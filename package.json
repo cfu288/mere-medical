@@ -9,11 +9,13 @@
   },
   "private": true,
   "dependencies": {
+    "@headlessui/react": "^1.6.6",
     "@ionic/react": "^6.2.1",
     "@ionic/react-router": "^6.2.1",
     "@nestjs/common": "^8.0.0",
     "@nestjs/core": "^8.0.0",
     "@nestjs/platform-express": "^8.0.0",
+    "@tailwindui/react": "^0.1.1",
     "core-js": "^3.6.5",
     "date-fns": "^2.29.1",
     "pouchdb": "^7.3.0",
