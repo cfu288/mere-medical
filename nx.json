@@ -40,5 +40,8 @@
       }
     }
   },
-  "defaultProject": "web"
+  "defaultProject": "web",
+  "cli": {
+    "defaultCollection": "nx-electron"
+  }
 }

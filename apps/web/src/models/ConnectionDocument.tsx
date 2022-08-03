@@ -1,0 +1,18 @@
+import { BaseDocument } from "./BaseDocument";
+
+export interface ConnectionDocument extends BaseDocument {
+  access_token: string;
+  expires_in: number;
+  patient: string;
+  refresh_token: string;
+  scope: string;
+  token_type: string;
+  source: string;
+  location: string;
+  last_refreshed: string;
+}
+
+export type CreateConnectionDocument = Omit<
+  ConnectionDocument,
+  "_rev" | "last_refreshed"
+>;

@@ -18,7 +18,8 @@
         "assets": ["apps/web/src/favicon.ico", "apps/web/src/assets"],
         "styles": ["apps/web/src/styles.css"],
         "scripts": [],
-        "webpackConfig": "@nrwl/react/plugins/webpack"
+        "webpackConfig": "@nrwl/react/plugins/webpack",
+        "postcssConfig": "apps/web/postcss.config.js"
       },
       "configurations": {
         "development": {
@@ -48,7 +49,11 @@
       "defaultConfiguration": "development",
       "options": {
         "buildTarget": "web:build",
-        "hmr": true
+        "hmr": true,
+        "proxyConfig": "apps/web/proxy.conf.json",
+        "ssl": true,
+        "sslKey": "./dev-stack/certs/localhost-key.pem",
+        "sslCert": "./dev-stack/certs/localhost.pem"
       },
       "configurations": {
         "development": {
