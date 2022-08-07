@@ -57,7 +57,7 @@
     "autoprefixer": "10.4.7",
     "babel-jest": "27.5.1",
     "cypress": "^10.2.0",
-    "electron": "^18.2.3",
+    "electron": "^18.3.7",
     "eslint": "~8.15.0",
     "eslint-config-prettier": "8.1.0",
     "eslint-plugin-cypress": "^2.10.3",

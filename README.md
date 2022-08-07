@@ -2,17 +2,27 @@
 
 ## Getting started
 
+Serve each one on its own:
+
 ```
 nx serve web
 nx serve desktop
 nx serve api
 ```
 
-build and serve
+Build and serve:
+
 ```
 npx nx build web
 docker build -t static-nginx .
 docker run -d --restart unless-stopped -p 9999:80 static-nginx
+
+```
+
+Serve electron app:
+
+```
+npx nx run-many --target=serve --projects=desktop,web
 ```
 
 This project was generated using [Nx](https://nx.dev).

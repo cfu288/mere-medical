@@ -23,3 +23,9 @@ ipcMain.handle('get-app-version', (event) => {
 ipcMain.on('quit', (event, code) => {
   app.exit(code);
 });
+
+// Main process
+ipcMain.handle('some-name', async (event, someArgument) => {
+  const result = await doSomeWork(someArgument);
+  return result;
+});

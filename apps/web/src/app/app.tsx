@@ -1,7 +1,12 @@
 import '../theme/ionic.css';
 import '../theme/tailwind.css';
 
-import { ellipse, triangle } from 'ionicons/icons';
+import {
+  newspaperOutline,
+  analyticsOutline,
+  addCircleOutline,
+  settingsOutline,
+} from 'ionicons/icons';
 import React from 'react';
 import { Redirect, Route } from 'react-router-dom';
 
@@ -22,6 +27,8 @@ import ConnectionTab from '../pages/ConnectionTab';
 import OnPatientRedirect from '../pages/OnPatientRedirect';
 import TimelineTab from '../pages/TimelineTab';
 import { Routes as AppRoutes } from '../Routes';
+import SummaryTab from '../pages/SummaryTab';
+import SettingsTab from '../pages/SettingsTab';
 
 setupIonicReact();
 
@@ -38,6 +45,12 @@ const App: React.FC = () => {
               <Route exact path={AppRoutes.AddConnection}>
                 <ConnectionTab />
               </Route>
+              <Route exact path={AppRoutes.Summary}>
+                <SummaryTab />
+              </Route>
+              <Route exact path={AppRoutes.Settings}>
+                <SettingsTab />
+              </Route>
               <Route exact path="/onpatient/redirect">
                 <OnPatientRedirect />
               </Route>
@@ -47,12 +60,20 @@ const App: React.FC = () => {
             </IonRouterOutlet>
             <IonTabBar slot="bottom">
               <IonTabButton tab="timeline" href={AppRoutes.Timeline}>
-                <IonIcon icon={triangle} />
+                <IonIcon icon={newspaperOutline} />
                 <IonLabel>Timeline</IonLabel>
               </IonTabButton>
+              <IonTabButton tab="summary" href={AppRoutes.Summary}>
+                <IonIcon icon={analyticsOutline} />
+                <IonLabel>Summary</IonLabel>
+              </IonTabButton>
               <IonTabButton tab="add" href={AppRoutes.AddConnection}>
-                <IonIcon icon={ellipse} />
+                <IonIcon icon={addCircleOutline} />
                 <IonLabel>Add</IonLabel>
+              </IonTabButton>
+              <IonTabButton tab="settings" href={AppRoutes.Settings}>
+                <IonIcon icon={settingsOutline} />
+                <IonLabel>Settings</IonLabel>
               </IonTabButton>
             </IonTabBar>
           </IonTabs>

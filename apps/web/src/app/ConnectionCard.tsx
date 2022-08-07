@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { BaseDocument } from "../models/BaseDocument";
-import { ConnectionDocument } from "../models/ConnectionDocument";
-import { usePouchDb } from "../components/PouchDbProvider";
-import image from "../img/onpatient_logo.jpeg";
-import { differenceInDays, format, parseISO } from "date-fns";
+import { useState } from 'react';
+import { BaseDocument } from '../models/BaseDocument';
+import { ConnectionDocument } from '../models/ConnectionDocument';
+import { usePouchDb } from '../components/PouchDbProvider';
+import image from '../img/onpatient_logo.jpeg';
+import { differenceInDays, format, parseISO } from 'date-fns';
 
 export function ConnectionCard({
   item,
@@ -56,10 +56,10 @@ export function ConnectionCard({
               (differenceInDays(parseISO(item.last_refreshed), new Date()) >= 1
                 ? ` - synced on ${format(
                     parseISO(item.last_refreshed),
-                    "MMM dd"
+                    'MMM dd'
                   )}`
                 : ` - synced at 
-          ${format(parseISO(item.last_refreshed), "p")}`)}
+          ${format(parseISO(item.last_refreshed), 'p')}`)}
           </p>
           {/* <p className="mt-1 text-gray-500 text-sm truncate">
             {item.access_token}
@@ -88,18 +88,23 @@ export function ConnectionCard({
             className="-ml-px w-0 flex-1 flex"
             onClick={() => {
               setSyncing(true);
-              fetchData(item, db).then(() => {
-                setSyncing(false);
-              });
+              fetchData(item, db)
+                .then(() => {
+                  setSyncing(false);
+                })
+                .catch(() => {
+                  setSyncing(false);
+                });
             }}
           >
             <div className="relative w-0 flex-1 inline-flex items-center justify-center py-4 text-sm text-gray-700 font-medium border border-transparent rounded-br-lg hover:text-gray-500">
+              sync
               <span className="ml-3">
                 {syncing ? (
                   <div role="status">
                     <svg
                       aria-hidden="true"
-                      className="mr-2 w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
+                      className="mr-2 w-4 h-4 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
                       viewBox="0 0 100 101"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
@@ -118,7 +123,6 @@ export function ConnectionCard({
                 ) : (
                   <></>
                 )}
-                sync
               </span>
             </div>
           </div>

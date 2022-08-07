@@ -1,7 +1,6 @@
-import { format, parseISO } from "date-fns";
-import { BundleEntry, Procedure } from "fhir/r2";
-import { ClinicalDocument } from "../models/ClinicalDocument";
-import { ShowObservationResultsExpandable } from "./ShowObservationResultsExpandable";
+import { format, parseISO } from 'date-fns';
+import { BundleEntry, Procedure } from 'fhir/r2';
+import { ClinicalDocument } from '../models/ClinicalDocument';
 
 export function ProcedureCard({
   item,
@@ -17,7 +16,7 @@ export function ProcedureCard({
           {item.metadata?.display_name}
         </p>
         <p className="text-sm font-medium text-gray-500 truncate">
-          {item.metadata?.date ? format(parseISO(item.metadata.date), "p") : ""}
+          {item.metadata?.date ? format(parseISO(item.metadata.date), 'p') : ''}
         </p>
       </div>
     </div>

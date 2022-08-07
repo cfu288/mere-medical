@@ -10,31 +10,29 @@ import {
   Procedure,
 } from 'fhir/r2';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { usePouchDb } from '../components/PouchDbProvider';
 import {
   ClinicalDocument,
   MergeClinicalDocument,
 } from '../models/ClinicalDocument';
-import { ConditionCard } from './ConditionCard';
-import { DiagnosticReportCard } from './DiagnosticReportCard';
-import { ImmunizationCard } from './ImmunizationCard';
-import { ObservationCard } from './ObservationCard';
-import { ProcedureCard } from './ProcedureCard';
-import { TimelineBanner } from './TimelineBanner';
+import { Routes } from '../Routes';
+import { ConditionCard } from '../app/ConditionCard';
+import { DiagnosticReportCard } from '../app/DiagnosticReportCard';
+import { ImmunizationCard } from '../app/ImmunizationCard';
+import { ObservationCard } from '../app/ObservationCard';
+import { ProcedureCard } from '../app/ProcedureCard';
+import { TimelineBanner } from '../app/TimelineBanner';
 
-const TimelineTab: React.FC = () => {
-  const db = usePouchDb();
-  const [list, setList] =
-    useState<Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>>();
-
-  useEffect(() => {
-    // Fetch clinical documents to display
-    db.find({
+function fetchRecords(db: PouchDB.Database<{}>) {
+  return db
+    .find({
       selector: {
         $and: [{ type: 'clinical' }, { 'metadata.date': { $gt: 0 } }],
       },
       sort: [{ 'metadata.date': 'desc' }],
-    }).then((list) => {
+    })
+    .then((list) => {
       const lst = list as PouchDB.Find.FindResponse<
         ClinicalDocument<BundleEntry<FhirResource>>
       >;
@@ -85,8 +83,37 @@ const TimelineTab: React.FC = () => {
         );
       });
 
-      setList(groupedRecords);
+      return groupedRecords;
     });
+}
+
+const TimelineTab: React.FC = () => {
+  const db = usePouchDb();
+  const [list, setList] =
+    useState<Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>>();
+
+  useEffect(() => {
+    console.log('listening for changes');
+    const changes = db
+      .changes({
+        since: 'now',
+        live: true,
+        include_docs: true,
+      })
+      .on('change', function (change) {
+        // received a change
+        console.log('change!');
+        fetchRecords(db).then((groupedRecords) => setList(groupedRecords));
+      });
+    return () => {
+      changes.cancel();
+      console.log('stopped listening for changes');
+    };
+  }, [db]);
+
+  useEffect(() => {
+    // Fetch clinical documents to display
+    fetchRecords(db).then((groupedRecords) => setList(groupedRecords));
   }, [db]);
 
   return (
@@ -97,7 +124,8 @@ const TimelineTab: React.FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen>
-        <div className="flex flex-col px-4">
+        <div className="flex flex-col max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          {!list || (Object.entries(list).length === 0 && <EmptyRecords />)}
           {list &&
             Object.entries(list).map(([key, itemList]) => (
               <div className="flex flex-row pt-12 gap-x-4" key={key}>
@@ -113,6 +141,7 @@ const TimelineTab: React.FC = () => {
                     <div key={item._id}>
                       {item.data_record.resource_type === 'immunization' && (
                         <ImmunizationCard
+                          key={item._id}
                           item={
                             item as PouchDB.Core.ExistingDocument<
                               ClinicalDocument<BundleEntry<Immunization>>
@@ -122,6 +151,7 @@ const TimelineTab: React.FC = () => {
                       )}
                       {item.data_record.resource_type === 'condition' && (
                         <ConditionCard
+                          key={item._id}
                           item={
                             item as PouchDB.Core.ExistingDocument<
                               ClinicalDocument<BundleEntry<Condition>>
@@ -131,6 +161,7 @@ const TimelineTab: React.FC = () => {
                       )}
                       {item.data_record.resource_type === 'procedure' && (
                         <ProcedureCard
+                          key={item._id}
                           item={
                             item as PouchDB.Core.ExistingDocument<
                               ClinicalDocument<BundleEntry<Procedure>>
@@ -140,6 +171,7 @@ const TimelineTab: React.FC = () => {
                       )}
                       {item.data_record.resource_type === 'observation' && (
                         <ObservationCard
+                          key={item._id}
                           item={
                             item as PouchDB.Core.ExistingDocument<
                               ClinicalDocument<BundleEntry<Observation>>
@@ -150,6 +182,7 @@ const TimelineTab: React.FC = () => {
                       {item.data_record.resource_type ===
                         'diagnostic_report' && (
                         <DiagnosticReportCard
+                          key={item._id}
                           item={
                             item as PouchDB.Core.ExistingDocument<
                               ClinicalDocument<BundleEntry<DiagnosticReport>>
@@ -167,5 +200,33 @@ const TimelineTab: React.FC = () => {
     </IonPage>
   );
 };
+
+function EmptyRecords() {
+  return (
+    <Link
+      to={Routes.AddConnection}
+      className="relative block w-full border-2 border-gray-300 border-dashed rounded-lg p-12 text-center hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mt-4"
+    >
+      <svg
+        className="mx-auto h-12 w-12 text-gray-400"
+        xmlns="http://www.w3.org/2000/svg"
+        stroke="currentColor"
+        fill="none"
+        viewBox="0 0 48 48"
+        aria-hidden="true"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M8 14v20c0 4.418 7.163 8 16 8 1.381 0 2.721-.087 4-.252M8 14c0 4.418 7.163 8 16 8s16-3.582 16-8M8 14c0-4.418 7.163-8 16-8s16 3.582 16 8m0 0v14m0-4c0 4.418-7.163 8-16 8S8 28.418 8 24m32 10v6m0 0v6m0-6h6m-6 0h-6"
+        />
+      </svg>
+      <span className="mt-2 block text-sm font-medium text-gray-900">
+        Connect your records
+      </span>
+    </Link>
+  );
+}
 
 export default TimelineTab;

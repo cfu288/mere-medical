@@ -1,9 +1,9 @@
-import { BundleEntry, DiagnosticReport, Observation } from "fhir/r2";
-import { useMemo, useState } from "react";
+import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
+import { useMemo, useState } from 'react';
 import {
   ClinicalDocument,
   MergeClinicalDocument,
-} from "../models/ClinicalDocument";
+} from '../models/ClinicalDocument';
 
 export function ShowObservationResultsExpandable({
   item,
@@ -20,13 +20,13 @@ export function ShowObservationResultsExpandable({
         >
       )?.data_items?.sort((a, b) => {
         if (!a?.fullUrl?.[0]) return 0;
-        return a?.fullUrl?.[0]?.localeCompare(b?.fullUrl?.[0] || "") || 0;
+        return a?.fullUrl?.[0]?.localeCompare(b?.fullUrl?.[0] || '') || 0;
       }),
     []
   );
 
   return (
-    <>
+    <div>
       <div className="relative py-2">
         <div className="absolute inset-0 flex items-center" aria-hidden="true">
           <div className="w-full border-t border-gray-300" />
@@ -43,28 +43,28 @@ export function ShowObservationResultsExpandable({
           </button>
         </div>
       </div>
-      <div className={`${expanded ? "" : "hidden"}`}>
+      <div className={`${expanded ? '' : 'hidden'}`}>
         {list?.map((item) => (
-          <>
-            <div className="flex flex-row gap-2 text-sm text-gray-600">
-              {/* <div>{item.resource?.code.text}</div> */}
-              {!(item.resource as Observation)?.dataAbsentReason && (
-                <>
-                  <div>{item.resource?.category?.text} result: </div>
-                  <div>
-                    {(item.resource as Observation)?.interpretation?.text ||
-                      (item.resource as Observation)?.valueString}
-                  </div>
-                  <div>
-                    {(item.resource as Observation)?.valueQuantity?.value}{" "}
-                    {(item.resource as Observation)?.valueQuantity?.unit}
-                  </div>
-                </>
-              )}
-            </div>
-          </>
+          <div
+            key={item.id}
+            className="flex flex-row gap-2 text-sm text-gray-600"
+          >
+            {!(item.resource as Observation)?.dataAbsentReason && (
+              <>
+                <div>{item.resource?.category?.text} result: </div>
+                <div>
+                  {(item.resource as Observation)?.interpretation?.text ||
+                    (item.resource as Observation)?.valueString}
+                </div>
+                <div>
+                  {(item.resource as Observation)?.valueQuantity?.value}{' '}
+                  {(item.resource as Observation)?.valueQuantity?.unit}
+                </div>
+              </>
+            )}
+          </div>
         ))}
       </div>
-    </>
+    </div>
   );
 }

@@ -14,7 +14,7 @@ import { ConnectionCard } from '../app/ConnectionCard';
 import { isElectron } from '../utils/electron';
 import { GenericBanner } from '../app/GenericBanner';
 
-const ConnectionTab: React.FC = () => {
+const SettingsTab: React.FC = () => {
   const db = usePouchDb(),
     [list, setList] = useState<PouchDB.Find.FindResponse<ConnectionDocument>>(),
     loginUrl = OnPatient.getLoginUrl(),
@@ -65,42 +65,16 @@ const ConnectionTab: React.FC = () => {
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <GenericBanner text="ADD NEW RECORD" />
+          <GenericBanner text="Settings" />
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen>
-        <IonHeader collapse="condense">
-          <IonToolbar>
-            <IonTitle size="large">Connect your data</IonTitle>
-          </IonToolbar>
-        </IonHeader>
-        <ul className="grid grid-cols-1 gap-4 p-4">
-          {list?.docs.map((item) => (
-            <ConnectionCard
-              key={item._id}
-              item={item}
-              getList={getList}
-              refreshToken={refreshToken}
-              fetchData={fetchData}
-            />
-          ))}
-        </ul>
         <div className="w-full box-border	flex justify-center align-middle">
-          <IonButton
-            className="m-4 w-11/12 h-12"
-            href={isElectron() ? '' : loginUrl}
-            onClick={() => {
-              if (isElectron()) {
-                // Renderer process
-              }
-            }}
-          >
-            <p className="font-bold">Log in to OnPatient</p>
-          </IonButton>
+          <p>TODO</p>
         </div>
       </IonContent>
     </IonPage>
   );
 };
 
-export default ConnectionTab;
+export default SettingsTab;
