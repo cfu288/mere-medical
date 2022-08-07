@@ -1,10 +1,14 @@
-# nginx state for serving content
-FROM nginx:alpine
-# Set working directory to nginx asset directory
-WORKDIR /usr/share/nginx/html
-# Remove default nginx static assets
-RUN rm -rf ./*
-# Copy static assets over
-COPY ./dist/apps/web/* ./
-# Containers run nginx with global directives and daemon off
-ENTRYPOINT ["nginx", "-g", "daemon off;"]
+FROM node:18 as build-stage
+
+WORKDIR /app
+COPY package*.json /app/
+RUN npm install
+COPY ./ /app/
+COPY ./nginx.conf /nginx.conf
+RUN npx nx build web
+
+# Stage 1, based on Nginx, to have only the compiled app, ready for production with Nginx
+FROM nginx:1.15
+COPY --from=build-stage /app/dist/apps/web/ /usr/share/nginx/html
+# Copy the default nginx.conf provided by tiangolo/node-frontend
+COPY --from=build-stage /nginx.conf /etc/nginx/conf.d/default.conf
