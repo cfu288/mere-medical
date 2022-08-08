@@ -12,7 +12,7 @@ steps:
   #   commands:
   #     - docker tag mari-medical-web:latest registry.mari.casa/mari-medical-web:latest                                                       git:(main|)
   #     - docker push registry.mari.casa/mari-medical-web:latest
-  - name: test
+  - name: build and push image
     image: docker:dind
     volumes:
       - name: dockersock
@@ -23,7 +23,7 @@ steps:
       - docker tag mari-medical-web:latest registry.mari.casa/mari-medical-web:latest
       - docker push registry.mari.casa/mari-medical-web:latest
 
-  - name: ssh deploy stack
+  - name: deploy stack
     image: appleboy/drone-ssh
     settings:
       host:
