@@ -1,13 +1,26 @@
 kind: pipeline
 name: default
-type: docker
+
+# steps:
+#   - name: deploy
+#     image: codestation/drone-stack
+#     settings:
+#       host: ssh://cfu288@192.168.1.100:22
+#       stack_name: mari-medical
+#       compose: docker-compose.yml
+#       ssh_key:
+#         from_secret: ssh_key
 
 steps:
-  - name: deploy
-    image: codestation/drone-stack
+  - name: ssh
+    image: appleboy/drone-ssh
     settings:
-      host: ssh://cfu288@192.168.1.100:22
-      stack_name: mari-medical
-      compose: docker-compose.yml
-      ssh_key:
+      host:
+        - 192.168.1.100
+      username: cfu288
+      key:
         from_secret: ssh_key
+      port: 22
+      command_timeout: 30m
+      script:
+        - echo "Hello World"
