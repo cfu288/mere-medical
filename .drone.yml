@@ -18,7 +18,7 @@ steps:
       - name: dockersock
         path: /var/run
     commands:
-      - sleep 5 # give docker enough time to start
+      - sleep 20 # give docker enough time to start
       - docker build -t mari-medical-web .
       - docker tag mari-medical-web:latest registry.mari.casa/mari-medical-web:latest
       - docker push registry.mari.casa/mari-medical-web:latest
