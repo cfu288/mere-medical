@@ -69,11 +69,6 @@ const ConnectionTab: React.FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen>
-        <IonHeader collapse="condense">
-          <IonToolbar>
-            <IonTitle size="large">Connect your data</IonTitle>
-          </IonToolbar>
-        </IonHeader>
         <ul className="grid grid-cols-1 gap-4 p-4">
           {list?.docs.map((item) => (
             <ConnectionCard

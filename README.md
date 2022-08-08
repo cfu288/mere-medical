@@ -14,8 +14,8 @@ Build and serve:
 
 ```
 npx nx build web
-docker build -t static-nginx .
-docker run -d --restart unless-stopped -p 9999:80 static-nginx
+docker build -t mari-medical-web .
+docker run -d --restart unless-stopped -p 9999:80 mari-medical-web
 
 ```
 
