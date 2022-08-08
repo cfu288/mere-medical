@@ -1,18 +1,29 @@
 kind: pipeline
 name: default
 
-# steps:
-#   - name: deploy
-#     image: codestation/drone-stack
-#     settings:
-#       host: ssh://cfu288@192.168.1.100:22
-#       stack_name: mari-medical
-#       compose: docker-compose.yml
-#       ssh_key:
-#         from_secret: ssh_key
-
 steps:
-  - name: ssh
+  # - name: build
+  #   image: plugins/docker
+  #   commands:
+  #     - docker build -t mari-medical-web .
+
+  # - name: push image
+  #   image: plugins/docker
+  #   commands:
+  #     - docker tag mari-medical-web:latest registry.mari.casa/mari-medical-web:latest                                                       git:(main|)
+  #     - docker push registry.mari.casa/mari-medical-web:latest
+  - name: test
+    image: docker:dind
+    volumes:
+      - name: dockersock
+        path: /var/run
+    commands:
+      - sleep 5 # give docker enough time to start
+      - docker build -t mari-medical-web .
+      - docker tag mari-medical-web:latest registry.mari.casa/mari-medical-web:latest
+      - docker push registry.mari.casa/mari-medical-web:latest
+
+  - name: ssh deploy stack
     image: appleboy/drone-ssh
     settings:
       host:
@@ -24,3 +35,20 @@ steps:
       command_timeout: 30m
       script:
         - echo "Hello World"
+        - docker stack deploy mari-medical
+
+services:
+  - name: docker
+    image: docker:dind
+    privileged: true
+    volumes:
+      - name: dockersock
+        path: /var/run
+
+volumes:
+  - name: dockersock
+    temp: {}
+
+trigger:
+  branch:
+    - main
