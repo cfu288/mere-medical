@@ -1,0 +1,7 @@
+version: '3.9'
+
+services:
+  web:
+    image: registry.mari.casa/mari-medical-web:latest
+    ports:
+      - '4200:80'
