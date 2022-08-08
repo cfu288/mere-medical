@@ -1,6 +1,5 @@
 kind: pipeline
 name: default
-type: docker
 
 steps:
   - name: build and push image
