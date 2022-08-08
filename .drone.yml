@@ -6,7 +6,7 @@ steps:
   - name: deploy
     image: codestation/drone-stack
     settings:
-      host: ssh://cfu288@192.168.1.100
+      host: ssh://cfu288@192.168.1.100:22
       stack_name: mari-medical
       compose: docker-compose.yml
       ssh_key:
