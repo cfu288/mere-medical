@@ -2,7 +2,6 @@ import {
   IonContent,
   IonHeader,
   IonPage,
-  IonTitle,
   IonToolbar,
   IonButton,
 } from '@ionic/react';
@@ -91,6 +90,19 @@ const ConnectionTab: React.FC = () => {
             }}
           >
             <p className="font-bold">Log in to OnPatient</p>
+          </IonButton>
+        </div>
+        <div className="w-full box-border	flex justify-center align-middle">
+          <IonButton
+            className="m-4 w-11/12 h-12"
+            href={isElectron() ? '' : loginUrl}
+            onClick={() => {
+              if (isElectron()) {
+                // Renderer process
+              }
+            }}
+          >
+            <p className="font-bold">Log in to Epic</p>
           </IonButton>
         </div>
       </IonContent>
