@@ -29,20 +29,22 @@ const OnPatientRedirect: React.FC = () => {
 
   useEffect(() => {
     const searchRequest = new URLSearchParams(window.location.search),
-      code = searchRequest.get('code'),
-      params = {
-        grant_type: 'authorization_code',
-        client_id: environment.onpatient_client_id,
-        client_secret: environment.onpatient_client_secret,
-        redirect_uri: environment.redirect_uri,
-        code,
-      };
+      code = searchRequest.get('code');
 
     if (code) {
-      const encodedParams = new URLSearchParams(
-        params as Record<string, string>
-      );
-      const url = `https://onpatient.com/o/token/?${encodedParams}`;
+      if (process.env['NODE_ENV'] === 'development') {
+        console.warn('This can double render in development');
+      }
+
+      const params = {
+          grant_type: 'authorization_code',
+          client_id: environment.onpatient_client_id,
+          client_secret: environment.onpatient_client_secret,
+          redirect_uri: environment.redirect_uri,
+          code,
+        },
+        encodedParams = new URLSearchParams(params as Record<string, string>),
+        url = `https://onpatient.com/o/token/?${encodedParams}`;
       // Even though this is a POST - Dr. Chrono expects the params as url encoded query params like a GET request. Don't ask me why.
       fetch(url, {
         method: 'POST',
@@ -58,20 +60,23 @@ const OnPatientRedirect: React.FC = () => {
             ...codeRes,
           };
           db.put(dbentry)
-            .then(() => console.log('Saved!'))
+            .then(() => {
+              console.log('Saved!');
+              // redirect
+              history.push(Routes.AddConnection);
+            })
             .catch((e: any) => {
-              alert('err');
+              alert('Error adding connection');
               console.error(e);
+              history.push(Routes.AddConnection);
             });
-          // redirect
-          history.push(Routes.AddConnection);
         })
         .catch((err) => {
-          alert('OAuth rejected');
+          alert(`OAuth rejected: ${err}`);
           console.log(err);
         });
     }
-  }, [history, db]);
+  }, []);
 
   return (
     <IonPage>
@@ -81,11 +86,6 @@ const OnPatientRedirect: React.FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen>
-        <IonHeader collapse="condense">
-          <IonToolbar>
-            <IonTitle size="large">Authenticated!</IonTitle>
-          </IonToolbar>
-        </IonHeader>
         <ExploreContainer name="One second..." />
       </IonContent>
     </IonPage>

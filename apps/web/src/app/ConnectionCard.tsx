@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BaseDocument } from '../models/BaseDocument';
 import { ConnectionDocument } from '../models/ConnectionDocument';
 import { usePouchDb } from '../components/PouchDbProvider';
@@ -29,6 +29,19 @@ export function ConnectionCard({
       // getList();
     },
     [syncing, setSyncing] = useState(false);
+
+  useEffect(() => {
+    if (!item.last_refreshed) {
+      setSyncing(true);
+      fetchData(item, db)
+        .then(() => {
+          setSyncing(false);
+        })
+        .catch(() => {
+          setSyncing(false);
+        });
+    }
+  }, [db, fetchData, item]);
 
   return (
     <li
@@ -76,16 +89,19 @@ export function ConnectionCard({
               <span className="ml-3">disconnect</span>
             </div>
           </div>
-          {/* <div
-            className="-ml-px w-0 flex-1 flex"
+          <div
+            className="-ml-px w-0 flex-1 flex divide-x divide-gray-200"
             onClick={() => refreshToken(item.refresh_token, item)}
           >
             <a className="relative w-0 flex-1 inline-flex items-center justify-center py-4 text-sm text-gray-700 font-medium border border-transparent rounded-br-lg hover:text-gray-500">
               <span className="ml-3">refresh</span>
             </a>
-          </div> */}
-          <div
-            className="-ml-px w-0 flex-1 flex"
+          </div>
+          <button
+            disabled={syncing}
+            className={`-ml-px w-0 divide-x divide-gray-200 flex-1 flex ${
+              syncing ? 'disabled:bg-slate-50' : ''
+            }`}
             onClick={() => {
               setSyncing(true);
               fetchData(item, db)
@@ -125,7 +141,7 @@ export function ConnectionCard({
                 )}
               </span>
             </div>
-          </div>
+          </button>
         </div>
       </div>
     </li>

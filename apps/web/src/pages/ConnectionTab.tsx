@@ -46,11 +46,13 @@ const ConnectionTab: React.FC = () => {
             db.put(dbentry)
               .then(() => getList())
               .catch((e) => {
-                alert(`OAuth rejected ${e}`);
+                alert(`Unable to save new connection: ${e}`);
+                console.error(e);
               });
           })
           .catch((err) => {
             alert(`OAuth rejected ${err}`);
+            console.error(err);
           });
       },
       [db, getList]
