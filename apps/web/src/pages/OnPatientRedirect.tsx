@@ -10,7 +10,7 @@ import { useHistory } from 'react-router';
 import ExploreContainer from '../components/ExploreContainer';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateConnectionDocument } from '../models/ConnectionDocument';
-import { usePouchDb } from '../components/PouchDbProvider';
+import { useRxDb } from '../components/RxDbProvider';
 import { Routes } from '../Routes';
 import { environment } from '../environments/environment';
 
@@ -25,7 +25,7 @@ export interface OnPatientAuthResponse {
 
 const OnPatientRedirect: React.FC = () => {
   const history = useHistory(),
-    db = usePouchDb();
+    db = useRxDb();
 
   useEffect(() => {
     const searchRequest = new URLSearchParams(window.location.search),
@@ -53,13 +53,15 @@ const OnPatientRedirect: React.FC = () => {
         .then((codeRes: OnPatientAuthResponse) => {
           const dbentry: CreateConnectionDocument = {
             _id: uuidv4(),
-            type: 'connection',
-            version: 1,
+            // type: 'connection',
+            //  version: 1,
             source: 'onpatient',
             location: 'https://onpatient.com',
             ...codeRes,
           };
-          db.put(dbentry)
+          console.log(dbentry);
+          db.connection_documents
+            .insert(dbentry)
             .then(() => {
               console.log('Saved!');
               // redirect
@@ -76,7 +78,7 @@ const OnPatientRedirect: React.FC = () => {
           console.log(err);
         });
     }
-  }, []);
+  }, [db.connection_documents, history]);
 
   return (
     <IonPage>

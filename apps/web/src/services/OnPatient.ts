@@ -9,7 +9,10 @@ import {
   Observation,
   DiagnosticReport,
 } from 'fhir/r2';
+import { RxDatabase, RxDocument } from 'rxdb';
+import { DatabaseCollections } from '../components/RxDbProvider';
 import { environment } from '../environments/environment';
+import { ClinicalDocumentType } from '../models/ClinicalDocumentCollection';
 import { ConnectionDocument } from '../models/ConnectionDocument';
 import { OnPatientAuthResponse } from '../pages/OnPatientRedirect';
 import { DSTU2 } from './DSTU2';
@@ -46,11 +49,11 @@ export namespace OnPatient {
   }
 
   async function getProcedures(
-    connectionDocument: ConnectionDocument
+    connectionDocument: RxDocument<ConnectionDocument>
   ): Promise<BundleEntry<Procedure>[]> {
     const res = await fetch(`https://onpatient.com/api/fhir/Procedure`, {
       headers: {
-        Authorization: `Bearer ${connectionDocument.access_token}`,
+        Authorization: `Bearer ${connectionDocument.get('access_token')}`,
       },
     })
       .then((res) => res.json())
@@ -63,11 +66,11 @@ export namespace OnPatient {
   }
 
   async function getImmunizations(
-    connectionDocument: ConnectionDocument
+    connectionDocument: RxDocument<ConnectionDocument>
   ): Promise<BundleEntry<Immunization>[]> {
     const res = await fetch(`https://onpatient.com/api/fhir/Immunization`, {
       headers: {
-        Authorization: `Bearer ${connectionDocument.access_token}`,
+        Authorization: `Bearer ${connectionDocument.get('access_token')}`,
       },
     })
       .then((res) => res.json())
@@ -80,11 +83,11 @@ export namespace OnPatient {
   }
 
   async function getConditions(
-    connectionDocument: ConnectionDocument
+    connectionDocument: RxDocument<ConnectionDocument>
   ): Promise<BundleEntry<Condition>[]> {
     const res = await fetch(`https://onpatient.com/api/fhir/Condition`, {
       headers: {
-        Authorization: `Bearer ${connectionDocument.access_token}`,
+        Authorization: `Bearer ${connectionDocument.get('access_token')}`,
       },
     })
       .then((res) => res.json())
@@ -97,11 +100,11 @@ export namespace OnPatient {
   }
 
   async function getObservations(
-    connectionDocument: ConnectionDocument
+    connectionDocument: RxDocument<ConnectionDocument>
   ): Promise<BundleEntry<Observation>[]> {
     const res = await fetch(`https://onpatient.com/api/fhir/Observation`, {
       headers: {
-        Authorization: `Bearer ${connectionDocument.access_token}`,
+        Authorization: `Bearer ${connectionDocument.get('access_token')}`,
       },
     })
       .then((res) => res.json())
@@ -114,11 +117,11 @@ export namespace OnPatient {
   }
 
   async function getDiagnosticReport(
-    connectionDocument: ConnectionDocument
+    connectionDocument: RxDocument<ConnectionDocument>
   ): Promise<BundleEntry<DiagnosticReport>[]> {
     const res = await fetch(`https://onpatient.com/api/fhir/Observation`, {
       headers: {
-        Authorization: `Bearer ${connectionDocument.access_token}`,
+        Authorization: `Bearer ${connectionDocument.get('access_token')}`,
       },
     })
       .then((res) => res.json())
@@ -131,26 +134,33 @@ export namespace OnPatient {
   }
 
   async function syncDiagnosticReport(
-    connectionDocument: ConnectionDocument,
-    db: PouchDB.Database<{}>
+    connectionDocument: RxDocument<ConnectionDocument>,
+    db: RxDatabase<DatabaseCollections>
   ) {
     const drs = await getDiagnosticReport(connectionDocument);
     const cds = drs.map((dr) =>
-      DSTU2.mapDiagnosticReportToCreateClinicalDocument(dr, connectionDocument)
+      DSTU2.mapDiagnosticReportToCreateClinicalDocument(
+        dr,
+        connectionDocument.toJSON()
+      )
     );
+    console.log(cds);
     const cdsmap = cds.map(async (cd) => {
-      const exists = await db.find({
-        selector: {
-          $and: [
-            { 'metadata.id': `${cd.metadata?.id}` },
-            { source_record: `${cd.source_record}` },
-          ],
-        },
-      });
-      if (exists.docs.length > 0) {
+      const exists = await db.clinical_documents
+        .findOne({
+          selector: {
+            $and: [
+              { 'metadata.id': `${cd.metadata?.id}` },
+              { source_record: `${cd.source_record}` },
+            ],
+          },
+        })
+        .exec();
+
+      if (exists) {
         console.log(`Skipped record ${cd._id}`);
       } else {
-        await db.put(cd);
+        await db.clinical_documents.insert(cd as ClinicalDocumentType);
         console.log(`Saved record ${cd._id}`);
       }
     });
@@ -158,27 +168,31 @@ export namespace OnPatient {
   }
 
   async function syncObservations(
-    connectionDocument: ConnectionDocument,
-    db: PouchDB.Database<{}>
+    connectionDocument: RxDocument<ConnectionDocument>,
+    db: RxDatabase<DatabaseCollections>
   ) {
     const imms = await getObservations(connectionDocument);
     const cds = imms.map((imm) =>
-      DSTU2.mapObservationToCreateClinicalDocument(imm, connectionDocument)
+      DSTU2.mapObservationToCreateClinicalDocument(
+        imm,
+        connectionDocument.toJSON()
+      )
     );
     const cdsmap = cds.map(async (cd) => {
-      const exists = await db.find({
-        selector: {
-          $and: [
-            { 'metadata.id': `${cd.metadata?.id}` },
-
-            { source_record: `${cd.source_record}` },
-          ],
-        },
-      });
-      if (exists.docs.length > 0) {
+      const exists = await db.clinical_documents
+        .find({
+          selector: {
+            $and: [
+              { 'metadata.id': `${cd.metadata?.id}` },
+              { source_record: `${cd.source_record}` },
+            ],
+          },
+        })
+        .exec();
+      if (exists.length > 0) {
         console.log(`Skipped record ${cd._id}`);
       } else {
-        await db.put(cd);
+        await db.clinical_documents.insert(cd as ClinicalDocumentType);
         console.log(`Saved record ${cd._id}`);
       }
     });
@@ -186,26 +200,31 @@ export namespace OnPatient {
   }
 
   async function syncImmunizations(
-    connectionDocument: ConnectionDocument,
-    db: PouchDB.Database<{}>
+    connectionDocument: RxDocument<ConnectionDocument>,
+    db: RxDatabase<DatabaseCollections>
   ) {
     const imms = await getImmunizations(connectionDocument);
     const cds = imms.map((imm) =>
-      DSTU2.mapImmunizationToCreateClinicalDocument(imm, connectionDocument)
+      DSTU2.mapImmunizationToCreateClinicalDocument(
+        imm,
+        connectionDocument.toJSON()
+      )
     );
     const cdsmap = cds.map(async (cd) => {
-      const exists = await db.find({
-        selector: {
-          $and: [
-            { 'metadata.id': `${cd.metadata?.id}` },
-            { source_record: `${cd.source_record}` },
-          ],
-        },
-      });
-      if (exists.docs.length > 0) {
+      const exists = await db.clinical_documents
+        .find({
+          selector: {
+            $and: [
+              { 'metadata.id': `${cd.metadata?.id}` },
+              { source_record: `${cd.source_record}` },
+            ],
+          },
+        })
+        .exec();
+      if (exists.length > 0) {
         console.log(`Skipped record ${cd._id}`);
       } else {
-        await db.put(cd);
+        await db.clinical_documents.insert(cd as ClinicalDocumentType);
         console.log(`Saved record ${cd._id}`);
       }
     });
@@ -213,26 +232,31 @@ export namespace OnPatient {
   }
 
   async function syncProcedures(
-    connectionDocument: ConnectionDocument,
-    db: PouchDB.Database<{}>
+    connectionDocument: RxDocument<ConnectionDocument>,
+    db: RxDatabase<DatabaseCollections>
   ) {
     const procs = await getProcedures(connectionDocument);
     const cds = procs.map((proc) =>
-      DSTU2.mapProcedureToCreateClinicalDocument(proc, connectionDocument)
+      DSTU2.mapProcedureToCreateClinicalDocument(
+        proc,
+        connectionDocument.toJSON()
+      )
     );
     const cdsmap = cds.map(async (cd) => {
-      const exists = await db.find({
-        selector: {
-          $and: [
-            { 'metadata.id': `${cd.metadata?.id}` },
-            { source_record: `${cd.source_record}` },
-          ],
-        },
-      });
-      if (exists.docs.length > 0) {
+      const exists = await db.clinical_documents
+        .find({
+          selector: {
+            $and: [
+              { 'metadata.id': `${cd.metadata?.id}` },
+              { source_record: `${cd.source_record}` },
+            ],
+          },
+        })
+        .exec();
+      if (exists.length > 0) {
         console.log(`Skipped record ${cd._id}`);
       } else {
-        await db.put(cd);
+        await db.clinical_documents.insert(cd as ClinicalDocumentType);
         console.log(`Saved record ${cd._id}`);
       }
     });
@@ -240,26 +264,31 @@ export namespace OnPatient {
   }
 
   async function syncConditions(
-    connectionDocument: ConnectionDocument,
-    db: PouchDB.Database<{}>
+    connectionDocument: RxDocument<ConnectionDocument>,
+    db: RxDatabase<DatabaseCollections>
   ) {
     const procs = await getConditions(connectionDocument);
     const cds = procs.map((proc) =>
-      DSTU2.mapConditionToCreateClinicalDocument(proc, connectionDocument)
+      DSTU2.mapConditionToCreateClinicalDocument(
+        proc,
+        connectionDocument.toJSON()
+      )
     );
     const cdsmap = cds.map(async (cd) => {
-      const exists = await db.find({
-        selector: {
-          $and: [
-            { 'metadata.id': `${cd.metadata?.id}` },
-            { source_record: `${cd.source_record}` },
-          ],
-        },
-      });
-      if (exists.docs.length > 0) {
+      const exists = await db.clinical_documents
+        .find({
+          selector: {
+            $and: [
+              { 'metadata.id': `${cd.metadata?.id}` },
+              { source_record: `${cd.source_record}` },
+            ],
+          },
+        })
+        .exec();
+      if (exists.length > 0) {
         console.log(`Skipped record ${cd._id}`);
       } else {
-        await db.put(cd);
+        await db.clinical_documents.insert(cd as ClinicalDocumentType);
         console.log(`Saved record ${cd._id}`);
       }
     });
@@ -267,12 +296,12 @@ export namespace OnPatient {
   }
 
   export async function syncAllRecords(
-    connectionDocument: ConnectionDocument,
-    db: PouchDB.Database<{}>
+    connectionDocument: RxDocument<ConnectionDocument>,
+    db: RxDatabase<DatabaseCollections>
   ): Promise<(void | void[])[]> {
-    const newCd = connectionDocument;
+    const newCd = connectionDocument.toMutableJSON();
     newCd.last_refreshed = new Date().toISOString();
-    await db.put(newCd);
+    await db.connection_documents.upsert(newCd);
     const syncJob = Promise.all([
       syncImmunizations(connectionDocument, db),
       syncProcedures(connectionDocument, db),

@@ -11,7 +11,7 @@ import {
 } from 'fhir/r2';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { usePouchDb } from '../components/PouchDbProvider';
+import { DatabaseCollections, useRxDb } from '../components/RxDbProvider';
 import {
   ClinicalDocument,
   MergeClinicalDocument,
@@ -23,19 +23,21 @@ import { ImmunizationCard } from '../app/ImmunizationCard';
 import { ObservationCard } from '../app/ObservationCard';
 import { ProcedureCard } from '../app/ProcedureCard';
 import { TimelineBanner } from '../app/TimelineBanner';
+import { RxDatabase, RxDocument } from 'rxdb';
 
-function fetchRecords(db: PouchDB.Database<{}>) {
-  return db
+function fetchRecords(db: RxDatabase<DatabaseCollections>) {
+  return db.clinical_documents
     .find({
       selector: {
-        $and: [{ type: 'clinical' }, { 'metadata.date': { $gt: 0 } }],
+        'metadata.date': { $gt: 0 },
       },
       sort: [{ 'metadata.date': 'desc' }],
     })
+    .exec()
     .then((list) => {
-      const lst = list as PouchDB.Find.FindResponse<
+      const lst = list as unknown as RxDocument<
         ClinicalDocument<BundleEntry<FhirResource>>
-      >;
+      >[];
 
       // Group records by date
       const groupedRecords: Record<
@@ -43,14 +45,19 @@ function fetchRecords(db: PouchDB.Database<{}>) {
         ClinicalDocument<BundleEntry<FhirResource>>[] // documents/cards for date
       > = {};
 
-      lst.docs.forEach((item) => {
-        const date = item.metadata?.date
-          ? format(parseISO(item.metadata.date), 'yyyy-MM-dd')
+      lst.forEach((item) => {
+        if (item.get('metadata')?.date === undefined) {
+          console.log(item.toJSON());
+        }
+        const date = item.get('metadata')?.date
+          ? format(parseISO(item.get('metadata')?.date), 'yyyy-MM-dd')
           : '-1';
         if (groupedRecords[date]) {
-          groupedRecords[date].push(item);
+          groupedRecords[date].push(
+            item.toMutableJSON() as ClinicalDocument<BundleEntry<FhirResource>>
+          );
         } else {
-          groupedRecords[date] = [item];
+          groupedRecords[date] = [item.toMutableJSON()];
         }
       });
 
@@ -88,28 +95,9 @@ function fetchRecords(db: PouchDB.Database<{}>) {
 }
 
 const TimelineTab: React.FC = () => {
-  const db = usePouchDb();
+  const db = useRxDb();
   const [list, setList] =
     useState<Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>>();
-
-  useEffect(() => {
-    console.log('listening for changes');
-    const changes = db
-      .changes({
-        since: 'now',
-        live: true,
-        include_docs: true,
-      })
-      .on('change', function (change) {
-        // received a change
-        console.log('change!');
-        fetchRecords(db).then((groupedRecords) => setList(groupedRecords));
-      });
-    return () => {
-      changes.cancel();
-      console.log('stopped listening for changes');
-    };
-  }, [db]);
 
   useEffect(() => {
     // Fetch clinical documents to display
@@ -143,9 +131,7 @@ const TimelineTab: React.FC = () => {
                         <ImmunizationCard
                           key={item._id}
                           item={
-                            item as PouchDB.Core.ExistingDocument<
-                              ClinicalDocument<BundleEntry<Immunization>>
-                            >
+                            item as ClinicalDocument<BundleEntry<Immunization>>
                           }
                         />
                       )}
@@ -153,9 +139,7 @@ const TimelineTab: React.FC = () => {
                         <ConditionCard
                           key={item._id}
                           item={
-                            item as PouchDB.Core.ExistingDocument<
-                              ClinicalDocument<BundleEntry<Condition>>
-                            >
+                            item as ClinicalDocument<BundleEntry<Condition>>
                           }
                         />
                       )}
@@ -163,9 +147,7 @@ const TimelineTab: React.FC = () => {
                         <ProcedureCard
                           key={item._id}
                           item={
-                            item as PouchDB.Core.ExistingDocument<
-                              ClinicalDocument<BundleEntry<Procedure>>
-                            >
+                            item as ClinicalDocument<BundleEntry<Procedure>>
                           }
                         />
                       )}
@@ -173,9 +155,7 @@ const TimelineTab: React.FC = () => {
                         <ObservationCard
                           key={item._id}
                           item={
-                            item as PouchDB.Core.ExistingDocument<
-                              ClinicalDocument<BundleEntry<Observation>>
-                            >
+                            item as ClinicalDocument<BundleEntry<Observation>>
                           }
                         />
                       )}
@@ -184,8 +164,8 @@ const TimelineTab: React.FC = () => {
                         <DiagnosticReportCard
                           key={item._id}
                           item={
-                            item as PouchDB.Core.ExistingDocument<
-                              ClinicalDocument<BundleEntry<DiagnosticReport>>
+                            item as ClinicalDocument<
+                              BundleEntry<DiagnosticReport>
                             >
                           }
                         />

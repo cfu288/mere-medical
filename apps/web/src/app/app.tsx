@@ -22,7 +22,7 @@ import {
 } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 
-import { PouchDbProvider } from '../components/PouchDbProvider';
+import { RxDbProvider } from '../components/RxDbProvider';
 import ConnectionTab from '../pages/ConnectionTab';
 import OnPatientRedirect from '../pages/OnPatientRedirect';
 import TimelineTab from '../pages/TimelineTab';
@@ -34,7 +34,7 @@ setupIonicReact();
 
 const App: React.FC = () => {
   return (
-    <PouchDbProvider>
+    <RxDbProvider>
       <IonApp>
         <IonReactRouter>
           <IonTabs>
@@ -79,7 +79,7 @@ const App: React.FC = () => {
           </IonTabs>
         </IonReactRouter>
       </IonApp>
-    </PouchDbProvider>
+    </RxDbProvider>
   );
 };
 

@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { BaseDocument } from '../models/BaseDocument';
 import { ConnectionDocument } from '../models/ConnectionDocument';
-import { usePouchDb } from '../components/PouchDbProvider';
+import { DatabaseCollections, useRxDb } from '../components/RxDbProvider';
 import image from '../img/onpatient_logo.jpeg';
 import { differenceInDays, format, parseISO } from 'date-fns';
+import { RxDatabase, RxDocument } from 'rxdb';
 
 export function ConnectionCard({
   item,
@@ -11,22 +12,22 @@ export function ConnectionCard({
   refreshToken,
   fetchData,
 }: {
-  item: ConnectionDocument;
+  item: RxDocument<ConnectionDocument>;
   getList: () => void;
   fetchData: (
-    connectionDocument: ConnectionDocument,
-    db: PouchDB.Database<{}>
+    connectionDocument: RxDocument<ConnectionDocument>,
+    db: RxDatabase<DatabaseCollections>
   ) => Promise<any>;
   refreshToken: (
     refToken: string,
-    lastDoc: PouchDB.Core.ExistingDocument<ConnectionDocument>
+    lastDoc: RxDocument<ConnectionDocument>
   ) => void;
 }) {
-  const db = usePouchDb(),
+  const db = useRxDb(),
     removeDocument = (document: BaseDocument) => {
-      db.destroy();
-      // db.remove(document);
-      // getList();
+      db.remove().then(() => {
+        console.log('db deleted');
+      });
     },
     [syncing, setSyncing] = useState(false);
 
@@ -57,7 +58,7 @@ export function ConnectionCard({
         <div className="flex-1 truncate">
           <div className="flex items-center space-x-3">
             <h3 className="text-gray-900 text-sm font-medium truncate uppercase">
-              {item.source}
+              {item.get('source')}
             </h3>
             {/* <span className="flex-shrink-0 inline-block px-2 py-0.5 text-green-800 text-xs font-medium bg-green-100 rounded-full">
               {item.expires_in}
@@ -108,7 +109,9 @@ export function ConnectionCard({
                 .then(() => {
                   setSyncing(false);
                 })
-                .catch(() => {
+                .catch((e) => {
+                  alert(`Error: ${e}`);
+                  console.error(e);
                   setSyncing(false);
                 });
             }}

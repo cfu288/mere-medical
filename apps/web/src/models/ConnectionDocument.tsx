@@ -1,4 +1,4 @@
-import { BaseDocument } from "./BaseDocument";
+import { BaseDocument } from './BaseDocument';
 
 export interface ConnectionDocument extends BaseDocument {
   access_token: string;
@@ -14,5 +14,5 @@ export interface ConnectionDocument extends BaseDocument {
 
 export type CreateConnectionDocument = Omit<
   ConnectionDocument,
-  "_rev" | "last_refreshed"
+  'last_refreshed'
 >;

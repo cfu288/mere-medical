@@ -1,17 +1,17 @@
-import { BaseDocument } from "./BaseDocument";
+import { BaseDocument } from './BaseDocument';
 
 export interface ClinicalDocument<T = any> extends BaseDocument {
   source_record: string;
   data_record: {
     raw: T;
-    format: "FHIR.DSTU2";
-    content_type: "application/json";
+    format: 'FHIR.DSTU2';
+    content_type: 'application/json';
     resource_type:
-      | "immunization"
-      | "procedure"
-      | "condition"
-      | "observation"
-      | "diagnostic_report";
+      | 'immunization'
+      | 'procedure'
+      | 'condition'
+      | 'observation'
+      | 'diagnostic_report';
     version_history: T[];
   };
   metadata?: {

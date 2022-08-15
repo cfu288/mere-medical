@@ -8,42 +8,45 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import { ConnectionDocument } from '../models/ConnectionDocument';
 import { OnPatient } from '../services/OnPatient';
-import { usePouchDb } from '../components/PouchDbProvider';
+import { DatabaseCollections, useRxDb } from '../components/RxDbProvider';
 import { ConnectionCard } from '../app/ConnectionCard';
 import { isElectron } from '../utils/electron';
 import { GenericBanner } from '../app/GenericBanner';
+import { RxDatabase, RxDocument } from 'rxdb';
 
 const ConnectionTab: React.FC = () => {
-  const db = usePouchDb(),
-    [list, setList] = useState<PouchDB.Find.FindResponse<ConnectionDocument>>(),
+  const db = useRxDb(),
+    [list, setList] = useState<RxDocument<ConnectionDocument>[]>(),
     loginUrl = OnPatient.getLoginUrl(),
     getList = useCallback(() => {
-      db.find({
-        selector: { type: 'connection' },
-      }).then((list) => {
-        console.log(list);
-        setList(list as PouchDB.Find.FindResponse<ConnectionDocument>);
-      });
+      db.connection_documents
+        .find({
+          selector: {},
+        })
+        .exec()
+        .then((list) => {
+          console.log('List');
+          console.log(list);
+          setList(list as unknown as RxDocument<ConnectionDocument>[]);
+        });
     }, [db]),
     fetchData = useCallback(
       async (
-        connectionDocument: ConnectionDocument,
-        db: PouchDB.Database<{}>
+        connectionDocument: RxDocument<ConnectionDocument>,
+        db: RxDatabase<DatabaseCollections>
       ) => await OnPatient.syncAllRecords(connectionDocument, db),
       []
     ),
     refreshToken = useCallback(
-      (
-        refToken: string,
-        lastDoc: PouchDB.Core.ExistingDocument<ConnectionDocument>
-      ) => {
+      (refToken: string, lastDoc: RxDocument<ConnectionDocument>) => {
         OnPatient.getAccessTokenFromRefreshToken(refToken)
           .then((codeRes) => {
             const dbentry: ConnectionDocument = {
               ...lastDoc,
               ...codeRes,
             };
-            db.put(dbentry)
+            db.connection_documents
+              .insert(dbentry)
               .then(() => getList())
               .catch((e) => {
                 alert(`Unable to save new connection: ${e}`);
@@ -71,7 +74,7 @@ const ConnectionTab: React.FC = () => {
       </IonHeader>
       <IonContent fullscreen>
         <ul className="grid grid-cols-1 gap-4 p-4">
-          {list?.docs.map((item) => (
+          {list?.map((item) => (
             <ConnectionCard
               key={item._id}
               item={item}
