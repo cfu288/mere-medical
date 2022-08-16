@@ -6,6 +6,7 @@ import {
   Condition,
   DiagnosticReport,
   Observation,
+  MedicationStatement,
 } from 'fhir/r2';
 import { ConnectionDocument } from '../models/ConnectionDocument';
 import { v4 as uuidv4 } from 'uuid';
@@ -31,6 +32,30 @@ export namespace DSTU2 {
         date: procedure.resource?.performedDateTime,
         display_name: procedure.resource?.code.text,
         merge_key: `"procedure_"${procedure.resource?.performedDateTime}_${procedure.resource?.code.text}`,
+      },
+    };
+    return cd;
+  }
+
+  export function mapMedicationStatementToCreateClinicalDocument(
+    procedure: BundleEntry<MedicationStatement>,
+    connectionDocument: ConnectionDocument
+  ) {
+    const cd: ClinicalDocument = {
+      _id: uuidv4(),
+      source_record: connectionDocument._id,
+      data_record: {
+        raw: procedure,
+        format: 'FHIR.DSTU2',
+        content_type: 'application/json',
+        resource_type: 'medication_statement',
+        version_history: [],
+      },
+      metadata: {
+        id: 'procedure_' + procedure.resource?.id,
+        date: procedure.resource?.dateAsserted,
+        display_name: procedure.resource?.medicationCodeableConcept?.text,
+        merge_key: `"procedure_"${procedure.resource?.dateAsserted}_${procedure.resource?.medicationCodeableConcept?.text}`,
       },
     };
     return cd;

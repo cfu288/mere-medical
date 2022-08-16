@@ -7,7 +7,6 @@ import {
 } from '@ionic/react';
 import { useEffect } from 'react';
 import { useHistory } from 'react-router';
-import ExploreContainer from '../components/ExploreContainer';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateConnectionDocument } from '../models/ConnectionDocument';
 import { useRxDb } from '../components/RxDbProvider';
@@ -87,9 +86,7 @@ const OnPatientRedirect: React.FC = () => {
           <IonTitle>Authenticated! Redirecting</IonTitle>
         </IonToolbar>
       </IonHeader>
-      <IonContent fullscreen>
-        <ExploreContainer name="One second..." />
-      </IonContent>
+      <IonContent fullscreen></IonContent>
     </IonPage>
   );
 };

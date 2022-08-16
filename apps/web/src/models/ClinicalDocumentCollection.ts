@@ -30,6 +30,8 @@ export const clinicalDocumentSchemaLiteral = {
         },
         resource_type: {
           type: 'string',
+          maxLength: 100,
+
           // enum: [
           //   'immunization',
           //   'procedure',
@@ -68,7 +70,7 @@ export const clinicalDocumentSchemaLiteral = {
       },
     },
   },
-  indexes: ['metadata.date'],
+  indexes: ['metadata.date', 'data_record.resource_type'],
 } as const;
 
 export const clinicalDocumentSchemaTyped = toTypedRxJsonSchema(

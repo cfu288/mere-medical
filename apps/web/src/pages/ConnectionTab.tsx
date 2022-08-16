@@ -9,10 +9,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { ConnectionDocument } from '../models/ConnectionDocument';
 import { OnPatient } from '../services/OnPatient';
 import { DatabaseCollections, useRxDb } from '../components/RxDbProvider';
-import { ConnectionCard } from '../app/ConnectionCard';
 import { isElectron } from '../utils/electron';
-import { GenericBanner } from '../app/GenericBanner';
 import { RxDatabase, RxDocument } from 'rxdb';
+import { GenericBanner } from '../components/GenericBanner';
+import { ConnectionCard } from '../components/ConnectionCard';
 
 const ConnectionTab: React.FC = () => {
   const db = useRxDb(),
@@ -42,11 +42,11 @@ const ConnectionTab: React.FC = () => {
         OnPatient.getAccessTokenFromRefreshToken(refToken)
           .then((codeRes) => {
             const dbentry: ConnectionDocument = {
-              ...lastDoc,
+              ...lastDoc.toJSON(),
               ...codeRes,
             };
             db.connection_documents
-              .insert(dbentry)
+              .upsert(dbentry)
               .then(() => getList())
               .catch((e) => {
                 alert(`Unable to save new connection: ${e}`);
@@ -73,42 +73,44 @@ const ConnectionTab: React.FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen>
-        <ul className="grid grid-cols-1 gap-4 p-4">
-          {list?.map((item) => (
-            <ConnectionCard
-              key={item._id}
-              item={item}
-              getList={getList}
-              refreshToken={refreshToken}
-              fetchData={fetchData}
-            />
-          ))}
-        </ul>
-        <div className="w-full box-border	flex justify-center align-middle">
-          <IonButton
-            className="m-4 w-11/12 h-12"
-            href={isElectron() ? '' : loginUrl}
-            onClick={() => {
-              if (isElectron()) {
-                // Renderer process
-              }
-            }}
-          >
-            <p className="font-bold">Log in to OnPatient</p>
-          </IonButton>
-        </div>
-        <div className="w-full box-border	flex justify-center align-middle">
-          <IonButton
-            className="m-4 w-11/12 h-12"
-            href={isElectron() ? '' : loginUrl}
-            onClick={() => {
-              if (isElectron()) {
-                // Renderer process
-              }
-            }}
-          >
-            <p className="font-bold">Log in to Epic</p>
-          </IonButton>
+        <div className="flex flex-col max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 gap-x-4">
+          <ul className="grid grid-cols-1 py-8">
+            {list?.map((item) => (
+              <ConnectionCard
+                key={item._id}
+                item={item}
+                getList={getList}
+                refreshToken={refreshToken}
+                fetchData={fetchData}
+              />
+            ))}
+          </ul>
+          <div className="w-full box-border	flex justify-center align-middle">
+            <IonButton
+              className="m-4 w-11/12 h-12"
+              href={isElectron() ? '' : loginUrl}
+              onClick={() => {
+                if (isElectron()) {
+                  // Renderer process
+                }
+              }}
+            >
+              <p className="font-bold">Log in to OnPatient</p>
+            </IonButton>
+          </div>
+          <div className="w-full box-border	flex justify-center align-middle">
+            <IonButton
+              className="m-4 w-11/12 h-12"
+              href={isElectron() ? '' : loginUrl}
+              onClick={() => {
+                if (isElectron()) {
+                  // Renderer process
+                }
+              }}
+            >
+              <p className="font-bold">Log in to Epic</p>
+            </IonButton>
+          </div>
         </div>
       </IonContent>
     </IonPage>

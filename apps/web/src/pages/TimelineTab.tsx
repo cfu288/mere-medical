@@ -6,6 +6,7 @@ import {
   DiagnosticReport,
   FhirResource,
   Immunization,
+  MedicationStatement,
   Observation,
   Procedure,
 } from 'fhir/r2';
@@ -17,13 +18,14 @@ import {
   MergeClinicalDocument,
 } from '../models/ClinicalDocument';
 import { Routes } from '../Routes';
-import { ConditionCard } from '../app/ConditionCard';
-import { DiagnosticReportCard } from '../app/DiagnosticReportCard';
-import { ImmunizationCard } from '../app/ImmunizationCard';
-import { ObservationCard } from '../app/ObservationCard';
-import { ProcedureCard } from '../app/ProcedureCard';
-import { TimelineBanner } from '../app/TimelineBanner';
+import { ConditionCard } from '../components/ConditionCard';
 import { RxDatabase, RxDocument } from 'rxdb';
+import { DiagnosticReportCard } from '../components/DiagnosticReportCard';
+import { ImmunizationCard } from '../components/ImmunizationCard';
+import { ObservationCard } from '../components/ObservationCard';
+import { ProcedureCard } from '../components/ProcedureCard';
+import { TimelineBanner } from '../components/TimelineBanner';
+import { MedicationCard } from '../components/MedicationCard';
 
 function fetchRecords(db: RxDatabase<DatabaseCollections>) {
   return db.clinical_documents
@@ -113,7 +115,8 @@ const TimelineTab: React.FC = () => {
       </IonHeader>
       <IonContent fullscreen>
         <div className="flex flex-col max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          {!list || (Object.entries(list).length === 0 && <EmptyRecords />)}
+          {!list ||
+            (Object.entries(list).length === 0 && <EmptyRecordsPlaceholder />)}
           {list &&
             Object.entries(list).map(([key, itemList]) => (
               <div className="flex flex-row pt-12 gap-x-4" key={key}>
@@ -160,6 +163,17 @@ const TimelineTab: React.FC = () => {
                         />
                       )}
                       {item.data_record.resource_type ===
+                        'medication_statement' && (
+                        <MedicationCard
+                          key={item._id}
+                          item={
+                            item as ClinicalDocument<
+                              BundleEntry<MedicationStatement>
+                            >
+                          }
+                        />
+                      )}
+                      {item.data_record.resource_type ===
                         'diagnostic_report' && (
                         <DiagnosticReportCard
                           key={item._id}
@@ -181,7 +195,7 @@ const TimelineTab: React.FC = () => {
   );
 };
 
-function EmptyRecords() {
+function EmptyRecordsPlaceholder() {
   return (
     <Link
       to={Routes.AddConnection}

@@ -8,6 +8,7 @@ import {
   Condition,
   Observation,
   DiagnosticReport,
+  MedicationStatement,
 } from 'fhir/r2';
 import { RxDatabase, RxDocument } from 'rxdb';
 import { DatabaseCollections } from '../components/RxDbProvider';
@@ -129,6 +130,26 @@ export namespace OnPatient {
 
     if (res.entry) {
       return res.entry as BundleEntry<DiagnosticReport>[];
+    }
+    return [];
+  }
+
+  async function getMedicationStatements(
+    connectionDocument: RxDocument<ConnectionDocument>
+  ): Promise<BundleEntry<MedicationStatement>[]> {
+    const res = await fetch(
+      `https://onpatient.com/api/fhir/MedicationStatement`,
+      {
+        headers: {
+          Authorization: `Bearer ${connectionDocument.get('access_token')}`,
+        },
+      }
+    )
+      .then((res) => res.json())
+      .then((res: Bundle) => res);
+
+    if (res.entry) {
+      return res.entry as BundleEntry<MedicationStatement>[];
     }
     return [];
   }
@@ -295,6 +316,38 @@ export namespace OnPatient {
     return await Promise.all(cdsmap);
   }
 
+  async function syncMedicationStatements(
+    connectionDocument: RxDocument<ConnectionDocument>,
+    db: RxDatabase<DatabaseCollections>
+  ) {
+    const medStmts = await getMedicationStatements(connectionDocument);
+    const cds = medStmts.map((mdst) =>
+      DSTU2.mapMedicationStatementToCreateClinicalDocument(
+        mdst,
+        connectionDocument.toJSON()
+      )
+    );
+    const cdsmap = cds.map(async (cd) => {
+      const exists = await db.clinical_documents
+        .find({
+          selector: {
+            $and: [
+              { 'metadata.id': `${cd.metadata?.id}` },
+              { source_record: `${cd.source_record}` },
+            ],
+          },
+        })
+        .exec();
+      if (exists.length > 0) {
+        console.log(`Skipped record ${cd._id}`);
+      } else {
+        await db.clinical_documents.insert(cd as ClinicalDocumentType);
+        console.log(`Saved record ${cd._id}`);
+      }
+    });
+    return await Promise.all(cdsmap);
+  }
+
   export async function syncAllRecords(
     connectionDocument: RxDocument<ConnectionDocument>,
     db: RxDatabase<DatabaseCollections>
@@ -308,6 +361,7 @@ export namespace OnPatient {
       syncConditions(connectionDocument, db),
       syncObservations(connectionDocument, db),
       syncDiagnosticReport(connectionDocument, db),
+      syncMedicationStatements(connectionDocument, db),
     ]);
 
     return syncJob;

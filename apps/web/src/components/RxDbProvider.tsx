@@ -5,7 +5,7 @@ import React, {
   useState,
 } from 'react';
 import logo from '../assets/logo.svg';
-import { createRxDatabase, RxDatabase } from 'rxdb';
+import { addRxPlugin, createRxDatabase, RxDatabase } from 'rxdb';
 import { Transition } from '@headlessui/react';
 import { getRxStoragePouch, addPouchPlugin } from 'rxdb/plugins/pouchdb';
 import plugin from 'pouchdb-adapter-idb';
@@ -19,10 +19,10 @@ import {
 } from '../models/ClinicalDocumentCollection';
 import { environment } from '../environments/environment';
 
-// import { RxDBDevModePlugin } from 'rxdb/plugins/dev-mode';
-// import { RxDBMigrationPlugin } from 'rxdb/plugins/migration';
-// addRxPlugin(RxDBMigrationPlugin);
-// addRxPlugin(RxDBDevModePlugin);
+import { RxDBDevModePlugin } from 'rxdb/plugins/dev-mode';
+import { RxDBMigrationPlugin } from 'rxdb/plugins/migration';
+addRxPlugin(RxDBMigrationPlugin);
+addRxPlugin(RxDBDevModePlugin);
 
 addPouchPlugin(plugin);
 
