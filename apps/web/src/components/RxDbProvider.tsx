@@ -11,7 +11,7 @@ import { getRxStoragePouch, addPouchPlugin } from 'rxdb/plugins/pouchdb';
 import plugin from 'pouchdb-adapter-idb';
 import {
   ConnectionDocumentCollection,
-  connectionDocumentSchema,
+  ConnectionDocumentSchema,
 } from '../models/ConnectionDocumentCollection';
 import {
   ClinicalDocumentCollection,
@@ -21,6 +21,10 @@ import { environment } from '../environments/environment';
 
 import { RxDBDevModePlugin } from 'rxdb/plugins/dev-mode';
 import { RxDBMigrationPlugin } from 'rxdb/plugins/migration';
+import {
+  UserDocumentCollection,
+  UserDocumentSchema,
+} from '../models/UserDocumentCollection';
 addRxPlugin(RxDBMigrationPlugin);
 addRxPlugin(RxDBDevModePlugin);
 
@@ -29,6 +33,7 @@ addPouchPlugin(plugin);
 export type DatabaseCollections = {
   clinical_documents: ClinicalDocumentCollection;
   connection_documents: ConnectionDocumentCollection;
+  user_documents: UserDocumentCollection;
 };
 
 const RxDbContext = React.createContext<
@@ -50,7 +55,10 @@ async function initRxDb() {
       schema: ClinicalDocumentSchema,
     },
     connection_documents: {
-      schema: connectionDocumentSchema,
+      schema: ConnectionDocumentSchema,
+    },
+    user_documents: {
+      schema: UserDocumentSchema,
     },
   });
 

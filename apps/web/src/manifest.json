@@ -1,0 +1,16 @@
+{
+  "short_name": "Mari",
+  "name": "Mari: Personal Medical Record Management",
+  "description": "Personal Medical Record Management",
+  "icons": [
+    {
+      "src": "/assets/icon/icon.png",
+      "type": "image/png",
+      "sizes": "1024x1024"
+    }
+  ],
+  "start_url": ".",
+  "background_color": "#006183",
+  "display": "standalone",
+  "theme_color": "#006183"
+}

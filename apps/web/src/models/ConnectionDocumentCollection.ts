@@ -52,11 +52,11 @@ export const connectionSchemaTyped = toTypedRxJsonSchema(
   connectionSchemaLiteral
 );
 
-export type ConnectionDocumentType = ExtractDocumentTypeFromTypedRxJsonSchema<
+type ConnectionDocumentType = ExtractDocumentTypeFromTypedRxJsonSchema<
   typeof connectionSchemaTyped
 >;
 
-export const connectionDocumentSchema: RxJsonSchema<ConnectionDocumentType> =
+export const ConnectionDocumentSchema: RxJsonSchema<ConnectionDocumentType> =
   connectionSchemaLiteral;
 
 export type ConnectionDocumentCollection = RxCollection<ConnectionDocumentType>;

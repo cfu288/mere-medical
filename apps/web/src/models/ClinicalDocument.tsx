@@ -12,7 +12,8 @@ export interface ClinicalDocument<T = any> extends BaseDocument {
       | 'condition'
       | 'observation'
       | 'diagnostic_report'
-      | 'medication_statement';
+      | 'medication_statement'
+      | 'patient';
     version_history: T[];
   };
   metadata?: {

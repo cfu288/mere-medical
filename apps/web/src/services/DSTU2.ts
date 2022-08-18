@@ -7,151 +7,185 @@ import {
   DiagnosticReport,
   Observation,
   MedicationStatement,
+  Patient,
 } from 'fhir/r2';
 import { ConnectionDocument } from '../models/ConnectionDocument';
 import { v4 as uuidv4 } from 'uuid';
 import { ClinicalDocument } from '../models/ClinicalDocument';
+import { UserDocument } from '../models/UserDocument';
 
 export namespace DSTU2 {
   export function mapProcedureToCreateClinicalDocument(
-    procedure: BundleEntry<Procedure>,
+    bundleItem: BundleEntry<Procedure>,
     connectionDocument: ConnectionDocument
   ) {
     const cd: ClinicalDocument = {
       _id: uuidv4(),
       source_record: connectionDocument._id,
       data_record: {
-        raw: procedure,
+        raw: bundleItem,
         format: 'FHIR.DSTU2',
         content_type: 'application/json',
         resource_type: 'procedure',
         version_history: [],
       },
       metadata: {
-        id: 'procedure_' + procedure.resource?.id,
-        date: procedure.resource?.performedDateTime,
-        display_name: procedure.resource?.code.text,
-        merge_key: `"procedure_"${procedure.resource?.performedDateTime}_${procedure.resource?.code.text}`,
+        id: 'procedure_' + bundleItem.resource?.id,
+        date: bundleItem.resource?.performedDateTime,
+        display_name: bundleItem.resource?.code.text,
+        merge_key: `"procedure_"${bundleItem.resource?.performedDateTime}_${bundleItem.resource?.code.text}`,
       },
     };
     return cd;
   }
 
   export function mapMedicationStatementToCreateClinicalDocument(
-    procedure: BundleEntry<MedicationStatement>,
+    bundleItem: BundleEntry<MedicationStatement>,
     connectionDocument: ConnectionDocument
   ) {
     const cd: ClinicalDocument = {
       _id: uuidv4(),
       source_record: connectionDocument._id,
       data_record: {
-        raw: procedure,
+        raw: bundleItem,
         format: 'FHIR.DSTU2',
         content_type: 'application/json',
         resource_type: 'medication_statement',
         version_history: [],
       },
       metadata: {
-        id: 'procedure_' + procedure.resource?.id,
-        date: procedure.resource?.dateAsserted,
-        display_name: procedure.resource?.medicationCodeableConcept?.text,
-        merge_key: `"procedure_"${procedure.resource?.dateAsserted}_${procedure.resource?.medicationCodeableConcept?.text}`,
+        id: 'medication_statement_' + bundleItem.resource?.id,
+        date: bundleItem.resource?.dateAsserted,
+        display_name: bundleItem.resource?.medicationCodeableConcept?.text,
+        merge_key: `"medication_statement_"${bundleItem.resource?.dateAsserted}_${bundleItem.resource?.medicationCodeableConcept?.text}`,
       },
     };
     return cd;
   }
 
   export function mapObservationToCreateClinicalDocument(
-    procedure: BundleEntry<Observation>,
+    bundleItem: BundleEntry<Observation>,
     connectionDocument: ConnectionDocument
   ) {
     const cd: ClinicalDocument = {
       _id: uuidv4(),
       source_record: connectionDocument._id,
       data_record: {
-        raw: procedure,
+        raw: bundleItem,
         format: 'FHIR.DSTU2',
         content_type: 'application/json',
         resource_type: 'observation',
         version_history: [],
       },
       metadata: {
-        id: 'observation_' + procedure.resource?.id,
-        date: procedure.resource?.effectiveDateTime,
-        display_name: procedure.resource?.code.text,
-        merge_key: `"observation_"${procedure.resource?.effectiveDateTime}_${procedure.resource?.code.text}`,
+        id: 'observation_' + bundleItem.resource?.id,
+        date: bundleItem.resource?.effectiveDateTime,
+        display_name: bundleItem.resource?.code.text,
+        merge_key: `"observation_"${bundleItem.resource?.effectiveDateTime}_${bundleItem.resource?.code.text}`,
       },
     };
     return cd;
   }
 
   export function mapDiagnosticReportToCreateClinicalDocument(
-    procedure: BundleEntry<DiagnosticReport>,
+    bundleItem: BundleEntry<DiagnosticReport>,
     connectionDocument: ConnectionDocument
   ) {
     const cd: ClinicalDocument = {
       _id: uuidv4(),
       source_record: connectionDocument._id,
       data_record: {
-        raw: procedure,
+        raw: bundleItem,
         format: 'FHIR.DSTU2',
         content_type: 'application/json',
         resource_type: 'diagnostic_report',
         version_history: [],
       },
       metadata: {
-        id: 'diagnostic_report_' + procedure.resource?.id,
-        date: procedure.resource?.effectiveDateTime,
-        display_name: procedure.resource?.code.text,
-        merge_key: `"diagnostic_report_"${procedure.resource?.effectiveDateTime}_${procedure.resource?.code.text}`,
+        id: 'diagnostic_report_' + bundleItem.resource?.id,
+        date: bundleItem.resource?.effectiveDateTime,
+        display_name: bundleItem.resource?.code.text,
+        merge_key: `"diagnostic_report_"${bundleItem.resource?.effectiveDateTime}_${bundleItem.resource?.code.text}`,
+      },
+    };
+    return cd;
+  }
+
+  export function mapPatientToUserDocument(bundleItem: BundleEntry<Patient>) {
+    const userDoc: UserDocument = {
+      _id: uuidv4(),
+      gender: bundleItem.resource?.gender,
+      birthday: bundleItem.resource?.birthDate,
+      first_name: bundleItem.resource?.name?.[0].given?.[0],
+      last_name: bundleItem.resource?.name?.[0].family?.[0],
+    };
+    return userDoc;
+  }
+
+  export function mapPatientToCreateClinicalDocument(
+    bundleItem: BundleEntry<Patient>,
+    connectionDocument: ConnectionDocument
+  ) {
+    const cd: ClinicalDocument = {
+      _id: uuidv4(),
+      source_record: connectionDocument._id,
+      data_record: {
+        raw: bundleItem,
+        format: 'FHIR.DSTU2',
+        content_type: 'application/json',
+        resource_type: 'patient',
+        version_history: [],
+      },
+      metadata: {
+        id: 'patient_' + bundleItem.resource?.id,
       },
     };
     return cd;
   }
 
   export function mapImmunizationToCreateClinicalDocument(
-    procedure: BundleEntry<Immunization>,
+    bundleItem: BundleEntry<Immunization>,
     connectionDocument: ConnectionDocument
   ) {
     const cd: ClinicalDocument = {
       _id: uuidv4(),
       source_record: connectionDocument._id,
       data_record: {
-        raw: procedure,
+        raw: bundleItem,
         format: 'FHIR.DSTU2',
         content_type: 'application/json',
         resource_type: 'immunization',
         version_history: [],
       },
       metadata: {
-        id: 'immunization_' + procedure.resource?.id,
-        date: procedure.resource?.date,
-        display_name: procedure.resource?.vaccineCode.text,
-        merge_key: `"immunization_"${procedure.resource?.date}_${procedure.resource?.vaccineCode.text}`,
+        id: 'immunization_' + bundleItem.resource?.id,
+        date: bundleItem.resource?.date,
+        display_name: bundleItem.resource?.vaccineCode.text,
+        merge_key: `"immunization_"${bundleItem.resource?.date}_${bundleItem.resource?.vaccineCode.text}`,
       },
     };
     return cd;
   }
 
   export function mapConditionToCreateClinicalDocument(
-    procedure: BundleEntry<Condition>,
+    bundleItem: BundleEntry<Condition>,
     connectionDocument: ConnectionDocument
   ) {
     const cd: ClinicalDocument = {
       _id: uuidv4(),
       source_record: connectionDocument._id,
       data_record: {
-        raw: procedure,
+        raw: bundleItem,
         format: 'FHIR.DSTU2',
         content_type: 'application/json',
         resource_type: 'condition',
         version_history: [],
       },
       metadata: {
-        id: 'condition_' + procedure.resource?.id,
-        date: procedure.resource?.dateRecorded,
-        display_name: procedure.resource?.code.text,
-        merge_key: `"condition_"${procedure.resource?.dateRecorded}_${procedure.resource?.code.text}`,
+        id: 'condition_' + bundleItem.resource?.id,
+        date: bundleItem.resource?.dateRecorded,
+        display_name: bundleItem.resource?.code.text,
+        merge_key: `"condition_"${bundleItem.resource?.dateRecorded}_${bundleItem.resource?.code.text}`,
       },
     };
     return cd;

@@ -9,6 +9,7 @@ import {
   Observation,
   DiagnosticReport,
   MedicationStatement,
+  Patient,
 } from 'fhir/r2';
 import { RxDatabase, RxDocument } from 'rxdb';
 import { DatabaseCollections } from '../components/RxDbProvider';
@@ -33,9 +34,8 @@ export namespace OnPatient {
   ): Promise<OnPatientAuthResponse> {
     const params = {
       grant_type: 'refresh_token',
-      client_id: 'a1xHQJ2nqn4NjtIJqaGCRezsL7EqxddvJd3NrqcK',
-      client_secret:
-        'vsWuUM3ioU06Pd737fPoAWhkV5aBlU8PK7XFJ5AeOrhMSlc8UnoEnNqnFYfesj98eZjnZITxx9Aos7XFHuU9BoFXBbaSXJ3J93gMrT9qtyTHIVDwY5yIMTj2EkPCFXwC',
+      client_id: environment.onpatient_client_id,
+      client_secret: environment.onpatient_client_secret,
       redirect_uri: 'https://localhost:3000/tab2',
       refresh_token: refreshToken,
     };
@@ -154,6 +154,53 @@ export namespace OnPatient {
     return [];
   }
 
+  async function getPatients(
+    connectionDocument: RxDocument<ConnectionDocument>
+  ): Promise<BundleEntry<Patient>[]> {
+    const res = await fetch(`https://onpatient.com/api/fhir/Patient`, {
+      headers: {
+        Authorization: `Bearer ${connectionDocument.get('access_token')}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((res: Bundle) => res);
+
+    if (res.entry) {
+      return res.entry as BundleEntry<Patient>[];
+    }
+    return [];
+  }
+
+  async function syncPatients(
+    connectionDocument: RxDocument<ConnectionDocument>,
+    db: RxDatabase<DatabaseCollections>
+  ) {
+    const pts = await getPatients(connectionDocument);
+    const uds = pts.map((pt) =>
+      DSTU2.mapPatientToCreateClinicalDocument(pt, connectionDocument)
+    );
+    const udsmap = uds.map(async (cd) => {
+      const exists = await db.user_documents
+        .findOne({
+          selector: {
+            $and: [
+              { 'metadata.id': `${cd.metadata?.id}` },
+              { source_record: `${cd.source_record}` },
+            ],
+          },
+        })
+        .exec();
+
+      if (exists) {
+        console.log(`Skipped record ${cd._id}`);
+      } else {
+        await db.user_documents.insert(cd as ClinicalDocumentType);
+        console.log(`Saved record ${cd._id}`);
+      }
+    });
+    return await Promise.all(udsmap);
+  }
+
   async function syncDiagnosticReport(
     connectionDocument: RxDocument<ConnectionDocument>,
     db: RxDatabase<DatabaseCollections>
@@ -165,7 +212,6 @@ export namespace OnPatient {
         connectionDocument.toJSON()
       )
     );
-    console.log(cds);
     const cdsmap = cds.map(async (cd) => {
       const exists = await db.clinical_documents
         .findOne({
@@ -354,15 +400,16 @@ export namespace OnPatient {
   ): Promise<(void | void[])[]> {
     const newCd = connectionDocument.toMutableJSON();
     newCd.last_refreshed = new Date().toISOString();
-    await db.connection_documents.upsert(newCd);
-    const syncJob = Promise.all([
+    const syncJob = await Promise.all([
       syncImmunizations(connectionDocument, db),
       syncProcedures(connectionDocument, db),
       syncConditions(connectionDocument, db),
       syncObservations(connectionDocument, db),
       syncDiagnosticReport(connectionDocument, db),
       syncMedicationStatements(connectionDocument, db),
+      syncPatients(connectionDocument, db),
     ]);
+    await db.connection_documents.upsert(newCd);
 
     return syncJob;
   }
