@@ -5,16 +5,17 @@ FROM node:18
 WORKDIR /app
 
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
-COPY package*.json ./
+COPY package*.json /app/
 
 # Install app dependencies
 RUN npm install
 
 # Bundle app source
-COPY . .
+COPY . /app/
 
 # Creates a "dist" folder with the production build
-RUN npm run build
+RUN npx nx build api
 
 # Start the server using the production build
-CMD [ "node", "/app/dist/apps/api" ]
+CMD [ "node", "dist/apps/api/main.js" ]
+# CMD [ "ls", "dist/apps" ]
