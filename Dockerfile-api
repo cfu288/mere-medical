@@ -14,7 +14,7 @@ RUN npm install
 COPY . /app/
 
 # Creates a "dist" folder with the production build
-RUN npx nx build api
+RUN npx nx build api:build:production  
 
 # Start the server using the production build
 CMD [ "node", "dist/apps/api/main.js" ]

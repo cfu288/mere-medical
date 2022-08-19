@@ -15,6 +15,9 @@ async function bootstrap() {
   const globalPrefix = 'api';
   // only enable ssl in dev, prod has a reverse proxy
   const ssl = environment.production === false;
+  Logger.log(
+    `Running in ${environment.production ? 'production' : 'development'} mode`
+  );
   let httpsOptions = null;
   if (ssl) {
     const keyPath = '../../../dev-stack/certs/localhost-key.pem' || '';
@@ -30,7 +33,9 @@ async function bootstrap() {
   const port = process.env.PORT || 4201;
   await app.listen(port);
   Logger.log(
-    `🚀 Application is running on: https://localhost:${port}/${globalPrefix}`
+    `🚀 Application is running on: http${
+      ssl ? 's' : ''
+    }://localhost:${port}/${globalPrefix}`
   );
 }
 
