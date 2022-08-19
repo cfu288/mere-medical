@@ -26,7 +26,7 @@ export function ShowObservationResultsExpandable({
   );
 
   return (
-    <div>
+    <div key={item._id}>
       <div className="relative py-2">
         <div className="absolute inset-0 flex items-center" aria-hidden="true">
           <div className="w-full border-t border-gray-300" />
@@ -44,21 +44,21 @@ export function ShowObservationResultsExpandable({
         </div>
       </div>
       <div className={`${expanded ? '' : 'hidden'}`}>
-        {list?.map((item) => (
+        {list?.map((list_item) => (
           <div
-            key={item.id}
+            key={list_item.id}
             className="flex flex-row gap-2 text-sm text-gray-600"
           >
-            {!(item.resource as Observation)?.dataAbsentReason && (
+            {!(list_item.resource as Observation)?.dataAbsentReason && (
               <>
-                <div>{item.resource?.category?.text} result: </div>
+                <div>{list_item.resource?.category?.text} result: </div>
                 <div>
-                  {(item.resource as Observation)?.interpretation?.text ||
-                    (item.resource as Observation)?.valueString}
+                  {(list_item.resource as Observation)?.interpretation?.text ||
+                    (list_item.resource as Observation)?.valueString}
                 </div>
                 <div>
-                  {(item.resource as Observation)?.valueQuantity?.value}{' '}
-                  {(item.resource as Observation)?.valueQuantity?.unit}
+                  {(list_item.resource as Observation)?.valueQuantity?.value}
+                  {(list_item.resource as Observation)?.valueQuantity?.unit}
                 </div>
               </>
             )}

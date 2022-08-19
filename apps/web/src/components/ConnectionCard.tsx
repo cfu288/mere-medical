@@ -32,7 +32,8 @@ export function ConnectionCard({
     [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
-    if (!item.last_refreshed) {
+    console.log(item.toJSON());
+    if (!item.get('last_refreshed')) {
       setSyncing(true);
       fetchData(item, db)
         .then(() => {
@@ -60,27 +61,21 @@ export function ConnectionCard({
             <h3 className="text-gray-900 text-sm font-medium truncate uppercase">
               {item.get('source')}
             </h3>
-            {/* <span className="flex-shrink-0 inline-block px-2 py-0.5 text-green-800 text-xs font-medium bg-green-100 rounded-full">
-              {item.expires_in}
-            </span> */}
           </div>
           <p className="mt-1 text-gray-500 text-sm truncate">
             Connected
-            {item.last_refreshed &&
-              (differenceInDays(parseISO(item.last_refreshed), new Date()) >= 1
+            {item.get('last_refreshed') &&
+              (differenceInDays(
+                parseISO(item.get('last_refreshed')),
+                new Date()
+              ) >= 1
                 ? ` - synced on ${format(
-                    parseISO(item.last_refreshed),
+                    parseISO(item.get('last_refreshed')),
                     'MMM dd'
                   )}`
                 : ` - synced at 
-          ${format(parseISO(item.last_refreshed), 'p')}`)}
+          ${format(parseISO(item.get('last_refreshed')), 'p')}`)}
           </p>
-          {/* <p className="mt-1 text-gray-500 text-sm truncate">
-            {item.access_token}
-          </p>
-          <p className="mt-1 text-gray-300 text-sm truncate">
-            {item.refresh_token}
-          </p> */}
         </div>
       </div>
       <div>

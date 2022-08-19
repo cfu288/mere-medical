@@ -1,10 +1,4 @@
-import {
-  IonContent,
-  IonHeader,
-  IonPage,
-  IonTitle,
-  IonToolbar,
-} from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle } from '@ionic/react';
 import { useEffect } from 'react';
 import { useHistory } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
@@ -52,8 +46,6 @@ const OnPatientRedirect: React.FC = () => {
         .then((codeRes: OnPatientAuthResponse) => {
           const dbentry: CreateConnectionDocument = {
             _id: uuidv4(),
-            // type: 'connection',
-            //  version: 1,
             source: 'onpatient',
             location: 'https://onpatient.com',
             ...codeRes,
@@ -63,7 +55,6 @@ const OnPatientRedirect: React.FC = () => {
             .insert(dbentry)
             .then(() => {
               console.log('Saved!');
-              // redirect
               history.push(Routes.AddConnection);
             })
             .catch((e: any) => {

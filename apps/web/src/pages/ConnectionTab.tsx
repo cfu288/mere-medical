@@ -1,10 +1,4 @@
-import {
-  IonContent,
-  IonHeader,
-  IonPage,
-  IonToolbar,
-  IonButton,
-} from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonButton } from '@ionic/react';
 import { useCallback, useEffect, useState } from 'react';
 import { ConnectionDocument } from '../models/ConnectionDocument';
 import { OnPatient } from '../services/OnPatient';
@@ -25,8 +19,6 @@ const ConnectionTab: React.FC = () => {
         })
         .exec()
         .then((list) => {
-          console.log('List');
-          console.log(list);
           setList(list as unknown as RxDocument<ConnectionDocument>[]);
         });
     }, [db]),

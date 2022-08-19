@@ -44,8 +44,10 @@ export const connectionSchemaLiteral = {
     },
     last_refreshed: {
       type: 'string',
+      maxLength: 100,
     },
   },
+  indexes: ['last_refreshed'],
 } as const;
 
 export const connectionSchemaTyped = toTypedRxJsonSchema(

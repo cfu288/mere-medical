@@ -192,10 +192,10 @@ export namespace OnPatient {
         .exec();
 
       if (exists) {
-        console.log(`Skipped record ${cd._id}`);
+        // console.log(`Skipped record ${cd._id}`);
       } else {
         await db.user_documents.insert(cd as ClinicalDocumentType);
-        console.log(`Saved record ${cd._id}`);
+        // console.log(`Saved record ${cd._id}`);
       }
     });
     return await Promise.all(udsmap);
@@ -225,10 +225,10 @@ export namespace OnPatient {
         .exec();
 
       if (exists) {
-        console.log(`Skipped record ${cd._id}`);
+        // console.log(`Skipped record ${cd._id}`);
       } else {
         await db.clinical_documents.insert(cd as ClinicalDocumentType);
-        console.log(`Saved record ${cd._id}`);
+        // console.log(`Saved record ${cd._id}`);
       }
     });
     return await Promise.all(cdsmap);
@@ -257,10 +257,10 @@ export namespace OnPatient {
         })
         .exec();
       if (exists.length > 0) {
-        console.log(`Skipped record ${cd._id}`);
+        // console.log(`Skipped record ${cd._id}`);
       } else {
         await db.clinical_documents.insert(cd as ClinicalDocumentType);
-        console.log(`Saved record ${cd._id}`);
+        // console.log(`Saved record ${cd._id}`);
       }
     });
     return await Promise.all(cdsmap);
@@ -289,10 +289,10 @@ export namespace OnPatient {
         })
         .exec();
       if (exists.length > 0) {
-        console.log(`Skipped record ${cd._id}`);
+        // console.log(`Skipped record ${cd._id}`);
       } else {
         await db.clinical_documents.insert(cd as ClinicalDocumentType);
-        console.log(`Saved record ${cd._id}`);
+        // console.log(`Saved record ${cd._id}`);
       }
     });
     return await Promise.all(cdsmap);
@@ -321,10 +321,10 @@ export namespace OnPatient {
         })
         .exec();
       if (exists.length > 0) {
-        console.log(`Skipped record ${cd._id}`);
+        // console.log(`Skipped record ${cd._id}`);
       } else {
         await db.clinical_documents.insert(cd as ClinicalDocumentType);
-        console.log(`Saved record ${cd._id}`);
+        // console.log(`Saved record ${cd._id}`);
       }
     });
     return await Promise.all(cdsmap);
@@ -353,10 +353,10 @@ export namespace OnPatient {
         })
         .exec();
       if (exists.length > 0) {
-        console.log(`Skipped record ${cd._id}`);
+        // console.log(`Skipped record ${cd._id}`);
       } else {
         await db.clinical_documents.insert(cd as ClinicalDocumentType);
-        console.log(`Saved record ${cd._id}`);
+        // console.log(`Saved record ${cd._id}`);
       }
     });
     return await Promise.all(cdsmap);
@@ -385,10 +385,10 @@ export namespace OnPatient {
         })
         .exec();
       if (exists.length > 0) {
-        console.log(`Skipped record ${cd._id}`);
+        // console.log(`Skipped record ${cd._id}`);
       } else {
         await db.clinical_documents.insert(cd as ClinicalDocumentType);
-        console.log(`Saved record ${cd._id}`);
+        // console.log(`Saved record ${cd._id}`);
       }
     });
     return await Promise.all(cdsmap);
@@ -397,7 +397,7 @@ export namespace OnPatient {
   export async function syncAllRecords(
     connectionDocument: RxDocument<ConnectionDocument>,
     db: RxDatabase<DatabaseCollections>
-  ): Promise<(void | void[])[]> {
+  ): Promise<any[][]> {
     const newCd = connectionDocument.toMutableJSON();
     newCd.last_refreshed = new Date().toISOString();
     const syncJob = await Promise.all([
@@ -408,8 +408,8 @@ export namespace OnPatient {
       syncDiagnosticReport(connectionDocument, db),
       syncMedicationStatements(connectionDocument, db),
       syncPatients(connectionDocument, db),
+      db.connection_documents.upsert(newCd).then(() => []),
     ]);
-    await db.connection_documents.upsert(newCd);
 
     return syncJob;
   }
