@@ -30,7 +30,7 @@ steps:
         - rm docker-compose.prod.yaml
     depends_on:
       - frontend
-      - backend
+      # - backend
 
 services:
   - name: docker
