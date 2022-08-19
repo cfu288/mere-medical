@@ -9,13 +9,13 @@ services:
     image: registry.mari.casa/mari-medical-api:latest
     ports:
       - '4201:4201'
-  couchserver:
-    image: couchdb
-    restart: always
-    ports:
-      - '5984:5984'
-    environment:
-      - COUCHDB_USER=admin
-      - COUCHDB_PASSWORD=YOURPASSWORD
-    volumes:
-      - /mnt/data/mari-medical/cdb:/opt/couchdb/data
+  # couchserver:
+  #   image: couchdb
+  #   restart: always
+  #   ports:
+  #     - '5984:5984'
+  #   environment:
+  #     - COUCHDB_USER=admin
+  #     - COUCHDB_PASSWORD=YOURPASSWORD
+  #   volumes:
+  #     - /mnt/data/mari-medical/cdb:/opt/couchdb/data
