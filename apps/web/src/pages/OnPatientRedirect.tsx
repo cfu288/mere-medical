@@ -82,9 +82,7 @@ const OnPatientRedirect: React.FC = () => {
   return (
     <IonPage>
       <IonHeader>
-        <IonToolbar>
-          <IonTitle>Authenticated! Redirecting</IonTitle>
-        </IonToolbar>
+        <IonTitle>Authenticated! Redirecting</IonTitle>
       </IonHeader>
       <IonContent fullscreen></IonContent>
     </IonPage>

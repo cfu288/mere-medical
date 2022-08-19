@@ -101,9 +101,7 @@ const SummaryTab: React.FC = () => {
   return (
     <IonPage>
       <IonHeader>
-        <IonToolbar>
-          <GenericBanner text="Summary" />
-        </IonToolbar>
+        <GenericBanner text="Summary" />
       </IonHeader>
       <IonContent fullscreen>
         <div className="flex flex-col max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 gap-x-4">

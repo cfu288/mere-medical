@@ -108,9 +108,7 @@ const TimelineTab: React.FC = () => {
   return (
     <IonPage>
       <IonHeader>
-        <IonToolbar>
-          <TimelineBanner />
-        </IonToolbar>
+        <TimelineBanner />
       </IonHeader>
       <IonContent fullscreen>
         <div className="flex flex-col max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

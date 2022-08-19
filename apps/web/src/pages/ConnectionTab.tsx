@@ -68,9 +68,7 @@ const ConnectionTab: React.FC = () => {
   return (
     <IonPage>
       <IonHeader>
-        <IonToolbar>
-          <GenericBanner text="ADD NEW RECORD" />
-        </IonToolbar>
+        <GenericBanner text="ADD NEW RECORD" />
       </IonHeader>
       <IonContent fullscreen>
         <div className="flex flex-col max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 gap-x-4">
