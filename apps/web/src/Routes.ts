@@ -3,4 +3,5 @@ export enum Routes {
   AddConnection = '/connections',
   Summary = '/summary',
   Settings = '/settings',
+  OnPatientCallback = '/onpatient/callback',
 }

@@ -51,7 +51,7 @@ const App: React.FC = () => {
               <Route exact path={AppRoutes.Settings}>
                 <SettingsTab />
               </Route>
-              <Route exact path="/onpatient/redirect">
+              <Route exact path={AppRoutes.OnPatientCallback}>
                 <OnPatientRedirect />
               </Route>
               <Route exact path="/">

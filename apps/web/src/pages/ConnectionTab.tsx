@@ -30,27 +30,9 @@ const ConnectionTab: React.FC = () => {
       []
     ),
     refreshToken = useCallback(
-      (refToken: string, lastDoc: RxDocument<ConnectionDocument>) => {
-        OnPatient.getAccessTokenFromRefreshToken(refToken)
-          .then((codeRes) => {
-            const dbentry: ConnectionDocument = {
-              ...lastDoc.toJSON(),
-              ...codeRes,
-            };
-            db.connection_documents
-              .upsert(dbentry)
-              .then(() => getList())
-              .catch((e) => {
-                alert(`Unable to save new connection: ${e}`);
-                console.error(e);
-              });
-          })
-          .catch((err) => {
-            alert(`OAuth rejected ${err}`);
-            console.error(err);
-          });
-      },
-      [db, getList]
+      (refToken: string, lastDoc: RxDocument<ConnectionDocument>) =>
+        ({} as unknown as any),
+      []
     );
 
   useEffect(() => {

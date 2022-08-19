@@ -3,9 +3,7 @@
 
 export const environment = {
   production: false,
-  redirect_uri: 'https://localhost:4200/onpatient/redirect',
-  onpatient_client_secret:
-    'vsWuUM3ioU06Pd737fPoAWhkV5aBlU8PK7XFJ5AeOrhMSlc8UnoEnNqnFYfesj98eZjnZITxx9Aos7XFHuU9BoFXBbaSXJ3J93gMrT9qtyTHIVDwY5yIMTj2EkPCFXwC',
+  redirect_uri: 'https://localhost:4201/api/v1/onpatient/callback',
   onpatient_client_id: 'a1xHQJ2nqn4NjtIJqaGCRezsL7EqxddvJd3NrqcK',
   database_name: 'mari_test_db',
   public_url: 'http://localhost:3000',
