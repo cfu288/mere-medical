@@ -5,6 +5,10 @@ services:
     image: registry.mari.casa/mari-medical-web:latest
     ports:
       - '4200:80'
+  api:
+    image: registry.mari.casa/mari-medical-api:latest
+    ports:
+      - '4201:4201'
   couchserver:
     image: couchdb
     restart: always

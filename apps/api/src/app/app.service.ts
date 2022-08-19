@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
+import { environment } from '../environments/environment.prod';
 
 @Injectable()
 export class AppService {
@@ -16,8 +17,8 @@ export class AppService {
       'https://onpatient.com/o/token/?' +
         new URLSearchParams({
           grant_type: 'authorization_code',
-          client_id: process.env.ONPATIENT_CLIENT_ID,
-          client_secret: process.env.ONPATIENT_CLIENT_SECRET,
+          client_id: environment.onpatient_client_id,
+          client_secret: environment.onpatient_client_secret,
           redirect_uri: 'https://mari-mu.vercel.app/api/v1/onpatient/callback',
           code: code,
         }),
