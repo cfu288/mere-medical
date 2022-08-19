@@ -1,13 +1,13 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, HttpService, Query, Req } from '@nestjs/common';
 
 import { AppService } from './app.service';
 
-@Controller()
+@Controller('v1/onpatient')
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @Get()
-  getData() {
-    return this.appService.getData();
+  @Get('callback')
+  async getData(@Query('code') code) {
+    const res = await this.appService.getData(code);
   }
 }

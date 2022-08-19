@@ -3,14 +3,14 @@ name: default
 type: docker
 
 steps:
-  - name: build and push image
+  - name: frontend
     image: docker:dind
     volumes:
       - name: dockersock
         path: /var/run
     commands:
       - sleep 20 # give docker enough time to start
-      - docker build -t mari-medical-web .
+      - docker build -f Dockerfile-web -t mari-medical-web .
       - docker tag mari-medical-web:latest registry.mari.casa/mari-medical-web:latest
       - docker push registry.mari.casa/mari-medical-web:latest
 
@@ -28,6 +28,9 @@ steps:
         - curl https://gitea.mari.casa/cfu288/mari-medical/raw/branch/main/docker-compose.yaml > docker-compose.prod.yaml
         - docker stack deploy -c docker-compose.prod.yaml mari-medical
         - rm docker-compose.prod.yaml
+    depends_on:
+      - frontend
+      - backend
 
 services:
   - name: docker
