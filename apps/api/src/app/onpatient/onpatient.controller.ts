@@ -1,4 +1,4 @@
-import { Controller, Get, HttpService, Query, Req, Res } from '@nestjs/common';
+import { Controller, Get, Query, Res } from '@nestjs/common';
 import { environment } from '../../environments/environment';
 import { Response } from 'express';
 import { OnPatientService } from './onpatient.service';

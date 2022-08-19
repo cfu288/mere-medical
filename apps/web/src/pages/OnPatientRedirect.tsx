@@ -5,7 +5,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { CreateConnectionDocument } from '../models/ConnectionDocument';
 import { useRxDb } from '../components/RxDbProvider';
 import { Routes } from '../Routes';
-import { environment } from '../environments/environment';
 
 export interface OnPatientAuthResponse {
   access_token: string;

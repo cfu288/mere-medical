@@ -1,5 +1,5 @@
 import { format, parseISO } from 'date-fns';
-import { BundleEntry, Condition, MedicationStatement } from 'fhir/r2';
+import { BundleEntry, Condition } from 'fhir/r2';
 import { ClinicalDocument } from '../models/ClinicalDocument';
 
 export function ConditionsListCard({

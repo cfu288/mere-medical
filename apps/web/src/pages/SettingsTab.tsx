@@ -1,11 +1,8 @@
-import { IonContent, IonHeader, IonPage, IonToolbar } from '@ionic/react';
-import { BundleEntry, FhirResource, Patient } from 'fhir/r2';
+import { IonContent, IonHeader, IonPage } from '@ionic/react';
 import { useEffect, useState } from 'react';
 import { RxDatabase, RxDocument } from 'rxdb';
 import { GenericBanner } from '../components/GenericBanner';
 import { DatabaseCollections, useRxDb } from '../components/RxDbProvider';
-import { ClinicalDocument } from '../models/ClinicalDocument';
-import { EmptyRecordsPlaceholder } from '../models/EmptyRecordsPlaceholder';
 import { EmptyUserPlaceholder } from '../models/EmptyUserPlaceholder';
 import { UserDocument } from '../models/UserDocument';
 

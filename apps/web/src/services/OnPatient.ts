@@ -16,7 +16,6 @@ import { DatabaseCollections } from '../components/RxDbProvider';
 import { environment } from '../environments/environment';
 import { ClinicalDocumentType } from '../models/ClinicalDocumentCollection';
 import { ConnectionDocument } from '../models/ConnectionDocument';
-import { OnPatientAuthResponse } from '../pages/OnPatientRedirect';
 import { DSTU2 } from './DSTU2';
 
 export namespace OnPatient {

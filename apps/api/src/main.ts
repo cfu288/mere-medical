@@ -6,8 +6,6 @@
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 
-import { OnPatientModule } from './app/onpatient/onpatient.module';
-
 import * as fs from 'fs';
 import * as path from 'path';
 import { environment } from './environments/environment';

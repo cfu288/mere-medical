@@ -1,4 +1,4 @@
-import { IonContent, IonHeader, IonPage, IonToolbar } from '@ionic/react';
+import { IonContent, IonHeader, IonPage } from '@ionic/react';
 import { DatabaseCollections, useRxDb } from '../components/RxDbProvider';
 import { GenericBanner } from '../components/GenericBanner';
 import { ClinicalDocument } from '../models/ClinicalDocument';
