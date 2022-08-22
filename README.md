@@ -1,32 +1,84 @@
-# MariMedical
+<a name="readme-top"></a>
 
-## Getting started
+<div align="center">
+  <img src="./logo.png" width="100" height="100" />
+  <h3 align="center">Mari Medical</h3>
 
-Serve each one on its own:
+  <p align="center">
+    A self-hosted web app to aggregate and sync all of your medical records from your patient portals in one place. Offline-first with multiple device sync supported.
+    <br />
+    <a href="https://www.marimedical.co/"><strong>Learn more »</strong></a>
+    <br />
+    <br />
+    <a href="">View Demo</a>
+  </p>
+</div>
 
+## Getting Started
+
+Here are some ways to get Mari Medical running on your local computer
+
+### Docker Compose
+
+```yaml
+version: '3.9'
+
+services:
+  web:
+    image: registry.mari.casa/mari-medical-web:latest
+    ports:
+      - '4200:80'
+  api:
+    image: registry.mari.casa/mari-medical-api:latest
+    ports:
+      - '4201:4201'
 ```
-nx serve web
-nx serve desktop
-nx serve api
-```
 
-Build and serve:
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-```
-npx nx build web
-docker build -t mari-medical-web .
-docker run -d --restart unless-stopped -p 9999:80 mari-medical-web
-```
+## Local Development
 
-Serve electron app:
+### Prerequisites
 
-```
-npx nx run-many --target=serve --projects=desktop,web
-```
+- npm
 
-Push to registry:
+### Installation
 
-```
-docker tag mari-medical-web:latest registry.mari.casa/mari-medical-web:latest                                                       git:(main|)
-docker push registry.mari.casa/mari-medical-web:latest
-```
+1. Clone the repo
+   ```sh
+   git clone https://gitea.mari.casa/cfu288/mari-medical.git
+   ```
+2. Install NPM packages
+   ```sh
+   npm install
+   ```
+3. Serve each one on its own:
+
+   ```bash
+   nx serve web
+   nx serve desktop
+   nx serve api
+   ```
+
+4. Build and serve in docker container:
+
+   ```bash
+   npx nx build web
+   docker build -t mari-medical-web .
+   docker run -d --restart unless-stopped -p 9999:80 mari-medical-web
+   ```
+
+5. Serve electron app:
+
+   ```bash
+   npx nx run-many --target=serve --projects=desktop,web
+   ```
+
+6. Push to registry:
+
+   ```bash
+   docker tag mari-medical-web:latest registry.mari.casa/mari-medical-web:latest
+   docker push registry.mari.casa/mari-medical-web:latest
+   ```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
