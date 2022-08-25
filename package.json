@@ -4,8 +4,9 @@
   "license": "MIT",
   "scripts": {
     "start": "nx serve",
-    "build": "nx build",
-    "test": "nx test"
+    "build": "nx build api:build:production",
+    "test": "nx test",
+    "serve:api": "node dist/apps/api/main.js"
   },
   "private": true,
   "dependencies": {
