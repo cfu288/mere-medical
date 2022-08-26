@@ -3,7 +3,6 @@
   "version": 2,
   "projects": {
     "api": "apps/api",
-    "desktop": "apps/desktop",
     "shared": "libs/shared",
     "web": "apps/web",
     "web-e2e": "apps/web-e2e"
