@@ -8,6 +8,10 @@
     "test": "nx test",
     "serve:api": "node dist/apps/api/main.js"
   },
+  "engines": {
+    "node": "16.13.0",
+    "npm": "8.1.0"
+  },
   "private": true,
   "dependencies": {
     "@headlessui/react": "^1.6.6",
