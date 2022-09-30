@@ -1,14 +1,22 @@
 <a name="readme-top"></a>
 
+<style>
+   a.disabled {
+      pointer-events: none;
+      cursor: default;
+   }
+</style>
+
 <div align="center">
   <img src="./images/logo.png" width="100" height="100" />
   <h3 align="center">Mari Medical</h3>
 
   <p align="center">
-    A self-hosted web app to aggregate and sync all of your medical records from your patient portals in one place. Offline-first with multiple device sync supported (eventually).
+    A self-hosted web app to aggregate and sync all of your medical records from your patient portals in one place. Offline-first with multiple device sync supported. Very much a work in progress.
+  </p>
+  <p align="center">
     <br />
-    <br />
-    <a href="">View Demo</a>
+    <a href="" class="disabled">Demo coming soon</a>
   </p>
 </div>
 
