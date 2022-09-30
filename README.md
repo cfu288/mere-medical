@@ -1,12 +1,5 @@
 <a name="readme-top"></a>
 
-<style>
-   a.disabled {
-      pointer-events: none;
-      cursor: default;
-   }
-</style>
-
 <div align="center">
   <img src="./images/logo.png" width="100" height="100" />
   <h3 align="center">Mari Medical</h3>
@@ -16,7 +9,7 @@
   </p>
   <p align="center">
     <br />
-    <a href="" class="disabled">Demo coming soon</a>
+    <a href="/" class="disabled">Demo coming soon</a>
   </p>
 </div>
 
