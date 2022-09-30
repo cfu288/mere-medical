@@ -1,7 +1,7 @@
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, DiagnosticReport } from 'fhir/r2';
-import { ClinicalDocument } from '../models/ClinicalDocument';
-import { ShowObservationResultsExpandable } from './ShowObservationResultsExpandable';
+import { ClinicalDocument } from '../../models/ClinicalDocument';
+import { ShowObservationResultsExpandable } from '../ShowObservationResultsExpandable';
 
 export function DiagnosticReportCard({
   item,

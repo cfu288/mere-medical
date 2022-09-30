@@ -5,7 +5,7 @@
   <h3 align="center">Mari Medical</h3>
 
   <p align="center">
-    A self-hosted web app to aggregate and sync all of your medical records from your patient portals in one place. Offline-first with multiple device sync supported.
+    A self-hosted web app to aggregate and sync all of your medical records from your patient portals in one place. Offline-first with multiple device sync supported (eventually).
     <br />
     <br />
     <a href="">View Demo</a>
@@ -56,29 +56,37 @@ services:
    git clone https://gitea.mari.casa/cfu288/mari-medical.git
    ```
 2. Install NPM packages
+
    ```sh
    npm install
    ```
-3. Serve each one on its own:
+
+3. Create `.env` files for each project to run and fill with values
+
+   ```sh
+   cp apps/web/.example.env apps/web/.env
+   cp apps/api/.example.env apps/api/.env
+   ```
+
+4. Serve each one on its own:
 
    ```bash
    nx serve web
-   nx serve desktop
    nx serve api
    ```
 
-4. Build and serve in docker container:
+   or together as a full app:
+
+   ```bash
+   npx nx run-many --target=serve --projects=api,web
+   ```
+
+5. Build and serve in docker container:
 
    ```bash
    npx nx build web
    docker build -t mari-medical-web .
    docker run -d --restart unless-stopped -p 9999:80 mari-medical-web
-   ```
-
-5. Serve electron app:
-
-   ```bash
-   npx nx run-many --target=serve --projects=desktop,web
    ```
 
 6. Push to registry:

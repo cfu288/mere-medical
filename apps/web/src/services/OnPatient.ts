@@ -13,7 +13,6 @@ import {
 } from 'fhir/r2';
 import { RxDatabase, RxDocument } from 'rxdb';
 import { DatabaseCollections } from '../components/RxDbProvider';
-import { environment } from '../environments/environment';
 import { ClinicalDocumentType } from '../models/ClinicalDocumentCollection';
 import { ConnectionDocument } from '../models/ConnectionDocument';
 import { DSTU2 } from './DSTU2';
@@ -21,8 +20,8 @@ import { DSTU2 } from './DSTU2';
 export namespace OnPatient {
   export function getLoginUrl() {
     return `https://onpatient.com/o/authorize/?${new URLSearchParams({
-      client_id: environment.onpatient_client_id,
-      redirect_uri: environment.onpatient_redirect_uri,
+      client_id: process.env.NX_ONPATIENT_CLIENT_ID,
+      redirect_uri: process.env.NX_ONPATIENT_REDIRECT_URI,
       scope: 'patient/*.read',
       response_type: 'code',
     })}`;
@@ -179,7 +178,7 @@ export namespace OnPatient {
       DSTU2.mapPatientToCreateClinicalDocument(pt, connectionDocument)
     );
     const udsmap = uds.map(async (cd) => {
-      const exists = await db.user_documents
+      const exists = await db.clinical_documents
         .findOne({
           selector: {
             $and: [
@@ -193,7 +192,7 @@ export namespace OnPatient {
       if (exists) {
         // console.log(`Skipped record ${cd._id}`);
       } else {
-        await db.user_documents.insert(cd as ClinicalDocumentType);
+        await db.clinical_documents.insert(cd as ClinicalDocumentType);
         // console.log(`Saved record ${cd._id}`);
       }
     });

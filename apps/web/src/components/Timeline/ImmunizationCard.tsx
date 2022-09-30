@@ -1,6 +1,6 @@
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, Immunization } from 'fhir/r2';
-import { ClinicalDocument } from '../models/ClinicalDocument';
+import { ClinicalDocument } from '../../models/ClinicalDocument';
 
 export function ImmunizationCard({
   item,

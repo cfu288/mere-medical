@@ -18,8 +18,8 @@ import {
 } from '../models/ClinicalDocument';
 import { ConditionCard } from '../components/ConditionCard';
 import { RxDatabase, RxDocument } from 'rxdb';
-import { DiagnosticReportCard } from '../components/DiagnosticReportCard';
-import { ImmunizationCard } from '../components/ImmunizationCard';
+import { DiagnosticReportCard } from '../components/Timeline/DiagnosticReportCard';
+import { ImmunizationCard } from '../components/Timeline/ImmunizationCard';
 import { ObservationCard } from '../components/ObservationCard';
 import { ProcedureCard } from '../components/ProcedureCard';
 import { TimelineBanner } from '../components/TimelineBanner';

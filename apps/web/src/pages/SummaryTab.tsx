@@ -10,7 +10,7 @@ import {
   MedicationStatement,
 } from 'fhir/r2';
 import { RxDatabase, RxDocument } from 'rxdb';
-import { useEffect, useState } from 'react';
+import { useEffect, useReducer } from 'react';
 import { MedicationsListCard } from '../components/MedicationsListCard';
 import { ConditionsListCard } from '../components/ConditionsListCard';
 import { ImmunizationListCard } from '../components/ImmunizationListCard';
@@ -72,31 +72,115 @@ function fetchImmunizations(db: RxDatabase<DatabaseCollections>) {
     });
 }
 
+enum ActionTypes {
+  IDLE,
+  PENDING,
+  COMPLETED,
+  ERROR,
+}
+
+type SummaryState = {
+  status: ActionTypes;
+  meds: ClinicalDocument<BundleEntry<MedicationStatement>>[];
+  cond: ClinicalDocument<BundleEntry<Condition>>[];
+  imm: ClinicalDocument<BundleEntry<Immunization>>[];
+};
+
+type SummaryActions =
+  | { type: ActionTypes.IDLE }
+  | { type: ActionTypes.PENDING }
+  | { type: ActionTypes.ERROR }
+  | {
+      type: ActionTypes.COMPLETED;
+      data: {
+        meds: ClinicalDocument<BundleEntry<MedicationStatement>>[];
+        cond: ClinicalDocument<BundleEntry<Condition>>[];
+        imm: ClinicalDocument<BundleEntry<Immunization>>[];
+      };
+    };
+
+function summaryReducer(state: SummaryState, action: SummaryActions) {
+  switch (action.type) {
+    case ActionTypes.IDLE: {
+      return {
+        ...state,
+        status: ActionTypes.IDLE,
+      };
+    }
+    case ActionTypes.PENDING: {
+      return {
+        ...state,
+        status: ActionTypes.PENDING,
+      };
+    }
+    case ActionTypes.ERROR: {
+      return {
+        ...state,
+        status: ActionTypes.ERROR,
+      };
+    }
+    case ActionTypes.COMPLETED: {
+      return {
+        meds: action.data.meds,
+        imm: action.data.imm,
+        cond: action.data.cond,
+        status: ActionTypes.COMPLETED,
+      };
+    }
+  }
+}
+
 const SummaryTab: React.FC = () => {
   const db = useRxDb(),
-    [meds, setMeds] = useState<
-      ClinicalDocument<BundleEntry<MedicationStatement>>[]
-    >([]),
-    [cond, setCond] = useState<ClinicalDocument<BundleEntry<Condition>>[]>([]),
-    [imm, setImm] = useState<ClinicalDocument<BundleEntry<Immunization>>[]>([]);
+    [{ status, meds, cond, imm }, reducer] = useReducer(summaryReducer, {
+      status: ActionTypes.IDLE,
+      meds: [],
+      cond: [],
+      imm: [],
+    });
 
   useEffect(() => {
-    fetchMedications(db).then((data) => {
-      const res = data.map((item) => item.toMutableJSON());
-      // @ts-ignore
-      setMeds(res);
-    });
-    fetchConditions(db).then((data) => {
-      const res = data.map((item) => item.toMutableJSON());
-      // @ts-ignore
-      setCond(res);
-    });
-    fetchImmunizations(db).then((data) => {
-      const res = data.map((item) => item.toMutableJSON());
-      // @ts-ignore
-      setImm(res);
-    });
-  }, [db]);
+    if (status === ActionTypes.IDLE) {
+      reducer({ type: ActionTypes.PENDING });
+      Promise.all([
+        fetchMedications(db).then((data) =>
+          data.map(
+            (item) =>
+              item.toMutableJSON() as ClinicalDocument<
+                BundleEntry<MedicationStatement>
+              >
+          )
+        ),
+        fetchConditions(db).then((data) =>
+          data.map(
+            (item) =>
+              item.toMutableJSON() as ClinicalDocument<BundleEntry<Condition>>
+          )
+        ),
+        fetchImmunizations(db).then((data) =>
+          data.map(
+            (item) =>
+              item.toMutableJSON() as ClinicalDocument<
+                BundleEntry<Immunization>
+              >
+          )
+        ),
+      ])
+        .then(([meds, cond, imm]) => {
+          reducer({
+            type: ActionTypes.COMPLETED,
+            data: {
+              meds,
+              cond,
+              imm,
+            },
+          });
+        })
+        .catch((err) => {
+          reducer({ type: ActionTypes.ERROR });
+        });
+    }
+  }, [status, db]);
 
   return (
     <IonPage>

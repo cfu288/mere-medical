@@ -8,15 +8,16 @@ import { NestFactory } from '@nestjs/core';
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { environment } from './environments/environment';
 import { RootModule } from './app/root.module';
 
 async function bootstrap() {
   const globalPrefix = 'api';
   // only enable ssl in dev, prod has a reverse proxy
-  const ssl = environment.production === false;
+  const ssl = process.env.NODE_ENV === 'development';
   Logger.log(
-    `Running in ${environment.production ? 'production' : 'development'} mode`
+    `Running in ${
+      process.env.NODE_ENV === 'production' ? 'production' : 'development'
+    } mode`
   );
   let httpsOptions = null;
   if (ssl) {
@@ -30,7 +31,7 @@ async function bootstrap() {
 
   const app = await NestFactory.create(RootModule, { httpsOptions });
   app.setGlobalPrefix(globalPrefix);
-  const port = process.env.PORT || 80;
+  const port = process.env.PORT || 4201;
   await app.listen(port);
   Logger.log(
     `🚀 Application is running on: http${

@@ -17,8 +17,6 @@ import {
   ClinicalDocumentCollection,
   ClinicalDocumentSchema,
 } from '../models/ClinicalDocumentCollection';
-import { environment } from '../environments/environment';
-
 import { RxDBDevModePlugin } from 'rxdb/plugins/dev-mode';
 import { RxDBMigrationPlugin } from 'rxdb/plugins/migration';
 import {
@@ -44,7 +42,7 @@ type RxDbProviderProps = PropsWithChildren<unknown>;
 
 async function initRxDb() {
   const db = await createRxDatabase<DatabaseCollections>({
-    name: environment.database_name,
+    name: process.env.NX_DATABASE_NAME,
     storage: getRxStoragePouch('idb'),
     multiInstance: true,
     ignoreDuplicate: true,

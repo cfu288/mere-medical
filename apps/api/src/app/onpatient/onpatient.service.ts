@@ -1,6 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { environment } from '../../environments/environment';
 
 @Injectable()
 export class OnPatientService {
@@ -15,9 +14,9 @@ export class OnPatientService {
 
     const params = {
       grant_type: 'authorization_code',
-      client_id: environment.onpatient_client_id,
-      client_secret: environment.onpatient_client_secret,
-      redirect_uri: environment.onpatient_redirect,
+      client_id: process.env.NX_ONPATIENT_CLIENT_ID,
+      client_secret: process.env.NX_ONPATIENT_CLIENT_SECRET,
+      redirect_uri: process.env.NX_ONPATIENT_REDIRECT,
       code: code,
     };
 

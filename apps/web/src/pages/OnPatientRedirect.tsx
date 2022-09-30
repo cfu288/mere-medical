@@ -1,5 +1,5 @@
 import { IonContent, IonHeader, IonPage, IonTitle } from '@ionic/react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateConnectionDocument } from '../models/ConnectionDocument';
@@ -17,7 +17,8 @@ export interface OnPatientAuthResponse {
 
 const OnPatientRedirect: React.FC = () => {
   const history = useHistory(),
-    db = useRxDb();
+    db = useRxDb(),
+    [count, setCount] = useState(0);
 
   // useEffect(() => {
   //   const searchRequest = new URLSearchParams(window.location.search),
@@ -70,38 +71,36 @@ const OnPatientRedirect: React.FC = () => {
   // }, [db.connection_documents, history]);
 
   useEffect(() => {
-    const searchRequest = new URLSearchParams(window.location.search),
-      accessToken = searchRequest.get('accessToken'),
-      refreshToken = searchRequest.get('refreshToken'),
-      expiresIn = searchRequest.get('expiresIn');
+    if (count === 0) {
+      setCount((count) => count + 1);
+      const searchRequest = new URLSearchParams(window.location.search),
+        accessToken = searchRequest.get('accessToken'),
+        refreshToken = searchRequest.get('refreshToken'),
+        expiresIn = searchRequest.get('expiresIn');
 
-    alert(accessToken);
-    alert(refreshToken);
-    alert(expiresIn);
-
-    if (accessToken && refreshToken && expiresIn) {
-      const dbentry: CreateConnectionDocument = {
-        _id: uuidv4(),
-        source: 'onpatient',
-        location: 'https://onpatient.com',
-        access_token: accessToken,
-        refresh_token: refreshToken,
-        expires_in: parseInt(expiresIn),
-      };
-      console.log(dbentry);
-      db.connection_documents
-        .insert(dbentry)
-        .then(() => {
-          console.log('Saved!');
-          history.push(Routes.AddConnection);
-        })
-        .catch((e: any) => {
-          alert('Error adding connection');
-          console.error(e);
-          history.push(Routes.AddConnection);
-        });
-    } else {
-      alert('Error completing authentication: no access token provided');
+      if (accessToken && refreshToken && expiresIn) {
+        const dbentry: CreateConnectionDocument = {
+          _id: uuidv4(),
+          source: 'onpatient',
+          location: 'https://onpatient.com',
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          expires_in: parseInt(expiresIn),
+        };
+        db.connection_documents
+          .insert(dbentry)
+          .then(() => {
+            console.log('Saved!');
+            history.push(Routes.AddConnection);
+          })
+          .catch((e: any) => {
+            alert('Error adding connection');
+            console.error(e);
+            history.push(Routes.AddConnection);
+          });
+      } else {
+        alert('Error completing authentication: no access token provided');
+      }
     }
   }, [db.connection_documents, history]);
 
