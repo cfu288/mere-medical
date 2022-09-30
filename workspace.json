@@ -4,7 +4,6 @@
   "projects": {
     "api": "apps/api",
     "shared": "libs/shared",
-    "web": "apps/web",
-    "web-e2e": "apps/web-e2e"
+    "web": "apps/web"
   }
 }
