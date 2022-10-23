@@ -9,7 +9,7 @@
   </p>
   <p align="center">
     <br />
-    <a href="/" class="disabled">Demo coming soon</a>
+    <a href="https://app.mari.casa/"><strong>View demo</strong></a>
   </p>
 </div>
 
