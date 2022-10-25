@@ -3,8 +3,8 @@ name: default
 type: docker
 
 environment:
-  PASSWORD:
-    from_secret: registry_password 
+  - PASSWORD:
+      - from_secret: registry_password 
 
 steps:
   - name: frontend
