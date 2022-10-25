@@ -2,13 +2,13 @@ kind: pipeline
 name: default
 type: docker
 
-environment:
-  - PASSWORD:
-      - from_secret: registry_password 
 
 steps:
   - name: frontend
     image: docker:dind
+    environment:
+      PASSWORD:
+        from_secret: registry_password 
     volumes:
       - name: dockersock
         path: /var/run
@@ -21,6 +21,9 @@ steps:
 
   - name: backend
     image: docker:dind
+    environment:
+      PASSWORD:
+        from_secret: registry_password 
     volumes:
       - name: dockersock
         path: /var/run
