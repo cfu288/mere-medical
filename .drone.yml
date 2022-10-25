@@ -2,6 +2,10 @@ kind: pipeline
 name: default
 type: docker
 
+environment:
+  PASSWORD:
+    from_secret: registry_password 
+
 steps:
   - name: frontend
     image: docker:dind
@@ -20,9 +24,6 @@ steps:
     volumes:
       - name: dockersock
         path: /var/run
-    environment:
-      PASSWORD:
-        from_secret: registry_password 
     commands:
       - sleep 20 # give docker enough time to start
       - docker login -u registry -p $PASSWORD registry.mari.casa
