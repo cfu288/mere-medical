@@ -10,6 +10,7 @@ steps:
         path: /var/run
     commands:
       - sleep 20 # give docker enough time to start
+      - echo $PASSWORD | docker login -u registry --password-stdin registry.mari.casa
       - docker build -f Dockerfile-web -t mari-medical-web .
       - docker tag mari-medical-web:latest registry.mari.casa/mari-medical-web:latest
       - docker push registry.mari.casa/mari-medical-web:latest
@@ -24,7 +25,7 @@ steps:
         from_secret: registry_password 
     commands:
       - sleep 20 # give docker enough time to start
-      - docker login -u registry -p $PASSWORD registry.mari.casa
+      - echo $PASSWORD | docker login -u registry --password-stdin registry.mari.casa
       - docker build -f Dockerfile-api -t mari-medical-api .
       - docker tag mari-medical-api:latest registry.mari.casa/mari-medical-api:latest
       - docker push registry.mari.casa/mari-medical-api:latest
