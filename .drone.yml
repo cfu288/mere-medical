@@ -19,8 +19,12 @@ steps:
     volumes:
       - name: dockersock
         path: /var/run
+    environment:
+      PASSWORD:
+        from_secret: registry_password 
     commands:
       - sleep 20 # give docker enough time to start
+      - docker login -u registry -p $PASSWORD registry.mari.casa
       - docker build -f Dockerfile-api -t mari-medical-api .
       - docker tag mari-medical-api:latest registry.mari.casa/mari-medical-api:latest
       - docker push registry.mari.casa/mari-medical-api:latest
