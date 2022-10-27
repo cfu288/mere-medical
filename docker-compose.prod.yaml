@@ -9,6 +9,11 @@ services:
     image: registry.mari.casa/mari-medical-api:latest
     ports:
       - '4201:80'
+    environment:
+      - NX_ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
+      - NX_ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
+      - NX_ONPATIENT_REDIRECT=${ONPATIENT_REDIRECT}
+      - NX_FRONTEND_APP_REDIRECT=${FRONTEND_APP_REDIRECT}
   # couchserver:
   #   image: couchdb
   #   restart: always
