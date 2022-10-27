@@ -5,6 +5,11 @@ services:
     image: registry.mari.casa/mari-medical-web:latest
     ports:
       - '4200:80'
+    environment:
+      - NX_ONPATIENT_REDIRECT_URI=${ONPATIENT_REDIRECT_URI}
+      - NX_ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
+      - NX_DATABASE_NAME=${DATABASE_NAME}
+      - NX_PUBLIC_URL=${PUBLIC_URL}
   api:
     image: registry.mari.casa/mari-medical-api:latest
     ports:
