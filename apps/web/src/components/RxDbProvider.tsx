@@ -23,6 +23,8 @@ import {
   UserDocumentCollection,
   UserDocumentSchema,
 } from '../models/UserDocumentCollection';
+import config from '../environments/config.json';
+
 addRxPlugin(RxDBMigrationPlugin);
 addRxPlugin(RxDBDevModePlugin);
 
@@ -42,7 +44,7 @@ type RxDbProviderProps = PropsWithChildren<unknown>;
 
 async function initRxDb() {
   const db = await createRxDatabase<DatabaseCollections>({
-    name: process.env.NX_DATABASE_NAME,
+    name: config.DATABASE_NAME,
     storage: getRxStoragePouch('idb'),
     multiInstance: true,
     ignoreDuplicate: true,

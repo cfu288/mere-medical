@@ -7,7 +7,7 @@ import {
   addCircleOutline,
   settingsOutline,
 } from 'ionicons/icons';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Redirect, Route } from 'react-router-dom';
 
 import {

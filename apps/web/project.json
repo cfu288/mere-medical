@@ -35,8 +35,8 @@
         "production": {
           "fileReplacements": [
             {
-              "replace": "apps/web/src/environments/.local.env",
-              "with": "apps/web/src/environments/.production.env"
+              "replace": "apps/web/src/environments/config.json",
+              "with": "apps/web/src/environments/config.prod.json"
             }
           ],
           "optimization": true,

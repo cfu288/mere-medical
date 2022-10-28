@@ -16,12 +16,13 @@ import { DatabaseCollections } from '../components/RxDbProvider';
 import { ClinicalDocumentType } from '../models/ClinicalDocumentCollection';
 import { ConnectionDocument } from '../models/ConnectionDocument';
 import { DSTU2 } from './DSTU2';
+import config from '../environments/config.json';
 
 export namespace OnPatient {
   export function getLoginUrl() {
     return `https://onpatient.com/o/authorize/?${new URLSearchParams({
-      client_id: process.env.NX_ONPATIENT_CLIENT_ID,
-      redirect_uri: process.env.NX_ONPATIENT_REDIRECT_URI,
+      client_id: config.ONPATIENT_CLIENT_ID,
+      redirect_uri: config.ONPATIENT_REDIRECT_URI,
       scope: 'patient/*.read',
       response_type: 'code',
     })}`;

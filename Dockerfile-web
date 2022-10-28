@@ -4,11 +4,21 @@ WORKDIR /app
 COPY package*.json /app/
 RUN npm install
 COPY ./ /app/
+#COPY ./apps/web/src/assets/config.env /app/config.env
 COPY ./nginx.conf /nginx.conf
 RUN npx nx build web --prod
 
 # Stage 1, based on Nginx, to have only the compiled app, ready for production with Nginx
-FROM nginx:1.15
+FROM nginx:1.23
+
+RUN apt-get update && apt-get install moreutils -y
+ENV JSFOLDER=/usr/share/nginx/html/*.js
+
 COPY --from=build-stage /app/dist/apps/web/ /usr/share/nginx/html
-# Copy the default nginx.conf provided by tiangolo/node-frontend
+#COPY --from=build-stage /app/config.env /usr/share/nginx/html/config.env
 COPY --from=build-stage /nginx.conf /etc/nginx/conf.d/default.conf
+
+COPY ./start-nginx.sh /usr/bin/start-nginx.sh
+RUN chmod +x /usr/bin/start-nginx.sh
+
+ENTRYPOINT [ "start-nginx.sh" ]
