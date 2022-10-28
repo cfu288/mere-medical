@@ -1,21 +1,16 @@
-# Base image
-FROM node:18
+FROM node:18 as build-stage
 
 # Create app directory
 WORKDIR /app
-
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
 COPY package*.json /app/
-
-# Install app dependencies
 RUN npm install
-
-# Bundle app source
 COPY . /app/
-
-# Creates a "dist" folder with the production build
 RUN npx nx build api:build:production  
 
-# Start the server using the production build
-CMD [ "node", "dist/apps/api/main.js" ]
-# CMD [ "ls", "dist/apps" ]
+# Base image
+FROM node:18
+
+WORKDIR /app
+COPY --from=build-stage /app/dist/apps/api/ /app/
+COPY --from=build-stage /app/node_modules/ /app/node_modules/
+CMD [ "node", "main.js" ]
