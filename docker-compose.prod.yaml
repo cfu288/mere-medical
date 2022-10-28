@@ -17,15 +17,5 @@ services:
     environment:
       - NX_ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
       - NX_ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
-      - NX_ONPATIENT_REDIRECT=${ONPATIENT_REDIRECT}
+      - NX_ONPATIENT_REDIRECT=${ONPATIENT_REDIRECT_URI}
       - NX_FRONTEND_APP_REDIRECT=${FRONTEND_APP_REDIRECT}
-  # couchserver:
-  #   image: couchdb
-  #   restart: always
-  #   ports:
-  #     - '5984:5984'
-  #   environment:
-  #     - COUCHDB_USER=admin
-  #     - COUCHDB_PASSWORD=YOURPASSWORD
-  #   volumes:
-  #     - /mnt/data/mari-medical/cdb:/opt/couchdb/data
