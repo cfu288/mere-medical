@@ -10,7 +10,7 @@ export class OnPatientController {
   async getData(@Res() response: Response, @Query('code') code) {
     const data = await this.onPatientService.getAuthCode(code);
     response.redirect(
-      `${process.env.NX_FRONTEND_APP_REDIRECT}?accessToken=${data.access_token}&refreshToken=${data.refresh_token}&expiresIn=${data.expires_in}`
+      `${process.env.PUBLIC_URL}/onpatient/callback?accessToken=${data.access_token}&refreshToken=${data.refresh_token}&expiresIn=${data.expires_in}`
     );
   }
 }

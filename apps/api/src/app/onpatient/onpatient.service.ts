@@ -15,8 +15,8 @@ export class OnPatientService {
     const params = {
       grant_type: 'authorization_code',
       client_id: process.env.ONPATIENT_CLIENT_ID,
-      client_secret: process.env.NX_ONPATIENT_CLIENT_SECRET,
-      redirect_uri: process.env.NX_ONPATIENT_REDIRECT,
+      client_secret: process.env.ONPATIENT_CLIENT_SECRET,
+      redirect_uri: process.env.ONPATIENT_REDIRECT_URI,
       code: code,
     };
 
