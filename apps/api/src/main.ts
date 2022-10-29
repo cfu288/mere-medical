@@ -19,8 +19,6 @@ async function bootstrap() {
       process.env.NODE_ENV === 'production' ? 'production' : 'development'
     } mode`
   );
-  Logger.log(`OnPatient CID is: ${process.env.ONPATIENT_CLIENT_ID}`);
-  Logger.log(`OnPatient CID is: ${process.env.ONPATIENT_REDIRECT_URI}`);
 
   let httpsOptions = null;
   if (ssl) {
