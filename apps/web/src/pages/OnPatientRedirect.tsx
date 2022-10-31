@@ -40,7 +40,6 @@ const OnPatientRedirect: React.FC = () => {
         db.connection_documents
           .insert(dbentry)
           .then(() => {
-            console.log('Saved!');
             history.push(Routes.AddConnection);
           })
           .catch((e: any) => {

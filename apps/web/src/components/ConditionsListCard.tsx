@@ -14,13 +14,13 @@ export function ConditionsListCard({
         <div className="flex-1 min-w-0">
           <span className="absolute inset-0" aria-hidden="true" />
           {items.map((item) => (
-            <div className="py-2">
+            <div className="py-2" key={item._id}>
               <p className="text-md font-bold text-gray-900">
                 {item.metadata?.display_name}
               </p>
               <p className="text-sm font-medium text-gray-500 truncate">
                 {item.metadata?.date
-                  ? format(parseISO(item.metadata.date), 'p')
+                  ? format(parseISO(item.metadata.date), 'MM/dd/yyyy')
                   : ''}
               </p>
             </div>

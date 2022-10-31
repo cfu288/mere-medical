@@ -46,9 +46,10 @@ export function ShowObservationResultsExpandable({
       <div className={`${expanded ? '' : 'hidden'}`}>
         {list?.map((list_item) => (
           <div
-            key={list_item.id}
+            key={list_item.id || list_item.fullUrl}
             className="flex flex-row gap-2 text-sm text-gray-600"
           >
+            {JSON.stringify(list_item)}
             {!(list_item.resource as Observation)?.dataAbsentReason && (
               <>
                 <div>{list_item.resource?.category?.text} result: </div>

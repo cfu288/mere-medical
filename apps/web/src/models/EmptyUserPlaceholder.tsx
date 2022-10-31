@@ -106,7 +106,6 @@ export function EmptyUserPlaceholder() {
         last_name: lastName,
         email,
       };
-      console.log(userDocument);
       db.user_documents.insert(userDocument).then(() => {
         toggleModal();
       });

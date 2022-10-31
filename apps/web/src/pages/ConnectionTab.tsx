@@ -42,9 +42,18 @@ const ConnectionTab: React.FC = () => {
   return (
     <IonPage>
       <IonHeader>
-        <GenericBanner text="ADD NEW RECORD" />
+        <GenericBanner text="Add Connections" />
       </IonHeader>
       <IonContent fullscreen>
+        <div className="flex flex-col max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 gap-x-4">
+          <div className="font-extrabold text-xl py-6">
+            Connect to Patient Portal
+          </div>
+          <div className="text-sm font-medium text-gray-500">
+            Connect to a patient portal to automatic download your most recent
+            data.
+          </div>
+        </div>
         <div className="flex flex-col max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 gap-x-4">
           <ul className="grid grid-cols-1 py-8">
             {list?.map((item) => (

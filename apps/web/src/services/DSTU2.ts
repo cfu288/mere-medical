@@ -141,7 +141,6 @@ export namespace DSTU2 {
         date: new Date().toISOString(),
       },
     };
-    console.log(cd);
     return cd;
   }
 
