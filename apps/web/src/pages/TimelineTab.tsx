@@ -30,6 +30,7 @@ function fetchRecords(db: RxDatabase<DatabaseCollections>) {
   return db.clinical_documents
     .find({
       selector: {
+        'data_record.resource_type': { $ne: 'patient' },
         'metadata.date': { $gt: 0 },
       },
       sort: [{ 'metadata.date': 'desc' }],

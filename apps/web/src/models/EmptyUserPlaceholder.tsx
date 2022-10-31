@@ -1,44 +1,140 @@
 import { Transition, Dialog } from '@headlessui/react';
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useReducer, useRef } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { RxDatabase, RxDocument } from 'rxdb';
 import { BundleEntry, Patient } from 'fhir/r2';
 import { DatabaseCollections, useRxDb } from '../components/RxDbProvider';
 import { ClinicalDocument } from './ClinicalDocument';
+import { UserDocument } from './UserDocument';
+import uuid4 from 'uuid4';
 
 function fetchPatientRecords(db: RxDatabase<DatabaseCollections>) {
   return db.clinical_documents
     .find({
       selector: {
-        'data_record.resource_type': 'patient',
-        'metadata.date': { $gt: 0 },
+        $and: [
+          { 'data_record.resource_type': `patient` },
+          {
+            'metadata.date': { $gt: 0 },
+          },
+        ],
+        sort: [{ 'metadata.date': 'desc' }],
       },
-      sort: [{ 'metadata.date': 'desc' }],
     })
     .exec()
     .then((list) => {
       const lst = list as unknown as RxDocument<
         ClinicalDocument<BundleEntry<Patient>>
       >[];
-
       return lst;
     });
 }
 
+enum ActionTypes {
+  TOGGLE_MODAL,
+  SET_PT_RECORD,
+  SET_FIRST_NAME,
+}
+
+type FormFields = {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  birthday?: string;
+  gender?: string;
+};
+
+type ModalState = {
+  patientRecord?: FormFields | undefined;
+  formFields: FormFields;
+  modalOpen: boolean;
+};
+
+type ModalActions =
+  | { type: ActionTypes.SET_PT_RECORD; data: FormFields }
+  | { type: ActionTypes.TOGGLE_MODAL };
+
+function reducer(state: ModalState, action: ModalActions): ModalState {
+  switch (action.type) {
+    case ActionTypes.SET_PT_RECORD: {
+      return {
+        ...state,
+        formFields: action.data,
+        patientRecord: action.data,
+      };
+    }
+    case ActionTypes.TOGGLE_MODAL: {
+      return {
+        ...state,
+        modalOpen: !state.modalOpen,
+      };
+    }
+    default: {
+      throw new Error('Something went wrong when filling out the form');
+    }
+  }
+}
+
 export function EmptyUserPlaceholder() {
-  const [open, setOpen] = useState(false);
-  const cancelButtonRef = useRef(null);
-  const [firstName, setFirstName] = useState('');
-  const db = useRxDb();
+  const [
+    {
+      formFields: { firstName, lastName, email, birthday, gender },
+      modalOpen,
+    },
+    dispatch,
+  ] = useReducer(reducer, {
+    formFields: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      birthday: '',
+      gender: '',
+    },
+    modalOpen: false,
+  });
+
+  const cancelButtonRef = useRef(null),
+    db = useRxDb(),
+    toggleModal = () => dispatch({ type: ActionTypes.TOGGLE_MODAL }),
+    submitUser = (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      const userDocument: UserDocument = {
+        _id: uuid4(),
+        gender,
+        birthday,
+        first_name: firstName,
+        last_name: lastName,
+        email,
+      };
+      console.log(userDocument);
+      db.user_documents.insert(userDocument).then(() => {
+        toggleModal();
+      });
+    };
 
   useEffect(() => {
-    fetchPatientRecords(db).then((res) => console.log(res));
+    fetchPatientRecords(db).then((data) => {
+      const res = data.map((item) => item.toMutableJSON());
+      const firstName =
+          res?.[0]?.data_record.raw.resource?.name?.[0].given?.[0],
+        lastName = res?.[0]?.data_record.raw.resource?.name?.[0].family?.[0],
+        email = res?.[0]?.data_record.raw.resource?.telecom?.find(
+          (x) => x.system === 'email'
+        )?.value,
+        birthDate = res?.[0]?.data_record.raw.resource?.birthDate,
+        gender = res?.[0]?.data_record.raw.resource?.gender;
+
+      dispatch({
+        type: ActionTypes.SET_PT_RECORD,
+        data: { firstName, lastName, email, birthday: birthDate, gender },
+      });
+    });
   }, [db]);
 
   return (
     <div
       onClick={() => {
-        setOpen((x) => !x);
+        dispatch({ type: ActionTypes.TOGGLE_MODAL });
       }}
       className="relative block w-full border-2 border-gray-300 border-dashed rounded-lg p-12 text-center hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 mt-4"
     >
@@ -60,12 +156,12 @@ export function EmptyUserPlaceholder() {
       <span className="mt-2 block text-sm font-medium text-gray-900">
         Add your information
       </span>
-      <Transition.Root show={open} as={Fragment}>
+      <Transition.Root show={modalOpen} as={Fragment}>
         <Dialog
           as="div"
           className="relative z-10"
           initialFocus={cancelButtonRef}
-          onClose={setOpen}
+          onClose={toggleModal}
         >
           {/* background */}
           <Transition.Child
@@ -93,7 +189,10 @@ export function EmptyUserPlaceholder() {
                 leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
               >
                 <Dialog.Panel className="pointer-events-auto w-screen max-w-xl">
-                  <form className="flex h-full flex-col divide-y divide-gray-200 bg-white shadow-xl rounded-lg">
+                  <form
+                    className="flex h-full flex-col divide-y divide-gray-200 bg-white shadow-xl rounded-lg"
+                    onSubmit={submitUser}
+                  >
                     <div className="h-0 flex-1 overflow-y-auto rounded-lg">
                       <div className="bg-primary-700 py-6 px-4 sm:px-6">
                         <div className="flex items-center justify-between">
@@ -104,7 +203,7 @@ export function EmptyUserPlaceholder() {
                             <button
                               type="button"
                               className="rounded-md bg-primary-700 text-primary-200 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
-                              onClick={() => setOpen(false)}
+                              onClick={toggleModal}
                             >
                               <span className="sr-only">Close panel</span>
                               <XMarkIcon
@@ -155,6 +254,7 @@ export function EmptyUserPlaceholder() {
                               id="last-name"
                               autoComplete="family-name"
                               className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:max-w-xs sm:text-sm"
+                              value={lastName}
                             />
                           </div>
                         </div>
@@ -169,13 +269,50 @@ export function EmptyUserPlaceholder() {
                             <input
                               id="email"
                               name="email"
-                              type="email"
+                              type="text"
                               autoComplete="email"
-                              className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                              className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:max-w-xs sm:text-sm"
+                              value={email}
                             />
                           </div>
                         </div>
-                        <div className="sm:grid sm:grid-cols-3 sm:items-center sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
+                        <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
+                          <label
+                            htmlFor="date-of-birth"
+                            className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+                          >
+                            Date of Birth
+                          </label>
+                          <div className="mt-1 sm:col-span-2 sm:mt-0">
+                            <input
+                              id="date-of-birth"
+                              name="date-of-birth"
+                              type="date"
+                              autoComplete="date"
+                              className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:max-w-xs sm:text-sm"
+                              value={birthday}
+                            />
+                          </div>
+                        </div>
+                        <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
+                          <label
+                            htmlFor="gender"
+                            className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+                          >
+                            Gender
+                          </label>
+                          <div className="mt-1 sm:col-span-2 sm:mt-0">
+                            <input
+                              type="text"
+                              name="gender"
+                              id="gender"
+                              autoComplete="gender"
+                              className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:max-w-xs sm:text-sm"
+                              value={gender}
+                            />
+                          </div>
+                        </div>
+                        {/* <div className="sm:grid sm:grid-cols-3 sm:items-center sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
                           <label
                             htmlFor="photo"
                             className="block text-sm font-medium text-gray-700"
@@ -201,85 +338,14 @@ export function EmptyUserPlaceholder() {
                               </button>
                             </div>
                           </div>
-                        </div>
-                        <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
-                          <label
-                            htmlFor="street-address"
-                            className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
-                          >
-                            Street address
-                          </label>
-                          <div className="mt-1 sm:col-span-2 sm:mt-0">
-                            <input
-                              type="text"
-                              name="street-address"
-                              id="street-address"
-                              autoComplete="street-address"
-                              className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
-                          <label
-                            htmlFor="city"
-                            className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
-                          >
-                            City
-                          </label>
-                          <div className="mt-1 sm:col-span-2 sm:mt-0">
-                            <input
-                              type="text"
-                              name="city"
-                              id="city"
-                              autoComplete="address-level2"
-                              className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:max-w-xs sm:text-sm"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
-                          <label
-                            htmlFor="region"
-                            className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
-                          >
-                            State / Province
-                          </label>
-                          <div className="mt-1 sm:col-span-2 sm:mt-0">
-                            <input
-                              type="text"
-                              name="region"
-                              id="region"
-                              autoComplete="address-level1"
-                              className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:max-w-xs sm:text-sm"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
-                          <label
-                            htmlFor="postal-code"
-                            className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
-                          >
-                            ZIP / Postal code
-                          </label>
-                          <div className="mt-1 sm:col-span-2 sm:mt-0">
-                            <input
-                              type="text"
-                              name="postal-code"
-                              id="postal-code"
-                              autoComplete="postal-code"
-                              className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:max-w-xs sm:text-sm"
-                            />
-                          </div>
-                        </div>
+                        </div> */}
                       </div>
                     </div>
                     <div className="flex flex-shrink-0 justify-end px-4 py-4">
                       <button
                         type="button"
                         className="rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-                        onClick={() => setOpen(false)}
+                        onClick={toggleModal}
                       >
                         Cancel
                       </button>

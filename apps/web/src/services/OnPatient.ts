@@ -194,7 +194,7 @@ export namespace OnPatient {
         // console.log(`Skipped record ${cd._id}`);
       } else {
         await db.clinical_documents.insert(cd as ClinicalDocumentType);
-        // console.log(`Saved record ${cd._id}`);
+        // console.log(`Saved record ${JSON.stringify(cd)}`);
       }
     });
     return await Promise.all(udsmap);

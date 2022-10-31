@@ -138,8 +138,10 @@ export namespace DSTU2 {
       },
       metadata: {
         id: 'patient_' + bundleItem.resource?.id,
+        date: new Date().toISOString(),
       },
     };
+    console.log(cd);
     return cd;
   }
 

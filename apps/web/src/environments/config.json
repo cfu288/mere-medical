@@ -2,6 +2,5 @@
   "ONPATIENT_REDIRECT_URI": "https://localhost:4201/api/v1/onpatient/callback",
   "ONPATIENT_CLIENT_ID": "2MkZStehSopenoRwmWalHqJ53Kips0z4zyNjk8in",
   "DATABASE_NAME": "mari_test_db",
-  "PUBLIC_URL": "http://localhost:3000",
-  "TEST_VAR": "$TEST_VAR"
+  "PUBLIC_URL": "http://localhost:4200"
 }

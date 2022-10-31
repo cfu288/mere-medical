@@ -27,6 +27,9 @@ export const userDocumentSchemaLiteral = {
     last_name: {
       type: 'string',
     },
+    email: {
+      type: 'string',
+    },
   },
 } as const;
 

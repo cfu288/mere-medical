@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Res } from '@nestjs/common';
+import { Controller, Get, Logger, Query, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { OnPatientService } from './onpatient.service';
 
@@ -8,9 +8,14 @@ export class OnPatientController {
 
   @Get('callback')
   async getData(@Res() response: Response, @Query('code') code) {
-    const data = await this.onPatientService.getAuthCode(code);
-    response.redirect(
-      `${process.env.PUBLIC_URL}/onpatient/callback?accessToken=${data.access_token}&refreshToken=${data.refresh_token}&expiresIn=${data.expires_in}`
-    );
+    try {
+      const data = await this.onPatientService.getAuthCode(code);
+      response.redirect(
+        `${process.env.PUBLIC_URL}/onpatient/callback?accessToken=${data.access_token}&refreshToken=${data.refresh_token}&expiresIn=${data.expires_in}`
+      );
+    } catch (e) {
+      Logger.log(e);
+      response.status(500).send({ message: 'There was an error' });
+    }
   }
 }
