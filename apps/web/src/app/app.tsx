@@ -58,7 +58,7 @@ const App: React.FC = () => {
                 <Redirect to={AppRoutes.Timeline} />
               </Route>
             </IonRouterOutlet>
-            <IonTabBar slot="bottom">
+            <IonTabBar slot="bottom" className="pb-4 sm:pb-0">
               <IonTabButton tab="timeline" href={AppRoutes.Timeline}>
                 <IonIcon icon={newspaperOutline} />
                 <IonLabel>Timeline</IonLabel>
