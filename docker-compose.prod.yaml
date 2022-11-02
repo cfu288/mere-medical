@@ -19,3 +19,7 @@ services:
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
       - ONPATIENT_REDIRECT_URI=${ONPATIENT_REDIRECT_URI}
       - PUBLIC_URL=${PUBLIC_URL}
+  docs:
+    image: registry.mari.casa/mari-medical-docs:latest
+    ports:
+      - '4202:4202'

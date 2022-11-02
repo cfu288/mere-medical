@@ -33,6 +33,22 @@ steps:
       - docker tag mari-medical-api:latest registry.mari.casa/mari-medical-api:latest
       - docker push registry.mari.casa/mari-medical-api:latest
 
+  - name: docs
+    image: docker:dind
+    environment:
+      PASSWORD:
+        from_secret: registry_password
+    volumes:
+      - name: dockersock
+        path: /var/run
+    commands:
+      - sleep 20 # give docker enough time to start
+      - docker login -u registry -p $PASSWORD registry.mari.casa
+      - docker build -f Dockerfile-docs -t mari-medical-docs .
+      - docker tag mari-medical-docs:latest registry.mari.casa/mari-medical-docs:latest
+      - docker push registry.mari.casa/mari-medical-docs:latest
+
+
 #   - name: deploy stack
 #     image: appleboy/drone-ssh
 #     settings:
