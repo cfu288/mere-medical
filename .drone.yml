@@ -48,6 +48,15 @@ steps:
       - docker tag mari-medical-docs:latest registry.mari.casa/mari-medical-docs:latest
       - docker push registry.mari.casa/mari-medical-docs:latest
 
+  - name: parallelize builds
+    image: docker:dind
+    commands: 
+      - echo "Done"
+    depends_on:
+      - frontend
+      - backend
+      - docs
+
 
 #   - name: deploy stack
 #     image: appleboy/drone-ssh
