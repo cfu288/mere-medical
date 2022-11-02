@@ -4,6 +4,9 @@
   "projects": {
     "api": "apps/api",
     "shared": "libs/shared",
-    "web": "apps/web"
+    "web": "apps/web",
+    "docs": {
+      "root": "apps/docs"
+    }
   }
 }
