@@ -11,7 +11,7 @@ const footerNavigation = {
 
 const features = [
   {
-    name: 'Sync to multiple patient portal',
+    name: 'Sync to multiple patient portals',
     description:
       'Connect to all of your patient portals across doctors and hospitals and see all of your data in one place. Let us help you manage your medical records.',
   },
@@ -38,7 +38,7 @@ const features = [
   {
     name: 'Free for Everyone',
     description:
-      'Every patient has the right to control their own healthcare data. That’s why Mari Medical is free.',
+      'Every patient has the right to control their own healthcare data. That’s why Mari Medical is free to use, deploy, and change.',
   },
 ];
 
@@ -74,8 +74,8 @@ export default function Home() {
                     One Place.
                   </h1>
                   <p className="mt-6 text-xl text-gray-600">
-                    With Mari Medical, you can finally manage your own medical
-                    records from one place – for free
+                    With Mari Medical, you can finally manage all of your
+                    medical records from one place via a self-hostable web app.
                   </p>
                 </div>
                 <div className=" mt-5 max-w-md sm:flex sm:justify-start md:mt-8">
@@ -186,6 +186,12 @@ export default function Home() {
                     the digital age, managing your patient profile should be
                     easier.
                   </p>
+                  <p className="text-lg">
+                    However, you shouldn't need to trust 3rd parties with your
+                    medical records. That's why Mari Medical is a self-hosted
+                    progressive web app - keep full control of your medical
+                    records by deploying it on your own computer or servers!
+                  </p>
                 </div>
               </div>
             </div>
@@ -252,7 +258,7 @@ export default function Home() {
             <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:py-20 lg:px-8">
               <div className="max-w-3xl mx-auto text-center">
                 <h2 className="text-3xl font-extrabold text-gray-900">
-                  Why Patients Love Mari
+                  Our Goals
                 </h2>
                 <p className="mt-4 text-lg text-gray-600">
                   {/* Decentralizing Patient Data */}
