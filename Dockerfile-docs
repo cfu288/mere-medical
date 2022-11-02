@@ -5,7 +5,7 @@ COPY package*.json /app/
 RUN npm install
 COPY ./ /app/
 COPY ./nginx.conf /nginx.conf
-RUN npx docusaurus build
+RUN npx nx build docs --prod
 
 FROM nginx:1.23
 
