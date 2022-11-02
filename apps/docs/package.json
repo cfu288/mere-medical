@@ -5,7 +5,7 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
-    "build": "docusaurus build",
+    "build": "npx docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
@@ -42,5 +42,14 @@
   },
   "engines": {
     "node": ">=16.14"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "outputs": [
+          "apps/docs/build"
+        ]
+      }
+    }
   }
 }
