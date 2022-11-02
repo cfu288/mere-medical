@@ -12,7 +12,7 @@ steps:
       - name: dockersock
         path: /var/run
     commands:
-      - sleep 20 # give docker enough time to start
+      - sleep 5 # give docker enough time to start
       - docker login -u registry -p $PASSWORD registry.mari.casa
       - docker build -f Dockerfile-web -t mari-medical-web .
       - docker tag mari-medical-web:latest registry.mari.casa/mari-medical-web:latest
@@ -27,7 +27,7 @@ steps:
       - name: dockersock
         path: /var/run
     commands:
-      - sleep 20 # give docker enough time to start
+      - sleep 5 # give docker enough time to start
       - docker login -u registry -p $PASSWORD registry.mari.casa
       - docker build -f Dockerfile-api -t mari-medical-api .
       - docker tag mari-medical-api:latest registry.mari.casa/mari-medical-api:latest
@@ -42,7 +42,7 @@ steps:
       - name: dockersock
         path: /var/run
     commands:
-      - sleep 20 # give docker enough time to start
+      - sleep 5 # give docker enough time to start
       - docker login -u registry -p $PASSWORD registry.mari.casa
       - docker build -f Dockerfile-docs -t mari-medical-docs .
       - docker tag mari-medical-docs:latest registry.mari.casa/mari-medical-docs:latest
@@ -50,13 +50,12 @@ steps:
 
   - name: parallelize builds
     image: docker:dind
-    commands: 
+    commands:
       - echo "Done"
     depends_on:
       - frontend
       - backend
       - docs
-
 
 #   - name: deploy stack
 #     image: appleboy/drone-ssh
