@@ -22,4 +22,4 @@ services:
   docs:
     image: registry.mari.casa/mari-medical-docs:latest
     ports:
-      - '4202:4202'
+      - '4202:80'
