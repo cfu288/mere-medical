@@ -1,8 +1,7 @@
 import React from 'react';
-import clsx from 'clsx';
-import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Head from '@docusaurus/Head';
+import { CheckIcon } from '@heroicons/react/24/solid';
 
 const footerNavigation = {
   main: [{ name: 'About', href: '#' }],
@@ -89,10 +88,10 @@ export default function Home() {
                   </div>
                   <div className="mt-3 rounded-md shadow sm:mt-0 sm:ml-3">
                     <a
-                      href="https://github.com/cfu288/mari-medical"
+                      href={`${siteConfig.url}/docs/intro`}
                       className="flex w-full items-center justify-center rounded-md border border-transparent bg-white px-8 py-3 text-base font-medium text-primary-600 hover:text-primary-500 hover:bg-gray-50 md:py-4 md:px-10 md:text-lg"
                     >
-                      GitHub
+                      Go to Docs
                     </a>
                   </div>
                 </div>
@@ -268,10 +267,10 @@ export default function Home() {
                 {features.map((feature) => (
                   <div key={feature.name} className="relative">
                     <dt>
-                      {/* <CheckIcon
-                          className="absolute h-6 w-6 text-green-600"
-                          aria-hidden="true"
-                        /> */}
+                      <CheckIcon
+                        className="absolute h-6 w-6 text-green-600"
+                        aria-hidden="true"
+                      />
                       <p className="ml-9 text-lg leading-6 font-medium text-gray-900">
                         {feature.name}
                       </p>
