@@ -117,7 +117,7 @@ export default function Home() {
         </div>
 
         {/* Problem section */}
-        <div className="relative mt-36">
+        <div className="relative mt-12 lg:mt-48">
           <div className="lg:mx-auto lg:grid lg:max-w-7xl lg:grid-cols-2 lg:items-start lg:gap-24 lg:px-8">
             <div className="relative sm:hidden sm:py-16 lg:py-0">
               <div className=" mt-12 flex aspect-square items-center justify-center overflow-hidden rounded-2xl lg:mt-0">
@@ -166,7 +166,7 @@ export default function Home() {
         </div>
 
         {/* Solution section */}
-        <div className="mt-20 bg-[#006182] py-20">
+        <div className="mt-20 bg-[#006182] py-10 lg:py-20">
           <div className="mx-auto max-w-md px-4 sm:max-w-3xl sm:px-6 lg:max-w-7xl lg:px-8">
             <div className="lg:grid lg:grid-cols-2 lg:items-center lg:gap-24">
               <div>
@@ -181,7 +181,7 @@ export default function Home() {
                   own medical records under one digital roof.
                 </p>
                 <div className="mb-0 mt-8 flex items-center justify-start rounded-md bg-[#8799D040] p-4">
-                  <div className="ml-2 mr-4 flex h-[35px] w-[35px] items-center justify-center rounded-full bg-[#7CE8C7]">
+                  <div className="ml-2 mr-4 flex aspect-square h-[35px] w-[35px] items-center justify-center rounded-full bg-[#7CE8C7]">
                     <p className="text-primary-900 mb-0 text-lg">1</p>
                   </div>
                   <p className=" text-md mb-0 flex h-max max-w-xl items-center justify-center align-bottom font-semibold leading-7 text-white">
@@ -189,7 +189,7 @@ export default function Home() {
                   </p>
                 </div>
                 <div className="mt-8 flex items-center justify-start rounded-md bg-[#8799D040] p-4">
-                  <div className="ml-2 mr-4 flex h-[35px] w-[35px] items-center justify-center rounded-full bg-[#7CE8C7]">
+                  <div className="ml-2 mr-4 flex aspect-square h-[35px] w-[35px] items-center justify-center rounded-full bg-[#7CE8C7]">
                     <p className="text-primary-900 mb-0 text-lg">2</p>
                   </div>
                   <p className="text-md mb-0 flex h-max max-w-xl items-center justify-center align-bottom font-semibold leading-7 text-white">
@@ -198,7 +198,7 @@ export default function Home() {
                   </p>
                 </div>
                 <div className="mt-8 flex items-center justify-start rounded-md bg-[#8799D040] p-4">
-                  <div className="ml-2 mr-4 flex h-[35px] w-[35px] items-center justify-center rounded-full bg-[#7CE8C7]">
+                  <div className="ml-2 mr-4 flex aspect-square h-[35px] w-[35px] items-center justify-center rounded-full bg-[#7CE8C7]">
                     <p className="text-primary-900 mb-0 text-lg">3</p>
                   </div>
                   <p className="text-md mb-0 flex h-max max-w-xl items-center justify-center align-bottom font-semibold leading-7 text-white">
@@ -208,7 +208,7 @@ export default function Home() {
               </div>
 
               {/* Screenshot */}
-              <div className=" mt-12 flex aspect-square items-center justify-center overflow-hidden rounded-2xl lg:mt-0">
+              <div className="mt-12 flex aspect-square items-center justify-center overflow-hidden rounded-2xl lg:mt-0">
                 <img
                   className="h-full max-h-[512px] w-auto max-w-[512px] object-cover"
                   src="/img/solution.png"
@@ -220,7 +220,7 @@ export default function Home() {
         </div>
 
         {/* Features */}
-        <div className="mt-20">
+        <div className="mt-10">
           <div className="bg-white">
             <div className="mx-auto max-w-7xl py-16 px-4 sm:px-6 lg:py-20 lg:px-8">
               <div className="mx-auto max-w-3xl text-center">
@@ -254,7 +254,7 @@ export default function Home() {
         </div>
 
         {/* CTA section */}
-        <div className="relative mt-24 sm:py-16">
+        <div className="relative sm:py-16">
           <div aria-hidden="true" className="hidden sm:block">
             <div className="absolute inset-y-0 left-0 w-1/2 rounded-r-3xl bg-gray-50" />
             <svg
