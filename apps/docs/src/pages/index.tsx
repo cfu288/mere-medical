@@ -43,6 +43,7 @@ const features = [
 
 export default function Home() {
   const { siteConfig } = useDocusaurusContext();
+  console.log(process.env.NODE_ENV);
   return (
     <>
       <Head>
@@ -50,6 +51,14 @@ export default function Home() {
           property="og:description"
           content="Aggregate and sync all of your medical records from your patient portals in one place. Self-hosted and privacy first"
         />
+        {process.env.NODE_ENV === 'production' && (
+          <script
+            async
+            defer
+            data-website-id="923df902-e3c6-4d55-8c84-51cd5881ed81"
+            src="https://umami.mari.casa/umami.js"
+          ></script>
+        )}
       </Head>
       <main className="overflow-x-hidden overflow-y-hidden bg-white">
         {/* Hero section */}
