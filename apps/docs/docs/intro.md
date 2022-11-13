@@ -13,7 +13,7 @@ Mari Medical tries to provide a solution to this complex problem. Mari Medical i
 Here are our goals:
 
 - **Free**: Mari Medical will always be free to download and self-host. Everyone should have easy access to their medical records.
-- Built on open standards: Conforming to open standards like HL7 FHIR will enable interoperability between multiple healthcare systems.
+- **Built on open standards**: Conforming to open standards like HL7 FHIR will enable interoperability between multiple healthcare systems.
 - **Open Source**: You shouldn't need to take us for our word. Our source is available so you can review each line of code that is going to be touching your medical records.
 - **Self-Hostable**: You can run this software on your local computer or your own servers. No need to rely on third-party services.
 - **Offline-First**: While some features need online connectivity, the web app will always function offline so you can access your records - even if you can't access the internet.
