@@ -6,6 +6,30 @@
 
 /* You can override the default Infima variables here. */
 
+:root {
+  --ifm-color-primary: #006183;
+  --ifm-color-primary-dark: #00455f;
+  --ifm-color-primary-darker: #232e50;
+  --ifm-color-primary-darkest: #232e50;
+  --ifm-color-primary-light: #0081ac;
+  --ifm-color-primary-lighter: #00a2d5;
+  --ifm-color-primary-lightest: #00c5fd;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: #232e500a;
+}
+
+/* For readability concerns, you should choose a lighter palette in dark mode. */
+[data-theme='dark'] {
+  --ifm-color-primary: #006183;
+  --ifm-color-primary-dark: #00a2d5;
+  --ifm-color-primary-darker: #0081ac;
+  --ifm-color-primary-darkest: #006183;
+  --ifm-color-primary-light: #50dcff;
+  --ifm-color-primary-lighter: #79e6ff;
+  --ifm-color-primary-lightest: #8deaff;
+  --docusaurus-highlighted-code-line-bg: #232e501e;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
