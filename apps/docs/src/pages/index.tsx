@@ -43,7 +43,6 @@ const features = [
 
 export default function Home() {
   const { siteConfig } = useDocusaurusContext();
-  console.log(process.env.NODE_ENV);
   return (
     <>
       <Head>
