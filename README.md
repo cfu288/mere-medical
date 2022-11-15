@@ -34,24 +34,20 @@ Here are some ways to get Mari Medical running on your local computer
 version: '3.9'
 
 services:
-  web:
-    image: registry.mari.casa/mari-medical-web:latest
+  app:
+    image: registry.mari.casa/mari-medical:latest
     ports:
       - '4200:80'
     environment:
       - ONPATIENT_REDIRECT_URI=${ONPATIENT_REDIRECT_URI}
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
+      - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
       - DATABASE_NAME=${DATABASE_NAME}
       - PUBLIC_URL=${PUBLIC_URL}
-  api:
-    image: registry.mari.casa/mari-medical-api:latest
+  docs:
+    image: registry.mari.casa/mari-medical-docs:latest
     ports:
-      - '4201:4201'
-    environment:
-      - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
-      - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
-      - ONPATIENT_REDIRECT_URI=${ONPATIENT_REDIRECT_URI}
-      - PUBLIC_URL=${PUBLIC_URL}
+      - '4202:80'
 ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

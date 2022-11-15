@@ -3,7 +3,7 @@ name: default
 type: docker
 
 steps:
-  - name: frontend
+  - name: build and push image
     image: docker:dind
     environment:
       PASSWORD:
@@ -14,66 +14,9 @@ steps:
     commands:
       - sleep 5 # give docker enough time to start
       - docker login -u registry -p $PASSWORD registry.mari.casa
-      - docker build -f Dockerfile-web -t mari-medical-web .
-      - docker tag mari-medical-web:latest registry.mari.casa/mari-medical-web:latest
-      - docker push registry.mari.casa/mari-medical-web:latest
-
-  - name: backend
-    image: docker:dind
-    environment:
-      PASSWORD:
-        from_secret: registry_password
-    volumes:
-      - name: dockersock
-        path: /var/run
-    commands:
-      - sleep 5 # give docker enough time to start
-      - docker login -u registry -p $PASSWORD registry.mari.casa
-      - docker build -f Dockerfile-api -t mari-medical-api .
-      - docker tag mari-medical-api:latest registry.mari.casa/mari-medical-api:latest
-      - docker push registry.mari.casa/mari-medical-api:latest
-
-  - name: docs
-    image: docker:dind
-    environment:
-      PASSWORD:
-        from_secret: registry_password
-    volumes:
-      - name: dockersock
-        path: /var/run
-    commands:
-      - sleep 5 # give docker enough time to start
-      - docker login -u registry -p $PASSWORD registry.mari.casa
-      - docker build -f Dockerfile-docs -t mari-medical-docs .
-      - docker tag mari-medical-docs:latest registry.mari.casa/mari-medical-docs:latest
-      - docker push registry.mari.casa/mari-medical-docs:latest
-
-  - name: parallelize builds
-    image: docker:dind
-    commands:
-      - echo "Done"
-    depends_on:
-      - frontend
-      - backend
-      - docs
-
-#   - name: deploy stack
-#     image: appleboy/drone-ssh
-#     settings:
-#       host:
-#         - 192.168.1.100
-#       username: cfu288
-#       key:
-#         from_secret: ssh_key
-#       port: 22
-#       command_timeout: 30m
-#       script:
-#         - curl https://gitea.mari.casa/cfu288/mari-medical/raw/branch/main/docker-compose.prod.yaml > docker-compose.deploy.yaml
-#         - docker stack deploy -c docker-compose.deploy.yaml mari-medical
-#         - rm docker-compose.deploy.yaml
-#     depends_on:
-#       - frontend
-#       - backend
+      - docker build -f Dockerfile-web -t mari-medical .
+      - docker tag mari-medical:latest registry.mari.casa/mari-medical:latest
+      - docker push registry.mari.casa/mari-medical:latest
 
 services:
   - name: docker

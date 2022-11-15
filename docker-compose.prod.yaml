@@ -1,23 +1,15 @@
 version: '3.9'
 
 services:
-  web:
-    image: registry.mari.casa/mari-medical-web:latest
+  app:
+    image: registry.mari.casa/mari-medical:latest
     ports:
       - '4200:80'
     environment:
       - ONPATIENT_REDIRECT_URI=${ONPATIENT_REDIRECT_URI}
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
-      - DATABASE_NAME=${DATABASE_NAME}
-      - PUBLIC_URL=${PUBLIC_URL}
-  api:
-    image: registry.mari.casa/mari-medical-api:latest
-    ports:
-      - '4201:4201'
-    environment:
       - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
-      - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
-      - ONPATIENT_REDIRECT_URI=${ONPATIENT_REDIRECT_URI}
+      - DATABASE_NAME=${DATABASE_NAME}
       - PUBLIC_URL=${PUBLIC_URL}
   docs:
     image: registry.mari.casa/mari-medical-docs:latest
