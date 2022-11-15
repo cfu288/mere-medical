@@ -106,10 +106,10 @@ export default function Home() {
               </div>
             </div>
             {/* Right Hero */}
-            <div className="lg:rounded-tr-0 lg:left-100 mt-24 w-auto rounded-bl-[80px] rounded-tr-[80px] bg-[#F1F4F9] pt-6 sm:overflow-visible lg:absolute lg:inset-y-0 lg:left-1/2 lg:right-0 lg:mt-0 lg:w-full">
+            <div className="lg:rounded-tr-0 lg:left-100 mt-24 flex h-96 w-auto overflow-hidden rounded-bl-[80px] rounded-tr-[80px] bg-[#F1F4F9] pt-6 sm:h-[32rem] lg:absolute lg:inset-y-0 lg:left-1/2 lg:right-0 lg:mt-0 lg:block lg:h-full lg:w-full lg:overflow-visible">
               <img
-                className="mx-auto mt-0 p-10 sm:max-w-xl lg:mx-0 lg:mt-20 lg:h-full lg:w-auto lg:max-w-none lg:pl-20 xl:pl-40"
-                src="/img/phone-screen.png"
+                className="mx-auto mt-0 self-start p-10 sm:max-w-xl lg:mx-0 lg:mt-20 lg:h-full lg:w-auto lg:max-w-none lg:self-center lg:pl-20 xl:pl-40"
+                src="/img/phone-screen.webp"
                 alt="phone screenshot"
               />
             </div>
@@ -117,19 +117,17 @@ export default function Home() {
         </div>
 
         {/* Problem section */}
-        <div className="relative mt-12 lg:mt-48">
-          <div className="lg:mx-auto lg:grid lg:max-w-7xl lg:grid-cols-2 lg:items-start lg:gap-24 lg:px-8">
-            <div className="relative sm:hidden sm:py-16 lg:py-0">
-              <div className=" mt-12 flex aspect-square items-center justify-center overflow-hidden rounded-2xl lg:mt-0">
-                <img
-                  className="h-auto max-h-[512px] w-full max-w-[512px] object-cover"
-                  src="/img/snippets.png"
-                  alt=""
-                />
-              </div>
-            </div>
+        <div className="relative mt-24 md:mt-36 lg:mt-48">
+          <div className="flex flex-col-reverse items-center justify-center lg:flex-row lg:items-start lg:gap-24 lg:px-8">
+            {/* <div className="flex h-full grow items-center justify-center overflow-hidden lg:order-1 lg:w-full"> */}
+            <img
+              className="mt-12 h-auto max-h-[512px] w-full max-w-[512px] self-center justify-self-center object-cover lg:order-1 lg:mt-0"
+              src="/img/snippets.webp"
+              alt=""
+            />
+            {/* </div> */}
 
-            <div className="relative mx-auto max-w-md px-4 sm:max-w-3xl sm:px-6 lg:px-0">
+            <div className="mx-auto max-w-md px-4 sm:max-w-3xl sm:px-6 lg:px-0">
               {/* Content area */}
               <div className="lg:pt-12">
                 <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
@@ -211,7 +209,7 @@ export default function Home() {
               <div className="mt-12 flex aspect-square items-center justify-center overflow-hidden rounded-2xl lg:mt-0">
                 <img
                   className="h-full max-h-[512px] w-auto max-w-[512px] object-cover"
-                  src="/img/solution.png"
+                  src="/img/solution.webp"
                   alt=""
                 />
               </div>

@@ -8,6 +8,11 @@ module.exports = {
   darkMode: ['class', '[data-theme="dark"]'],
   theme: {
     extend: {
+      extend: {
+        spacing: {
+          128: '32rem',
+        },
+      },
       fontFamily: {
         sans: ['Gilroy', ...defaultTheme.fontFamily.sans],
       },
