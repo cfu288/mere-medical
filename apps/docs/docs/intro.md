@@ -19,6 +19,6 @@ Here are our goals:
 - **Offline-First**: While some features need online connectivity, the web app will always function offline so you can access your records - even if you can't access the internet.
 - **Multi-device syncing support**: Medical records are useless if they're stuck on your computer but you only have your phone on you.
 
-Mari Medical is still in the early stages of its development. Lots of features are still rough around the edges. Using Mari Medical currently requires someone with a technical background to get it up and running - you should be familiar with docker. The hope is that by keeping this open source, others can run this software so others can use it without setup.
+Mari Medical is still in the early stages of its development. Lots of features are still rough around the edges. Using Mari Medical currently requires someone with a technical background to get it up and running - you should be familiar with docker. The hope is that by keeping this open source, technical users can run this software so anyone can use it without setup.
 
 [Check out our live demo here](https://medical.mari.casa)
