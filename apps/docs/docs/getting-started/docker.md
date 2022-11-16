@@ -76,4 +76,4 @@ to start Mari Medical as a background process.
 
 Then open `http://localhost:4200` in a browser to see Mari Medical running!
 
-Note that this will set up SSL for you, which is needed for some patient portal syncing/authentication flows. Look into using `mkcert` and/or a reverse proxy like `nginx` to set up localhost certificates.
+Note that this will not set up SSL for you, which is needed for some patient portal syncing/authentication flows. Look into using `mkcert` and/or a reverse proxy like `nginx` to set up localhost certificates.
