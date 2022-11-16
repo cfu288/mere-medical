@@ -96,7 +96,7 @@ export default function Home() {
                   </div>
                   <div className="mt-3 rounded-md shadow sm:mt-0 sm:ml-3">
                     <a
-                      href={`${siteConfig.url}/docs/intro`}
+                      href={`${siteConfig.url}/docs`}
                       className="text-primary-600 hover:text-primary-500 flex w-full items-center justify-center rounded-md border border-transparent bg-white px-8 py-3 text-base font-medium hover:bg-gray-50 md:py-4 md:px-10 md:text-lg"
                     >
                       Go to Docs
@@ -118,7 +118,7 @@ export default function Home() {
 
         {/* Problem section */}
         <div className="relative mt-24 md:mt-36 lg:mt-48">
-          <div className=" mx-auto max-w-md px-4 sm:max-w-3xl sm:px-6 lg:max-w-7xl lg:px-8 flex flex-col-reverse items-center justify-center lg:flex-row-reverse lg:items-start lg:gap-24 lg:px-8">
+          <div className=" mx-auto flex max-w-md flex-col-reverse items-center justify-center px-4 sm:max-w-3xl sm:px-6 lg:max-w-7xl lg:flex-row-reverse lg:items-start lg:gap-24 lg:px-8 lg:px-8">
             {/* <div className="flex h-full grow items-center justify-center overflow-hidden lg:order-1 lg:w-full"> */}
             <img
               className="mt-12 h-auto max-h-[512px] w-full max-w-[512px] self-center justify-self-center object-cover lg:order-1 lg:mt-0"

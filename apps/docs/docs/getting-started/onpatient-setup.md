@@ -1,5 +1,6 @@
 ---
 sidebar_position: 2
+description: Configuring integration with OnPatient patient portal.
 ---
 
 # Setting up OnPatient Sync

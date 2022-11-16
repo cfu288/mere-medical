@@ -1,5 +1,7 @@
 ---
 sidebar_position: 1
+slug: /
+description: What exactly is Mari Medical anyways?
 ---
 
 # What is Mari Medical?

@@ -1,5 +1,6 @@
 ---
 sidebar_position: 1
+description: Get up and running with Docker
 ---
 
 # Run with Docker
