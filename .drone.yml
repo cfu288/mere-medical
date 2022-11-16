@@ -3,7 +3,7 @@ name: default
 type: docker
 
 steps:
-  - name: build and push image
+  - name: app
     image: docker:dind
     environment:
       PASSWORD:
@@ -17,6 +17,29 @@ steps:
       - docker build -f Dockerfile -t mari-medical .
       - docker tag mari-medical:latest registry.mari.casa/mari-medical:latest
       - docker push registry.mari.casa/mari-medical:latest
+
+  - name: docs
+    image: docker:dind
+    environment:
+      PASSWORD:
+        from_secret: registry_password
+    volumes:
+      - name: dockersock
+        path: /var/run
+    commands:
+      - sleep 5 # give docker enough time to start
+      - docker login -u registry -p $PASSWORD registry.mari.casa
+      - docker build -f Dockerfile-docs -t mari-medical-docs .
+      - docker tag mari-medical-docs:latest registry.mari.casa/mari-medical-docs:latest
+      - docker push registry.mari.casa/mari-medical-docs:latest
+
+  - name: parallelize builds
+    image: docker:dind
+    commands:
+      - echo "Done"
+    depends_on:
+      - app
+      - docs
 
 services:
   - name: docker
