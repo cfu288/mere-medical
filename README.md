@@ -59,9 +59,11 @@ services:
 ### Installation
 
 1. Clone the repo
+
    ```sh
    git clone https://gitea.mari.casa/cfu288/mari-medical.git
    ```
+
 2. Install NPM packages
 
    ```sh
@@ -91,16 +93,13 @@ services:
 5. Build and serve in docker container:
 
    ```bash
-   npx nx build web
-   docker build -t mari-medical-web .
-   docker run -d --restart unless-stopped -p 9999:80 mari-medical-web
-   ```
-
-6. Push to registry:
-
-   ```bash
-   docker tag mari-medical-web:latest registry.mari.casa/mari-medical-web:latest
-   docker push registry.mari.casa/mari-medical-web:latest
+   docker build -t mari-medical .
+   docker run -p 4200:80 -i -t \
+     --name mari-medical \
+     -e ONPATIENT_CLIENT_ID=<> \
+     -e ONPATIENT_CLIENT_SECRET=<> \
+     -e PUBLIC_URL=https://localhost:4200 \
+     mari-medical:latest
    ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
