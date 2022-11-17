@@ -5,7 +5,7 @@ description: Deploy Mari Medical to Digital Ocean with one click
 
 # 1-Click Deploy to Digital Ocean
 
-If you don't want to deploy Mari Medical to your own server or local machine, you can easily deploy Mari Medical to Digital Ocean App Platform with one click! Just click the button below and follow the steps to get started for just $5 a month! The button below is a referral link that comes with $200 worth of credit.
+If you don't want to deploy Mari Medical to your own server or local machine, you can easily deploy Mari Medical to Digital Ocean App Platform with one click!. Just click the button below and follow the steps to deploy Mari Medical for $5 a month. The button below is a referral link that comes with $200 worth of credit for the first two months.
 
 Note that by default, DO App platform pre-selects their $12 droplet. You can downgrade to the $5 droplet during setup by clicking `Edit Plan`.
 
