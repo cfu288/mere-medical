@@ -1,11 +1,11 @@
 spec:
   name: mari-medical
   services:
-    - name: app
+    - dockerfile_path: Dockerfile
+      name: app
       git:
         branch: main
         repo_clone_url: https://github.com/cfu288/mari-medical.git
-      dockerfile_path: Dockerfile
       envs:
         - key: ONPATIENT_CLIENT_ID
           scope: RUN_TIME
