@@ -1,7 +1,9 @@
 ---
 sidebar_position: 2
-description: 1-Click Deploy to Digital Ocean
+description: Deploy Mari Medical to Digital Ocean with one click
 ---
+
+# 1-Click Deploy to Digital Ocean
 
 To deploy Mari Medical to Digital Ocean App Platform, click the button below and follow the steps:
 
