@@ -77,7 +77,7 @@ Then open http://localhost:4200 in a browser to see Mari Medical running!
 
 Note that this will not set up SSL for you, which is needed for some patient portal syncing/authentication flows. If you are running this on a server with reverse proxy already set up, it is recommended to have your reverse proxy handle SSL and forward requests to Mari Medical. If you are running this on your local machine and need local SSL set up, read the section below.
 
-### Setting Up with Docker Compose & Local SSL with mkcert + nginx
+### Setting Up with Docker Compose & Local SSL with mkcert + NGINX
 
 Copy the following a docker compose file in a new directory.
 
