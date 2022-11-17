@@ -2,6 +2,7 @@
 .env
 .local.env
 .production.env
+/dev-stack
 
 # compiled output
 /dist
