@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1
+sidebar_position: 2
 description: 1-Click Deploy to Digital Ocean
 ---
 
