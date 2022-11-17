@@ -9,7 +9,6 @@ spec:
         - key: ONPATIENT_CLIENT_ID
           type: SECRET
         - key: ONPATIENT_CLIENT_SECRET
-          scope: SECRET
+          type: SECRET
         - key: PUBLIC_URL
-          scope: RUN_TIME
           value: ${APP_URL}
