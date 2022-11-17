@@ -16,7 +16,7 @@
 </div>
 
 <p align="center">
-  <a href="https://cloud.digitalocean.com/apps/new?repo=https://github.com/cfu288/mari-medical/tree/main">
+  <a href="https://cloud.digitalocean.com/apps/new?repo=https://github.com/cfu288/mari-medical/tree/main&refcode=f6e0d718edc7">
   <img src="https://www.deploytodo.com/do-btn-blue.svg" alt="Deploy to DO">
   </a>
 </p>
