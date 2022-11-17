@@ -21,7 +21,6 @@ Run the following in your command prompt:
 ```
 docker run -p 4200:80 -i -t \
   --name mari-medical \
-  -e ONPATIENT_REDIRECT_URI=https://localhost:4200/api/v1/onpatient/callback \
   -e ONPATIENT_CLIENT_ID=<ID_HERE> \
   -e ONPATIENT_CLIENT_SECRET=<SECRET_HERE> \
   -e PUBLIC_URL=https://localhost:4200 \
@@ -37,7 +36,6 @@ docker run -p 4200:80 \
   --name mari-medical \
   --detach \
   --restart unless-stopped \
-  -e ONPATIENT_REDIRECT_URI=https://localhost:4200/api/v1/onpatient/callback \
   -e ONPATIENT_CLIENT_ID=<ID_HERE> \
   -e ONPATIENT_CLIENT_SECRET=<SECRET_HERE> \
   -e PUBLIC_URL=https://localhost:4200 \
@@ -61,7 +59,6 @@ services:
     ports:
       - '4200:80'
     environment:
-      - ONPATIENT_REDIRECT_URI=${ONPATIENT_REDIRECT_URI}
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
       - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
       - PUBLIC_URL=${PUBLIC_URL}
@@ -95,13 +92,12 @@ services:
     depends_on:
       - app
   app:
-    image: mari-medical:latest
+    image: registry.mari.casa/mari-medical:latest
     container_name: mari-medical-app
     environment:
-      - ONPATIENT_REDIRECT_URI=${ONPATIENT_REDIRECT_URI}
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
       - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
-      - PUBLIC_URL=marimedical.local
+      - PUBLIC_URL=https://marimedical.local
 ```
 
 Note that the directory name becomes the prefix for the container, we suggest naming the folder `mari-medical`. Create a nginx subdirectory, which contains folders `conf` and `certs`. Your folder directory should look something like this:

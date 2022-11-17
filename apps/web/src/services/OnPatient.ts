@@ -22,7 +22,7 @@ export namespace OnPatient {
   export function getLoginUrl() {
     return `https://onpatient.com/o/authorize/?${new URLSearchParams({
       client_id: config.ONPATIENT_CLIENT_ID,
-      redirect_uri: config.ONPATIENT_REDIRECT_URI,
+      redirect_uri: `${config.PUBLIC_URL}/api/v1/onpatient/callback`,
       scope: 'patient/*.read',
       response_type: 'code',
     })}`;

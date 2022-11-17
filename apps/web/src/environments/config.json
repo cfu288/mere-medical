@@ -1,5 +1,4 @@
 {
-  "ONPATIENT_REDIRECT_URI": "https://localhost:4200/api/v1/onpatient/callback",
   "ONPATIENT_CLIENT_ID": "2MkZStehSopenoRwmWalHqJ53Kips0z4zyNjk8in",
-  "PUBLIC_URL": "http://localhost:4200"
+  "PUBLIC_URL": "https://localhost:4200"
 }
