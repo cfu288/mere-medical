@@ -302,6 +302,9 @@ export default function Home() {
       </main>
       <footer className="bg-primary-900">
         <div className="mx-auto max-w-md overflow-hidden py-12 px-4 sm:max-w-3xl sm:px-6 lg:max-w-7xl lg:px-8">
+          <div className="mx-auto flex w-full items-center pb-4">
+            <img className="mx-auto" src="/img/white-logo.svg"></img>
+          </div>
           <nav
             className="-mx-5 -my-2 flex flex-wrap justify-center"
             aria-label="Footer"
