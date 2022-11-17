@@ -110,9 +110,13 @@ mari-medical
     certs/
 ```
 
+From the root folder, run the following command to set up local certs:
+
 ```bash
 mkcert -key-file nginx/certs/ssl.key -cert-file nginx/certs/ssl.crt marimedical.local
 ```
+
+Run `mkcert -install` if prompted to.
 
 Add the following entry to your `/etc/hosts` file:
 

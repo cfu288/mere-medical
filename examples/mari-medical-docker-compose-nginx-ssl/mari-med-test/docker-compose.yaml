@@ -1,0 +1,19 @@
+version: '3.9'
+
+services:
+  nginx:
+    image: nginx:latest
+    ports: 
+      - 443:443
+    volumes:
+      - ./nginx/certs/:/etc/nginx/ssl
+      - ./nginx/conf/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+  app:
+    image: registry.mari.casa/mari-medical:latest
+    container_name: mari-medical-app
+    environment:
+      - ONPATIENT_CLIENT_ID=2MkZStehSopenoRwmWalHqJ53Kips0z4zyNjk8in
+      - ONPATIENT_CLIENT_SECRET=6SK0rJxRz7xB9Z3HioWxFnOH1kQJIsTuLCcpqbUl3j2qJ6THshLRqBXNI5lE7sKJnxtd860dwslQbrsWbaVINynx3SeUI8dTfOEfBBrT2yqhwaRRsROxczpktHBwZtgE
+      - PUBLIC_URL=https://marimedical.local

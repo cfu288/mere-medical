@@ -28,26 +28,6 @@ export namespace OnPatient {
     })}`;
   }
 
-  // export async function getAccessTokenFromRefreshToken(
-  //   refreshToken: string
-  // ): Promise<OnPatientAuthResponse> {
-  //   const params = {
-  //     grant_type: 'refresh_token',
-  //     client_id: environment.onpatient_client_id,
-  //     client_secret: environment.onpatient_client_secret,
-  //     redirect_uri: 'https://localhost:3000/tab2',
-  //     refresh_token: refreshToken,
-  //   };
-  //   const encodedParams = new URLSearchParams(params as Record<string, string>);
-  //   const url = `https://onpatient.com/o/token/?${encodedParams}`;
-
-  //   return await fetch(url, {
-  //     method: 'POST',
-  //   })
-  //     .then((res) => res.json())
-  //     .then((codeRes: OnPatientAuthResponse) => codeRes);
-  // }
-
   async function getProcedures(
     connectionDocument: RxDocument<ConnectionDocument>
   ): Promise<BundleEntry<Procedure>[]> {
