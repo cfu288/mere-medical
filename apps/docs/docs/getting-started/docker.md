@@ -5,7 +5,7 @@ description: Get up and running with Docker
 
 # Run with Docker
 
-These instructions will tell you how to get Mari Medical up and running with Docker or Docker Compose.
+These instructions will tell you how to get Mari Medical up and running on your machine with Docker or Docker Compose.
 
 As Mari Medical is still being developed, so is this documentation. Complete documentation is coming soon!
 
