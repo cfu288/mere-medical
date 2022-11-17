@@ -23,4 +23,6 @@ Here are our goals:
 
 Mari Medical is still in the early stages of its development. Lots of features are still rough around the edges. Using Mari Medical currently requires someone with a technical background to get it up and running - you should be familiar with docker. The hope is that by keeping this open source, technical users can run this software so anyone can use it without setup.
 
+We also offer [1-click deployment to digital ocean](./getting-started/deploy-to-do.md) if you prefer having a cloud service host Mari Medical for you.
+
 [Check out our live demo here](https://medical.mari.casa)
