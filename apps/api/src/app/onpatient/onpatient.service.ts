@@ -1,9 +1,24 @@
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
+import { Inject } from '@nestjs/common';
+
+export interface OnPatientServiceConfig {
+  clientId: string;
+  clientSecret: string;
+  redirectUri: string;
+}
 
 @Injectable()
 export class OnPatientService {
-  constructor(private readonly httpService: HttpService) {}
+  private readonly envConfig: OnPatientServiceConfig;
+
+  constructor(
+    @Inject('CONFIG') private options: OnPatientServiceConfig,
+    private readonly httpService: HttpService
+  ) {
+    this.envConfig = options;
+  }
+
   async getAuthCode(code: string): Promise<OnPatientAuthResponse> {
     if (!code) {
       throw new HttpException(
@@ -14,9 +29,9 @@ export class OnPatientService {
 
     const params = {
       grant_type: 'authorization_code',
-      client_id: process.env.ONPATIENT_CLIENT_ID,
-      client_secret: process.env.ONPATIENT_CLIENT_SECRET,
-      redirect_uri: process.env.ONPATIENT_REDIRECT_URI,
+      client_id: this.envConfig.clientId,
+      client_secret: this.envConfig.clientSecret,
+      redirect_uri: this.envConfig.redirectUri,
       code: code,
     };
 

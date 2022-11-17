@@ -44,7 +44,7 @@ type RxDbProviderProps = PropsWithChildren<unknown>;
 
 async function initRxDb() {
   const db = await createRxDatabase<DatabaseCollections>({
-    name: config.DATABASE_NAME,
+    name: 'mari_db',
     storage: getRxStoragePouch('idb'),
     multiInstance: true,
     ignoreDuplicate: true,
@@ -84,8 +84,8 @@ export function RxDbProvider(props: RxDbProviderProps) {
         enterFrom="opacity-100"
         enterTo="opacity-0"
       >
-        <div className="flex flex-col h-screen w-full justify-center items-center gap-8">
-          <img className="w-48 h-48" src={logo} alt="Loading screen"></img>
+        <div className="flex h-screen w-full flex-col items-center justify-center gap-8">
+          <img className="h-48 w-48" src={logo} alt="Loading screen"></img>
         </div>
       </Transition.Child>
       <Transition.Child

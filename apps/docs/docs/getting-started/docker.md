@@ -23,7 +23,6 @@ docker run -p 4200:80 -i -t \
   -e ONPATIENT_REDIRECT_URI=https://localhost:4200/api/v1/onpatient/callback \
   -e ONPATIENT_CLIENT_ID=<ID_HERE> \
   -e ONPATIENT_CLIENT_SECRET=<SECRET_HERE> \
-  -e DATABASE_NAME=mari_db \
   -e PUBLIC_URL=https://localhost:4200 \
   registry.mari.casa/mari-medical:latest
 ```
@@ -40,7 +39,6 @@ docker run -p 4200:80 \
   -e ONPATIENT_REDIRECT_URI=https://localhost:4200/api/v1/onpatient/callback \
   -e ONPATIENT_CLIENT_ID=<ID_HERE> \
   -e ONPATIENT_CLIENT_SECRET=<SECRET_HERE> \
-  -e DATABASE_NAME=mari_db \
   -e PUBLIC_URL=https://localhost:4200 \
   registry.mari.casa/mari-medical:latest
 ```
@@ -65,7 +63,6 @@ services:
       - ONPATIENT_REDIRECT_URI=${ONPATIENT_REDIRECT_URI}
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
       - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
-      - DATABASE_NAME=${DATABASE_NAME}
       - PUBLIC_URL=${PUBLIC_URL}
 ```
 

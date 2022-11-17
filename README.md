@@ -42,7 +42,6 @@ services:
       - ONPATIENT_REDIRECT_URI=${ONPATIENT_REDIRECT_URI}
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
       - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
-      - DATABASE_NAME=${DATABASE_NAME}
       - PUBLIC_URL=${PUBLIC_URL}
   docs:
     image: registry.mari.casa/mari-medical-docs:latest
