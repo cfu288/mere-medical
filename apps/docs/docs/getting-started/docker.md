@@ -76,7 +76,9 @@ Note that this will not set up SSL for you, which is needed for some patient por
 
 ### Setting Up with Docker Compose & Local SSL with mkcert + NGINX
 
-Copy the following a docker compose file in a new directory.
+You can grab the required files for the following steps [here](https://github.com/cfu288/mari-medical/tree/main/examples/mari-medical-docker-compose-nginx-ssl).
+
+If not, then you can create a new directory and copy the following a docker compose file into it.
 
 ```yaml title="mari-medical/docker-compose.yaml"
 version: '3.9'
