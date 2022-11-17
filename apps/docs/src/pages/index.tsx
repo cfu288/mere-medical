@@ -11,31 +11,37 @@ const footerNavigation = {
 const features = [
   {
     name: 'Sync to multiple patient portals',
+    img: '/img/sync.svg',
     description:
       'Connect to all of your patient portals across doctors and hospitals and see all of your data in one place. Let us help you manage your medical records.',
   },
   {
-    name: 'Self-hosted',
+    name: 'Self-Hosted',
+    img: '/img/self.svg',
     description:
       'Mari respects the privacy, security, and integrity of your info at all times. Run it on your own servers at home without worrying about your sensitive data falling into the wrong hands.',
   },
   {
-    name: 'Offline Functionality',
+    name: 'Offline First',
+    img: '/img/offline.svg',
     description:
       'Mari is offline-first. Everything will be available right on your device for anytime-access – whether you’re connected to the web or not.',
   },
   {
     name: 'Reminders',
+    img: '/img/reminders.svg',
     description:
       'Advanced AI technology means you’ll get convenient health recommendations, wellness metrics, and reminders when it’s time to see the doctor again – all from one intuitive dashboard.',
   },
   {
     name: 'Anonymous & Secure',
+    img: '/img/secure.svg',
     description:
       'With Mari, you are always in control of your data. Stay offline, sync online – the choice is yours.',
   },
   {
     name: 'Free for Everyone',
+    img: '/img/free.svg',
     description:
       'Every patient has the right to control their own healthcare data. That’s why Mari Medical is free to use, deploy, and change.',
   },
@@ -129,7 +135,7 @@ export default function Home() {
 
             <div className="mx-auto max-w-md px-4 sm:max-w-3xl sm:px-6 lg:px-0">
               {/* Content area */}
-              <div className="lg:pt-12">
+              <div className="lg:pt-20">
                 <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
                   What’s the Problem?
                 </h2>
@@ -231,17 +237,21 @@ export default function Home() {
               </div>
               <dl className="mt-12 space-y-10 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:gap-y-12 sm:space-y-0 lg:grid-cols-3 lg:gap-x-8">
                 {features.map((feature) => (
-                  <div key={feature.name} className="relative">
-                    <dt>
-                      <CheckIcon
-                        className="absolute h-6 w-6 text-green-600"
+                  <div
+                    key={feature.name}
+                    className="flex min-h-[250px] flex-col rounded-md border border-2 border-solid border-slate-100 p-6"
+                  >
+                    <dt className="flex flex-col">
+                      <img
+                        src={feature.img}
+                        className="h-[84px] w-[84px] text-green-600"
                         aria-hidden="true"
                       />
-                      <p className="ml-9 text-lg font-medium leading-6 text-gray-900">
+                      <p className="mt-8 text-2xl font-semibold text-gray-900">
                         {feature.name}
                       </p>
                     </dt>
-                    <dd className="mt-2 ml-9 text-base text-gray-600">
+                    <dd className="text- mt-4 ml-0 font-light text-gray-600">
                       {feature.description}
                     </dd>
                   </div>
@@ -253,7 +263,7 @@ export default function Home() {
 
         {/* CTA section */}
         <div className="relative sm:py-16">
-          <div aria-hidden="true" className="hidden sm:block">
+          {/* <div aria-hidden="true" className="hidden sm:block">
             <div className="absolute inset-y-0 left-0 w-1/2 rounded-r-3xl bg-gray-50" />
             <svg
               className="absolute top-8 left-1/2 -ml-3"
@@ -287,7 +297,7 @@ export default function Home() {
                 fill="url(#8228f071-bcee-4ec8-905a-2a059a2cc4fb)"
               />
             </svg>
-          </div>
+          </div> */}
         </div>
       </main>
       <footer className="bg-primary-900">
