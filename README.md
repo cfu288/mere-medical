@@ -15,6 +15,12 @@
   </p>
 </div>
 
+<p align="center">
+  <a href="https://cloud.digitalocean.com/apps/new?repo=https://github.com/cfu288/mari-medical/tree/main">
+  <img src="https://www.deploytodo.com/do-btn-blue.svg" alt="Deploy to DO">
+  </a>
+</p>
+
 ## What is Mari Medical
 
 <p align="center">

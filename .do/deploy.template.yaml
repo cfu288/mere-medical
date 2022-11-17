@@ -1,0 +1,15 @@
+spec:
+  name: mari-medical
+  services:
+    - name: app
+      git:
+        branch: main
+        repo_clone_url: https://github.com/cfu288/mari-medical.git
+      envs:
+        - key: ONPATIENT_CLIENT_ID
+          type: SECRET
+        - key: ONPATIENT_CLIENT_SECRET
+          scope: SECRET
+        - key: PUBLIC_URL
+          scope: RUN_TIME
+          value: ${APP_URL}
