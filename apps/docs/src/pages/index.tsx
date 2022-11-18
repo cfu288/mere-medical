@@ -53,6 +53,10 @@ export default function Home() {
     <>
       <Head>
         <meta
+          name="description"
+          content="Aggregate and sync all of your medical records from your patient portals in one place. Self-hosted and privacy first"
+        />
+        <meta
           property="og:description"
           content="Aggregate and sync all of your medical records from your patient portals in one place. Self-hosted and privacy first"
         />
@@ -95,7 +99,7 @@ export default function Home() {
                   <div className="rounded-md shadow">
                     <a
                       href="https://medical.mari.casa"
-                      className="bg-primary-600 hover:bg-primary-500 flex w-full items-center justify-center rounded-md border border-transparent px-8 py-3 text-base font-medium text-white hover:text-white md:py-4 md:px-10 md:text-lg"
+                      className="bg-primary-700 hover:bg-primary-600 flex w-full items-center justify-center rounded-md border border-transparent px-8 py-3 text-base font-medium text-white hover:text-white md:py-4 md:px-10 md:text-lg"
                     >
                       See Demo
                     </a>
@@ -103,7 +107,7 @@ export default function Home() {
                   <div className="mt-3 rounded-md shadow sm:mt-0 sm:ml-3">
                     <a
                       href={`${siteConfig.url}/docs`}
-                      className="text-primary-600 hover:text-primary-500 flex w-full items-center justify-center rounded-md border border-transparent bg-white px-8 py-3 text-base font-medium hover:bg-gray-50 md:py-4 md:px-10 md:text-lg"
+                      className="text-primary-700 hover:text-primary-600 flex w-full items-center justify-center rounded-md border border-transparent bg-white px-8 py-3 text-base font-medium hover:bg-gray-50 md:py-4 md:px-10 md:text-lg"
                     >
                       Go to Docs
                     </a>
@@ -303,7 +307,11 @@ export default function Home() {
       <footer className="bg-primary-900">
         <div className="mx-auto max-w-md overflow-hidden py-12 px-4 sm:max-w-3xl sm:px-6 lg:max-w-7xl lg:px-8">
           <div className="mx-auto flex w-full items-center pb-4">
-            <img className="mx-auto" src="/img/white-logo.svg"></img>
+            <img
+              aria-hidden="true"
+              className="mx-auto"
+              src="/img/white-logo.svg"
+            ></img>
           </div>
           <nav
             className="-mx-5 -my-2 flex flex-wrap justify-center"
