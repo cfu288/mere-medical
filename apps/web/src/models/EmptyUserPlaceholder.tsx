@@ -7,6 +7,7 @@ import { DatabaseCollections, useRxDb } from '../components/RxDbProvider';
 import { ClinicalDocument } from './ClinicalDocument';
 import { UserDocument } from './UserDocument';
 import uuid4 from 'uuid4';
+import { useUser } from '../components/UserProvider';
 
 function fetchPatientRecords(db: RxDatabase<DatabaseCollections>) {
   return db.clinical_documents
@@ -34,6 +35,10 @@ enum ActionTypes {
   TOGGLE_MODAL,
   SET_PT_RECORD,
   SET_FIRST_NAME,
+  SET_LAST_NAME,
+  SET_EMAIL,
+  SET_BIRTHDAY,
+  SET_GENDER,
 }
 
 type FormFields = {
@@ -52,6 +57,11 @@ type ModalState = {
 
 type ModalActions =
   | { type: ActionTypes.SET_PT_RECORD; data: FormFields }
+  | { type: ActionTypes.SET_FIRST_NAME; data: string }
+  | { type: ActionTypes.SET_LAST_NAME; data: string }
+  | { type: ActionTypes.SET_EMAIL; data: string }
+  | { type: ActionTypes.SET_BIRTHDAY; data: string }
+  | { type: ActionTypes.SET_GENDER; data: string }
   | { type: ActionTypes.TOGGLE_MODAL };
 
 function reducer(state: ModalState, action: ModalActions): ModalState {
@@ -61,6 +71,36 @@ function reducer(state: ModalState, action: ModalActions): ModalState {
         ...state,
         formFields: action.data,
         patientRecord: action.data,
+      };
+    }
+    case ActionTypes.SET_FIRST_NAME: {
+      return {
+        ...state,
+        formFields: { ...state.formFields, firstName: action.data },
+      };
+    }
+    case ActionTypes.SET_LAST_NAME: {
+      return {
+        ...state,
+        formFields: { ...state.formFields, lastName: action.data },
+      };
+    }
+    case ActionTypes.SET_GENDER: {
+      return {
+        ...state,
+        formFields: { ...state.formFields, gender: action.data },
+      };
+    }
+    case ActionTypes.SET_EMAIL: {
+      return {
+        ...state,
+        formFields: { ...state.formFields, email: action.data },
+      };
+    }
+    case ActionTypes.SET_BIRTHDAY: {
+      return {
+        ...state,
+        formFields: { ...state.formFields, birthday: action.data },
       };
     }
     case ActionTypes.TOGGLE_MODAL: {
@@ -105,11 +145,38 @@ export function EmptyUserPlaceholder() {
         first_name: firstName,
         last_name: lastName,
         email,
+        is_selected_user: true,
       };
       db.user_documents.insert(userDocument).then(() => {
         toggleModal();
       });
     };
+
+  const firstNameHandler = (e: React.ChangeEvent<HTMLInputElement>) =>
+      dispatch({
+        type: ActionTypes.SET_FIRST_NAME,
+        data: e.target.value,
+      }),
+    lastNameHandler = (e: React.ChangeEvent<HTMLInputElement>) =>
+      dispatch({
+        type: ActionTypes.SET_LAST_NAME,
+        data: e.target.value,
+      }),
+    emailHandler = (e: React.ChangeEvent<HTMLInputElement>) =>
+      dispatch({
+        type: ActionTypes.SET_EMAIL,
+        data: e.target.value,
+      }),
+    birthdayHandler = (e: React.ChangeEvent<HTMLInputElement>) =>
+      dispatch({
+        type: ActionTypes.SET_BIRTHDAY,
+        data: e.target.value,
+      }),
+    genderHandler = (e: React.ChangeEvent<HTMLInputElement>) =>
+      dispatch({
+        type: ActionTypes.SET_GENDER,
+        data: e.target.value,
+      });
 
   useEffect(() => {
     fetchPatientRecords(db).then((data) => {
@@ -135,7 +202,7 @@ export function EmptyUserPlaceholder() {
       onClick={() => {
         dispatch({ type: ActionTypes.TOGGLE_MODAL });
       }}
-      className="relative block w-full border-2 border-gray-300 border-dashed rounded-lg p-12 text-center hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 mt-4"
+      className="focus:ring-primary-500 relative mt-4 block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 text-center hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2"
     >
       <svg
         className="mx-auto h-12 w-12 text-gray-400"
@@ -172,7 +239,7 @@ export function EmptyUserPlaceholder() {
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <div className="fixed inset-0 bg-primary bg-opacity-50 transition-opacity" />
+            <div className="bg-primary fixed inset-0 bg-opacity-50 transition-opacity" />
           </Transition.Child>
 
           {/* modal */}
@@ -189,7 +256,7 @@ export function EmptyUserPlaceholder() {
               >
                 <Dialog.Panel className="pointer-events-auto w-screen max-w-xl">
                   <form
-                    className="flex h-full flex-col divide-y divide-gray-200 bg-white shadow-xl rounded-lg"
+                    className="flex h-full flex-col divide-y divide-gray-200 rounded-lg bg-white shadow-xl"
                     onSubmit={submitUser}
                   >
                     <div className="h-0 flex-1 overflow-y-auto rounded-lg">
@@ -201,7 +268,7 @@ export function EmptyUserPlaceholder() {
                           <div className="ml-3 flex h-7 items-center">
                             <button
                               type="button"
-                              className="rounded-md bg-primary-700 text-primary-200 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
+                              className="bg-primary-700 text-primary-200 rounded-md hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
                               onClick={toggleModal}
                             >
                               <span className="sr-only">Close panel</span>
@@ -213,14 +280,14 @@ export function EmptyUserPlaceholder() {
                           </div>
                         </div>
                         <div className="mt-1">
-                          <p className="text-sm text-white text-opacity-95 text-left">
+                          <p className="text-left text-sm text-white text-opacity-95">
                             Provide some more information about yourself so we
                             can link your medical records to you.
                           </p>
                         </div>
                       </div>
                       {/* user info */}
-                      <div className="space-y-6 mb-6 sm:space-y-5">
+                      <div className="mb-6 space-y-6 sm:space-y-5">
                         <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
                           <label
                             htmlFor="first-name"
@@ -234,8 +301,9 @@ export function EmptyUserPlaceholder() {
                               name="first-name"
                               id="first-name"
                               autoComplete="given-name"
-                              className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:max-w-xs sm:text-sm"
+                              className="focus:border-primary-500 focus:ring-primary-500 block w-full max-w-lg rounded-md border-gray-300 shadow-sm sm:max-w-xs sm:text-sm"
                               value={firstName}
+                              onChange={firstNameHandler}
                             />
                           </div>
                         </div>
@@ -252,8 +320,9 @@ export function EmptyUserPlaceholder() {
                               name="last-name"
                               id="last-name"
                               autoComplete="family-name"
-                              className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:max-w-xs sm:text-sm"
+                              className="focus:border-primary-500 focus:ring-primary-500 block w-full max-w-lg rounded-md border-gray-300 shadow-sm sm:max-w-xs sm:text-sm"
                               value={lastName}
+                              onChange={lastNameHandler}
                             />
                           </div>
                         </div>
@@ -270,8 +339,9 @@ export function EmptyUserPlaceholder() {
                               name="email"
                               type="text"
                               autoComplete="email"
-                              className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:max-w-xs sm:text-sm"
+                              className="focus:border-primary-500 focus:ring-primary-500 block w-full max-w-lg rounded-md border-gray-300 shadow-sm sm:max-w-xs sm:text-sm"
                               value={email}
+                              onChange={emailHandler}
                             />
                           </div>
                         </div>
@@ -288,8 +358,9 @@ export function EmptyUserPlaceholder() {
                               name="date-of-birth"
                               type="date"
                               autoComplete="date"
-                              className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:max-w-xs sm:text-sm"
+                              className="focus:border-primary-500 focus:ring-primary-500 block w-full max-w-lg rounded-md border-gray-300 shadow-sm sm:max-w-xs sm:text-sm"
                               value={birthday}
+                              onChange={birthdayHandler}
                             />
                           </div>
                         </div>
@@ -306,8 +377,9 @@ export function EmptyUserPlaceholder() {
                               name="gender"
                               id="gender"
                               autoComplete="gender"
-                              className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:max-w-xs sm:text-sm"
+                              className="focus:border-primary-500 focus:ring-primary-500 block w-full max-w-lg rounded-md border-gray-300 shadow-sm sm:max-w-xs sm:text-sm"
                               value={gender}
+                              onChange={genderHandler}
                             />
                           </div>
                         </div>
@@ -343,14 +415,14 @@ export function EmptyUserPlaceholder() {
                     <div className="flex flex-shrink-0 justify-end px-4 py-4">
                       <button
                         type="button"
-                        className="rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                        className="focus:ring-primary-500 rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2"
                         onClick={toggleModal}
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="ml-4 inline-flex justify-center rounded-md border border-transparent bg-primary-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                        className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 ml-4 inline-flex justify-center rounded-md border border-transparent py-2 px-4 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
                       >
                         Save
                       </button>

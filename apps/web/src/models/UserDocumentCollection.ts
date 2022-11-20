@@ -6,7 +6,7 @@ import {
 } from 'rxdb';
 
 export const userDocumentSchemaLiteral = {
-  title: 'Clinical Document Schema',
+  title: 'User Document Schema',
   version: 0,
   primaryKey: '_id',
   type: 'object',
@@ -29,6 +29,9 @@ export const userDocumentSchemaLiteral = {
     },
     email: {
       type: 'string',
+    },
+    is_selected_user: {
+      type: 'boolean',
     },
   },
 } as const;
