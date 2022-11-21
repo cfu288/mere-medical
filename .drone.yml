@@ -13,10 +13,10 @@ steps:
         path: /var/run
     commands:
       - sleep 5 # give docker enough time to start
-      - docker login -u registry -p $PASSWORD registry.mari.casa
+      - echo $PASSWORD | docker login --username cfu288 --password-stdin
       - docker build -f Dockerfile -t mari-medical .
-      - docker tag mari-medical:latest registry.mari.casa/mari-medical:latest
-      - docker push registry.mari.casa/mari-medical:latest
+      - docker tag mari-medical:latest mari-medical:latest
+      - docker push mari-medical:latest
 
   - name: docs
     image: docker:dind
@@ -28,10 +28,10 @@ steps:
         path: /var/run
     commands:
       - sleep 5 # give docker enough time to start
-      - docker login -u registry -p $PASSWORD registry.mari.casa
+      - echo $PASSWORD | docker login --username cfu288 --password-stdin
       - docker build -f Dockerfile-docs -t mari-medical-docs .
-      - docker tag mari-medical-docs:latest registry.mari.casa/mari-medical-docs:latest
-      - docker push registry.mari.casa/mari-medical-docs:latest
+      - docker tag mari-medical-docs:latest mari-medical-docs:latest
+      - docker push mari-medical-docs:latest
 
   - name: parallelize builds
     image: docker:dind
