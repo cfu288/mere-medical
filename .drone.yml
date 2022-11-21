@@ -14,7 +14,7 @@ steps:
     commands:
       - sleep 5 # give docker enough time to start
       - echo $PASSWORD | docker login --username cfu288 --password-stdin
-      - docker build -f Dockerfile -t mari-medical .
+      - docker build -f Dockerfile -t cfu288/mari-medical .
       - docker push cfu288/mari-medical:latest
 
   - name: docs
@@ -28,7 +28,7 @@ steps:
     commands:
       - sleep 5 # give docker enough time to start
       - echo $PASSWORD | docker login --username cfu288 --password-stdin
-      - docker build -f Dockerfile-docs -t mari-medical-docs .
+      - docker build -f Dockerfile-docs -t cfu288/mari-medical-docs .
       - docker push cfu288/mari-medical-docs:latest
 
   - name: parallelize builds
