@@ -9,7 +9,7 @@
   </p>
   <p align="center">
     <br />
-    <a href="https://docs.mari.casa/"><strong>See Docs</strong></a>
+    <a href="https://marimedical.co/"><strong>See Docs</strong></a>
     <span> • </span>
     <a href="https://medical.mari.casa/"><strong>View Demo</strong></a>
   </p>
