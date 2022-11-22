@@ -7,6 +7,7 @@ import { setCacheNameDetails } from 'workbox-core';
 import { registerRoute } from 'workbox-routing';
 import { StaleWhileRevalidate } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
+import config from './environments/config.json';
 
 // ServiceWorkerGlobalScope is a type from the workbox-precaching module
 declare const self: Window & ServiceWorkerGlobalScope;
@@ -50,7 +51,7 @@ registerRoute(
 
     return true;
   },
-  createHandlerBoundToURL(process.env.PUBLIC_URL + '/index.html')
+  createHandlerBoundToURL(config.PUBLIC_URL + '/index.html')
 );
 
 // An example runtime caching route for requests that aren't handled by the
