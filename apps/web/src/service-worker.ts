@@ -1,13 +1,9 @@
 /// <reference lib="webworker" />
 /* eslint-disable no-restricted-globals */
 // <reference lib="webworker" />
-import { createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching';
+import { precacheAndRoute } from 'workbox-precaching';
 import { clientsClaim } from 'workbox-core';
 import { setCacheNameDetails } from 'workbox-core';
-import { registerRoute } from 'workbox-routing';
-import { StaleWhileRevalidate } from 'workbox-strategies';
-import { ExpirationPlugin } from 'workbox-expiration';
-import config from './environments/config.json';
 
 // ServiceWorkerGlobalScope is a type from the workbox-precaching module
 declare const self: Window & ServiceWorkerGlobalScope;
@@ -17,6 +13,10 @@ setCacheNameDetails({
   suffix: 'v1',
 });
 
+// Download and cache all the files webpack created
+const precacheManifest = [].concat((self.__WB_MANIFEST as any) || []);
+precacheAndRoute(precacheManifest);
+
 // Tells the Service Worker to skip the waiting state and become active.
 self.skipWaiting();
 
@@ -24,32 +24,3 @@ self.skipWaiting();
 // (even if they're controlling other tabs or windows). Without this,
 // we could be seeing different versions in different tabs or windows.
 clientsClaim();
-
-// Download and cache all the files webpack created
-const precacheManifest = [].concat((self.__WB_MANIFEST as any) || []);
-precacheAndRoute(precacheManifest);
-
-// Set up App Shell-style routing, so that all navigation requests
-// are fulfilled with your index.html shell. Learn more at
-// https://developers.google.com/web/fundamentals/architecture/app-shell
-const fileExtensionRegexp = new RegExp('/[^/?]+\\.[^/]+$');
-registerRoute(
-  // Return false to exempt requests from being fulfilled by index.html.
-  ({ request, url }) => {
-    // If this isn't a navigation, skip.
-    if (request.mode !== 'navigate') {
-      return false;
-    } // If this is a URL that starts with /_, skip.
-
-    if (url.pathname.startsWith('/_')) {
-      return false;
-    } // If this looks like a URL for a resource, because it contains // a file extension, skip.
-
-    if (url.pathname.match(fileExtensionRegexp)) {
-      return false;
-    } // Return true to signal that we want to use the handler.
-
-    return true;
-  },
-  createHandlerBoundToURL(config.PUBLIC_URL)
-);

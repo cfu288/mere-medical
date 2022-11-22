@@ -5,6 +5,8 @@ services:
     image: cfu288/mari-medical:latest
     ports:
       - '4200:80'
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://app:4200/api/health']
     environment:
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
       - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}

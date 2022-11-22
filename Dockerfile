@@ -26,7 +26,7 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-RUN apk update && apk add --no-cache gettext moreutils
+RUN apk update && apk add --no-cache gettext moreutils curl
 ENV JSFOLDER=/app/web/*.js
 
 COPY --from=build-web-stage /app/dist/apps/web/ /app/web/
