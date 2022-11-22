@@ -6,7 +6,11 @@ services:
     ports:
       - '4200:80'
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://app:4200/api/health']
+      test: ['CMD', 'node', '/app/healthcheck.js']
+      interval: 5s # Interval between health checks.
+      timeout: 5s # Timeout for each health checking.
+      retries: 12 # Hou many times retries.
+      start_period: 5s # Estimated time to boot.
     environment:
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
       - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}

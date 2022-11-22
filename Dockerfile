@@ -26,13 +26,16 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-RUN apk update && apk add --no-cache gettext moreutils curl
+RUN apk update && apk add --no-cache gettext moreutils
 ENV JSFOLDER=/app/web/*.js
 
 COPY --from=build-web-stage /app/dist/apps/web/ /app/web/
 COPY --from=build-api-stage /app/dist/apps/api/ /app/api/
 COPY --from=build-api-stage /app/node_modules/ /app/node_modules/
 
+COPY ./healthcheck.js /app/healthcheck.js
+
 COPY ./inject-env-and-start.sh /usr/bin/inject-env-and-start.sh
 RUN chmod +x /usr/bin/inject-env-and-start.sh
+
 ENTRYPOINT [ "inject-env-and-start.sh" ]
