@@ -11,6 +11,13 @@ services:
       timeout: 5s # Timeout for each health checking.
       retries: 12 # Hou many times retries.
       start_period: 5s # Estimated time to boot.
+    stop_grace_period: 30s
+    deploy:
+      replicas: 2
+      update_config:
+        delay: 1h
+        parallelism: 1
+        failure_action: rollback
     environment:
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
       - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
@@ -19,3 +26,10 @@ services:
     image: cfu288/mari-medical-docs:latest
     ports:
       - '4202:80'
+    stop_grace_period: 30s
+    deploy:
+      replicas: 2
+      update_config:
+        delay: 1h
+        parallelism: 1
+        failure_action: rollback
