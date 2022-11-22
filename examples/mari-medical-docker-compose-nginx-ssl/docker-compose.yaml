@@ -3,7 +3,7 @@ version: '3.9'
 services:
   nginx:
     image: nginx:latest
-    ports: 
+    ports:
       - 443:443
     volumes:
       - ./nginx/certs/:/etc/nginx/ssl
@@ -11,7 +11,7 @@ services:
     depends_on:
       - app
   app:
-    image: registry.mari.casa/mari-medical:latest
+    image: cfu288/mari-medical:latest
     container_name: mari-medical-app
     environment:
       - ONPATIENT_CLIENT_ID=2MkZStehSopenoRwmWalHqJ53Kips0z4zyNjk8in

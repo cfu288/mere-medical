@@ -22,7 +22,7 @@ docker run -p 4200:80 -i -t \
   -e ONPATIENT_CLIENT_ID=<ID_HERE> \
   -e ONPATIENT_CLIENT_SECRET=<SECRET_HERE> \
   -e PUBLIC_URL=https://localhost:4200 \
-  registry.mari.casa/mari-medical:latest
+  cfu288/mari-medical:latest
 ```
 
 Then open [http://localhost:4200](http://localhost:4200) in a browser to see Mari Medical running!
@@ -37,7 +37,7 @@ docker run -p 4200:80 \
   -e ONPATIENT_CLIENT_ID=<ID_HERE> \
   -e ONPATIENT_CLIENT_SECRET=<SECRET_HERE> \
   -e PUBLIC_URL=https://localhost:4200 \
-  registry.mari.casa/mari-medical:latest
+  cfu288/mari-medical:latest
 ```
 
 Note that neither of these will set up SSL for you, which is needed for some patient portal syncing/authentication flows. If you are running this on a server with reverse proxy already set up, it is recommended to have your reverse proxy handle SSL and forward requests to Mari Medical. If you are running this on your local machine and need local SSL set up, read the section below.
@@ -53,7 +53,7 @@ version: '3.9'
 
 services:
   app:
-    image: registry.mari.casa/mari-medical:latest
+    image: cfu288/mari-medical:latest
     ports:
       - '4200:80'
     environment:
@@ -92,7 +92,7 @@ services:
     depends_on:
       - app
   app:
-    image: registry.mari.casa/mari-medical:latest
+    image: cfu288/mari-medical:latest
     container_name: mari-medical-app
     environment:
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}

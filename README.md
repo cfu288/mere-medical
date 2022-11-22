@@ -41,17 +41,13 @@ version: '3.9'
 
 services:
   app:
-    image: registry.mari.casa/mari-medical:latest
+    image: cfu288/mari-medical:latest
     ports:
       - '4200:80'
     environment:
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
       - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
       - PUBLIC_URL=${PUBLIC_URL}
-  docs:
-    image: registry.mari.casa/mari-medical-docs:latest
-    ports:
-      - '4202:80'
 ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
