@@ -15,7 +15,7 @@ services:
     deploy:
       replicas: 2
       update_config:
-        delay: 1h
+        delay: 1m
         parallelism: 1
         failure_action: rollback
     environment:
@@ -30,6 +30,6 @@ services:
     deploy:
       replicas: 2
       update_config:
-        delay: 1h
+        delay: 1m
         parallelism: 1
         failure_action: rollback
