@@ -90,7 +90,7 @@ export default function Home() {
                   <h1 className="text-primary-900 text-5xl font-bold tracking-tight sm:text-5xl">
                     One Place.
                   </h1>
-                  <p className="mt-6 text-xl text-gray-600">
+                  <p className="mt-6 text-xl leading-relaxed text-gray-600">
                     With Mari Medical, you can finally manage all of your
                     medical records from one place via a self-hostable web app.
                   </p>
@@ -144,11 +144,11 @@ export default function Home() {
                   What’s the Problem?
                 </h2>
                 <div className="mt-6 space-y-6 text-gray-600">
-                  <p className="text-lg">
+                  <p className="text-lg leading-relaxed">
                     Your medical records are yours. So, why is it so hard to
                     access them?
                   </p>
-                  <p className="text-lg">
+                  <p className="text-lg leading-relaxed">
                     Maintaining your well being can seem impossible when you
                     can’t recall what month you last saw your doctor – or
                     whether you had that specific vaccine. Did you ever get your
@@ -156,12 +156,12 @@ export default function Home() {
                     shot?
                     {/* Are all of your different doctors on the same page? */}
                   </p>
-                  <p className="text-lg">
+                  <p className="text-lg leading-relaxed">
                     Medical record organization is critical. With the rise of
                     the digital age, managing your patient profile should be
                     easier.
                   </p>
-                  <p className="text-lg">
+                  <p className="text-lg leading-relaxed">
                     However, you shouldn't need to trust 3rd parties with your
                     medical records. That's why Mari Medical is a self-hosted
                     progressive web app - keep full control of your medical
@@ -181,7 +181,7 @@ export default function Home() {
                 <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
                   What’s the Solution?
                 </h2>
-                <p className="mt-6 max-w-3xl text-lg leading-7 text-white">
+                <p className="mt-6 max-w-3xl text-lg leading-relaxed text-white">
                   Mari Medical is the all-new, open source, self hostable, and
                   free medical record management web app that connects to
                   multiple patient portals and allows you to upload your own

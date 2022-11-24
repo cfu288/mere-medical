@@ -17,50 +17,20 @@ http://ionicframework.com/docs/theming/ */
 @import '@ionic/react/css/display.css';
 
 @font-face {
-  font-family: 'Cera Pro';
-  src: url('../assets/fonts/Cera Pro Regular.otf');
-  font-weight: normal;
+  font-family: 'Quicksand';
+  src: url('../assets/fonts/Quicksand-VariableFont_wght.ttf');
   font-style: normal;
 }
 
 @font-face {
-  font-family: 'Cera Pro';
-  src: url('../assets/fonts/Cera Pro Light.otf');
-  font-weight: 300;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Cera Pro';
-  src: url('../assets/fonts/Cera Pro Thin.otf');
-  font-weight: 200;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Cera Pro';
-  src: url('../assets/fonts/Cera Pro Medium.otf');
-  font-weight: 700;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Cera Pro';
-  src: url('../assets/fonts/Cera Pro Medium.otf');
-  font-weight: 700;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Cera Pro';
-  src: url('../assets/fonts/Cera Pro Bold.otf');
-  font-weight: 900;
+  font-family: 'Inter';
+  src: url('../assets/fonts/Inter-VariableFont.ttf');
   font-style: normal;
 }
 
 /** Ionic CSS Variables **/
 :root {
-  --ion-font-family: 'Cera Pro';
+  --ion-font-family: 'Quicksand';
 
   /** primary **/
   --ion-color-primary: #006183;

@@ -13,8 +13,8 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Cera Pro'],
-        cera: ['Cera Pro'],
+        sans: ['Quicksand'],
+        cera: ['Quicksand'],
         // sans: ["Cera Pro", ...defaultTheme.fontFamily.sans],
       },
       colors: {

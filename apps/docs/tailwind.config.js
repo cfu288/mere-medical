@@ -14,7 +14,7 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ['Gilroy', ...defaultTheme.fontFamily.sans],
+        sans: ['Montserrat', ...defaultTheme.fontFamily.sans],
       },
       colors: {
         primary: {

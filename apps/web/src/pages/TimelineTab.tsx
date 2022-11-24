@@ -25,6 +25,7 @@ import { ProcedureCard } from '../components/ProcedureCard';
 import { TimelineBanner } from '../components/TimelineBanner';
 import { MedicationCard } from '../components/MedicationCard';
 import { EmptyRecordsPlaceholder } from '../models/EmptyRecordsPlaceholder';
+import { useUser } from '../components/UserProvider';
 
 function fetchRecords(db: RxDatabase<DatabaseCollections>) {
   return db.clinical_documents
@@ -100,6 +101,7 @@ const TimelineTab: React.FC = () => {
   const db = useRxDb();
   const [list, setList] =
     useState<Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>>();
+  const user = useUser();
 
   useEffect(() => {
     // Fetch clinical documents to display
@@ -109,23 +111,27 @@ const TimelineTab: React.FC = () => {
   return (
     <IonPage>
       <IonHeader>
-        <TimelineBanner />
+        <TimelineBanner
+          text={
+            user?.first_name ? `Welcome back ${user.first_name}!` : ' Hello!'
+          }
+        />
       </IonHeader>
       <IonContent fullscreen>
-        <div className="flex flex-col max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-4xl flex-col px-4 sm:px-6 lg:px-8">
           {!list ||
             (Object.entries(list).length === 0 && <EmptyRecordsPlaceholder />)}
           {list &&
             Object.entries(list).map(([key, itemList]) => (
-              <div className="flex flex-row pt-12 gap-x-4" key={key}>
-                <span className="flex justify-end grow font-bold whitespace-nowrap text-primary-700 pt-5">
+              <div className="flex flex-row gap-x-4 pt-12" key={key}>
+                <span className="text-primary-700 flex grow justify-end whitespace-nowrap pt-5 font-bold">
                   {format(parseISO(key), 'MMM dd')}
                 </span>
-                <div className="relative flex flex-column justify-center font-black text-primary-700 pt-5">
-                  <div className="">⬤</div>
+                <div className="flex-column text-primary-700 relative flex justify-center pt-5 font-black">
+                  <div className="">•</div>
                   {/* <div className="absolute h-full mt-8 border border-gray-300"></div> */}
                 </div>
-                <div className="flex flex-col gap-y-4 w-3/4">
+                <div className="flex w-3/4 flex-col gap-y-4">
                   {itemList.map((item) => (
                     <div key={item._id}>
                       {item.data_record.resource_type === 'immunization' && (

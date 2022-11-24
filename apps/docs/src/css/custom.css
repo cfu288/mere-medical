@@ -6,6 +6,41 @@
 
 /* You can override the default Infima variables here. */
 
+@font-face {
+  font-family: 'Lato';
+  src: url('../../static/fonts/Lato-Thin.ttf');
+  font-style: normal;
+  font-weight: 100;
+}
+
+@font-face {
+  font-family: 'Lato';
+  src: url('../../static/fonts/Lato-Light.ttf');
+  font-style: normal;
+  font-weight: 300;
+}
+
+@font-face {
+  font-family: 'Lato';
+  src: url('../../static/fonts/Lato-Regular.woff2');
+  font-style: normal;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'Lato';
+  src: url('../../static/fonts/Lato-Bold.ttf');
+  font-style: normal;
+  font-style: 700;
+}
+
+@font-face {
+  font-family: 'Lato';
+  src: url('../../static/fonts/Lato-Black.ttf');
+  font-style: normal;
+  font-weight: 900;
+}
+
 :root {
   --ifm-color-primary: #006183;
   --ifm-color-primary-dark: #00455f;
@@ -16,6 +51,10 @@
   --ifm-color-primary-lightest: #00c5fd;
   --ifm-code-font-size: 95%;
   --docusaurus-highlighted-code-line-bg: #232e500a;
+  --ifm-font-family-base: Lato, system-ui, -apple-system, Segoe UI, Roboto,
+    Ubuntu, Cantarell, Noto Sans, sans-serif, BlinkMacSystemFont, 'Segoe UI',
+    Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    'Segoe UI Symbol';
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
