@@ -1,5 +1,6 @@
 const { createGlobPatternsForDependencies } = require('@nrwl/react/tailwind');
 const { join } = require('path');
+const defaultTheme = require('tailwindcss/defaultTheme');
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -13,9 +14,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Quicksand'],
-        cera: ['Quicksand'],
-        // sans: ["Cera Pro", ...defaultTheme.fontFamily.sans],
+        sans: ['Quicksand', ...defaultTheme.fontFamily.sans],
       },
       colors: {
         primary: {
