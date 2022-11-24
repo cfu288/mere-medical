@@ -30,7 +30,10 @@ async function bootstrap() {
     };
   }
 
-  const app = await NestFactory.create(RootModule, { httpsOptions });
+  const app = await NestFactory.create(RootModule, {
+    ...httpsOptions,
+    logger: ['debug', 'log', 'warn', 'error', 'verbose'],
+  });
   app.setGlobalPrefix(globalPrefix);
   const port = process.env.PORT || 80;
   await app.listen(port);
