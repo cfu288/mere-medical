@@ -98,7 +98,7 @@ export default function Home() {
                 <div className=" mt-5 max-w-md sm:flex sm:justify-start md:mt-8">
                   <div className="rounded-md shadow">
                     <a
-                      href="https://medical.mari.casa"
+                      href="https://app.marimedical.co"
                       className="bg-primary-700 hover:bg-primary-600 flex w-full items-center justify-center rounded-md border border-transparent px-8 py-3 text-base font-medium text-white hover:text-white md:py-4 md:px-10 md:text-lg"
                     >
                       See Demo

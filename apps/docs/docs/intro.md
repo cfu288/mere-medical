@@ -25,4 +25,4 @@ Mari Medical is still in the early stages of its development. Lots of features a
 
 We also offer [1-click deployment to digital ocean](./getting-started/deploy-to-do.md) if you prefer having a cloud service host Mari Medical for you.
 
-[Check out our live demo here](https://medical.mari.casa)
+[Check out our live demo here](https://app.marimedical.co)

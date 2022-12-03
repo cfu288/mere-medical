@@ -30,6 +30,7 @@ import { Routes as AppRoutes } from '../Routes';
 import SummaryTab from '../pages/SummaryTab';
 import SettingsTab from '../pages/SettingsTab';
 import { UserProvider } from '../components/UserProvider';
+import EpicRedirect from '../pages/EpicRedirect';
 
 setupIonicReact();
 
@@ -55,6 +56,9 @@ const App: React.FC = () => {
                 </Route>
                 <Route exact path={AppRoutes.OnPatientCallback}>
                   <OnPatientRedirect />
+                </Route>
+                <Route exact path={AppRoutes.EpicCallback}>
+                  <EpicRedirect />
                 </Route>
                 <Route exact path="/">
                   <Redirect to={AppRoutes.Timeline} />

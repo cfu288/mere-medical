@@ -11,7 +11,7 @@
     <br />
     <a href="https://marimedical.co/"><strong>See Docs</strong></a>
     <span> • </span>
-    <a href="https://medical.mari.casa/"><strong>View Demo</strong></a>
+    <a href="https://app.marimedical.co/"><strong>View Demo</strong></a>
   </p>
 </div>
 
