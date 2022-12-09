@@ -23,7 +23,6 @@ import {
   UserDocumentCollection,
   UserDocumentSchema,
 } from '../models/UserDocumentCollection';
-import config from '../environments/config.json';
 
 addRxPlugin(RxDBMigrationPlugin);
 addRxPlugin(RxDBDevModePlugin);

@@ -13,6 +13,7 @@ services:
       start_period: 5s # Estimated time to boot.
     stop_grace_period: 30s
     deploy:
+      replicas: 2
       update_config:
         delay: 1m
         parallelism: 1
@@ -27,7 +28,7 @@ services:
       - '4202:80'
     stop_grace_period: 30s
     deploy:
-      mode: global
+      replicas: 2
       update_config:
         delay: 1m
         parallelism: 1

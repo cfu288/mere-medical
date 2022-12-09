@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { CreateConnectionDocument } from '../models/ConnectionDocument';
 import { useRxDb } from '../components/RxDbProvider';
 import { Routes } from '../Routes';
-import config from '../environments/config.json';
+import Config from '../environments/config.json';
 import { Epic } from '../services/Epic';
 
 export interface EpicAuthResponse {
@@ -33,8 +33,8 @@ const EpicRedirect: React.FC = () => {
         },
         body: new URLSearchParams({
           grant_type: 'authorization_code',
-          client_id: `${config.EPIC_CLIENT_ID}`,
-          redirect_uri: `${config.PUBLIC_URL}${Routes.EpicCallback}`,
+          client_id: `${Config.EPIC_CLIENT_ID}`,
+          redirect_uri: `${Config.PUBLIC_URL}${Routes.EpicCallback}`,
           code: code,
         }),
       })
