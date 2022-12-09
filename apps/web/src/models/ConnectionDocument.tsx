@@ -3,11 +3,11 @@ import { BaseDocument } from './BaseDocument';
 export interface ConnectionDocument extends BaseDocument {
   access_token: string;
   expires_in: number;
-  // patient: string;
+  patient: string;
   refresh_token: string;
-  // scope: string;
+  scope: string;
   // token_type: string;
-  source: string;
+  source: 'epic' | 'onpatient';
   location: string;
   last_refreshed: string;
 }

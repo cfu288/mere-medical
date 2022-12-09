@@ -29,7 +29,7 @@ const OnPatientRedirect: React.FC = () => {
         expiresIn = searchRequest.get('expiresIn');
 
       if (accessToken && refreshToken && expiresIn) {
-        const dbentry: CreateConnectionDocument = {
+        const dbentry: Omit<CreateConnectionDocument, 'patient' | 'scope'> = {
           _id: uuidv4(),
           source: 'onpatient',
           location: 'https://onpatient.com',

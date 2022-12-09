@@ -8,17 +8,19 @@ import {
   Observation,
   MedicationStatement,
   Patient,
+  AllergyIntolerance,
 } from 'fhir/r2';
 import { ConnectionDocument } from '../models/ConnectionDocument';
 import { v4 as uuidv4 } from 'uuid';
 import { ClinicalDocument } from '../models/ClinicalDocument';
 import { UserDocument } from '../models/UserDocument';
+import { RxDocument } from 'rxdb';
 
 export namespace DSTU2 {
-  export function mapProcedureToCreateClinicalDocument(
+  export function mapProcedureToClinicalDocument(
     bundleItem: BundleEntry<Procedure>,
     connectionDocument: ConnectionDocument
-  ) {
+  ): ClinicalDocument<Procedure> {
     const cd: ClinicalDocument = {
       _id: uuidv4(),
       source_record: connectionDocument._id,
@@ -39,7 +41,7 @@ export namespace DSTU2 {
     return cd;
   }
 
-  export function mapMedicationStatementToCreateClinicalDocument(
+  export function mapMedicationStatementToClinicalDocument(
     bundleItem: BundleEntry<MedicationStatement>,
     connectionDocument: ConnectionDocument
   ) {
@@ -55,7 +57,9 @@ export namespace DSTU2 {
       },
       metadata: {
         id: 'medication_statement_' + bundleItem.resource?.id,
-        date: bundleItem.resource?.dateAsserted,
+        date:
+          bundleItem.resource?.dateAsserted ||
+          bundleItem.resource?.effectivePeriod?.start,
         display_name: bundleItem.resource?.medicationCodeableConcept?.text,
         merge_key: `"medication_statement_"${bundleItem.resource?.dateAsserted}_${bundleItem.resource?.medicationCodeableConcept?.text}`,
       },
@@ -63,7 +67,7 @@ export namespace DSTU2 {
     return cd;
   }
 
-  export function mapObservationToCreateClinicalDocument(
+  export function mapObservationToClinicalDocument(
     bundleItem: BundleEntry<Observation>,
     connectionDocument: ConnectionDocument
   ) {
@@ -87,7 +91,7 @@ export namespace DSTU2 {
     return cd;
   }
 
-  export function mapDiagnosticReportToCreateClinicalDocument(
+  export function mapDiagnosticReportToClinicalDocument(
     bundleItem: BundleEntry<DiagnosticReport>,
     connectionDocument: ConnectionDocument
   ) {
@@ -122,7 +126,7 @@ export namespace DSTU2 {
     return userDoc;
   }
 
-  export function mapPatientToCreateClinicalDocument(
+  export function mapPatientToClinicalDocument(
     bundleItem: BundleEntry<Patient>,
     connectionDocument: ConnectionDocument
   ) {
@@ -144,7 +148,7 @@ export namespace DSTU2 {
     return cd;
   }
 
-  export function mapImmunizationToCreateClinicalDocument(
+  export function mapImmunizationToClinicalDocument(
     bundleItem: BundleEntry<Immunization>,
     connectionDocument: ConnectionDocument
   ) {
@@ -168,7 +172,7 @@ export namespace DSTU2 {
     return cd;
   }
 
-  export function mapConditionToCreateClinicalDocument(
+  export function mapConditionToClinicalDocument(
     bundleItem: BundleEntry<Condition>,
     connectionDocument: ConnectionDocument
   ) {
@@ -187,6 +191,30 @@ export namespace DSTU2 {
         date: bundleItem.resource?.dateRecorded,
         display_name: bundleItem.resource?.code.text,
         merge_key: `"condition_"${bundleItem.resource?.dateRecorded}_${bundleItem.resource?.code.text}`,
+      },
+    };
+    return cd;
+  }
+
+  export function mapAllergyIntoleranceToClinicalDocument(
+    bundleItem: BundleEntry<AllergyIntolerance>,
+    connectionDocument: ConnectionDocument
+  ) {
+    const cd: ClinicalDocument = {
+      _id: uuidv4(),
+      source_record: connectionDocument._id,
+      data_record: {
+        raw: bundleItem,
+        format: 'FHIR.DSTU2',
+        content_type: 'application/json',
+        resource_type: 'allergyintolerance',
+        version_history: [],
+      },
+      metadata: {
+        id: 'allergyintolerance_' + bundleItem.resource?.id,
+        date: bundleItem.resource?.recordedDate,
+        display_name: bundleItem.resource?.text?.div,
+        merge_key: `"allergyintolerance_"${bundleItem.resource?.recordedDate}_${bundleItem.resource?.text?.div}`,
       },
     };
     return cd;

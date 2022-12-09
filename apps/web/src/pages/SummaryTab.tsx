@@ -29,7 +29,6 @@ function fetchMedications(db: RxDatabase<DatabaseCollections>) {
       const lst = list as unknown as RxDocument<
         ClinicalDocument<BundleEntry<FhirResource>>
       >[];
-
       return lst;
     });
 }
@@ -188,7 +187,7 @@ const SummaryTab: React.FC = () => {
         <GenericBanner text="Summary" />
       </IonHeader>
       <IonContent fullscreen>
-        <div className="flex flex-col max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 gap-x-4">
+        <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 sm:px-6 lg:px-8">
           <MedicationsListCard items={meds} />
           <ConditionsListCard items={cond} />
           <ImmunizationListCard items={imm} />

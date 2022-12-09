@@ -1,11 +1,13 @@
 import { IonContent, IonHeader, IonPage, IonTitle } from '@ionic/react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useHistory } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateConnectionDocument } from '../models/ConnectionDocument';
 import { useRxDb } from '../components/RxDbProvider';
 import { Routes } from '../Routes';
-import FHIR from 'fhirclient';
+import config from '../environments/config.json';
+import { Epic } from '../services/Epic';
+
 export interface EpicAuthResponse {
   access_token: string;
   expires_in: number;
@@ -17,37 +19,71 @@ export interface EpicAuthResponse {
 
 const EpicRedirect: React.FC = () => {
   const history = useHistory(),
-    db = useRxDb(),
-    [isReady, setIsReady] = useState(false);
+    db = useRxDb();
 
   useEffect(() => {
-    (window as any).FHIR = FHIR;
+    const searchRequest = new URLSearchParams(window.location.search),
+      code = searchRequest.get('code');
 
-    FHIR.oauth2
-      .ready()
-      .then(() => {
-        setIsReady(true);
+    if (code) {
+      fetch(`${Epic.EpicBaseUrl}oauth2/token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          client_id: `${config.EPIC_CLIENT_ID}`,
+          redirect_uri: `${config.PUBLIC_URL}${Routes.EpicCallback}`,
+          code: code,
+        }),
       })
-      .catch(() => console.error('not ready'));
-  }, []);
-
-  useEffect(() => {
-    if (isReady) {
-      alert('ready!');
-      FHIR.oauth2
-        .ready()
-        .then((client) => client.request('Patient'))
-        .then(console.log)
-        .catch(console.error);
+        .then((response) => response.json())
+        .then(
+          (res: {
+            access_token: string;
+            token_type: string;
+            expires_in: number;
+            scope: string;
+            patient: string;
+            '__epic.dstu2.patient': string;
+          }) => {
+            if (res.access_token && res.expires_in && res.patient) {
+              const dbentry: Omit<CreateConnectionDocument, 'refresh_token'> = {
+                _id: uuidv4(),
+                source: 'epic',
+                location: Epic.EpicBaseUrl,
+                access_token: res.access_token,
+                expires_in: res.expires_in,
+                scope: res.scope,
+                patient: res.patient,
+              };
+              db.connection_documents
+                .insert(dbentry)
+                .then(() => {
+                  history.push(Routes.AddConnection);
+                })
+                .catch((e: any) => {
+                  alert('Error adding connection');
+                  console.error(e);
+                  history.push(Routes.AddConnection);
+                });
+            } else {
+              alert(
+                'Error completing authentication: no access token provided'
+              );
+            }
+          }
+        );
     }
-  }, [isReady]);
+  }, []);
 
   return (
     <IonPage>
       <IonHeader>
         <IonTitle>Authenticated! Redirecting</IonTitle>
       </IonHeader>
-      <IonContent fullscreen>hello</IonContent>
+      <IonContent fullscreen></IonContent>
     </IonPage>
   );
 };

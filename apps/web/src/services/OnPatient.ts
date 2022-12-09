@@ -99,7 +99,7 @@ export namespace OnPatient {
   async function getDiagnosticReport(
     connectionDocument: RxDocument<ConnectionDocument>
   ): Promise<BundleEntry<DiagnosticReport>[]> {
-    const res = await fetch(`https://onpatient.com/api/fhir/Observation`, {
+    const res = await fetch(`https://onpatient.com/api/fhir/DiagnosticReport`, {
       headers: {
         Authorization: `Bearer ${connectionDocument.get('access_token')}`,
       },
@@ -156,7 +156,7 @@ export namespace OnPatient {
   ) {
     const pts = await getPatients(connectionDocument);
     const uds = pts.map((pt) =>
-      DSTU2.mapPatientToCreateClinicalDocument(pt, connectionDocument)
+      DSTU2.mapPatientToClinicalDocument(pt, connectionDocument)
     );
     const udsmap = uds.map(async (cd) => {
       const exists = await db.clinical_documents
@@ -186,7 +186,7 @@ export namespace OnPatient {
   ) {
     const drs = await getDiagnosticReport(connectionDocument);
     const cds = drs.map((dr) =>
-      DSTU2.mapDiagnosticReportToCreateClinicalDocument(
+      DSTU2.mapDiagnosticReportToClinicalDocument(
         dr,
         connectionDocument.toJSON()
       )
@@ -219,10 +219,7 @@ export namespace OnPatient {
   ) {
     const imms = await getObservations(connectionDocument);
     const cds = imms.map((imm) =>
-      DSTU2.mapObservationToCreateClinicalDocument(
-        imm,
-        connectionDocument.toJSON()
-      )
+      DSTU2.mapObservationToClinicalDocument(imm, connectionDocument.toJSON())
     );
     const cdsmap = cds.map(async (cd) => {
       const exists = await db.clinical_documents
@@ -251,10 +248,7 @@ export namespace OnPatient {
   ) {
     const imms = await getImmunizations(connectionDocument);
     const cds = imms.map((imm) =>
-      DSTU2.mapImmunizationToCreateClinicalDocument(
-        imm,
-        connectionDocument.toJSON()
-      )
+      DSTU2.mapImmunizationToClinicalDocument(imm, connectionDocument.toJSON())
     );
     const cdsmap = cds.map(async (cd) => {
       const exists = await db.clinical_documents
@@ -283,10 +277,7 @@ export namespace OnPatient {
   ) {
     const procs = await getProcedures(connectionDocument);
     const cds = procs.map((proc) =>
-      DSTU2.mapProcedureToCreateClinicalDocument(
-        proc,
-        connectionDocument.toJSON()
-      )
+      DSTU2.mapProcedureToClinicalDocument(proc, connectionDocument.toJSON())
     );
     const cdsmap = cds.map(async (cd) => {
       const exists = await db.clinical_documents
@@ -302,7 +293,9 @@ export namespace OnPatient {
       if (exists.length > 0) {
         // console.log(`Skipped record ${cd._id}`);
       } else {
-        await db.clinical_documents.insert(cd as ClinicalDocumentType);
+        await db.clinical_documents.insert(
+          cd as unknown as ClinicalDocumentType
+        );
         // console.log(`Saved record ${cd._id}`);
       }
     });
@@ -315,10 +308,7 @@ export namespace OnPatient {
   ) {
     const procs = await getConditions(connectionDocument);
     const cds = procs.map((proc) =>
-      DSTU2.mapConditionToCreateClinicalDocument(
-        proc,
-        connectionDocument.toJSON()
-      )
+      DSTU2.mapConditionToClinicalDocument(proc, connectionDocument.toJSON())
     );
     const cdsmap = cds.map(async (cd) => {
       const exists = await db.clinical_documents
@@ -347,7 +337,7 @@ export namespace OnPatient {
   ) {
     const medStmts = await getMedicationStatements(connectionDocument);
     const cds = medStmts.map((mdst) =>
-      DSTU2.mapMedicationStatementToCreateClinicalDocument(
+      DSTU2.mapMedicationStatementToClinicalDocument(
         mdst,
         connectionDocument.toJSON()
       )

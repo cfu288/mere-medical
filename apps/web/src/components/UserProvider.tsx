@@ -32,7 +32,6 @@ export function UserProvider(props: UserProviderProps) {
         if (item) {
           setUser(item);
         }
-        console.log(item);
       });
     }
   }, [db]);

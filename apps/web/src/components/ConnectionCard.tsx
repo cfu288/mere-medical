@@ -2,19 +2,48 @@ import { useEffect, useState } from 'react';
 import { BaseDocument } from '../models/BaseDocument';
 import { ConnectionDocument } from '../models/ConnectionDocument';
 import { DatabaseCollections, useRxDb } from '../components/RxDbProvider';
-import image from '../img/onpatient_logo.jpeg';
+import onpatientLogo from '../img/onpatient_logo.jpeg';
+import epicLogo from '../img/MyChartByEpic.png';
 import { differenceInDays, format, parseISO } from 'date-fns';
 import { RxDatabase, RxDocument } from 'rxdb';
+import { OnPatient } from '../services/OnPatient';
+import { Epic } from '../services/Epic';
+
+function getImage(logo: 'onpatient' | 'epic') {
+  switch (logo) {
+    case 'onpatient': {
+      return onpatientLogo;
+    }
+    case 'epic': {
+      return epicLogo;
+    }
+    default: {
+      return undefined;
+    }
+  }
+}
+
+async function fetchData(
+  connectionDocument: RxDocument<ConnectionDocument>,
+  db: RxDatabase<DatabaseCollections>
+) {
+  switch (connectionDocument.get('source')) {
+    case 'onpatient': {
+      return await OnPatient.syncAllRecords(connectionDocument, db);
+    }
+    case 'epic': {
+      return await Epic.syncAllRecords(connectionDocument, db);
+    }
+    default: {
+      throw Error('Cannot sync');
+    }
+  }
+}
 
 export function ConnectionCard({
   item,
-  fetchData,
 }: {
   item: RxDocument<ConnectionDocument>;
-  fetchData: (
-    connectionDocument: RxDocument<ConnectionDocument>,
-    db: RxDatabase<DatabaseCollections>
-  ) => Promise<any>;
 }) {
   const db = useRxDb(),
     removeDocument = (document: BaseDocument) => {
@@ -25,7 +54,6 @@ export function ConnectionCard({
     [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
-    console.log(item.toJSON());
     if (!item.get('last_refreshed')) {
       setSyncing(true);
       fetchData(item, db)
@@ -41,21 +69,21 @@ export function ConnectionCard({
   return (
     <li
       key={item._id}
-      className="col-span-1 bg-white rounded-lg shadow divide-y divide-gray-200"
+      className="col-span-1 mb-8 divide-y divide-gray-200 rounded-lg bg-white shadow"
     >
-      <div className="w-full flex items-center justify-between p-6 space-x-6">
+      <div className="flex w-full items-center justify-between space-x-6 p-6">
         <img
-          className="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0"
-          src={image}
+          className="h-10 w-10 flex-shrink-0 rounded-full bg-gray-300"
+          src={getImage(item.get('source'))}
           alt=""
         />
         <div className="flex-1 truncate">
           <div className="flex items-center space-x-3">
-            <h3 className="text-gray-900 text-sm font-semibold  truncate uppercase">
+            <h3 className="truncate text-sm font-semibold  uppercase text-gray-900">
               {item.get('source')}
             </h3>
           </div>
-          <p className="mt-1 text-gray-500 text-sm font-medium truncate">
+          <p className="mt-1 truncate text-sm font-medium text-gray-500">
             Connected
             {item.get('last_refreshed') &&
               (differenceInDays(
@@ -74,16 +102,16 @@ export function ConnectionCard({
       <div>
         <div className="-mt-px flex divide-x divide-gray-800">
           <button
-            className="w-0 flex-1 flex"
+            className="flex w-0 flex-1"
             onClick={() => removeDocument(item)}
           >
-            <div className="relative -mr-px w-0 flex-1 inline-flex items-center justify-center py-4 text-sm text-gray-700 font-medium border border-transparent rounded-bl-lg hover:text-gray-500">
+            <div className="relative -mr-px inline-flex w-0 flex-1 items-center justify-center rounded-bl-lg border border-transparent py-4 text-sm font-medium text-gray-700 hover:text-gray-500">
               <span className="ml-3">Disconnect Source</span>
             </div>
           </button>
           <button
             disabled={syncing}
-            className={`-ml-px w-0 divide-x divide-gray-800 flex-1 flex ${
+            className={`-ml-px flex w-0 flex-1 divide-x divide-gray-800 ${
               syncing ? 'disabled:bg-slate-50' : ''
             }`}
             onClick={() => {
@@ -99,7 +127,7 @@ export function ConnectionCard({
                 });
             }}
           >
-            <div className="relative w-0 flex-1 inline-flex items-center justify-center py-4 text-sm text-gray-700 font-medium border border-transparent rounded-br-lg hover:text-gray-500">
+            <div className="relative inline-flex w-0 flex-1 items-center justify-center rounded-br-lg border border-transparent py-4 text-sm font-medium text-gray-700 hover:text-gray-500">
               Sync
               <span className="ml-3">
                 {syncing ? <LoadingSpinner /> : null}
@@ -117,7 +145,7 @@ function LoadingSpinner() {
     <div role="status">
       <svg
         aria-hidden="true"
-        className="mr-2 w-4 h-4 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
+        className="mr-2 h-4 w-4 animate-spin fill-blue-600 text-gray-200 dark:text-gray-600"
         viewBox="0 0 100 101"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"

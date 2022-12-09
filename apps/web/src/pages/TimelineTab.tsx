@@ -50,6 +50,7 @@ function fetchRecords(db: RxDatabase<DatabaseCollections>) {
 
       lst.forEach((item) => {
         if (item.get('metadata')?.date === undefined) {
+          console.warn('Date is undefined for object:');
           console.log(item.toJSON());
         }
         const date = item.get('metadata')?.date
