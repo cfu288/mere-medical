@@ -20,7 +20,7 @@ export function CarePlanListCard({
         <div className="min-w-0 flex-1">
           <span className="absolute inset-0" aria-hidden="true" />
           {items.map((item) => (
-            <Fragment key={item._id}>
+            <Fragment key={item.metadata?.id}>
               {item.data_record.raw.resource?.goal &&
                 item.data_record.raw.resource?.goal?.length !== 0 && (
                   <div className="py-2">

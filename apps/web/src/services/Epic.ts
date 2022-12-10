@@ -13,7 +13,6 @@ import {
   MedicationStatement,
   Observation,
   Patient,
-  Practitioner,
   Procedure,
 } from 'fhir/r2';
 import { RxDocument, RxDatabase } from 'rxdb';
@@ -27,7 +26,9 @@ import { DSTU2 } from './DSTU2';
 import Config from '../environments/config.json';
 
 export namespace Epic {
-  export const EpicBaseUrl = 'https://fhir.epic.com/interconnect-fhir-oauth';
+  export const EpicBaseUrl = '	https://mepic.hmhn.org/fhir';
+  // export const EpicBaseUrl = 'https://epicarr.optum.com/FHIR';
+  // export const EpicBaseUrl = 'https://fhir.epic.com/interconnect-fhir-oauth';
   export const EpicDSTU2Url = `${EpicBaseUrl}/api/FHIR/DSTU2`;
 
   export function getLoginUrl() {

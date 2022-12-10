@@ -39,6 +39,7 @@ const EpicRedirect: React.FC = () => {
         }),
       })
         .then((response) => response.json())
+        .catch((e) => console.error(e))
         .then(
           (res: {
             access_token: string;
