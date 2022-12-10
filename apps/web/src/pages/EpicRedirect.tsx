@@ -26,7 +26,7 @@ const EpicRedirect: React.FC = () => {
       code = searchRequest.get('code');
 
     if (code) {
-      fetch(`${Epic.EpicBaseUrl}oauth2/token`, {
+      fetch(`${Epic.EpicBaseUrl}/oauth2/token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',

@@ -11,10 +11,13 @@ export interface ClinicalDocument<T = any> extends BaseDocument {
       | 'procedure'
       | 'condition'
       | 'observation'
-      | 'diagnostic_report'
-      | 'medication_statement'
+      | 'diagnosticreport'
+      | 'medicationstatement'
       | 'patient'
-      | 'allergyintolerance';
+      | 'allergyintolerance'
+      | 'practitioner'
+      | 'documentreference'
+      | 'careplan';
     version_history: T[];
   };
   metadata?: {

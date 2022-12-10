@@ -75,8 +75,11 @@ services:
 3. Create `.env` files for each project to run and fill with values
 
    ```sh
-   cp apps/web/.example.env apps/web/.env
    cp apps/api/.example.env apps/api/.env
+   ```
+
+   ```sh
+   vim apps/web/src/environments/config.json
    ```
 
 4. Serve each one on its own:

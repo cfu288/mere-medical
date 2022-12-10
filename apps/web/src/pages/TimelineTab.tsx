@@ -2,8 +2,10 @@ import { IonContent, IonHeader, IonPage } from '@ionic/react';
 import { format, parseISO } from 'date-fns';
 import {
   BundleEntry,
+  CarePlan,
   Condition,
   DiagnosticReport,
+  DocumentReference,
   FhirResource,
   Immunization,
   MedicationStatement,
@@ -26,6 +28,7 @@ import { TimelineBanner } from '../components/TimelineBanner';
 import { MedicationCard } from '../components/MedicationCard';
 import { EmptyRecordsPlaceholder } from '../models/EmptyRecordsPlaceholder';
 import { useUser } from '../components/UserProvider';
+import { DocumentReferenceCard } from '../components/DocumentReferenceCard';
 
 function fetchRecords(db: RxDatabase<DatabaseCollections>) {
   return db.clinical_documents
@@ -119,7 +122,7 @@ const TimelineTab: React.FC = () => {
         />
       </IonHeader>
       <IonContent fullscreen>
-        <div className="mx-auto flex max-w-4xl flex-col px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-4xl flex-col px-4 pt-2 pb-4 sm:px-6 lg:px-8">
           {!list ||
             (Object.entries(list).length === 0 && <EmptyRecordsPlaceholder />)}
           {list &&
@@ -168,7 +171,7 @@ const TimelineTab: React.FC = () => {
                         />
                       )}
                       {item.data_record.resource_type ===
-                        'medication_statement' && (
+                        'medicationstatement' && (
                         <MedicationCard
                           key={item._id}
                           item={
@@ -179,12 +182,23 @@ const TimelineTab: React.FC = () => {
                         />
                       )}
                       {item.data_record.resource_type ===
-                        'diagnostic_report' && (
+                        'diagnosticreport' && (
                         <DiagnosticReportCard
                           key={item._id}
                           item={
                             item as ClinicalDocument<
                               BundleEntry<DiagnosticReport>
+                            >
+                          }
+                        />
+                      )}
+                      {item.data_record.resource_type ===
+                        'documentreference' && (
+                        <DocumentReferenceCard
+                          key={item._id}
+                          item={
+                            item as ClinicalDocument<
+                              BundleEntry<DocumentReference>
                             >
                           }
                         />

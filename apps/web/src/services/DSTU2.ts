@@ -9,12 +9,14 @@ import {
   MedicationStatement,
   Patient,
   AllergyIntolerance,
+  Practitioner,
+  DocumentReference,
+  CarePlan,
 } from 'fhir/r2';
 import { ConnectionDocument } from '../models/ConnectionDocument';
 import { v4 as uuidv4 } from 'uuid';
 import { ClinicalDocument } from '../models/ClinicalDocument';
 import { UserDocument } from '../models/UserDocument';
-import { RxDocument } from 'rxdb';
 
 export namespace DSTU2 {
   export function mapProcedureToClinicalDocument(
@@ -52,16 +54,16 @@ export namespace DSTU2 {
         raw: bundleItem,
         format: 'FHIR.DSTU2',
         content_type: 'application/json',
-        resource_type: 'medication_statement',
+        resource_type: 'medicationstatement',
         version_history: [],
       },
       metadata: {
-        id: 'medication_statement_' + bundleItem.resource?.id,
+        id: 'medicationstatement_' + bundleItem.resource?.id,
         date:
           bundleItem.resource?.dateAsserted ||
           bundleItem.resource?.effectivePeriod?.start,
         display_name: bundleItem.resource?.medicationCodeableConcept?.text,
-        merge_key: `"medication_statement_"${bundleItem.resource?.dateAsserted}_${bundleItem.resource?.medicationCodeableConcept?.text}`,
+        merge_key: `"medicationstatement_"${bundleItem.resource?.dateAsserted}_${bundleItem.resource?.medicationCodeableConcept?.text}`,
       },
     };
     return cd;
@@ -102,14 +104,14 @@ export namespace DSTU2 {
         raw: bundleItem,
         format: 'FHIR.DSTU2',
         content_type: 'application/json',
-        resource_type: 'diagnostic_report',
+        resource_type: 'diagnosticreport',
         version_history: [],
       },
       metadata: {
-        id: 'diagnostic_report_' + bundleItem.resource?.id,
+        id: 'diagnosticreport_' + bundleItem.resource?.id,
         date: bundleItem.resource?.effectiveDateTime,
         display_name: bundleItem.resource?.code.text,
-        merge_key: `"diagnostic_report_"${bundleItem.resource?.effectiveDateTime}_${bundleItem.resource?.code.text}`,
+        merge_key: `"diagnosticreport_"${bundleItem.resource?.effectiveDateTime}_${bundleItem.resource?.code.text}`,
       },
     };
     return cd;
@@ -215,6 +217,83 @@ export namespace DSTU2 {
         date: bundleItem.resource?.recordedDate,
         display_name: bundleItem.resource?.text?.div,
         merge_key: `"allergyintolerance_"${bundleItem.resource?.recordedDate}_${bundleItem.resource?.text?.div}`,
+      },
+    };
+    return cd;
+  }
+
+  export function mapPractitionerToClinicalDocument(
+    bundleItem: BundleEntry<Practitioner>,
+    connectionDocument: ConnectionDocument
+  ) {
+    const cd: ClinicalDocument = {
+      _id: uuidv4(),
+      source_record: connectionDocument._id,
+      data_record: {
+        raw: bundleItem,
+        format: 'FHIR.DSTU2',
+        content_type: 'application/json',
+        resource_type: 'practitioner',
+        version_history: [],
+      },
+      metadata: {
+        id: 'practitioner_' + bundleItem.resource?.id,
+        date: bundleItem.resource?.birthDate,
+        display_name: bundleItem.resource?.text?.div,
+        merge_key: `"practitioner_"${bundleItem.resource?.birthDate}_${bundleItem.resource?.text?.div}`,
+      },
+    };
+    return cd;
+  }
+
+  export function mapDocumentReferenceToClinicalDocument(
+    bundleItem: BundleEntry<DocumentReference>,
+    connectionDocument: ConnectionDocument
+  ) {
+    const cd: ClinicalDocument = {
+      _id: uuidv4(),
+      source_record: connectionDocument._id,
+      data_record: {
+        raw: bundleItem,
+        format: 'FHIR.DSTU2',
+        content_type: 'application/json',
+        resource_type: 'documentreference',
+        version_history: [],
+      },
+      metadata: {
+        id: 'documentreference_' + bundleItem.resource?.id,
+        date:
+          bundleItem.resource?.created ||
+          bundleItem.resource?.context?.period?.start,
+        display_name: bundleItem.resource?.type?.text,
+        merge_key: `"documentreference_"${
+          bundleItem.resource?.created ||
+          bundleItem.resource?.context?.period?.start
+        }_${bundleItem.resource?.type?.text}`,
+      },
+    };
+    return cd;
+  }
+
+  export function mapCarePlanToClinicalDocument(
+    bundleItem: BundleEntry<CarePlan>,
+    connectionDocument: ConnectionDocument
+  ) {
+    const cd: ClinicalDocument = {
+      _id: uuidv4(),
+      source_record: connectionDocument._id,
+      data_record: {
+        raw: bundleItem,
+        format: 'FHIR.DSTU2',
+        content_type: 'application/json',
+        resource_type: 'careplan',
+        version_history: [],
+      },
+      metadata: {
+        id: 'careplan_' + bundleItem.resource?.id,
+        date: bundleItem.resource?.period?.start,
+        display_name: bundleItem.resource?.description,
+        merge_key: `"careplan_"${bundleItem.resource?.period?.start}_${bundleItem.resource?.description}`,
       },
     };
     return cd;

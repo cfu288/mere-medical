@@ -10,6 +10,7 @@ import {
   DiagnosticReport,
   MedicationStatement,
   Patient,
+  FhirResource,
 } from 'fhir/r2';
 import { RxDatabase, RxDocument } from 'rxdb';
 import { DatabaseCollections } from '../components/RxDbProvider';
@@ -17,10 +18,14 @@ import { ClinicalDocumentType } from '../models/ClinicalDocumentCollection';
 import { ConnectionDocument } from '../models/ConnectionDocument';
 import { DSTU2 } from './DSTU2';
 import Config from '../environments/config.json';
+import { ClinicalDocument } from '../models/ClinicalDocument';
 
 export namespace OnPatient {
+  export const OnPatientBaseUrl = 'https://onpatient.com';
+  export const OnPatientDSTU2Url = `${OnPatientBaseUrl}/api/fhir`;
+
   export function getLoginUrl() {
-    return `https://onpatient.com/o/authorize/?${new URLSearchParams({
+    return `${OnPatientBaseUrl}/o/authorize/?${new URLSearchParams({
       client_id: Config.ONPATIENT_CLIENT_ID,
       redirect_uri: `${Config.PUBLIC_URL}/api/v1/onpatient/callback`,
       scope: 'patient/*.read',
@@ -28,339 +33,59 @@ export namespace OnPatient {
     })}`;
   }
 
-  async function getProcedures(
-    connectionDocument: RxDocument<ConnectionDocument>
-  ): Promise<BundleEntry<Procedure>[]> {
-    const res = await fetch(`https://onpatient.com/api/fhir/Procedure`, {
-      headers: {
-        Authorization: `Bearer ${connectionDocument.get('access_token')}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((res: Bundle) => res);
-
-    if (res.entry) {
-      return res.entry as BundleEntry<Procedure>[];
-    }
-    return [];
-  }
-
-  async function getImmunizations(
-    connectionDocument: RxDocument<ConnectionDocument>
-  ): Promise<BundleEntry<Immunization>[]> {
-    const res = await fetch(`https://onpatient.com/api/fhir/Immunization`, {
-      headers: {
-        Authorization: `Bearer ${connectionDocument.get('access_token')}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((res: Bundle) => res);
-
-    if (res.entry) {
-      return res.entry as BundleEntry<Immunization>[];
-    }
-    return [];
-  }
-
-  async function getConditions(
-    connectionDocument: RxDocument<ConnectionDocument>
-  ): Promise<BundleEntry<Condition>[]> {
-    const res = await fetch(`https://onpatient.com/api/fhir/Condition`, {
-      headers: {
-        Authorization: `Bearer ${connectionDocument.get('access_token')}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((res: Bundle) => res);
-
-    if (res.entry) {
-      return res.entry as BundleEntry<Condition>[];
-    }
-    return [];
-  }
-
-  async function getObservations(
-    connectionDocument: RxDocument<ConnectionDocument>
-  ): Promise<BundleEntry<Observation>[]> {
-    const res = await fetch(`https://onpatient.com/api/fhir/Observation`, {
-      headers: {
-        Authorization: `Bearer ${connectionDocument.get('access_token')}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((res: Bundle) => res);
-
-    if (res.entry) {
-      return res.entry as BundleEntry<Observation>[];
-    }
-    return [];
-  }
-
-  async function getDiagnosticReport(
-    connectionDocument: RxDocument<ConnectionDocument>
-  ): Promise<BundleEntry<DiagnosticReport>[]> {
-    const res = await fetch(`https://onpatient.com/api/fhir/DiagnosticReport`, {
-      headers: {
-        Authorization: `Bearer ${connectionDocument.get('access_token')}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((res: Bundle) => res);
-
-    if (res.entry) {
-      return res.entry as BundleEntry<DiagnosticReport>[];
-    }
-    return [];
-  }
-
-  async function getMedicationStatements(
-    connectionDocument: RxDocument<ConnectionDocument>
-  ): Promise<BundleEntry<MedicationStatement>[]> {
-    const res = await fetch(
-      `https://onpatient.com/api/fhir/MedicationStatement`,
-      {
-        headers: {
-          Authorization: `Bearer ${connectionDocument.get('access_token')}`,
-        },
-      }
-    )
-      .then((res) => res.json())
-      .then((res: Bundle) => res);
-
-    if (res.entry) {
-      return res.entry as BundleEntry<MedicationStatement>[];
-    }
-    return [];
-  }
-
-  async function getPatients(
-    connectionDocument: RxDocument<ConnectionDocument>
-  ): Promise<BundleEntry<Patient>[]> {
-    const res = await fetch(`https://onpatient.com/api/fhir/Patient`, {
-      headers: {
-        Authorization: `Bearer ${connectionDocument.get('access_token')}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((res: Bundle) => res);
-
-    if (res.entry) {
-      return res.entry as BundleEntry<Patient>[];
-    }
-    return [];
-  }
-
-  async function syncPatients(
+  async function getFHIRResource<T extends FhirResource>(
     connectionDocument: RxDocument<ConnectionDocument>,
-    db: RxDatabase<DatabaseCollections>
+    fhirResourcePathUrl: string
+  ): Promise<BundleEntry<T>[]> {
+    const res = await fetch(`${OnPatientDSTU2Url}/${fhirResourcePathUrl}`, {
+      headers: {
+        Authorization: `Bearer ${connectionDocument.get('access_token')}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((res: Bundle) => res);
+
+    if (res.entry) {
+      return res.entry as BundleEntry<T>[];
+    }
+    return [];
+  }
+
+  async function syncFHIRResource<T extends FhirResource>(
+    connectionDocument: RxDocument<ConnectionDocument>,
+    db: RxDatabase<DatabaseCollections>,
+    fhirResourceUrl: string,
+    mapper: (proc: BundleEntry<T>) => ClinicalDocument<T>
   ) {
-    const pts = await getPatients(connectionDocument);
-    const uds = pts.map((pt) =>
-      DSTU2.mapPatientToClinicalDocument(pt, connectionDocument)
+    const fhirResources = await getFHIRResource<T>(
+      connectionDocument,
+      fhirResourceUrl
     );
-    const udsmap = uds.map(async (cd) => {
-      const exists = await db.clinical_documents
-        .findOne({
-          selector: {
-            $and: [
-              { 'metadata.id': `${cd.metadata?.id}` },
-              { source_record: `${cd.source_record}` },
-            ],
-          },
-        })
-        .exec();
-
-      if (exists) {
-        // console.log(`Skipped record ${cd._id}`);
-      } else {
-        await db.clinical_documents.insert(cd as ClinicalDocumentType);
-        // console.log(`Saved record ${JSON.stringify(cd)}`);
-      }
-    });
-    return await Promise.all(udsmap);
-  }
-
-  async function syncDiagnosticReport(
-    connectionDocument: RxDocument<ConnectionDocument>,
-    db: RxDatabase<DatabaseCollections>
-  ) {
-    const drs = await getDiagnosticReport(connectionDocument);
-    const cds = drs.map((dr) =>
-      DSTU2.mapDiagnosticReportToClinicalDocument(
-        dr,
-        connectionDocument.toJSON()
+    const clinDocs = fhirResources
+      .filter(
+        (i) =>
+          i.resource?.resourceType.toLowerCase() ===
+          fhirResourceUrl.toLowerCase()
       )
-    );
-    const cdsmap = cds.map(async (cd) => {
-      const exists = await db.clinical_documents
-        .findOne({
-          selector: {
-            $and: [
-              { 'metadata.id': `${cd.metadata?.id}` },
-              { source_record: `${cd.source_record}` },
-            ],
-          },
-        })
-        .exec();
-
-      if (exists) {
-        // console.log(`Skipped record ${cd._id}`);
-      } else {
-        await db.clinical_documents.insert(cd as ClinicalDocumentType);
-        // console.log(`Saved record ${cd._id}`);
-      }
-    });
-    return await Promise.all(cdsmap);
-  }
-
-  async function syncObservations(
-    connectionDocument: RxDocument<ConnectionDocument>,
-    db: RxDatabase<DatabaseCollections>
-  ) {
-    const imms = await getObservations(connectionDocument);
-    const cds = imms.map((imm) =>
-      DSTU2.mapObservationToClinicalDocument(imm, connectionDocument.toJSON())
-    );
-    const cdsmap = cds.map(async (cd) => {
+      .map(mapper);
+    const saveTaskList = clinDocs.map(async (doc) => {
       const exists = await db.clinical_documents
         .find({
           selector: {
             $and: [
-              { 'metadata.id': `${cd.metadata?.id}` },
-              { source_record: `${cd.source_record}` },
+              { 'metadata.id': `${doc.metadata?.id}` },
+              { source_record: `${doc.source_record}` },
             ],
           },
         })
         .exec();
-      if (exists.length > 0) {
-        // console.log(`Skipped record ${cd._id}`);
-      } else {
-        await db.clinical_documents.insert(cd as ClinicalDocumentType);
-        // console.log(`Saved record ${cd._id}`);
-      }
-    });
-    return await Promise.all(cdsmap);
-  }
-
-  async function syncImmunizations(
-    connectionDocument: RxDocument<ConnectionDocument>,
-    db: RxDatabase<DatabaseCollections>
-  ) {
-    const imms = await getImmunizations(connectionDocument);
-    const cds = imms.map((imm) =>
-      DSTU2.mapImmunizationToClinicalDocument(imm, connectionDocument.toJSON())
-    );
-    const cdsmap = cds.map(async (cd) => {
-      const exists = await db.clinical_documents
-        .find({
-          selector: {
-            $and: [
-              { 'metadata.id': `${cd.metadata?.id}` },
-              { source_record: `${cd.source_record}` },
-            ],
-          },
-        })
-        .exec();
-      if (exists.length > 0) {
-        // console.log(`Skipped record ${cd._id}`);
-      } else {
-        await db.clinical_documents.insert(cd as ClinicalDocumentType);
-        // console.log(`Saved record ${cd._id}`);
-      }
-    });
-    return await Promise.all(cdsmap);
-  }
-
-  async function syncProcedures(
-    connectionDocument: RxDocument<ConnectionDocument>,
-    db: RxDatabase<DatabaseCollections>
-  ) {
-    const procs = await getProcedures(connectionDocument);
-    const cds = procs.map((proc) =>
-      DSTU2.mapProcedureToClinicalDocument(proc, connectionDocument.toJSON())
-    );
-    const cdsmap = cds.map(async (cd) => {
-      const exists = await db.clinical_documents
-        .find({
-          selector: {
-            $and: [
-              { 'metadata.id': `${cd.metadata?.id}` },
-              { source_record: `${cd.source_record}` },
-            ],
-          },
-        })
-        .exec();
-      if (exists.length > 0) {
-        // console.log(`Skipped record ${cd._id}`);
-      } else {
+      if (exists.length === 0) {
         await db.clinical_documents.insert(
-          cd as unknown as ClinicalDocumentType
+          doc as unknown as ClinicalDocumentType
         );
-        // console.log(`Saved record ${cd._id}`);
       }
     });
-    return await Promise.all(cdsmap);
-  }
-
-  async function syncConditions(
-    connectionDocument: RxDocument<ConnectionDocument>,
-    db: RxDatabase<DatabaseCollections>
-  ) {
-    const procs = await getConditions(connectionDocument);
-    const cds = procs.map((proc) =>
-      DSTU2.mapConditionToClinicalDocument(proc, connectionDocument.toJSON())
-    );
-    const cdsmap = cds.map(async (cd) => {
-      const exists = await db.clinical_documents
-        .find({
-          selector: {
-            $and: [
-              { 'metadata.id': `${cd.metadata?.id}` },
-              { source_record: `${cd.source_record}` },
-            ],
-          },
-        })
-        .exec();
-      if (exists.length > 0) {
-        // console.log(`Skipped record ${cd._id}`);
-      } else {
-        await db.clinical_documents.insert(cd as ClinicalDocumentType);
-        // console.log(`Saved record ${cd._id}`);
-      }
-    });
-    return await Promise.all(cdsmap);
-  }
-
-  async function syncMedicationStatements(
-    connectionDocument: RxDocument<ConnectionDocument>,
-    db: RxDatabase<DatabaseCollections>
-  ) {
-    const medStmts = await getMedicationStatements(connectionDocument);
-    const cds = medStmts.map((mdst) =>
-      DSTU2.mapMedicationStatementToClinicalDocument(
-        mdst,
-        connectionDocument.toJSON()
-      )
-    );
-    const cdsmap = cds.map(async (cd) => {
-      const exists = await db.clinical_documents
-        .find({
-          selector: {
-            $and: [
-              { 'metadata.id': `${cd.metadata?.id}` },
-              { source_record: `${cd.source_record}` },
-            ],
-          },
-        })
-        .exec();
-      if (exists.length > 0) {
-        // console.log(`Skipped record ${cd._id}`);
-      } else {
-        await db.clinical_documents.insert(cd as ClinicalDocumentType);
-        // console.log(`Saved record ${cd._id}`);
-      }
-    });
-    return await Promise.all(cdsmap);
+    return await Promise.all(saveTaskList);
   }
 
   export async function syncAllRecords(
@@ -369,14 +94,69 @@ export namespace OnPatient {
   ): Promise<any[][]> {
     const newCd = connectionDocument.toMutableJSON();
     newCd.last_refreshed = new Date().toISOString();
+    const immMapper = (dr: BundleEntry<Immunization>) =>
+      DSTU2.mapImmunizationToClinicalDocument(dr, connectionDocument.toJSON());
+    const procMapper = (proc: BundleEntry<Procedure>) =>
+      DSTU2.mapProcedureToClinicalDocument(proc, connectionDocument.toJSON());
+    const patientMapper = (pt: BundleEntry<Patient>) =>
+      DSTU2.mapPatientToClinicalDocument(pt, connectionDocument);
+    const obsMapper = (imm: BundleEntry<Observation>) =>
+      DSTU2.mapObservationToClinicalDocument(imm, connectionDocument.toJSON());
+    const drMapper = (dr: BundleEntry<DiagnosticReport>) =>
+      DSTU2.mapDiagnosticReportToClinicalDocument(
+        dr,
+        connectionDocument.toJSON()
+      );
+    const medStatementMapper = (dr: BundleEntry<MedicationStatement>) =>
+      DSTU2.mapMedicationStatementToClinicalDocument(
+        dr,
+        connectionDocument.toJSON()
+      );
+    const conditionMapper = (dr: BundleEntry<Condition>) =>
+      DSTU2.mapConditionToClinicalDocument(dr, connectionDocument.toJSON());
     const syncJob = await Promise.all([
-      syncImmunizations(connectionDocument, db),
-      syncProcedures(connectionDocument, db),
-      syncConditions(connectionDocument, db),
-      syncObservations(connectionDocument, db),
-      syncDiagnosticReport(connectionDocument, db),
-      syncMedicationStatements(connectionDocument, db),
-      syncPatients(connectionDocument, db),
+      syncFHIRResource<Immunization>(
+        connectionDocument,
+        db,
+        'Immunization',
+        immMapper
+      ),
+      syncFHIRResource<Procedure>(
+        connectionDocument,
+        db,
+        'Procedure',
+        procMapper
+      ),
+      syncFHIRResource<Condition>(
+        connectionDocument,
+        db,
+        'Condition',
+        conditionMapper
+      ),
+      syncFHIRResource<Observation>(
+        connectionDocument,
+        db,
+        'Observation',
+        obsMapper
+      ),
+      syncFHIRResource<DiagnosticReport>(
+        connectionDocument,
+        db,
+        'DiagnosticReport',
+        drMapper
+      ),
+      syncFHIRResource<MedicationStatement>(
+        connectionDocument,
+        db,
+        'MedicationStatement',
+        medStatementMapper
+      ),
+      syncFHIRResource<Patient>(
+        connectionDocument,
+        db,
+        'Patient',
+        patientMapper
+      ),
       db.connection_documents.upsert(newCd).then(() => []),
     ]);
 

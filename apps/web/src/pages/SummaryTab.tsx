@@ -3,7 +3,9 @@ import { DatabaseCollections, useRxDb } from '../components/RxDbProvider';
 import { GenericBanner } from '../components/GenericBanner';
 import { ClinicalDocument } from '../models/ClinicalDocument';
 import {
+  AllergyIntolerance,
   BundleEntry,
+  CarePlan,
   Condition,
   FhirResource,
   Immunization,
@@ -14,15 +16,34 @@ import { useEffect, useReducer } from 'react';
 import { MedicationsListCard } from '../components/MedicationsListCard';
 import { ConditionsListCard } from '../components/ConditionsListCard';
 import { ImmunizationListCard } from '../components/ImmunizationListCard';
+import { CarePlanListCard } from '../components/CarePlanListCard';
+import { AllerrgyIntoleranceListCard } from '../components/AllerrgyIntoleranceListCard';
+import { EmptyRecordsPlaceholder } from '../models/EmptyRecordsPlaceholder';
 
 function fetchMedications(db: RxDatabase<DatabaseCollections>) {
   return db.clinical_documents
     .find({
       selector: {
-        'data_record.resource_type': 'medication_statement',
+        'data_record.resource_type': 'medicationstatement',
         'metadata.date': { $gt: 0 },
       },
       sort: [{ 'metadata.date': 'desc' }],
+    })
+    .exec()
+    .then((list) => {
+      const lst = list as unknown as RxDocument<
+        ClinicalDocument<BundleEntry<FhirResource>>
+      >[];
+      return lst;
+    });
+}
+
+function fetchCarePlan(db: RxDatabase<DatabaseCollections>) {
+  return db.clinical_documents
+    .find({
+      selector: {
+        'data_record.resource_type': 'careplan',
+      },
     })
     .exec()
     .then((list) => {
@@ -70,6 +91,24 @@ function fetchImmunizations(db: RxDatabase<DatabaseCollections>) {
       return lst;
     });
 }
+function fetchAllergy(db: RxDatabase<DatabaseCollections>) {
+  return db.clinical_documents
+    .find({
+      selector: {
+        'data_record.resource_type': 'allergyintolerance',
+        'metadata.date': { $gt: 0 },
+      },
+      sort: [{ 'metadata.date': 'desc' }],
+    })
+    .exec()
+    .then((list) => {
+      const lst = list as unknown as RxDocument<
+        ClinicalDocument<BundleEntry<FhirResource>>
+      >[];
+
+      return lst;
+    });
+}
 
 enum ActionTypes {
   IDLE,
@@ -83,6 +122,8 @@ type SummaryState = {
   meds: ClinicalDocument<BundleEntry<MedicationStatement>>[];
   cond: ClinicalDocument<BundleEntry<Condition>>[];
   imm: ClinicalDocument<BundleEntry<Immunization>>[];
+  careplan: ClinicalDocument<BundleEntry<CarePlan>>[];
+  allergy: ClinicalDocument<BundleEntry<AllergyIntolerance>>[];
 };
 
 type SummaryActions =
@@ -95,6 +136,8 @@ type SummaryActions =
         meds: ClinicalDocument<BundleEntry<MedicationStatement>>[];
         cond: ClinicalDocument<BundleEntry<Condition>>[];
         imm: ClinicalDocument<BundleEntry<Immunization>>[];
+        careplan: ClinicalDocument<BundleEntry<CarePlan>>[];
+        allergy: ClinicalDocument<BundleEntry<AllergyIntolerance>>[];
       };
     };
 
@@ -123,6 +166,8 @@ function summaryReducer(state: SummaryState, action: SummaryActions) {
         meds: action.data.meds,
         imm: action.data.imm,
         cond: action.data.cond,
+        careplan: action.data.careplan,
+        allergy: action.data.allergy,
         status: ActionTypes.COMPLETED,
       };
     }
@@ -131,12 +176,17 @@ function summaryReducer(state: SummaryState, action: SummaryActions) {
 
 const SummaryTab: React.FC = () => {
   const db = useRxDb(),
-    [{ status, meds, cond, imm }, reducer] = useReducer(summaryReducer, {
-      status: ActionTypes.IDLE,
-      meds: [],
-      cond: [],
-      imm: [],
-    });
+    [{ status, meds, cond, imm, careplan, allergy }, reducer] = useReducer(
+      summaryReducer,
+      {
+        status: ActionTypes.IDLE,
+        meds: [],
+        cond: [],
+        imm: [],
+        careplan: [],
+        allergy: [],
+      }
+    );
 
   useEffect(() => {
     if (status === ActionTypes.IDLE) {
@@ -164,14 +214,31 @@ const SummaryTab: React.FC = () => {
               >
           )
         ),
+        fetchCarePlan(db).then((data) =>
+          data.map(
+            (item) =>
+              item.toMutableJSON() as ClinicalDocument<BundleEntry<CarePlan>>
+          )
+        ),
+        fetchAllergy(db).then((data) =>
+          data.map(
+            (item) =>
+              item.toMutableJSON() as ClinicalDocument<
+                BundleEntry<AllergyIntolerance>
+              >
+          )
+        ),
       ])
-        .then(([meds, cond, imm]) => {
+        .then(([meds, cond, imm, careplan, allergy]) => {
+          console.log(allergy);
           reducer({
             type: ActionTypes.COMPLETED,
             data: {
               meds,
               cond,
               imm,
+              careplan,
+              allergy,
             },
           });
         })
@@ -187,10 +254,17 @@ const SummaryTab: React.FC = () => {
         <GenericBanner text="Summary" />
       </IonHeader>
       <IonContent fullscreen>
-        <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 pb-4 sm:px-6 lg:px-8">
+          {meds.length === 0 &&
+            cond.length === 0 &&
+            imm.length === 0 &&
+            careplan.length === 0 &&
+            allergy.length === 0 && <EmptyRecordsPlaceholder />}
           <MedicationsListCard items={meds} />
           <ConditionsListCard items={cond} />
           <ImmunizationListCard items={imm} />
+          <CarePlanListCard items={careplan} />
+          <AllerrgyIntoleranceListCard items={allergy} />
         </div>
       </IonContent>
     </IonPage>

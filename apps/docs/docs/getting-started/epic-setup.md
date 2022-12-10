@@ -11,7 +11,7 @@ You'll need to get a client id value from the Epic On FHIR portal. You can do th
 
 After you've logged in, go to `My Apps` and create and app. Give the app a name of `Mari Patient App`. Application Audience will be `Patients`. For Incoming API's, search by DSTU2 and select all the endpoints below with `left click + shift`. With all the endpoints selected, click on the `>>` button to add them to your selected list.
 
-You'll now need to set the redirect URI to redirect to Mari Medical. By default this is served at `https://localhost:4200/epic/callback` but depending on what your public url is will generally be in the format `{PUBLIC_URL}//epic/callback`.
+You'll now need to set the redirect URI to redirect to Mari Medical. By default this is served at `https://localhost:4200/epic/callback` but depending on what your public url is will generally be in the format `{PUBLIC_URL}/epic/callback`.
 
 Make sure that `Can Register Dynamic Clients` is selected and that `JWT Bearer grant type` is selected.
 

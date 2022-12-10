@@ -1,15 +1,19 @@
 /* eslint-disable no-inner-declarations */
 /* eslint-disable @typescript-eslint/no-namespace */
 import {
+  AllergyIntolerance,
   Bundle,
   BundleEntry,
+  CarePlan,
   Condition,
   DiagnosticReport,
+  DocumentReference,
   FhirResource,
   Immunization,
   MedicationStatement,
   Observation,
   Patient,
+  Practitioner,
   Procedure,
 } from 'fhir/r2';
 import { RxDocument, RxDatabase } from 'rxdb';
@@ -23,8 +27,8 @@ import { DSTU2 } from './DSTU2';
 import Config from '../environments/config.json';
 
 export namespace Epic {
-  export const EpicBaseUrl = 'https://fhir.epic.com/interconnect-fhir-oauth/';
-  export const EpicDSTU2Url = `${EpicBaseUrl}api/FHIR/DSTU2/`;
+  export const EpicBaseUrl = 'https://fhir.epic.com/interconnect-fhir-oauth';
+  export const EpicDSTU2Url = `${EpicBaseUrl}/api/FHIR/DSTU2`;
 
   export function getLoginUrl() {
     const params = {
@@ -35,16 +39,16 @@ export namespace Epic {
       response_type: 'code',
     };
 
-    return `${EpicBaseUrl}oauth2/authorize?${new URLSearchParams(params)}`;
+    return `${EpicBaseUrl}/oauth2/authorize?${new URLSearchParams(params)}`;
   }
 
   async function getFHIRResource<T extends FhirResource>(
     connectionDocument: RxDocument<ConnectionDocument>,
-    fhirUrl: string,
+    fhirResourceUrl: string,
     params?: any
   ): Promise<BundleEntry<T>[]> {
     const res = await fetch(
-      `${EpicDSTU2Url}${fhirUrl}?_format=${encodeURIComponent(
+      `${EpicDSTU2Url}/${fhirResourceUrl}?_format=${encodeURIComponent(
         `application/fhir+json`
       )}&${new URLSearchParams(params)}`,
       {
@@ -65,14 +69,20 @@ export namespace Epic {
   async function syncFHIRResource<T extends FhirResource>(
     connectionDocument: RxDocument<ConnectionDocument>,
     db: RxDatabase<DatabaseCollections>,
-    fhirUrl: string,
+    fhirResourceUrl: string,
     mapper: (proc: BundleEntry<T>) => ClinicalDocument<T>,
     params: Record<string, string>
   ) {
-    const resc = await getFHIRResource<T>(connectionDocument, fhirUrl, params);
+    const resc = await getFHIRResource<T>(
+      connectionDocument,
+      fhirResourceUrl,
+      params
+    );
     const cds = resc
       .filter(
-        (i) => i.resource?.resourceType.toLowerCase() === fhirUrl.toLowerCase()
+        (i) =>
+          i.resource?.resourceType.toLowerCase() ===
+          fhirResourceUrl.toLowerCase()
       )
       .map(mapper);
     const cdsmap = cds.map(async (cd) => {
@@ -86,13 +96,10 @@ export namespace Epic {
           },
         })
         .exec();
-      if (exists.length > 0) {
-        // console.log(`Skipped record ${cd._id}`);
-      } else {
+      if (exists.length === 0) {
         await db.clinical_documents.insert(
           cd as unknown as ClinicalDocumentType
         );
-        // console.log(`Saved record ${cd._id}`);
       }
     });
     return await Promise.all(cdsmap);
@@ -124,6 +131,18 @@ export namespace Epic {
       DSTU2.mapImmunizationToClinicalDocument(dr, connectionDocument.toJSON());
     const conditionMapper = (dr: BundleEntry<Condition>) =>
       DSTU2.mapConditionToClinicalDocument(dr, connectionDocument.toJSON());
+    const allergyIntoleranceMapper = (a: BundleEntry<AllergyIntolerance>) =>
+      DSTU2.mapAllergyIntoleranceToClinicalDocument(
+        a,
+        connectionDocument.toJSON()
+      );
+    const documentReferenceMapper = (dr: BundleEntry<DocumentReference>) =>
+      DSTU2.mapDocumentReferenceToClinicalDocument(
+        dr,
+        connectionDocument.toJSON()
+      );
+    const carePlanMapper = (dr: BundleEntry<CarePlan>) =>
+      DSTU2.mapCarePlanToClinicalDocument(dr, connectionDocument.toJSON());
 
     const syncJob = await Promise.all([
       syncFHIRResource<Procedure>(
@@ -186,6 +205,33 @@ export namespace Epic {
         db,
         'Condition',
         conditionMapper,
+        {
+          patient: connectionDocument.get('patient'),
+        }
+      ),
+      syncFHIRResource<DocumentReference>(
+        connectionDocument,
+        db,
+        'DocumentReference',
+        documentReferenceMapper,
+        {
+          patient: connectionDocument.get('patient'),
+        }
+      ),
+      syncFHIRResource<CarePlan>(
+        connectionDocument,
+        db,
+        'CarePlan',
+        carePlanMapper,
+        {
+          patient: connectionDocument.get('patient'),
+        }
+      ),
+      syncFHIRResource<AllergyIntolerance>(
+        connectionDocument,
+        db,
+        'AllergyIntolerance',
+        allergyIntoleranceMapper,
         {
           patient: connectionDocument.get('patient'),
         }
