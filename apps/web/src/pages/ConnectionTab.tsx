@@ -1,5 +1,5 @@
 import { IonContent, IonHeader, IonPage, IonButton } from '@ionic/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { ConnectionDocument } from '../models/ConnectionDocument';
 import { OnPatient } from '../services/OnPatient';
 import { DatabaseCollections, useRxDb } from '../components/RxDbProvider';
@@ -13,6 +13,7 @@ import { Fragment } from 'react';
 import { Combobox, Dialog, Transition } from '@headlessui/react';
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/20/solid';
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
+import { useDebounce } from '@react-hook/debounce';
 
 async function getConnectionCards(
   db: RxDatabase<DatabaseCollections, any, any>
@@ -115,6 +116,50 @@ const items = [
   },
 ];
 
+function getNGrams(s: string, len: number) {
+  s = ' '.repeat(len - 1) + s.toLowerCase() + ' '.repeat(len - 1);
+  const v = new Array(s.length - len + 1);
+  for (let i = 0; i < v.length; i++) {
+    v[i] = s.slice(i, i + len);
+  }
+  return v;
+}
+
+/**
+ * Compares the similarity between two strings using an n-gram comparison method.
+ * The grams default to length 2.
+ * @param str1 The first string to compare.
+ * @param str2 The second string to compare.
+ * @param gramSize The size of the grams. Defaults to length 2.
+ */
+function stringSimilarity(str1: string, str2: string, gramSize = 2) {
+  // if (str1.toLowerCase().includes(str2.toLowerCase())) {
+  //   return 1;
+  // }
+
+  if (!str1?.length || !str2?.length) {
+    return 0.0;
+  }
+
+  //Order the strings by length so the order they're passed in doesn't matter
+  //and so the smaller string's ngrams are always the ones in the set
+  const s1 = str1.length < str2.length ? str1 : str2;
+  const s2 = str1.length < str2.length ? str2 : str1;
+
+  const pairs1 = getNGrams(s1, gramSize);
+  const pairs2 = getNGrams(s2, gramSize);
+  const set = new Set<string>(pairs1);
+
+  const total = pairs2.length;
+  let hits = 0;
+  for (const item of pairs2) {
+    if (set.delete(item)) {
+      hits++;
+    }
+  }
+  return hits / total;
+}
+
 function classNames(...classes: any) {
   return classes.filter(Boolean).join(' ');
 }
@@ -128,15 +173,24 @@ export function CommandPaletteModal({
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   onClick: (s: string & Location, name: string) => void;
 }) {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useDebounce('', 300);
   const filteredItems = useCallback((s: string) => {
-    return s === ''
-      ? items.sort((x, y) => (x.name > y.name ? 1 : -1)).slice(0, 40)
-      : items
-          .filter((item) => {
-            return item.name.toLowerCase().includes(s.toLowerCase());
-          })
-          .slice(0, 40);
+    if (s === '') {
+      return items.sort((x, y) => (x.name > y.name ? 1 : -1));
+    }
+    return items
+      .map((item) => {
+        // Match against each token, take highest score
+        const vals = item.name
+          .split(' ')
+          .map((token) => stringSimilarity(token, s));
+        const rating = Math.max(...vals);
+        return { rating, item };
+      })
+      .filter((item) => item.rating > 0.05)
+      .sort((a, b) => b.rating - a.rating)
+      .slice(0, 50)
+      .map((item) => item.item);
   }, []);
 
   return (
@@ -208,29 +262,11 @@ export function CommandPaletteModal({
                     className="scroll-py-3 overflow-y-auto p-3 sm:max-h-96"
                   >
                     {filteredItems(query).map((item) => (
-                      <Combobox.Option
-                        key={item.id}
-                        value={item}
-                        className={({ active }) =>
-                          classNames(
-                            'flex cursor-default select-none rounded-xl p-3',
-                            active && 'bg-gray-100'
-                          )
-                        }
-                      >
-                        {({ active }) => (
-                          <div className="ml-4 flex-auto">
-                            <p
-                              className={classNames(
-                                'text-sm font-medium',
-                                active ? 'text-gray-900' : 'text-gray-700'
-                              )}
-                            >
-                              {item.name}
-                            </p>
-                          </div>
-                        )}
-                      </Combobox.Option>
+                      <MemoizedResultItem
+                        id={item.id}
+                        name={item.name}
+                        url={item.url}
+                      />
                     ))}
                   </Combobox.Options>
                 )}
@@ -257,5 +293,43 @@ export function CommandPaletteModal({
         </div>
       </Dialog>
     </Transition.Root>
+  );
+}
+
+export const MemoizedResultItem = memo(ResultItem);
+
+function ResultItem({
+  id,
+  name,
+  url,
+}: {
+  id: string;
+  name: string;
+  url: string;
+}) {
+  return (
+    <Combobox.Option
+      key={id}
+      value={{ id, name, url }}
+      className={({ active }) =>
+        classNames(
+          'flex cursor-default select-none rounded-xl p-3',
+          active && 'bg-gray-100'
+        )
+      }
+    >
+      {({ active }) => (
+        <div className="ml-4 flex-auto">
+          <p
+            className={classNames(
+              'text-sm font-medium',
+              active ? 'text-gray-900' : 'text-gray-700'
+            )}
+          >
+            {name}
+          </p>
+        </div>
+      )}
+    </Combobox.Option>
   );
 }
