@@ -177,7 +177,7 @@ export function CommandPaletteModal({
                 </p>
                 <button
                   type="button"
-                  className="focus:ring-primary-500 rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                  className="rounded-md bg-white text-gray-500 hover:text-gray-700 focus:text-gray-700 focus:outline-none focus:ring-0 "
                   onClick={() => setOpen(false)}
                 >
                   <span className="sr-only">Close</span>
