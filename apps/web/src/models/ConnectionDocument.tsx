@@ -8,6 +8,7 @@ export interface ConnectionDocument extends BaseDocument {
   scope: string;
   // token_type: string;
   source: 'epic' | 'onpatient';
+  name: string;
   location: string;
   last_refreshed: string;
 }

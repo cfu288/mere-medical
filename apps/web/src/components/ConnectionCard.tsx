@@ -25,14 +25,15 @@ function getImage(logo: 'onpatient' | 'epic') {
 
 async function fetchData(
   connectionDocument: RxDocument<ConnectionDocument>,
-  db: RxDatabase<DatabaseCollections>
+  db: RxDatabase<DatabaseCollections>,
+  baseUrl: string
 ) {
   switch (connectionDocument.get('source')) {
     case 'onpatient': {
       return await OnPatient.syncAllRecords(connectionDocument, db);
     }
     case 'epic': {
-      return await Epic.syncAllRecords(connectionDocument, db);
+      return await Epic.syncAllRecords(baseUrl, connectionDocument, db);
     }
     default: {
       throw Error('Cannot sync');
@@ -42,8 +43,10 @@ async function fetchData(
 
 export function ConnectionCard({
   item,
+  baseUrl,
 }: {
   item: RxDocument<ConnectionDocument>;
+  baseUrl: string;
 }) {
   const db = useRxDb(),
     removeDocument = (document: BaseDocument) => {
@@ -56,7 +59,7 @@ export function ConnectionCard({
   useEffect(() => {
     if (!item.get('last_refreshed')) {
       setSyncing(true);
-      fetchData(item, db)
+      fetchData(item, db, baseUrl)
         .then(() => {
           setSyncing(false);
         })
@@ -79,8 +82,8 @@ export function ConnectionCard({
         />
         <div className="flex-1 truncate">
           <div className="flex items-center space-x-3">
-            <h3 className="truncate text-sm font-semibold  uppercase text-gray-900">
-              {item.get('source')}
+            <h3 className="truncate text-sm font-semibold  text-gray-900">
+              {item.get('name')}
             </h3>
           </div>
           <p className="mt-1 truncate text-sm font-medium text-gray-500">
@@ -116,7 +119,7 @@ export function ConnectionCard({
             }`}
             onClick={() => {
               setSyncing(true);
-              fetchData(item, db)
+              fetchData(item, db, baseUrl)
                 .then(() => {
                   setSyncing(false);
                 })

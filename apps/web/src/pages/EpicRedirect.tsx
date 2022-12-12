@@ -1,5 +1,5 @@
 import { IonContent, IonHeader, IonPage, IonTitle } from '@ionic/react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateConnectionDocument } from '../models/ConnectionDocument';
@@ -25,8 +25,10 @@ const EpicRedirect: React.FC = () => {
     const searchRequest = new URLSearchParams(window.location.search),
       code = searchRequest.get('code');
 
-    if (code) {
-      fetch(`${Epic.EpicBaseUrl}/oauth2/token`, {
+    const epicUrl = localStorage.getItem(Epic.LocalStorageKeys.EPIC_URL);
+    const epicName = localStorage.getItem(Epic.LocalStorageKeys.EPIC_NAME);
+    if (code && epicUrl) {
+      fetch(`${epicUrl}/oauth2/token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -53,7 +55,8 @@ const EpicRedirect: React.FC = () => {
               const dbentry: Omit<CreateConnectionDocument, 'refresh_token'> = {
                 _id: uuidv4(),
                 source: 'epic',
-                location: Epic.EpicBaseUrl,
+                location: epicUrl,
+                name: `MyChart ${epicName ? `- ${epicName}` : ''}`,
                 access_token: res.access_token,
                 expires_in: res.expires_in,
                 scope: res.scope,
@@ -77,7 +80,7 @@ const EpicRedirect: React.FC = () => {
           }
         );
     }
-  }, []);
+  }, [db.connection_documents, history]);
 
   return (
     <IonPage>

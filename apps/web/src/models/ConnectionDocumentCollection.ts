@@ -30,6 +30,9 @@ export const connectionSchemaLiteral = {
     refresh_token: {
       type: 'string',
     },
+    name: {
+      type: 'string',
+    },
     scope: {
       type: 'string',
     },

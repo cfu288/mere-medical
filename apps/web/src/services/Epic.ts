@@ -17,39 +17,50 @@ import {
 } from 'fhir/r2';
 import { RxDocument, RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../components/RxDbProvider';
-import config from '../environments/config.json';
 import { ClinicalDocument } from '../models/ClinicalDocument';
 import { ClinicalDocumentType } from '../models/ClinicalDocumentCollection';
 import { ConnectionDocument } from '../models/ConnectionDocument';
 import { Routes } from '../Routes';
 import { DSTU2 } from './DSTU2';
 import Config from '../environments/config.json';
+import { useState, useEffect } from 'react';
 
 export namespace Epic {
-  export const EpicBaseUrl = 'https://mepic.hmhn.org/fhir';
-  // export const EpicBaseUrl = 'https://epicarr.optum.com/FHIR';
+  // export const EpicBaseUrl = 'https://mepic.hmhn.org/fhir';
   // export const EpicBaseUrl = 'https://fhir.epic.com/interconnect-fhir-oauth';
-  export const EpicDSTU2Url = `${EpicBaseUrl}/api/FHIR/DSTU2`;
+  // export const EpicDSTU2Url = `${EpicBaseUrl}/api/FHIR/DSTU2`;
 
-  export function getLoginUrl() {
+  export function getDSTU2Url(baseUrl: string) {
+    return `${baseUrl}/api/FHIR/DSTU2`;
+  }
+
+  export function getLoginUrl(baseUrl: string): string & Location {
     const params = {
       client_id: `${Config.EPIC_CLIENT_ID}`,
       scope: 'Patient.read Patient.search',
-      redirect_uri: `${config.PUBLIC_URL}${Routes.EpicCallback}`,
-      aud: EpicDSTU2Url,
+      redirect_uri: `${Config.PUBLIC_URL}${Routes.EpicCallback}`,
+      aud: getDSTU2Url(baseUrl),
       response_type: 'code',
     };
 
-    return `${EpicBaseUrl}/oauth2/authorize?${new URLSearchParams(params)}`;
+    return `${baseUrl}/oauth2/authorize?${new URLSearchParams(
+      params
+    )}` as string & Location;
+  }
+
+  export enum LocalStorageKeys {
+    EPIC_URL = 'epicUrl',
+    EPIC_NAME = 'epicName',
   }
 
   async function getFHIRResource<T extends FhirResource>(
+    baseUrl: string,
     connectionDocument: RxDocument<ConnectionDocument>,
     fhirResourceUrl: string,
     params?: any
   ): Promise<BundleEntry<T>[]> {
     const res = await fetch(
-      `${EpicDSTU2Url}/${fhirResourceUrl}?_format=${encodeURIComponent(
+      `${getDSTU2Url(baseUrl)}/${fhirResourceUrl}?_format=${encodeURIComponent(
         `application/fhir+json`
       )}&${new URLSearchParams(params)}`,
       {
@@ -68,6 +79,7 @@ export namespace Epic {
   }
 
   async function syncFHIRResource<T extends FhirResource>(
+    baseUrl: string,
     connectionDocument: RxDocument<ConnectionDocument>,
     db: RxDatabase<DatabaseCollections>,
     fhirResourceUrl: string,
@@ -75,6 +87,7 @@ export namespace Epic {
     params: Record<string, string>
   ) {
     const resc = await getFHIRResource<T>(
+      baseUrl,
       connectionDocument,
       fhirResourceUrl,
       params
@@ -107,6 +120,7 @@ export namespace Epic {
   }
 
   export async function syncAllRecords(
+    baseUrl: string,
     connectionDocument: RxDocument<ConnectionDocument>,
     db: RxDatabase<DatabaseCollections>
   ): Promise<any[][]> {
@@ -147,6 +161,7 @@ export namespace Epic {
 
     const syncJob = await Promise.all([
       syncFHIRResource<Procedure>(
+        baseUrl,
         connectionDocument,
         db,
         'Procedure',
@@ -156,6 +171,7 @@ export namespace Epic {
         }
       ),
       syncFHIRResource<Patient>(
+        baseUrl,
         connectionDocument,
         db,
         'Patient',
@@ -165,6 +181,7 @@ export namespace Epic {
         }
       ),
       syncFHIRResource<Observation>(
+        baseUrl,
         connectionDocument,
         db,
         'Observation',
@@ -175,6 +192,7 @@ export namespace Epic {
         }
       ),
       syncFHIRResource<DiagnosticReport>(
+        baseUrl,
         connectionDocument,
         db,
         'DiagnosticReport',
@@ -184,6 +202,7 @@ export namespace Epic {
         }
       ),
       syncFHIRResource<MedicationStatement>(
+        baseUrl,
         connectionDocument,
         db,
         'MedicationStatement',
@@ -193,6 +212,7 @@ export namespace Epic {
         }
       ),
       syncFHIRResource<Immunization>(
+        baseUrl,
         connectionDocument,
         db,
         'Immunization',
@@ -202,6 +222,7 @@ export namespace Epic {
         }
       ),
       syncFHIRResource<Condition>(
+        baseUrl,
         connectionDocument,
         db,
         'Condition',
@@ -211,6 +232,7 @@ export namespace Epic {
         }
       ),
       syncFHIRResource<DocumentReference>(
+        baseUrl,
         connectionDocument,
         db,
         'DocumentReference',
@@ -220,6 +242,7 @@ export namespace Epic {
         }
       ),
       syncFHIRResource<CarePlan>(
+        baseUrl,
         connectionDocument,
         db,
         'CarePlan',
@@ -229,6 +252,7 @@ export namespace Epic {
         }
       ),
       syncFHIRResource<AllergyIntolerance>(
+        baseUrl,
         connectionDocument,
         db,
         'AllergyIntolerance',

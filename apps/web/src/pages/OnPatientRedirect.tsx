@@ -33,6 +33,7 @@ const OnPatientRedirect: React.FC = () => {
           _id: uuidv4(),
           source: 'onpatient',
           location: 'https://onpatient.com',
+          name: 'OnPatient',
           access_token: accessToken,
           refresh_token: refreshToken,
           expires_in: parseInt(expiresIn),
