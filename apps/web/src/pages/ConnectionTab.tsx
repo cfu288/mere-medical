@@ -244,15 +244,16 @@ export function CommandPaletteModal({
                   setOpen(false);
                 }}
               >
-                <div className="relative">
+                <div className="relative px-4">
                   <MagnifyingGlassIcon
-                    className="pointer-events-none absolute top-3.5 left-4 h-5 w-5 text-gray-400"
+                    className="pointer-events-none absolute top-3.5 left-8 h-5 w-5 text-gray-400"
                     aria-hidden="true"
                   />
                   <Combobox.Input
-                    className="h-12 w-full divide-y-2 rounded-md border-0 bg-transparent pl-11 pr-4 text-gray-800 placeholder-gray-400 hover:border-gray-200 focus:ring-0 sm:text-sm"
+                    className="focus:ring-primary-700 h-12 w-full divide-y-2 rounded-xl border-0 bg-gray-50 bg-transparent pl-11 pr-4 text-gray-800 placeholder-gray-400 hover:border-gray-200 focus:ring-2 sm:text-sm"
                     placeholder="Search for your health system"
                     onChange={(event) => setQuery(event.target.value)}
+                    autoFocus={true}
                   />
                 </div>
 
@@ -263,6 +264,7 @@ export function CommandPaletteModal({
                   >
                     {filteredItems(query).map((item) => (
                       <MemoizedResultItem
+                        key={item.id}
                         id={item.id}
                         name={item.name}
                         url={item.url}
@@ -309,12 +311,13 @@ function ResultItem({
 }) {
   return (
     <Combobox.Option
+      tabIndex={0}
       key={id}
       value={{ id, name, url }}
       className={({ active }) =>
         classNames(
-          'flex cursor-default select-none rounded-xl p-3',
-          active && 'bg-gray-100'
+          active && 'bg-gray-100',
+          'mb-2 flex cursor-default select-none rounded-xl p-3'
         )
       }
     >
