@@ -34,7 +34,9 @@ function fetchRecords(db: RxDatabase<DatabaseCollections>) {
   return db.clinical_documents
     .find({
       selector: {
-        'data_record.resource_type': { $ne: 'patient' },
+        'data_record.resource_type': {
+          $nin: ['patient', 'observation'],
+        },
         'metadata.date': { $gt: 0 },
       },
       sort: [{ 'metadata.date': 'desc' }],
@@ -109,7 +111,10 @@ const TimelineTab: React.FC = () => {
 
   useEffect(() => {
     // Fetch clinical documents to display
-    fetchRecords(db).then((groupedRecords) => setList(groupedRecords));
+    fetchRecords(db).then((groupedRecords) => {
+      setList(groupedRecords);
+      // console.log(groupedRecords);
+    });
   }, [db]);
 
   return (

@@ -34,7 +34,7 @@ export namespace DSTU2 {
         version_history: [],
       },
       metadata: {
-        id: 'procedure_' + bundleItem.resource?.id,
+        id: bundleItem.fullUrl,
         date: bundleItem.resource?.performedDateTime,
         display_name: bundleItem.resource?.code.text,
         merge_key: `"procedure_"${bundleItem.resource?.performedDateTime}_${bundleItem.resource?.code.text}`,
@@ -58,7 +58,7 @@ export namespace DSTU2 {
         version_history: [],
       },
       metadata: {
-        id: 'medicationstatement_' + bundleItem.resource?.id,
+        id: bundleItem.fullUrl,
         date:
           bundleItem.resource?.dateAsserted ||
           bundleItem.resource?.effectivePeriod?.start,
@@ -84,7 +84,7 @@ export namespace DSTU2 {
         version_history: [],
       },
       metadata: {
-        id: 'observation_' + bundleItem.resource?.id,
+        id: bundleItem.fullUrl,
         date: bundleItem.resource?.effectiveDateTime,
         display_name: bundleItem.resource?.code.text,
         merge_key: `"observation_"${bundleItem.resource?.effectiveDateTime}_${bundleItem.resource?.code.text}`,
@@ -108,7 +108,7 @@ export namespace DSTU2 {
         version_history: [],
       },
       metadata: {
-        id: 'diagnosticreport_' + bundleItem.resource?.id,
+        id: bundleItem.fullUrl,
         date: bundleItem.resource?.effectiveDateTime,
         display_name: bundleItem.resource?.code.text,
         merge_key: `"diagnosticreport_"${bundleItem.resource?.effectiveDateTime}_${bundleItem.resource?.code.text}`,
@@ -143,7 +143,7 @@ export namespace DSTU2 {
         version_history: [],
       },
       metadata: {
-        id: 'patient_' + bundleItem.resource?.id,
+        id: bundleItem.fullUrl,
         date: new Date().toISOString(),
       },
     };
@@ -165,7 +165,7 @@ export namespace DSTU2 {
         version_history: [],
       },
       metadata: {
-        id: 'immunization_' + bundleItem.resource?.id,
+        id: bundleItem.fullUrl,
         date: bundleItem.resource?.date,
         display_name: bundleItem.resource?.vaccineCode.text,
         merge_key: `"immunization_"${bundleItem.resource?.date}_${bundleItem.resource?.vaccineCode.text}`,
@@ -189,7 +189,7 @@ export namespace DSTU2 {
         version_history: [],
       },
       metadata: {
-        id: 'condition_' + bundleItem.resource?.id,
+        id: bundleItem.fullUrl,
         date: bundleItem.resource?.dateRecorded,
         display_name: bundleItem.resource?.code.text,
         merge_key: `"condition_"${bundleItem.resource?.dateRecorded}_${bundleItem.resource?.code.text}`,
@@ -213,7 +213,7 @@ export namespace DSTU2 {
         version_history: [],
       },
       metadata: {
-        id: 'allergyintolerance_' + bundleItem.resource?.id,
+        id: bundleItem.fullUrl,
         date: bundleItem.resource?.recordedDate,
         display_name: bundleItem.resource?.text?.div,
         merge_key: `"allergyintolerance_"${bundleItem.resource?.recordedDate}_${bundleItem.resource?.text?.div}`,
@@ -237,7 +237,7 @@ export namespace DSTU2 {
         version_history: [],
       },
       metadata: {
-        id: 'practitioner_' + bundleItem.resource?.id,
+        id: bundleItem.fullUrl,
         date: bundleItem.resource?.birthDate,
         display_name: bundleItem.resource?.text?.div,
         merge_key: `"practitioner_"${bundleItem.resource?.birthDate}_${bundleItem.resource?.text?.div}`,
@@ -261,7 +261,7 @@ export namespace DSTU2 {
         version_history: [],
       },
       metadata: {
-        id: 'documentreference_' + bundleItem.resource?.id,
+        id: bundleItem.fullUrl,
         date:
           bundleItem.resource?.created ||
           bundleItem.resource?.context?.period?.start,
@@ -290,7 +290,7 @@ export namespace DSTU2 {
         version_history: [],
       },
       metadata: {
-        id: 'careplan_' + bundleItem.resource?.id,
+        id: bundleItem.fullUrl,
         date: bundleItem.resource?.period?.start,
         display_name: bundleItem.resource?.description,
         merge_key: `"careplan_"${bundleItem.resource?.period?.start}_${bundleItem.resource?.description}`,
