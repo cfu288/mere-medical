@@ -54,15 +54,24 @@ export function ShowDiagnosticReportResultsExpandable({
           </button>
         </div>
       </div>
-      <div className={`${expanded ? '' : 'hidden'}`}>
+      <div
+        className={`${
+          expanded ? '' : 'hidden'
+        } rounded-lg border border-solid border-gray-200`}
+      >
+        <div className="grid grid-cols-2 gap-2 gap-y-2 border-b-2 border-solid border-gray-200 p-2 px-4 text-gray-700">
+          <div className="text-sm font-semibold">Name</div>
+          <div className="text-sm font-semibold">Value</div>
+        </div>
         {docs.map((item) => (
           // eslint-disable-next-line react/jsx-no-useless-fragment
           <>
             {!(item.get('raw')?.resource as Observation)?.dataAbsentReason ? (
-              <>
-                <p>
+              <div className="mx-4 grid grid-cols-2 gap-2 gap-y-2 border-b-2 border-solid border-gray-50 py-2">
+                <div className="self-center text-sm font-bold text-gray-600">
                   {item.get('metadata.display_name')}
-                  {'\t'}
+                </div>
+                <div className="flex self-center text-sm">
                   {(item.get('data_record.raw').resource as Observation)
                     ?.interpretation?.text ||
                     (item.get('data_record.raw').resource as Observation)
@@ -80,8 +89,8 @@ export function ShowDiagnosticReportResultsExpandable({
                     (item.get('data_record.raw').resource as Observation)
                       ?.valueQuantity?.unit
                   }
-                </p>
-              </>
+                </div>
+              </div>
             ) : null}
           </>
         ))}
