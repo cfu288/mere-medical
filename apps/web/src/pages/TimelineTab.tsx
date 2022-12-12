@@ -113,7 +113,7 @@ const TimelineTab: React.FC = () => {
     // Fetch clinical documents to display
     fetchRecords(db).then((groupedRecords) => {
       setList(groupedRecords);
-      // console.log(groupedRecords);
+      console.log(groupedRecords);
     });
   }, [db]);
 

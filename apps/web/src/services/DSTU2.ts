@@ -18,6 +18,18 @@ import { v4 as uuidv4 } from 'uuid';
 import { ClinicalDocument } from '../models/ClinicalDocument';
 import { UserDocument } from '../models/UserDocument';
 
+function parseId<T>(bundleItem: BundleEntry<T>) {
+  // OnPatient returns an array instead of a string, not to spec
+  const isArrayId =
+    Array.isArray(bundleItem.fullUrl as string | string[]) &&
+    bundleItem.fullUrl &&
+    bundleItem.fullUrl?.length > 0;
+  // Hacky workaround for consistent ID's in OnPatient
+  return isArrayId
+    ? bundleItem.fullUrl?.[0].replace('/api/fhir/', '')
+    : bundleItem.fullUrl;
+}
+
 export namespace DSTU2 {
   export function mapProcedureToClinicalDocument(
     bundleItem: BundleEntry<Procedure>,
@@ -34,7 +46,7 @@ export namespace DSTU2 {
         version_history: [],
       },
       metadata: {
-        id: bundleItem.fullUrl,
+        id: parseId(bundleItem),
         date: bundleItem.resource?.performedDateTime,
         display_name: bundleItem.resource?.code.text,
         merge_key: `"procedure_"${bundleItem.resource?.performedDateTime}_${bundleItem.resource?.code.text}`,
@@ -58,7 +70,7 @@ export namespace DSTU2 {
         version_history: [],
       },
       metadata: {
-        id: bundleItem.fullUrl,
+        id: parseId(bundleItem),
         date:
           bundleItem.resource?.dateAsserted ||
           bundleItem.resource?.effectivePeriod?.start,
@@ -84,7 +96,7 @@ export namespace DSTU2 {
         version_history: [],
       },
       metadata: {
-        id: bundleItem.fullUrl,
+        id: parseId(bundleItem),
         date: bundleItem.resource?.effectiveDateTime,
         display_name: bundleItem.resource?.code.text,
         merge_key: `"observation_"${bundleItem.resource?.effectiveDateTime}_${bundleItem.resource?.code.text}`,
@@ -108,7 +120,7 @@ export namespace DSTU2 {
         version_history: [],
       },
       metadata: {
-        id: bundleItem.fullUrl,
+        id: parseId(bundleItem),
         date: bundleItem.resource?.effectiveDateTime,
         display_name: bundleItem.resource?.code.text,
         merge_key: `"diagnosticreport_"${bundleItem.resource?.effectiveDateTime}_${bundleItem.resource?.code.text}`,
@@ -143,7 +155,7 @@ export namespace DSTU2 {
         version_history: [],
       },
       metadata: {
-        id: bundleItem.fullUrl,
+        id: parseId(bundleItem),
         date: new Date().toISOString(),
       },
     };
@@ -165,7 +177,7 @@ export namespace DSTU2 {
         version_history: [],
       },
       metadata: {
-        id: bundleItem.fullUrl,
+        id: parseId(bundleItem),
         date: bundleItem.resource?.date,
         display_name: bundleItem.resource?.vaccineCode.text,
         merge_key: `"immunization_"${bundleItem.resource?.date}_${bundleItem.resource?.vaccineCode.text}`,
@@ -189,7 +201,7 @@ export namespace DSTU2 {
         version_history: [],
       },
       metadata: {
-        id: bundleItem.fullUrl,
+        id: parseId(bundleItem),
         date: bundleItem.resource?.dateRecorded,
         display_name: bundleItem.resource?.code.text,
         merge_key: `"condition_"${bundleItem.resource?.dateRecorded}_${bundleItem.resource?.code.text}`,
@@ -213,7 +225,8 @@ export namespace DSTU2 {
         version_history: [],
       },
       metadata: {
-        id: bundleItem.fullUrl,
+        id: parseId(bundleItem),
+
         date: bundleItem.resource?.recordedDate,
         display_name: bundleItem.resource?.text?.div,
         merge_key: `"allergyintolerance_"${bundleItem.resource?.recordedDate}_${bundleItem.resource?.text?.div}`,
@@ -237,7 +250,7 @@ export namespace DSTU2 {
         version_history: [],
       },
       metadata: {
-        id: bundleItem.fullUrl,
+        id: parseId(bundleItem),
         date: bundleItem.resource?.birthDate,
         display_name: bundleItem.resource?.text?.div,
         merge_key: `"practitioner_"${bundleItem.resource?.birthDate}_${bundleItem.resource?.text?.div}`,
@@ -261,7 +274,7 @@ export namespace DSTU2 {
         version_history: [],
       },
       metadata: {
-        id: bundleItem.fullUrl,
+        id: parseId(bundleItem),
         date:
           bundleItem.resource?.created ||
           bundleItem.resource?.context?.period?.start,
@@ -290,7 +303,7 @@ export namespace DSTU2 {
         version_history: [],
       },
       metadata: {
-        id: bundleItem.fullUrl,
+        id: parseId(bundleItem),
         date: bundleItem.resource?.period?.start,
         display_name: bundleItem.resource?.description,
         merge_key: `"careplan_"${bundleItem.resource?.period?.start}_${bundleItem.resource?.description}`,

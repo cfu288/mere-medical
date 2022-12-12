@@ -19,7 +19,7 @@ export function ShowDiagnosticReportResultsExpandable({
   );
 
   const listToQuery = item.data_record.raw.resource?.result?.map(
-    (item) => item.reference
+    (item) => `${item.reference}`
   ) as string[];
 
   useEffect(() => {
