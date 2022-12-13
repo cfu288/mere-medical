@@ -1,5 +1,5 @@
 import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { RxDocument } from 'rxdb';
 import {
   ClinicalDocument,
@@ -31,8 +31,9 @@ export function ShowDiagnosticReportResultsExpandable({
       })
       .exec()
       .then((res) => {
-        setDocs(res as unknown as RxDocument<ClinicalDocument<Observation>>[]);
-        console.log(res.map((x) => x.toJSON()));
+        setDocs(
+          (res as unknown) as RxDocument<ClinicalDocument<Observation>>[]
+        );
       });
   }, []);
 
@@ -65,26 +66,25 @@ export function ShowDiagnosticReportResultsExpandable({
         </div>
         {docs.map((item) => (
           // eslint-disable-next-line react/jsx-no-useless-fragment
-          <>
+          <Fragment key={item.metadata?.id}>
             {!(item.get('raw')?.resource as Observation)?.dataAbsentReason ? (
               <div className="mx-4 grid grid-cols-2 gap-2 gap-y-2 border-b-2 border-solid border-gray-50 py-2">
-                <div className="self-center text-sm font-bold text-gray-600">
-                  {item.get('metadata.display_name')}
+                <div className="self-center text-xs font-bold text-gray-600">
+                  <p>{item.get('metadata.display_name')}</p>
+                  <p>{(item.get('data_record.raw').resource as Observation)?.referenceRange?.[0]?.text ? `Range: ${(item.get('data_record.raw').resource as Observation)?.referenceRange?.[0]?.text}` : ''}</p>
                 </div>
                 <div className="flex self-center text-sm">
                   {(item.get('data_record.raw').resource as Observation)
                     ?.interpretation?.text ||
                     (item.get('data_record.raw').resource as Observation)
                       ?.valueString}
-
                   {(item.get('data_record.raw').resource as Observation)
-                    ?.valueQuantity?.value
+                    ?.valueQuantity?.value !== undefined
                     ? `  ${
                         (item.get('data_record.raw').resource as Observation)
                           ?.valueQuantity?.value
                       }`
                     : ''}
-                  {''}
                   {
                     (item.get('data_record.raw').resource as Observation)
                       ?.valueQuantity?.unit
@@ -92,31 +92,8 @@ export function ShowDiagnosticReportResultsExpandable({
                 </div>
               </div>
             ) : null}
-          </>
+          </Fragment>
         ))}
-        {/* {item.data_record.raw.resource?.result?.map((item) => (
-          <p key={item.id}>{item.display}</p>
-        ))} */}
-        {/* {list?.map((list_item) => (
-          <div
-            key={list_item.id || list_item.fullUrl}
-            className="flex flex-row gap-2 text-sm text-gray-600"
-          >
-            {!(list_item.resource as Observation)?.dataAbsentReason && (
-              <>
-                <div>{list_item.resource?.category?.text} result: </div>
-                <div>
-                  {(list_item.resource as Observation)?.interpretation?.text ||
-                    (list_item.resource as Observation)?.valueString}
-                </div>
-                <div>
-                  {(list_item.resource as Observation)?.valueQuantity?.value}
-                  {(list_item.resource as Observation)?.valueQuantity?.unit}
-                </div>
-              </>
-            )}
-          </div>
-        ))} */}
       </div>
     </div>
   );
