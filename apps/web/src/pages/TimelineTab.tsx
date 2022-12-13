@@ -2,7 +2,6 @@ import { IonContent, IonHeader, IonPage } from '@ionic/react';
 import { format, parseISO } from 'date-fns';
 import {
   BundleEntry,
-  CarePlan,
   Condition,
   DiagnosticReport,
   DocumentReference,
@@ -14,10 +13,7 @@ import {
 } from 'fhir/r2';
 import { useEffect, useState } from 'react';
 import { DatabaseCollections, useRxDb } from '../components/RxDbProvider';
-import {
-  ClinicalDocument,
-  MergeClinicalDocument,
-} from '../models/ClinicalDocument';
+import { ClinicalDocument } from '../models/ClinicalDocument';
 import { ConditionCard } from '../components/ConditionCard';
 import { RxDatabase, RxDocument } from 'rxdb';
 import { DiagnosticReportCard } from '../components/Timeline/DiagnosticReportCard';
@@ -29,6 +25,7 @@ import { MedicationCard } from '../components/MedicationCard';
 import { EmptyRecordsPlaceholder } from '../models/EmptyRecordsPlaceholder';
 import { useUser } from '../components/UserProvider';
 import { DocumentReferenceCard } from '../components/DocumentReferenceCard';
+import { useThrottle } from '@react-hook/throttle';
 
 function fetchRecords(db: RxDatabase<DatabaseCollections>) {
   return db.clinical_documents
@@ -70,35 +67,6 @@ function fetchRecords(db: RxDatabase<DatabaseCollections>) {
         }
       });
 
-      // Now that we've grouped by date, lets group cards further if a set of cards on a single date belong to the same lab panel
-      Object.entries(groupedRecords).forEach(([date, itemList]) => {
-        const groupedCards: Record<
-          string, // merge_key
-          MergeClinicalDocument<BundleEntry<FhirResource>> // documents for date
-        > = {};
-
-        // Merge key is used to de-dup cards that should be displayed together, like observations to a diagnostic report
-        itemList.forEach((item) => {
-          const mergeKey = item.metadata?.merge_key;
-          // only attempt to merge if mergeKey exists and is not undefined
-          if (mergeKey !== undefined) {
-            if (groupedCards[mergeKey]) {
-              // Push to existing data_item
-              groupedCards[mergeKey].data_items?.push(item.data_record.raw);
-            } else {
-              // If new key, add as first item and initialize data_items with same item for display later
-              groupedCards[mergeKey] = item;
-              groupedCards[mergeKey].data_items = [item.data_record.raw];
-            }
-          }
-        });
-
-        // Replace existing array with un-duped array
-        groupedRecords[date] = Object.entries(groupedCards).map(
-          ([, res]) => res
-        );
-      });
-
       return groupedRecords;
     });
 }
@@ -108,12 +76,13 @@ const TimelineTab: React.FC = () => {
   const [list, setList] =
     useState<Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>>();
   const user = useUser();
+  const [scrollPosition, setScrollPosition] = useThrottle(0);
 
   useEffect(() => {
     // Fetch clinical documents to display
     fetchRecords(db).then((groupedRecords) => {
       setList(groupedRecords);
-      console.log(groupedRecords);
+      console.debug(groupedRecords);
     });
   }, [db]);
 
@@ -126,92 +95,120 @@ const TimelineTab: React.FC = () => {
           }
         />
       </IonHeader>
-      <IonContent fullscreen>
-        <div className="mx-auto flex max-w-4xl flex-col px-4 pt-2 pb-4 sm:px-6 lg:px-8">
+      <IonContent
+        fullscreen
+        scrollEvents
+        onIonScroll={(event) => {
+          const position = event.detail.scrollTop;
+          setScrollPosition(position);
+        }}
+      >
+        <div className="mx-auto flex max-w-4xl flex-col px-4 sm:px-6 lg:px-8">
           {!list ||
             (Object.entries(list).length === 0 && <EmptyRecordsPlaceholder />)}
           {list &&
-            Object.entries(list).map(([key, itemList]) => (
-              <div className="flex flex-row gap-x-4 pt-12" key={key}>
-                <span className="text-primary-700 flex grow justify-end whitespace-nowrap pt-5 font-bold">
-                  {format(parseISO(key), 'MMM dd')}
-                </span>
-                <div className="flex-column text-primary-700 relative flex justify-center pt-5 font-black">
-                  <div className="">•</div>
-                  {/* <div className="absolute h-full mt-8 border border-gray-300"></div> */}
+            Object.entries(list).map(([key, itemList], index, elements) => (
+              <>
+                {index === 0 ? (
+                  <TimelineYearHeader
+                    key={`${key}${index}`}
+                    year={key}
+                    scroll={scrollPosition}
+                  />
+                ) : (
+                  // Only show year header if the next item is not in the same year
+                  elements[index + 1] &&
+                  format(parseISO(elements[index + 1][0]), 'yyyy') !==
+                    format(parseISO(key), 'yyyy') && (
+                    <TimelineYearHeader
+                      key={`${key}${index}`}
+                      year={key}
+                      scroll={scrollPosition}
+                    />
+                  )
+                )}
+                <div className="flex flex-row gap-x-4 pt-12" key={key}>
+                  <span className="text-primary-700 flex grow justify-end whitespace-nowrap pt-5 font-bold">
+                    {format(parseISO(key), 'MMM dd')}
+                  </span>
+                  <div className="flex-column text-primary-700 relative flex justify-center pt-5 font-black">
+                    <div className="">•</div>
+                  </div>
+                  <div className="flex w-3/4 flex-col gap-y-4">
+                    {itemList.map((item) => (
+                      <div key={item._id}>
+                        {item.data_record.resource_type === 'immunization' && (
+                          <ImmunizationCard
+                            key={item._id}
+                            item={
+                              item as ClinicalDocument<
+                                BundleEntry<Immunization>
+                              >
+                            }
+                          />
+                        )}
+                        {item.data_record.resource_type === 'condition' && (
+                          <ConditionCard
+                            key={item._id}
+                            item={
+                              item as ClinicalDocument<BundleEntry<Condition>>
+                            }
+                          />
+                        )}
+                        {item.data_record.resource_type === 'procedure' && (
+                          <ProcedureCard
+                            key={item._id}
+                            item={
+                              item as ClinicalDocument<BundleEntry<Procedure>>
+                            }
+                          />
+                        )}
+                        {item.data_record.resource_type === 'observation' && (
+                          <ObservationCard
+                            key={item._id}
+                            item={
+                              item as ClinicalDocument<BundleEntry<Observation>>
+                            }
+                          />
+                        )}
+                        {item.data_record.resource_type ===
+                          'medicationstatement' && (
+                          <MedicationCard
+                            key={item._id}
+                            item={
+                              item as ClinicalDocument<
+                                BundleEntry<MedicationStatement>
+                              >
+                            }
+                          />
+                        )}
+                        {item.data_record.resource_type ===
+                          'diagnosticreport' && (
+                          <DiagnosticReportCard
+                            key={item._id}
+                            item={
+                              item as ClinicalDocument<
+                                BundleEntry<DiagnosticReport>
+                              >
+                            }
+                          />
+                        )}
+                        {item.data_record.resource_type ===
+                          'documentreference' && (
+                          <DocumentReferenceCard
+                            key={item._id}
+                            item={
+                              item as ClinicalDocument<
+                                BundleEntry<DocumentReference>
+                              >
+                            }
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex w-3/4 flex-col gap-y-4">
-                  {itemList.map((item) => (
-                    <div key={item._id}>
-                      {item.data_record.resource_type === 'immunization' && (
-                        <ImmunizationCard
-                          key={item._id}
-                          item={
-                            item as ClinicalDocument<BundleEntry<Immunization>>
-                          }
-                        />
-                      )}
-                      {item.data_record.resource_type === 'condition' && (
-                        <ConditionCard
-                          key={item._id}
-                          item={
-                            item as ClinicalDocument<BundleEntry<Condition>>
-                          }
-                        />
-                      )}
-                      {item.data_record.resource_type === 'procedure' && (
-                        <ProcedureCard
-                          key={item._id}
-                          item={
-                            item as ClinicalDocument<BundleEntry<Procedure>>
-                          }
-                        />
-                      )}
-                      {item.data_record.resource_type === 'observation' && (
-                        <ObservationCard
-                          key={item._id}
-                          item={
-                            item as ClinicalDocument<BundleEntry<Observation>>
-                          }
-                        />
-                      )}
-                      {item.data_record.resource_type ===
-                        'medicationstatement' && (
-                        <MedicationCard
-                          key={item._id}
-                          item={
-                            item as ClinicalDocument<
-                              BundleEntry<MedicationStatement>
-                            >
-                          }
-                        />
-                      )}
-                      {item.data_record.resource_type ===
-                        'diagnosticreport' && (
-                        <DiagnosticReportCard
-                          key={item._id}
-                          item={
-                            item as ClinicalDocument<
-                              BundleEntry<DiagnosticReport>
-                            >
-                          }
-                        />
-                      )}
-                      {item.data_record.resource_type ===
-                        'documentreference' && (
-                        <DocumentReferenceCard
-                          key={item._id}
-                          item={
-                            item as ClinicalDocument<
-                              BundleEntry<DocumentReference>
-                            >
-                          }
-                        />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
+              </>
             ))}
         </div>
       </IonContent>
@@ -220,3 +217,25 @@ const TimelineTab: React.FC = () => {
 };
 
 export default TimelineTab;
+
+function TimelineYearHeader({
+  year,
+  scroll,
+}: {
+  year: string;
+  scroll: number;
+}) {
+  return (
+    <div className="sticky top-0 z-10 flex flex-col">
+      <div className="flex flex-row bg-white pt-6">
+        <span className="flex grow">{/* {y} >= {scroll}? */}</span>
+        <div className="w-5/6">
+          <p className="text-xl font-black">
+            Timeline of {format(parseISO(year), 'yyyy')}
+          </p>
+        </div>
+      </div>
+      <div className="bg-gradient-to-b from-red-700"></div>
+    </div>
+  );
+}

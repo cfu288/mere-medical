@@ -133,10 +133,6 @@ function getNGrams(s: string, len: number) {
  * @param gramSize The size of the grams. Defaults to length 2.
  */
 function stringSimilarity(str1: string, str2: string, gramSize = 2) {
-  // if (str1.toLowerCase().includes(str2.toLowerCase())) {
-  //   return 1;
-  // }
-
   if (!str1?.length || !str2?.length) {
     return 0.0;
   }
@@ -214,17 +210,17 @@ export function CommandPaletteModal({
           <div className="fixed inset-0 bg-gray-500 bg-opacity-25 transition-opacity" />
         </Transition.Child>
         {/* Modal */}
-        <div className="sm:pt-15 fixed inset-0 z-10 overflow-y-auto pt-10 md:pt-20">
+        <div className="sm:pt-15 fixed inset-0 z-10 flex flex-col overflow-y-auto pt-10 md:pt-20">
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
-            enterFrom="opacity-0 scale-95"
-            enterTo="opacity-100 scale-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100 scale-100"
+            enterFrom="opacity-0 scale-95 translate-y-1/2"
+            enterTo="opacity-100 scale-100 translate-y-0"
+            leave="ease-in duration-200 translate-y-1/2"
+            leaveFrom="opacity-100 scale-100 translate-y-0"
             leaveTo="opacity-0 scale-95"
           >
-            <Dialog.Panel className="mx-auto h-full max-w-xl transform overflow-hidden rounded-tl-xl rounded-tr-xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 transition-all sm:h-auto sm:rounded-xl">
+            <Dialog.Panel className="mx-auto h-full max-h-full max-w-xl transform overflow-hidden rounded-tl-xl rounded-tr-xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 transition-all sm:h-auto sm:rounded-xl">
               <div className="flex justify-between">
                 <p className="p-4 text-xl font-bold">
                   Select your EPIC health system to log in
@@ -256,11 +252,10 @@ export function CommandPaletteModal({
                     autoFocus={true}
                   />
                 </div>
-
                 {filteredItems(query).length > 0 && (
                   <Combobox.Options
                     static
-                    className="scroll-py-3 overflow-y-auto p-3 sm:max-h-96"
+                    className="max-h-full scroll-py-3 overflow-y-scroll p-3 sm:max-h-96"
                   >
                     {filteredItems(query).map((item) => (
                       <MemoizedResultItem

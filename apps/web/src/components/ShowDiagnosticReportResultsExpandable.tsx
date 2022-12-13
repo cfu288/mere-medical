@@ -1,10 +1,7 @@
 import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { RxDocument } from 'rxdb';
-import {
-  ClinicalDocument,
-  MergeClinicalDocument,
-} from '../models/ClinicalDocument';
+import { ClinicalDocument } from '../models/ClinicalDocument';
 import { useRxDb } from './RxDbProvider';
 
 export function ShowDiagnosticReportResultsExpandable({
@@ -17,28 +14,31 @@ export function ShowDiagnosticReportResultsExpandable({
   const [docs, setDocs] = useState<RxDocument<ClinicalDocument<Observation>>[]>(
     []
   );
-
-  const listToQuery = item.data_record.raw.resource?.result?.map(
-    (item) => `${item.reference}`
-  ) as string[];
+  const listToQuery = [
+    ...new Set(
+      item.data_record.raw.resource?.result?.map((item) => `${item.reference}`)
+    ),
+  ] as string[];
 
   useEffect(() => {
-    db.clinical_documents
-      .find({
-        selector: {
-          'metadata.id': { $in: listToQuery },
-        },
-      })
-      .exec()
-      .then((res) => {
-        setDocs(
-          (res as unknown) as RxDocument<ClinicalDocument<Observation>>[]
-        );
-      });
-  }, []);
+    if (expanded && docs.length === 0) {
+      db.clinical_documents
+        .find({
+          selector: {
+            'metadata.id': { $in: listToQuery },
+          },
+        })
+        .exec()
+        .then((res) => {
+          setDocs(
+            res as unknown as RxDocument<ClinicalDocument<Observation>>[]
+          );
+        });
+    }
+  }, [expanded]);
 
   return (
-    <div key={item._id}>
+    <div>
       <div className="relative py-2">
         <div className="absolute inset-0 flex items-center" aria-hidden="true">
           <div className="w-full border-t border-gray-300" />
@@ -46,7 +46,7 @@ export function ShowDiagnosticReportResultsExpandable({
         <div className="relative flex justify-center">
           <button
             type="button"
-            className="focus:ring-primary-500 inline-flex items-center rounded-full border border-gray-300 bg-white px-4 py-1.5 text-sm font-medium leading-5 text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2"
+            className="focus:ring-primary-700 inline-flex items-center rounded-full border border-gray-300 bg-white px-4 py-1.5 text-sm font-medium leading-5 text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2"
             onClick={() => {
               setExpanded((x) => !x);
             }}
@@ -60,36 +60,42 @@ export function ShowDiagnosticReportResultsExpandable({
           expanded ? '' : 'hidden'
         } rounded-lg border border-solid border-gray-200`}
       >
-        <div className="grid grid-cols-2 gap-2 gap-y-2 border-b-2 border-solid border-gray-200 p-2 px-4 text-gray-700">
-          <div className="text-sm font-semibold">Name</div>
-          <div className="text-sm font-semibold">Value</div>
+        <div className="grid grid-cols-5 gap-2 gap-y-2 border-b-2 border-solid border-gray-200 p-2 px-4 text-gray-700">
+          <div className="col-span-3 text-sm font-semibold">Name</div>
+          <div className="col-span-2 text-sm font-semibold">Value</div>
         </div>
         {docs.map((item) => (
           // eslint-disable-next-line react/jsx-no-useless-fragment
-          <Fragment key={item.metadata?.id}>
-            {!(item.get('raw')?.resource as Observation)?.dataAbsentReason ? (
-              <div className="mx-4 grid grid-cols-2 gap-2 gap-y-2 border-b-2 border-solid border-gray-50 py-2">
-                <div className="self-center text-xs font-bold text-gray-600">
+          <Fragment
+            key={`${
+              (item.get('data_record.raw')?.resource as Observation)?.id ||
+              item.metadata?.id
+            }`}
+          >
+            {!(item.get('data_record.raw')?.resource as Observation)
+              ?.dataAbsentReason ? (
+              <div className="mx-4 grid grid-cols-5 gap-2 gap-y-2 border-b-2 border-solid border-gray-50 py-2">
+                <div className="col-span-3 self-center text-xs font-bold text-gray-600">
                   <p>{item.get('metadata.display_name')}</p>
-                  <p>{(item.get('data_record.raw').resource as Observation)?.referenceRange?.[0]?.text ? `Range: ${(item.get('data_record.raw').resource as Observation)?.referenceRange?.[0]?.text}` : ''}</p>
+                  <p>
+                    {getReferenceRangeString(item)
+                      ? `Range: ${getReferenceRangeString(item)}`
+                      : ''}
+                  </p>
                 </div>
-                <div className="flex self-center text-sm">
-                  {(item.get('data_record.raw').resource as Observation)
-                    ?.interpretation?.text ||
-                    (item.get('data_record.raw').resource as Observation)
-                      ?.valueString}
-                  {(item.get('data_record.raw').resource as Observation)
-                    ?.valueQuantity?.value !== undefined
-                    ? `  ${
-                        (item.get('data_record.raw').resource as Observation)
-                          ?.valueQuantity?.value
-                      }`
+                <div
+                  className={`col-span-2 flex self-center text-sm ${
+                    isOutOfRangeResult(item) && 'text-red-700'
+                  }`}
+                >
+                  {getValueQuantity(item) !== undefined
+                    ? `  ${getValueQuantity(item)}`
                     : ''}
-                  {
-                    (item.get('data_record.raw').resource as Observation)
-                      ?.valueQuantity?.unit
-                  }
+                  {getValueUnit(item)}{' '}
+                  {getInterpretationText(item) || getValueString(item)}
+                  {/* {getCommentString(item)} */}
                 </div>
+                <div className="col-span-1"></div>
               </div>
             ) : null}
           </Fragment>
@@ -97,4 +103,51 @@ export function ShowDiagnosticReportResultsExpandable({
       </div>
     </div>
   );
+}
+
+function getCommentString(item: RxDocument<ClinicalDocument<Observation>>) {
+  return (item.get('data_record.raw').resource as Observation)?.comments;
+}
+
+function getReferenceRangeString(
+  item: RxDocument<ClinicalDocument<Observation>>
+) {
+  return item.get('data_record.raw').resource?.referenceRange?.[0]?.text;
+}
+
+function getValueUnit(item: RxDocument<ClinicalDocument<Observation>>) {
+  return item.get('data_record.raw').resource?.valueQuantity?.unit;
+}
+
+function getValueQuantity(item: RxDocument<ClinicalDocument<Observation>>) {
+  return item.get('data_record.raw').resource?.valueQuantity?.value;
+}
+
+function getValueString(item: RxDocument<ClinicalDocument<Observation>>) {
+  return item.get('data_record.raw').resource?.valueString;
+}
+
+function getInterpretationText(
+  item: RxDocument<ClinicalDocument<Observation>>
+) {
+  return item.get('data_record.raw').resource?.interpretation?.text;
+}
+
+/**
+ * Takes a RxDocument of type ClinicalDocument<Observation> and returns true if the value is out of reference range
+ * @param item
+ */
+function isOutOfRangeResult(
+  item: RxDocument<ClinicalDocument<Observation>>
+): boolean {
+  const low =
+    item.get('data_record.raw').resource?.referenceRange?.[0]?.low?.value;
+  const high =
+    item.get('data_record.raw').resource?.referenceRange?.[0]?.high?.value;
+  const value = item.get('data_record.raw').resource?.valueQuantity?.value;
+
+  if (!isNaN(low) && !isNaN(high) && !isNaN(value)) {
+    return value < low || value > high;
+  }
+  return false;
 }

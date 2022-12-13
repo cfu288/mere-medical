@@ -17,7 +17,7 @@ export function DocumentReferenceCard({
         </p>
         {item.data_record.raw.resource?.content?.map((item) => (
           <a
-            key={item.id || item._id?.id}
+            key={item.id || item.attachment.url}
             href={item.attachment.url}
             className="my-6 text-base text-gray-600 hover:text-gray-900 hover:underline"
           >
