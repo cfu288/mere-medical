@@ -25,7 +25,6 @@ import { MedicationCard } from '../components/Timeline/MedicationCard';
 import { EmptyRecordsPlaceholder } from '../models/EmptyRecordsPlaceholder';
 import { useUser } from '../components/UserProvider';
 import { DocumentReferenceCard } from '../components/Timeline/DocumentReferenceCard';
-import { useThrottle } from '@react-hook/throttle';
 
 function fetchRecords(db: RxDatabase<DatabaseCollections>) {
   return db.clinical_documents
@@ -76,7 +75,6 @@ const TimelineTab: React.FC = () => {
   const [list, setList] =
     useState<Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>>();
   const user = useUser();
-  const [scrollPosition, setScrollPosition] = useThrottle(0);
 
   useEffect(() => {
     // Fetch clinical documents to display
@@ -95,14 +93,7 @@ const TimelineTab: React.FC = () => {
           }
         />
       </IonHeader>
-      <IonContent
-        fullscreen
-        scrollEvents
-        onIonScroll={(event) => {
-          const position = event.detail.scrollTop;
-          setScrollPosition(position);
-        }}
-      >
+      <IonContent fullscreen scrollEvents>
         <div className="mx-auto flex max-w-4xl flex-col px-4 sm:px-6 lg:px-8">
           {!list ||
             (Object.entries(list).length === 0 && <EmptyRecordsPlaceholder />)}
@@ -110,24 +101,22 @@ const TimelineTab: React.FC = () => {
             Object.entries(list).map(([key, itemList], index, elements) => (
               <>
                 {index === 0 ? (
-                  <TimelineYearHeader
-                    key={`${key}${index}`}
-                    year={key}
-                    scroll={scrollPosition}
-                  />
+                  <TimelineYearHeader key={`${key}${index}`} year={key} />
                 ) : (
                   // Only show year header if the next item is not in the same year
                   elements[index + 1] &&
                   format(parseISO(elements[index + 1][0]), 'yyyy') !==
                     format(parseISO(key), 'yyyy') && (
-                    <TimelineYearHeader
-                      key={`${key}${index}`}
-                      year={key}
-                      scroll={scrollPosition}
-                    />
+                    <>
+                      <div className="h-12" />
+                      <TimelineYearHeader
+                        key={`${key}${index}`}
+                        year={format(parseISO(elements[index + 1][0]), 'yyyy')}
+                      />
+                    </>
                   )
                 )}
-                <div className="flex flex-row gap-x-4 pt-12" key={key}>
+                <div className="flex flex-row gap-x-4 px-2 pt-12" key={key}>
                   <span className="text-primary-700 flex grow justify-end whitespace-nowrap pt-5 font-bold">
                     {format(parseISO(key), 'MMM dd')}
                   </span>
@@ -218,24 +207,19 @@ const TimelineTab: React.FC = () => {
 
 export default TimelineTab;
 
-function TimelineYearHeader({
-  year,
-  scroll,
-}: {
-  year: string;
-  scroll: number;
-}) {
+function TimelineYearHeader({ year }: { year: string }) {
   return (
-    <div className="sticky top-0 z-10 flex flex-col">
-      <div className="flex flex-row bg-white pt-4 pb-2">
+    <div className=" sticky top-0 z-10 flex flex-col bg-white">
+      <div className="relative flex flex-row pt-4 pb-1">
+        <div className="absolute -top-4 h-4 w-full bg-gradient-to-t from-white"></div>
         <span className="flex grow"></span>
         <div className="w-3/4">
           <p className="text-xl font-black">
             Timeline of {format(parseISO(year), 'yyyy')}
           </p>
         </div>
+        <div className="absolute -bottom-4 h-4 w-full bg-gradient-to-b from-white"></div>
       </div>
-      <div className="bg-gradient-to-b from-red-700"></div>
     </div>
   );
 }

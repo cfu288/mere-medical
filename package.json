@@ -12,6 +12,9 @@
     "node": "16.13.0",
     "npm": "8.1.0"
   },
+  "browser": {
+    "assert": false
+  },
   "private": true,
   "dependencies": {
     "@headlessui/react": "^1.6.6",

@@ -38,6 +38,7 @@ const ConnectionTab: React.FC = () => {
     getList = useCallback(() => {
       getConnectionCards(db).then((list) => {
         setList(list as unknown as RxDocument<ConnectionDocument>[]);
+        console.log(list.map((x) => x.toJSON()));
       });
     }, [db]),
     [open, setOpen] = useState(false),

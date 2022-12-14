@@ -1,12 +1,16 @@
 import { IonContent, IonHeader, IonPage, IonTitle } from '@ionic/react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useHistory } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
-import { CreateConnectionDocument } from '../models/ConnectionDocument';
-import { useRxDb } from '../components/RxDbProvider';
+import {
+  ConnectionDocument,
+  CreateConnectionDocument,
+} from '../models/ConnectionDocument';
+import { DatabaseCollections, useRxDb } from '../components/RxDbProvider';
 import { Routes } from '../Routes';
 import Config from '../environments/config.json';
 import { Epic } from '../services/Epic';
+import { RxDatabase, RxDocument } from 'rxdb';
 
 export interface EpicAuthResponse {
   access_token: string;
@@ -15,6 +19,18 @@ export interface EpicAuthResponse {
   refresh_token: string;
   scope: string;
   token_type: string;
+}
+
+async function getConnectionCardByUrl(
+  url: string,
+  db: RxDatabase<DatabaseCollections, any, any>
+) {
+  return db.connection_documents
+    .findOne({
+      selector: { location: url },
+    })
+    .exec()
+    .then((list) => list as unknown as RxDocument<ConnectionDocument>);
 }
 
 const EpicRedirect: React.FC = () => {
@@ -52,26 +68,51 @@ const EpicRedirect: React.FC = () => {
             '__epic.dstu2.patient': string;
           }) => {
             if (res.access_token && res.expires_in && res.patient) {
-              const dbentry: Omit<CreateConnectionDocument, 'refresh_token'> = {
-                _id: uuidv4(),
-                source: 'epic',
-                location: epicUrl,
-                name: `MyChart ${epicName ? `- ${epicName}` : ''}`,
-                access_token: res.access_token,
-                expires_in: res.expires_in,
-                scope: res.scope,
-                patient: res.patient,
-              };
-              db.connection_documents
-                .insert(dbentry)
-                .then(() => {
-                  history.push(Routes.AddConnection);
-                })
-                .catch((e: any) => {
-                  alert('Error adding connection');
-                  console.error(e);
-                  history.push(Routes.AddConnection);
-                });
+              getConnectionCardByUrl(epicUrl, db).then((doc) => {
+                if (doc) {
+                  doc
+                    .update({
+                      $set: {
+                        access_token: res.access_token,
+                        expires_in: res.expires_in,
+                        scope: res.scope,
+                        patient: res.patient,
+                      },
+                    })
+                    .then(() => {
+                      history.push(Routes.AddConnection);
+                    })
+                    .catch((e: any) => {
+                      alert('Error adding connection');
+                      console.error(e);
+                      history.push(Routes.AddConnection);
+                    });
+                } else {
+                  const dbentry: Omit<
+                    CreateConnectionDocument,
+                    'refresh_token'
+                  > = {
+                    _id: uuidv4(),
+                    source: 'epic',
+                    location: epicUrl,
+                    name: `MyChart ${epicName ? `- ${epicName}` : ''}`,
+                    access_token: res.access_token,
+                    expires_in: res.expires_in,
+                    scope: res.scope,
+                    patient: res.patient,
+                  };
+                  db.connection_documents
+                    .insert(dbentry)
+                    .then(() => {
+                      history.push(Routes.AddConnection);
+                    })
+                    .catch((e: any) => {
+                      alert('Error adding connection');
+                      console.error(e);
+                      history.push(Routes.AddConnection);
+                    });
+                }
+              });
             } else {
               alert(
                 'Error completing authentication: no access token provided'
@@ -80,7 +121,7 @@ const EpicRedirect: React.FC = () => {
           }
         );
     }
-  }, [db.connection_documents, history]);
+  }, [db, db.connection_documents, history]);
 
   return (
     <IonPage>

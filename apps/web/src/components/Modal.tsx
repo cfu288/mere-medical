@@ -15,13 +15,7 @@ export function Modal({
   overflowHidden?: boolean;
 }>) {
   return (
-    <Transition.Root
-      show={open}
-      as={Fragment}
-      afterLeave={afterLeave}
-      appear
-      unmount
-    >
+    <Transition.Root show={open} as={Fragment} afterLeave={afterLeave} appear>
       <Dialog as="div" className="relative z-10" onClose={setOpen}>
         {/* Background opacity */}
         <Transition.Child
@@ -47,7 +41,7 @@ export function Modal({
             leaveTo="opacity-0 scale-95"
           >
             <Dialog.Panel
-              className={`mx-auto max-w-xl transform rounded-xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 transition-all ${
+              className={`mx-auto max-w-3xl transform rounded-xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 transition-all sm:min-w-[50%] ${
                 overflowHidden ? 'overflow-hidden' : ''
               }`}
             >

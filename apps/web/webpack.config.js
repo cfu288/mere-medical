@@ -9,7 +9,15 @@ module.exports = function (webpackConfig, nxConfig) {
   const config = nxReactBaseConfig(webpackConfig);
 
   const mergeWebpackConfigs = [config];
-
+  mergeWebpackConfigs.push({
+    resolve: {
+      // ...
+      fallback: {
+        // 👇️👇️👇️ add this 👇️👇️👇️
+        assert: false,
+      },
+    },
+  });
   // For production we add the service worker
   // if (config.mode === 'production') {
   //   mergeWebpackConfigs.push({

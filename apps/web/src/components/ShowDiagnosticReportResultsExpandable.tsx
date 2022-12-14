@@ -1,5 +1,5 @@
 import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { RxDocument } from 'rxdb';
 import { ClinicalDocument } from '../models/ClinicalDocument';
 import { Modal } from './Modal';
@@ -11,16 +11,19 @@ export function ShowDiagnosticReportResultsExpandable({
 }: {
   item: ClinicalDocument<BundleEntry<DiagnosticReport>>;
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const db = useRxDb();
-  const [docs, setDocs] = useState<RxDocument<ClinicalDocument<Observation>>[]>(
-    []
-  );
-  const listToQuery = [
-    ...new Set(
-      item.data_record.raw.resource?.result?.map((item) => `${item.reference}`)
-    ),
-  ] as string[];
+  const db = useRxDb(),
+    [expanded, setExpanded] = useState(false),
+    [docs, setDocs] = useState<RxDocument<ClinicalDocument<Observation>>[]>([]),
+    listToQuery = useMemo(() => {
+      return [
+        ...new Set(
+          item.data_record.raw.resource?.result?.map(
+            (item) => `${item.reference}`
+          )
+        ),
+      ] as string[];
+    }, [item.data_record.raw.resource?.result]),
+    toggleOpen = () => setExpanded((x) => !x);
 
   useEffect(() => {
     if (expanded && docs.length === 0) {
@@ -37,7 +40,7 @@ export function ShowDiagnosticReportResultsExpandable({
           );
         });
     }
-  }, [expanded]);
+  }, [db.clinical_documents, docs.length, expanded, listToQuery]);
 
   return (
     <>
@@ -46,9 +49,7 @@ export function ShowDiagnosticReportResultsExpandable({
           <button
             type="button"
             className="focus:ring-primary-700 inline-flex items-center rounded-full border border-gray-300 bg-white px-4 py-1.5 text-sm font-medium leading-5 text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2"
-            onClick={() => {
-              setExpanded((x) => !x);
-            }}
+            onClick={toggleOpen}
           >
             <span>Open</span>
           </button>
@@ -58,9 +59,9 @@ export function ShowDiagnosticReportResultsExpandable({
         <div className="flex flex-col">
           <ModalHeader
             title={item.metadata?.display_name || ''}
-            setClose={() => setExpanded((x) => !x)}
+            setClose={toggleOpen}
           />
-          <div className="max-h-full scroll-py-3  p-3">
+          <div className="max-h-full  scroll-py-3 p-3">
             <div
               className={`${
                 expanded ? '' : 'hidden'

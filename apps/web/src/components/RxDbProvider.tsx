@@ -23,7 +23,10 @@ import {
   UserDocumentCollection,
   UserDocumentSchema,
 } from '../models/UserDocumentCollection';
+// to use the update() method, you need to add the update plugin.
+import { RxDBUpdatePlugin } from 'rxdb/plugins/update';
 
+addRxPlugin(RxDBUpdatePlugin);
 addRxPlugin(RxDBMigrationPlugin);
 addRxPlugin(RxDBDevModePlugin);
 
