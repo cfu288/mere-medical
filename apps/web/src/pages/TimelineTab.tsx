@@ -227,9 +227,9 @@ function TimelineYearHeader({
 }) {
   return (
     <div className="sticky top-0 z-10 flex flex-col">
-      <div className="flex flex-row bg-white pt-6">
-        <span className="flex grow">{/* {y} >= {scroll}? */}</span>
-        <div className="w-5/6">
+      <div className="flex flex-row bg-white pt-4 pb-2">
+        <span className="flex grow"></span>
+        <div className="w-3/4">
           <p className="text-xl font-black">
             Timeline of {format(parseISO(year), 'yyyy')}
           </p>

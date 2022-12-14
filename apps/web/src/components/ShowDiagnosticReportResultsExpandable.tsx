@@ -2,6 +2,8 @@ import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
 import { Fragment, useEffect, useState } from 'react';
 import { RxDocument } from 'rxdb';
 import { ClinicalDocument } from '../models/ClinicalDocument';
+import { Modal } from './Modal';
+import { ModalHeader } from './ModalHeader';
 import { useRxDb } from './RxDbProvider';
 
 export function ShowDiagnosticReportResultsExpandable({
@@ -38,11 +40,8 @@ export function ShowDiagnosticReportResultsExpandable({
   }, [expanded]);
 
   return (
-    <div>
+    <>
       <div className="relative py-2">
-        <div className="absolute inset-0 flex items-center" aria-hidden="true">
-          <div className="w-full border-t border-gray-300" />
-        </div>
         <div className="relative flex justify-center">
           <button
             type="button"
@@ -51,57 +50,67 @@ export function ShowDiagnosticReportResultsExpandable({
               setExpanded((x) => !x);
             }}
           >
-            <span>Expand Results</span>
+            <span>Open</span>
           </button>
         </div>
       </div>
-      <div
-        className={`${
-          expanded ? '' : 'hidden'
-        } rounded-lg border border-solid border-gray-200`}
-      >
-        <div className="grid grid-cols-5 gap-2 gap-y-2 border-b-2 border-solid border-gray-200 p-2 px-4 text-gray-700">
-          <div className="col-span-3 text-sm font-semibold">Name</div>
-          <div className="col-span-2 text-sm font-semibold">Value</div>
-        </div>
-        {docs.map((item) => (
-          // eslint-disable-next-line react/jsx-no-useless-fragment
-          <Fragment
-            key={`${
-              (item.get('data_record.raw')?.resource as Observation)?.id ||
-              item.metadata?.id
-            }`}
-          >
-            {!(item.get('data_record.raw')?.resource as Observation)
-              ?.dataAbsentReason ? (
-              <div className="mx-4 grid grid-cols-5 gap-2 gap-y-2 border-b-2 border-solid border-gray-50 py-2">
-                <div className="col-span-3 self-center text-xs font-bold text-gray-600">
-                  <p>{item.get('metadata.display_name')}</p>
-                  <p>
-                    {getReferenceRangeString(item)
-                      ? `Range: ${getReferenceRangeString(item)}`
-                      : ''}
-                  </p>
-                </div>
-                <div
-                  className={`col-span-2 flex self-center text-sm ${
-                    isOutOfRangeResult(item) && 'text-red-700'
+      <Modal open={expanded} setOpen={setExpanded}>
+        <div className="flex flex-col">
+          <ModalHeader
+            title={item.metadata?.display_name || ''}
+            setClose={() => setExpanded((x) => !x)}
+          />
+          <div className="max-h-full scroll-py-3  p-3">
+            <div
+              className={`${
+                expanded ? '' : 'hidden'
+              } rounded-lg border border-solid border-gray-200`}
+            >
+              <div className="grid grid-cols-5 gap-2 gap-y-2 border-b-2 border-solid border-gray-200 p-2 px-4 text-gray-700">
+                <div className="col-span-3 text-sm font-semibold">Name</div>
+                <div className="col-span-2 text-sm font-semibold">Value</div>
+              </div>
+              {docs.map((item) => (
+                // eslint-disable-next-line react/jsx-no-useless-fragment
+                <Fragment
+                  key={`${
+                    (item.get('data_record.raw')?.resource as Observation)
+                      ?.id || item.metadata?.id
                   }`}
                 >
-                  {getValueQuantity(item) !== undefined
-                    ? `  ${getValueQuantity(item)}`
-                    : ''}
-                  {getValueUnit(item)}{' '}
-                  {getInterpretationText(item) || getValueString(item)}
-                  {/* {getCommentString(item)} */}
-                </div>
-                <div className="col-span-1"></div>
-              </div>
-            ) : null}
-          </Fragment>
-        ))}
-      </div>
-    </div>
+                  {!(item.get('data_record.raw')?.resource as Observation)
+                    ?.dataAbsentReason ? (
+                    <div className="mx-4 grid grid-cols-5 gap-2 gap-y-2 border-b-2 border-solid border-gray-50 py-2">
+                      <div className="col-span-3 self-center text-xs font-bold text-gray-600">
+                        <p>{item.get('metadata.display_name')}</p>
+                        <p>
+                          {getReferenceRangeString(item)
+                            ? `Range: ${getReferenceRangeString(item)}`
+                            : ''}
+                        </p>
+                      </div>
+                      <div
+                        className={`col-span-2 flex self-center text-sm ${
+                          isOutOfRangeResult(item) && 'text-red-700'
+                        }`}
+                      >
+                        {getValueQuantity(item) !== undefined
+                          ? `  ${getValueQuantity(item)}`
+                          : ''}
+                        {getValueUnit(item)}{' '}
+                        {getInterpretationText(item) || getValueString(item)}
+                        {/* {getCommentString(item)} */}
+                      </div>
+                      <div className="col-span-1"></div>
+                    </div>
+                  ) : null}
+                </Fragment>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 }
 

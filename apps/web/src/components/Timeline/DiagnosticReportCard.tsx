@@ -20,9 +20,8 @@ export function DiagnosticReportCard({
         <p className="truncate text-sm font-medium text-gray-500">
           {item.metadata?.date ? format(parseISO(item.metadata.date), 'p') : ''}
         </p>
-
-        <ShowDiagnosticReportResultsExpandable item={item} />
       </div>
+      <ShowDiagnosticReportResultsExpandable item={item} />
     </div>
   );
 }

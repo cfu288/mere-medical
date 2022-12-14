@@ -9,7 +9,9 @@
     "../../node_modules/@nrwl/react/typings/image.d.ts",
     "./src/components/ConnectionDocumentCollection.tsx",
     "./src/components/ClinicalDocumentCollection.tsx",
-    "src/models/EmptyRecordsPlaceholder.tsx"
+    "src/models/EmptyRecordsPlaceholder.tsx",
+    "src/components/Modal.tsx",
+    "src/components/ModalHeader.tsx"
   ],
   "exclude": [
     "jest.config.ts",
