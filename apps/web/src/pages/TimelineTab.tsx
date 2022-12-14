@@ -14,17 +14,17 @@ import {
 import { useEffect, useState } from 'react';
 import { DatabaseCollections, useRxDb } from '../components/RxDbProvider';
 import { ClinicalDocument } from '../models/ClinicalDocument';
-import { ConditionCard } from '../components/ConditionCard';
+import { ConditionCard } from '../components/Timeline/ConditionCard';
 import { RxDatabase, RxDocument } from 'rxdb';
 import { DiagnosticReportCard } from '../components/Timeline/DiagnosticReportCard';
 import { ImmunizationCard } from '../components/Timeline/ImmunizationCard';
 import { ObservationCard } from '../components/ObservationCard';
-import { ProcedureCard } from '../components/ProcedureCard';
+import { ProcedureCard } from '../components/Timeline/ProcedureCard';
 import { TimelineBanner } from '../components/TimelineBanner';
-import { MedicationCard } from '../components/MedicationCard';
+import { MedicationCard } from '../components/Timeline/MedicationCard';
 import { EmptyRecordsPlaceholder } from '../models/EmptyRecordsPlaceholder';
 import { useUser } from '../components/UserProvider';
-import { DocumentReferenceCard } from '../components/DocumentReferenceCard';
+import { DocumentReferenceCard } from '../components/Timeline/DocumentReferenceCard';
 import { useThrottle } from '@react-hook/throttle';
 
 function fetchRecords(db: RxDatabase<DatabaseCollections>) {

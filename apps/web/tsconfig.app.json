@@ -11,7 +11,8 @@
     "./src/components/ClinicalDocumentCollection.tsx",
     "src/models/EmptyRecordsPlaceholder.tsx",
     "src/components/Modal.tsx",
-    "src/components/ModalHeader.tsx"
+    "src/components/ModalHeader.tsx",
+    "./src/components/Timeline/useConnectionDoc.tsx"
   ],
   "exclude": [
     "jest.config.ts",
