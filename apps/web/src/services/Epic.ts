@@ -278,9 +278,8 @@ export namespace Epic {
           'data_record.resource_type': {
             $eq: 'documentreference',
           },
-          'metadata.date': { $gt: 0 },
+          source_record: `${connectionDocument.get('_id')}`,
         },
-        sort: [{ 'metadata.date': 'desc' }],
       })
       .exec();
 
@@ -291,6 +290,8 @@ export namespace Epic {
           BundleEntry<DocumentReference>
         >
     );
+    console.log(connectionDocument.toMutableJSON());
+    console.log(docRefItems);
     // for each docref, get attachments and sync them
     const cdsmap = docRefItems.map(async (item) => {
       const attachmentUrls = item.data_record.raw.resource?.content.map(
@@ -309,7 +310,9 @@ export namespace Epic {
                 },
               })
               .exec();
+            console.log(exists.map((e) => e.toMutableJSON()));
             if (exists.length === 0) {
+              console.log('Syncing attachment: ' + attachmentUrl);
               // attachment does not exist, sync it
               const { contentType, raw } = await fetchData(
                 attachmentUrl,
@@ -344,6 +347,8 @@ export namespace Epic {
                   cd as unknown as ClinicalDocumentType
                 );
               }
+            } else {
+              console.log('Attachment already synced: ' + attachmentUrl);
             }
           }
         }
