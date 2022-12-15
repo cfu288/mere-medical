@@ -1,5 +1,6 @@
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, DiagnosticReport } from 'fhir/r2';
+import { useState } from 'react';
 import { ClinicalDocument } from '../../models/ClinicalDocument';
 import { ShowDiagnosticReportResultsExpandable } from '../ShowDiagnosticReportResultsExpandable';
 import { useConnectionDoc } from './useConnectionDoc';
@@ -10,12 +11,23 @@ export function DiagnosticReportCard({
   item: ClinicalDocument<BundleEntry<DiagnosticReport>>;
 }) {
   const conn = useConnectionDoc(item.source_record);
+  const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="relative flex items-center space-x-3 rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm ">
+    <div
+      className="focus:ring-primary-700 relative flex items-center space-x-3 rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
+      onClick={() => setExpanded((x) => !x)}
+      tabIndex={0}
+    >
       <div className="min-w-0 flex-1">
-        <div className=" pb-2 font-bold text-blue-600">Labs</div>
-        <span className="absolute inset-0" aria-hidden="true" />
+        <div className="items-top flex justify-between">
+          <div className=" pb-2 font-bold text-blue-600">Labs</div>
+          <ShowDiagnosticReportResultsExpandable
+            item={item}
+            expanded={expanded}
+            setExpanded={setExpanded}
+          />
+        </div>
         <p className="text-md pb-2 font-bold text-gray-900">
           {item.metadata?.display_name}
         </p>
@@ -26,7 +38,6 @@ export function DiagnosticReportCard({
           {conn?.get('name')}
         </p>
       </div>
-      <ShowDiagnosticReportResultsExpandable item={item} />
     </div>
   );
 }

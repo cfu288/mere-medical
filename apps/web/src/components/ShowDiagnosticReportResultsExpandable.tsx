@@ -8,11 +8,15 @@ import { useRxDb } from './RxDbProvider';
 
 export function ShowDiagnosticReportResultsExpandable({
   item,
+  expanded,
+  setExpanded,
 }: {
   item: ClinicalDocument<BundleEntry<DiagnosticReport>>;
+  expanded: boolean;
+  setExpanded: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const db = useRxDb(),
-    [expanded, setExpanded] = useState(false),
+    // [expanded, setExpanded] = useState(false),
     [docs, setDocs] = useState<RxDocument<ClinicalDocument<Observation>>[]>([]),
     listToQuery = useMemo(() => {
       return [
@@ -45,14 +49,21 @@ export function ShowDiagnosticReportResultsExpandable({
   return (
     <>
       <div className="relative py-2">
-        <div className="relative flex justify-center">
-          <button
-            type="button"
-            className="focus:ring-primary-700 inline-flex items-center rounded-full border border-gray-300 bg-white px-4 py-1.5 text-sm font-medium leading-5 text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2"
-            onClick={toggleOpen}
+        <div className="relative flex justify-center text-gray-400">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="-mt-2 -mr-2 h-4 w-4"
           >
-            <span>Open</span>
-          </button>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"
+            />
+          </svg>
         </div>
       </div>
       <Modal open={expanded} setOpen={setExpanded}>
