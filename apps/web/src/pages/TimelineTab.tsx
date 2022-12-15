@@ -102,20 +102,7 @@ const TimelineTab: React.FC = () => {
               <>
                 {index === 0 ? (
                   <TimelineYearHeader key={`${key}${index}`} year={key} />
-                ) : (
-                  // Only show year header if the next item is not in the same year
-                  elements[index + 1] &&
-                  format(parseISO(elements[index + 1][0]), 'yyyy') !==
-                    format(parseISO(key), 'yyyy') && (
-                    <>
-                      <div className="h-12" />
-                      <TimelineYearHeader
-                        key={`${key}${index}`}
-                        year={format(parseISO(elements[index + 1][0]), 'yyyy')}
-                      />
-                    </>
-                  )
-                )}
+                ) : null}
                 <div className="flex flex-row gap-x-4 px-2 pt-12" key={key}>
                   <span className="text-primary-700 flex grow justify-end whitespace-nowrap pt-5 font-bold">
                     {format(parseISO(key), 'MMM dd')}
@@ -197,6 +184,23 @@ const TimelineTab: React.FC = () => {
                     ))}
                   </div>
                 </div>
+                {
+                  // Only show year header if the next item is not in the same year
+                  elements[index + 1] &&
+                    format(parseISO(elements[index + 1][0]), 'yyyy') !==
+                      format(parseISO(key), 'yyyy') && (
+                      <>
+                        <div className="h-12" />
+                        <TimelineYearHeader
+                          key={`${key}${index}`}
+                          year={format(
+                            parseISO(elements[index + 1][0]),
+                            'yyyy'
+                          )}
+                        />
+                      </>
+                    )
+                }
               </>
             ))}
         </div>

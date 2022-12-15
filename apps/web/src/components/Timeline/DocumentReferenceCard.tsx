@@ -12,7 +12,7 @@ export function DocumentReferenceCard({
   const conn = useConnectionDoc(item.source_record);
 
   return (
-    <div className="relative flex items-center space-x-3 rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm focus-within:ring-2 focus-within:ring-offset-2 ">
+    <div className="relative flex items-center space-x-3 rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm">
       <div className="min-w-0 flex-1">
         <div className=" pb-2 font-bold text-teal-600">Documents</div>
         <p className="text-md font-bold text-gray-900">
