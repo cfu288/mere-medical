@@ -18,16 +18,6 @@ export function DocumentReferenceCard({
         <p className="text-md font-bold text-gray-900">
           {item.metadata?.display_name}
         </p>
-        {/* {item.data_record.raw.resource?.content?.map((item) => (
-          <a
-            key={item.id || item.attachment.url}
-            href={item.attachment.url}
-            className="my-6 text-base text-gray-600 hover:text-gray-900 hover:underline"
-          >
-            Open document
-          </a>
-        ))} */}
-
         <p className="truncate text-sm font-medium text-gray-500">
           {item.metadata?.date ? format(parseISO(item.metadata.date), 'p') : ''}
         </p>

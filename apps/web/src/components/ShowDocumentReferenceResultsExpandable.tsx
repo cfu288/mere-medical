@@ -118,7 +118,6 @@ export function ShowDocumentResultsExpandable({
             >
               <p className="text-md whitespace-wrap overflow-x-scroll  text-gray-900">
                 {!ccda && 'Loading...'}
-                {/* {xml} */}
                 {ccda?.vitalSigns && (
                   <div className="p-4">
                     <p className="w-full rounded-md bg-gray-100 p-2 font-bold">

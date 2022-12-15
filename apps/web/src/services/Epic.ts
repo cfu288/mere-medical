@@ -23,18 +23,9 @@ import { ConnectionDocument } from '../models/ConnectionDocument';
 import { Routes } from '../Routes';
 import { DSTU2 } from './DSTU2';
 import Config from '../environments/config.json';
-import { useState, useEffect } from 'react';
-import {
-  CCDAParsed,
-  CCDAStructureDefinition,
-} from '../components/ShowDocumentReferenceResultsExpandable';
 import { v4 as uuidv4 } from 'uuid';
 
 export namespace Epic {
-  // export const EpicBaseUrl = 'https://mepic.hmhn.org/fhir';
-  // export const EpicBaseUrl = 'https://fhir.epic.com/interconnect-fhir-oauth';
-  // export const EpicDSTU2Url = `${EpicBaseUrl}/api/FHIR/DSTU2`;
-
   export function getDSTU2Url(baseUrl: string) {
     return `${baseUrl}/api/FHIR/DSTU2`;
   }
@@ -154,11 +145,6 @@ export namespace Epic {
     const allergyIntoleranceMapper = (a: BundleEntry<AllergyIntolerance>) =>
       DSTU2.mapAllergyIntoleranceToClinicalDocument(
         a,
-        connectionDocument.toJSON()
-      );
-    const documentReferenceMapper = (dr: BundleEntry<DocumentReference>) =>
-      DSTU2.mapDocumentReferenceToClinicalDocument(
-        dr,
         connectionDocument.toJSON()
       );
     const carePlanMapper = (dr: BundleEntry<CarePlan>) =>
