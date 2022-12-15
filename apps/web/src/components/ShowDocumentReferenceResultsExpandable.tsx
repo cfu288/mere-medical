@@ -6,9 +6,10 @@ import { ConnectionDocument } from '../models/ConnectionDocument';
 import { Modal } from './Modal';
 import { ModalHeader } from './ModalHeader';
 import { useRxDb } from './RxDbProvider';
+import { useClinicalDoc } from './Timeline/useAttachmentDoc';
 import { useConnectionDoc } from './Timeline/useConnectionDoc';
 
-enum CCDAStructureDefinition {
+export enum CCDAStructureDefinition {
   VITAL_SIGNS = '2.16.840.1.113883.10.20.22.2.4',
   PATIENT_INSTRUCTIONS = '2.16.840.1.113883.10.20.22.2.45',
   HPI = '1.3.6.1.4.1.19376.1.5.3.1.3.4',
@@ -17,35 +18,7 @@ enum CCDAStructureDefinition {
   VISIT_DIAGNOSIS = '2.16.840.1.113883.10.20.22.2.8',
   CARE_TEAMS = '2.16.840.1.113883.10.20.22.2.500',
 }
-
-async function fetchData(url: string, cd: RxDocument<ConnectionDocument>) {
-  try {
-    const res = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${cd.get('access_token')}`,
-      },
-    });
-    if (!res.ok) {
-      throw new Error(
-        'Could not get document as the user is unauthorized. Try logging in again.'
-      );
-    }
-    const contentType = res.headers.get('Content-Type');
-    let raw = undefined;
-    if (contentType === 'application/xml') {
-      raw = await res.text();
-      // raw = raw.replace(/\s+/g, '');
-    }
-
-    return { contentType, raw };
-  } catch (e) {
-    throw new Error(
-      'Could not get document as the user is unauthorized. Try logging in again.'
-    );
-  }
-}
-
-interface CCDAParsed {
+export interface CCDAParsed {
   hpi: string;
   vitalSigns: string;
 }
@@ -54,7 +27,6 @@ function parseCCDA(raw: string): CCDAParsed {
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(raw, 'text/xml');
   const sections = xmlDoc.getElementsByTagName('section');
-  console.log(sections);
   const hpi = [...(sections as unknown as HTMLElement[])]
     ?.filter(
       (s) =>
@@ -81,8 +53,18 @@ function parseCCDA(raw: string): CCDAParsed {
     hpi: hpiInnerHtml?.[0] || '',
     vitalSigns: vsInnerHtml?.[0] || '',
   };
-  console.log(parsedDoc);
   return parsedDoc;
+}
+
+function checkIfXmlIsCCDA(xml: string): boolean {
+  try {
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xml, 'text/xml');
+    const sections = xmlDoc.getElementsByTagName('ClinicalDocument');
+    return sections.length > 0;
+  } catch (e) {
+    return false;
+  }
 }
 
 export function ShowDocumentResultsExpandable({
@@ -90,31 +72,24 @@ export function ShowDocumentResultsExpandable({
 }: {
   item: ClinicalDocument<BundleEntry<DocumentReference>>;
 }) {
-  const db = useRxDb(),
-    cd = useConnectionDoc(item.source_record),
+  const cd = useConnectionDoc(item.source_record),
     [expanded, setExpanded] = useState(false),
     [ccda, setCCDA] = useState<CCDAParsed | undefined>(undefined),
-    [contentType, setContentType] = useState<string | null>(null),
     toggleOpen = () => setExpanded((x) => !x),
-    attachmentUrl = item.data_record.raw.resource?.content?.[0].attachment.url;
+    attachmentUrl = item.data_record.raw.resource?.content?.[0].attachment.url,
+    attachment = useClinicalDoc(attachmentUrl);
 
   useEffect(() => {
     if (expanded) {
-      if (attachmentUrl && cd) {
-        fetchData(attachmentUrl, cd)
-          .then(({ contentType, raw }) => {
-            setContentType(contentType);
-            if (raw) {
-              const parsedDoc = parseCCDA(raw);
-              setCCDA(parsedDoc);
-            }
-          })
-          .catch((e) => {
-            setCCDA(e.message);
-          });
+      if (
+        attachment?.get('data_record.content_type') === 'application/xml' &&
+        checkIfXmlIsCCDA(attachment.get('data_record.raw'))
+      ) {
+        const parsedDoc = parseCCDA(attachment.get('data_record.raw'));
+        setCCDA(parsedDoc);
       }
     }
-  }, [expanded, attachmentUrl, cd]);
+  }, [expanded, cd, attachment]);
 
   return (
     <>

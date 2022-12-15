@@ -5,7 +5,7 @@ export interface ClinicalDocument<T = any> extends BaseDocument {
   data_record: {
     raw: T;
     format: 'FHIR.DSTU2';
-    content_type: 'application/json';
+    content_type: 'application/json' | 'application/xml' | string;
     resource_type:
       | 'immunization'
       | 'procedure'
@@ -17,6 +17,7 @@ export interface ClinicalDocument<T = any> extends BaseDocument {
       | 'allergyintolerance'
       | 'practitioner'
       | 'documentreference'
+      | 'documentreference_attachment'
       | 'careplan';
     version_history: T[];
   };

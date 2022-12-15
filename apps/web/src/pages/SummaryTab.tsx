@@ -230,7 +230,6 @@ const SummaryTab: React.FC = () => {
         ),
       ])
         .then(([meds, cond, imm, careplan, allergy]) => {
-          console.log(allergy);
           reducer({
             type: ActionTypes.COMPLETED,
             data: {

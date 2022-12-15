@@ -24,6 +24,11 @@ import { Routes } from '../Routes';
 import { DSTU2 } from './DSTU2';
 import Config from '../environments/config.json';
 import { useState, useEffect } from 'react';
+import {
+  CCDAParsed,
+  CCDAStructureDefinition,
+} from '../components/ShowDocumentReferenceResultsExpandable';
+import { v4 as uuidv4 } from 'uuid';
 
 export namespace Epic {
   // export const EpicBaseUrl = 'https://mepic.hmhn.org/fhir';
@@ -231,16 +236,9 @@ export namespace Epic {
           patient: connectionDocument.get('patient'),
         }
       ),
-      syncFHIRResource<DocumentReference>(
-        baseUrl,
-        connectionDocument,
-        db,
-        'DocumentReference',
-        documentReferenceMapper,
-        {
-          patient: connectionDocument.get('patient'),
-        }
-      ),
+      syncDocumentReferences(baseUrl, connectionDocument, db, {
+        patient: connectionDocument.get('patient'),
+      }),
       syncFHIRResource<CarePlan>(
         baseUrl,
         connectionDocument,
@@ -264,5 +262,134 @@ export namespace Epic {
       db.connection_documents.upsert(newCd).then(() => []),
     ]);
     return syncJob;
+  }
+
+  async function syncDocumentReferences(
+    baseUrl: string,
+    connectionDocument: RxDocument<ConnectionDocument>,
+    db: RxDatabase<DatabaseCollections>,
+    // fhirResourceUrl: string,
+    params: Record<string, string>
+  ) {
+    const documentReferenceMapper = (dr: BundleEntry<DocumentReference>) =>
+      DSTU2.mapDocumentReferenceToClinicalDocument(
+        dr,
+        connectionDocument.toJSON()
+      );
+    // Sync document references and return them
+    await syncFHIRResource<DocumentReference>(
+      baseUrl,
+      connectionDocument,
+      db,
+      'DocumentReference',
+      documentReferenceMapper,
+      params
+    );
+
+    const docs = await db.clinical_documents
+      .find({
+        selector: {
+          'data_record.resource_type': {
+            $eq: 'documentreference',
+          },
+          'metadata.date': { $gt: 0 },
+        },
+        sort: [{ 'metadata.date': 'desc' }],
+      })
+      .exec();
+
+    // format all the document references
+    const docRefItems = docs.map(
+      (doc) =>
+        doc.toMutableJSON() as unknown as ClinicalDocument<
+          BundleEntry<DocumentReference>
+        >
+    );
+    // for each docref, get attachments and sync them
+    const cdsmap = docRefItems.map(async (item) => {
+      const attachmentUrls = item.data_record.raw.resource?.content.map(
+        (a) => a.attachment.url
+      );
+      if (attachmentUrls) {
+        for (const attachmentUrl of attachmentUrls) {
+          if (attachmentUrl) {
+            const exists = await db.clinical_documents
+              .find({
+                selector: {
+                  $and: [
+                    { 'metadata.id': `${attachmentUrl}` },
+                    { source_record: `${item.source_record}` },
+                  ],
+                },
+              })
+              .exec();
+            if (exists.length === 0) {
+              // attachment does not exist, sync it
+              const { contentType, raw } = await fetchData(
+                attachmentUrl,
+                connectionDocument
+              );
+              if (raw && contentType) {
+                // save as ClinicalDocument
+                const cd: ClinicalDocument = {
+                  _id: uuidv4(),
+                  source_record: connectionDocument._id,
+                  data_record: {
+                    raw: raw,
+                    format: 'FHIR.DSTU2',
+                    content_type: contentType,
+                    resource_type: 'documentreference_attachment',
+                    version_history: [],
+                  },
+                  metadata: {
+                    id: attachmentUrl,
+                    date:
+                      item.data_record.raw.resource?.created ||
+                      item.data_record.raw.resource?.context?.period?.start,
+                    display_name: item.data_record.raw.resource?.type?.text,
+                    merge_key: `"documentreference_attachment_"${
+                      item.data_record.raw.resource?.created ||
+                      item.data_record.raw.resource?.context?.period?.start
+                    }_${item.data_record.raw.resource?.type?.text}`,
+                  },
+                };
+
+                await db.clinical_documents.insert(
+                  cd as unknown as ClinicalDocumentType
+                );
+              }
+            }
+          }
+        }
+      }
+    });
+    return await Promise.all(cdsmap);
+  }
+}
+
+async function fetchData(url: string, cd: RxDocument<ConnectionDocument>) {
+  try {
+    const res = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${cd.get('access_token')}`,
+      },
+    });
+    if (!res.ok) {
+      throw new Error(
+        'Could not get document as the user is unauthorized. Try logging in again.'
+      );
+    }
+    const contentType = res.headers.get('Content-Type');
+    let raw = undefined;
+    if (contentType === 'application/xml') {
+      raw = await res.text();
+      // raw = raw.replace(/\s+/g, '');
+    }
+
+    return { contentType, raw };
+  } catch (e) {
+    throw new Error(
+      'Could not get document as the user is unauthorized. Try logging in again.'
+    );
   }
 }
