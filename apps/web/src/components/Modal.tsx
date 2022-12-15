@@ -41,7 +41,7 @@ export function Modal({
             leaveTo="opacity-0 scale-95"
           >
             <Dialog.Panel
-              className={`mx-auto max-w-3xl transform rounded-xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 transition-all sm:min-w-[50%] ${
+              className={`mx-auto w-screen transform rounded-xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 transition-all sm:w-auto sm:min-w-[50%] sm:max-w-3xl ${
                 overflowHidden ? 'overflow-hidden' : ''
               }`}
             >

@@ -11,7 +11,8 @@
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "lib": ["dom.Iterable"]
   },
   "files": [],
   "include": [],
