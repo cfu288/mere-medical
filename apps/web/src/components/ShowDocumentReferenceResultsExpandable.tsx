@@ -119,87 +119,67 @@ export function ShowDocumentResultsExpandable({
   }, [expanded, cd, attachment]);
 
   return (
-    <>
-      <div className="relative py-2">
-        <div className="relative flex justify-center">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="-mt-2 -mr-2 h-4 w-4"
+    <Modal open={expanded} setOpen={setExpanded}>
+      <div className="flex flex-col">
+        <ModalHeader
+          title={item.metadata?.display_name || ''}
+          setClose={() => setExpanded(false)}
+        />
+        <div className="max-h-full  scroll-py-3 p-3">
+          <div
+            className={`${
+              expanded ? '' : 'hidden'
+            } rounded-lg border border-solid border-gray-200`}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"
-            />
-          </svg>
-        </div>
-      </div>
-      <Modal open={expanded} setOpen={setExpanded}>
-        <div className="flex flex-col">
-          <ModalHeader
-            title={item.metadata?.display_name || ''}
-            setClose={toggleOpen}
-          />
-          <div className="max-h-full  scroll-py-3 p-3">
-            <div
-              className={`${
-                expanded ? '' : 'hidden'
-              } rounded-lg border border-solid border-gray-200`}
-            >
-              <p className="text-md whitespace-wrap overflow-x-scroll p-4 text-gray-900">
-                {!ccda && 'Loading...'}
-                {ccda?.vitalSigns && (
-                  <DisplayCCDASection
-                    title="Vital Signs"
-                    content={ccda.vitalSigns || ''}
-                  />
-                )}
-                {ccda?.hpi && (
-                  <DisplayCCDASection
-                    title="History of Present Illness"
-                    content={ccda.hpi || ''}
-                  />
-                )}
-                {ccda?.results && (
-                  <DisplayCCDASection
-                    title="Results"
-                    content={ccda.results || ''}
-                  />
-                )}
-                {ccda?.visitDiagnoses && (
-                  <DisplayCCDASection
-                    title="Visit Diagnoses"
-                    content={ccda.visitDiagnoses || ''}
-                  />
-                )}
-                {ccda?.planOfTreatment && (
-                  <DisplayCCDASection
-                    title="Plan of Treatment"
-                    content={ccda.planOfTreatment || ''}
-                  />
-                )}
-                {ccda?.patientInstructions && (
-                  <DisplayCCDASection
-                    title="Patient Instructions"
-                    content={ccda.patientInstructions || ''}
-                  />
-                )}
-                {ccda?.careTeam && (
-                  <DisplayCCDASection
-                    title="Care Team"
-                    content={ccda.careTeam || ''}
-                  />
-                )}
-              </p>
-            </div>
+            <p className="text-md whitespace-wrap overflow-x-scroll p-4 text-gray-900">
+              {!ccda && 'Loading...'}
+              {ccda?.vitalSigns && (
+                <DisplayCCDASection
+                  title="Vital Signs"
+                  content={ccda.vitalSigns || ''}
+                />
+              )}
+              {ccda?.hpi && (
+                <DisplayCCDASection
+                  title="History of Present Illness"
+                  content={ccda.hpi || ''}
+                />
+              )}
+              {ccda?.results && (
+                <DisplayCCDASection
+                  title="Results"
+                  content={ccda.results || ''}
+                />
+              )}
+              {ccda?.visitDiagnoses && (
+                <DisplayCCDASection
+                  title="Visit Diagnoses"
+                  content={ccda.visitDiagnoses || ''}
+                />
+              )}
+              {ccda?.planOfTreatment && (
+                <DisplayCCDASection
+                  title="Plan of Treatment"
+                  content={ccda.planOfTreatment || ''}
+                />
+              )}
+              {ccda?.patientInstructions && (
+                <DisplayCCDASection
+                  title="Patient Instructions"
+                  content={ccda.patientInstructions || ''}
+                />
+              )}
+              {ccda?.careTeam && (
+                <DisplayCCDASection
+                  title="Care Team"
+                  content={ccda.careTeam || ''}
+                />
+              )}
+            </p>
           </div>
         </div>
-      </Modal>
-    </>
+      </div>
+    </Modal>
   );
 }
 
