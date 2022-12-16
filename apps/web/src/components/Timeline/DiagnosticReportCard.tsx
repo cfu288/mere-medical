@@ -21,7 +21,7 @@ export function DiagnosticReportCard({
     >
       <div className="min-w-0 flex-1">
         <div className="items-top flex justify-between">
-          <div className=" pb-2 font-bold text-blue-600">Labs</div>
+          <div className="pb-2 font-bold text-blue-600">Labs</div>
           <ShowDiagnosticReportResultsExpandable
             item={item}
             expanded={expanded}

@@ -16,7 +16,6 @@ export function ShowDiagnosticReportResultsExpandable({
   setExpanded: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const db = useRxDb(),
-    // [expanded, setExpanded] = useState(false),
     [docs, setDocs] = useState<RxDocument<ClinicalDocument<Observation>>[]>([]),
     listToQuery = useMemo(() => {
       return [
