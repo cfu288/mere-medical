@@ -464,19 +464,43 @@ export async function registerDynamicClient({
     },
   };
   // We've got a temp access token and public key, now we can register this app as a dynamic client
-  const registerRes = await fetch(`${epicUrl}/oauth2/register`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${res.access_token}`,
-    },
-    body: JSON.stringify(request),
-  });
-  if (!registerRes.ok) {
-    console.log(await registerRes.text());
-    throw new Error('Error registering dynamic client with ' + epicName);
+  try {
+    const registerRes = await fetch(`${epicUrl}/oauth2/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${res.access_token}`,
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (!registerRes.ok) {
+      if (registerRes.status === 404) {
+        throw new DynamicRegistrationError(
+          'This site does not support dynamic client registration.',
+          res
+        );
+      }
+      console.log(await registerRes.text());
+      throw new Error('Error registering dynamic client with ' + epicName);
+    }
+    return await registerRes.json();
+  } catch (e) {
+    throw new DynamicRegistrationError(
+      'This site does not support dynamic client registration.',
+      res
+    );
   }
-  return await registerRes.json();
+}
+
+export class DynamicRegistrationError extends Error {
+  public data: EpicAuthResponse;
+
+  constructor(message: string, data: EpicAuthResponse) {
+    super(message);
+    this.name = 'DynamicRegistrationError';
+    this.data = data;
+  }
 }
 
 export async function fetchAccessTokenUsingJWT(
@@ -528,7 +552,7 @@ export async function saveConnectionToDb({
   epicName,
   db,
 }: {
-  res: EpicAuthResponseWithClientId;
+  res: EpicAuthResponseWithClientId | EpicAuthResponse;
   epicUrl: string;
   epicName: string;
   db: RxDatabase<DatabaseCollections, any, any>;
@@ -573,7 +597,7 @@ export async function saveConnectionToDb({
           expires_in: nowInSeconds + res.expires_in,
           scope: res.scope,
           patient: res.patient,
-          client_id: res.client_id,
+          client_id: (res as EpicAuthResponseWithClientId)?.client_id,
         };
         try {
           db.connection_documents.insert(dbentry).then(() => {

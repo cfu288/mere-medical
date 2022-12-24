@@ -4,6 +4,7 @@ import { useHistory } from 'react-router';
 import { useRxDb } from '../components/RxDbProvider';
 import { Routes } from '../Routes';
 import {
+  DynamicRegistrationError,
   EpicLocalStorageKeys,
   fetchAccessTokenUsingJWT,
   fetchAccessTokenWithCode,
@@ -12,6 +13,18 @@ import {
 } from '../services/Epic';
 import { useNotificationDispatch } from '../services/NotificationContext';
 
+/**
+ * Handles the redirect from Epic's authorization server. If possible, it
+ * will attempt to register a dynamic client so we can automatically refresh
+ * tokens in the future. If that fails, it will attempt to use the access
+ * token provided by Epic to pull FHIR resources once and we will need the
+ * user to manually re-sign in every time they want to manually pull their
+ * records.
+ * Ideally, we would use the conformance statement to determine whether or
+ * not we can register a dynamic client, but Epic's conformance statement at
+ * `api/FHIR/DSTU2/metadata` at `rest.security.extensions` is mostly inaccurate
+ * anyways so we can't tell.
+ */
 const EpicRedirect: React.FC = () => {
   const history = useHistory(),
     db = useRxDb(),
@@ -32,6 +45,30 @@ const EpicRedirect: React.FC = () => {
             epicUrl,
             epicName,
           });
+        })
+        .catch((e: Error | DynamicRegistrationError) => {
+          // If we can't register a dynamic client, we can still use the access token
+          // provided by Epic to pull FHIR resources once and we will need the user to
+          // manually re-sign in every time they want to manually pull their records.
+          if (e instanceof DynamicRegistrationError) {
+            const res = e.data;
+            saveConnectionToDb({
+              res,
+              epicUrl,
+              epicName,
+              db,
+            });
+            return Promise.reject(
+              new Error(
+                'This MyChart instance does not support dynamic client registration. We will still try to pull your records once, but you will need to sign in again to pull them again in the future.'
+              )
+            );
+          }
+          return Promise.reject(
+            new Error(
+              'There was an error registering you at this MyChart instance'
+            )
+          );
         })
         .then(async (res) => {
           // We've registered, now we can get another access token with our signed JWT
