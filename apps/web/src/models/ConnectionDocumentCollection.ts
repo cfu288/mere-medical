@@ -49,6 +49,9 @@ export const connectionSchemaLiteral = {
       type: 'string',
       maxLength: 100,
     },
+    client_id: {
+      type: 'string',
+    },
   },
   indexes: ['last_refreshed'],
 } as const;

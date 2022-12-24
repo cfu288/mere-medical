@@ -11,6 +11,7 @@ export interface ConnectionDocument extends BaseDocument {
   name: string;
   location: string;
   last_refreshed: string;
+  client_id?: string;
 }
 
 export type CreateConnectionDocument = Omit<

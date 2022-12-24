@@ -1,12 +1,11 @@
 import { IonContent, IonHeader, IonPage, IonButton } from '@ionic/react';
 import { memo, useCallback, useEffect, useState } from 'react';
 import { ConnectionDocument } from '../models/ConnectionDocument';
-import { OnPatient } from '../services/OnPatient';
+import * as OnPatient from '../services/OnPatient';
 import { DatabaseCollections, useRxDb } from '../components/RxDbProvider';
 import { RxDatabase, RxDocument } from 'rxdb';
 import { GenericBanner } from '../components/GenericBanner';
 import { ConnectionCard } from '../components/ConnectionCard';
-import { Epic } from '../services/Epic';
 import EpicEndpoints from '../assets/DSTU2Endpoints.json';
 
 import { Combobox } from '@headlessui/react';
@@ -15,6 +14,7 @@ import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import { useDebounce } from '@react-hook/debounce';
 import { Modal } from '../components/Modal';
 import { ModalHeader } from '../components/ModalHeader';
+import { EpicLocalStorageKeys, getLoginUrl } from '../services/Epic';
 
 async function getConnectionCards(
   db: RxDatabase<DatabaseCollections, any, any>
@@ -32,11 +32,12 @@ const ConnectionTab: React.FC = () => {
     [list, setList] = useState<RxDocument<ConnectionDocument>[]>(),
     onpatientLoginUrl = OnPatient.getLoginUrl(),
     setTenantEpicUrl = (s: string & Location, name: string) => {
-      localStorage.setItem(Epic.LocalStorageKeys.EPIC_URL, s);
-      localStorage.setItem(Epic.LocalStorageKeys.EPIC_NAME, name);
+      localStorage.setItem(EpicLocalStorageKeys.EPIC_URL, s);
+      localStorage.setItem(EpicLocalStorageKeys.EPIC_NAME, name);
     },
     getList = useCallback(() => {
       getConnectionCards(db).then((list) => {
+        console.log(list.map((x) => x.toJSON()));
         setList(list as unknown as RxDocument<ConnectionDocument>[]);
       });
     }, [db]),
@@ -44,7 +45,7 @@ const ConnectionTab: React.FC = () => {
     toggleEpicPanel = (s: string & Location, name: string) => {
       setTenantEpicUrl(s, name);
       setOpen((x) => !x);
-      window.location = Epic.getLoginUrl(s);
+      window.location = getLoginUrl(s);
     };
 
   useEffect(() => {

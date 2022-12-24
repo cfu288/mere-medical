@@ -6,8 +6,9 @@ import onpatientLogo from '../img/onpatient_logo.jpeg';
 import epicLogo from '../img/MyChartByEpic.png';
 import { differenceInDays, format, parseISO } from 'date-fns';
 import { RxDatabase, RxDocument } from 'rxdb';
-import { OnPatient } from '../services/OnPatient';
-import { Epic } from '../services/Epic';
+import * as OnPatient from '../services/OnPatient';
+import * as Epic from '../services/Epic';
+import { useNotificationDispatch } from '../services/NotificationContext';
 
 function getImage(logo: 'onpatient' | 'epic') {
   switch (logo) {
@@ -33,10 +34,51 @@ async function fetchData(
       return await OnPatient.syncAllRecords(connectionDocument, db);
     }
     case 'epic': {
-      return await Epic.syncAllRecords(baseUrl, connectionDocument, db);
+      try {
+        await refreshConnectionTokenIfNeeded(connectionDocument, db);
+        return await Epic.syncAllRecords(baseUrl, connectionDocument, db);
+      } catch (e) {
+        console.error(e);
+        throw new Error('Error refreshing token  - try logging in again');
+      }
     }
     default: {
-      throw Error('Cannot sync');
+      throw Error(
+        `Cannot sync unknown source: ${connectionDocument.get('source')}`
+      );
+    }
+  }
+}
+
+/**
+ * For a connection document, if the access token is expired, refresh it and save it to the db
+ * @param connectionDocument the connection document to refresh the access token for
+ * @param db
+ */
+async function refreshConnectionTokenIfNeeded(
+  connectionDocument: RxDocument<ConnectionDocument>,
+  db: RxDatabase<DatabaseCollections>
+) {
+  const nowInSeconds = Math.floor(Date.now() / 1000);
+  if (connectionDocument.get('expires_in') <= nowInSeconds) {
+    try {
+      const epicUrl = connectionDocument.get('location'),
+        epicName = connectionDocument.get('name'),
+        clientId = connectionDocument.get('client_id');
+
+      const access_token_data = await Epic.fetchAccessTokenUsingJWT(
+        clientId,
+        epicUrl
+      );
+      return await Epic.saveConnectionToDb({
+        res: access_token_data,
+        epicUrl,
+        epicName,
+        db,
+      });
+    } catch (e) {
+      console.error(e);
+      throw new Error('Error refreshing token  - try logging in again');
     }
   }
 }
@@ -54,7 +96,8 @@ export function ConnectionCard({
         console.log('db deleted');
       });
     },
-    [syncing, setSyncing] = useState(false);
+    [syncing, setSyncing] = useState(false),
+    notifyDispatch = useNotificationDispatch();
 
   useEffect(() => {
     if (!item.get('last_refreshed')) {
@@ -63,11 +106,16 @@ export function ConnectionCard({
         .then(() => {
           setSyncing(false);
         })
-        .catch(() => {
+        .catch((e) => {
+          notifyDispatch({
+            type: 'set_notification',
+            message: `Error fetching data: ${e.message}`,
+            variant: 'error',
+          });
           setSyncing(false);
         });
     }
-  }, [db, fetchData, item]);
+  }, [baseUrl, db, item]);
 
   return (
     <li
@@ -83,7 +131,9 @@ export function ConnectionCard({
         <div className="flex-1 truncate">
           <div className="flex items-center space-x-3">
             <h3 className="truncate text-sm font-semibold  text-gray-900">
-              {item.get('name')}
+              {item.get('source') === 'epic'
+                ? `MyChart - ${item.get('name')}`
+                : item.get('name')}
             </h3>
           </div>
           <p className="mt-1 truncate text-sm font-medium text-gray-500">
@@ -124,8 +174,11 @@ export function ConnectionCard({
                   setSyncing(false);
                 })
                 .catch((e) => {
-                  alert(`Error: ${e}`);
-                  console.error(e);
+                  notifyDispatch({
+                    type: 'set_notification',
+                    message: `Error: ${e}`,
+                    variant: 'error',
+                  });
                   setSyncing(false);
                 });
             }}

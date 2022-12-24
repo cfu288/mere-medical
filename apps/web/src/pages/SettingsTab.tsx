@@ -2,6 +2,7 @@ import { IonContent, IonHeader, IonPage } from '@ionic/react';
 import { GenericBanner } from '../components/GenericBanner';
 import { useUser } from '../components/UserProvider';
 import { EmptyUserPlaceholder } from '../models/EmptyUserPlaceholder';
+import { useNotificationDispatch } from '../services/NotificationContext';
 
 const SettingsTab: React.FC = () => {
   const user = useUser();

@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { CreateConnectionDocument } from '../models/ConnectionDocument';
 import { useRxDb } from '../components/RxDbProvider';
 import { Routes } from '../Routes';
+import { useNotificationDispatch } from '../services/NotificationContext';
 
 export interface OnPatientAuthResponse {
   access_token: string;
@@ -18,7 +19,8 @@ export interface OnPatientAuthResponse {
 const OnPatientRedirect: React.FC = () => {
   const history = useHistory(),
     db = useRxDb(),
-    [count, setCount] = useState(0);
+    [count, setCount] = useState(0),
+    notifyDispatch = useNotificationDispatch();
 
   useEffect(() => {
     if (count === 0) {
@@ -29,6 +31,7 @@ const OnPatientRedirect: React.FC = () => {
         expiresIn = searchRequest.get('expiresIn');
 
       if (accessToken && refreshToken && expiresIn) {
+        const nowInSeconds = Math.floor(Date.now() / 1000);
         const dbentry: Omit<CreateConnectionDocument, 'patient' | 'scope'> = {
           _id: uuidv4(),
           source: 'onpatient',
@@ -36,7 +39,7 @@ const OnPatientRedirect: React.FC = () => {
           name: 'OnPatient',
           access_token: accessToken,
           refresh_token: refreshToken,
-          expires_in: parseInt(expiresIn),
+          expires_in: nowInSeconds + parseInt(expiresIn),
         };
         db.connection_documents
           .insert(dbentry)
@@ -44,12 +47,19 @@ const OnPatientRedirect: React.FC = () => {
             history.push(Routes.AddConnection);
           })
           .catch((e: any) => {
-            alert('Error adding connection');
-            console.error(e);
+            notifyDispatch({
+              type: 'set_notification',
+              message: `Error adding connection: ${e.message}`,
+              variant: 'error',
+            });
             history.push(Routes.AddConnection);
           });
       } else {
-        alert('Error completing authentication: no access token provided');
+        notifyDispatch({
+          type: 'set_notification',
+          message: `Error completing authentication: no access token provided`,
+          variant: 'error',
+        });
       }
     }
   }, [db.connection_documents, history]);

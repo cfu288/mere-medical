@@ -31,62 +31,65 @@ import SummaryTab from '../pages/SummaryTab';
 import SettingsTab from '../pages/SettingsTab';
 import { UserProvider } from '../components/UserProvider';
 import EpicRedirect from '../pages/EpicRedirect';
+import { NotificationProvider } from '../services/NotificationContext';
 
 setupIonicReact();
 
 const App: React.FC = () => {
   return (
-    <RxDbProvider>
-      <UserProvider>
-        <IonApp>
-          <IonReactRouter>
-            <IonTabs>
-              <IonRouterOutlet>
-                <Route exact path={AppRoutes.Timeline}>
-                  <TimelineTab />
-                </Route>
-                <Route exact path={AppRoutes.AddConnection}>
-                  <ConnectionTab />
-                </Route>
-                <Route exact path={AppRoutes.Summary}>
-                  <SummaryTab />
-                </Route>
-                <Route exact path={AppRoutes.Settings}>
-                  <SettingsTab />
-                </Route>
-                <Route exact path={AppRoutes.OnPatientCallback}>
-                  <OnPatientRedirect />
-                </Route>
-                <Route exact path={AppRoutes.EpicCallback}>
-                  <EpicRedirect />
-                </Route>
-                <Route exact path="/">
-                  <Redirect to={AppRoutes.Timeline} />
-                </Route>
-              </IonRouterOutlet>
-              <IonTabBar slot="bottom" className="pb-4 sm:pb-0">
-                <IonTabButton tab="timeline" href={AppRoutes.Timeline}>
-                  <IonIcon icon={newspaperOutline} />
-                  <IonLabel>Timeline</IonLabel>
-                </IonTabButton>
-                <IonTabButton tab="summary" href={AppRoutes.Summary}>
-                  <IonIcon icon={analyticsOutline} />
-                  <IonLabel>Summary</IonLabel>
-                </IonTabButton>
-                <IonTabButton tab="add" href={AppRoutes.AddConnection}>
-                  <IonIcon icon={addCircleOutline} />
-                  <IonLabel>Add</IonLabel>
-                </IonTabButton>
-                <IonTabButton tab="settings" href={AppRoutes.Settings}>
-                  <IonIcon icon={settingsOutline} />
-                  <IonLabel>Settings</IonLabel>
-                </IonTabButton>
-              </IonTabBar>
-            </IonTabs>
-          </IonReactRouter>
-        </IonApp>
-      </UserProvider>
-    </RxDbProvider>
+    <NotificationProvider>
+      <RxDbProvider>
+        <UserProvider>
+          <IonApp>
+            <IonReactRouter>
+              <IonTabs>
+                <IonRouterOutlet>
+                  <Route exact path={AppRoutes.Timeline}>
+                    <TimelineTab />
+                  </Route>
+                  <Route exact path={AppRoutes.AddConnection}>
+                    <ConnectionTab />
+                  </Route>
+                  <Route exact path={AppRoutes.Summary}>
+                    <SummaryTab />
+                  </Route>
+                  <Route exact path={AppRoutes.Settings}>
+                    <SettingsTab />
+                  </Route>
+                  <Route exact path={AppRoutes.OnPatientCallback}>
+                    <OnPatientRedirect />
+                  </Route>
+                  <Route exact path={AppRoutes.EpicCallback}>
+                    <EpicRedirect />
+                  </Route>
+                  <Route exact path="/">
+                    <Redirect to={AppRoutes.Timeline} />
+                  </Route>
+                </IonRouterOutlet>
+                <IonTabBar slot="bottom" className="pb-4 sm:pb-0">
+                  <IonTabButton tab="timeline" href={AppRoutes.Timeline}>
+                    <IonIcon icon={newspaperOutline} />
+                    <IonLabel>Timeline</IonLabel>
+                  </IonTabButton>
+                  <IonTabButton tab="summary" href={AppRoutes.Summary}>
+                    <IonIcon icon={analyticsOutline} />
+                    <IonLabel>Summary</IonLabel>
+                  </IonTabButton>
+                  <IonTabButton tab="add" href={AppRoutes.AddConnection}>
+                    <IonIcon icon={addCircleOutline} />
+                    <IonLabel>Add</IonLabel>
+                  </IonTabButton>
+                  <IonTabButton tab="settings" href={AppRoutes.Settings}>
+                    <IonIcon icon={settingsOutline} />
+                    <IonLabel>Settings</IonLabel>
+                  </IonTabButton>
+                </IonTabBar>
+              </IonTabs>
+            </IonReactRouter>
+          </IonApp>
+        </UserProvider>
+      </RxDbProvider>
+    </NotificationProvider>
   );
 };
 
