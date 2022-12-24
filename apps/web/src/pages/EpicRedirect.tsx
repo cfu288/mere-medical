@@ -46,21 +46,22 @@ const EpicRedirect: React.FC = () => {
             epicName,
           });
         })
-        .catch((e: Error | DynamicRegistrationError) => {
+        .catch(async (e: Error | DynamicRegistrationError) => {
           // If we can't register a dynamic client, we can still use the access token
           // provided by Epic to pull FHIR resources once and we will need the user to
           // manually re-sign in every time they want to manually pull their records.
           if (e instanceof DynamicRegistrationError) {
             const res = e.data;
-            saveConnectionToDb({
+            await saveConnectionToDb({
               res,
               epicUrl,
               epicName,
               db,
             });
             return Promise.reject(
-              new Error(
-                'This MyChart instance does not support dynamic client registration. We will still try to pull your records once, but you will need to sign in again to pull them again in the future.'
+              new DynamicRegistrationError(
+                'This MyChart instance does not support dynamic client registration, which means we cannot automatically fetch your records in the future. We will still try to pull your records once, but you will need to sign in again to pull them again in the future.',
+                res
               )
             );
           }
@@ -86,12 +87,21 @@ const EpicRedirect: React.FC = () => {
           redirectToConnectionsTab(history);
         })
         .catch((e) => {
-          notifyDispatch({
-            type: 'set_notification',
-            message: `Error: ${e.message}`,
-            variant: 'error',
-          });
-          setError(`${e}`);
+          if (e instanceof DynamicRegistrationError) {
+            notifyDispatch({
+              type: 'set_notification',
+              message: `Error: ${e.message}`,
+              variant: 'error',
+            });
+            redirectToConnectionsTab(history);
+          } else {
+            notifyDispatch({
+              type: 'set_notification',
+              message: `Error: ${e.message}`,
+              variant: 'error',
+            });
+            setError(`${e}`);
+          }
         });
     } else {
       setError('There was a problem trying to sign in');
