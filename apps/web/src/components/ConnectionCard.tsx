@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { BaseDocument } from '../models/BaseDocument';
 import { ConnectionDocument } from '../models/ConnectionDocument';
 import { DatabaseCollections, useRxDb } from '../components/RxDbProvider';
@@ -24,7 +24,7 @@ function getImage(logo: 'onpatient' | 'epic') {
   }
 }
 
-async function fetchData(
+async function fetchMedicalRecords(
   connectionDocument: RxDocument<ConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
   baseUrl: string
@@ -97,12 +97,10 @@ export function ConnectionCard({
       });
     },
     [syncing, setSyncing] = useState(false),
-    notifyDispatch = useNotificationDispatch();
-
-  useEffect(() => {
-    if (!item.get('last_refreshed')) {
+    notifyDispatch = useNotificationDispatch(),
+    handleFetchData = useCallback(() => {
       setSyncing(true);
-      fetchData(item, db, baseUrl)
+      fetchMedicalRecords(item, db, baseUrl)
         .then(() => {
           setSyncing(false);
         })
@@ -114,8 +112,17 @@ export function ConnectionCard({
           });
           setSyncing(false);
         });
+    }, [baseUrl, db, item, notifyDispatch]);
+
+  useEffect(() => {
+    if (
+      !item.get('last_refreshed') ||
+      (item.get('last_refreshed') &&
+        differenceInDays(parseISO(item.get('last_refreshed')), new Date()) >= 1)
+    ) {
+      handleFetchData();
     }
-  }, [baseUrl, db, item]);
+  }, [baseUrl, db, handleFetchData, item]);
 
   return (
     <li
@@ -167,21 +174,7 @@ export function ConnectionCard({
             className={`-ml-px flex w-0 flex-1 divide-x divide-gray-800 ${
               syncing ? 'disabled:bg-slate-50' : ''
             }`}
-            onClick={() => {
-              setSyncing(true);
-              fetchData(item, db, baseUrl)
-                .then(() => {
-                  setSyncing(false);
-                })
-                .catch((e) => {
-                  notifyDispatch({
-                    type: 'set_notification',
-                    message: `Error: ${e}`,
-                    variant: 'error',
-                  });
-                  setSyncing(false);
-                });
-            }}
+            onClick={handleFetchData}
           >
             <div className="relative inline-flex w-0 flex-1 items-center justify-center rounded-br-lg border border-transparent py-4 text-sm font-medium text-gray-700 hover:text-gray-500">
               Sync

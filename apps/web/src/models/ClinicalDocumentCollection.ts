@@ -64,9 +64,6 @@ export const clinicalDocumentSchemaLiteral = {
         display_name: {
           type: 'string',
         },
-        merge_key: {
-          type: 'string',
-        },
       },
     },
   },

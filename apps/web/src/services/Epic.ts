@@ -352,10 +352,6 @@ async function syncDocumentReferences(
                     item.data_record.raw.resource?.created ||
                     item.data_record.raw.resource?.context?.period?.start,
                   display_name: item.data_record.raw.resource?.type?.text,
-                  merge_key: `"documentreference_attachment_"${
-                    item.data_record.raw.resource?.created ||
-                    item.data_record.raw.resource?.context?.period?.start
-                  }_${item.data_record.raw.resource?.type?.text}`,
                 },
               };
 

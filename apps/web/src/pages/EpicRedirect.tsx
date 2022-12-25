@@ -90,17 +90,17 @@ const EpicRedirect: React.FC = () => {
           if (e instanceof DynamicRegistrationError) {
             notifyDispatch({
               type: 'set_notification',
-              message: `Error: ${e.message}`,
+              message: `${e.message}`,
               variant: 'error',
             });
             redirectToConnectionsTab(history);
           } else {
             notifyDispatch({
               type: 'set_notification',
-              message: `Error: ${e.message}`,
+              message: `${e.message}`,
               variant: 'error',
             });
-            setError(`${e}`);
+            setError(`${e.message}`);
           }
         });
     } else {

@@ -49,7 +49,6 @@ export namespace DSTU2 {
         id: parseId(bundleItem),
         date: bundleItem.resource?.performedDateTime,
         display_name: bundleItem.resource?.code.text,
-        merge_key: `"procedure_"${bundleItem.resource?.performedDateTime}_${bundleItem.resource?.code.text}`,
       },
     };
     return cd;
@@ -75,7 +74,6 @@ export namespace DSTU2 {
           bundleItem.resource?.dateAsserted ||
           bundleItem.resource?.effectivePeriod?.start,
         display_name: bundleItem.resource?.medicationCodeableConcept?.text,
-        merge_key: `"medicationstatement_"${bundleItem.resource?.dateAsserted}_${bundleItem.resource?.medicationCodeableConcept?.text}`,
       },
     };
     return cd;
@@ -99,7 +97,6 @@ export namespace DSTU2 {
         id: parseId(bundleItem),
         date: bundleItem.resource?.effectiveDateTime,
         display_name: bundleItem.resource?.code.text,
-        merge_key: `"observation_"${bundleItem.resource?.effectiveDateTime}_${bundleItem.resource?.code.text}`,
       },
     };
     return cd;
@@ -123,7 +120,6 @@ export namespace DSTU2 {
         id: parseId(bundleItem),
         date: bundleItem.resource?.effectiveDateTime,
         display_name: bundleItem.resource?.code.text,
-        merge_key: `"diagnosticreport_"${bundleItem.resource?.effectiveDateTime}_${bundleItem.resource?.code.text}`,
       },
     };
     return cd;
@@ -180,7 +176,6 @@ export namespace DSTU2 {
         id: parseId(bundleItem),
         date: bundleItem.resource?.date,
         display_name: bundleItem.resource?.vaccineCode.text,
-        merge_key: `"immunization_"${bundleItem.resource?.date}_${bundleItem.resource?.vaccineCode.text}`,
       },
     };
     return cd;
@@ -204,7 +199,6 @@ export namespace DSTU2 {
         id: parseId(bundleItem),
         date: bundleItem.resource?.dateRecorded,
         display_name: bundleItem.resource?.code.text,
-        merge_key: `"condition_"${bundleItem.resource?.dateRecorded}_${bundleItem.resource?.code.text}`,
       },
     };
     return cd;
@@ -229,7 +223,6 @@ export namespace DSTU2 {
 
         date: bundleItem.resource?.recordedDate,
         display_name: bundleItem.resource?.text?.div,
-        merge_key: `"allergyintolerance_"${bundleItem.resource?.recordedDate}_${bundleItem.resource?.text?.div}`,
       },
     };
     return cd;
@@ -253,7 +246,6 @@ export namespace DSTU2 {
         id: parseId(bundleItem),
         date: bundleItem.resource?.birthDate,
         display_name: bundleItem.resource?.text?.div,
-        merge_key: `"practitioner_"${bundleItem.resource?.birthDate}_${bundleItem.resource?.text?.div}`,
       },
     };
     return cd;
@@ -279,10 +271,6 @@ export namespace DSTU2 {
           bundleItem.resource?.created ||
           bundleItem.resource?.context?.period?.start,
         display_name: bundleItem.resource?.type?.text,
-        merge_key: `"documentreference_"${
-          bundleItem.resource?.created ||
-          bundleItem.resource?.context?.period?.start
-        }_${bundleItem.resource?.type?.text}`,
       },
     };
     return cd;
@@ -306,7 +294,6 @@ export namespace DSTU2 {
         id: parseId(bundleItem),
         date: bundleItem.resource?.period?.start,
         display_name: bundleItem.resource?.description,
-        merge_key: `"careplan_"${bundleItem.resource?.period?.start}_${bundleItem.resource?.description}`,
       },
     };
     return cd;

@@ -25,7 +25,6 @@ export interface ClinicalDocument<T = any> extends BaseDocument {
     id?: string;
     date?: string;
     display_name?: string;
-    merge_key?: string;
   };
 }
 
