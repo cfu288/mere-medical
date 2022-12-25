@@ -94,7 +94,7 @@ const TimelineTab: React.FC = () => {
         />
       </IonHeader>
       <IonContent fullscreen scrollEvents>
-        <div className="mx-auto flex max-w-4xl flex-col px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-4xl flex-col px-4 pb-12 sm:px-6 lg:px-8">
           {!list ||
             (Object.entries(list).length === 0 && <EmptyRecordsPlaceholder />)}
           {list &&

@@ -13,11 +13,11 @@ import {
 } from 'fhir/r2';
 import { RxDatabase, RxDocument } from 'rxdb';
 import { useEffect, useReducer } from 'react';
-import { MedicationsListCard } from '../components/MedicationsListCard';
-import { ConditionsListCard } from '../components/ConditionsListCard';
-import { ImmunizationListCard } from '../components/ImmunizationListCard';
-import { CarePlanListCard } from '../components/CarePlanListCard';
-import { AllerrgyIntoleranceListCard } from '../components/AllerrgyIntoleranceListCard';
+import { MedicationsListCard } from '../components/Summary/MedicationsListCard';
+import { ConditionsListCard } from '../components/Summary/ConditionsListCard';
+import { ImmunizationListCard } from '../components/Summary/ImmunizationListCard';
+import { CarePlanListCard } from '../components/Summary/CarePlanListCard';
+import { AllerrgyIntoleranceListCard } from '../components/Summary/AllerrgyIntoleranceListCard';
 import { EmptyRecordsPlaceholder } from '../models/EmptyRecordsPlaceholder';
 
 function fetchMedications(db: RxDatabase<DatabaseCollections>) {
