@@ -129,7 +129,7 @@ function TabWrapper() {
   );
 }
 
-const App: React.FC = () => {
+export default function App() {
   return (
     <NotificationProvider>
       <RxDbProvider>
@@ -141,6 +141,4 @@ const App: React.FC = () => {
       </RxDbProvider>
     </NotificationProvider>
   );
-};
-
-export default App;
+}
