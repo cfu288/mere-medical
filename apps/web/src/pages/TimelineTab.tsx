@@ -88,16 +88,14 @@ const TimelineTab: React.FC = () => {
   return (
     <AppPage
       banner={
-        <div className="md:hidden">
-          <TimelineBanner
-            text={
-              user?.first_name ? `Welcome back ${user.first_name}!` : 'Hello!'
-            }
-          />
-        </div>
+        <TimelineBanner
+          text={
+            user?.first_name ? `Welcome back ${user.first_name}!` : 'Hello!'
+          }
+        />
       }
     >
-      <div className="mx-auto flex max-w-4xl flex-col px-4 pb-12 sm:px-6 md:pt-6 lg:px-8">
+      <div className="mx-auto flex max-w-4xl flex-col overflow-x-clip px-4 pb-12 sm:px-6 md:pt-6 lg:px-8">
         {!list ||
           (Object.entries(list).length === 0 && <EmptyRecordsPlaceholder />)}
         {list &&
