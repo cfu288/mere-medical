@@ -19,25 +19,25 @@ module.exports = function (webpackConfig, nxConfig) {
     },
   });
   // For production we add the service worker
-  // if (config.mode === 'production') {
-  //   mergeWebpackConfigs.push({
-  //     plugins: [
-  //       new InjectManifest({
-  //         swSrc: path.resolve(
-  //           nxConfig.options.root,
-  //           nxConfig.options.sourceRoot,
-  //           'service-worker.ts'
-  //         ),
-  //         dontCacheBustURLsMatching: /\.[0-9a-f]{8}\./,
-  //         exclude: [/\.map$/, /asset-manifest\.json$/, /LICENSE/],
-  //         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-  //         // this is the output of the plugin,
-  //         // relative to webpack's output directory
-  //         swDest: 'service-worker.js',
-  //       }),
-  //     ],
-  //   });
-  // }
+  if (config.mode === 'production') {
+    mergeWebpackConfigs.push({
+      plugins: [
+        new InjectManifest({
+          swSrc: path.resolve(
+            nxConfig.options.root,
+            nxConfig.options.sourceRoot,
+            'service-worker.ts'
+          ),
+          dontCacheBustURLsMatching: /\.[0-9a-f]{8}\./,
+          exclude: [/\.map$/, /asset-manifest\.json$/, /LICENSE/],
+          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+          // this is the output of the plugin,
+          // relative to webpack's output directory
+          swDest: 'service-worker.js',
+        }),
+      ],
+    });
+  }
 
   return merge(mergeWebpackConfigs);
 };
