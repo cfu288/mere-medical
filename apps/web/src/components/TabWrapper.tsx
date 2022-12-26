@@ -24,7 +24,7 @@ export function TabWrapper() {
     <div className="flex h-screen max-h-screen md:flex-row-reverse">
       <div className="flex-grow">
         <Switch>
-          <Route exact path={AppRoutes.Timeline}>
+          <Route path={AppRoutes.Timeline}>
             <TimelineTab />
           </Route>
           <Route exact path={AppRoutes.AddConnection}>

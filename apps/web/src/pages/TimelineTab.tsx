@@ -10,7 +10,7 @@ import {
   Observation,
   Procedure,
 } from 'fhir/r2';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { DatabaseCollections, useRxDb } from '../components/RxDbProvider';
 import { ClinicalDocument } from '../models/ClinicalDocument';
 import { ConditionCard } from '../components/Timeline/ConditionCard';
@@ -25,7 +25,7 @@ import { EmptyRecordsPlaceholder } from '../models/EmptyRecordsPlaceholder';
 import { useUser } from '../components/UserProvider';
 import { DocumentReferenceCard } from '../components/Timeline/DocumentReferenceCard';
 import { AppPage } from '../components/AppPage';
-import { GenericBanner } from '../components/GenericBanner';
+import { Link, useLocation } from 'react-router-dom';
 
 function fetchRecords(db: RxDatabase<DatabaseCollections>) {
   return db.clinical_documents
@@ -75,7 +75,9 @@ const TimelineTab: React.FC = () => {
   const db = useRxDb(),
     [list, setList] =
       useState<Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>>(),
-    user = useUser();
+    user = useUser(),
+    { pathname, hash, key } = useLocation(),
+    ref = useRef(null);
 
   useEffect(() => {
     // Fetch clinical documents to display
@@ -84,6 +86,27 @@ const TimelineTab: React.FC = () => {
       console.debug(groupedRecords);
     });
   }, [db]);
+
+  useEffect(() => {
+    // if not a hash link, scroll to top
+    if (hash === '') {
+      // window.scrollTo(0, 0);
+    }
+    // else scroll to id
+    else {
+      setTimeout(() => {
+        const id = hash.replace('#', '');
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+            inline: 'nearest',
+          });
+        }
+      }, 0);
+    }
+  }, [pathname, hash, key]); // do this on route change
 
   return (
     <AppPage
@@ -95,110 +118,144 @@ const TimelineTab: React.FC = () => {
         />
       }
     >
-      <div className="mx-auto flex max-w-4xl flex-col overflow-x-clip px-4 pb-12 sm:px-6 md:pt-6 lg:px-8">
-        {!list ||
-          (Object.entries(list).length === 0 && <EmptyRecordsPlaceholder />)}
-        {list &&
-          Object.entries(list).map(([key, itemList], index, elements) => (
-            <>
-              {index === 0 ? (
-                <TimelineYearHeader key={`${key}${index}`} year={key} />
-              ) : null}
-              <div className="flex flex-row gap-x-4 px-2 pt-8" key={key}>
-                <span className="text-primary-700 flex grow justify-end whitespace-nowrap pt-5 font-bold">
-                  {format(parseISO(key), 'MMM dd')}
-                </span>
-                <div className="flex-column text-primary-700 relative flex justify-center pt-5 font-black">
-                  <div className="">•</div>
-                </div>
-                <div className="flex w-3/4 flex-col gap-y-2">
-                  {itemList.map((item) => (
-                    <div key={item._id}>
-                      {item.data_record.resource_type === 'immunization' && (
-                        <ImmunizationCard
-                          key={item._id}
-                          item={
-                            item as ClinicalDocument<BundleEntry<Immunization>>
-                          }
-                        />
-                      )}
-                      {item.data_record.resource_type === 'condition' && (
-                        <ConditionCard
-                          key={item._id}
-                          item={
-                            item as ClinicalDocument<BundleEntry<Condition>>
-                          }
-                        />
-                      )}
-                      {item.data_record.resource_type === 'procedure' && (
-                        <ProcedureCard
-                          key={item._id}
-                          item={
-                            item as ClinicalDocument<BundleEntry<Procedure>>
-                          }
-                        />
-                      )}
-                      {item.data_record.resource_type === 'observation' && (
-                        <ObservationCard
-                          key={item._id}
-                          item={
-                            item as ClinicalDocument<BundleEntry<Observation>>
-                          }
-                        />
-                      )}
-                      {item.data_record.resource_type ===
-                        'medicationstatement' && (
-                        <MedicationCard
-                          key={item._id}
-                          item={
-                            item as ClinicalDocument<
-                              BundleEntry<MedicationStatement>
-                            >
-                          }
-                        />
-                      )}
-                      {item.data_record.resource_type ===
-                        'diagnosticreport' && (
-                        <DiagnosticReportCard
-                          key={item._id}
-                          item={
-                            item as ClinicalDocument<
-                              BundleEntry<DiagnosticReport>
-                            >
-                          }
-                        />
-                      )}
-                      {item.data_record.resource_type ===
-                        'documentreference' && (
-                        <DocumentReferenceCard
-                          key={item._id}
-                          item={
-                            item as ClinicalDocument<
-                              BundleEntry<DocumentReference>
-                            >
-                          }
-                        />
-                      )}
+      <div className="relative flex">
+        <div className="bg-primary-600 sticky top-0 hidden h-screen min-h-full w-0 flex-col overflow-y-scroll border-gray-200 text-white lg:flex lg:w-36 lg:border-r-2">
+          <p className="bg-primary-600 sticky top-0 p-2 font-bold ">Jump To</p>
+          <ul>
+            {list &&
+              Object.entries(list).map(([key, itemList], index, elements) => (
+                <Link to={`#${format(parseISO(key), 'MMM-dd-yyyy')}`}>
+                  <li className="p-2 hover:underline">
+                    {format(parseISO(key), 'MMM dd, yyyy')}
+                  </li>
+                </Link>
+              ))}
+          </ul>
+        </div>
+        {!list || Object.entries(list).length === 0 ? (
+          <div className="mx-auto w-full max-w-4xl gap-x-4 px-4 pt-2 pb-4 sm:px-6 lg:px-8">
+            <EmptyRecordsPlaceholder />
+          </div>
+        ) : (
+          <div
+            ref={ref}
+            className="mx-auto flex max-w-4xl flex-col overflow-x-clip px-4 pb-12 sm:px-6 md:pt-6 lg:px-8"
+          >
+            {list &&
+              Object.entries(list).map(([key, itemList], index, elements) => (
+                <>
+                  {index === 0 ? (
+                    <TimelineYearHeader key={`${key}${index}`} year={key} />
+                  ) : null}
+                  <div
+                    id={format(parseISO(key), 'MMM-dd-yyyy')}
+                    className="flex scroll-mt-10 flex-row gap-x-4 px-2 pt-8"
+                    key={key}
+                  >
+                    <span className="text-primary-700 flex grow justify-end whitespace-nowrap pt-5 font-bold">
+                      {format(parseISO(key), 'MMM dd')}
+                    </span>
+                    <div className="flex-column text-primary-700 relative flex justify-center pt-5 font-black">
+                      <div className="">•</div>
                     </div>
-                  ))}
-                </div>
-              </div>
-              {
-                // Only show year header if the next item is not in the same year
-                elements[index + 1] &&
-                  format(parseISO(elements[index + 1][0]), 'yyyy') !==
-                    format(parseISO(key), 'yyyy') && (
-                    <>
-                      <div className="h-12" />
-                      <TimelineYearHeader
-                        key={`${key}${index}`}
-                        year={format(parseISO(elements[index + 1][0]), 'yyyy')}
-                      />
-                    </>
-                  )
-              }
-            </>
-          ))}
+                    <div className="flex w-3/4 flex-col gap-y-2">
+                      {itemList.map((item) => (
+                        <div key={item._id}>
+                          {item.data_record.resource_type ===
+                            'immunization' && (
+                            <ImmunizationCard
+                              key={item._id}
+                              item={
+                                item as ClinicalDocument<
+                                  BundleEntry<Immunization>
+                                >
+                              }
+                            />
+                          )}
+                          {item.data_record.resource_type === 'condition' && (
+                            <ConditionCard
+                              key={item._id}
+                              item={
+                                item as ClinicalDocument<BundleEntry<Condition>>
+                              }
+                            />
+                          )}
+                          {item.data_record.resource_type === 'procedure' && (
+                            <ProcedureCard
+                              key={item._id}
+                              item={
+                                item as ClinicalDocument<BundleEntry<Procedure>>
+                              }
+                            />
+                          )}
+                          {item.data_record.resource_type === 'observation' && (
+                            <ObservationCard
+                              key={item._id}
+                              item={
+                                item as ClinicalDocument<
+                                  BundleEntry<Observation>
+                                >
+                              }
+                            />
+                          )}
+                          {item.data_record.resource_type ===
+                            'medicationstatement' && (
+                            <MedicationCard
+                              key={item._id}
+                              item={
+                                item as ClinicalDocument<
+                                  BundleEntry<MedicationStatement>
+                                >
+                              }
+                            />
+                          )}
+                          {item.data_record.resource_type ===
+                            'diagnosticreport' && (
+                            <DiagnosticReportCard
+                              key={item._id}
+                              item={
+                                item as ClinicalDocument<
+                                  BundleEntry<DiagnosticReport>
+                                >
+                              }
+                            />
+                          )}
+                          {item.data_record.resource_type ===
+                            'documentreference' && (
+                            <DocumentReferenceCard
+                              key={item._id}
+                              item={
+                                item as ClinicalDocument<
+                                  BundleEntry<DocumentReference>
+                                >
+                              }
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {
+                    // Only show year header if the next item is not in the same year
+                    elements[index + 1] &&
+                      format(parseISO(elements[index + 1][0]), 'yyyy') !==
+                        format(parseISO(key), 'yyyy') && (
+                        <>
+                          <div className="h-12" />
+                          <TimelineYearHeader
+                            key={`${key}${index}`}
+                            year={format(
+                              parseISO(elements[index + 1][0]),
+                              'yyyy'
+                            )}
+                          />
+                        </>
+                      )
+                  }
+                </>
+              ))}
+          </div>
+        )}
       </div>
     </AppPage>
   );
