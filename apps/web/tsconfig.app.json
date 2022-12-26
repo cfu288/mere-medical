@@ -13,7 +13,9 @@
     "src/components/Modal.tsx",
     "src/components/ModalHeader.tsx",
     "./src/components/Timeline/useConnectionDoc.tsx",
-    "src/components/AppPage.tsx"
+    "src/components/AppPage.tsx",
+    "src/components/TabWrapper.tsx",
+    "src/components/TabButton.tsx"
   ],
   "exclude": [
     "jest.config.ts",
