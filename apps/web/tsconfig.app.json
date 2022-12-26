@@ -12,7 +12,8 @@
     "src/models/EmptyRecordsPlaceholder.tsx",
     "src/components/Modal.tsx",
     "src/components/ModalHeader.tsx",
-    "./src/components/Timeline/useConnectionDoc.tsx"
+    "./src/components/Timeline/useConnectionDoc.tsx",
+    "src/components/AppPage.tsx"
   ],
   "exclude": [
     "jest.config.ts",

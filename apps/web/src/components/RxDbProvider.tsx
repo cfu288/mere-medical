@@ -77,20 +77,9 @@ export function RxDbProvider(props: RxDbProviderProps) {
   }, []);
 
   return (
-    <Transition show={!!db}>
-      <Transition.Child
-        leave="transition-opacity ease-linear duration-150"
-        leaveFrom="opacity-0"
-        leaveTo="opacity-100"
-        enter="transition-opacity ease-linear duration-150"
-        enterFrom="opacity-100"
-        enterTo="opacity-0"
-      >
-        <div className="flex h-screen w-full flex-col items-center justify-center gap-8">
-          <img className="h-48 w-48" src={logo} alt="Loading screen"></img>
-        </div>
-      </Transition.Child>
-      <Transition.Child
+    <>
+      <Transition
+        show={!!db}
         enter="transition-opacity ease-linear duration-150"
         enterFrom="opacity-0"
         enterTo="opacity-100"
@@ -99,8 +88,21 @@ export function RxDbProvider(props: RxDbProviderProps) {
         leaveTo="opacity-0"
       >
         <RxDbContext.Provider value={db}>{props.children}</RxDbContext.Provider>
-      </Transition.Child>
-    </Transition>
+      </Transition>
+      <Transition
+        show={!db}
+        leave="transition-opacity ease-linear duration-150"
+        leaveFrom="opacity-0"
+        leaveTo="opacity-100"
+        enter="transition-opacity ease-linear duration-150"
+        enterFrom="opacity-100"
+        enterTo="opacity-0"
+      >
+        <div className="z-20 flex h-screen w-full flex-col items-center justify-center gap-8">
+          <img className="h-48 w-48" src={logo} alt="Loading screen"></img>
+        </div>
+      </Transition>
+    </>
   );
 }
 

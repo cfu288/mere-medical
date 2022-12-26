@@ -160,7 +160,7 @@ export function ConnectionCard({
         </div>
       </div>
       <div>
-        <div className="-mt-px flex divide-x divide-gray-800">
+        <div className="-mt-px flex divide-x divide-gray-200">
           <button
             className="flex w-0 flex-1"
             onClick={() => removeDocument(item)}

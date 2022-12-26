@@ -1,4 +1,3 @@
-import { IonContent, IonHeader, IonPage } from '@ionic/react';
 import { DatabaseCollections, useRxDb } from '../components/RxDbProvider';
 import { GenericBanner } from '../components/GenericBanner';
 import { ClinicalDocument } from '../models/ClinicalDocument';
@@ -19,6 +18,7 @@ import { ImmunizationListCard } from '../components/Summary/ImmunizationListCard
 import { CarePlanListCard } from '../components/Summary/CarePlanListCard';
 import { AllerrgyIntoleranceListCard } from '../components/Summary/AllerrgyIntoleranceListCard';
 import { EmptyRecordsPlaceholder } from '../models/EmptyRecordsPlaceholder';
+import { AppPage } from '../components/AppPage';
 
 function fetchMedications(db: RxDatabase<DatabaseCollections>) {
   return db.clinical_documents
@@ -248,25 +248,20 @@ const SummaryTab: React.FC = () => {
   }, [status, db]);
 
   return (
-    <IonPage>
-      <IonHeader>
-        <GenericBanner text="Summary" />
-      </IonHeader>
-      <IonContent fullscreen>
-        <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 pb-4 sm:px-6 lg:px-8">
-          {meds.length === 0 &&
-            cond.length === 0 &&
-            imm.length === 0 &&
-            careplan.length === 0 &&
-            allergy.length === 0 && <EmptyRecordsPlaceholder />}
-          <MedicationsListCard items={meds} />
-          <ConditionsListCard items={cond} />
-          <ImmunizationListCard items={imm} />
-          <CarePlanListCard items={careplan} />
-          <AllerrgyIntoleranceListCard items={allergy} />
-        </div>
-      </IonContent>
-    </IonPage>
+    <AppPage banner={<GenericBanner text="Summary" />}>
+      <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 pb-4 sm:px-6 lg:px-8">
+        {meds.length === 0 &&
+          cond.length === 0 &&
+          imm.length === 0 &&
+          careplan.length === 0 &&
+          allergy.length === 0 && <EmptyRecordsPlaceholder />}
+        <MedicationsListCard items={meds} />
+        <ConditionsListCard items={cond} />
+        <ImmunizationListCard items={imm} />
+        <CarePlanListCard items={careplan} />
+        <AllerrgyIntoleranceListCard items={allergy} />
+      </div>
+    </AppPage>
   );
 };
 

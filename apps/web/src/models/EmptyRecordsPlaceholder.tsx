@@ -1,10 +1,9 @@
-import { Link } from 'react-router-dom';
 import { Routes } from '../Routes';
 
 export function EmptyRecordsPlaceholder() {
   return (
-    <Link
-      to={Routes.AddConnection}
+    <a
+      href={Routes.AddConnection}
       className="focus:ring-primary-500 relative mt-4 block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 text-center hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2"
     >
       <svg
@@ -25,6 +24,6 @@ export function EmptyRecordsPlaceholder() {
       <span className="mt-2 block text-sm font-medium text-gray-900">
         Connect your records
       </span>
-    </Link>
+    </a>
   );
 }

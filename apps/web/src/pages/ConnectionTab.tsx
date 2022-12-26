@@ -1,4 +1,3 @@
-import { IonContent, IonHeader, IonPage, IonButton } from '@ionic/react';
 import { memo, useCallback, useEffect, useState } from 'react';
 import { ConnectionDocument } from '../models/ConnectionDocument';
 import * as OnPatient from '../services/OnPatient';
@@ -15,6 +14,7 @@ import { useDebounce } from '@react-hook/debounce';
 import { Modal } from '../components/Modal';
 import { ModalHeader } from '../components/ModalHeader';
 import { EpicLocalStorageKeys, getLoginUrl } from '../services/Epic';
+import { AppPage } from '../components/AppPage';
 
 async function getConnectionCards(
   db: RxDatabase<DatabaseCollections, any, any>
@@ -53,51 +53,49 @@ const ConnectionTab: React.FC = () => {
   }, [getList]);
 
   return (
-    <IonPage>
-      <IonHeader>
-        <GenericBanner text="Add Connections" />
-      </IonHeader>
-      <IonContent fullscreen>
-        <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 sm:px-6 lg:px-8">
-          <div className="py-6 text-xl font-extrabold">
-            Connect to Patient Portal
-          </div>
-          <div className="text-sm font-medium text-gray-500">
-            Connect to a patient portal to automatic download your most recent
-            data.
-          </div>
+    <AppPage banner={<GenericBanner text="Add Connections" />}>
+      <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 sm:px-6 lg:px-8">
+        <div className="py-6 text-xl font-extrabold">
+          Connect to Patient Portal
         </div>
-        <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 sm:px-6 lg:px-8">
-          <ul className="grid grid-cols-1 py-8">
-            {list?.map((item) => (
-              <ConnectionCard
-                key={item._id}
-                item={item}
-                baseUrl={item.get('location')}
-              />
-            ))}
-          </ul>
-          <div className="box-border flex	w-full justify-center align-middle">
-            <IonButton className="m-4 h-12 w-11/12" href={onpatientLoginUrl}>
-              <p className="font-bold">Log in to OnPatient</p>
-            </IonButton>
-          </div>
-          <div className="box-border flex	w-full justify-center align-middle">
-            <IonButton
-              className="m-4 h-12 w-11/12"
-              onClick={() => setOpen((x) => !x)}
-            >
-              <p className="font-bold">Log in to Epic MyChart</p>
-            </IonButton>
-          </div>
+        <div className="text-sm font-medium text-gray-500">
+          Connect to a patient portal to automatic download your most recent
+          data.
         </div>
-        <EpicSelectModal
-          open={open}
-          setOpen={setOpen}
-          onClick={toggleEpicPanel}
-        />
-      </IonContent>
-    </IonPage>
+      </div>
+      <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 sm:px-6 lg:px-8">
+        <ul className="grid grid-cols-1 py-8">
+          {list?.map((item) => (
+            <ConnectionCard
+              key={item._id}
+              item={item}
+              baseUrl={item.get('location')}
+            />
+          ))}
+        </ul>
+        <div className="box-border flex	w-full justify-center align-middle">
+          <a
+            className="bg-primary mb-4 w-full rounded-lg p-4 text-center text-white"
+            href={onpatientLoginUrl}
+          >
+            <p className="font-bold">Log in to OnPatient</p>
+          </a>
+        </div>
+        <div className="mb-4 box-border	flex w-full justify-center align-middle">
+          <button
+            className="bg-primary w-full rounded-lg p-4 text-white"
+            onClick={() => setOpen((x) => !x)}
+          >
+            <p className="font-bold">Log in to Epic MyChart</p>
+          </button>
+        </div>
+      </div>
+      <EpicSelectModal
+        open={open}
+        setOpen={setOpen}
+        onClick={toggleEpicPanel}
+      />
+    </AppPage>
   );
 };
 
