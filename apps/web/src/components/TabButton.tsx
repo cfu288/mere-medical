@@ -16,23 +16,23 @@ export function TabButton({
   return (
     <Link
       to={route}
-      className={`flex w-24 flex-col items-center justify-center p-2 pb-3 md:m-1 md:w-auto md:flex-row md:justify-start md:rounded-md md:p-4 md:pb-2 ${
+      className={`flex w-24 flex-col items-center justify-center p-2 pb-3 text-white md:m-1 md:w-auto md:flex-row md:justify-start md:rounded-md md:p-4 ${
         location === route
-          ? 'border-primary bg-gray-0 border-t-2 md:border-t-0 md:bg-gray-200'
+          ? 'bg-gray-0 md:bg-primary-700 border-primary border-t-2 md:border-t-0'
           : ''
       }`}
     >
       <>
         <p
-          className={`font-xs h-5 w-5 md:mr-4 md:h-8 md:w-8 ${
-            location === route ? 'text-primary-700' : 'text-gray-800'
+          className={`font-xs h-5 w-5 text-base md:mr-4 md:h-8 md:w-8 md:text-white ${
+            location === route ? 'text-primary font-bold' : 'text-slate-800'
           }`}
         >
           {icon}
         </p>
         <p
-          className={`md:font-xs text-[10px] ${
-            location === route ? 'text-primary-700' : 'text-gray-800'
+          className={`pt-1 text-[11px] text-white md:pt-0 md:text-base md:text-white ${
+            location === route ? 'text-primary font-bold' : 'text-slate-800'
           }`}
         >
           {title}

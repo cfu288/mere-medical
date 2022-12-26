@@ -16,7 +16,7 @@ export function Modal({
 }>) {
   return (
     <Transition.Root show={open} as={Fragment} afterLeave={afterLeave} appear>
-      <Dialog as="div" className="relative z-10" onClose={setOpen}>
+      <Dialog as="div" className="relative z-30" onClose={setOpen}>
         {/* Background opacity */}
         <Transition.Child
           as={Fragment}

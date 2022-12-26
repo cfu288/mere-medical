@@ -88,27 +88,16 @@ const TimelineTab: React.FC = () => {
   return (
     <AppPage
       banner={
-        <>
-          <div className="md:hidden">
-            <TimelineBanner
-              text={
-                user?.first_name ? `Welcome back ${user.first_name}!` : 'Hello!'
-              }
-            />
-          </div>
-          <div className="hidden md:block">
-            <GenericBanner
-              text={
-                user?.first_name
-                  ? `Welcome back ${user.first_name}!`
-                  : 'Your medical timeline'
-              }
-            />
-          </div>
-        </>
+        <div className="md:hidden">
+          <TimelineBanner
+            text={
+              user?.first_name ? `Welcome back ${user.first_name}!` : 'Hello!'
+            }
+          />
+        </div>
       }
     >
-      <div className="mx-auto flex max-w-4xl flex-col px-4 pb-12 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-4xl flex-col px-4 pb-12 sm:px-6 md:pt-6 lg:px-8">
         {!list ||
           (Object.entries(list).length === 0 && <EmptyRecordsPlaceholder />)}
         {list &&
@@ -225,8 +214,11 @@ function TimelineYearHeader({ year }: { year: string }) {
       <div className="relative flex flex-row pt-4 pb-1">
         <div className="absolute -top-4 h-4 w-full bg-gradient-to-t from-white"></div>
         <span className="flex grow"></span>
-        <div className="w-11/12 md:w-5/6">
-          <p className="text-xl font-black">{format(parseISO(year), 'yyyy')}</p>
+        <div className="w-full">
+          <p className="text-xl font-black">{`Timeline of ${format(
+            parseISO(year),
+            'yyyy'
+          )}`}</p>
         </div>
         <div className="absolute -bottom-4 h-4 w-full bg-gradient-to-b from-white"></div>
       </div>
