@@ -47,6 +47,7 @@ services:
     environment:
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
       - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
+      - EPIC_CLIENT_ID=${EPIC_CLIENT_ID}
       - PUBLIC_URL=${PUBLIC_URL}
 ```
 
@@ -103,6 +104,7 @@ services:
      --name mere-medical \
      -e ONPATIENT_CLIENT_ID=<> \
      -e ONPATIENT_CLIENT_SECRET=<> \
+     -e EPIC_CLIENT_ID=<> \
      -e PUBLIC_URL=https://localhost:4200 \
      mere-medical:latest
    ```

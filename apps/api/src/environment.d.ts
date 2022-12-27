@@ -4,6 +4,7 @@ declare global {
       NODE_ENV: 'development' | 'production';
       ONPATIENT_CLIENT_SECRET: string | undefined;
       ONPATIENT_CLIENT_ID: string | undefined;
+      EPIC_CLIENT_ID: string | undefined;
       PUBLIC_URL: string;
     }
   }

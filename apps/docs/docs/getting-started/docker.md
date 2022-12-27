@@ -21,6 +21,7 @@ docker run -p 4200:80 -i -t \
   --name mere-medical \
   -e ONPATIENT_CLIENT_ID=<ID_HERE> \
   -e ONPATIENT_CLIENT_SECRET=<SECRET_HERE> \
+  -e EPIC_CLIENT_ID=<ID_HERE> \
   -e PUBLIC_URL=https://localhost:4200 \
   cfu288/mere-medical:latest
 ```
@@ -36,6 +37,7 @@ docker run -p 4200:80 \
   --restart unless-stopped \
   -e ONPATIENT_CLIENT_ID=<ID_HERE> \
   -e ONPATIENT_CLIENT_SECRET=<SECRET_HERE> \
+  -e EPIC_CLIENT_ID=<ID_HERE> \
   -e PUBLIC_URL=https://localhost:4200 \
   cfu288/mere-medical:latest
 ```
@@ -59,6 +61,7 @@ services:
     environment:
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
       - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
+      - EPIC_CLIENT_ID=${EPIC_CLIENT_ID}
       - PUBLIC_URL=${PUBLIC_URL}
 ```
 
@@ -97,6 +100,7 @@ services:
     environment:
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
       - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
+      - EPIC_CLIENT_ID=${EPIC_CLIENT_ID}
       - PUBLIC_URL=https://meremedical.local
 ```
 
