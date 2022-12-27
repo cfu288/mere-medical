@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
   app:
-    image: cfu288/mari-medical:latest
+    image: cfu288/mere-medical:latest
     ports:
       - '4200:80'
     healthcheck:
@@ -24,7 +24,7 @@ services:
       - EPIC_CLIENT_ID=${EPIC_CLIENT_ID}
       - PUBLIC_URL=${PUBLIC_URL}
   docs:
-    image: cfu288/mari-medical-docs:latest
+    image: cfu288/mere-medical-docs:latest
     ports:
       - '4202:80'
     stop_grace_period: 30s

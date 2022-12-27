@@ -11,9 +11,9 @@ services:
     depends_on:
       - app
   app:
-    image: cfu288/mari-medical:latest
-    container_name: mari-medical-app
+    image: cfu288/mere-medical:latest
+    container_name: mere-medical-app
     environment:
       - ONPATIENT_CLIENT_ID=2MkZStehSopenoRwmWalHqJ53Kips0z4zyNjk8in
       - ONPATIENT_CLIENT_SECRET=6SK0rJxRz7xB9Z3HioWxFnOH1kQJIsTuLCcpqbUl3j2qJ6THshLRqBXNI5lE7sKJnxtd860dwslQbrsWbaVINynx3SeUI8dTfOEfBBrT2yqhwaRRsROxczpktHBwZtgE
-      - PUBLIC_URL=https://marimedical.local
+      - PUBLIC_URL=https://meremedical.local

@@ -19,13 +19,13 @@ const features = [
     name: 'Self-Hosted',
     img: '/img/self.svg',
     description:
-      'Mari respects the privacy, security, and integrity of your info at all times. Run it on your own servers at home without worrying about your sensitive data falling into the wrong hands.',
+      'Mere respects the privacy, security, and integrity of your info at all times. Run it on your own servers at home without worrying about your sensitive data falling into the wrong hands.',
   },
   {
     name: 'Offline First',
     img: '/img/offline.svg',
     description:
-      'Mari is offline-first. Everything will be available right on your device for anytime-access – whether you’re connected to the web or not.',
+      'Mere is offline-first. Everything will be available right on your device for anytime-access – whether you’re connected to the web or not.',
   },
   {
     name: 'Reminders',
@@ -37,13 +37,13 @@ const features = [
     name: 'Anonymous & Secure',
     img: '/img/secure.svg',
     description:
-      'With Mari, you are always in control of your data. Stay offline, sync online – the choice is yours.',
+      'With Mere, you are always in control of your data. Stay offline, sync online – the choice is yours.',
   },
   {
     name: 'Free for Everyone',
     img: '/img/free.svg',
     description:
-      'Every patient has the right to control their own healthcare data. That’s why Mari Medical is free to use, deploy, and change.',
+      'Every patient has the right to control their own healthcare data. That’s why Mere Medical is free to use, deploy, and change.',
   },
 ];
 
@@ -65,7 +65,7 @@ export default function Home() {
             async
             defer
             data-website-id="923df902-e3c6-4d55-8c84-51cd5881ed81"
-            src="https://umami.mari.casa/umami.js"
+            src="https://umami.mere.casa/umami.js"
           ></script>
         )}
       </Head>
@@ -91,14 +91,14 @@ export default function Home() {
                     One Place.
                   </h1>
                   <p className="mt-6 text-xl leading-relaxed text-gray-600">
-                    With Mari Medical, you can finally manage all of your
+                    With Mere Medical, you can finally manage all of your
                     medical records from one place via a self-hostable web app.
                   </p>
                 </div>
                 <div className=" mt-5 max-w-md sm:flex sm:justify-start md:mt-8">
                   <div className="rounded-md shadow">
                     <a
-                      href="https://app.marimedical.co"
+                      href="https://app.meremedical.co"
                       className="bg-primary-700 hover:bg-primary-600 flex w-full items-center justify-center rounded-md border border-transparent px-8 py-3 text-base font-medium text-white hover:text-white md:py-4 md:px-10 md:text-lg"
                     >
                       See Demo
@@ -163,7 +163,7 @@ export default function Home() {
                   </p>
                   <p className="text-lg leading-relaxed">
                     However, you shouldn't need to trust 3rd parties with your
-                    medical records. That's why Mari Medical is a self-hosted
+                    medical records. That's why Mere Medical is a self-hosted
                     progressive web app - keep full control of your medical
                     records by deploying it on your own computer or servers!
                   </p>
@@ -182,10 +182,10 @@ export default function Home() {
                   What’s the Solution?
                 </h2>
                 <p className="mt-6 max-w-3xl text-lg leading-relaxed text-white">
-                  Mari Medical is the all-new, open source, self hostable, and
+                  Mere Medical is the all-new, open source, self hostable, and
                   free medical record management web app that connects to
                   multiple patient portals and allows you to upload your own
-                  paper records. With Mari Medical, you can easily manage your
+                  paper records. With Mere Medical, you can easily manage your
                   own medical records under one digital roof.
                 </p>
                 <div className="mb-0 mt-8 flex items-center justify-start rounded-md bg-[#8799D040] p-4">
@@ -341,7 +341,7 @@ export default function Home() {
               ))}
             </div> */}
           <p className="mt-8 text-center text-base text-gray-400">
-            &copy; 2022 Mari Medical. All rights reserved.
+            &copy; 2022 Mere Medical. All rights reserved.
           </p>
         </div>
       </footer>

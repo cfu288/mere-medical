@@ -5,11 +5,11 @@ description: Configuring integration with Epic MyChart patient portal.
 
 # Setting up MyChart Sync
 
-Here we'll talk about how you can get the API access needed for Mari Medical to connect to your MyChart patient portal.
+Here we'll talk about how you can get the API access needed for Mere Medical to connect to your MyChart patient portal.
 
 You'll need to get a client id value from the Epic On FHIR portal. You can do this by [creating an account here](https://fhir.epic.com/Developer/Index).
 
-After you've logged in, go to `My Apps` and create and app. Give the app a name of `Mari Patient App`. Application Audience will be `Patients`. For Incoming API's, search by DSTU2 and select all the endpoints shown below with `left click + shift`. With all the endpoints selected, click on the `>>` button to add them to your selected list.
+After you've logged in, go to `My Apps` and create and app. Give the app a name of `Mere Patient App`. Application Audience will be `Patients`. For Incoming API's, search by DSTU2 and select all the endpoints shown below with `left click + shift`. With all the endpoints selected, click on the `>>` button to add them to your selected list.
 
 Make sure you've only selected the following:
 
@@ -51,7 +51,7 @@ Make sure that the DSTU2 `FamilyMemberHistory.Search` is not selected. This will
 
 Make sure that under the `I accept the terms of use of open.epic.` line that the following line is there: **Client IDs for this app _will_ be automatically downloaded to certain customer systems upon marking it ready for production.** If it does not say _will_, authentication will not work.
 
-You'll now need to set the redirect URI to redirect to Mari Medical. By default this is served at `https://localhost:4200/epic/callback` but depending on what your public url is will generally be in the format `{PUBLIC_URL}/epic/callback`.
+You'll now need to set the redirect URI to redirect to Mere Medical. By default this is served at `https://localhost:4200/epic/callback` but depending on what your public url is will generally be in the format `{PUBLIC_URL}/epic/callback`.
 
 Make sure that `Can Register Dynamic Clients` is selected and that `JWT Bearer grant type` is selected.
 

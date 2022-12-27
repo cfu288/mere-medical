@@ -9,7 +9,7 @@ import { setCacheNameDetails } from 'workbox-core';
 declare const self: Window & ServiceWorkerGlobalScope;
 
 setCacheNameDetails({
-  prefix: 'MariMedical',
+  prefix: 'MereMedical',
   suffix: 'v1',
 });
 

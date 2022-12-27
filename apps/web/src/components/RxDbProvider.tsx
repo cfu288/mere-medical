@@ -46,7 +46,7 @@ type RxDbProviderProps = PropsWithChildren<unknown>;
 
 async function initRxDb() {
   const db = await createRxDatabase<DatabaseCollections>({
-    name: 'mari_db',
+    name: 'mere_db',
     storage: getRxStoragePouch('idb'),
     multiInstance: true,
     ignoreDuplicate: true,
