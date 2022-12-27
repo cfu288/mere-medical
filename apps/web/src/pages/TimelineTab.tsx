@@ -119,19 +119,41 @@ const TimelineTab: React.FC = () => {
       }
     >
       <div className="relative flex">
-        <div className="bg-primary-600 sticky top-0 hidden h-screen min-h-full w-0 flex-col overflow-y-scroll border-gray-200 text-white lg:flex lg:w-36 lg:border-r-2">
-          <p className="bg-primary-600 sticky top-0 p-2 font-bold ">Jump To</p>
-          <ul>
-            {list &&
-              Object.entries(list).map(([key, itemList], index, elements) => (
-                <Link to={`#${format(parseISO(key), 'MMM-dd-yyyy')}`}>
-                  <li className="p-2 hover:underline">
-                    {format(parseISO(key), 'MMM dd, yyyy')}
-                  </li>
-                </Link>
-              ))}
-          </ul>
-        </div>
+        {list && Object.entries(list).length !== 0 ? (
+          <div className="sticky top-0 hidden h-screen min-h-full w-0 flex-col overflow-y-scroll border-gray-200 bg-gray-50 text-slate-800 lg:flex lg:w-36 lg:border-r-2">
+            <p className="sticky top-0 h-10 bg-gray-50 p-2 font-bold">
+              Jump To
+            </p>
+            <ul>
+              {list &&
+                Object.entries(list).map(([key, itemList], index, elements) => (
+                  <>
+                    {index === 0 ? (
+                      <li className="sticky top-10 bg-gray-50 p-2">
+                        {format(parseISO(key), 'yyyy')}
+                      </li>
+                    ) : null}
+                    <Link to={`#${format(parseISO(key), 'MMM-dd-yyyy')}`}>
+                      <li className="p-2 pl-4 text-xs font-thin hover:underline">
+                        {format(parseISO(key), 'MMM dd')}
+                      </li>
+                    </Link>
+                    {
+                      // Only show year header if the next item is not in the same year
+                      elements[index + 1] &&
+                        format(parseISO(elements[index + 1][0]), 'yyyy') !==
+                          format(parseISO(key), 'yyyy') && (
+                          <li className="sticky top-10 bg-gray-50 p-2">
+                            {format(parseISO(elements[index + 1][0]), 'yyyy')}
+                          </li>
+                        )
+                    }
+                  </>
+                ))}
+            </ul>
+          </div>
+        ) : null}
+
         {!list || Object.entries(list).length === 0 ? (
           <div className="mx-auto w-full max-w-4xl gap-x-4 px-4 pt-2 pb-4 sm:px-6 lg:px-8">
             <EmptyRecordsPlaceholder />
