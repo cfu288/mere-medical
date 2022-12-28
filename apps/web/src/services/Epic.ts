@@ -52,6 +52,7 @@ export function getLoginUrl(baseUrl: string): string & Location {
 export enum EpicLocalStorageKeys {
   EPIC_URL = 'epicUrl',
   EPIC_NAME = 'epicName',
+  EPIC_ID = 'epicId',
 }
 
 async function getFHIRResource<T extends FhirResource>(
@@ -414,9 +415,13 @@ async function fetchAttachmentData(
 export async function fetchAccessTokenWithCode(
   code: string,
   epicUrl: string,
-  epicName: string
+  epicName: string,
+  epicId?: string,
+  useProxy = false
 ): Promise<EpicAuthResponse> {
-  const res = await fetch(`${epicUrl}/oauth2/token`, {
+  const defaultUrl = `${epicUrl}/oauth2/token`;
+  const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${epicId}&target=/oauth2/token`;
+  const res = await fetch(useProxy ? proxyUrl : defaultUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -439,11 +444,18 @@ export async function registerDynamicClient({
   res,
   epicUrl,
   epicName,
+  epicId,
+  useProxy = false,
 }: {
   res: EpicAuthResponse;
   epicUrl: string;
   epicName: string;
+  epicId?: string;
+  useProxy?: boolean;
 }): Promise<EpicDynamicRegistrationResponse> {
+  const defaultUrl = `${epicUrl}/oauth2/register`;
+  const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${epicId}&target=/oauth2/register`;
+
   const jsonWebKeySet = await getPublicKey();
   const validJWKS = jsonWebKeySet as JsonWebKeyWKid;
   const request: EpicDynamicRegistrationRequest = {
@@ -461,7 +473,7 @@ export async function registerDynamicClient({
   };
   // We've got a temp access token and public key, now we can register this app as a dynamic client
   try {
-    const registerRes = await fetch(`${epicUrl}/oauth2/register`, {
+    const registerRes = await fetch(useProxy ? proxyUrl : defaultUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -501,8 +513,13 @@ export class DynamicRegistrationError extends Error {
 
 export async function fetchAccessTokenUsingJWT(
   clientId: string,
-  epicUrl: string
+  epicUrl: string,
+  epicId?: string,
+  useProxy = false
 ): Promise<EpicAuthResponseWithClientId> {
+  const defaultUrl = `${epicUrl}/oauth2/token`;
+  const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${epicId}&target=/oauth2/token`;
+
   // We've registered, now we can get another access token with our signed JWT
   const jwtBody = {
     sub: clientId,
@@ -511,7 +528,7 @@ export async function fetchAccessTokenUsingJWT(
     jti: uuidv4(),
   };
   const signedJwt = await signJwt(jwtBody);
-  const tokenRes = await fetch(`${epicUrl}/oauth2/token`, {
+  const tokenRes = await fetch(useProxy ? proxyUrl : defaultUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',

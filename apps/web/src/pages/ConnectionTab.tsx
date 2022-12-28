@@ -6,7 +6,6 @@ import { RxDatabase, RxDocument } from 'rxdb';
 import { GenericBanner } from '../components/GenericBanner';
 import { ConnectionCard } from '../components/ConnectionCard';
 import EpicEndpoints from '../assets/DSTU2Endpoints.json';
-
 import { Combobox } from '@headlessui/react';
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid';
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
@@ -31,9 +30,10 @@ const ConnectionTab: React.FC = () => {
   const db = useRxDb(),
     [list, setList] = useState<RxDocument<ConnectionDocument>[]>(),
     onpatientLoginUrl = OnPatient.getLoginUrl(),
-    setTenantEpicUrl = (s: string & Location, name: string) => {
+    setTenantEpicUrl = (s: string & Location, name: string, id: string) => {
       localStorage.setItem(EpicLocalStorageKeys.EPIC_URL, s);
       localStorage.setItem(EpicLocalStorageKeys.EPIC_NAME, name);
+      localStorage.setItem(EpicLocalStorageKeys.EPIC_ID, id);
     },
     getList = useCallback(() => {
       getConnectionCards(db).then((list) => {
@@ -42,8 +42,8 @@ const ConnectionTab: React.FC = () => {
       });
     }, [db]),
     [open, setOpen] = useState(false),
-    toggleEpicPanel = (s: string & Location, name: string) => {
-      setTenantEpicUrl(s, name);
+    toggleEpicPanel = (s: string & Location, name: string, id: string) => {
+      setTenantEpicUrl(s, name, id);
       setOpen((x) => !x);
       window.location = getLoginUrl(s);
     };
@@ -107,14 +107,7 @@ interface SelectOption {
   url: string & Location;
 }
 
-const items = [
-  ...EpicEndpoints,
-  {
-    id: 'default',
-    name: 'Sandbox',
-    url: 'https://fhir.epic.com/interconnect-fhir-oauth',
-  },
-];
+const items = [...EpicEndpoints];
 
 function getNGrams(s: string, len: number) {
   s = ' '.repeat(len - 1) + s.toLowerCase() + ' '.repeat(len - 1);
@@ -167,9 +160,9 @@ export function EpicSelectModal({
 }: {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  onClick: (s: string & Location, name: string) => void;
+  onClick: (s: string & Location, name: string, id: string) => void;
 }) {
-  const [query, setQuery] = useDebounce('', 300);
+  const [query, setQuery] = useDebounce('', 250);
   const filteredItems = useCallback((s: string) => {
     if (s === '') {
       return items.sort((x, y) => (x.name > y.name ? 1 : -1));
@@ -202,7 +195,7 @@ export function EpicSelectModal({
       />
       <Combobox
         onChange={(s: SelectOption) => {
-          onClick(s.url, s.name);
+          onClick(s.url, s.name, s.id);
           setOpen(false);
         }}
       >

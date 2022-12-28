@@ -28,6 +28,7 @@ async function bootstrap() {
       key: fs.readFileSync(path.join(__dirname, keyPath)),
       cert: fs.readFileSync(path.join(__dirname, certPath)),
       logger: ['error', 'warn', 'debug', 'verbose', 'log'],
+      //TODO: apply this only to proxy routes
       bodyParser: false,
     };
   }

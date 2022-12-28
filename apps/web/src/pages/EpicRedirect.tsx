@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
+import { RxDatabase } from 'rxdb';
 import { AppPage } from '../components/AppPage';
 import { GenericBanner } from '../components/GenericBanner';
-import { useRxDb } from '../components/RxDbProvider';
+import { DatabaseCollections, useRxDb } from '../components/RxDbProvider';
 import { Routes } from '../Routes';
 import {
   DynamicRegistrationError,
+  EpicAuthResponse,
+  EpicDynamicRegistrationResponse,
   EpicLocalStorageKeys,
   fetchAccessTokenUsingJWT,
   fetchAccessTokenWithCode,
@@ -36,57 +39,12 @@ const EpicRedirect: React.FC = () => {
     const searchRequest = new URLSearchParams(window.location.search),
       code = searchRequest.get('code'),
       epicUrl = localStorage.getItem(EpicLocalStorageKeys.EPIC_URL),
-      epicName = localStorage.getItem(EpicLocalStorageKeys.EPIC_NAME);
+      epicName = localStorage.getItem(EpicLocalStorageKeys.EPIC_NAME),
+      epicId = localStorage.getItem(EpicLocalStorageKeys.EPIC_ID);
 
-    if (code && epicUrl && epicName) {
-      fetchAccessTokenWithCode(code, epicUrl, epicName)
-        .then(async (res) => {
-          return registerDynamicClient({
-            res,
-            epicUrl,
-            epicName,
-          });
-        })
-        .catch(async (e: Error | DynamicRegistrationError) => {
-          // If we can't register a dynamic client, we can still use the access token
-          // provided by Epic to pull FHIR resources once and we will need the user to
-          // manually re-sign in every time they want to manually pull their records.
-          if (e instanceof DynamicRegistrationError) {
-            const res = e.data;
-            await saveConnectionToDb({
-              res,
-              epicUrl,
-              epicName,
-              db,
-            });
-            return Promise.reject(
-              new DynamicRegistrationError(
-                'This MyChart instance does not support dynamic client registration, which means we cannot automatically fetch your records in the future. We will still try to pull your records once, but you will need to sign in again to pull them again in the future.',
-                res
-              )
-            );
-          }
-          return Promise.reject(
-            new Error(
-              'There was an error registering you at this MyChart instance'
-            )
-          );
-        })
-        .then(async (res) => {
-          // We've registered, now we can get another access token with our signed JWT
-          return fetchAccessTokenUsingJWT(res.client_id, epicUrl);
-        })
-        .then((res) => {
-          return saveConnectionToDb({
-            res,
-            epicUrl,
-            epicName,
-            db,
-          });
-        })
-        .then(() => {
-          redirectToConnectionsTab(history);
-        })
+    if (code && epicUrl && epicName && epicId) {
+      handleLogin({ code, epicUrl, epicId, epicName, db, history })
+        .then()
         .catch((e) => {
           if (e instanceof DynamicRegistrationError) {
             notifyDispatch({
@@ -98,16 +56,16 @@ const EpicRedirect: React.FC = () => {
           } else {
             notifyDispatch({
               type: 'set_notification',
-              message: `${e.message}`,
+              message: `${(e as Error).message}`,
               variant: 'error',
             });
-            setError(`${e.message}`);
+            setError(`${(e as Error).message}`);
           }
         });
     } else {
       setError('There was a problem trying to sign in');
     }
-  }, [db, db.connection_documents, history]);
+  }, [db, db.connection_documents, history, notifyDispatch]);
 
   return (
     <AppPage
@@ -160,4 +118,181 @@ export default EpicRedirect;
 
 const redirectToConnectionsTab = (history: any) => {
   history.push(Routes.AddConnection);
+};
+
+/**
+ * Handles the login process for Epic, with fallbacks to a proxy server if needed
+ * @param param0
+ * @returns Promise<void>
+ */
+const handleLogin = async ({
+  code,
+  epicUrl,
+  epicId,
+  epicName,
+  db,
+  history,
+}: {
+  code: string;
+  epicUrl: string;
+  epicName: string;
+  epicId: string;
+  db: RxDatabase<DatabaseCollections, any, any>;
+  history: any;
+}) => {
+  let initalAuthResponse: EpicAuthResponse;
+  let dynamicRegResponse: EpicDynamicRegistrationResponse;
+  let jwtAuthResponse: EpicAuthResponse;
+  const enableProxy = true;
+
+  // Attempt initial code swap
+  try {
+    initalAuthResponse = await fetchAccessTokenWithCode(
+      code,
+      epicUrl,
+      epicName,
+      epicId,
+      enableProxy
+    );
+  } catch (e) {
+    initalAuthResponse = await fetchAccessTokenWithCode(
+      code,
+      epicUrl,
+      epicName,
+      epicId,
+      true
+    );
+  }
+
+  // Attempt dynamic registration
+  try {
+    try {
+      dynamicRegResponse = await registerDynamicClient({
+        res: initalAuthResponse,
+        epicUrl,
+        epicName,
+        epicId,
+        useProxy: enableProxy,
+      });
+    } catch (e) {
+      dynamicRegResponse = await registerDynamicClient({
+        res: initalAuthResponse,
+        epicUrl,
+        epicName,
+        epicId,
+        useProxy: true,
+      });
+    }
+  } catch (e) {
+    if (e instanceof DynamicRegistrationError) {
+      const res = e.data;
+      await saveConnectionToDb({
+        res,
+        epicUrl,
+        epicName,
+        db,
+      });
+      return Promise.reject(
+        new DynamicRegistrationError(
+          'This MyChart instance does not support dynamic client registration, which means we cannot automatically fetch your records in the future. We will still try to pull your records once, but you will need to sign in again to pull them again in the future.',
+          res
+        )
+      );
+    }
+    return Promise.reject(
+      new Error('There was an error registering you at this MyChart instance')
+    );
+  }
+
+  // Using DR to fetch new token
+  try {
+    jwtAuthResponse = await fetchAccessTokenUsingJWT(
+      dynamicRegResponse.client_id,
+      epicUrl,
+      epicId,
+      enableProxy
+    );
+  } catch (e) {
+    jwtAuthResponse = await fetchAccessTokenUsingJWT(
+      dynamicRegResponse.client_id,
+      epicUrl,
+      epicId,
+      true
+    );
+  }
+  await saveConnectionToDb({
+    res: jwtAuthResponse,
+    epicUrl,
+    epicName,
+    db,
+  });
+  return await redirectToConnectionsTab(history);
+
+  // fetchAccessTokenWithCode(code, epicUrl, epicName, epicId, false)
+  //   .then(async (res) => {
+  //     return registerDynamicClient({
+  //       res,
+  //       epicUrl,
+  //       epicName,
+  //       epicId,
+  //       useProxy: false,
+  //     });
+  //   })
+  //   .catch(async (e: Error | DynamicRegistrationError) => {
+  //     // If we can't register a dynamic client, we can still use the access token
+  //     // provided by Epic to pull FHIR resources once and we will need the user to
+  //     // manually re-sign in every time they want to manually pull their records.
+  //     if (e instanceof DynamicRegistrationError) {
+  //       const res = e.data;
+  //       await saveConnectionToDb({
+  //         res,
+  //         epicUrl,
+  //         epicName,
+  //         db,
+  //       });
+  //       return Promise.reject(
+  //         new DynamicRegistrationError(
+  //           'This MyChart instance does not support dynamic client registration, which means we cannot automatically fetch your records in the future. We will still try to pull your records once, but you will need to sign in again to pull them again in the future.',
+  //           res
+  //         )
+  //       );
+  //     }
+  //     return Promise.reject(
+  //       new Error(
+  //         'There was an error registering you at this MyChart instance'
+  //       )
+  //     );
+  //   })
+  //   .then(async (res) => {
+  //     // We've registered, now we can get another access token with our signed JWT
+  //     return fetchAccessTokenUsingJWT(res.client_id, epicUrl);
+  //   })
+  //   .then((res) => {
+  //     return saveConnectionToDb({
+  //       res,
+  //       epicUrl,
+  //       epicName,
+  //       db,
+  //     });
+  //   })
+  //   .then(() => {
+  //     redirectToConnectionsTab(history);
+  //   })
+  //   .catch((e) => {
+  //     if (e instanceof DynamicRegistrationError) {
+  //       notifyDispatch({
+  //         type: 'set_notification',
+  //         message: `${e.message}`,
+  //         variant: 'error',
+  //       });
+  //       redirectToConnectionsTab(history);
+  //     } else {
+  //       notifyDispatch({
+  //         type: 'set_notification',
+  //         message: `${e.message}`,
+  //         variant: 'error',
+  //       });
+  //       setError(`${e.message}`);
+  //     }
+  //   });
 };

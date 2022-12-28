@@ -95,7 +95,7 @@ export class ProxyService {
       if (err.code === 'ECONNRESET') return;
 
       this.logger.error(
-        `Error ${err.code} while proxying ${req.method} ${req.url}`
+        `Error ${err.code} while proxying ${req.method} ${req.url}: ${err.message}`
       );
 
       res.writeHead(500, {
