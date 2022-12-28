@@ -2,8 +2,9 @@ import { Logger, Module, ModuleMetadata } from '@nestjs/common';
 import { OnPatientModule } from './onpatient/onpatient.module';
 import { RootController } from './root.controller';
 import { StaticModule } from './static.module';
+import { LoginProxyModule } from './proxy/proxy.module';
 
-const imports: ModuleMetadata['imports'] = [StaticModule];
+const imports: ModuleMetadata['imports'] = [StaticModule, LoginProxyModule];
 
 if (checkIfOnPatientConfigured()) {
   imports.push(

@@ -27,6 +27,8 @@ async function bootstrap() {
     httpsOptions = {
       key: fs.readFileSync(path.join(__dirname, keyPath)),
       cert: fs.readFileSync(path.join(__dirname, certPath)),
+      logger: ['error', 'warn', 'debug', 'verbose', 'log'],
+      bodyParser: false,
     };
   }
 

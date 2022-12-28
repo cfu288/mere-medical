@@ -5,7 +5,10 @@
     "module": "commonjs",
     "types": ["node"],
     "emitDecoratorMetadata": true,
-    "target": "es2022"
+    "target": "es2022",
+    "paths": {
+      "@shared/epic": ["../../libs/shared/src/lib/Epic.ts"]
+    }
   },
   "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],
   "include": ["**/*.ts"]
