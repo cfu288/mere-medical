@@ -47,7 +47,7 @@ const OnPatientRedirect: React.FC = () => {
         .catch((e: unknown) => {
           notifyDispatch({
             type: 'set_notification',
-            message: `Error adding connection: ${e.message}`,
+            message: `Error adding connection: ${(e as Error).message}`,
             variant: 'error',
           });
           history.push(Routes.AddConnection);

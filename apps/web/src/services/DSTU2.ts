@@ -12,13 +12,14 @@ import {
   Practitioner,
   DocumentReference,
   CarePlan,
+  FhirResource,
 } from 'fhir/r2';
 import { ConnectionDocument } from '../models/ConnectionDocument';
 import { v4 as uuidv4 } from 'uuid';
 import { ClinicalDocument } from '../models/ClinicalDocument';
 import { UserDocument } from '../models/UserDocument';
 
-function parseId<T>(bundleItem: BundleEntry<T>) {
+function parseId<T = FhirResource>(bundleItem: BundleEntry<T>) {
   // OnPatient returns an array instead of a string, not to spec
   const isArrayId =
     Array.isArray(bundleItem.fullUrl as string | string[]) &&
@@ -34,8 +35,8 @@ export namespace DSTU2 {
   export function mapProcedureToClinicalDocument(
     bundleItem: BundleEntry<Procedure>,
     connectionDocument: ConnectionDocument
-  ): ClinicalDocument<Procedure> {
-    const cd: ClinicalDocument = {
+  ): ClinicalDocument<BundleEntry<Procedure>> {
+    const cd: ClinicalDocument<BundleEntry<Procedure>> = {
       _id: uuidv4(),
       source_record: connectionDocument._id,
       data_record: {
@@ -58,7 +59,7 @@ export namespace DSTU2 {
     bundleItem: BundleEntry<MedicationStatement>,
     connectionDocument: ConnectionDocument
   ) {
-    const cd: ClinicalDocument = {
+    const cd: ClinicalDocument<BundleEntry<MedicationStatement>> = {
       _id: uuidv4(),
       source_record: connectionDocument._id,
       data_record: {
@@ -83,7 +84,7 @@ export namespace DSTU2 {
     bundleItem: BundleEntry<Observation>,
     connectionDocument: ConnectionDocument
   ) {
-    const cd: ClinicalDocument = {
+    const cd: ClinicalDocument<BundleEntry<Observation>> = {
       _id: uuidv4(),
       source_record: connectionDocument._id,
       data_record: {
@@ -106,7 +107,7 @@ export namespace DSTU2 {
     bundleItem: BundleEntry<DiagnosticReport>,
     connectionDocument: ConnectionDocument
   ) {
-    const cd: ClinicalDocument = {
+    const cd: ClinicalDocument<BundleEntry<DiagnosticReport>> = {
       _id: uuidv4(),
       source_record: connectionDocument._id,
       data_record: {
@@ -140,7 +141,7 @@ export namespace DSTU2 {
     bundleItem: BundleEntry<Patient>,
     connectionDocument: ConnectionDocument
   ) {
-    const cd: ClinicalDocument = {
+    const cd: ClinicalDocument<BundleEntry<Patient>> = {
       _id: uuidv4(),
       source_record: connectionDocument._id,
       data_record: {
@@ -162,7 +163,7 @@ export namespace DSTU2 {
     bundleItem: BundleEntry<Immunization>,
     connectionDocument: ConnectionDocument
   ) {
-    const cd: ClinicalDocument = {
+    const cd: ClinicalDocument<BundleEntry<Immunization>> = {
       _id: uuidv4(),
       source_record: connectionDocument._id,
       data_record: {
@@ -185,7 +186,7 @@ export namespace DSTU2 {
     bundleItem: BundleEntry<Condition>,
     connectionDocument: ConnectionDocument
   ) {
-    const cd: ClinicalDocument = {
+    const cd: ClinicalDocument<BundleEntry<Condition>> = {
       _id: uuidv4(),
       source_record: connectionDocument._id,
       data_record: {
@@ -208,7 +209,7 @@ export namespace DSTU2 {
     bundleItem: BundleEntry<AllergyIntolerance>,
     connectionDocument: ConnectionDocument
   ) {
-    const cd: ClinicalDocument = {
+    const cd: ClinicalDocument<BundleEntry<AllergyIntolerance>> = {
       _id: uuidv4(),
       source_record: connectionDocument._id,
       data_record: {
@@ -232,7 +233,7 @@ export namespace DSTU2 {
     bundleItem: BundleEntry<Practitioner>,
     connectionDocument: ConnectionDocument
   ) {
-    const cd: ClinicalDocument = {
+    const cd: ClinicalDocument<BundleEntry<Practitioner>> = {
       _id: uuidv4(),
       source_record: connectionDocument._id,
       data_record: {
@@ -255,7 +256,7 @@ export namespace DSTU2 {
     bundleItem: BundleEntry<DocumentReference>,
     connectionDocument: ConnectionDocument
   ) {
-    const cd: ClinicalDocument = {
+    const cd: ClinicalDocument<BundleEntry<DocumentReference>> = {
       _id: uuidv4(),
       source_record: connectionDocument._id,
       data_record: {
@@ -280,7 +281,7 @@ export namespace DSTU2 {
     bundleItem: BundleEntry<CarePlan>,
     connectionDocument: ConnectionDocument
   ) {
-    const cd: ClinicalDocument = {
+    const cd: ClinicalDocument<BundleEntry<CarePlan>> = {
       _id: uuidv4(),
       source_record: connectionDocument._id,
       data_record: {

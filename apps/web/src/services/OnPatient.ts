@@ -52,7 +52,7 @@ async function syncFHIRResource<T extends FhirResource>(
   connectionDocument: RxDocument<ConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
-  mapper: (proc: BundleEntry<T>) => ClinicalDocument<T>
+  mapper: (proc: BundleEntry<T>) => ClinicalDocument<BundleEntry<T>>
 ) {
   const fhirResources = await getFHIRResource<T>(
     connectionDocument,

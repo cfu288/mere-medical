@@ -261,7 +261,7 @@ function ResultItem({
       value={{ id, name, url }}
       className={({ active }) =>
         classNames(
-          active && 'bg-gray-100',
+          active ? 'bg-gray-100' : '',
           'mb-2 flex cursor-default select-none rounded-xl p-3'
         )
       }
