@@ -4,7 +4,6 @@
 .production.env
 /dev-stack
 
-config.json
 .vscode/
 
 # compiled output
