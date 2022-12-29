@@ -4,6 +4,8 @@
 .production.env
 /dev-stack
 
+config.json
+
 # compiled output
 /dist
 /tmp
