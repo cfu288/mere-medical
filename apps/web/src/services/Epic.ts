@@ -59,18 +59,27 @@ async function getFHIRResource<T extends FhirResource>(
   baseUrl: string,
   connectionDocument: RxDocument<ConnectionDocument>,
   fhirResourceUrl: string,
-  params?: Record<string, string>
+  params?: Record<string, string>,
+  useProxy = false
 ): Promise<BundleEntry<T>[]> {
-  const res = await fetch(
-    `${getDSTU2Url(baseUrl)}/${fhirResourceUrl}?_format=${encodeURIComponent(
+  const epicId = connectionDocument.get('tenant_id');
+  const defaultUrl = `${getDSTU2Url(
+      baseUrl
+    )}/${fhirResourceUrl}?_format=${encodeURIComponent(
       `application/fhir+json`
     )}&${new URLSearchParams(params)}`,
-    {
-      headers: {
-        Authorization: `Bearer ${connectionDocument.get('access_token')}`,
-      },
-    }
-  )
+    proxyUrl = `${
+      Config.PUBLIC_URL
+    }/api/proxy?serviceId=${epicId}&target=${`${encodeURIComponent(
+      `/api/FHIR/DSTU2/${fhirResourceUrl}?${new URLSearchParams(params)}`
+    )}`}`;
+
+  const res = await fetch(useProxy ? proxyUrl : defaultUrl, {
+    headers: {
+      Authorization: `Bearer ${connectionDocument.get('access_token')}`,
+      Accept: 'application/fhir+json',
+    },
+  })
     .then((res) => res.json())
     .then((res: Bundle) => res);
 
@@ -98,12 +107,23 @@ async function syncFHIRResource<T extends FhirResource>(
   mapper: (proc: BundleEntry<T>) => ClinicalDocument<BundleEntry<T>>,
   params: Record<string, string>
 ) {
-  const resc = await getFHIRResource<T>(
-    baseUrl,
-    connectionDocument,
-    fhirResourceUrl,
-    params
-  );
+  let resc;
+  try {
+    resc = await getFHIRResource<T>(
+      baseUrl,
+      connectionDocument,
+      fhirResourceUrl,
+      params
+    );
+  } catch (e) {
+    resc = await getFHIRResource<T>(
+      baseUrl,
+      connectionDocument,
+      fhirResourceUrl,
+      params,
+      true
+    );
+  }
   const cds = resc
     .filter(
       (i) =>
@@ -564,11 +584,13 @@ export async function saveConnectionToDb({
   epicUrl,
   epicName,
   db,
+  epicId,
 }: {
   res: EpicAuthResponseWithClientId | EpicAuthResponse;
   epicUrl: string;
   epicName: string;
   db: RxDatabase<DatabaseCollections>;
+  epicId: string;
 }) {
   const doc = await getConnectionCardByUrl(epicUrl, db);
   return new Promise((resolve, reject) => {
@@ -584,6 +606,7 @@ export async function saveConnectionToDb({
                 expires_in: nowInSeconds + res.expires_in,
                 scope: res.scope,
                 patient: res.patient,
+                tenant_id: epicId,
               },
             })
             .then(() => {
@@ -611,6 +634,7 @@ export async function saveConnectionToDb({
           scope: res.scope,
           patient: res.patient,
           client_id: (res as EpicAuthResponseWithClientId)?.client_id,
+          tenant_id: epicId,
         };
         try {
           db.connection_documents.insert(dbentry).then(() => {

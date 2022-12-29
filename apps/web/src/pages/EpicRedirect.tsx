@@ -144,7 +144,7 @@ const handleLogin = async ({
   let initalAuthResponse: EpicAuthResponse;
   let dynamicRegResponse: EpicDynamicRegistrationResponse;
   let jwtAuthResponse: EpicAuthResponse;
-  const enableProxy = true;
+  const enableProxy = false;
 
   // Attempt initial code swap
   try {
@@ -192,6 +192,7 @@ const handleLogin = async ({
         epicUrl,
         epicName,
         db,
+        epicId,
       });
       return Promise.reject(
         new DynamicRegistrationError(
@@ -226,74 +227,7 @@ const handleLogin = async ({
     epicUrl,
     epicName,
     db,
+    epicId,
   });
   return await redirectToConnectionsTab(history);
-
-  // fetchAccessTokenWithCode(code, epicUrl, epicName, epicId, false)
-  //   .then(async (res) => {
-  //     return registerDynamicClient({
-  //       res,
-  //       epicUrl,
-  //       epicName,
-  //       epicId,
-  //       useProxy: false,
-  //     });
-  //   })
-  //   .catch(async (e: Error | DynamicRegistrationError) => {
-  //     // If we can't register a dynamic client, we can still use the access token
-  //     // provided by Epic to pull FHIR resources once and we will need the user to
-  //     // manually re-sign in every time they want to manually pull their records.
-  //     if (e instanceof DynamicRegistrationError) {
-  //       const res = e.data;
-  //       await saveConnectionToDb({
-  //         res,
-  //         epicUrl,
-  //         epicName,
-  //         db,
-  //       });
-  //       return Promise.reject(
-  //         new DynamicRegistrationError(
-  //           'This MyChart instance does not support dynamic client registration, which means we cannot automatically fetch your records in the future. We will still try to pull your records once, but you will need to sign in again to pull them again in the future.',
-  //           res
-  //         )
-  //       );
-  //     }
-  //     return Promise.reject(
-  //       new Error(
-  //         'There was an error registering you at this MyChart instance'
-  //       )
-  //     );
-  //   })
-  //   .then(async (res) => {
-  //     // We've registered, now we can get another access token with our signed JWT
-  //     return fetchAccessTokenUsingJWT(res.client_id, epicUrl);
-  //   })
-  //   .then((res) => {
-  //     return saveConnectionToDb({
-  //       res,
-  //       epicUrl,
-  //       epicName,
-  //       db,
-  //     });
-  //   })
-  //   .then(() => {
-  //     redirectToConnectionsTab(history);
-  //   })
-  //   .catch((e) => {
-  //     if (e instanceof DynamicRegistrationError) {
-  //       notifyDispatch({
-  //         type: 'set_notification',
-  //         message: `${e.message}`,
-  //         variant: 'error',
-  //       });
-  //       redirectToConnectionsTab(history);
-  //     } else {
-  //       notifyDispatch({
-  //         type: 'set_notification',
-  //         message: `${e.message}`,
-  //         variant: 'error',
-  //       });
-  //       setError(`${e.message}`);
-  //     }
-  //   });
 };

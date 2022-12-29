@@ -64,17 +64,30 @@ async function refreshConnectionTokenIfNeeded(
     try {
       const epicUrl = connectionDocument.get('location'),
         epicName = connectionDocument.get('name'),
-        clientId = connectionDocument.get('client_id');
+        clientId = connectionDocument.get('client_id'),
+        epicId = connectionDocument.get('tenant_id');
 
-      const access_token_data = await Epic.fetchAccessTokenUsingJWT(
-        clientId,
-        epicUrl
-      );
+      let access_token_data;
+      try {
+        access_token_data = await Epic.fetchAccessTokenUsingJWT(
+          clientId,
+          epicUrl
+        );
+      } catch (e) {
+        access_token_data = await Epic.fetchAccessTokenUsingJWT(
+          clientId,
+          epicUrl,
+          epicId,
+          true
+        );
+      }
+
       return await Epic.saveConnectionToDb({
         res: access_token_data,
         epicUrl,
         epicName,
         db,
+        epicId,
       });
     } catch (e) {
       console.error(e);

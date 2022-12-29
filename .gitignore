@@ -5,6 +5,7 @@
 /dev-stack
 
 config.json
+.vscode/
 
 # compiled output
 /dist

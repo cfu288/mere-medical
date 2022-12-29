@@ -12,7 +12,6 @@ export class ProxyConfigService implements ProxyModuleOptionsFactory {
 
   createModuleConfig(): ProxyModuleOptions {
     const services = EpicDSTU2TenantEndpoints;
-    Logger.log(services);
 
     return {
       services,

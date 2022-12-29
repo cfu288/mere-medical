@@ -1,6 +1,7 @@
 import { Transition } from '@headlessui/react';
 import { CheckCircleIcon, XMarkIcon } from '@heroicons/react/20/solid';
 import * as React from 'react';
+import { useEffect } from 'react';
 
 type NotificationType = 'error' | 'success';
 
@@ -49,6 +50,13 @@ function NotificationRenderer(
   props: React.PropsWithChildren<{ data: NotificationData }>
 ) {
   const dispatch = useNotificationDispatch();
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      dispatch({ type: 'hide_notification' });
+    }, 8000);
+    return () => clearTimeout(timeout);
+  }, [dispatch, props.data.showNotification]);
 
   return (
     <>
