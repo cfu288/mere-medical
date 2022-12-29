@@ -15,9 +15,7 @@ import { ModalHeader } from '../components/ModalHeader';
 import { EpicLocalStorageKeys, getLoginUrl } from '../services/Epic';
 import { AppPage } from '../components/AppPage';
 
-async function getConnectionCards(
-  db: RxDatabase<DatabaseCollections, any, any>
-) {
+async function getConnectionCards(db: RxDatabase<DatabaseCollections>) {
   return db.connection_documents
     .find({
       selector: {},
@@ -149,7 +147,7 @@ function stringSimilarity(str1: string, str2: string, gramSize = 2) {
   return hits / total;
 }
 
-function classNames(...classes: any) {
+function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ');
 }
 

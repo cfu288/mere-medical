@@ -21,7 +21,7 @@ export function useConnectionDoc(id: string) {
 
 async function getConnectionCards(
   id: string,
-  db: RxDatabase<DatabaseCollections, any, any>
+  db: RxDatabase<DatabaseCollections>
 ) {
   return db.connection_documents
     .findOne({

@@ -16,6 +16,7 @@ import {
   saveConnectionToDb,
 } from '../services/Epic';
 import { useNotificationDispatch } from '../services/NotificationContext';
+import { History, LocationState } from 'history';
 
 /**
  * Handles the redirect from Epic's authorization server. If possible, it
@@ -116,7 +117,7 @@ const EpicRedirect: React.FC = () => {
 
 export default EpicRedirect;
 
-const redirectToConnectionsTab = (history: any) => {
+const redirectToConnectionsTab = (history: History<LocationState>) => {
   history.push(Routes.AddConnection);
 };
 
@@ -137,8 +138,8 @@ const handleLogin = async ({
   epicUrl: string;
   epicName: string;
   epicId: string;
-  db: RxDatabase<DatabaseCollections, any, any>;
-  history: any;
+  db: RxDatabase<DatabaseCollections>;
+  history: History<LocationState>;
 }) => {
   let initalAuthResponse: EpicAuthResponse;
   let dynamicRegResponse: EpicDynamicRegistrationResponse;

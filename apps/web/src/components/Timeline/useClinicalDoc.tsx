@@ -28,7 +28,7 @@ export function useClinicalDoc(id?: string) {
 
 async function getClinicalDocWithMetaId(
   id: string,
-  db: RxDatabase<DatabaseCollections, any, any>
+  db: RxDatabase<DatabaseCollections>
 ) {
   if (!id) {
     return [];

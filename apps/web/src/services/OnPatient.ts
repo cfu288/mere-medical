@@ -1,5 +1,3 @@
-/* eslint-disable no-inner-declarations */
-/* eslint-disable @typescript-eslint/no-namespace */
 import {
   Bundle,
   BundleEntry,
@@ -89,7 +87,7 @@ async function syncFHIRResource<T extends FhirResource>(
 export async function syncAllRecords(
   connectionDocument: RxDocument<ConnectionDocument>,
   db: RxDatabase<DatabaseCollections>
-): Promise<any[][]> {
+): Promise<unknown[][]> {
   const newCd = connectionDocument.toMutableJSON();
   newCd.last_refreshed = new Date().toISOString();
   const immMapper = (dr: BundleEntry<Immunization>) =>

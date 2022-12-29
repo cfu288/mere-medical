@@ -1,6 +1,6 @@
 import { BaseDocument } from './BaseDocument';
 
-export interface ClinicalDocument<T = any> extends BaseDocument {
+export interface ClinicalDocument<T = unknown> extends BaseDocument {
   source_record: string;
   data_record: {
     raw: T;

@@ -16,7 +16,7 @@ import { MedicationsListCard } from '../components/Summary/MedicationsListCard';
 import { ConditionsListCard } from '../components/Summary/ConditionsListCard';
 import { ImmunizationListCard } from '../components/Summary/ImmunizationListCard';
 import { CarePlanListCard } from '../components/Summary/CarePlanListCard';
-import { AllerrgyIntoleranceListCard } from '../components/Summary/AllerrgyIntoleranceListCard';
+import { AllergyIntoleranceListCard } from '../components/Summary/AllerrgyIntoleranceListCard';
 import { EmptyRecordsPlaceholder } from '../models/EmptyRecordsPlaceholder';
 import { AppPage } from '../components/AppPage';
 
@@ -259,7 +259,7 @@ const SummaryTab: React.FC = () => {
         <ConditionsListCard items={cond} />
         <ImmunizationListCard items={imm} />
         <CarePlanListCard items={careplan} />
-        <AllerrgyIntoleranceListCard items={allergy} />
+        <AllergyIntoleranceListCard items={allergy} />
       </div>
     </AppPage>
   );

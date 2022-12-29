@@ -102,7 +102,6 @@ export function ShowDocumentResultsExpandable({
 }) {
   const cd = useConnectionDoc(item.source_record),
     [ccda, setCCDA] = useState<CCDAParsed | undefined>(undefined),
-    toggleOpen = () => setExpanded((x) => !x),
     attachmentUrl = item.data_record.raw.resource?.content?.[0].attachment.url,
     attachment = useClinicalDoc(attachmentUrl);
 

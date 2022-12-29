@@ -5,7 +5,7 @@ import { AllergyIntolerance, BundleEntry } from 'fhir/r2';
 import { Fragment } from 'react';
 import { ClinicalDocument } from '../../models/ClinicalDocument';
 
-export function AllerrgyIntoleranceListCard({
+export function AllergyIntoleranceListCard({
   items,
 }: {
   items: ClinicalDocument<BundleEntry<AllergyIntolerance>>[];

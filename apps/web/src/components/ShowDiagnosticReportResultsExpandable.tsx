@@ -105,10 +105,6 @@ export function ShowDiagnosticReportResultsExpandable({
   );
 }
 
-function getCommentString(item: RxDocument<ClinicalDocument<Observation>>) {
-  return (item.get('data_record.raw').resource as Observation)?.comments;
-}
-
 function getReferenceRangeString(
   item: RxDocument<ClinicalDocument<Observation>>
 ) {

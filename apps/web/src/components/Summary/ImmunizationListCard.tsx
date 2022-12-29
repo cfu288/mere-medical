@@ -1,8 +1,7 @@
 import { Disclosure } from '@headlessui/react';
-import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/20/solid';
+import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, Immunization } from 'fhir/r2';
-import { title } from 'process';
 import { ClinicalDocument } from '../../models/ClinicalDocument';
 
 function getVaccineCode(item: ClinicalDocument<BundleEntry<Immunization>>) {

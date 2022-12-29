@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useHistory } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateConnectionDocument } from '../models/ConnectionDocument';
@@ -20,50 +20,46 @@ export interface OnPatientAuthResponse {
 const OnPatientRedirect: React.FC = () => {
   const history = useHistory(),
     db = useRxDb(),
-    [count, setCount] = useState(0),
     notifyDispatch = useNotificationDispatch();
 
   useEffect(() => {
-    if (count === 0) {
-      setCount((count) => count + 1);
-      const searchRequest = new URLSearchParams(window.location.search),
-        accessToken = searchRequest.get('accessToken'),
-        refreshToken = searchRequest.get('refreshToken'),
-        expiresIn = searchRequest.get('expiresIn');
+    const searchRequest = new URLSearchParams(window.location.search),
+      accessToken = searchRequest.get('accessToken'),
+      refreshToken = searchRequest.get('refreshToken'),
+      expiresIn = searchRequest.get('expiresIn');
 
-      if (accessToken && refreshToken && expiresIn) {
-        const nowInSeconds = Math.floor(Date.now() / 1000);
-        const dbentry: Omit<CreateConnectionDocument, 'patient' | 'scope'> = {
-          _id: uuidv4(),
-          source: 'onpatient',
-          location: 'https://onpatient.com',
-          name: 'OnPatient',
-          access_token: accessToken,
-          refresh_token: refreshToken,
-          expires_in: nowInSeconds + parseInt(expiresIn),
-        };
-        db.connection_documents
-          .insert(dbentry)
-          .then(() => {
-            history.push(Routes.AddConnection);
-          })
-          .catch((e: any) => {
-            notifyDispatch({
-              type: 'set_notification',
-              message: `Error adding connection: ${e.message}`,
-              variant: 'error',
-            });
-            history.push(Routes.AddConnection);
+    if (accessToken && refreshToken && expiresIn) {
+      const nowInSeconds = Math.floor(Date.now() / 1000);
+      const dbentry: Omit<CreateConnectionDocument, 'patient' | 'scope'> = {
+        _id: uuidv4(),
+        source: 'onpatient',
+        location: 'https://onpatient.com',
+        name: 'OnPatient',
+        access_token: accessToken,
+        refresh_token: refreshToken,
+        expires_in: nowInSeconds + parseInt(expiresIn),
+      };
+      db.connection_documents
+        .insert(dbentry)
+        .then(() => {
+          history.push(Routes.AddConnection);
+        })
+        .catch((e: unknown) => {
+          notifyDispatch({
+            type: 'set_notification',
+            message: `Error adding connection: ${e.message}`,
+            variant: 'error',
           });
-      } else {
-        notifyDispatch({
-          type: 'set_notification',
-          message: `Error completing authentication: no access token provided`,
-          variant: 'error',
+          history.push(Routes.AddConnection);
         });
-      }
+    } else {
+      notifyDispatch({
+        type: 'set_notification',
+        message: `Error completing authentication: no access token provided`,
+        variant: 'error',
+      });
     }
-  }, [db.connection_documents, history]);
+  }, [db.connection_documents, history, notifyDispatch]);
 
   return (
     <AppPage banner={<GenericBanner text="Authenticated! Redirecting" />}>

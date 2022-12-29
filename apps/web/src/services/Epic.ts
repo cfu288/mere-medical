@@ -59,7 +59,7 @@ async function getFHIRResource<T extends FhirResource>(
   baseUrl: string,
   connectionDocument: RxDocument<ConnectionDocument>,
   fhirResourceUrl: string,
-  params?: any
+  params?: Record<string, string>
 ): Promise<BundleEntry<T>[]> {
   const res = await fetch(
     `${getDSTU2Url(baseUrl)}/${fhirResourceUrl}?_format=${encodeURIComponent(
@@ -139,7 +139,7 @@ export async function syncAllRecords(
   baseUrl: string,
   connectionDocument: RxDocument<ConnectionDocument>,
   db: RxDatabase<DatabaseCollections>
-): Promise<any[][]> {
+): Promise<unknown[][]> {
   const newCd = connectionDocument.toMutableJSON();
   newCd.last_refreshed = new Date().toISOString();
   const procMapper = (proc: BundleEntry<Procedure>) =>
@@ -549,7 +549,7 @@ export async function fetchAccessTokenUsingJWT(
 
 export async function getConnectionCardByUrl(
   url: string,
-  db: RxDatabase<DatabaseCollections, any, any>
+  db: RxDatabase<DatabaseCollections>
 ) {
   return db.connection_documents
     .findOne({
@@ -568,7 +568,7 @@ export async function saveConnectionToDb({
   res: EpicAuthResponseWithClientId | EpicAuthResponse;
   epicUrl: string;
   epicName: string;
-  db: RxDatabase<DatabaseCollections, any, any>;
+  db: RxDatabase<DatabaseCollections>;
 }) {
   const doc = await getConnectionCardByUrl(epicUrl, db);
   return new Promise((resolve, reject) => {

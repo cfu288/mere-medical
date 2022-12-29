@@ -6,7 +6,6 @@ import {
   arrayBufferToBase64UrlString,
   base64UrlStringToArrayBuffer,
   verifyPayload,
-  getPublicKey,
 } from './WebCrypto';
 
 export interface JsonWebKeyWKid extends JsonWebKey {
