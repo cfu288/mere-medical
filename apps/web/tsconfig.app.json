@@ -15,7 +15,8 @@
     "./src/components/Timeline/useConnectionDoc.tsx",
     "src/components/AppPage.tsx",
     "src/components/TabWrapper.tsx",
-    "src/components/TabButton.tsx"
+    "src/components/TabButton.tsx",
+    "src/components/ErrorBoundary.tsx"
   ],
   "exclude": [
     "jest.config.ts",

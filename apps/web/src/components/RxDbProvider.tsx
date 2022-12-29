@@ -5,7 +5,7 @@ import React, {
   useState,
 } from 'react';
 import logo from '../assets/logo.svg';
-import { addRxPlugin, createRxDatabase, RxDatabase } from 'rxdb';
+import { addRxPlugin, createRxDatabase, RxDatabase, RxError } from 'rxdb';
 import { Transition } from '@headlessui/react';
 import { getRxStoragePouch, addPouchPlugin } from 'rxdb/plugins/pouchdb';
 import plugin from 'pouchdb-adapter-idb';
@@ -19,6 +19,7 @@ import {
 } from '../models/ClinicalDocumentCollection';
 import { RxDBDevModePlugin } from 'rxdb/plugins/dev-mode';
 import { RxDBMigrationPlugin } from 'rxdb/plugins/migration';
+import { RxDBJsonDumpPlugin } from 'rxdb/plugins/json-dump';
 import {
   UserDocumentCollection,
   UserDocumentSchema,
@@ -29,6 +30,7 @@ import { RxDBUpdatePlugin } from 'rxdb/plugins/update';
 addRxPlugin(RxDBUpdatePlugin);
 addRxPlugin(RxDBMigrationPlugin);
 addRxPlugin(RxDBDevModePlugin);
+addRxPlugin(RxDBJsonDumpPlugin);
 
 addPouchPlugin(plugin);
 
@@ -51,7 +53,6 @@ async function initRxDb() {
     multiInstance: true,
     ignoreDuplicate: true,
   });
-
   await db.addCollections<DatabaseCollections>({
     clinical_documents: {
       schema: ClinicalDocumentSchema,
