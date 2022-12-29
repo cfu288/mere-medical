@@ -65,7 +65,7 @@ export default function Home() {
             async
             defer
             data-website-id="923df902-e3c6-4d55-8c84-51cd5881ed81"
-            src="https://umami.mere.casa/umami.js"
+            src="https://umami.mari.casa/umami.js"
           ></script>
         )}
       </Head>
