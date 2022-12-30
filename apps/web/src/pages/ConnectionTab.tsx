@@ -15,13 +15,18 @@ import { ModalHeader } from '../components/ModalHeader';
 import { EpicLocalStorageKeys, getLoginUrl } from '../services/Epic';
 import { AppPage } from '../components/AppPage';
 
-async function getConnectionCards(db: RxDatabase<DatabaseCollections>) {
+async function getConnectionCards(
+  db: RxDatabase<DatabaseCollections>,
+  handleChange: (item: RxDocument<ConnectionDocument>[] | undefined) => void
+) {
   return db.connection_documents
     .find({
       selector: {},
     })
-    .exec()
-    .then((list) => list as unknown as RxDocument<ConnectionDocument>[]);
+    .$.subscribe((list) =>
+      handleChange(list as unknown as RxDocument<ConnectionDocument>[])
+    );
+  // .then((list) => list as unknown as RxDocument<ConnectionDocument>[]);
 }
 
 const ConnectionTab: React.FC = () => {
@@ -34,10 +39,7 @@ const ConnectionTab: React.FC = () => {
       localStorage.setItem(EpicLocalStorageKeys.EPIC_ID, id);
     },
     getList = useCallback(() => {
-      getConnectionCards(db).then((list) => {
-        console.log(list.map((x) => x.toJSON()));
-        setList(list as unknown as RxDocument<ConnectionDocument>[]);
-      });
+      getConnectionCards(db, setList);
     }, [db]),
     [open, setOpen] = useState(false),
     toggleEpicPanel = (s: string & Location, name: string, id: string) => {

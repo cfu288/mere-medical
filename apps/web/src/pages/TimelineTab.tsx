@@ -279,10 +279,12 @@ function JumpToPanel({
 }) {
   return (
     <div className="sticky top-0 hidden h-screen min-h-full w-0 flex-col overflow-y-scroll border-gray-200 bg-gray-50 text-slate-800 lg:flex lg:w-auto lg:border-r-2">
-      <p className="sticky top-0 h-10 bg-gray-50 p-2 font-bold">Jump To</p>
+      <p className="sticky top-0 h-10 whitespace-nowrap bg-gray-50 p-2 font-bold">
+        Jump To
+      </p>
       <ul>
         {list &&
-          Object.entries(list).map(([key, itemList], index, elements) => (
+          Object.entries(list).map(([key], index, elements) => (
             <>
               {index === 0 ? (
                 <li className="sticky top-10 bg-gray-50 p-1 pl-2">

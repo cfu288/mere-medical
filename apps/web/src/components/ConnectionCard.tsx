@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react';
-import { BaseDocument } from '../models/BaseDocument';
 import { ConnectionDocument } from '../models/ConnectionDocument';
 import { DatabaseCollections, useRxDb } from '../components/RxDbProvider';
 import onpatientLogo from '../img/onpatient_logo.jpeg';
@@ -104,10 +103,35 @@ export function ConnectionCard({
   baseUrl: string;
 }) {
   const db = useRxDb(),
-    removeDocument = (document: BaseDocument) => {
-      db.remove().then(() => {
-        console.log('db deleted');
-      });
+    [deleting, setDeleting] = useState(false),
+    removeDocument = (document: RxDocument<ConnectionDocument>) => {
+      setDeleting(true);
+      const connectionId = document.get('_id');
+      db.clinical_documents
+        .find({
+          selector: {
+            source_record: connectionId,
+          },
+        })
+        .remove()
+        .then(() => {
+          document.remove();
+          setDeleting(false);
+          notifyDispatch({
+            type: 'set_notification',
+            message: `Successfully removed connection`,
+            variant: 'success',
+          });
+        })
+        .catch((e) => {
+          console.error(e);
+          setDeleting(false);
+          notifyDispatch({
+            type: 'set_notification',
+            message: `Error removing connection: ${e.message}`,
+            variant: 'error',
+          });
+        });
     },
     [syncing, setSyncing] = useState(false),
     notifyDispatch = useNotificationDispatch(),
@@ -175,11 +199,17 @@ export function ConnectionCard({
       <div>
         <div className="-mt-px flex divide-x divide-gray-200">
           <button
-            className="flex w-0 flex-1"
+            disabled={deleting}
+            className={`flex w-0 flex-1 ${
+              deleting ? 'disabled:bg-slate-50' : ''
+            }`}
             onClick={() => removeDocument(item)}
           >
             <div className="relative -mr-px inline-flex w-0 flex-1 items-center justify-center rounded-bl-lg border border-transparent py-4 text-sm font-medium text-gray-700 hover:text-gray-500">
-              <span className="ml-3">Disconnect Source</span>
+              Disconnect Source
+              <span className="ml-3">
+                {deleting ? <LoadingSpinner /> : null}
+              </span>
             </div>
           </button>
           <button

@@ -17,6 +17,7 @@ export const clinicalDocumentSchemaLiteral = {
     },
     source_record: {
       type: 'string',
+      maxLength: 100,
     },
     data_record: {
       type: 'object',
@@ -67,7 +68,7 @@ export const clinicalDocumentSchemaLiteral = {
       },
     },
   },
-  indexes: ['metadata.date', 'data_record.resource_type'],
+  indexes: ['metadata.date', 'data_record.resource_type', 'source_record'],
 } as const;
 
 export const clinicalDocumentSchemaTyped = toTypedRxJsonSchema(
