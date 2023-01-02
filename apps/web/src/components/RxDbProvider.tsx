@@ -26,6 +26,10 @@ import {
 } from '../models/UserDocumentCollection';
 // to use the update() method, you need to add the update plugin.
 import { RxDBUpdatePlugin } from 'rxdb/plugins/update';
+import {
+  UserPreferencesDocumentCollection,
+  UserPreferencesDocumentSchema,
+} from '../models/UserPreferencesCollection';
 
 addRxPlugin(RxDBUpdatePlugin);
 addRxPlugin(RxDBMigrationPlugin);
@@ -38,6 +42,7 @@ export type DatabaseCollections = {
   clinical_documents: ClinicalDocumentCollection;
   connection_documents: ConnectionDocumentCollection;
   user_documents: UserDocumentCollection;
+  user_preferences: UserPreferencesDocumentCollection;
 };
 
 const RxDbContext = React.createContext<
@@ -62,6 +67,9 @@ async function initRxDb() {
     },
     user_documents: {
       schema: UserDocumentSchema,
+    },
+    user_preferences: {
+      schema: UserPreferencesDocumentSchema,
     },
   });
 

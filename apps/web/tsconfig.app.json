@@ -16,7 +16,8 @@
     "src/components/AppPage.tsx",
     "src/components/TabWrapper.tsx",
     "src/components/TabButton.tsx",
-    "src/components/ErrorBoundary.tsx"
+    "src/components/ErrorBoundary.tsx",
+    "src/components/Timeline/JumpToPanel.tsx"
   ],
   "exclude": [
     "jest.config.ts",

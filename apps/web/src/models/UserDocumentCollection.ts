@@ -13,7 +13,7 @@ export const userDocumentSchemaLiteral = {
   properties: {
     _id: {
       type: 'string',
-      maxLength: 100,
+      maxLength: 128,
     },
     gender: {
       type: 'string',

@@ -17,6 +17,7 @@ import {
 } from '../services/Epic';
 import { useNotificationDispatch } from '../services/NotificationContext';
 import { History, LocationState } from 'history';
+import { useUserPreferences } from '../components/UserPreferencesProvider';
 
 /**
  * Handles the redirect from Epic's authorization server. If possible, it
@@ -36,6 +37,8 @@ const EpicRedirect: React.FC = () => {
     [error, setError] = useState(''),
     notifyDispatch = useNotificationDispatch();
 
+  const { userPreferences } = useUserPreferences();
+
   useEffect(() => {
     const searchRequest = new URLSearchParams(window.location.search),
       code = searchRequest.get('code'),
@@ -43,8 +46,16 @@ const EpicRedirect: React.FC = () => {
       epicName = localStorage.getItem(EpicLocalStorageKeys.EPIC_NAME),
       epicId = localStorage.getItem(EpicLocalStorageKeys.EPIC_ID);
 
-    if (code && epicUrl && epicName && epicId) {
-      handleLogin({ code, epicUrl, epicId, epicName, db, history })
+    if (code && epicUrl && epicName && epicId && userPreferences) {
+      handleLogin({
+        code,
+        epicUrl,
+        epicId,
+        epicName,
+        db,
+        history,
+        enableProxy: userPreferences?.use_proxy,
+      })
         .then()
         .catch((e) => {
           if (e instanceof DynamicRegistrationError) {
@@ -66,7 +77,7 @@ const EpicRedirect: React.FC = () => {
     } else {
       setError('There was a problem trying to sign in');
     }
-  }, [db, db.connection_documents, history, notifyDispatch]);
+  }, [db, db.connection_documents, history, notifyDispatch, userPreferences]);
 
   return (
     <AppPage
@@ -133,6 +144,7 @@ const handleLogin = async ({
   epicName,
   db,
   history,
+  enableProxy = false,
 }: {
   code: string;
   epicUrl: string;
@@ -140,11 +152,11 @@ const handleLogin = async ({
   epicId: string;
   db: RxDatabase<DatabaseCollections>;
   history: History<LocationState>;
+  enableProxy?: boolean;
 }) => {
   let initalAuthResponse: EpicAuthResponse;
   let dynamicRegResponse: EpicDynamicRegistrationResponse;
   let jwtAuthResponse: EpicAuthResponse;
-  const enableProxy = false;
 
   // Attempt initial code swap
   try {

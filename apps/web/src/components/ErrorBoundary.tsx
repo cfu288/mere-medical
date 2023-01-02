@@ -32,8 +32,8 @@ export class ErrorBoundary extends React.Component<
         <div className="flex h-screen flex-col items-center justify-center">
           <h1 className="text-2xl font-bold">Something went wrong</h1>
           <p className="text-center">
-            Please try reloading the app. If the problem persists, please
-            contact support.
+            Please try reloading the app. If the problem persists, please try
+            clearing your browser cache.
           </p>
           {/* <p className="text-xs text-gray-500">{error.message}</p> */}
           <button

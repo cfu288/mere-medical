@@ -13,11 +13,11 @@ export const clinicalDocumentSchemaLiteral = {
   properties: {
     _id: {
       type: 'string',
-      maxLength: 100,
+      maxLength: 128,
     },
     source_record: {
       type: 'string',
-      maxLength: 100,
+      maxLength: 128,
     },
     data_record: {
       type: 'object',
@@ -31,7 +31,7 @@ export const clinicalDocumentSchemaLiteral = {
         },
         resource_type: {
           type: 'string',
-          maxLength: 100,
+          maxLength: 128,
 
           // enum: [
           //   'immunization',
@@ -60,7 +60,7 @@ export const clinicalDocumentSchemaLiteral = {
         },
         date: {
           type: 'string',
-          maxLength: 100,
+          maxLength: 128,
         },
         display_name: {
           type: 'string',

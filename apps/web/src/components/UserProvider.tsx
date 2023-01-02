@@ -4,6 +4,12 @@ import { RxDatabase } from 'rxdb';
 import { UserDocument } from '../models/UserDocument';
 import { DatabaseCollections, useRxDb } from './RxDbProvider';
 
+const defaultUser: Partial<UserDocument> = {
+  _id: 'default',
+  is_selected_user: true,
+  is_default_user: true,
+};
+
 function fetchUsers(
   db: RxDatabase<DatabaseCollections>,
   handleChange: (item: UserDocument | undefined) => void
@@ -14,7 +20,9 @@ function fetchUsers(
         is_selected_user: true,
       },
     })
-    .$.subscribe((item) => handleChange(item?.toMutableJSON() as UserDocument));
+    .$.subscribe((item) =>
+      handleChange({ ...defaultUser, ...item?.toMutableJSON() } as UserDocument)
+    );
 }
 
 type UserProviderProps = PropsWithChildren<unknown>;

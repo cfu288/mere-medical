@@ -7,6 +7,7 @@ import { NotificationProvider } from '../services/NotificationContext';
 import { TabWrapper } from '../components/TabWrapper';
 import { RxDbProvider } from '../components/RxDbProvider';
 import { ErrorBoundary } from '../components/ErrorBoundary';
+import { UserPreferencesProvider } from '../components/UserPreferencesProvider';
 
 export default function App() {
   return (
@@ -14,9 +15,11 @@ export default function App() {
       <NotificationProvider>
         <RxDbProvider>
           <UserProvider>
-            <Router>
-              <TabWrapper />
-            </Router>
+            <UserPreferencesProvider>
+              <Router>
+                <TabWrapper />
+              </Router>
+            </UserPreferencesProvider>
           </UserProvider>
         </RxDbProvider>
       </NotificationProvider>

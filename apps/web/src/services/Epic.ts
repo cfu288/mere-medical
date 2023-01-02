@@ -105,25 +105,17 @@ async function syncFHIRResource<T extends FhirResource>(
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
   mapper: (proc: BundleEntry<T>) => ClinicalDocument<BundleEntry<T>>,
-  params: Record<string, string>
+  params: Record<string, string>,
+  useProxy = false
 ) {
-  let resc;
-  try {
-    resc = await getFHIRResource<T>(
-      baseUrl,
-      connectionDocument,
-      fhirResourceUrl,
-      params
-    );
-  } catch (e) {
-    resc = await getFHIRResource<T>(
-      baseUrl,
-      connectionDocument,
-      fhirResourceUrl,
-      params,
-      true
-    );
-  }
+  const resc = await getFHIRResource<T>(
+    baseUrl,
+    connectionDocument,
+    fhirResourceUrl,
+    params,
+    useProxy
+  );
+
   const cds = resc
     .filter(
       (i) =>
@@ -153,12 +145,14 @@ async function syncFHIRResource<T extends FhirResource>(
  * @param baseUrl Base url of the FHIR server to sync from
  * @param connectionDocument
  * @param db
+ * @param useProxy
  * @returns A promise of void arrays
  */
 export async function syncAllRecords(
   baseUrl: string,
   connectionDocument: RxDocument<ConnectionDocument>,
-  db: RxDatabase<DatabaseCollections>
+  db: RxDatabase<DatabaseCollections>,
+  useProxy = false
 ): Promise<unknown[][]> {
   const newCd = connectionDocument.toMutableJSON();
   newCd.last_refreshed = new Date().toISOString();
@@ -199,7 +193,8 @@ export async function syncAllRecords(
       procMapper,
       {
         patient: connectionDocument.get('patient'),
-      }
+      },
+      useProxy
     ),
     syncFHIRResource<Patient>(
       baseUrl,
@@ -209,7 +204,8 @@ export async function syncAllRecords(
       patientMapper,
       {
         _id: connectionDocument.get('patient'),
-      }
+      },
+      useProxy
     ),
     syncFHIRResource<Observation>(
       baseUrl,
@@ -220,7 +216,8 @@ export async function syncAllRecords(
       {
         patient: connectionDocument.get('patient'),
         category: 'laboratory',
-      }
+      },
+      useProxy
     ),
     syncFHIRResource<DiagnosticReport>(
       baseUrl,
@@ -230,7 +227,8 @@ export async function syncAllRecords(
       drMapper,
       {
         patient: connectionDocument.get('patient'),
-      }
+      },
+      useProxy
     ),
     syncFHIRResource<MedicationStatement>(
       baseUrl,
@@ -240,7 +238,8 @@ export async function syncAllRecords(
       medStatementMapper,
       {
         patient: connectionDocument.get('patient'),
-      }
+      },
+      useProxy
     ),
     syncFHIRResource<Immunization>(
       baseUrl,
@@ -250,7 +249,8 @@ export async function syncAllRecords(
       immMapper,
       {
         patient: connectionDocument.get('patient'),
-      }
+      },
+      useProxy
     ),
     syncFHIRResource<Condition>(
       baseUrl,
@@ -260,11 +260,18 @@ export async function syncAllRecords(
       conditionMapper,
       {
         patient: connectionDocument.get('patient'),
-      }
+      },
+      useProxy
     ),
-    syncDocumentReferences(baseUrl, connectionDocument, db, {
-      patient: connectionDocument.get('patient'),
-    }),
+    syncDocumentReferences(
+      baseUrl,
+      connectionDocument,
+      db,
+      {
+        patient: connectionDocument.get('patient'),
+      },
+      useProxy
+    ),
     syncFHIRResource<CarePlan>(
       baseUrl,
       connectionDocument,
@@ -273,7 +280,8 @@ export async function syncAllRecords(
       carePlanMapper,
       {
         patient: connectionDocument.get('patient'),
-      }
+      },
+      useProxy
     ),
     syncFHIRResource<AllergyIntolerance>(
       baseUrl,
@@ -283,7 +291,8 @@ export async function syncAllRecords(
       allergyIntoleranceMapper,
       {
         patient: connectionDocument.get('patient'),
-      }
+      },
+      useProxy
     ),
     db.connection_documents.upsert(newCd).then(() => []),
   ]);
@@ -295,7 +304,8 @@ async function syncDocumentReferences(
   connectionDocument: RxDocument<ConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
   // fhirResourceUrl: string,
-  params: Record<string, string>
+  params: Record<string, string>,
+  useProxy = false
 ) {
   const documentReferenceMapper = (dr: BundleEntry<DocumentReference>) =>
     DSTU2.mapDocumentReferenceToClinicalDocument(
@@ -309,7 +319,8 @@ async function syncDocumentReferences(
     db,
     'DocumentReference',
     documentReferenceMapper,
-    params
+    params,
+    useProxy
   );
 
   const docs = await db.clinical_documents

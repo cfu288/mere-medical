@@ -8,6 +8,7 @@ import { RxDatabase, RxDocument } from 'rxdb';
 import * as OnPatient from '../services/OnPatient';
 import * as Epic from '../services/Epic';
 import { useNotificationDispatch } from '../services/NotificationContext';
+import { useUserPreferences } from './UserPreferencesProvider';
 
 function getImage(logo: 'onpatient' | 'epic') {
   switch (logo) {
@@ -26,7 +27,8 @@ function getImage(logo: 'onpatient' | 'epic') {
 async function fetchMedicalRecords(
   connectionDocument: RxDocument<ConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
-  baseUrl: string
+  baseUrl: string,
+  useProxy = false
 ) {
   switch (connectionDocument.get('source')) {
     case 'onpatient': {
@@ -35,7 +37,12 @@ async function fetchMedicalRecords(
     case 'epic': {
       try {
         await refreshConnectionTokenIfNeeded(connectionDocument, db);
-        return await Epic.syncAllRecords(baseUrl, connectionDocument, db);
+        return await Epic.syncAllRecords(
+          baseUrl,
+          connectionDocument,
+          db,
+          useProxy
+        );
       } catch (e) {
         console.error(e);
         throw new Error('Error refreshing token  - try logging in again');
@@ -104,6 +111,7 @@ export function ConnectionCard({
 }) {
   const db = useRxDb(),
     [deleting, setDeleting] = useState(false),
+    { userPreferences } = useUserPreferences(),
     removeDocument = (document: RxDocument<ConnectionDocument>) => {
       setDeleting(true);
       const connectionId = document.get('_id');
@@ -137,7 +145,7 @@ export function ConnectionCard({
     notifyDispatch = useNotificationDispatch(),
     handleFetchData = useCallback(() => {
       setSyncing(true);
-      fetchMedicalRecords(item, db, baseUrl)
+      fetchMedicalRecords(item, db, baseUrl, userPreferences?.use_proxy)
         .then(() => {
           setSyncing(false);
         })
@@ -149,7 +157,7 @@ export function ConnectionCard({
           });
           setSyncing(false);
         });
-    }, [baseUrl, db, item, notifyDispatch]);
+    }, [baseUrl, db, item, notifyDispatch, userPreferences?.use_proxy]);
 
   useEffect(() => {
     if (

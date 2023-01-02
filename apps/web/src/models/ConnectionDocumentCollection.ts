@@ -13,7 +13,7 @@ export const connectionSchemaLiteral = {
   properties: {
     _id: {
       type: 'string',
-      maxLength: 100,
+      maxLength: 128,
     },
     type: {
       type: 'string',
@@ -47,7 +47,7 @@ export const connectionSchemaLiteral = {
     },
     last_refreshed: {
       type: 'string',
-      maxLength: 100,
+      maxLength: 128,
     },
     client_id: {
       type: 'string',

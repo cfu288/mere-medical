@@ -32,21 +32,27 @@ async function getConnectionCards(
 const ConnectionTab: React.FC = () => {
   const db = useRxDb(),
     [list, setList] = useState<RxDocument<ConnectionDocument>[]>(),
+    [open, setOpen] = useState(false),
     onpatientLoginUrl = OnPatient.getLoginUrl(),
-    setTenantEpicUrl = (s: string & Location, name: string, id: string) => {
-      localStorage.setItem(EpicLocalStorageKeys.EPIC_URL, s);
-      localStorage.setItem(EpicLocalStorageKeys.EPIC_NAME, name);
-      localStorage.setItem(EpicLocalStorageKeys.EPIC_ID, id);
-    },
+    setTenantEpicUrl = useCallback(
+      (s: string & Location, name: string, id: string) => {
+        localStorage.setItem(EpicLocalStorageKeys.EPIC_URL, s);
+        localStorage.setItem(EpicLocalStorageKeys.EPIC_NAME, name);
+        localStorage.setItem(EpicLocalStorageKeys.EPIC_ID, id);
+      },
+      []
+    ),
     getList = useCallback(() => {
       getConnectionCards(db, setList);
     }, [db]),
-    [open, setOpen] = useState(false),
-    toggleEpicPanel = (s: string & Location, name: string, id: string) => {
-      setTenantEpicUrl(s, name, id);
-      setOpen((x) => !x);
-      window.location = getLoginUrl(s);
-    };
+    toggleEpicPanel = useCallback(
+      (s: string & Location, name: string, id: string) => {
+        setTenantEpicUrl(s, name, id);
+        setOpen((x) => !x);
+        window.location = getLoginUrl(s);
+      },
+      [setTenantEpicUrl]
+    );
 
   useEffect(() => {
     getList();
