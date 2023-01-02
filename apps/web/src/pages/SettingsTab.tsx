@@ -21,12 +21,12 @@ const SettingsTab: React.FC = () => {
       <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 sm:px-6 lg:px-8">
         <div className="py-6 text-xl font-extrabold">About Me</div>
       </div>
-      {user === undefined && (
+      {(user === undefined || user.is_default_user) && (
         <div className="mx-auto flex max-w-4xl flex-col px-4 sm:px-6 lg:px-8">
           <EmptyUserPlaceholder />
         </div>
       )}
-      {user !== undefined && (
+      {user !== undefined && !user.is_default_user && (
         <div className="mx-auto mt-2 flex max-w-sm flex-col px-4 sm:px-6 lg:px-8">
           <li
             key={user.email || user._id}

@@ -145,6 +145,7 @@ export function EmptyUserPlaceholder() {
         last_name: lastName,
         email,
         is_selected_user: true,
+        is_default_user: false,
       };
       db.user_documents.insert(userDocument).then(() => {
         toggleModal();
