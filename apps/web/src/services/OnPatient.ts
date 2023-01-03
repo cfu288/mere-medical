@@ -11,7 +11,7 @@ import {
   FhirResource,
 } from 'fhir/r2';
 import { RxDatabase, RxDocument } from 'rxdb';
-import { DatabaseCollections } from '../components/RxDbProvider';
+import { DatabaseCollections } from '../components/providers/RxDbProvider';
 import { ClinicalDocumentType } from '../models/ClinicalDocumentCollection';
 import { ConnectionDocument } from '../models/ConnectionDocument';
 import { DSTU2 } from './DSTU2';

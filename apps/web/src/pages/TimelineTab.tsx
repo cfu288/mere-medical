@@ -11,22 +11,25 @@ import {
   Procedure,
 } from 'fhir/r2';
 import React, { useEffect, useRef, useState } from 'react';
-import { DatabaseCollections, useRxDb } from '../components/RxDbProvider';
+import {
+  DatabaseCollections,
+  useRxDb,
+} from '../components/providers/RxDbProvider';
 import { ClinicalDocument } from '../models/ClinicalDocument';
-import { ConditionCard } from '../components/Timeline/ConditionCard';
+import { ConditionCard } from '../components/timeline/ConditionCard';
 import { RxDatabase, RxDocument } from 'rxdb';
-import { DiagnosticReportCard } from '../components/Timeline/DiagnosticReportCard';
-import { ImmunizationCard } from '../components/Timeline/ImmunizationCard';
-import { ObservationCard } from '../components/ObservationCard';
-import { ProcedureCard } from '../components/Timeline/ProcedureCard';
-import { TimelineBanner } from '../components/TimelineBanner';
-import { MedicationCard } from '../components/Timeline/MedicationCard';
+import { DiagnosticReportCard } from '../components/timeline/DiagnosticReportCard';
+import { ImmunizationCard } from '../components/timeline/ImmunizationCard';
+import { ObservationCard } from '../components/timeline/ObservationCard';
+import { ProcedureCard } from '../components/timeline/ProcedureCard';
+import { TimelineBanner } from '../components/timeline/TimelineBanner';
+import { MedicationCard } from '../components/timeline/MedicationCard';
 import { EmptyRecordsPlaceholder } from '../models/EmptyRecordsPlaceholder';
-import { useUser } from '../components/UserProvider';
-import { DocumentReferenceCard } from '../components/Timeline/DocumentReferenceCard';
+import { useUser } from '../components/providers/UserProvider';
+import { DocumentReferenceCard } from '../components/timeline/DocumentReferenceCard';
 import { AppPage } from '../components/AppPage';
 import { useLocation } from 'react-router-dom';
-import { JumpToPanel } from '../components/Timeline/JumpToPanel';
+import { JumpToPanel } from '../components/timeline/JumpToPanel';
 
 function fetchRecords(db: RxDatabase<DatabaseCollections>) {
   return db.clinical_documents

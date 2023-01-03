@@ -2,11 +2,11 @@ import { Disclosure } from '@headlessui/react';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
 import { BundleEntry, DocumentReference } from 'fhir/r2';
 import { useEffect, useState } from 'react';
-import { ClinicalDocument } from '../models/ClinicalDocument';
-import { Modal } from './Modal';
-import { ModalHeader } from './ModalHeader';
-import { useClinicalDoc } from './Timeline/useClinicalDoc';
-import { useConnectionDoc } from './Timeline/useConnectionDoc';
+import { ClinicalDocument } from '../../models/ClinicalDocument';
+import { Modal } from '../Modal';
+import { ModalHeader } from '../ModalHeader';
+import { useClinicalDoc } from '../hooks/useClinicalDoc';
+import { useConnectionDoc } from '../hooks/useConnectionDoc';
 
 export enum CCDAStructureDefinition {
   CARE_TEAMS = '2.16.840.1.113883.10.20.22.2.500',

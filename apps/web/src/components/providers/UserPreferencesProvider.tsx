@@ -5,7 +5,7 @@ import React, {
   useState,
 } from 'react';
 import { RxDocument } from 'rxdb';
-import { UserPreferencesDocument } from '../models/UserPreferences';
+import { UserPreferencesDocument } from '../../models/UserPreferences';
 import { useRxDb } from './RxDbProvider';
 import { useUser } from './UserProvider';
 

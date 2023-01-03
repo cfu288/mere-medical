@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { PropsWithChildren, useEffect, useState } from 'react';
 import { RxDatabase } from 'rxdb';
-import { UserDocument } from '../models/UserDocument';
+import { UserDocument } from '../../models/UserDocument';
 import { DatabaseCollections, useRxDb } from './RxDbProvider';
 
 const defaultUser: Partial<UserDocument> = {

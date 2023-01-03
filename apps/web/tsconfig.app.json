@@ -12,12 +12,12 @@
     "src/models/EmptyRecordsPlaceholder.tsx",
     "src/components/Modal.tsx",
     "src/components/ModalHeader.tsx",
-    "./src/components/Timeline/useConnectionDoc.tsx",
+    "src/components/hooks/useConnectionDoc.tsx",
     "src/components/AppPage.tsx",
     "src/components/TabWrapper.tsx",
     "src/components/TabButton.tsx",
     "src/components/ErrorBoundary.tsx",
-    "src/components/Timeline/JumpToPanel.tsx"
+    "src/components/timeline/JumpToPanel.tsx"
   ],
   "exclude": [
     "jest.config.ts",

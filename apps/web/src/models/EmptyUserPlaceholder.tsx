@@ -3,7 +3,10 @@ import { Fragment, useEffect, useReducer, useRef } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { RxDatabase, RxDocument } from 'rxdb';
 import { BundleEntry, Patient } from 'fhir/r2';
-import { DatabaseCollections, useRxDb } from '../components/RxDbProvider';
+import {
+  DatabaseCollections,
+  useRxDb,
+} from '../components/providers/RxDbProvider';
 import { ClinicalDocument } from './ClinicalDocument';
 import { UserDocument } from './UserDocument';
 import uuid4 from 'uuid4';

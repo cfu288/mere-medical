@@ -16,7 +16,7 @@ import {
   Procedure,
 } from 'fhir/r2';
 import { RxDocument, RxDatabase } from 'rxdb';
-import { DatabaseCollections } from '../components/RxDbProvider';
+import { DatabaseCollections } from '../components/providers/RxDbProvider';
 import { ClinicalDocument } from '../models/ClinicalDocument';
 import { ClinicalDocumentType } from '../models/ClinicalDocumentCollection';
 import {

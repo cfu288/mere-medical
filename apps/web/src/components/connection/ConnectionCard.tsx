@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ConnectionDocument } from '../models/ConnectionDocument';
-import { DatabaseCollections, useRxDb } from '../components/RxDbProvider';
-import onpatientLogo from '../img/onpatient_logo.jpeg';
-import epicLogo from '../img/MyChartByEpic.png';
+import { ConnectionDocument } from '../../models/ConnectionDocument';
+import { DatabaseCollections, useRxDb } from '../providers/RxDbProvider';
+import onpatientLogo from '../../img/onpatient_logo.jpeg';
+import epicLogo from '../../img/MyChartByEpic.png';
 import { differenceInDays, format, parseISO } from 'date-fns';
 import { RxDatabase, RxDocument } from 'rxdb';
-import * as OnPatient from '../services/OnPatient';
-import * as Epic from '../services/Epic';
-import { useNotificationDispatch } from '../services/NotificationContext';
-import { useUserPreferences } from './UserPreferencesProvider';
+import * as OnPatient from '../../services/OnPatient';
+import * as Epic from '../../services/Epic';
+import { useNotificationDispatch } from '../../services/NotificationContext';
+import { useUserPreferences } from '../providers/UserPreferencesProvider';
 
 function getImage(logo: 'onpatient' | 'epic') {
   switch (logo) {

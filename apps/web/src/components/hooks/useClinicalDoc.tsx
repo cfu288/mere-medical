@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { RxDatabase, RxDocument } from 'rxdb';
 import { ClinicalDocument } from '../../models/ClinicalDocument';
-import { DatabaseCollections, useRxDb } from '../RxDbProvider';
+import { DatabaseCollections, useRxDb } from '../providers/RxDbProvider';
 
 /**
  * This hook is used to get the clinical document given a metadata.id

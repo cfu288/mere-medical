@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateConnectionDocument } from '../models/ConnectionDocument';
-import { useRxDb } from '../components/RxDbProvider';
+import { useRxDb } from '../components/providers/RxDbProvider';
 import { Routes } from '../Routes';
 import { useNotificationDispatch } from '../services/NotificationContext';
 import { AppPage } from '../components/AppPage';

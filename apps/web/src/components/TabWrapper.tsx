@@ -15,7 +15,7 @@ import SettingsTab from '../pages/SettingsTab';
 import EpicRedirect from '../pages/EpicRedirect';
 import logo from '../img/white-logo.svg';
 import { TabButton } from './TabButton';
-import { useUser } from './UserProvider';
+import { useUser } from './providers/UserProvider';
 
 export function TabWrapper() {
   const user = useUser();

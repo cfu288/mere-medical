@@ -2,9 +2,9 @@ import { Switch } from '@headlessui/react';
 import uuid4 from 'uuid4';
 import { AppPage } from '../components/AppPage';
 import { GenericBanner } from '../components/GenericBanner';
-import { useRxDb } from '../components/RxDbProvider';
-import { useUserPreferences } from '../components/UserPreferencesProvider';
-import { useUser } from '../components/UserProvider';
+import { useRxDb } from '../components/providers/RxDbProvider';
+import { useUserPreferences } from '../components/providers/UserPreferencesProvider';
+import { useUser } from '../components/providers/UserProvider';
 import { EmptyUserPlaceholder } from '../models/EmptyUserPlaceholder';
 
 function classNames(...classes: string[]) {

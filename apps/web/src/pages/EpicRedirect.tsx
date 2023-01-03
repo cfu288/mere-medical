@@ -3,7 +3,10 @@ import { NavigateFunction, useNavigate } from 'react-router-dom';
 import { RxDatabase } from 'rxdb';
 import { AppPage } from '../components/AppPage';
 import { GenericBanner } from '../components/GenericBanner';
-import { DatabaseCollections, useRxDb } from '../components/RxDbProvider';
+import {
+  DatabaseCollections,
+  useRxDb,
+} from '../components/providers/RxDbProvider';
 import { Routes } from '../Routes';
 import {
   DynamicRegistrationError,
@@ -17,7 +20,7 @@ import {
 } from '../services/Epic';
 import { useNotificationDispatch } from '../services/NotificationContext';
 import { History, LocationState } from 'history';
-import { useUserPreferences } from '../components/UserPreferencesProvider';
+import { useUserPreferences } from '../components/providers/UserPreferencesProvider';
 
 /**
  * Handles the redirect from Epic's authorization server. If possible, it

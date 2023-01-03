@@ -1,4 +1,7 @@
-import { DatabaseCollections, useRxDb } from '../components/RxDbProvider';
+import {
+  DatabaseCollections,
+  useRxDb,
+} from '../components/providers/RxDbProvider';
 import { GenericBanner } from '../components/GenericBanner';
 import { ClinicalDocument } from '../models/ClinicalDocument';
 import {
@@ -12,11 +15,11 @@ import {
 } from 'fhir/r2';
 import { RxDatabase, RxDocument } from 'rxdb';
 import { useEffect, useReducer } from 'react';
-import { MedicationsListCard } from '../components/Summary/MedicationsListCard';
-import { ConditionsListCard } from '../components/Summary/ConditionsListCard';
-import { ImmunizationListCard } from '../components/Summary/ImmunizationListCard';
-import { CarePlanListCard } from '../components/Summary/CarePlanListCard';
-import { AllergyIntoleranceListCard } from '../components/Summary/AllerrgyIntoleranceListCard';
+import { MedicationsListCard } from '../components/summary/MedicationsListCard';
+import { ConditionsListCard } from '../components/summary/ConditionsListCard';
+import { ImmunizationListCard } from '../components/summary/ImmunizationListCard';
+import { CarePlanListCard } from '../components/summary/CarePlanListCard';
+import { AllergyIntoleranceListCard } from '../components/summary/AllerrgyIntoleranceListCard';
 import { EmptyRecordsPlaceholder } from '../models/EmptyRecordsPlaceholder';
 import { AppPage } from '../components/AppPage';
 

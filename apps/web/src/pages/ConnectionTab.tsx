@@ -1,10 +1,13 @@
 import { memo, useCallback, useEffect, useState } from 'react';
 import { ConnectionDocument } from '../models/ConnectionDocument';
 import * as OnPatient from '../services/OnPatient';
-import { DatabaseCollections, useRxDb } from '../components/RxDbProvider';
+import {
+  DatabaseCollections,
+  useRxDb,
+} from '../components/providers/RxDbProvider';
 import { RxDatabase, RxDocument } from 'rxdb';
 import { GenericBanner } from '../components/GenericBanner';
-import { ConnectionCard } from '../components/ConnectionCard';
+import { ConnectionCard } from '../components/connection/ConnectionCard';
 import EpicEndpoints from '../assets/DSTU2Endpoints.json';
 import { Combobox } from '@headlessui/react';
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid';
