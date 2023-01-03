@@ -1,4 +1,4 @@
-FROM node:18 as build-api-stage
+FROM node:16.14.0 as build-api-stage
 
 WORKDIR /app
 COPY package*.json /app/
@@ -11,7 +11,7 @@ RUN npm prune --production
 RUN node-prune
 
 
-FROM node:18 as build-web-stage
+FROM node:16.14.0 as build-web-stage
 
 WORKDIR /app
 COPY package*.json /app/
