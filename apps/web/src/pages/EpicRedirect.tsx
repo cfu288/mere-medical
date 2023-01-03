@@ -94,12 +94,25 @@ const EpicRedirect: React.FC = () => {
       {error && (
         <div className="flex h-full flex-col items-center justify-center">
           <h1 className="font-2xl mb-4 font-bold text-red-700">{error}</h1>
-          <button
-            className="bg-primary rounded-lg p-4 text-white"
-            onClick={() => navigate(Routes.AddConnection)}
-          >
-            Go Back
-          </button>
+
+          <h1 className="font-xl mb-4 p-8 text-gray-600">
+            You can try enabling proxy authentication in the settings section if
+            login continues to fail
+          </h1>
+          <div className="flex flex-row justify-center gap-x-4">
+            <button
+              className="border-primary-700 text-primary w-36 rounded-lg border-2 bg-white p-4"
+              onClick={() => navigate(Routes.Settings)}
+            >
+              Go to Settings
+            </button>
+            <button
+              className="bg-primary w-36 rounded-lg p-4 text-white"
+              onClick={() => navigate(Routes.AddConnection)}
+            >
+              Go Back
+            </button>
+          </div>
         </div>
       )}
       {!error && (
