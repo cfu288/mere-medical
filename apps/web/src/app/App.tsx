@@ -12,17 +12,17 @@ import { UserPreferencesProvider } from '../components/UserPreferencesProvider';
 export default function App() {
   return (
     <ErrorBoundary>
-      <NotificationProvider>
-        <RxDbProvider>
-          <UserProvider>
-            <UserPreferencesProvider>
+      <RxDbProvider>
+        <UserProvider>
+          <UserPreferencesProvider>
+            <NotificationProvider>
               <Router>
                 <TabWrapper />
               </Router>
-            </UserPreferencesProvider>
-          </UserProvider>
-        </RxDbProvider>
-      </NotificationProvider>
+            </NotificationProvider>
+          </UserPreferencesProvider>
+        </UserProvider>
+      </RxDbProvider>
     </ErrorBoundary>
   );
 }

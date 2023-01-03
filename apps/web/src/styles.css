@@ -3,3 +3,19 @@
 @tailwind utilities;
 
 /* You can add global styles to this file, and also import other style files */
+
+.mobile-full-height {
+  height: 100vh;
+}
+
+@supports (height: 100cqh) {
+  .mobile-full-height {
+    height: 100cqh;
+  }
+}
+
+@supports (height: 100svh) {
+  .mobile-full-height {
+    height: 100svh;
+  }
+}

@@ -21,7 +21,7 @@ export function TabWrapper() {
   const user = useUser();
 
   return (
-    <div className="flex h-screen max-h-screen md:flex-row-reverse">
+    <div className="mobile-full-height flex md:flex-row-reverse">
       <div className="flex-grow">
         <Switch>
           <Route path={AppRoutes.Timeline}>
