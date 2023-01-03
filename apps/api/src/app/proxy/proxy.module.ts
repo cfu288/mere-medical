@@ -1,4 +1,3 @@
-// import { ProxyModule } from '@finastra/nestjs-proxy';
 import { EpicDSTU2TenantEndpoints } from './Epic';
 import { DynamicModule, Logger, Module, Provider } from '@nestjs/common';
 import { createProxyServer } from 'http-proxy';
