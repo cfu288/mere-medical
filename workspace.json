@@ -3,10 +3,10 @@
   "version": 2,
   "projects": {
     "api": "apps/api",
-    "shared": "libs/shared",
-    "web": "apps/web",
     "docs": {
       "root": "apps/docs"
-    }
+    },
+    "epic": "libs/epic",
+    "web": "apps/web"
   }
 }

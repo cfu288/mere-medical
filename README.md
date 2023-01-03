@@ -58,6 +58,8 @@ services:
 ### Prerequisites
 
 - npm
+- nvm
+- Docker
 
 ### Installation
 
@@ -67,9 +69,11 @@ services:
    git clone https://gitea.mere.casa/cfu288/mere-medical.git
    ```
 
-2. Install NPM packages
+2. Set up NPM and install NPM packages
 
    ```sh
+   nvm install v16.14.0
+   nvm use
    npm install
    ```
 

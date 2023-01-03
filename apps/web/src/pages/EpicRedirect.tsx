@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useHistory } from 'react-router';
+import { NavigateFunction, useNavigate } from 'react-router-dom';
 import { RxDatabase } from 'rxdb';
 import { AppPage } from '../components/AppPage';
 import { GenericBanner } from '../components/GenericBanner';
@@ -32,7 +32,7 @@ import { useUserPreferences } from '../components/UserPreferencesProvider';
  * anyways so we can't tell.
  */
 const EpicRedirect: React.FC = () => {
-  const history = useHistory(),
+  const navigate = useNavigate(),
     db = useRxDb(),
     [error, setError] = useState(''),
     notifyDispatch = useNotificationDispatch();
@@ -53,7 +53,7 @@ const EpicRedirect: React.FC = () => {
         epicId,
         epicName,
         db,
-        history,
+        navigate,
         enableProxy: userPreferences?.use_proxy,
       })
         .then()
@@ -64,7 +64,7 @@ const EpicRedirect: React.FC = () => {
               message: `${e.message}`,
               variant: 'error',
             });
-            redirectToConnectionsTab(history);
+            redirectToConnectionsTab(navigate);
           } else {
             notifyDispatch({
               type: 'set_notification',
@@ -77,7 +77,7 @@ const EpicRedirect: React.FC = () => {
     } else {
       setError('There was a problem trying to sign in');
     }
-  }, [db, db.connection_documents, history, notifyDispatch, userPreferences]);
+  }, [db, db.connection_documents, navigate, notifyDispatch, userPreferences]);
 
   return (
     <AppPage
@@ -96,7 +96,7 @@ const EpicRedirect: React.FC = () => {
           <h1 className="font-2xl mb-4 font-bold text-red-700">{error}</h1>
           <button
             className="bg-primary rounded-lg p-4 text-white"
-            onClick={() => history.push(Routes.AddConnection)}
+            onClick={() => navigate(Routes.AddConnection)}
           >
             Go Back
           </button>
@@ -128,8 +128,8 @@ const EpicRedirect: React.FC = () => {
 
 export default EpicRedirect;
 
-const redirectToConnectionsTab = (history: History<LocationState>) => {
-  history.push(Routes.AddConnection);
+const redirectToConnectionsTab = (navigate: any) => {
+  navigate(Routes.AddConnection);
 };
 
 /**
@@ -143,7 +143,7 @@ const handleLogin = async ({
   epicId,
   epicName,
   db,
-  history,
+  navigate,
   enableProxy = false,
 }: {
   code: string;
@@ -151,7 +151,7 @@ const handleLogin = async ({
   epicName: string;
   epicId: string;
   db: RxDatabase<DatabaseCollections>;
-  history: History<LocationState>;
+  navigate: NavigateFunction;
   enableProxy?: boolean;
 }) => {
   let initalAuthResponse: EpicAuthResponse;
@@ -241,5 +241,5 @@ const handleLogin = async ({
     db,
     epicId,
   });
-  return await redirectToConnectionsTab(history);
+  return await redirectToConnectionsTab(navigate);
 };

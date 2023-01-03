@@ -5,7 +5,7 @@ import {
   QueueListIcon,
 } from '@heroicons/react/24/outline';
 import React from 'react';
-import { Switch, Route, Redirect, Link } from 'react-router-dom';
+import { Routes, Route, Navigate, Link } from 'react-router-dom';
 import ConnectionTab from '../pages/ConnectionTab';
 import OnPatientRedirect from '../pages/OnPatientRedirect';
 import TimelineTab from '../pages/TimelineTab';
@@ -23,29 +23,18 @@ export function TabWrapper() {
   return (
     <div className="mobile-full-height flex md:flex-row-reverse">
       <div className="flex-grow">
-        <Switch>
-          <Route path={AppRoutes.Timeline}>
-            <TimelineTab />
-          </Route>
-          <Route exact path={AppRoutes.AddConnection}>
-            <ConnectionTab />
-          </Route>
-          <Route exact path={AppRoutes.Summary}>
-            <SummaryTab />
-          </Route>
-          <Route exact path={AppRoutes.Settings}>
-            <SettingsTab />
-          </Route>
-          <Route exact path={AppRoutes.OnPatientCallback}>
-            <OnPatientRedirect />
-          </Route>
-          <Route exact path={AppRoutes.EpicCallback}>
-            <EpicRedirect />
-          </Route>
-          <Route exact path="/">
-            <Redirect to={AppRoutes.Timeline} />
-          </Route>
-        </Switch>
+        <Routes>
+          <Route path={AppRoutes.Timeline} element={<TimelineTab />} />
+          <Route path={AppRoutes.AddConnection} element={<ConnectionTab />} />
+          <Route path={AppRoutes.Summary} element={<SummaryTab />} />
+          <Route path={AppRoutes.Settings} element={<SettingsTab />} />
+          <Route
+            path={AppRoutes.OnPatientCallback}
+            element={<OnPatientRedirect />}
+          />
+          <Route path={AppRoutes.EpicCallback} element={<EpicRedirect />} />
+          <Route path="*" element={<Navigate to={AppRoutes.Timeline} />} />
+        </Routes>
       </div>
       <div className="flex-0 md:bg-primary-800 absolute bottom-0 left-0 z-20 w-full bg-slate-50 md:relative md:bottom-auto md:top-0 md:h-full md:w-auto">
         <div className="mx-auto flex w-full max-w-3xl justify-around md:h-full md:w-64 md:flex-col md:justify-start">

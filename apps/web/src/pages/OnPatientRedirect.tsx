@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useHistory } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateConnectionDocument } from '../models/ConnectionDocument';
 import { useRxDb } from '../components/RxDbProvider';
@@ -18,7 +18,7 @@ export interface OnPatientAuthResponse {
 }
 
 const OnPatientRedirect: React.FC = () => {
-  const history = useHistory(),
+  const navigate = useNavigate(),
     db = useRxDb(),
     notifyDispatch = useNotificationDispatch();
 
@@ -42,7 +42,7 @@ const OnPatientRedirect: React.FC = () => {
       db.connection_documents
         .insert(dbentry)
         .then(() => {
-          history.push(Routes.AddConnection);
+          navigate(Routes.AddConnection);
         })
         .catch((e: unknown) => {
           notifyDispatch({
@@ -50,7 +50,7 @@ const OnPatientRedirect: React.FC = () => {
             message: `Error adding connection: ${(e as Error).message}`,
             variant: 'error',
           });
-          history.push(Routes.AddConnection);
+          navigate(Routes.AddConnection);
         });
     } else {
       notifyDispatch({
@@ -59,7 +59,7 @@ const OnPatientRedirect: React.FC = () => {
         variant: 'error',
       });
     }
-  }, [db.connection_documents, history, notifyDispatch]);
+  }, [db.connection_documents, navigate, notifyDispatch]);
 
   return (
     <AppPage banner={<GenericBanner text="Authenticated! Redirecting" />}>

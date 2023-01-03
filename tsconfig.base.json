@@ -15,7 +15,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@mere-medical/shared": ["libs/shared/src/index.ts"]
+      "@mere/epic": ["libs/epic/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
