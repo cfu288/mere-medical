@@ -66,7 +66,7 @@ services:
 1. Clone the repo
 
    ```sh
-   git clone https://gitea.mere.casa/cfu288/mere-medical.git
+   git clone https://github.com/cfu288/mere-medical.git
    ```
 
 2. Set up NPM and install NPM packages
