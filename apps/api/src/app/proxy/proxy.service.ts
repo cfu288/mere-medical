@@ -1,11 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { EpicDSTU2TenantEndpoints } from './Epic';
+import { EpicDSTU2TenantEndpoints } from '@mere/epic';
 import { ProxyModuleOptionsFactory, ProxyModuleOptions } from './interfaces';
 
 @Injectable()
 export class ProxyConfigService implements ProxyModuleOptionsFactory {
-  constructor() {}
-
   createModuleConfig(): ProxyModuleOptions {
     const services = EpicDSTU2TenantEndpoints;
 

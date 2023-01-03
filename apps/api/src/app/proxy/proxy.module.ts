@@ -1,6 +1,7 @@
-import { EpicDSTU2TenantEndpoints } from './Epic';
+// import { EpicDSTU2TenantEndpoints } from '@mere/epic';
 import { DynamicModule, Logger, Module, Provider } from '@nestjs/common';
 import { createProxyServer } from 'http-proxy';
+import { EpicDSTU2TenantEndpoints } from '@mere/epic';
 import * as queryString from 'querystring';
 import { ProxyController } from './controllers';
 import {

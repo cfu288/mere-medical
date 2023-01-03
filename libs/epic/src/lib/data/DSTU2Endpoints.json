@@ -1,10 +1,5 @@
 [
   {
-    "id": "default",
-    "name": "Sandbox",
-    "url": "https://fhir.epic.com/interconnect-fhir-oauth"
-  },
-  {
     "id": "699c0f4c-9813-e911-9126-001dd8b71f19",
     "name": "The Brooklyn Hospital Center",
     "url": "https://epicproxy.et1043.epichosted.com/FHIRProxy"
@@ -2208,5 +2203,10 @@
     "id": "0615611f-f356-ed11-9157-001dd8b71f1a",
     "name": "Valley Health Systems -  PRD",
     "url": "https://api.valleyhealth.org/fhirproxy"
+  },
+  {
+    "id": "default",
+    "name": "Sandbox",
+    "url": "https://fhir.epic.com/interconnect-fhir-oauth"
   }
 ]

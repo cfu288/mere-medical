@@ -8,7 +8,7 @@ import {
 import { RxDatabase, RxDocument } from 'rxdb';
 import { GenericBanner } from '../components/GenericBanner';
 import { ConnectionCard } from '../components/connection/ConnectionCard';
-import EpicEndpoints from '../assets/DSTU2Endpoints.json';
+import { EpicDSTU2TenantEndpoints } from '@mere/epic';
 import { Combobox } from '@headlessui/react';
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid';
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
@@ -116,7 +116,7 @@ interface SelectOption {
   url: string & Location;
 }
 
-const items = [...EpicEndpoints];
+const items = EpicDSTU2TenantEndpoints;
 
 function getNGrams(s: string, len: number) {
   s = ' '.repeat(len - 1) + s.toLowerCase() + ' '.repeat(len - 1);
