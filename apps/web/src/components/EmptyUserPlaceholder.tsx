@@ -9,7 +9,7 @@ import {
 } from '../components/providers/RxDbProvider';
 import uuid4 from 'uuid4';
 import { UserDocument } from '../models/user-document/UserDocumentType';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocumentType';
 import { useRxUserDocument, useUser } from './providers/UserProvider';
 
 function fetchPatientRecords(db: RxDatabase<DatabaseCollections>) {
@@ -163,7 +163,7 @@ export function EmptyUserPlaceholder() {
         }
       } else {
         const userDocument: UserDocument = {
-          _id: uuid4(),
+          id: uuid4(),
           birthday,
           email,
           first_name: firstName,

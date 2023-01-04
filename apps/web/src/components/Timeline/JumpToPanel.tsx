@@ -1,7 +1,7 @@
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, FhirResource } from 'fhir/r2';
 import React from 'react';
-import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument';
+import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocumentType';
 import { Link } from 'react-router-dom';
 
 export function JumpToPanel({

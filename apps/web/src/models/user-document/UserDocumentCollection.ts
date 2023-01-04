@@ -1,9 +1,15 @@
 import { RxCollection } from 'rxdb';
-import { ExtractDocumentTypeFromTypedRxJsonSchema, RxJsonSchema } from 'rxdb';
+import {
+  toTypedRxJsonSchema,
+  ExtractDocumentTypeFromTypedRxJsonSchema,
+  RxJsonSchema,
+} from 'rxdb';
 import { userDocumentSchemaLiteral } from './UserDocumentSchema';
 
+const userDocumentSchemaTyped = toTypedRxJsonSchema(userDocumentSchemaLiteral);
+
 type UserDocumentType = ExtractDocumentTypeFromTypedRxJsonSchema<
-  typeof userDocumentSchemaLiteral
+  typeof userDocumentSchemaTyped
 >;
 
 export const UserDocumentSchema: RxJsonSchema<UserDocumentType> =

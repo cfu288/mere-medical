@@ -3,7 +3,7 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { format, parseISO } from 'date-fns';
 import { AllergyIntolerance, BundleEntry } from 'fhir/r2';
 import { Fragment } from 'react';
-import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument';
+import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocumentType';
 
 export function AllergyIntoleranceListCard({
   items,
@@ -28,7 +28,7 @@ export function AllergyIntoleranceListCard({
               <div className="min-w-0 flex-1">
                 <span className="absolute inset-0" aria-hidden="true" />
                 {items.map((item) => (
-                  <div className="py-2" key={item._id}>
+                  <div className="py-2" key={item.id}>
                     <p className="font-bold text-gray-800">
                       {item.data_record.raw.resource?.substance.text}{' '}
                       {item.data_record.raw.resource?.reaction &&

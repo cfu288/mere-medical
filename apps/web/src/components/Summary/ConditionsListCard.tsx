@@ -2,7 +2,7 @@ import { Disclosure } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, Condition } from 'fhir/r2';
-import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument';
+import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocumentType';
 
 export function ConditionsListCard({
   items,
@@ -27,7 +27,7 @@ export function ConditionsListCard({
               <div className="min-w-0 flex-1">
                 <span className="absolute inset-0" aria-hidden="true" />
                 {items.map((item) => (
-                  <div className="py-2" key={item._id}>
+                  <div className="py-2" key={item.id}>
                     <p className="text-md font-bold text-gray-900">
                       {item.metadata?.display_name}
                     </p>

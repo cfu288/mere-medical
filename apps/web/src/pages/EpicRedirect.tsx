@@ -156,7 +156,7 @@ const EpicRedirect: React.FC = () => {
 
 export default EpicRedirect;
 
-const redirectToConnectionsTab = (navigate: any) => {
+const redirectToConnectionsTab = (navigate: NavigateFunction) => {
   navigate(Routes.AddConnection);
 };
 

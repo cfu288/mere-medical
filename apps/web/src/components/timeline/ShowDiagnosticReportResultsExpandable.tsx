@@ -1,7 +1,7 @@
 import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { RxDocument } from 'rxdb';
-import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument';
+import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocumentType';
 import { Modal } from '../Modal';
 import { ModalHeader } from '../ModalHeader';
 import { useRxDb } from '../providers/RxDbProvider';

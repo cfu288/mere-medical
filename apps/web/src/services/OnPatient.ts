@@ -14,9 +14,9 @@ import { RxDatabase, RxDocument } from 'rxdb';
 import { DatabaseCollections } from '../components/providers/RxDbProvider';
 import { DSTU2 } from './DSTU2';
 import Config from '../environments/config.json';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocumentType';
 import { ClinicalDocumentType } from '../models/clinical-document/ClinicalDocumentCollection';
-import { ConnectionDocument } from '../models/connection-document/ConnectionDocument';
+import { ConnectionDocument } from '../models/connection-document/ConnectionDocumentType';
 
 export const OnPatientBaseUrl = 'https://onpatient.com';
 export const OnPatientDSTU2Url = `${OnPatientBaseUrl}/api/fhir`;

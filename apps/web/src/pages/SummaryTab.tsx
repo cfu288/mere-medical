@@ -3,7 +3,7 @@ import {
   useRxDb,
 } from '../components/providers/RxDbProvider';
 import { GenericBanner } from '../components/GenericBanner';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocumentType';
 import {
   AllergyIntolerance,
   BundleEntry,

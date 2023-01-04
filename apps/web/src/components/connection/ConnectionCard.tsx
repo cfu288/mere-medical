@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument';
+import { ConnectionDocument } from '../../models/connection-document/ConnectionDocumentType';
 import { DatabaseCollections, useRxDb } from '../providers/RxDbProvider';
 import onpatientLogo from '../../img/onpatient_logo.jpeg';
 import epicLogo from '../../img/MyChartByEpic.png';
@@ -116,7 +116,7 @@ export function ConnectionCard({
     userPreferences = useUserPreferences(),
     removeDocument = (document: RxDocument<ConnectionDocument>) => {
       setDeleting(true);
-      const connectionId = document.get('_id');
+      const connectionId = document.get('id');
       db.clinical_documents
         .find({
           selector: {
@@ -173,7 +173,7 @@ export function ConnectionCard({
 
   return (
     <li
-      key={item._id}
+      key={item.id}
       className="col-span-1 mb-8 divide-y divide-gray-200 rounded-lg bg-white shadow"
     >
       <div className="flex w-full items-center justify-between space-x-6 p-6">

@@ -1,10 +1,10 @@
 export const userDocumentSchemaLiteral = {
   title: 'User Document Schema',
   version: 0,
-  primaryKey: '_id',
+  primaryKey: 'id',
   type: 'object',
   properties: {
-    _id: {
+    id: {
       type: 'string',
       maxLength: 128,
     },

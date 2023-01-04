@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { RxDatabase, RxDocument } from 'rxdb';
-import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument';
+import { ConnectionDocument } from '../../models/connection-document/ConnectionDocumentType';
 import { DatabaseCollections, useRxDb } from '../providers/RxDbProvider';
 
 export function useConnectionDoc(id: string) {
@@ -26,7 +26,7 @@ async function getConnectionCards(
   return db.connection_documents
     .findOne({
       selector: {
-        _id: id,
+        id: id,
       },
     })
     .exec()

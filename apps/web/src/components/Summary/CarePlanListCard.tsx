@@ -2,7 +2,7 @@ import { Disclosure } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { BundleEntry, CarePlan } from 'fhir/r2';
 import { Fragment } from 'react';
-import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument';
+import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocumentType';
 
 export function CarePlanListCard({
   items,

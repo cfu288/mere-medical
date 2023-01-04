@@ -15,7 +15,7 @@ import {
   DatabaseCollections,
   useRxDb,
 } from '../components/providers/RxDbProvider';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocumentType';
 import { ConditionCard } from '../components/timeline/ConditionCard';
 import { RxDatabase, RxDocument } from 'rxdb';
 import { DiagnosticReportCard } from '../components/timeline/DiagnosticReportCard';
@@ -154,11 +154,11 @@ const TimelineTab: React.FC = () => {
                     </div>
                     <div className="flex w-3/4 flex-col gap-y-2">
                       {itemList.map((item) => (
-                        <div key={item._id}>
+                        <div key={item.id}>
                           {item.data_record.resource_type ===
                             'immunization' && (
                             <ImmunizationCard
-                              key={item._id}
+                              key={item.id}
                               item={
                                 item as ClinicalDocument<
                                   BundleEntry<Immunization>
@@ -168,7 +168,7 @@ const TimelineTab: React.FC = () => {
                           )}
                           {item.data_record.resource_type === 'condition' && (
                             <ConditionCard
-                              key={item._id}
+                              key={item.id}
                               item={
                                 item as ClinicalDocument<BundleEntry<Condition>>
                               }
@@ -176,7 +176,7 @@ const TimelineTab: React.FC = () => {
                           )}
                           {item.data_record.resource_type === 'procedure' && (
                             <ProcedureCard
-                              key={item._id}
+                              key={item.id}
                               item={
                                 item as ClinicalDocument<BundleEntry<Procedure>>
                               }
@@ -184,7 +184,7 @@ const TimelineTab: React.FC = () => {
                           )}
                           {item.data_record.resource_type === 'observation' && (
                             <ObservationCard
-                              key={item._id}
+                              key={item.id}
                               item={
                                 item as ClinicalDocument<
                                   BundleEntry<Observation>
@@ -195,7 +195,7 @@ const TimelineTab: React.FC = () => {
                           {item.data_record.resource_type ===
                             'medicationstatement' && (
                             <MedicationCard
-                              key={item._id}
+                              key={item.id}
                               item={
                                 item as ClinicalDocument<
                                   BundleEntry<MedicationStatement>
@@ -206,7 +206,7 @@ const TimelineTab: React.FC = () => {
                           {item.data_record.resource_type ===
                             'diagnosticreport' && (
                             <DiagnosticReportCard
-                              key={item._id}
+                              key={item.id}
                               item={
                                 item as ClinicalDocument<
                                   BundleEntry<DiagnosticReport>
@@ -217,7 +217,7 @@ const TimelineTab: React.FC = () => {
                           {item.data_record.resource_type ===
                             'documentreference' && (
                             <DocumentReferenceCard
-                              key={item._id}
+                              key={item.id}
                               item={
                                 item as ClinicalDocument<
                                   BundleEntry<DocumentReference>

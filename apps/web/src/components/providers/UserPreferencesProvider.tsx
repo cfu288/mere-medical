@@ -7,7 +7,7 @@ import React, {
 import { RxDatabase, RxDocument } from 'rxdb';
 import { Subscription } from 'rxjs';
 import uuid4 from 'uuid4';
-import { UserPreferencesDocument } from '../../models/user-preferences/UserPreferences';
+import { UserPreferencesDocument } from '../../models/user-preferences/UserPreferencesType';
 import { DatabaseCollections, useRxDb } from './RxDbProvider';
 import { useUser } from './UserProvider';
 
@@ -15,7 +15,7 @@ import { useUser } from './UserProvider';
 function createDefaultPreferences(
   user_id: string
 ): Partial<UserPreferencesDocument> {
-  return { use_proxy: false, user_id, _id: uuid4() };
+  return { use_proxy: false, user_id, id: uuid4() };
 }
 
 /**
@@ -127,8 +127,8 @@ export function UserPreferencesProvider(props: UserPreferencesProviderProps) {
   useEffect(() => {
     let sub: Subscription | undefined;
 
-    createUserPreferencesIfNone(db, user._id).then(() => {
-      sub = fetchUserPreferences(db, user._id, (item) => {
+    createUserPreferencesIfNone(db, user.id).then(() => {
+      sub = fetchUserPreferences(db, user.id, (item) => {
         setUpContext(item?.userPreferences);
         setRupContext(item?.rawUserPreferences);
       });
@@ -137,7 +137,7 @@ export function UserPreferencesProvider(props: UserPreferencesProviderProps) {
     return () => {
       sub?.unsubscribe();
     };
-  }, [db, user._id]);
+  }, [db, user.id]);
 
   return (
     <UserPreferencesContext.Provider value={upContext}>

@@ -1,6 +1,6 @@
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, MedicationStatement } from 'fhir/r2';
-import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument';
+import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocumentType';
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
 
 export function MedicationCard({

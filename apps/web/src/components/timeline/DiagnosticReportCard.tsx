@@ -1,7 +1,7 @@
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, DiagnosticReport } from 'fhir/r2';
 import { useState } from 'react';
-import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument';
+import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocumentType';
 import { ShowDiagnosticReportResultsExpandable } from './ShowDiagnosticReportResultsExpandable';
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
 

@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import {
   ClinicalDocument,
   MergeClinicalDocument,
-} from '../../models/clinical-document/ClinicalDocument';
+} from '../../models/clinical-document/ClinicalDocumentType';
 
 export function ShowObservationResultsExpandable({
   item,
@@ -26,7 +26,7 @@ export function ShowObservationResultsExpandable({
   );
 
   return (
-    <div key={item._id}>
+    <div key={item.id}>
       <div className="relative py-2">
         <div className="absolute inset-0 flex items-center" aria-hidden="true">
           <div className="w-full border-t border-gray-300" />

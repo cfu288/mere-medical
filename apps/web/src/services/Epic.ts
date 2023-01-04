@@ -17,12 +17,12 @@ import {
 } from 'fhir/r2';
 import { RxDocument, RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../components/providers/RxDbProvider';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocumentType';
 import { ClinicalDocumentType } from '../models/clinical-document/ClinicalDocumentCollection';
 import {
   ConnectionDocument,
   CreateConnectionDocument,
-} from '../models/connection-document/ConnectionDocument';
+} from '../models/connection-document/ConnectionDocumentType';
 import { Routes } from '../Routes';
 import { DSTU2 } from './DSTU2';
 import Config from '../environments/config.json';
@@ -204,7 +204,7 @@ export async function syncAllRecords(
       'Patient',
       patientMapper,
       {
-        _id: connectionDocument.get('patient'),
+        id: connectionDocument.get('patient'),
       },
       useProxy
     ),
@@ -330,7 +330,7 @@ async function syncDocumentReferences(
         'data_record.resource_type': {
           $eq: 'documentreference',
         },
-        connection_record_id: `${connectionDocument.get('_id')}`,
+        connection_record_id: `${connectionDocument.get('id')}`,
       },
     })
     .exec();
@@ -370,9 +370,9 @@ async function syncDocumentReferences(
             if (raw && contentType) {
               // save as ClinicalDocument
               const cd: ClinicalDocument = {
-                _id: uuidv4(),
+                id: uuidv4(),
                 user_id: connectionDocument.user_id,
-                connection_record_id: connectionDocument._id,
+                connection_record_id: connectionDocument.id,
                 data_record: {
                   raw: raw,
                   format: 'FHIR.DSTU2',
@@ -640,8 +640,8 @@ export async function saveConnectionToDb({
         const nowInSeconds = Math.floor(Date.now() / 1000);
         // Otherwise, create a new connection card
         const dbentry: Omit<CreateConnectionDocument, 'refresh_token'> = {
-          _id: uuidv4(),
-          user_id: user._id,
+          id: uuidv4(),
+          user_id: user.id,
           source: 'epic',
           location: epicUrl,
           name: epicName,

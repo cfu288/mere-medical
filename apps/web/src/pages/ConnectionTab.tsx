@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useState } from 'react';
-import { ConnectionDocument } from '../models/connection-document/ConnectionDocument';
+import { ConnectionDocument } from '../models/connection-document/ConnectionDocumentType';
 import * as OnPatient from '../services/OnPatient';
 import {
   DatabaseCollections,
@@ -75,7 +75,7 @@ const ConnectionTab: React.FC = () => {
         <ul className="grid grid-cols-1 py-8">
           {list?.map((item) => (
             <ConnectionCard
-              key={item._id}
+              key={item.id}
               item={item}
               baseUrl={item.get('location')}
             />

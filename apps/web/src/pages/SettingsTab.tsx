@@ -33,7 +33,7 @@ const SettingsTab: React.FC = () => {
       {user !== undefined && !user.is_default_user && (
         <div className="mx-auto mt-2 flex max-w-sm flex-col px-4 sm:px-6 lg:px-8">
           <li
-            key={user.email || user._id}
+            key={user.email || user.id}
             className="col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white text-center"
           >
             <div className="flex flex-1 flex-col p-8">
@@ -105,8 +105,8 @@ const SettingsTab: React.FC = () => {
                         });
                       } else {
                         db.user_preferences.insert({
-                          _id: uuid4(),
-                          user_id: user?._id,
+                          id: uuid4(),
+                          user_id: user?.id,
                           use_proxy: true,
                         });
                       }

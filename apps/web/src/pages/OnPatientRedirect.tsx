@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
-import { CreateConnectionDocument } from '../models/connection-document/ConnectionDocument';
+import { CreateConnectionDocument } from '../models/connection-document/ConnectionDocumentType';
 import { useRxDb } from '../components/providers/RxDbProvider';
 import { Routes } from '../Routes';
 import { useNotificationDispatch } from '../components/providers/NotificationProvider';
@@ -30,11 +30,11 @@ const OnPatientRedirect: React.FC = () => {
       refreshToken = searchRequest.get('refreshToken'),
       expiresIn = searchRequest.get('expiresIn');
 
-    if (accessToken && refreshToken && expiresIn && user._id) {
+    if (accessToken && refreshToken && expiresIn && user.id) {
       const nowInSeconds = Math.floor(Date.now() / 1000);
       const dbentry: Omit<CreateConnectionDocument, 'patient' | 'scope'> = {
-        _id: uuidv4(),
-        user_id: user._id,
+        id: uuidv4(),
+        user_id: user.id,
         source: 'onpatient',
         location: 'https://onpatient.com',
         name: 'OnPatient',
@@ -62,7 +62,7 @@ const OnPatientRedirect: React.FC = () => {
         variant: 'error',
       });
     }
-  }, [db.connection_documents, navigate, notifyDispatch, user._id]);
+  }, [db.connection_documents, navigate, notifyDispatch, user.id]);
 
   return (
     <AppPage banner={<GenericBanner text="Authenticated! Redirecting" />}>

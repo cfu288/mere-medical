@@ -7,7 +7,7 @@ import { UserDocument } from '../../models/user-document/UserDocumentType';
 import { DatabaseCollections, useRxDb } from './RxDbProvider';
 
 const defaultUser: UserDocument = {
-  _id: uuid4(),
+  id: uuid4(),
   is_selected_user: true,
   is_default_user: true,
 };
