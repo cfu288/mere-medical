@@ -1,4 +1,4 @@
-import { BaseDocument } from './BaseDocument';
+import { BaseDocument } from '../BaseDocument';
 
 export interface UserDocument extends BaseDocument {
   gender?: string;

@@ -1,6 +1,6 @@
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, Condition } from 'fhir/r2';
-import { ClinicalDocument } from '../../models/ClinicalDocument';
+import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument';
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
 
 export function ConditionCard({

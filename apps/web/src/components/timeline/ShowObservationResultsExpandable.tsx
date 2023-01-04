@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import {
   ClinicalDocument,
   MergeClinicalDocument,
-} from '../../models/ClinicalDocument';
+} from '../../models/clinical-document/ClinicalDocument';
 
 export function ShowObservationResultsExpandable({
   item,

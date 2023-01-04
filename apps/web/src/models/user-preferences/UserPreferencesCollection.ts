@@ -22,6 +22,7 @@ export const userPreferencesSchemaLiteral = {
     },
     use_proxy: {
       type: 'boolean',
+      default: false,
     },
   },
   indexes: ['user_id'],

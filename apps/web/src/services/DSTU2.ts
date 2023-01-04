@@ -14,10 +14,10 @@ import {
   CarePlan,
   FhirResource,
 } from 'fhir/r2';
-import { ConnectionDocument } from '../models/ConnectionDocument';
+import { ConnectionDocument } from '../models/connection-document/ConnectionDocument';
 import { v4 as uuidv4 } from 'uuid';
-import { ClinicalDocument } from '../models/ClinicalDocument';
-import { UserDocument } from '../models/UserDocument';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument';
+import { UserDocument } from '../models/user-document/UserDocumentType';
 
 function parseId<T = FhirResource>(bundleItem: BundleEntry<T>) {
   // OnPatient returns an array instead of a string, not to spec

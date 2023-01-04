@@ -12,11 +12,11 @@ import {
 } from 'fhir/r2';
 import { RxDatabase, RxDocument } from 'rxdb';
 import { DatabaseCollections } from '../components/providers/RxDbProvider';
-import { ClinicalDocumentType } from '../models/ClinicalDocumentCollection';
-import { ConnectionDocument } from '../models/ConnectionDocument';
 import { DSTU2 } from './DSTU2';
 import Config from '../environments/config.json';
-import { ClinicalDocument } from '../models/ClinicalDocument';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument';
+import { ClinicalDocumentType } from '../models/clinical-document/ClinicalDocumentCollection';
+import { ConnectionDocument } from '../models/connection-document/ConnectionDocument';
 
 export const OnPatientBaseUrl = 'https://onpatient.com';
 export const OnPatientDSTU2Url = `${OnPatientBaseUrl}/api/fhir`;

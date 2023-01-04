@@ -2,7 +2,7 @@ import { Disclosure } from '@headlessui/react';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
 import { BundleEntry, DocumentReference } from 'fhir/r2';
 import { useEffect, useState } from 'react';
-import { ClinicalDocument } from '../../models/ClinicalDocument';
+import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument';
 import { Modal } from '../Modal';
 import { ModalHeader } from '../ModalHeader';
 import { useClinicalDoc } from '../hooks/useClinicalDoc';

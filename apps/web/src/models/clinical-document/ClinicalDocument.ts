@@ -1,4 +1,4 @@
-import { BaseDocument } from './BaseDocument';
+import { BaseDocument } from '../BaseDocument';
 
 export interface ClinicalDocument<T = unknown> extends BaseDocument {
   connection_record_id: string;

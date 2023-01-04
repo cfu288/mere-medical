@@ -7,9 +7,9 @@ import {
   DatabaseCollections,
   useRxDb,
 } from '../components/providers/RxDbProvider';
-import { ClinicalDocument } from './ClinicalDocument';
-import { UserDocument } from './UserDocument';
 import uuid4 from 'uuid4';
+import { UserDocument } from '../models/user-document/UserDocumentType';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument';
 
 function fetchPatientRecords(db: RxDatabase<DatabaseCollections>) {
   return db.clinical_documents

@@ -2,7 +2,7 @@ import { Disclosure } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, Condition } from 'fhir/r2';
-import { ClinicalDocument } from '../../models/ClinicalDocument';
+import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument';
 
 export function ConditionsListCard({
   items,

@@ -17,12 +17,12 @@ import {
 } from 'fhir/r2';
 import { RxDocument, RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../components/providers/RxDbProvider';
-import { ClinicalDocument } from '../models/ClinicalDocument';
-import { ClinicalDocumentType } from '../models/ClinicalDocumentCollection';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument';
+import { ClinicalDocumentType } from '../models/clinical-document/ClinicalDocumentCollection';
 import {
   ConnectionDocument,
   CreateConnectionDocument,
-} from '../models/ConnectionDocument';
+} from '../models/connection-document/ConnectionDocument';
 import { Routes } from '../Routes';
 import { DSTU2 } from './DSTU2';
 import Config from '../environments/config.json';
@@ -30,7 +30,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { JsonWebKeyWKid, signJwt } from './JWTTools';
 import { getPublicKey, IDBKeyConfig } from './WebCrypto';
 import { JsonWebKeySet } from '../services/JWTTools';
-import { UserDocument } from '../models/UserDocument';
+import { UserDocument } from '../models/user-document/UserDocumentType';
 
 export function getDSTU2Url(baseUrl: string) {
   return `${baseUrl}/api/FHIR/DSTU2`;

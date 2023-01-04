@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { RxDatabase, RxDocument } from 'rxdb';
-import { ConnectionDocument } from '../../models/ConnectionDocument';
+import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument';
 import { DatabaseCollections, useRxDb } from '../providers/RxDbProvider';
 
 export function useConnectionDoc(id: string) {

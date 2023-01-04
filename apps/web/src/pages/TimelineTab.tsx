@@ -15,7 +15,7 @@ import {
   DatabaseCollections,
   useRxDb,
 } from '../components/providers/RxDbProvider';
-import { ClinicalDocument } from '../models/ClinicalDocument';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument';
 import { ConditionCard } from '../components/timeline/ConditionCard';
 import { RxDatabase, RxDocument } from 'rxdb';
 import { DiagnosticReportCard } from '../components/timeline/DiagnosticReportCard';
@@ -24,7 +24,7 @@ import { ObservationCard } from '../components/timeline/ObservationCard';
 import { ProcedureCard } from '../components/timeline/ProcedureCard';
 import { TimelineBanner } from '../components/timeline/TimelineBanner';
 import { MedicationCard } from '../components/timeline/MedicationCard';
-import { EmptyRecordsPlaceholder } from '../models/EmptyRecordsPlaceholder';
+import { EmptyRecordsPlaceholder } from '../components/EmptyRecordsPlaceholder';
 import { useUser } from '../components/providers/UserProvider';
 import { DocumentReferenceCard } from '../components/timeline/DocumentReferenceCard';
 import { AppPage } from '../components/AppPage';

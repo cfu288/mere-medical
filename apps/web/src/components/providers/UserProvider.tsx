@@ -3,7 +3,7 @@ import { PropsWithChildren, useEffect, useState } from 'react';
 import { RxDatabase } from 'rxdb';
 import { Subscription } from 'rxjs';
 import uuid4 from 'uuid4';
-import { UserDocument } from '../../models/UserDocument';
+import { UserDocument } from '../../models/user-document/UserDocumentType';
 import { DatabaseCollections, useRxDb } from './RxDbProvider';
 
 const defaultUser: UserDocument = {

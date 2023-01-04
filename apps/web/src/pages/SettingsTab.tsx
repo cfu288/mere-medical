@@ -5,7 +5,7 @@ import { GenericBanner } from '../components/GenericBanner';
 import { useRxDb } from '../components/providers/RxDbProvider';
 import { useUserPreferences } from '../components/providers/UserPreferencesProvider';
 import { useUser } from '../components/providers/UserProvider';
-import { EmptyUserPlaceholder } from '../models/EmptyUserPlaceholder';
+import { EmptyUserPlaceholder } from '../components/EmptyUserPlaceholder';
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ');

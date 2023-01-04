@@ -9,27 +9,28 @@ import { addRxPlugin, createRxDatabase, RxDatabase } from 'rxdb';
 import { Transition } from '@headlessui/react';
 import { getRxStoragePouch, addPouchPlugin } from 'rxdb/plugins/pouchdb';
 import plugin from 'pouchdb-adapter-idb';
-import {
-  ConnectionDocumentCollection,
-  ConnectionDocumentSchema,
-} from '../../models/ConnectionDocumentCollection';
-import {
-  ClinicalDocumentCollection,
-  ClinicalDocumentSchema,
-} from '../../models/ClinicalDocumentCollection';
+
 import { RxDBDevModePlugin } from 'rxdb/plugins/dev-mode';
 import { RxDBMigrationPlugin } from 'rxdb/plugins/migration';
 import { RxDBJsonDumpPlugin } from 'rxdb/plugins/json-dump';
+
+import { RxDBUpdatePlugin } from 'rxdb/plugins/update';
+import {
+  ClinicalDocumentCollection,
+  ClinicalDocumentSchema,
+} from '../../models/clinical-document/ClinicalDocumentCollection';
+import {
+  ConnectionDocumentCollection,
+  ConnectionDocumentSchema,
+} from '../../models/connection-document/ConnectionDocumentCollection';
 import {
   UserDocumentCollection,
   UserDocumentSchema,
-} from '../../models/UserDocumentCollection';
-// to use the update() method, you need to add the update plugin.
-import { RxDBUpdatePlugin } from 'rxdb/plugins/update';
+} from '../../models/user-document/UserDocumentCollection';
 import {
   UserPreferencesDocumentCollection,
   UserPreferencesDocumentSchema,
-} from '../../models/UserPreferencesCollection';
+} from '../../models/user-preferences/UserPreferencesCollection';
 
 addRxPlugin(RxDBUpdatePlugin);
 addRxPlugin(RxDBMigrationPlugin);

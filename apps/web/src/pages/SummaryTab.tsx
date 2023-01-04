@@ -3,7 +3,7 @@ import {
   useRxDb,
 } from '../components/providers/RxDbProvider';
 import { GenericBanner } from '../components/GenericBanner';
-import { ClinicalDocument } from '../models/ClinicalDocument';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument';
 import {
   AllergyIntolerance,
   BundleEntry,
@@ -20,7 +20,7 @@ import { ConditionsListCard } from '../components/summary/ConditionsListCard';
 import { ImmunizationListCard } from '../components/summary/ImmunizationListCard';
 import { CarePlanListCard } from '../components/summary/CarePlanListCard';
 import { AllergyIntoleranceListCard } from '../components/summary/AllergyIntoleranceListCard';
-import { EmptyRecordsPlaceholder } from '../models/EmptyRecordsPlaceholder';
+import { EmptyRecordsPlaceholder } from '../components/EmptyRecordsPlaceholder';
 import { AppPage } from '../components/AppPage';
 
 function fetchMedications(db: RxDatabase<DatabaseCollections>) {
