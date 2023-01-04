@@ -70,7 +70,7 @@ async function syncFHIRResource<T extends FhirResource>(
         selector: {
           $and: [
             { 'metadata.id': `${doc.metadata?.id}` },
-            { source_record: `${doc.source_record}` },
+            { connection_record_id: `${doc.connection_record_id}` },
           ],
         },
       })

@@ -7,7 +7,7 @@ import { differenceInDays, format, parseISO } from 'date-fns';
 import { RxDatabase, RxDocument } from 'rxdb';
 import * as OnPatient from '../../services/OnPatient';
 import * as Epic from '../../services/Epic';
-import { useNotificationDispatch } from '../../services/NotificationContext';
+import { useNotificationDispatch } from '../providers/NotificationProvider';
 import { useUserPreferences } from '../providers/UserPreferencesProvider';
 
 function getImage(logo: 'onpatient' | 'epic') {
@@ -71,7 +71,8 @@ async function refreshConnectionTokenIfNeeded(
       const epicUrl = connectionDocument.get('location'),
         epicName = connectionDocument.get('name'),
         clientId = connectionDocument.get('client_id'),
-        epicId = connectionDocument.get('tenant_id');
+        epicId = connectionDocument.get('tenant_id'),
+        user = connectionDocument.get('user_id');
 
       let access_token_data;
       try {
@@ -94,6 +95,7 @@ async function refreshConnectionTokenIfNeeded(
         epicName,
         db,
         epicId,
+        user,
       });
     } catch (e) {
       console.error(e);
@@ -118,7 +120,7 @@ export function ConnectionCard({
       db.clinical_documents
         .find({
           selector: {
-            source_record: connectionId,
+            connection_record_id: connectionId,
           },
         })
         .remove()

@@ -15,6 +15,11 @@ export const connectionSchemaLiteral = {
       type: 'string',
       maxLength: 128,
     },
+    user_id: {
+      ref: 'user_documents',
+      type: 'string',
+      maxLength: 128,
+    },
     type: {
       type: 'string',
     },
@@ -56,7 +61,7 @@ export const connectionSchemaLiteral = {
       type: 'string',
     },
   },
-  indexes: ['last_refreshed'],
+  indexes: ['last_refreshed', 'user_id'],
 } as const;
 
 export const connectionSchemaTyped = toTypedRxJsonSchema(

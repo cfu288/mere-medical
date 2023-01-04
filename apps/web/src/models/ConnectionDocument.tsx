@@ -1,6 +1,7 @@
 import { BaseDocument } from './BaseDocument';
 
 export interface ConnectionDocument extends BaseDocument {
+  user_id: string;
   access_token: string;
   expires_in: number;
   patient: string;

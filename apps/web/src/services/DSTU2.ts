@@ -38,7 +38,8 @@ export namespace DSTU2 {
   ): ClinicalDocument<BundleEntry<Procedure>> {
     const cd: ClinicalDocument<BundleEntry<Procedure>> = {
       _id: uuidv4(),
-      source_record: connectionDocument._id,
+      user_id: connectionDocument.user_id,
+      connection_record_id: connectionDocument._id,
       data_record: {
         raw: bundleItem,
         format: 'FHIR.DSTU2',
@@ -61,7 +62,8 @@ export namespace DSTU2 {
   ) {
     const cd: ClinicalDocument<BundleEntry<MedicationStatement>> = {
       _id: uuidv4(),
-      source_record: connectionDocument._id,
+      user_id: connectionDocument.user_id,
+      connection_record_id: connectionDocument._id,
       data_record: {
         raw: bundleItem,
         format: 'FHIR.DSTU2',
@@ -86,7 +88,8 @@ export namespace DSTU2 {
   ) {
     const cd: ClinicalDocument<BundleEntry<Observation>> = {
       _id: uuidv4(),
-      source_record: connectionDocument._id,
+      user_id: connectionDocument.user_id,
+      connection_record_id: connectionDocument._id,
       data_record: {
         raw: bundleItem,
         format: 'FHIR.DSTU2',
@@ -109,7 +112,8 @@ export namespace DSTU2 {
   ) {
     const cd: ClinicalDocument<BundleEntry<DiagnosticReport>> = {
       _id: uuidv4(),
-      source_record: connectionDocument._id,
+      user_id: connectionDocument.user_id,
+      connection_record_id: connectionDocument._id,
       data_record: {
         raw: bundleItem,
         format: 'FHIR.DSTU2',
@@ -143,7 +147,8 @@ export namespace DSTU2 {
   ) {
     const cd: ClinicalDocument<BundleEntry<Patient>> = {
       _id: uuidv4(),
-      source_record: connectionDocument._id,
+      user_id: connectionDocument.user_id,
+      connection_record_id: connectionDocument._id,
       data_record: {
         raw: bundleItem,
         format: 'FHIR.DSTU2',
@@ -165,7 +170,8 @@ export namespace DSTU2 {
   ) {
     const cd: ClinicalDocument<BundleEntry<Immunization>> = {
       _id: uuidv4(),
-      source_record: connectionDocument._id,
+      user_id: connectionDocument.user_id,
+      connection_record_id: connectionDocument._id,
       data_record: {
         raw: bundleItem,
         format: 'FHIR.DSTU2',
@@ -188,7 +194,8 @@ export namespace DSTU2 {
   ) {
     const cd: ClinicalDocument<BundleEntry<Condition>> = {
       _id: uuidv4(),
-      source_record: connectionDocument._id,
+      user_id: connectionDocument.user_id,
+      connection_record_id: connectionDocument._id,
       data_record: {
         raw: bundleItem,
         format: 'FHIR.DSTU2',
@@ -211,7 +218,8 @@ export namespace DSTU2 {
   ) {
     const cd: ClinicalDocument<BundleEntry<AllergyIntolerance>> = {
       _id: uuidv4(),
-      source_record: connectionDocument._id,
+      user_id: connectionDocument.user_id,
+      connection_record_id: connectionDocument._id,
       data_record: {
         raw: bundleItem,
         format: 'FHIR.DSTU2',
@@ -235,7 +243,8 @@ export namespace DSTU2 {
   ) {
     const cd: ClinicalDocument<BundleEntry<Practitioner>> = {
       _id: uuidv4(),
-      source_record: connectionDocument._id,
+      user_id: connectionDocument.user_id,
+      connection_record_id: connectionDocument._id,
       data_record: {
         raw: bundleItem,
         format: 'FHIR.DSTU2',
@@ -258,7 +267,8 @@ export namespace DSTU2 {
   ) {
     const cd: ClinicalDocument<BundleEntry<DocumentReference>> = {
       _id: uuidv4(),
-      source_record: connectionDocument._id,
+      user_id: connectionDocument.user_id,
+      connection_record_id: connectionDocument._id,
       data_record: {
         raw: bundleItem,
         format: 'FHIR.DSTU2',
@@ -283,7 +293,8 @@ export namespace DSTU2 {
   ) {
     const cd: ClinicalDocument<BundleEntry<CarePlan>> = {
       _id: uuidv4(),
-      source_record: connectionDocument._id,
+      user_id: connectionDocument.user_id,
+      connection_record_id: connectionDocument._id,
       data_record: {
         raw: bundleItem,
         format: 'FHIR.DSTU2',

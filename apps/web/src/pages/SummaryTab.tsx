@@ -19,7 +19,7 @@ import { MedicationsListCard } from '../components/summary/MedicationsListCard';
 import { ConditionsListCard } from '../components/summary/ConditionsListCard';
 import { ImmunizationListCard } from '../components/summary/ImmunizationListCard';
 import { CarePlanListCard } from '../components/summary/CarePlanListCard';
-import { AllergyIntoleranceListCard } from '../components/summary/AllerrgyIntoleranceListCard';
+import { AllergyIntoleranceListCard } from '../components/summary/AllergyIntoleranceListCard';
 import { EmptyRecordsPlaceholder } from '../models/EmptyRecordsPlaceholder';
 import { AppPage } from '../components/AppPage';
 

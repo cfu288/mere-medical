@@ -4,9 +4,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { CreateConnectionDocument } from '../models/ConnectionDocument';
 import { useRxDb } from '../components/providers/RxDbProvider';
 import { Routes } from '../Routes';
-import { useNotificationDispatch } from '../services/NotificationContext';
+import { useNotificationDispatch } from '../components/providers/NotificationProvider';
 import { AppPage } from '../components/AppPage';
 import { GenericBanner } from '../components/GenericBanner';
+import { useUser } from '../components/providers/UserProvider';
 
 export interface OnPatientAuthResponse {
   access_token: string;
@@ -19,6 +20,7 @@ export interface OnPatientAuthResponse {
 
 const OnPatientRedirect: React.FC = () => {
   const navigate = useNavigate(),
+    user = useUser(),
     db = useRxDb(),
     notifyDispatch = useNotificationDispatch();
 
@@ -28,10 +30,11 @@ const OnPatientRedirect: React.FC = () => {
       refreshToken = searchRequest.get('refreshToken'),
       expiresIn = searchRequest.get('expiresIn');
 
-    if (accessToken && refreshToken && expiresIn) {
+    if (accessToken && refreshToken && expiresIn && user._id) {
       const nowInSeconds = Math.floor(Date.now() / 1000);
       const dbentry: Omit<CreateConnectionDocument, 'patient' | 'scope'> = {
         _id: uuidv4(),
+        user_id: user._id,
         source: 'onpatient',
         location: 'https://onpatient.com',
         name: 'OnPatient',
@@ -59,7 +62,7 @@ const OnPatientRedirect: React.FC = () => {
         variant: 'error',
       });
     }
-  }, [db.connection_documents, navigate, notifyDispatch]);
+  }, [db.connection_documents, navigate, notifyDispatch, user._id]);
 
   return (
     <AppPage banner={<GenericBanner text="Authenticated! Redirecting" />}>

@@ -1,7 +1,8 @@
 import { BaseDocument } from './BaseDocument';
 
 export interface ClinicalDocument<T = unknown> extends BaseDocument {
-  source_record: string;
+  connection_record_id: string;
+  user_id: string;
   data_record: {
     raw: T;
     format: 'FHIR.DSTU2';

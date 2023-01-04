@@ -15,9 +15,15 @@ export const clinicalDocumentSchemaLiteral = {
       type: 'string',
       maxLength: 128,
     },
-    source_record: {
+    connection_record_id: {
       type: 'string',
       maxLength: 128,
+      ref: 'connection_documents',
+    },
+    user_id: {
+      type: 'string',
+      maxLength: 128,
+      ref: 'user_documents',
     },
     data_record: {
       type: 'object',
@@ -32,14 +38,6 @@ export const clinicalDocumentSchemaLiteral = {
         resource_type: {
           type: 'string',
           maxLength: 128,
-
-          // enum: [
-          //   'immunization',
-          //   'procedure',
-          //   'condition',
-          //   'observation',
-          //   'diagnostic_report',
-          // ],
         },
         version_history: {
           type: 'array',
@@ -68,7 +66,12 @@ export const clinicalDocumentSchemaLiteral = {
       },
     },
   },
-  indexes: ['metadata.date', 'data_record.resource_type', 'source_record'],
+  indexes: [
+    'metadata.date',
+    'data_record.resource_type',
+    'connection_record_id',
+    'user_id',
+  ],
 } as const;
 
 export const clinicalDocumentSchemaTyped = toTypedRxJsonSchema(

@@ -30,6 +30,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { JsonWebKeyWKid, signJwt } from './JWTTools';
 import { getPublicKey, IDBKeyConfig } from './WebCrypto';
 import { JsonWebKeySet } from '../services/JWTTools';
+import { UserDocument } from '../models/UserDocument';
 
 export function getDSTU2Url(baseUrl: string) {
   return `${baseUrl}/api/FHIR/DSTU2`;
@@ -128,7 +129,7 @@ async function syncFHIRResource<T extends FhirResource>(
         selector: {
           $and: [
             { 'metadata.id': `${cd.metadata?.id}` },
-            { source_record: `${cd.source_record}` },
+            { connection_record_id: `${cd.connection_record_id}` },
           ],
         },
       })
@@ -329,7 +330,7 @@ async function syncDocumentReferences(
         'data_record.resource_type': {
           $eq: 'documentreference',
         },
-        source_record: `${connectionDocument.get('_id')}`,
+        connection_record_id: `${connectionDocument.get('_id')}`,
       },
     })
     .exec();
@@ -354,7 +355,7 @@ async function syncDocumentReferences(
               selector: {
                 $and: [
                   { 'metadata.id': `${attachmentUrl}` },
-                  { source_record: `${item.source_record}` },
+                  { connection_record_id: `${item.connection_record_id}` },
                 ],
               },
             })
@@ -370,7 +371,8 @@ async function syncDocumentReferences(
               // save as ClinicalDocument
               const cd: ClinicalDocument = {
                 _id: uuidv4(),
-                source_record: connectionDocument._id,
+                user_id: connectionDocument.user_id,
+                connection_record_id: connectionDocument._id,
                 data_record: {
                   raw: raw,
                   format: 'FHIR.DSTU2',
@@ -596,12 +598,14 @@ export async function saveConnectionToDb({
   epicName,
   db,
   epicId,
+  user,
 }: {
   res: EpicAuthResponseWithClientId | EpicAuthResponse;
   epicUrl: string;
   epicName: string;
   db: RxDatabase<DatabaseCollections>;
   epicId: string;
+  user: UserDocument;
 }) {
   const doc = await getConnectionCardByUrl(epicUrl, db);
   return new Promise((resolve, reject) => {
@@ -637,9 +641,10 @@ export async function saveConnectionToDb({
         // Otherwise, create a new connection card
         const dbentry: Omit<CreateConnectionDocument, 'refresh_token'> = {
           _id: uuidv4(),
+          user_id: user._id,
           source: 'epic',
           location: epicUrl,
-          name: epicName, //`MyChart ${epicName ? `- ${epicName}` : ''}`,
+          name: epicName,
           access_token: res.access_token,
           expires_in: nowInSeconds + res.expires_in,
           scope: res.scope,

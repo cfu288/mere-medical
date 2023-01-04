@@ -18,9 +18,10 @@ import {
   registerDynamicClient,
   saveConnectionToDb,
 } from '../services/Epic';
-import { useNotificationDispatch } from '../services/NotificationContext';
-import { History, LocationState } from 'history';
+import { useNotificationDispatch } from '../components/providers/NotificationProvider';
 import { useUserPreferences } from '../components/providers/UserPreferencesProvider';
+import { useUser } from '../components/providers/UserProvider';
+import { UserDocument } from '../models/UserDocument';
 
 /**
  * Handles the redirect from Epic's authorization server. If possible, it
@@ -37,6 +38,7 @@ import { useUserPreferences } from '../components/providers/UserPreferencesProvi
 const EpicRedirect: React.FC = () => {
   const navigate = useNavigate(),
     db = useRxDb(),
+    user = useUser(),
     [error, setError] = useState(''),
     notifyDispatch = useNotificationDispatch();
 
@@ -49,7 +51,7 @@ const EpicRedirect: React.FC = () => {
       epicName = localStorage.getItem(EpicLocalStorageKeys.EPIC_NAME),
       epicId = localStorage.getItem(EpicLocalStorageKeys.EPIC_ID);
 
-    if (code && epicUrl && epicName && epicId && userPreferences) {
+    if (code && epicUrl && epicName && epicId && userPreferences && user) {
       handleLogin({
         code,
         epicUrl,
@@ -57,6 +59,7 @@ const EpicRedirect: React.FC = () => {
         epicName,
         db,
         navigate,
+        user,
         enableProxy: userPreferences?.use_proxy,
       })
         .then()
@@ -78,9 +81,19 @@ const EpicRedirect: React.FC = () => {
           }
         });
     } else {
-      setError('There was a problem trying to sign in');
+      if (!(code && epicUrl && epicName && epicId)) {
+        setError('There was a problem trying to sign in');
+      }
+      // Otherwise, we're just pulling data
     }
-  }, [db, db.connection_documents, navigate, notifyDispatch, userPreferences]);
+  }, [
+    db,
+    db.connection_documents,
+    navigate,
+    notifyDispatch,
+    userPreferences,
+    user,
+  ]);
 
   return (
     <AppPage
@@ -160,6 +173,7 @@ const handleLogin = async ({
   epicName,
   db,
   navigate,
+  user,
   enableProxy = false,
 }: {
   code: string;
@@ -168,6 +182,7 @@ const handleLogin = async ({
   epicId: string;
   db: RxDatabase<DatabaseCollections>;
   navigate: NavigateFunction;
+  user: UserDocument;
   enableProxy?: boolean;
 }) => {
   let initalAuthResponse: EpicAuthResponse;
@@ -221,6 +236,7 @@ const handleLogin = async ({
         epicName,
         db,
         epicId,
+        user,
       });
       return Promise.reject(
         new DynamicRegistrationError(
@@ -256,6 +272,7 @@ const handleLogin = async ({
     epicName,
     db,
     epicId,
+    user,
   });
   return await redirectToConnectionsTab(navigate);
 };

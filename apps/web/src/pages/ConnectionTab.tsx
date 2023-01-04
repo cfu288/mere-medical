@@ -29,7 +29,6 @@ async function getConnectionCards(
     .$.subscribe((list) =>
       handleChange(list as unknown as RxDocument<ConnectionDocument>[])
     );
-  // .then((list) => list as unknown as RxDocument<ConnectionDocument>[]);
 }
 
 const ConnectionTab: React.FC = () => {

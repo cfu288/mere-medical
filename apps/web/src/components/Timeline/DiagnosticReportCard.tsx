@@ -10,7 +10,7 @@ export function DiagnosticReportCard({
 }: {
   item: ClinicalDocument<BundleEntry<DiagnosticReport>>;
 }) {
-  const conn = useConnectionDoc(item.source_record);
+  const conn = useConnectionDoc(item.connection_record_id);
   const [expanded, setExpanded] = useState(false);
 
   return (

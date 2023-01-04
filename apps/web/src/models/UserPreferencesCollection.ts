@@ -16,6 +16,7 @@ export const userPreferencesSchemaLiteral = {
       maxLength: 128,
     },
     user_id: {
+      ref: 'user_documents',
       type: 'string',
       maxLength: 128,
     },

@@ -100,7 +100,7 @@ export function ShowDocumentResultsExpandable({
   expanded: boolean;
   setExpanded: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  const cd = useConnectionDoc(item.source_record),
+  const cd = useConnectionDoc(item.connection_record_id),
     [ccda, setCCDA] = useState<CCDAParsed | undefined>(undefined),
     attachmentUrl = item.data_record.raw.resource?.content?.[0].attachment.url,
     attachment = useClinicalDoc(attachmentUrl);
