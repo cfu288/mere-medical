@@ -40,9 +40,8 @@ const EpicRedirect: React.FC = () => {
     db = useRxDb(),
     user = useUser(),
     [error, setError] = useState(''),
-    notifyDispatch = useNotificationDispatch();
-
-  const { userPreferences } = useUserPreferences();
+    notifyDispatch = useNotificationDispatch(),
+    userPreferences = useUserPreferences();
 
   useEffect(() => {
     const searchRequest = new URLSearchParams(window.location.search),

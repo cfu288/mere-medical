@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { PropsWithChildren, useEffect, useState } from 'react';
-import { RxDatabase } from 'rxdb';
+import { RxDatabase, RxDocument } from 'rxdb';
 import { Subscription } from 'rxjs';
 import uuid4 from 'uuid4';
 import { UserDocument } from '../../models/user-document/UserDocumentType';
@@ -14,7 +14,11 @@ const defaultUser: UserDocument = {
 
 function fetchUsers(
   db: RxDatabase<DatabaseCollections>,
-  handleChange: (item: UserDocument | undefined) => void
+  handleChange: (
+    item:
+      | { user: UserDocument; rawUser: RxDocument<UserDocument> | null }
+      | undefined
+  ) => void
 ) {
   return db.user_documents
     .findOne({
@@ -23,7 +27,10 @@ function fetchUsers(
       },
     })
     .$.subscribe((item) =>
-      handleChange({ ...defaultUser, ...item?.toMutableJSON() } as UserDocument)
+      handleChange({
+        user: { ...defaultUser, ...item?.toMutableJSON() } as UserDocument,
+        rawUser: item as unknown as RxDocument<UserDocument> | null,
+      })
     );
 }
 
@@ -53,10 +60,14 @@ function createUserIfNone(
 type UserProviderProps = PropsWithChildren<unknown>;
 
 const UserContext = React.createContext<UserDocument>(defaultUser);
+const RawUserContext = React.createContext<RxDocument<UserDocument> | null>(
+  null
+);
 
 export function UserProvider(props: UserProviderProps) {
   const db = useRxDb(),
-    [user, setUser] = useState<UserDocument>(defaultUser);
+    [user, setUser] = useState<UserDocument | undefined>(undefined),
+    [rawUser, setRawUser] = useState<RxDocument<UserDocument> | null>(null);
 
   useEffect(() => {
     let sub: Subscription | undefined;
@@ -64,7 +75,9 @@ export function UserProvider(props: UserProviderProps) {
     createUserIfNone(db).then(() => {
       sub = fetchUsers(db, (item) => {
         if (item) {
-          setUser(item);
+          console.log(item.user);
+          setUser(item.user);
+          setRawUser(item.rawUser);
         }
       });
     });
@@ -76,14 +89,31 @@ export function UserProvider(props: UserProviderProps) {
 
   if (user) {
     return (
-      <UserContext.Provider value={user}>{props.children}</UserContext.Provider>
+      <UserContext.Provider value={user}>
+        <RawUserContext.Provider value={rawUser}>
+          {props.children}
+        </RawUserContext.Provider>
+      </UserContext.Provider>
     );
   }
 
   return null;
 }
 
+/**
+ * Gets a parsed user document from the context, not modifiable
+ * @returns
+ */
 export function useUser() {
   const context = useContext(UserContext);
+  return context;
+}
+
+/**
+ * Gets the raw user document from the context, modifiable
+ * @returns The raw user document from the context, modifiable
+ */
+export function useRxUserDocument() {
+  const context = useContext(RawUserContext);
   return context;
 }

@@ -10,6 +10,7 @@ import {
 import uuid4 from 'uuid4';
 import { UserDocument } from '../models/user-document/UserDocumentType';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument';
+import { useRxUserDocument, useUser } from './providers/UserProvider';
 
 function fetchPatientRecords(db: RxDatabase<DatabaseCollections>) {
   return db.clinical_documents
@@ -137,22 +138,44 @@ export function EmptyUserPlaceholder() {
 
   const cancelButtonRef = useRef(null),
     db = useRxDb(),
+    user = useUser(),
+    rawUser = useRxUserDocument(),
     toggleModal = () => dispatch({ type: ActionTypes.TOGGLE_MODAL }),
     submitUser = (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      const userDocument: UserDocument = {
-        _id: uuid4(),
-        gender,
-        birthday,
-        first_name: firstName,
-        last_name: lastName,
-        email,
-        is_selected_user: true,
-        is_default_user: false,
-      };
-      db.user_documents.insert(userDocument).then(() => {
-        toggleModal();
-      });
+      if (user) {
+        if (rawUser) {
+          rawUser
+            .update({
+              $set: {
+                birthday,
+                email,
+                first_name: firstName,
+                gender,
+                is_default_user: false,
+                is_selected_user: true,
+                last_name: lastName,
+              },
+            })
+            .then(() => {
+              toggleModal();
+            });
+        }
+      } else {
+        const userDocument: UserDocument = {
+          _id: uuid4(),
+          birthday,
+          email,
+          first_name: firstName,
+          gender,
+          is_default_user: false,
+          is_selected_user: true,
+          last_name: lastName,
+        };
+        db.user_documents.insert(userDocument).then(() => {
+          toggleModal();
+        });
+      }
     };
 
   const firstNameHandler = (e: React.ChangeEvent<HTMLInputElement>) =>

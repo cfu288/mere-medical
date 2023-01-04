@@ -113,7 +113,7 @@ export function ConnectionCard({
 }) {
   const db = useRxDb(),
     [deleting, setDeleting] = useState(false),
-    { userPreferences } = useUserPreferences(),
+    userPreferences = useUserPreferences(),
     removeDocument = (document: RxDocument<ConnectionDocument>) => {
       setDeleting(true);
       const connectionId = document.get('_id');

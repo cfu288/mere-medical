@@ -53,10 +53,7 @@ function createUserPreferencesIfNone(
         } else {
           db.user_preferences
             .insert(createDefaultPreferences(user_id))
-            .then((x) => {
-              console.log(x.toMutableJSON());
-              resolve(true);
-            })
+            .then(() => resolve(true))
             .catch(() => reject(false));
         }
       })
@@ -85,6 +82,7 @@ function fetchUserPreferences(
       },
     })
     .$.subscribe((item) => {
+      console.log(item?.toMutableJSON());
       handleChange({
         userPreferences: getUserPreferencesFromRxDocument(
           item as unknown as RxDocument<UserPreferencesDocument>,
@@ -103,10 +101,13 @@ type UserPreferencesContextType = {
   rawUserPreferences?: RxDocument<UserPreferencesDocument>;
 };
 
-const UserPreferencesContext = React.createContext<UserPreferencesContextType>({
-  userPreferences: undefined,
-  rawUserPreferences: undefined,
-});
+const UserPreferencesContext = React.createContext<
+  UserPreferencesDocument | undefined
+>(undefined);
+
+const RawUserPreferencesContext = React.createContext<
+  RxDocument<UserPreferencesDocument> | undefined
+>(undefined);
 
 /**
  * To all descendents, expose the parsed user preferences (with defaults) and the the raw RxDocument for update ability
@@ -116,23 +117,20 @@ const UserPreferencesContext = React.createContext<UserPreferencesContextType>({
 export function UserPreferencesProvider(props: UserPreferencesProviderProps) {
   const db = useRxDb(),
     user = useUser(),
-    [upContext, setUpContext] = useState<{
-      userPreferences?: UserPreferencesDocument;
-      rawUserPreferences?: RxDocument<UserPreferencesDocument>;
-    }>({
-      userPreferences: undefined,
-      rawUserPreferences: undefined,
-    });
+    [upContext, setUpContext] = useState<UserPreferencesDocument | undefined>(
+      undefined
+    ),
+    [rupContext, setRupContext] = useState<
+      RxDocument<UserPreferencesDocument> | undefined
+    >();
 
   useEffect(() => {
     let sub: Subscription | undefined;
 
     createUserPreferencesIfNone(db, user._id).then(() => {
       sub = fetchUserPreferences(db, user._id, (item) => {
-        setUpContext({
-          userPreferences: item?.userPreferences,
-          rawUserPreferences: item?.rawUserPreferences,
-        });
+        setUpContext(item?.userPreferences);
+        setRupContext(item?.rawUserPreferences);
       });
     });
 
@@ -143,12 +141,29 @@ export function UserPreferencesProvider(props: UserPreferencesProviderProps) {
 
   return (
     <UserPreferencesContext.Provider value={upContext}>
-      {props.children}
+      <RawUserPreferencesContext.Provider value={rupContext}>
+        {props.children}
+      </RawUserPreferencesContext.Provider>
     </UserPreferencesContext.Provider>
   );
 }
 
-export function useUserPreferences(): UserPreferencesContextType {
+/**
+ * A react hook to get the parsed user preferences (with defaults). Not modifiable
+ * @returns The parsed user preferences (with defaults)
+ */
+export function useUserPreferences(): UserPreferencesDocument | undefined {
   const context = useContext(UserPreferencesContext);
+  return context;
+}
+
+/**
+ * A react hook to get the raw RxDocument for the user preferences. Use this to update the document
+ * @returns The raw RxDocument for the user preferences. Use this to update the document
+ */
+export function useRawUserPreferences():
+  | RxDocument<UserPreferencesDocument>
+  | undefined {
+  const context = useContext(RawUserPreferencesContext);
   return context;
 }

@@ -3,7 +3,10 @@ import uuid4 from 'uuid4';
 import { AppPage } from '../components/AppPage';
 import { GenericBanner } from '../components/GenericBanner';
 import { useRxDb } from '../components/providers/RxDbProvider';
-import { useUserPreferences } from '../components/providers/UserPreferencesProvider';
+import {
+  useRawUserPreferences,
+  useUserPreferences,
+} from '../components/providers/UserPreferencesProvider';
 import { useUser } from '../components/providers/UserProvider';
 import { EmptyUserPlaceholder } from '../components/EmptyUserPlaceholder';
 
@@ -12,9 +15,10 @@ function classNames(...classes: string[]) {
 }
 
 const SettingsTab: React.FC = () => {
-  const db = useRxDb();
-  const user = useUser();
-  const { userPreferences, rawUserPreferences } = useUserPreferences();
+  const db = useRxDb(),
+    user = useUser(),
+    userPreferences = useUserPreferences(),
+    rawUserPreferences = useRawUserPreferences();
 
   return (
     <AppPage banner={<GenericBanner text="Settings" />}>

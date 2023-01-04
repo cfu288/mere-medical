@@ -23,6 +23,10 @@ export const userDocumentSchemaLiteral = {
     email: {
       type: 'string',
     },
+    is_default_user: {
+      type: 'boolean',
+      default: false,
+    },
     is_selected_user: {
       type: 'boolean',
     },
