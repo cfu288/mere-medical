@@ -4,7 +4,7 @@ slug: /install-the-app
 description: Install the app
 ---
 
-# Installing Mere Medical as an app
+# Installing Mere Medical as an App
 
 While Mere Medical does not have an official app in an app store, you can install this website as an app directly on your iOS or Android device. You can also install the app on your desktop device if you use Google Chrome.
 

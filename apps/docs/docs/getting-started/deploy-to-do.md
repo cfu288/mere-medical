@@ -1,6 +1,6 @@
 ---
 sidebar_position: 2
-description: Deploy Mere Medical to Digital Ocean with one click
+description: Deploy Mere Medical to Digital Ocean with One click
 ---
 
 # 1-Click Deploy to Digital Ocean

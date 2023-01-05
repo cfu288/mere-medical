@@ -1,10 +1,10 @@
 ---
 sidebar_position: 2
 slug: /which-patient-portals-are-supported
-description: Supported Patient Portals
+description: Which Patient Portals are Supported?
 ---
 
-# Which Patient Portals are Supported?
+# Supported Patient Portals
 
 Currently, only the following patient portals are supported:
 
