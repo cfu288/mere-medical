@@ -184,48 +184,27 @@ const handleLogin = async ({
   user: UserDocument;
   enableProxy?: boolean;
 }) => {
-  let initalAuthResponse: EpicAuthResponse;
   let dynamicRegResponse: EpicDynamicRegistrationResponse;
-  let jwtAuthResponse: EpicAuthResponse;
 
   // Attempt initial code swap
-  try {
-    initalAuthResponse = await fetchAccessTokenWithCode(
-      code,
-      epicUrl,
-      epicName,
-      epicId,
-      enableProxy
-    );
-  } catch (e) {
-    initalAuthResponse = await fetchAccessTokenWithCode(
-      code,
-      epicUrl,
-      epicName,
-      epicId,
-      true
-    );
-  }
+
+  const initalAuthResponse = await fetchAccessTokenWithCode(
+    code,
+    epicUrl,
+    epicName,
+    epicId,
+    enableProxy
+  );
 
   // Attempt dynamic registration
   try {
-    try {
-      dynamicRegResponse = await registerDynamicClient({
-        res: initalAuthResponse,
-        epicUrl,
-        epicName,
-        epicId,
-        useProxy: enableProxy,
-      });
-    } catch (e) {
-      dynamicRegResponse = await registerDynamicClient({
-        res: initalAuthResponse,
-        epicUrl,
-        epicName,
-        epicId,
-        useProxy: true,
-      });
-    }
+    dynamicRegResponse = await registerDynamicClient({
+      res: initalAuthResponse,
+      epicUrl,
+      epicName,
+      epicId,
+      useProxy: enableProxy,
+    });
   } catch (e) {
     if (e instanceof DynamicRegistrationError) {
       const res = e.data;
@@ -250,21 +229,13 @@ const handleLogin = async ({
   }
 
   // Using DR to fetch new token
-  try {
-    jwtAuthResponse = await fetchAccessTokenUsingJWT(
-      dynamicRegResponse.client_id,
-      epicUrl,
-      epicId,
-      enableProxy
-    );
-  } catch (e) {
-    jwtAuthResponse = await fetchAccessTokenUsingJWT(
-      dynamicRegResponse.client_id,
-      epicUrl,
-      epicId,
-      true
-    );
-  }
+  const jwtAuthResponse = await fetchAccessTokenUsingJWT(
+    dynamicRegResponse.client_id,
+    epicUrl,
+    epicId,
+    enableProxy
+  );
+
   await saveConnectionToDb({
     res: jwtAuthResponse,
     epicUrl,
