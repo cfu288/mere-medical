@@ -1,6 +1,6 @@
 {
-  "label": "Getting Started",
-  "position": 2,
+  "label": "Getting Started with Self-Hosting",
+  "position": 5,
   "link": {
     "type": "generated-index",
     "description": "How to get Mere Medical up and running. As Mere Medical is still being developed, so is this documentation. Complete documentation is coming soon!"
