@@ -27,7 +27,8 @@
     "serve": {
       "executor": "@nrwl/node:node",
       "options": {
-        "buildTarget": "api:build"
+        "buildTarget": "api:build",
+        "runtimeArgs": ["--tls-min-v1.0"]
       },
       "configurations": {
         "production": {

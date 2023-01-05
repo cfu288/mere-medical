@@ -1,6 +1,6 @@
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, FhirResource } from 'fhir/r2';
-import React from 'react';
+import React, { Fragment } from 'react';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocumentType';
 import { Link } from 'react-router-dom';
 
@@ -17,7 +17,7 @@ export function JumpToPanel({
       <ul>
         {list &&
           Object.entries(list).map(([key], index, elements) => (
-            <>
+            <Fragment key={key}>
               {index === 0 ? (
                 <li className="sticky top-10 bg-gray-50 p-1 pl-2">
                   {format(parseISO(key), 'yyyy')}
@@ -38,7 +38,7 @@ export function JumpToPanel({
                     </li>
                   )
               }
-            </>
+            </Fragment>
           ))}
       </ul>
     </div>

@@ -10,7 +10,7 @@ import {
   Observation,
   Procedure,
 } from 'fhir/r2';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { Fragment, useEffect, useRef, useState } from 'react';
 import {
   DatabaseCollections,
   useRxDb,
@@ -138,7 +138,7 @@ const TimelineTab: React.FC = () => {
           >
             {list &&
               Object.entries(list).map(([key, itemList], index, elements) => (
-                <>
+                <Fragment key={key}>
                   {index === 0 ? (
                     <TimelineYearHeader key={`${key}${index}`} year={key} />
                   ) : null}
@@ -247,7 +247,7 @@ const TimelineTab: React.FC = () => {
                         </>
                       )
                   }
-                </>
+                </Fragment>
               ))}
           </div>
         )}

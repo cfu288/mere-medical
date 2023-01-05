@@ -22,7 +22,6 @@ export class ProxyController {
     @Param() params
   ) {
     try {
-      Logger.log(`=== ${request.url}`);
       this.proxyService.proxyRequest(request, response, params);
     } catch (err) {
       const msg = 'An error occurred while making the proxy call';

@@ -6,4 +6,4 @@ do
   envsubst $EXISTING_VARS < $file | sponge $file 
 done
 
-cd api && node main.js
+cd api && node --tls-min-v1.0 main.js
