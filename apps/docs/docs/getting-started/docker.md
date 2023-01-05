@@ -6,6 +6,7 @@ description: Get up and running with Docker
 # Run with Docker
 
 These instructions will tell you how to get Mere Medical up and running on your machine with Docker or Docker Compose.
+If you're just getting started and don't already have a reverse proxy set up, we'd recommend following [these Docker Compose setup instructions](https://meremedical.co/docs/getting-started/docker/#setting-up-with-docker-compose--local-ssl-with-mkcert--nginx)
 
 ## What you'll need
 
