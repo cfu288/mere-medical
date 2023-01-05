@@ -16,8 +16,8 @@ import {
 } from 'fhir/r2';
 import { ConnectionDocument } from '../models/connection-document/ConnectionDocumentType';
 import { v4 as uuidv4 } from 'uuid';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocumentType';
 import { UserDocument } from '../models/user-document/UserDocumentType';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocumentType';
 
 function parseId<T = FhirResource>(bundleItem: BundleEntry<T>) {
   // OnPatient returns an array instead of a string, not to spec

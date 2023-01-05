@@ -7,7 +7,7 @@ import React, {
 import { RxDatabase, RxDocument } from 'rxdb';
 import { Subscription } from 'rxjs';
 import uuid4 from 'uuid4';
-import { UserPreferencesDocument } from '../../models/user-preferences/UserPreferencesType';
+import { UserPreferencesDocument } from '../../models/user-preferences/UserPreferences';
 import { DatabaseCollections, useRxDb } from './RxDbProvider';
 import { useUser } from './UserProvider';
 

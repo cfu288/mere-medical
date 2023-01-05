@@ -17,7 +17,6 @@ import {
 } from 'fhir/r2';
 import { RxDocument, RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../components/providers/RxDbProvider';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocumentType';
 import { ClinicalDocumentType } from '../models/clinical-document/ClinicalDocumentCollection';
 import {
   ConnectionDocument,
@@ -31,6 +30,7 @@ import { JsonWebKeyWKid, signJwt } from './JWTTools';
 import { getPublicKey, IDBKeyConfig } from './WebCrypto';
 import { JsonWebKeySet } from '../services/JWTTools';
 import { UserDocument } from '../models/user-document/UserDocumentType';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocumentType';
 
 export function getDSTU2Url(baseUrl: string) {
   return `${baseUrl}/api/FHIR/DSTU2`;

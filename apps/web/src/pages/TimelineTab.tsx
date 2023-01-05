@@ -15,21 +15,22 @@ import {
   DatabaseCollections,
   useRxDb,
 } from '../components/providers/RxDbProvider';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocumentType';
-import { ConditionCard } from '../components/timeline/ConditionCard';
 import { RxDatabase, RxDocument } from 'rxdb';
+
+import { EmptyRecordsPlaceholder } from '../components/EmptyRecordsPlaceholder';
+import { useUser } from '../components/providers/UserProvider';
+import { AppPage } from '../components/AppPage';
+import { useLocation } from 'react-router-dom';
+import { ConditionCard } from '../components/timeline/ConditionCard';
 import { DiagnosticReportCard } from '../components/timeline/DiagnosticReportCard';
+import { DocumentReferenceCard } from '../components/timeline/DocumentReferenceCard';
 import { ImmunizationCard } from '../components/timeline/ImmunizationCard';
+import { JumpToPanel } from '../components/timeline/JumpToPanel';
+import { MedicationCard } from '../components/timeline/MedicationCard';
 import { ObservationCard } from '../components/timeline/ObservationCard';
 import { ProcedureCard } from '../components/timeline/ProcedureCard';
 import { TimelineBanner } from '../components/timeline/TimelineBanner';
-import { MedicationCard } from '../components/timeline/MedicationCard';
-import { EmptyRecordsPlaceholder } from '../components/EmptyRecordsPlaceholder';
-import { useUser } from '../components/providers/UserProvider';
-import { DocumentReferenceCard } from '../components/timeline/DocumentReferenceCard';
-import { AppPage } from '../components/AppPage';
-import { useLocation } from 'react-router-dom';
-import { JumpToPanel } from '../components/timeline/JumpToPanel';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocumentType';
 
 function fetchRecords(db: RxDatabase<DatabaseCollections>) {
   return db.clinical_documents
