@@ -17,7 +17,12 @@
 
 <p align="center">
   <a href="https://cloud.digitalocean.com/apps/new?repo=https://github.com/cfu288/mere-medical/tree/main&refcode=f6e0d718edc7">
-  <img src="https://www.deploytodo.com/do-btn-blue.svg" alt="Deploy to DO">
+    <img src="https://www.deploytodo.com/do-btn-blue.svg" alt="Deploy to DO">
+  </a>
+</p>
+<p align="center">
+  <a href="https://drone.mari.casa/cfu288/mere-medical">
+    <img src="https://drone.mari.casa/api/badges/cfu288/mere-medical/status.svg" alt="Build Status">
   </a>
 </p>
 
@@ -28,7 +33,7 @@
   <img src="./images/connections.png" width="400" />
 </p>
 
-Mere Medical is a self-hosted web app to aggregate and sync all of your medical records from your patient portals in one place. See everything in a timeline view or quickly summereze your records in one page. Handles multiple user accounts. Offline-first with multiple device sync supported.
+Mere Medical is a self-hosted web app to aggregate and sync all of your medical records from your patient portals in one place. See everything in a timeline view or quickly summereze your records in one page. Handles multiple user accounts. Offline-first.
 
 ## Getting Started
 

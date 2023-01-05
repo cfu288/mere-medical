@@ -6,4 +6,6 @@ do
   envsubst $EXISTING_VARS < $file | sponge $file 
 done
 
+echo "Starting Mere Medical"
+
 cd api && node --tls-min-v1.0 main.js
