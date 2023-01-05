@@ -153,9 +153,17 @@ server {
 }
 ```
 
+Create an `.env' file with the following format:
+
+```
+ONPATIENT_CLIENT_ID=
+ONPATIENT_CLIENT_SECRET=
+EPIC_CLIENT_ID=
+```
+
 `cd` into the directory of the `docker-compose.yaml` , and then run
 
-`docker-compose up`
+`docker compose --env-file .env up docker-compose up`
 
 to start Mere Medical.
 

@@ -14,6 +14,7 @@ services:
     image: cfu288/mere-medical:latest
     container_name: mere-medical-app
     environment:
-      - ONPATIENT_CLIENT_ID=2MkZStehSopenoRwmWalHqJ53Kips0z4zyNjk8in
-      - ONPATIENT_CLIENT_SECRET=6SK0rJxRz7xB9Z3HioWxFnOH1kQJIsTuLCcpqbUl3j2qJ6THshLRqBXNI5lE7sKJnxtd860dwslQbrsWbaVINynx3SeUI8dTfOEfBBrT2yqhwaRRsROxczpktHBwZtgE
+      - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
+      - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
+      - EPIC_CLIENT_ID=${EPIC_CLIENT_ID}
       - PUBLIC_URL=https://meremedical.local
