@@ -4,7 +4,7 @@ import Head from '@docusaurus/Head';
 import { CheckIcon } from '@heroicons/react/24/solid';
 
 const footerNavigation = {
-  main: [{ name: 'About', href: '#' }],
+  main: [{ name: 'About', href: 'https://meremedical.co/docs/' }],
   social: [],
 };
 
