@@ -6,75 +6,12 @@ description: Get up and running with Docker
 # Run with Docker or Docker Compose
 
 These instructions will tell you how to get Mere Medical up and running on your machine with Docker or Docker Compose.
-If you're just getting started and don't already have a reverse proxy set up, we'd recommend following [these Docker Compose setup instructions](https://meremedical.co/docs/getting-started/docker/#setting-up-with-docker-compose--local-ssl-with-mkcert--nginx)
 
-## What you'll need
+If you're looking to get Mere up and running on your local computer, we'd recommend following [these Docker Compose setup instructions](#setting-up-with-docker-compose--local-ssl-with-mkcert--nginx) as it will take you through step by step and help you set up local SSL.
 
-- [Docker](https://docs.docker.com/get-docker/)
-- [mkcert](https://github.com/FiloSottile/mkcert#installation) (if you want to run Mere Medical locally with SSL)
+If you want to run Mere on an external server and already have a reverse proxy with SSL set up, you can follow these [Docker](#setting-up-with-docker) instructions or [these Docker Compose instructions](#setting-up-with-docker-compose).
 
-### Setting Up with Docker
-
-Run the following in your command prompt:
-
-```
-docker run -p 4200:80 -i -t \
-  --name mere-medical \
-  -e ONPATIENT_CLIENT_ID=<ID_HERE> \
-  -e ONPATIENT_CLIENT_SECRET=<SECRET_HERE> \
-  -e EPIC_CLIENT_ID=<ID_HERE> \
-  -e PUBLIC_URL=https://localhost:4200 \
-  cfu288/mere-medical:latest
-```
-
-Then open [http://localhost:4200](http://localhost:4200) in a browser to see Mere Medical running!
-
-If you'd like to run Mere Medical as background process instead:
-
-```
-docker run -p 4200:80 \
-  --name mere-medical \
-  --detach \
-  --restart unless-stopped \
-  -e ONPATIENT_CLIENT_ID=<ID_HERE> \
-  -e ONPATIENT_CLIENT_SECRET=<SECRET_HERE> \
-  -e EPIC_CLIENT_ID=<ID_HERE> \
-  -e PUBLIC_URL=https://localhost:4200 \
-  cfu288/mere-medical:latest
-```
-
-Note that neither of these will set up SSL for you, which is needed for some patient portal syncing/authentication flows. If you are running this on a server with reverse proxy already set up, it is recommended to have your reverse proxy handle SSL and forward requests to Mere Medical. If you are running this on your local machine and need local SSL set up, read the section below.
-
-### Setting Up with Docker Compose
-
-Copy the following a docker compose file in a new directory. Note that the directory name becomes the prefix for the container. You'll need to replace items in the file that have the format `${VARIABLE_NAME}` with the actual value. Check out the [docker documentation](https://docs.docker.com/compose/environment-variables/#substitute-environment-variables-in-compose-files) for more information on how to do this securely.
-
-To get the env variables needed for OnPatient functionality, [see our documentation here](./onpatient-setup).
-
-```yaml title="docker-compose.yaml"
-version: '3.9'
-
-services:
-  app:
-    image: cfu288/mere-medical:latest
-    ports:
-      - '4200:80'
-    environment:
-      - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
-      - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
-      - EPIC_CLIENT_ID=${EPIC_CLIENT_ID}
-      - PUBLIC_URL=${PUBLIC_URL}
-```
-
-`cd` into the directory of the `docker-compose.yaml` , and then run
-
-`docker-compose up --detach`
-
-to start Mere Medical as a background process.
-
-Then open [http://localhost:4200](http://localhost:4200) in a browser to see Mere Medical running!
-
-Note that this will not set up SSL for you, which is needed for some patient portal syncing/authentication flows. If you are running this on a server with reverse proxy already set up, it is recommended to have your reverse proxy handle SSL and forward requests to Mere Medical. If you are running this on your local machine and need local SSL set up, read the section below.
+If you'd rather deploy to a cloud instance instead of your own computer, check out our [one click Digital Ocean deploy](./deploy-to-do.md).
 
 ### Setting Up with Docker Compose & Local SSL with mkcert + NGINX
 
@@ -169,3 +106,71 @@ EPIC_CLIENT_ID=
 to start Mere Medical.
 
 Then open [https://meremedical.local](https://meremedical.local) in a browser to see Mere Medical running!
+
+## What you'll need
+
+- [Docker](https://docs.docker.com/get-docker/)
+- [mkcert](https://github.com/FiloSottile/mkcert#installation) (if you want to run Mere Medical locally with SSL)
+
+### Setting Up with Docker
+
+Run the following in your command prompt:
+
+```
+docker run -p 4200:80 -i -t \
+  --name mere-medical \
+  -e ONPATIENT_CLIENT_ID=<ID_HERE> \
+  -e ONPATIENT_CLIENT_SECRET=<SECRET_HERE> \
+  -e EPIC_CLIENT_ID=<ID_HERE> \
+  -e PUBLIC_URL=https://localhost:4200 \
+  cfu288/mere-medical:latest
+```
+
+Then open [http://localhost:4200](http://localhost:4200) in a browser to see Mere Medical running!
+
+If you'd like to run Mere Medical as background process instead:
+
+```
+docker run -p 4200:80 \
+  --name mere-medical \
+  --detach \
+  --restart unless-stopped \
+  -e ONPATIENT_CLIENT_ID=<ID_HERE> \
+  -e ONPATIENT_CLIENT_SECRET=<SECRET_HERE> \
+  -e EPIC_CLIENT_ID=<ID_HERE> \
+  -e PUBLIC_URL=https://localhost:4200 \
+  cfu288/mere-medical:latest
+```
+
+Note that neither of these will set up SSL for you, which is needed for some patient portal syncing/authentication flows. If you are running this on a server with reverse proxy already set up, it is recommended to have your reverse proxy handle SSL and forward requests to Mere Medical. If you are running this on your local machine and need local SSL set up, read the section below.
+
+### Setting Up with Docker Compose
+
+Copy the following a docker compose file in a new directory. Note that the directory name becomes the prefix for the container. You'll need to replace items in the file that have the format `${VARIABLE_NAME}` with the actual value. Check out the [docker documentation](https://docs.docker.com/compose/environment-variables/#substitute-environment-variables-in-compose-files) for more information on how to do this securely.
+
+To get the env variables needed for OnPatient functionality, [see our documentation here](./onpatient-setup).
+
+```yaml title="docker-compose.yaml"
+version: '3.9'
+
+services:
+  app:
+    image: cfu288/mere-medical:latest
+    ports:
+      - '4200:80'
+    environment:
+      - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
+      - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
+      - EPIC_CLIENT_ID=${EPIC_CLIENT_ID}
+      - PUBLIC_URL=${PUBLIC_URL}
+```
+
+`cd` into the directory of the `docker-compose.yaml` , and then run
+
+`docker-compose up --detach`
+
+to start Mere Medical as a background process.
+
+Then open [http://localhost:4200](http://localhost:4200) in a browser to see Mere Medical running!
+
+Note that this will not set up SSL for you, which is needed for some patient portal syncing/authentication flows. If you are running this on a server with reverse proxy already set up, it is recommended to have your reverse proxy handle SSL and forward requests to Mere Medical. If you are running this on your local machine and need local SSL set up, read the section below.

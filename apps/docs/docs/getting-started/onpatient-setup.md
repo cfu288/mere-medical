@@ -5,7 +5,7 @@ description: Configuring integration with OnPatient patient portal.
 
 # Setting up OnPatient Sync
 
-_Note_: OnPatient unfortunately has a poor implementation of the FHIR DSTU2 standard for their patient facing api's. This means that some data will not be properly synced, such as lab panel results (CBC, CMP). For these panel results, they do not include the name of the individual components of the panel so you can't know which result is which. Outpatient office visits may appear as procedures.
+_Note_: OnPatient unfortunately has a poor implementation of the FHIR DSTU2 standard for their patient facing api's. This means that some data will not be properly synced, such as lab panel results (CBC, CMP). For these panel results, they do not include the name of the individual components of the panel so you can't know which result is which. OnPatient office visits may also appear as procedures.
 
 _Note_: There is a technical limitation in OnPatient that prevents the Mere Medical web app from securely authenticating directly with OnPatient. Therefore, in order for Mere Medical to access your medical records on your behalf, Mere Medical intercepts the login redirect from OnPatient via a backend endpoint and then forwards the access token to your web app. If you are not hosting this app yourself, this means that whoever is hosting the app for you can potentially intercept this request and login credentials.
 

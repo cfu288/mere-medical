@@ -5,7 +5,7 @@ description: Deploy Mere Medical to Digital Ocean with One click
 
 # 1-Click Deploy to Digital Ocean
 
-If you don't want to deploy Mere Medical to your own server or local machine, you can easily deploy Mere Medical to Digital Ocean App Platform with one click!. Just click the button below and follow the steps to deploy Mere Medical for $5 a month. The button below is a referral link that comes with $200 worth of credit for the first two months.
+If you don't want to deploy Mere Medical to your own local server or machine, you can easily deploy Mere Medical to Digital Ocean App Platform with one click! Just click the button below and follow the steps to deploy Mere Medical for $5 a month. The button below is a referral link that comes with $200 worth of credit for the first two months.
 
 [![Deploy to DO](https://www.deploytodo.com/do-btn-blue-ghost.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/cfu288/mere-medical/tree/main&refcode=f6e0d718edc7)
 
