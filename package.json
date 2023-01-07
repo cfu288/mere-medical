@@ -1,7 +1,7 @@
 {
   "name": "mere-medical",
   "version": "0.0.0",
-  "license": "Fair Source License",
+  "license": "Sustainable Use License",
   "scripts": {
     "start": "nx serve",
     "build": "nx build",
