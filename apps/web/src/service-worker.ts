@@ -4,6 +4,9 @@
 import { precacheAndRoute } from 'workbox-precaching';
 import { clientsClaim } from 'workbox-core';
 import { setCacheNameDetails } from 'workbox-core';
+import { staticResourceCache } from 'workbox-recipes';
+import { pageCache } from 'workbox-recipes';
+import { imageCache } from 'workbox-recipes';
 
 // ServiceWorkerGlobalScope is a type from the workbox-precaching module
 declare const self: Window & ServiceWorkerGlobalScope;
@@ -24,5 +27,12 @@ self.skipWaiting();
 // (even if they're controlling other tabs or windows). Without this,
 // we could be seeing different versions in different tabs or windows.
 clientsClaim();
+
+pageCache();
+staticResourceCache();
+imageCache();
+
+// offlineFallback();
+// staticResourceCache();
 
 console.log('Service worker ready');
