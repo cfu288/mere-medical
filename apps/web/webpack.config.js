@@ -10,15 +10,8 @@ module.exports = function (webpackConfig, nxConfig) {
 
   const mergeWebpackConfigs = [config];
   mergeWebpackConfigs.push({
-    // devServer: {
-    //   devMiddleware: {
-    //     writeToDisk: true,
-    //   },
-    // },
     resolve: {
-      // ...
       fallback: {
-        // 👇️👇️👇️ add this 👇️👇️👇️
         assert: false,
       },
     },

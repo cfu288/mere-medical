@@ -260,7 +260,7 @@ export default TimelineTab;
 
 function TimelineYearHeader({ year }: { year: string }) {
   return (
-    <div className="sticky top-0 z-10 flex flex-col bg-white">
+    <div className="sticky top-0 left-0 z-10 flex flex-col bg-white">
       <div className="relative flex flex-row pt-4 pb-1">
         <div className="absolute -top-4 h-4 w-full bg-gradient-to-t from-white"></div>
         <span className="flex grow"></span>

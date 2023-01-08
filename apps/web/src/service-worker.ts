@@ -2,14 +2,15 @@
 /* eslint-disable no-restricted-globals */
 // <reference lib="webworker" />
 import { precacheAndRoute } from 'workbox-precaching';
-import { clientsClaim } from 'workbox-core';
-import { setCacheNameDetails } from 'workbox-core';
-import { staticResourceCache } from 'workbox-recipes';
-import { pageCache } from 'workbox-recipes';
-import { imageCache } from 'workbox-recipes';
+import { clientsClaim, setCacheNameDetails } from 'workbox-core';
+import { pageCache, imageCache, staticResourceCache } from 'workbox-recipes';
 
 // ServiceWorkerGlobalScope is a type from the workbox-precaching module
 declare const self: Window & ServiceWorkerGlobalScope;
+
+/**
+ * Setting up pre-caching
+ */
 
 setCacheNameDetails({
   prefix: 'MereMedical',
@@ -17,6 +18,7 @@ setCacheNameDetails({
 });
 
 // Download and cache all the files webpack created
+// https://developer.chrome.com/docs/workbox/precaching-with-workbox/#precaching-with-injectmanifest
 const precacheManifest = [].concat((self.__WB_MANIFEST as any) || []);
 precacheAndRoute(precacheManifest);
 
@@ -28,11 +30,12 @@ self.skipWaiting();
 // we could be seeing different versions in different tabs or windows.
 clientsClaim();
 
+/**
+ * Setting up runtime caching - independent of the previous pre-cache step but uses it if it's available
+ */
+
 pageCache();
 staticResourceCache();
 imageCache();
-
-// offlineFallback();
-// staticResourceCache();
 
 console.log('Service worker ready');

@@ -54,11 +54,11 @@ export default function Home() {
       <Head>
         <meta
           name="description"
-          content="Aggregate and sync all of your medical records from your patient portals in one place. Self-hosted and privacy first"
+          content="Manage all of your medical records in one place. Mere syncs your records across hospital systems for you. Self-hosted and offline-first"
         />
         <meta
           property="og:description"
-          content="Aggregate and sync all of your medical records from your patient portals in one place. Self-hosted and privacy first"
+          content="Manage all of your medical records in one place. Mere syncs your records across hospital systems for you. Self-hosted and offline-first"
         />
         {process.env.NODE_ENV === 'production' && (
           <script

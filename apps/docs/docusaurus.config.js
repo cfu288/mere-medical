@@ -40,7 +40,9 @@ const config = {
           // editUrl:
           //   'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
         },
-        blog: false,
+        blog: {
+          showReadingTime: true,
+        },
         // showReadingTime: true,
         // Please change this to your repo.
         // Remove this to remove the "edit this page" links.
@@ -63,12 +65,12 @@ const config = {
         },
         items: [
           {
-            type: 'doc',
             docId: 'intro',
-            position: 'left',
             label: 'Documentation',
+            position: 'left',
+            type: 'doc',
           },
-          // { to: '/blog', label: 'Blog', position: 'left' },
+          { to: 'blog', label: 'Blog', position: 'left' }, // or position: 'right'
           {
             href: 'https://github.com/cfu288/mere-medical',
             label: 'GitHub',

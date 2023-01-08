@@ -1,16 +1,23 @@
 {
   "short_name": "Mere",
-  "name": "Mere: Personal Medical Record Management",
+  "name": "Mere Medical",
   "description": "Personal Medical Record Management",
   "icons": [
     {
-      "src": "/assets/icon/icon.png",
+      "src": "/assets/icon/icon-1024.png",
       "type": "image/png",
       "sizes": "1024x1024"
+    },
+    {
+      "src": "/assets/icon/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
     }
   ],
   "start_url": ".",
   "background_color": "#006183",
   "display": "standalone",
-  "theme_color": "#006183"
+  "theme_color": "#006183",
+  "orientation": "portrait",
+  "prefer_related_applications": false
 }
