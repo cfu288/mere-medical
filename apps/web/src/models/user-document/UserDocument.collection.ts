@@ -4,7 +4,7 @@ import {
   ExtractDocumentTypeFromTypedRxJsonSchema,
   RxJsonSchema,
 } from 'rxdb';
-import { userDocumentSchemaLiteral } from './UserDocumentSchema';
+import { userDocumentSchemaLiteral } from './UserDocument.schema';
 
 const userDocumentSchemaTyped = toTypedRxJsonSchema(userDocumentSchemaLiteral);
 

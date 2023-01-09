@@ -1,5 +1,5 @@
 import { Transition, Dialog } from '@headlessui/react';
-import { Fragment, useEffect, useReducer, useRef } from 'react';
+import { Fragment, useEffect, useReducer, useRef, useState } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { RxDatabase, RxDocument } from 'rxdb';
 import { BundleEntry, Patient } from 'fhir/r2';
@@ -8,7 +8,7 @@ import {
   useRxDb,
 } from '../components/providers/RxDbProvider';
 import uuid4 from 'uuid4';
-import { UserDocument } from '../models/user-document/UserDocumentType';
+import { UserDocument } from '../models/user-document/UserDocument.type';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocumentType';
 import { useRxUserDocument, useUser } from './providers/UserProvider';
 
@@ -42,6 +42,7 @@ enum ActionTypes {
   SET_EMAIL,
   SET_BIRTHDAY,
   SET_GENDER,
+  SET_PROFILE_PHOTO,
 }
 
 type FormFields = {
@@ -50,6 +51,7 @@ type FormFields = {
   email?: string;
   birthday?: string;
   gender?: string;
+  profilePhoto?: File;
 };
 
 type ModalState = {
@@ -65,6 +67,7 @@ type ModalActions =
   | { type: ActionTypes.SET_EMAIL; data: string }
   | { type: ActionTypes.SET_BIRTHDAY; data: string }
   | { type: ActionTypes.SET_GENDER; data: string }
+  | { type: ActionTypes.SET_PROFILE_PHOTO; data?: File }
   | { type: ActionTypes.TOGGLE_MODAL };
 
 function reducer(state: ModalState, action: ModalActions): ModalState {
@@ -80,6 +83,12 @@ function reducer(state: ModalState, action: ModalActions): ModalState {
       return {
         ...state,
         formFields: { ...state.formFields, firstName: action.data },
+      };
+    }
+    case ActionTypes.SET_PROFILE_PHOTO: {
+      return {
+        ...state,
+        formFields: { ...state.formFields, profilePhoto: action.data },
       };
     }
     case ActionTypes.SET_LAST_NAME: {
@@ -121,7 +130,14 @@ function reducer(state: ModalState, action: ModalActions): ModalState {
 export function EmptyUserPlaceholder() {
   const [
     {
-      formFields: { firstName, lastName, email, birthday, gender },
+      formFields: {
+        firstName,
+        lastName,
+        email,
+        birthday,
+        gender,
+        profilePhoto,
+      },
       modalOpen,
     },
     dispatch,
@@ -132,9 +148,12 @@ export function EmptyUserPlaceholder() {
       email: '',
       birthday: '',
       gender: '',
+      profilePhoto: undefined,
     },
     modalOpen: false,
   });
+
+  // const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
 
   const cancelButtonRef = useRef(null),
     db = useRxDb(),
@@ -145,6 +164,7 @@ export function EmptyUserPlaceholder() {
       e.preventDefault();
       if (user) {
         if (rawUser) {
+          //update existing
           rawUser
             .update({
               $set: {
@@ -157,7 +177,18 @@ export function EmptyUserPlaceholder() {
                 last_name: lastName,
               },
             })
-            .then(() => {
+            .then(async () => {
+              if (profilePhoto) {
+                const id = 'profile_photo';
+                const data = profilePhoto;
+                const type = profilePhoto.type;
+                // URL.createObjectURL(profilePhoto)
+                await rawUser.putAttachment({
+                  id, // (string) name of the attachment like 'cat.jpg'
+                  data, // (string|Blob|Buffer) data of the attachment
+                  type, // (string) type of the attachment-data like 'image/jpeg'
+                });
+              }
               toggleModal();
             });
         }
@@ -172,7 +203,18 @@ export function EmptyUserPlaceholder() {
           is_selected_user: true,
           last_name: lastName,
         };
-        db.user_documents.insert(userDocument).then(() => {
+        db.user_documents.insert(userDocument).then(async (doc) => {
+          if (profilePhoto) {
+            const id = 'profile_photo';
+            const data = profilePhoto;
+            const type = profilePhoto.type;
+            // URL.createObjectURL(profilePhoto)
+            await doc.putAttachment({
+              id, // (string) name of the attachment like 'cat.jpg'
+              data, // (string|Blob|Buffer) data of the attachment
+              type, // (string) type of the attachment-data like 'image/jpeg'
+            });
+          }
           toggleModal();
         });
       }
@@ -202,6 +244,11 @@ export function EmptyUserPlaceholder() {
       dispatch({
         type: ActionTypes.SET_GENDER,
         data: e.target.value,
+      }),
+    profilePicHandler = (e: React.ChangeEvent<HTMLInputElement>) =>
+      dispatch({
+        type: ActionTypes.SET_PROFILE_PHOTO,
+        data: e?.target?.files?.[0],
       });
 
   useEffect(() => {
@@ -409,7 +456,7 @@ export function EmptyUserPlaceholder() {
                             />
                           </div>
                         </div>
-                        {/* <div className="sm:grid sm:grid-cols-3 sm:items-center sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
+                        <div className="sm:grid sm:grid-cols-3 sm:items-center sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
                           <label
                             htmlFor="photo"
                             className="block text-sm font-medium text-gray-700"
@@ -417,25 +464,34 @@ export function EmptyUserPlaceholder() {
                             Photo
                           </label>
                           <div className="mt-1 sm:col-span-2 sm:mt-0">
-                            <div className="flex items-center">
-                              <span className="h-12 w-12 overflow-hidden rounded-full bg-gray-100">
-                                <svg
-                                  className="h-full w-full text-gray-300"
-                                  fill="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
-                                </svg>
+                            <div className="flex items-center justify-between">
+                              <span className="flex-0 h-12 w-12 overflow-hidden rounded-full bg-gray-100">
+                                {!profilePhoto ? (
+                                  <svg
+                                    className="h-full w-full text-gray-300"
+                                    fill="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+                                  </svg>
+                                ) : (
+                                  <img
+                                    className="h-full w-full text-gray-300"
+                                    src={URL.createObjectURL(profilePhoto)}
+                                    alt="profile"
+                                  ></img>
+                                )}
                               </span>
-                              <button
-                                type="button"
-                                className="ml-5 rounded-md border border-gray-300 bg-white py-2 px-3 text-sm font-medium leading-4 text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-                              >
-                                Change
-                              </button>
+                              <input
+                                type="file"
+                                id="photo"
+                                className="file:focus:ring-primary-500 file:text-medium block w-full flex-1 py-2 text-sm text-gray-500 file:ml-5 file:mr-4 file:rounded-md file:border file:border-gray-300 file:bg-white  file:py-2 file:px-3 file:text-gray-700 hover:file:bg-gray-100 focus:outline-none file:focus:outline-none file:focus:ring-2 file:focus:ring-offset-2"
+                                accept="image/png, image/jpeg"
+                                onChange={profilePicHandler}
+                              />
                             </div>
                           </div>
-                        </div> */}
+                        </div>
                       </div>
                     </div>
                     <div className="flex flex-shrink-0 justify-end px-4 py-4">

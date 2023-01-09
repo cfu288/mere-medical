@@ -3,7 +3,7 @@ import { PropsWithChildren, useEffect, useState } from 'react';
 import { RxDatabase, RxDocument } from 'rxdb';
 import { Subscription } from 'rxjs';
 import uuid4 from 'uuid4';
-import { UserDocument } from '../../models/user-document/UserDocumentType';
+import { UserDocument } from '../../models/user-document/UserDocument.type';
 import { DatabaseCollections, useRxDb } from './RxDbProvider';
 
 const defaultUser: UserDocument = {
@@ -26,12 +26,18 @@ function fetchUsers(
         is_selected_user: true,
       },
     })
-    .$.subscribe((item) =>
+    .$.subscribe(async (item) => {
+      const pp = item?.getAttachment('profile_photo');
+      const ppBlob = await pp?.getData();
       handleChange({
-        user: { ...defaultUser, ...item?.toMutableJSON() } as UserDocument,
+        user: {
+          ...defaultUser,
+          ...item?.toMutableJSON(),
+          profile_picture: ppBlob,
+        } as UserDocument,
         rawUser: item as unknown as RxDocument<UserDocument> | null,
-      })
-    );
+      });
+    });
 }
 
 function createUserIfNone(
@@ -75,7 +81,6 @@ export function UserProvider(props: UserProviderProps) {
     createUserIfNone(db).then(() => {
       sub = fetchUsers(db, (item) => {
         if (item) {
-          console.log(item.user);
           setUser(item.user);
           setRawUser(item.rawUser);
         }

@@ -69,15 +69,25 @@ const SettingsTab: React.FC = () => {
             className="col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white text-center"
           >
             <div className="flex flex-1 flex-col p-8">
-              <div className="mx-auto h-32 w-32 flex-shrink-0 rounded-full border border-black">
-                <svg
-                  className="h-full w-full rounded-full text-gray-300"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              </div>
+              {user?.profile_picture ? (
+                <div className="mx-auto h-32 w-32 flex-shrink-0 rounded-full border border-black">
+                  <img
+                    className="h-full w-full rounded-full text-gray-300"
+                    src={URL.createObjectURL(user.profile_picture)}
+                    alt="profile"
+                  ></img>
+                </div>
+              ) : (
+                <div className="mx-auto h-32 w-32 flex-shrink-0 rounded-full border border-black">
+                  <svg
+                    className="h-full w-full rounded-full text-gray-300"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                </div>
+              )}
               <h2 className="text-md mt-6 text-start font-medium text-gray-600">
                 Name
               </h2>

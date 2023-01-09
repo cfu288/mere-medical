@@ -116,6 +116,11 @@ const TimelineTab: React.FC = () => {
     <AppPage
       banner={
         <TimelineBanner
+          image={
+            user?.profile_picture
+              ? URL.createObjectURL(user.profile_picture)
+              : undefined
+          }
           text={
             user?.first_name ? `Welcome back ${user.first_name}!` : 'Hello!'
           }

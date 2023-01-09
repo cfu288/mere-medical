@@ -13,7 +13,11 @@ export function TimelineBanner({
         <div className="flex h-full items-center justify-center pl-2 pr-4">
           <div className="aspect-square h-12 rounded-full border-2 border-solid border-white bg-gray-100 md:hidden">
             {image ? (
-              <img alt="profile" className="p-2" src={image}></img>
+              <img
+                alt="profile"
+                className="h-full w-full rounded-full"
+                src={image}
+              ></img>
             ) : (
               <svg
                 className="h-full w-full rounded-full text-gray-500"

@@ -16,7 +16,7 @@ import {
 } from 'fhir/r2';
 import { ConnectionDocument } from '../models/connection-document/ConnectionDocumentType';
 import { v4 as uuidv4 } from 'uuid';
-import { UserDocument } from '../models/user-document/UserDocumentType';
+import { UserDocument } from '../models/user-document/UserDocument.type';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocumentType';
 
 function parseId<T = FhirResource>(bundleItem: BundleEntry<T>) {

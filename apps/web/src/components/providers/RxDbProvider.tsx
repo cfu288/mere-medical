@@ -26,14 +26,17 @@ import {
 import {
   UserDocumentCollection,
   UserDocumentSchema,
-} from '../../models/user-document/UserDocumentCollection';
+} from '../../models/user-document/UserDocument.collection';
 import {
   UserPreferencesDocumentCollection,
   UserPreferencesDocumentSchema,
 } from '../../models/user-preferences/UserPreferencesCollection';
+import { UserDocumentMigrations } from '../../models/user-document/UserDocument.migration';
+import { RxDBAttachmentsPlugin } from 'rxdb/plugins/attachments';
 
 addRxPlugin(RxDBUpdatePlugin);
 addRxPlugin(RxDBMigrationPlugin);
+addRxPlugin(RxDBAttachmentsPlugin);
 addRxPlugin(RxDBDevModePlugin);
 addRxPlugin(RxDBJsonDumpPlugin);
 
@@ -68,6 +71,7 @@ async function initRxDb() {
     },
     user_documents: {
       schema: UserDocumentSchema,
+      migrationStrategies: UserDocumentMigrations,
     },
     user_preferences: {
       schema: UserPreferencesDocumentSchema,

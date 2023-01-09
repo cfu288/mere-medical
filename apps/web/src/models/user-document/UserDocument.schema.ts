@@ -1,6 +1,6 @@
 export const userDocumentSchemaLiteral = {
   title: 'User Document Schema',
-  version: 0,
+  version: 1,
   primaryKey: 'id',
   type: 'object',
   properties: {
@@ -35,5 +35,8 @@ export const userDocumentSchemaLiteral = {
       type: 'string',
       maxLength: 128,
     },
+  },
+  attachments: {
+    encrypted: false, // if true, the attachment-data will be encrypted with the db-password
   },
 } as const;

@@ -29,7 +29,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { JsonWebKeyWKid, signJwt } from './JWTTools';
 import { getPublicKey, IDBKeyConfig } from './WebCrypto';
 import { JsonWebKeySet } from '../services/JWTTools';
-import { UserDocument } from '../models/user-document/UserDocumentType';
+import { UserDocument } from '../models/user-document/UserDocument.type';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocumentType';
 
 export function getDSTU2Url(baseUrl: string) {

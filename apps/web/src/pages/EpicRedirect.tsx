@@ -21,7 +21,7 @@ import {
 import { useNotificationDispatch } from '../components/providers/NotificationProvider';
 import { useUserPreferences } from '../components/providers/UserPreferencesProvider';
 import { useUser } from '../components/providers/UserProvider';
-import { UserDocument } from '../models/user-document/UserDocumentType';
+import { UserDocument } from '../models/user-document/UserDocument.type';
 
 /**
  * Handles the redirect from Epic's authorization server. If possible, it
