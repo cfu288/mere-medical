@@ -117,7 +117,7 @@ const EpicRedirect: React.FC = () => {
           <div className="flex flex-row justify-center gap-x-4">
             <button
               className="border-primary-700 text-primary w-36 rounded-lg border-2 bg-white p-4"
-              onClick={() => navigate(Routes.Settings)}
+              onClick={() => navigate(`${Routes.Settings}#use_proxy`)}
             >
               Go to Settings
             </button>

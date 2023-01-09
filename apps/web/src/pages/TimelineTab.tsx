@@ -81,8 +81,7 @@ const TimelineTab: React.FC = () => {
     [list, setList] =
       useState<Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>>(),
     user = useUser(),
-    { pathname, hash, key } = useLocation(),
-    ref = useRef(null);
+    { pathname, hash, key } = useLocation();
 
   useEffect(() => {
     // Fetch clinical documents to display
@@ -132,10 +131,7 @@ const TimelineTab: React.FC = () => {
             <EmptyRecordsPlaceholder />
           </div>
         ) : (
-          <div
-            ref={ref}
-            className="mx-auto flex max-w-4xl flex-col overflow-x-clip px-4 pb-12 sm:px-6 md:pt-6 lg:px-8"
-          >
+          <div className="mx-auto flex max-w-4xl flex-col overflow-x-clip px-4 pb-12 sm:px-6 md:pt-6 lg:px-8">
             {list &&
               Object.entries(list).map(([key, itemList], index, elements) => (
                 <Fragment key={key}>

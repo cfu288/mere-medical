@@ -9,6 +9,10 @@ import {
 } from '../components/providers/UserPreferencesProvider';
 import { useUser } from '../components/providers/UserProvider';
 import { EmptyUserPlaceholder } from '../components/EmptyUserPlaceholder';
+import { useLocation } from 'react-router-dom';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
+import { ArrowDownTrayIcon } from '@heroicons/react/20/solid';
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ');
@@ -18,7 +22,35 @@ const SettingsTab: React.FC = () => {
   const db = useRxDb(),
     user = useUser(),
     userPreferences = useUserPreferences(),
-    rawUserPreferences = useRawUserPreferences();
+    rawUserPreferences = useRawUserPreferences(),
+    { pathname, hash, key } = useLocation(),
+    ref = useRef<HTMLDivElement | null>(null),
+    [fileDownloadLink, setFiledownloadlink] = useState('');
+
+  const exportData = useCallback(() => {
+    db.exportJSON().then((json) => {
+      const jsonData = JSON.stringify(json);
+      const blobUrl = URL.createObjectURL(
+        new Blob([jsonData], { type: 'application/json' })
+      );
+      setFiledownloadlink(blobUrl);
+    });
+  }, [db]);
+
+  useEffect(() => {
+    // if not a hash link, scroll to top
+    setTimeout(() => {
+      const id = hash.replace('#', '');
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+          inline: 'nearest',
+        });
+      }
+    }, 100);
+  }, [pathname, hash, key]); // do this on route change
 
   return (
     <AppPage banner={<GenericBanner text="Settings" />}>
@@ -70,17 +102,18 @@ const SettingsTab: React.FC = () => {
       )}
       {userPreferences !== undefined && rawUserPreferences !== undefined && (
         <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 sm:px-6 lg:px-8">
-          <div className="py-6 text-xl font-extrabold">Settings</div>
-          <div className="divide-y divide-gray-200">
+          <h1 className="py-6 text-xl font-extrabold">Settings</h1>
+          <div className="divide-y divide-gray-200" ref={ref}>
             <div className="px-4 sm:px-6">
               <ul className="mt-2 divide-y divide-gray-200">
                 <Switch.Group
+                  id="use_proxy"
                   as="li"
                   className="flex items-center justify-between py-4"
                 >
                   <div className="flex flex-col">
                     <Switch.Label
-                      as="p"
+                      as="h2"
                       className="text-lg font-black leading-6 text-gray-900"
                       passive
                     >
@@ -115,7 +148,7 @@ const SettingsTab: React.FC = () => {
                       userPreferences.use_proxy
                         ? 'bg-primary-500'
                         : 'bg-gray-200',
-                      'relative ml-4 inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2'
+                      'focus:ring-primary-500 relative ml-4 inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2'
                     )}
                   >
                     <span
@@ -129,6 +162,49 @@ const SettingsTab: React.FC = () => {
                     />
                   </Switch>
                 </Switch.Group>
+                <li className="flex items-center divide-y divide-gray-200 py-2">
+                  <div className="flex flex-1 flex-col">
+                    <h2 className="text-lg font-black leading-6 text-gray-900">
+                      Export data
+                    </h2>
+                    <p className="pt-2 text-sm text-gray-500">
+                      Export all of your data in JSON format. You can use this
+                      to backup your data and can import it back if needed.
+                    </p>
+                    <p className="pt-2 text-sm text-gray-500">
+                      It may take a couple of seconds to prepare the data for
+                      download.
+                    </p>
+                  </div>
+
+                  {fileDownloadLink ? (
+                    <a href={fileDownloadLink} download="export.json">
+                      <button
+                        type="button"
+                        className="relative ml-4 inline-flex flex-shrink-0 cursor-pointer items-center rounded-md border border-transparent bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                      >
+                        <ArrowDownTrayIcon
+                          className="-ml-1 mr-2 h-5 w-5"
+                          aria-hidden="true"
+                        />
+                        <p className="font-bold">Download Ready</p>
+                      </button>
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 relative ml-4 inline-flex flex-shrink-0 cursor-pointer items-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
+                      onClick={() => exportData()}
+                    >
+                      <ArrowRightOnRectangleIcon
+                        className="-ml-1 mr-2 h-5 w-5"
+                        aria-hidden="true"
+                      />
+                      <p className="font-bold">Start data export</p>
+                    </button>
+                  )}
+                </li>
+                <li></li>
               </ul>
             </div>
           </div>
