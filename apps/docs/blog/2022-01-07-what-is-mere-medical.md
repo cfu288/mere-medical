@@ -23,7 +23,7 @@ Throughout this process, I kept thinking: why was getting all my medical records
 
 I searched for other services and apps that would automatically sync to multiple patient portals and aggregate my records. I thought to myself that there was no way I was the first one to have this problem.
 
-In my search for an app to do this for me, I found one or two decent-looking options, but the main issue I had with them was that they were external third parties. While many of them looked reputable, I was antsy about sending over my medical information to a third party. What if this company had a data leak? What if they sold their product to another cooperation?
+In my search for an app to do this for me, I found one or two decent-looking options, but the main issue I had with them was that they were external third party companies not directly associated to my health care providers. While many of them looked reputable, I was antsy about sending over my medical information to a third party. What if this company had a data leak? What if they sold their product to another cooperation?
 
 At this point, I decided it was time to build something myself to solve my problems. I had a few goals in mind for a solution that other solutions didn't solve or seem to prioritize:
 
@@ -43,6 +43,7 @@ This means that application developers can now integrate with these electronic m
 Mere Medical is still in early development and is essentially pre-release software. However, we've already accomplished a lot of goals:
 
 - Self-hostable - Run the software on your computers, no third parties
+- Source-available - Audit every line of code that touches your medical records.
 - Multi-Platform - A progressive web application that runs on any OS or device with a browser.
 - Offline first - Data is stored locally and can be accessed with no internet connection
 - Data exportable - Backup and control your data
