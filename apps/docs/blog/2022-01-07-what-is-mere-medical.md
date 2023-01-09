@@ -34,7 +34,7 @@ At this point, I decided it was time to build something myself to solve my probl
 
 # Why now?
 
-It's good timing. As of December 31st 2022 (or 7 days ago since this article was written), as part of the 21st Century Cures Act established back in 2015, [certified electronic medical record systems are required to provide open FHIR API endpoints to their customers and patients](https://www.healthit.gov/buzz-blog/healthit-certification/an-upcoming-milestone-in-our-interoperability-journey). FHIR is a HL7 standard that defines data primitives in healthcare and allows medical systems to communicate using these data primitives.
+It's a good time to be building a project like this. As of December 31st 2022 (or 7 days ago since this article was written), as part of the 21st Century Cures Act established back in 2015, [certified electronic medical record systems are required to provide open FHIR API endpoints to their customers and patients](https://www.healthit.gov/buzz-blog/healthit-certification/an-upcoming-milestone-in-our-interoperability-journey). FHIR is a HL7 standard that defines data primitives in healthcare and allows medical systems to communicate using these data primitives.
 
 This means that application developers can now integrate with these electronic medical record systems and patient portals in a relatively standard way across different systems, making it easier to develop applications that work with health data. In reality, many EMR's have supported these FHIR API's for a few years in preparation for this deadline.
 
