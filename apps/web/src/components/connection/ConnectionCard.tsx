@@ -36,7 +36,7 @@ async function fetchMedicalRecords(
     }
     case 'epic': {
       try {
-        await refreshConnectionTokenIfNeeded(connectionDocument, db);
+        await refreshConnectionTokenIfNeeded(connectionDocument, db, useProxy);
         return await Epic.syncAllRecords(
           baseUrl,
           connectionDocument,
@@ -63,7 +63,8 @@ async function fetchMedicalRecords(
  */
 async function refreshConnectionTokenIfNeeded(
   connectionDocument: RxDocument<ConnectionDocument>,
-  db: RxDatabase<DatabaseCollections>
+  db: RxDatabase<DatabaseCollections>,
+  useProxy = false
 ) {
   const nowInSeconds = Math.floor(Date.now() / 1000);
   if (connectionDocument.get('expires_in') <= nowInSeconds) {
@@ -74,20 +75,12 @@ async function refreshConnectionTokenIfNeeded(
         epicId = connectionDocument.get('tenant_id'),
         user = connectionDocument.get('user_id');
 
-      let access_token_data;
-      try {
-        access_token_data = await Epic.fetchAccessTokenUsingJWT(
-          clientId,
-          epicUrl
-        );
-      } catch (e) {
-        access_token_data = await Epic.fetchAccessTokenUsingJWT(
+      const access_token_data = await Epic.fetchAccessTokenUsingJWT(
           clientId,
           epicUrl,
           epicId,
-          true
+          useProxy
         );
-      }
 
       return await Epic.saveConnectionToDb({
         res: access_token_data,
