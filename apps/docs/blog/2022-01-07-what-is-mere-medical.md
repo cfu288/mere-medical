@@ -11,9 +11,9 @@ authors:
 
 # Why Mere Medical
 
-About a year ago, I was a second-year medical student preparing to start my third-year clinical rotations. It was a pretty exciting but terrifying time - I was also getting ready to take my first set of board exams. On top of long days of studying, I had to complete a lot of paperwork required by the school and the hospitals I would be rotating at. One of the biggest things I needed to get done before starting my rotations was ensuring I was up to date on my vaccinations and had my updated health records. In addition, I needed to gather my previous medical records and get the necessary blood work.
+About a year ago, I was a second-year medical student preparing to start my third-year clinical rotations. It was a pretty exciting but terrifying time - I was also getting ready to take my first set of board exams. On top of long days of studying, I had to complete a lot of paperwork required by the school and the hospitals I would be rotating at. One of the biggest things I needed to get done before starting my rotations was ensuring I was up to date on my vaccinations and had my latest health records.
 
-I quickly realized that getting all my old vaccine records was a pain. Most of my old medical records were with my old primary care physician (PCP) in my hometown, not with my current one. Luckily, my old PCP offered a patient portal I could use to see my old records. After a quick phone call to my old PCP's office to set up my online account, I could log in and see my old vaccine records. However, my current PCP used a completely different electronic medical record (EMR) system and had a different patient portal. So if I wanted to see my most recent blood work and my historical data at the same time, I needed to log in to two places at once.
+I quickly realized that getting all my old vaccine records was more difficult than I originally expected. Most of my previous vaccination records were with my old primary care physician (PCP) in my hometown, not with my current one. Luckily, my old PCP offered a patient portal I could use to see my old records. After a quick phone call to my old PCP's office to set up my online account, I could log in and see my old vaccine records. However, my current PCP used a completely different electronic medical record (EMR) system and had a different patient portal. So if I wanted to see my most recent blood work and my historical vaccine data at the same time, I needed to log in to two places at once.
 
 A few months later, I moved to a new apartment closer to my new rotation site and had to again find another new PCP closer to me. Luckily, this new PCP I chose used the same EMR and patient portal system that my original PCP did. Unluckily, I had to go through the patient portal creation process all over again. Despite using the same EMR, this new doctor was part of a different health system as my original PCP, which meant a new account still. Ultimately I had two different logins, and I had trouble manually linking the accounts after the fact.
 
@@ -23,7 +23,7 @@ Throughout this process, I kept thinking: why was getting all my medical records
 
 I searched for other services and apps that would automatically sync to multiple patient portals and aggregate my records. I thought to myself that there was no way I was the first one to have this problem.
 
-In my search for an app to do this for me, I found one or two decent-looking options, but the main issue I had with them was that they were external third party companies not directly associated to my health care providers. While many of them looked reputable, I was antsy about sending over my medical information to a third party. What if this company had a data leak? What if they sold their product to another cooperation?
+In my search for an app to do this for me, I found one or two decent-looking options, but the main issue I had with them was that they were external third party companies not directly associated to my health care providers. While many of them looked reputable, I was antsy about sending over my medical information to a third party. What if this company had a data leak? What if they sold their product to another cooperation? What would happen to my data then?
 
 At this point, I decided it was time to build something myself to solve my problems. I had a few goals in mind for a solution that other solutions didn't solve or seem to prioritize:
 
@@ -42,13 +42,13 @@ This means that application developers can now write programs to integrate with 
 
 Mere Medical is still in early development and is essentially pre-release software. However, we've already accomplished a lot of goals:
 
-- Self-hostable - Run the software on your computers, no third parties
+- Self-hostable - Run Mere Medical on your computers, no third parties
 - Source-available - Audit every line of code that touches your medical records.
 - Multi-platform - A progressive web application that runs on any OS or device with a browser.
-- Offline-first - Data is stored locally and can be accessed with no internet connection
-- Full control of data - Backup, export, and delete your data
+- Offline-first - Data is stored locally on device and can be accessed with no internet connection.
+- Full control of data - Backup, export, and delete your data.
 - Automatic sync to patient portals - Reduce the work you need to do to get your records.
-- Multiple EMR support - Integrations to two EMR systems, which includes 450+ health systems and practices
+- Multiple EMR support - Integrations to two different EMR systems, which includes 450+ health systems and practices.
 
 There are a few more features I'd like to wrap up before we hit v1.0, hopefully coming soon.
 
