@@ -17,7 +17,14 @@
     "src/components/TabWrapper.tsx",
     "src/components/TabButton.tsx",
     "src/components/ErrorBoundary.tsx",
-    "src/components/timeline/JumpToPanel.tsx"
+    "src/components/timeline/JumpToPanel.tsx",
+    "src/components/timeline/TimelineItem.tsx",
+    "src/components/timeline/TimelineYearHeader.tsx",
+    "src/components/timeline/TimelineYearHeaderWrapper.tsx",
+    "src/components/connection/EpicSelectModal.tsx",
+    "src/components/connection/EpicSelectModelResultItem.tsx",
+    "src/utils/StyleUtils.tsx",
+    "src/utils/SearchUtils.tsx"
   ],
   "exclude": [
     "jest.config.ts",

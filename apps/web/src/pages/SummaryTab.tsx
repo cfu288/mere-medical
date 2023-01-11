@@ -177,22 +177,30 @@ function summaryReducer(state: SummaryState, action: SummaryActions) {
   }
 }
 
-const SummaryTab: React.FC = () => {
-  const db = useRxDb(),
-    [{ status, meds, cond, imm, careplan, allergy }, reducer] = useReducer(
-      summaryReducer,
-      {
-        status: ActionTypes.IDLE,
-        meds: [],
-        cond: [],
-        imm: [],
-        careplan: [],
-        allergy: [],
-      }
-    );
+// Hook to fetch data for summary page
+function useSummaryData(): [
+  {
+    status: ActionTypes;
+    meds: ClinicalDocument<BundleEntry<MedicationStatement>>[];
+    cond: ClinicalDocument<BundleEntry<Condition>>[];
+    imm: ClinicalDocument<BundleEntry<Immunization>>[];
+    careplan: ClinicalDocument<BundleEntry<CarePlan>>[];
+    allergy: ClinicalDocument<BundleEntry<AllergyIntolerance>>[];
+  },
+  React.Dispatch<SummaryActions>
+] {
+  const db = useRxDb();
+  const [data, reducer] = useReducer(summaryReducer, {
+    status: ActionTypes.IDLE,
+    meds: [],
+    cond: [],
+    imm: [],
+    careplan: [],
+    allergy: [],
+  });
 
   useEffect(() => {
-    if (status === ActionTypes.IDLE) {
+    if (data.status === ActionTypes.IDLE) {
       reducer({ type: ActionTypes.PENDING });
       Promise.all([
         fetchMedications(db).then((data) =>
@@ -248,7 +256,13 @@ const SummaryTab: React.FC = () => {
           reducer({ type: ActionTypes.ERROR });
         });
     }
-  }, [status, db]);
+  }, [data.status, db]);
+
+  return [data, reducer];
+}
+
+function SummaryTab() {
+  const [{ meds, cond, imm, careplan, allergy }] = useSummaryData();
 
   return (
     <AppPage banner={<GenericBanner text="Summary" />}>
@@ -266,6 +280,6 @@ const SummaryTab: React.FC = () => {
       </div>
     </AppPage>
   );
-};
+}
 
 export default SummaryTab;

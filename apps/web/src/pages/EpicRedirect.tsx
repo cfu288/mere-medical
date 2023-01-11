@@ -10,7 +10,6 @@ import {
 import { Routes } from '../Routes';
 import {
   DynamicRegistrationError,
-  EpicAuthResponse,
   EpicDynamicRegistrationResponse,
   EpicLocalStorageKeys,
   fetchAccessTokenUsingJWT,
@@ -35,13 +34,13 @@ import { UserDocument } from '../models/user-document/UserDocument.type';
  * `api/FHIR/DSTU2/metadata` at `rest.security.extensions` is mostly inaccurate
  * anyways so we can't tell.
  */
-const EpicRedirect: React.FC = () => {
-  const navigate = useNavigate(),
-    db = useRxDb(),
+function useEpicDynamicRegistrationLogin() {
+  const db = useRxDb(),
     user = useUser(),
     [error, setError] = useState(''),
     notifyDispatch = useNotificationDispatch(),
-    userPreferences = useUserPreferences();
+    userPreferences = useUserPreferences(),
+    navigate = useNavigate();
 
   useEffect(() => {
     const searchRequest = new URLSearchParams(window.location.search),
@@ -88,11 +87,18 @@ const EpicRedirect: React.FC = () => {
   }, [
     db,
     db.connection_documents,
-    navigate,
     notifyDispatch,
     userPreferences,
     user,
+    navigate,
   ]);
+
+  return [error];
+}
+
+const EpicRedirect: React.FC = () => {
+  const navigate = useNavigate(),
+    [error] = useEpicDynamicRegistrationLogin();
 
   return (
     <AppPage
@@ -109,7 +115,6 @@ const EpicRedirect: React.FC = () => {
       {error && (
         <div className="flex h-full flex-col items-center justify-center">
           <h1 className="font-2xl mb-4 font-bold text-red-700">{error}</h1>
-
           <h1 className="font-xl mb-4 p-8 text-gray-600">
             You can try enabling proxy authentication in the settings section if
             login continues to fail

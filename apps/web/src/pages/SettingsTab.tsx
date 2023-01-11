@@ -13,10 +13,7 @@ import { useLocation } from 'react-router-dom';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { ArrowDownTrayIcon } from '@heroicons/react/20/solid';
-
-function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(' ');
-}
+import { classNames } from '../utils/StyleUtils';
 
 const SettingsTab: React.FC = () => {
   const db = useRxDb(),
