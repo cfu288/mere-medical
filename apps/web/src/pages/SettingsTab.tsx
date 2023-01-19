@@ -1,5 +1,5 @@
 import { Switch } from '@headlessui/react';
-import uuid4 from 'uuid4';
+import uuid4 from '../utils/UUIDUtils';
 import { AppPage } from '../components/AppPage';
 import { GenericBanner } from '../components/GenericBanner';
 import { useRxDb } from '../components/providers/RxDbProvider';

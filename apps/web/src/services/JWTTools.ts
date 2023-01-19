@@ -1,11 +1,13 @@
 import {
   IDBKeyConfig,
-  convertStringToBase64UrlString,
-  stringToArrayBuffer,
+  stringToBase64UrlString,
+  stringToBase64UrlArrayBuffer,
   signPayload,
-  arrayBufferToBase64UrlString,
-  base64UrlStringToArrayBuffer,
+  arrayBufferToBase64,
+  // base64StringToBase64UrlArrayBuffer,
   verifyPayload,
+  base64StringtoBase64UrlString,
+  base64UrlStringToArrayBuffer,
 } from './WebCrypto';
 
 export interface JsonWebKeyWKid extends JsonWebKey {
@@ -48,25 +50,29 @@ export async function signJwt(tokenPayload: TokenPayload): Promise<string> {
   const stringifiedHeader = JSON.stringify(header);
   const stringifiedPayload = JSON.stringify(payload);
 
-  const headerBase64 = convertStringToBase64UrlString(stringifiedHeader);
-  const payloadBase64 = convertStringToBase64UrlString(stringifiedPayload);
+  const headerBase64 = stringToBase64UrlString(stringifiedHeader);
+  const payloadBase64 = stringToBase64UrlString(stringifiedPayload);
 
   const headerAndPayload = `${headerBase64}.${payloadBase64}`;
 
-  const messageAsArrayBuffer = stringToArrayBuffer(headerAndPayload);
+  const messageAsArrayBuffer = stringToBase64UrlArrayBuffer(headerAndPayload);
 
   const signature = await signPayload(messageAsArrayBuffer);
-  const base64Signature = arrayBufferToBase64UrlString(signature);
+  const base64Signature = arrayBufferToBase64(signature);
 
   return `${headerAndPayload}.${base64Signature}`;
 }
 
 export async function verifyJwt(jwt: string) {
   const [header, payload, signature] = jwt.split('.');
-  const headerAndPayloadAsUint8Array = stringToArrayBuffer(
+  const headerAndPayloadAsUint8Array = stringToBase64UrlArrayBuffer(
     `${header}.${payload}`
   );
-  const signatureAsUint8Array = base64UrlStringToArrayBuffer(signature);
+  const signatureAsUint8Array = base64UrlStringToArrayBuffer(
+    base64StringtoBase64UrlString(signature)
+  );
+
+  // const signatureAsUint8Array = base64StringToBase64UrlArrayBuffer(signature);
   return await verifyPayload(
     headerAndPayloadAsUint8Array,
     signatureAsUint8Array

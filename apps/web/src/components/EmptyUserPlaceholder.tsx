@@ -1,5 +1,5 @@
 import { Transition, Dialog } from '@headlessui/react';
-import { Fragment, useEffect, useReducer, useRef, useState } from 'react';
+import { Fragment, useEffect, useReducer, useRef } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { RxDatabase, RxDocument } from 'rxdb';
 import { BundleEntry, Patient } from 'fhir/r2';
@@ -7,7 +7,7 @@ import {
   DatabaseCollections,
   useRxDb,
 } from '../components/providers/RxDbProvider';
-import uuid4 from 'uuid4';
+import uuid4 from '../utils/UUIDUtils';
 import { UserDocument } from '../models/user-document/UserDocument.type';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocumentType';
 import { useRxUserDocument, useUser } from './providers/UserProvider';

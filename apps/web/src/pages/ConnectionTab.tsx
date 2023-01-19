@@ -9,6 +9,9 @@ import { EpicLocalStorageKeys, getLoginUrl } from '../services/Epic';
 import { AppPage } from '../components/AppPage';
 import { EpicSelectModal } from '../components/connection/EpicSelectModal';
 import { EpicSelectModelResultItem } from '../components/connection/EpicSelectModelResultItem';
+import { useUserPreferences } from '../components/providers/UserPreferencesProvider';
+import { Routes } from '../Routes';
+import { Link } from 'react-router-dom';
 
 function useConnectionCards() {
   const db = useRxDb(),
@@ -31,6 +34,7 @@ function useConnectionCards() {
 const ConnectionTab: React.FC = () => {
   const list = useConnectionCards(),
     [open, setOpen] = useState(false),
+    userPreferences = useUserPreferences(),
     onpatientLoginUrl = OnPatient.getLoginUrl(),
     setTenantEpicUrl = useCallback(
       (s: string & Location, name: string, id: string) => {
@@ -71,12 +75,35 @@ const ConnectionTab: React.FC = () => {
           ))}
         </ul>
         <div className="box-border flex	w-full justify-center align-middle">
-          <a
-            className="bg-primary mb-4 w-full rounded-lg p-4 text-center text-white"
-            href={onpatientLoginUrl}
-          >
-            <p className="font-bold">Log in to OnPatient</p>
-          </a>
+          {userPreferences?.use_proxy ? (
+            <a
+              href={onpatientLoginUrl}
+              className="bg-primary mb-4 w-full rounded-lg p-4 text-center text-white"
+            >
+              <button>
+                <p className="font-bold">Log in to OnPatient</p>
+              </button>
+            </a>
+          ) : (
+            <div className="mb-4 flex w-full flex-col">
+              <button
+                disabled
+                className="w-full rounded-lg p-4 text-center text-white disabled:bg-gray-300"
+              >
+                <p className="font-bold">Log in to OnPatient</p>
+              </button>
+              <p>
+                To log in with OnPatient, go to{' '}
+                <Link
+                  className="text-primary hover:text-primary-500 underline"
+                  to={`${Routes.Settings}#use_proxy`}
+                >
+                  the settings page
+                </Link>{' '}
+                and enable the <code>use proxy</code> setting.
+              </p>
+            </div>
+          )}
         </div>
         <div className="mb-4 box-border	flex w-full justify-center align-middle">
           <button

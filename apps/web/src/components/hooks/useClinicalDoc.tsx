@@ -26,6 +26,12 @@ export function useClinicalDoc(id?: string) {
   return conn;
 }
 
+/**
+ * Fetch a clinical document with the original document url
+ * @param id metadata.id, aka the foll url of the original document
+ * @param db
+ * @returns
+ */
 async function getClinicalDocWithMetaId(
   id: string,
   db: RxDatabase<DatabaseCollections>

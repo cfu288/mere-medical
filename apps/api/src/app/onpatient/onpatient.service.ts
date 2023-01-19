@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { Inject } from '@nestjs/common';
+import { OnPatientAuthResponse } from '@mere/onpatient';
 
 export interface OnPatientServiceConfig {
   clientId: string;
@@ -55,13 +56,4 @@ export class OnPatientService {
 
     return data;
   }
-}
-
-interface OnPatientAuthResponse {
-  access_token: string;
-  expires_in: number;
-  patient: string;
-  refresh_token: string;
-  scope: string;
-  token_type: string;
 }

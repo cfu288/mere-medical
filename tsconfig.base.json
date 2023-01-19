@@ -15,7 +15,8 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@mere/epic": ["libs/epic/src/index.ts"]
+      "@mere/epic": ["libs/epic/src/index.ts"],
+      "@mere/onpatient": ["libs/onpatient/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

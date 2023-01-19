@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { PropsWithChildren, useEffect, useState } from 'react';
 import { RxDatabase, RxDocument } from 'rxdb';
 import { Subscription } from 'rxjs';
-import uuid4 from 'uuid4';
+import uuid4 from '../../utils/UUIDUtils';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
 import { DatabaseCollections, useRxDb } from './RxDbProvider';
 

@@ -238,43 +238,25 @@ export function verifyPayload(
     };
   });
 }
+
 // Helpers
 
 /**
- * Convert a normal string to a Base64Url string - removes chars that are not allowed in a url
+ * Convert a normal string to a base64Url string - removes chars that are not allowed in a url
  * @param data
  * @returns
  */
-export function convertStringToBase64UrlString(data: string): string {
-  return arrayBufferToBase64UrlString(stringToArrayBuffer(data));
+export function stringToBase64UrlString(data: string): string {
+  return base64StringtoBase64UrlString(btoa(data));
 }
 
 /**
- * Converts an ArrayBuffer to a base64url string
- * @param arrayBuffer ArrayBuffer to convert
- * @returns base64 string
+ * Converts a string in base64 to base64url format
+ * @param base64String base64 string
+ * @returns base64Url string
  */
-export function arrayBufferToBase64UrlString(arrayBuffer: ArrayBuffer): string {
-  const byteArray = new Uint8Array(arrayBuffer);
-  let byteString = '';
-  byteArray.forEach((byte) => {
-    byteString += String.fromCharCode(byte);
-  });
-  return btoa(byteString)
-    .replace(/=/g, '')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_');
-}
-
-/**
- * Converts a string already in base64url format to an ArrayBuffer
- * @param base64UrlString base64 string
- * @returns ArrayBuffer
- */
-export function base64UrlStringToArrayBuffer(
-  base64UrlString: string
-): ArrayBuffer {
-  let base64Formatted = base64UrlString
+export function base64StringtoBase64UrlString(base64: string): string {
+  let base64Formatted = base64
     .replace(/-/g, '+')
     .replace(/_/g, '/')
     .replace(/\s/g, '');
@@ -284,17 +266,48 @@ export function base64UrlStringToArrayBuffer(
   if (pad) {
     if (pad === 1) {
       throw new Error(
-        'InvalidLengthError: Input base64url string is the wrong length to determine padding'
+        'InvalidLengthError: Input base64 string is the wrong length to determine padding'
       );
     }
     base64Formatted += new Array(5 - pad).join('=');
   }
-  const binary_string = atob(base64Formatted);
-  const len = binary_string.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binary_string.charCodeAt(i);
+  return base64Formatted;
+}
+
+/**
+ * Converts an ArrayBuffer to a base64 string
+ * @param arrayBuffer ArrayBuffer to convert
+ * @returns base64 string
+ */
+export function arrayBufferToBase64(arrayBuffer: ArrayBuffer): string {
+  const byteArray = new Uint8Array(arrayBuffer);
+  let byteString = '';
+
+  byteArray.forEach((byte) => {
+    byteString += String.fromCharCode(byte);
+  });
+
+  return btoa(byteString)
+    .replace(/=/g, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_');
+}
+
+/**
+ * Converts a string in base64url format to an ArrayBuffer
+ * @param base64String base64 string
+ * @returns ArrayBuffer
+ */
+export function base64UrlStringToArrayBuffer(
+  base64UrlString: string
+): ArrayBuffer {
+  const binaryString = atob(base64UrlString),
+    bytes = new Uint8Array(binaryString.length);
+
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
   }
+
   return bytes.buffer;
 }
 
@@ -303,7 +316,6 @@ export function base64UrlStringToArrayBuffer(
  * @param str string
  * @returns ArrayBuffer of base64 string
  */
-export function stringToArrayBuffer(str: string): ArrayBuffer {
-  const base64Encoded = btoa(str);
-  return base64UrlStringToArrayBuffer(base64Encoded);
+export function stringToBase64UrlArrayBuffer(str: string): ArrayBuffer {
+  return base64UrlStringToArrayBuffer(base64StringtoBase64UrlString(btoa(str)));
 }
