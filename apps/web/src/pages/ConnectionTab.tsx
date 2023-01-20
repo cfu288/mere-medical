@@ -85,17 +85,17 @@ const ConnectionTab: React.FC = () => {
               </button>
             </a>
           ) : (
-            <div className="mb-4 flex w-full flex-col">
+            <div className="mb-4 flex w-full flex-col items-center">
               <button
                 disabled
                 className="w-full rounded-lg p-4 text-center text-white disabled:bg-gray-300"
               >
                 <p className="font-bold">Log in to OnPatient</p>
               </button>
-              <p>
+              <p className="pt-2">
                 To log in with OnPatient, go to{' '}
                 <Link
-                  className="text-primary hover:text-primary-500 underline"
+                  className="text-primary hover:text-primary-500 w-full text-center underline"
                   to={`${Routes.Settings}#use_proxy`}
                 >
                   the settings page

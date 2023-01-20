@@ -128,10 +128,14 @@ const SettingsTab: React.FC = () => {
                     </Switch.Label>
                     <Switch.Description className="pt-2 text-sm text-gray-500">
                       Some patient portals disable direct communication from the
-                      app. If your app fails to login or sync data, you can
-                      enable this to use a backend proxy to do actions on your
-                      behalf. You should only enable this if you trust the
-                      organization hosting the app.
+                      Mere app. If your app fails to login or sync data, you can
+                      enable this setting to use a backend proxy to do login and
+                      sync on your behalf.
+                    </Switch.Description>
+                    <Switch.Description className="pt-2 text-sm text-gray-500">
+                      You should only enable this if you trust the organization
+                      hosting the app, as the proxy will be able to access your
+                      health data.
                     </Switch.Description>
                   </div>
                   <Switch
