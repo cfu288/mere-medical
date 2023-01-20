@@ -1,12 +1,11 @@
 import {
   IDBKeyConfig,
-  stringToBase64UrlString,
-  stringToBase64UrlArrayBuffer,
+  textStringToBase64UrlString,
+  textStringToBase64UrlArrayBuffer,
   signPayload,
-  arrayBufferToBase64,
-  // base64StringToBase64UrlArrayBuffer,
+  arrayBufferToBase64String,
   verifyPayload,
-  base64StringtoBase64UrlString,
+  base64StringToBase64UrlString,
   base64UrlStringToArrayBuffer,
 } from './WebCrypto';
 
@@ -50,29 +49,31 @@ export async function signJwt(tokenPayload: TokenPayload): Promise<string> {
   const stringifiedHeader = JSON.stringify(header);
   const stringifiedPayload = JSON.stringify(payload);
 
-  const headerBase64 = stringToBase64UrlString(stringifiedHeader);
-  const payloadBase64 = stringToBase64UrlString(stringifiedPayload);
+  const headerBase64 = textStringToBase64UrlString(stringifiedHeader);
+  const payloadBase64 = textStringToBase64UrlString(stringifiedPayload);
 
   const headerAndPayload = `${headerBase64}.${payloadBase64}`;
 
-  const messageAsArrayBuffer = stringToBase64UrlArrayBuffer(headerAndPayload);
+  const messageAsArrayBuffer =
+    textStringToBase64UrlArrayBuffer(headerAndPayload);
 
   const signature = await signPayload(messageAsArrayBuffer);
-  const base64Signature = arrayBufferToBase64(signature);
+  const base64Signature = base64StringToBase64UrlString(
+    arrayBufferToBase64String(signature)
+  );
 
   return `${headerAndPayload}.${base64Signature}`;
 }
 
 export async function verifyJwt(jwt: string) {
   const [header, payload, signature] = jwt.split('.');
-  const headerAndPayloadAsUint8Array = stringToBase64UrlArrayBuffer(
+  const headerAndPayloadAsUint8Array = textStringToBase64UrlArrayBuffer(
     `${header}.${payload}`
   );
   const signatureAsUint8Array = base64UrlStringToArrayBuffer(
-    base64StringtoBase64UrlString(signature)
+    base64StringToBase64UrlString(signature)
   );
 
-  // const signatureAsUint8Array = base64StringToBase64UrlArrayBuffer(signature);
   return await verifyPayload(
     headerAndPayloadAsUint8Array,
     signatureAsUint8Array
