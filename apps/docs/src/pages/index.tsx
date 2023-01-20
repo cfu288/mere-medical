@@ -6,7 +6,7 @@ import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 
 const footerNavigation = {
-  main: [{ name: 'About', href: 'https://meremedical.co/docs/' }],
+    main: [{ name: 'About', href: 'https://meremedical.co/docs/' }, { name: "Blog", href: "/blog" }],
   social: [],
 };
 
@@ -79,16 +79,6 @@ export default function Home() {
         )}
       </Head>
       <main className="relative overflow-x-hidden overflow-y-hidden bg-white">
-        <div className="absolute flex top-0 z-50 mx-auto w-full py-4">
-          <div className="flex gap-x-4 mx-auto">
-            <Link to="/docs" className="text-primary-900 text-xl">
-              About
-            </Link>
-            <Link to="/blog" className="text-primary-900 text-xl">
-              Blog
-            </Link>
-          </div>
-        </div>
         {/* Hero section */}
         <div className="pt-8 sm:pt-12 lg:relative lg:py-48">
           <div className="mx-auto max-w-md px-4 sm:max-w-3xl sm:grid-cols-1 sm:px-6 lg:grid lg:max-w-7xl lg:grid-cols-2 lg:gap-24 lg:px-8">
