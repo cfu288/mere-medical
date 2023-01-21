@@ -6,7 +6,7 @@ steps:
   - name: app-check-if-changed
     image: node
     commands:
-      - npx nx print-affected --type=app --select=projects | grep -q -E "api|web" || exit 78
+      - npx nx print-affected --type=app --select=projects --base=HEAD~1 | grep -q -E "api|web" || exit 78
 
   - name: app
     image: docker:dind
@@ -27,7 +27,7 @@ steps:
   - name: docs-check-if-changed
     image: node
     commands:
-      - npx nx print-affected --type=app --select=projects | grep -q -E "docs" || exit 78
+      - npx nx print-affected --type=app --select=projects --base=HEAD~1 | grep -q -E "docs" || exit 78
 
   - name: docs
     image: docker:dind
