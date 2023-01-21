@@ -45,7 +45,11 @@ function createUserPreferencesIfNone(
 ): Promise<boolean> {
   return new Promise((resolve, reject) => {
     db.user_preferences
-      .findOne({})
+      .findOne({
+        selector: {
+          user_id: user_id,
+        },
+      })
       .exec()
       .then((item) => {
         if (item) {

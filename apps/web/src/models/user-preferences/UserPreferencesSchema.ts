@@ -1,6 +1,6 @@
 export const userPreferencesSchemaLiteral = {
   title: 'User Preferences Schema',
-  version: 0,
+  version: 1,
   primaryKey: 'id',
   type: 'object',
   properties: {

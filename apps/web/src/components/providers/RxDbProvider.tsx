@@ -33,6 +33,7 @@ import {
 } from '../../models/user-preferences/UserPreferencesCollection';
 import { UserDocumentMigrations } from '../../models/user-document/UserDocument.migration';
 import { RxDBAttachmentsPlugin } from 'rxdb/plugins/attachments';
+import { UserPreferencesMigrations } from '../../models/user-preferences/UserPreferences.migration';
 
 addRxPlugin(RxDBUpdatePlugin);
 addRxPlugin(RxDBMigrationPlugin);
@@ -75,6 +76,7 @@ async function initRxDb() {
     },
     user_preferences: {
       schema: UserPreferencesDocumentSchema,
+      migrationStrategies: UserPreferencesMigrations,
     },
   });
 
