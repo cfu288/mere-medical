@@ -1,9 +1,6 @@
 import React, { Fragment } from 'react';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Head from '@docusaurus/Head';
-import { Popover, Transition } from '@headlessui/react';
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import { Link } from 'react-router-dom';
 
 const footerNavigation = {
   main: [
@@ -278,43 +275,7 @@ export default function Home() {
         </div>
 
         {/* CTA section */}
-        <div className="relative sm:py-16">
-          {/* <div aria-hidden="true" className="hidden sm:block">
-            <div className="absolute inset-y-0 left-0 w-1/2 rounded-r-3xl bg-gray-50" />
-            <svg
-              className="absolute top-8 left-1/2 -ml-3"
-              width={404}
-              height={392}
-              fill="none"
-              viewBox="0 0 404 392"
-            >
-              <defs>
-                <pattern
-                  id="8228f071-bcee-4ec8-905a-2a059a2cc4fb"
-                  x={0}
-                  y={0}
-                  width={20}
-                  height={20}
-                  patternUnits="userSpaceOnUse"
-                >
-                  <rect
-                    x={0}
-                    y={0}
-                    width={4}
-                    height={4}
-                    className="text-gray-200"
-                    fill="currentColor"
-                  />
-                </pattern>
-              </defs>
-              <rect
-                width={404}
-                height={392}
-                fill="url(#8228f071-bcee-4ec8-905a-2a059a2cc4fb)"
-              />
-            </svg>
-          </div> */}
-        </div>
+        <div className="relative sm:py-16"></div>
       </main>
       <footer className="bg-primary-900">
         <div className="mx-auto max-w-md overflow-hidden py-12 px-4 sm:max-w-3xl sm:px-6 lg:max-w-7xl lg:px-8">

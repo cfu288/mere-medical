@@ -78,7 +78,7 @@ const ConnectionTab: React.FC = () => {
           {userPreferences?.use_proxy ? (
             <a
               href={onpatientLoginUrl}
-              className="bg-primary mb-4 w-full rounded-lg p-4 text-center text-white"
+              className="bg-primary hover:bg-primary-600 mb-4 w-full rounded-lg p-4 text-center text-white"
             >
               <button>
                 <p className="font-bold">Log in to OnPatient</p>
@@ -107,7 +107,7 @@ const ConnectionTab: React.FC = () => {
         </div>
         <div className="mb-4 box-border	flex w-full justify-center align-middle">
           <button
-            className="bg-primary w-full rounded-lg p-4 text-white"
+            className="bg-primary hover:bg-primary-600 w-full rounded-lg p-4 text-white"
             onClick={() => setOpen((x) => !x)}
           >
             <p className="font-bold">Log in to Epic MyChart</p>

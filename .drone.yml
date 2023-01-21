@@ -10,8 +10,8 @@ steps:
     image: node:16.14.0
     commands:
       - npm ci
-      - npx nx print-affected --type=app --select=projects --base=HEAD~1 --head=HEAD
-      - npx nx print-affected --type=app --select=projects --base=HEAD~1 --head=HEAD | grep -q -E "api|web" || exit 78
+      - npx nx print-affected --type=app --select=projects --base=HEAD~1
+      - npx nx print-affected --type=app --select=projects --base=HEAD~1 | grep -q -E "api|web" || exit 78
 
   - name: app
     image: docker:dind
@@ -33,8 +33,9 @@ steps:
     image: node:16.14.0
     commands:
       - npm ci
-      - npx nx print-affected --type=app --select=projects --base=HEAD~1 --head=HEAD
-      - npx nx print-affected --type=app --select=projects --base=HEAD~1 --head=HEAD | grep -q -E "docs" || exit 78
+      - npx nx print-affected --type=app --select=projects --base=HEAD~1
+      # docs project is not detected by print affected yet
+      - npx nx print-affected --type=app --select=projects --base=HEAD~1 | grep -q -E "docs" || exit 78
 
   - name: docs
     image: docker:dind
