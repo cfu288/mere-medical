@@ -11,7 +11,7 @@ steps:
     commands:
       - npm ci
       - npx nx print-affected --type=app --select=projects --base=HEAD~1
-      - npx nx print-affected --type=app --select=projects --base=HEAD~1 | grep -q -E "api|web" || exit 78
+      - npx nx print-affected --type=app --select=projects --base=HEAD~1 | grep -q -E "api|web" && echo "Files changed, start new build" || exit 78
 
   - name: app
     image: docker:dind
@@ -35,7 +35,7 @@ steps:
       - npm ci
       - npx nx print-affected --type=app --select=projects --base=HEAD~1
       # docs project is not detected by print affected yet
-      - npx nx print-affected --type=app --select=projects --base=HEAD~1 | grep -q -E "docs" || exit 78
+      - npx nx print-affected --type=app --select=projects --base=HEAD~1 | grep -q -E "docs" && echo "Files changed, start new build" || exit 78
 
   - name: docs
     image: docker:dind
