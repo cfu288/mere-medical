@@ -7,7 +7,7 @@ clone:
 
 steps:
   - name: app-check-if-changed
-    image: node:16
+    image: node:16.14.0
     commands:
       - npm ci
       - npx nx print-affected --type=app --select=projects --base=HEAD~1 --head=HEAD
@@ -30,7 +30,7 @@ steps:
       - app-check-if-changed
 
   - name: docs-check-if-changed
-    image: node:16
+    image: node:16.14.0
     commands:
       - npm ci
       - npx nx print-affected --type=app --select=projects --base=HEAD~1 --head=HEAD
