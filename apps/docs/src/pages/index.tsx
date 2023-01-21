@@ -6,7 +6,10 @@ import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 
 const footerNavigation = {
-    main: [{ name: 'About', href: 'https://meremedical.co/docs/' }, { name: "Blog", href: "/blog" }],
+  main: [
+    { name: 'About', href: 'https://meremedical.co/docs/' },
+    { name: 'Blog', href: '/blog' },
+  ],
   social: [],
 };
 
@@ -45,7 +48,7 @@ const features = [
     name: 'Free for Everyone',
     img: '/img/free.svg',
     description:
-      'Every patient has the right to control their own healthcare data. That’s why Mere Medical is free to use, deploy, and change.',
+      'Every patient has the right to control their own healthcare data. That’s why Mere Medical is free to use, deploy, and extend.',
   },
 ];
 
