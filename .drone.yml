@@ -9,6 +9,7 @@ steps:
   - name: app-check-if-changed
     image: node
     commands:
+      - npx nx print-affected --type=app --select=projects --base=HEAD~1 --head=HEAD
       - npx nx print-affected --type=app --select=projects --base=HEAD~1 --head=HEAD | grep -q -E "api|web" || exit 78
 
   - name: app
@@ -30,6 +31,7 @@ steps:
   - name: docs-check-if-changed
     image: node
     commands:
+      - npx nx print-affected --type=app --select=projects --base=HEAD~1 --head=HEAD
       - npx nx print-affected --type=app --select=projects --base=HEAD~1 --head=HEAD | grep -q -E "docs" || exit 78
 
   - name: docs
