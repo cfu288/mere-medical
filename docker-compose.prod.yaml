@@ -9,7 +9,7 @@ services:
       test: ['CMD', 'node', '/app/healthcheck.js']
       interval: 5s # Interval between health checks.
       timeout: 5s # Timeout for each health checking.
-      retries: 12 # Hou many times retries.
+      retries: 12 # How many times retries.
       start_period: 5s # Estimated time to boot.
     stop_grace_period: 30s
     deploy:

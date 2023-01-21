@@ -617,7 +617,9 @@ export async function saveConnectionToDb({
           doc
             .update({
               $set: {
-                client_id: (res as EpicAuthResponseWithClientId)?.client_id || doc.client_id,
+                client_id:
+                  (res as EpicAuthResponseWithClientId)?.client_id ||
+                  doc.client_id,
                 access_token: res.access_token,
                 expires_in: nowInSeconds + res.expires_in,
                 scope: res.scope,
