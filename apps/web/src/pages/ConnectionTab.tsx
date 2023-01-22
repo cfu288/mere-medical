@@ -12,21 +12,25 @@ import { EpicSelectModelResultItem } from '../components/connection/EpicSelectMo
 import { useUserPreferences } from '../components/providers/UserPreferencesProvider';
 import { Routes } from '../Routes';
 import { Link } from 'react-router-dom';
+import { useUser } from '../components/providers/UserProvider';
 
 function useConnectionCards() {
   const db = useRxDb(),
+    user = useUser(),
     [list, setList] = useState<RxDocument<ConnectionDocument>[]>();
 
   useEffect(() => {
     const sub = db.connection_documents
       .find({
-        selector: {},
+        selector: {
+          user_id: user.id,
+        },
       })
       .$.subscribe((list) =>
         setList(list as unknown as RxDocument<ConnectionDocument>[])
       );
     return () => sub.unsubscribe();
-  }, [db.connection_documents]);
+  }, [db.connection_documents, user.id]);
 
   return list;
 }

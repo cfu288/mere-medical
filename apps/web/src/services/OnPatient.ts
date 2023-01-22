@@ -69,6 +69,7 @@ async function syncFHIRResource<T extends FhirResource>(
       .find({
         selector: {
           $and: [
+            { user_id: connectionDocument.user_id },
             { 'metadata.id': `${doc.metadata?.id}` },
             { connection_record_id: `${doc.connection_record_id}` },
           ],
@@ -79,6 +80,9 @@ async function syncFHIRResource<T extends FhirResource>(
       await db.clinical_documents.insert(
         doc as unknown as ClinicalDocumentType
       );
+      console.log(`Syncing document with id ${doc.id}`);
+    } else {
+      console.log(`Document with id ${doc.id} already exists`);
     }
   });
   return await Promise.all(saveTaskList);

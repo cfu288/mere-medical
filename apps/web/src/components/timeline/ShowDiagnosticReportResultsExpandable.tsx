@@ -5,6 +5,7 @@ import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocumen
 import { Modal } from '../Modal';
 import { ModalHeader } from '../ModalHeader';
 import { useRxDb } from '../providers/RxDbProvider';
+import { useUser } from '../providers/UserProvider';
 
 export function ShowDiagnosticReportResultsExpandable({
   item,
@@ -16,6 +17,7 @@ export function ShowDiagnosticReportResultsExpandable({
   setExpanded: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const db = useRxDb(),
+    user = useUser(),
     [docs, setDocs] = useState<RxDocument<ClinicalDocument<Observation>>[]>([]),
     listToQuery = useMemo(() => {
       return [
@@ -33,6 +35,7 @@ export function ShowDiagnosticReportResultsExpandable({
       db.clinical_documents
         .find({
           selector: {
+            user_id: user.id,
             'metadata.id': { $in: listToQuery },
           },
         })

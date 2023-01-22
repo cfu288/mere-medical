@@ -12,11 +12,15 @@ import { UserDocument } from '../models/user-document/UserDocument.type';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocumentType';
 import { useRxUserDocument, useUser } from './providers/UserProvider';
 
-function fetchPatientRecords(db: RxDatabase<DatabaseCollections>) {
+function fetchPatientRecords(
+  db: RxDatabase<DatabaseCollections>,
+  user_id: string
+) {
   return db.clinical_documents
     .find({
       selector: {
         $and: [
+          { user_id: user_id },
           { 'data_record.resource_type': `patient` },
           {
             'metadata.date': { $gt: 0 },
@@ -252,7 +256,7 @@ export function EmptyUserPlaceholder() {
       });
 
   useEffect(() => {
-    fetchPatientRecords(db).then((data) => {
+    fetchPatientRecords(db, user.id).then((data) => {
       const res = data.map((item) => item.toMutableJSON());
       const firstName =
           res?.[0]?.data_record.raw.resource?.name?.[0].given?.[0],
@@ -268,7 +272,7 @@ export function EmptyUserPlaceholder() {
         data: { firstName, lastName, email, birthday: birthDate, gender },
       });
     });
-  }, [db]);
+  }, [db, user.id]);
 
   return (
     <div

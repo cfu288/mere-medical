@@ -22,11 +22,16 @@ import { CarePlanListCard } from '../components/summary/CarePlanListCard';
 import { AllergyIntoleranceListCard } from '../components/summary/AllergyIntoleranceListCard';
 import { EmptyRecordsPlaceholder } from '../components/EmptyRecordsPlaceholder';
 import { AppPage } from '../components/AppPage';
+import { useUser } from '../components/providers/UserProvider';
 
-function fetchMedications(db: RxDatabase<DatabaseCollections>) {
+function fetchMedications(
+  db: RxDatabase<DatabaseCollections>,
+  user_id: string
+) {
   return db.clinical_documents
     .find({
       selector: {
+        user_id: user_id,
         'data_record.resource_type': 'medicationstatement',
         'metadata.date': { $gt: 0 },
       },
@@ -41,10 +46,11 @@ function fetchMedications(db: RxDatabase<DatabaseCollections>) {
     });
 }
 
-function fetchCarePlan(db: RxDatabase<DatabaseCollections>) {
+function fetchCarePlan(db: RxDatabase<DatabaseCollections>, user_id: string) {
   return db.clinical_documents
     .find({
       selector: {
+        user_id: user_id,
         'data_record.resource_type': 'careplan',
       },
     })
@@ -57,10 +63,11 @@ function fetchCarePlan(db: RxDatabase<DatabaseCollections>) {
     });
 }
 
-function fetchConditions(db: RxDatabase<DatabaseCollections>) {
+function fetchConditions(db: RxDatabase<DatabaseCollections>, user_id: string) {
   return db.clinical_documents
     .find({
       selector: {
+        user_id: user_id,
         'data_record.resource_type': 'condition',
         'metadata.date': { $gt: 0 },
       },
@@ -76,10 +83,14 @@ function fetchConditions(db: RxDatabase<DatabaseCollections>) {
     });
 }
 
-function fetchImmunizations(db: RxDatabase<DatabaseCollections>) {
+function fetchImmunizations(
+  db: RxDatabase<DatabaseCollections>,
+  user_id: string
+) {
   return db.clinical_documents
     .find({
       selector: {
+        user_id: user_id,
         'data_record.resource_type': 'immunization',
         'metadata.date': { $gt: 0 },
       },
@@ -94,10 +105,11 @@ function fetchImmunizations(db: RxDatabase<DatabaseCollections>) {
       return lst;
     });
 }
-function fetchAllergy(db: RxDatabase<DatabaseCollections>) {
+function fetchAllergy(db: RxDatabase<DatabaseCollections>, user_id: string) {
   return db.clinical_documents
     .find({
       selector: {
+        user_id: user_id,
         'data_record.resource_type': 'allergyintolerance',
         'metadata.date': { $gt: 0 },
       },
@@ -189,7 +201,8 @@ function useSummaryData(): [
   },
   React.Dispatch<SummaryActions>
 ] {
-  const db = useRxDb();
+  const db = useRxDb(),
+    user = useUser();
   const [data, reducer] = useReducer(summaryReducer, {
     status: ActionTypes.IDLE,
     meds: [],
@@ -203,7 +216,7 @@ function useSummaryData(): [
     if (data.status === ActionTypes.IDLE) {
       reducer({ type: ActionTypes.PENDING });
       Promise.all([
-        fetchMedications(db).then((data) =>
+        fetchMedications(db, user.id).then((data) =>
           data.map(
             (item) =>
               item.toMutableJSON() as ClinicalDocument<
@@ -211,13 +224,13 @@ function useSummaryData(): [
               >
           )
         ),
-        fetchConditions(db).then((data) =>
+        fetchConditions(db, user.id).then((data) =>
           data.map(
             (item) =>
               item.toMutableJSON() as ClinicalDocument<BundleEntry<Condition>>
           )
         ),
-        fetchImmunizations(db).then((data) =>
+        fetchImmunizations(db, user.id).then((data) =>
           data.map(
             (item) =>
               item.toMutableJSON() as ClinicalDocument<
@@ -225,13 +238,13 @@ function useSummaryData(): [
               >
           )
         ),
-        fetchCarePlan(db).then((data) =>
+        fetchCarePlan(db, user.id).then((data) =>
           data.map(
             (item) =>
               item.toMutableJSON() as ClinicalDocument<BundleEntry<CarePlan>>
           )
         ),
-        fetchAllergy(db).then((data) =>
+        fetchAllergy(db, user.id).then((data) =>
           data.map(
             (item) =>
               item.toMutableJSON() as ClinicalDocument<

@@ -22,7 +22,7 @@ const SettingsTab: React.FC = () => {
     rawUserPreferences = useRawUserPreferences(),
     { pathname, hash, key } = useLocation(),
     ref = useRef<HTMLDivElement | null>(null),
-    [fileDownloadLink, setFiledownloadlink] = useState('');
+    [fileDownloadLink, setFileDownloadLink] = useState('');
 
   const exportData = useCallback(() => {
     db.exportJSON().then((json) => {
@@ -30,7 +30,7 @@ const SettingsTab: React.FC = () => {
       const blobUrl = URL.createObjectURL(
         new Blob([jsonData], { type: 'application/json' })
       );
-      setFiledownloadlink(blobUrl);
+      setFileDownloadLink(blobUrl);
     });
   }, [db]);
 

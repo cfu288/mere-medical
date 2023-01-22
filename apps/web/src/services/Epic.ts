@@ -128,6 +128,7 @@ async function syncFHIRResource<T extends FhirResource>(
       .find({
         selector: {
           $and: [
+            { user_id: connectionDocument.user_id },
             { 'metadata.id': `${cd.metadata?.id}` },
             { connection_record_id: `${cd.connection_record_id}` },
           ],
@@ -136,6 +137,9 @@ async function syncFHIRResource<T extends FhirResource>(
       .exec();
     if (exists.length === 0) {
       await db.clinical_documents.insert(cd as unknown as ClinicalDocumentType);
+      console.log(`Syncing document with id ${cd.id}`);
+    } else {
+      console.log(`Document with id ${cd.id} already exists`);
     }
   });
   return await Promise.all(cdsmap);
@@ -327,6 +331,7 @@ async function syncDocumentReferences(
   const docs = await db.clinical_documents
     .find({
       selector: {
+        user_id: connectionDocument.user_id,
         'data_record.resource_type': {
           $eq: 'documentreference',
         },
@@ -354,6 +359,7 @@ async function syncDocumentReferences(
             .find({
               selector: {
                 $and: [
+                  { user_id: connectionDocument.user_id },
                   { 'metadata.id': `${attachmentUrl}` },
                   { connection_record_id: `${item.connection_record_id}` },
                 ],

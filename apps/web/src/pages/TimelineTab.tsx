@@ -22,10 +22,11 @@ import { TimelineYearHeaderWrapper } from '../components/timeline/TimelineYearHe
  * @param db
  * @returns
  */
-function fetchRecords(db: RxDatabase<DatabaseCollections>) {
+function fetchRecords(db: RxDatabase<DatabaseCollections>, user_id: string) {
   return db.clinical_documents
     .find({
       selector: {
+        user_id: user_id,
         'data_record.resource_type': {
           $nin: ['patient', 'observation'],
         },
@@ -94,11 +95,11 @@ function TimelineTab() {
 
   useEffect(() => {
     // Fetch clinical documents to display
-    fetchRecords(db).then((groupedRecords) => {
+    fetchRecords(db, user.id).then((groupedRecords) => {
       setList(groupedRecords);
       console.debug(groupedRecords);
     });
-  }, [db]);
+  }, [db, user.id]);
 
   return (
     <AppPage

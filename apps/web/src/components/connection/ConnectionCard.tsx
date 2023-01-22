@@ -9,6 +9,7 @@ import * as OnPatient from '../../services/OnPatient';
 import * as Epic from '../../services/Epic';
 import { useNotificationDispatch } from '../providers/NotificationProvider';
 import { useUserPreferences } from '../providers/UserPreferencesProvider';
+import { useUser } from '../providers/UserProvider';
 
 function getImage(logo: 'onpatient' | 'epic') {
   switch (logo) {
@@ -76,11 +77,11 @@ async function refreshConnectionTokenIfNeeded(
         user = connectionDocument.get('user_id');
 
       const access_token_data = await Epic.fetchAccessTokenUsingJWT(
-          clientId,
-          epicUrl,
-          epicId,
-          useProxy
-        );
+        clientId,
+        epicUrl,
+        epicId,
+        useProxy
+      );
 
       return await Epic.saveConnectionToDb({
         res: access_token_data,
@@ -105,6 +106,7 @@ export function ConnectionCard({
   baseUrl: string;
 }) {
   const db = useRxDb(),
+    user = useUser(),
     [deleting, setDeleting] = useState(false),
     userPreferences = useUserPreferences(),
     removeDocument = (document: RxDocument<ConnectionDocument>) => {
@@ -113,6 +115,7 @@ export function ConnectionCard({
       db.clinical_documents
         .find({
           selector: {
+            user_id: user.id,
             connection_record_id: connectionId,
           },
         })
