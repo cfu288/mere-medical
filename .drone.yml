@@ -29,14 +29,13 @@ steps:
     depends_on:
       - app-check-if-changed
 
-  - name: docs-check-if-changed
-    image: node:16.14.0
-    commands:
-      - npm ci
-      - npx nx print-affected --type=app --select=projects --base=HEAD~1
-      # docs project is not detected by print affected yet
-      - npx nx print-affected --type=app --select=projects --base=HEAD~1 | grep -q -E "docs" && echo "Files changed, start new build" || exit 78
-
+  # - name: docs-check-if-changed
+  #   image: node:16.14.0
+  #   commands:
+  #     - npm ci
+  #     - npx nx print-affected --type=app --select=projects --base=HEAD~1
+  #     # docs project is not detected by print affected yet
+  #     - npx nx print-affected --type=app --select=projects --base=HEAD~1 | grep -q -E "docs" && echo "Files changed, start new build" || exit 78
   - name: docs
     image: docker:dind
     environment:
@@ -50,8 +49,8 @@ steps:
       - echo $PASSWORD | docker login --username cfu288 --password-stdin
       - docker build -f Dockerfile-docs -t cfu288/mere-medical-docs .
       - docker push cfu288/mere-medical-docs:latest
-    depends_on:
-      - docs-check-if-changed
+    # depends_on:
+    #   - docs-check-if-changed
 
   - name: parallelize builds
     image: docker:dind
