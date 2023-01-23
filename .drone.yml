@@ -3,15 +3,15 @@ name: default
 type: docker
 
 clone:
-  depth: 10
+  depth: 2
 
 steps:
-  - name: app-check-if-changed
-    image: node:16.14.0
-    commands:
-      - npm ci
-      - npx nx print-affected --type=app --select=projects --base=HEAD~1
-      - npx nx print-affected --type=app --select=projects --base=HEAD~1 | grep -q -E "api|web" && echo "Files changed, start new build" || exit 78
+  # - name: app-check-if-changed
+  #   image: node:16.14.0
+  #   commands:
+  #     - npm ci
+  #     - npx nx print-affected --type=app --select=projects --base=HEAD~1
+  #     - npx nx print-affected --type=app --select=projects --base=HEAD~1 | grep -q -E "api|web" && echo "Files changed, start new build" || exit 78
 
   - name: app
     image: docker:dind
@@ -26,8 +26,8 @@ steps:
       - echo $PASSWORD | docker login --username cfu288 --password-stdin
       - docker build -f Dockerfile -t cfu288/mere-medical .
       - docker push cfu288/mere-medical:latest
-    depends_on:
-      - app-check-if-changed
+    # depends_on:
+    #   - app-check-if-changed
 
   # - name: docs-check-if-changed
   #   image: node:16.14.0
