@@ -2,18 +2,210 @@ import { Switch } from '@headlessui/react';
 import uuid4 from '../utils/UUIDUtils';
 import { AppPage } from '../components/AppPage';
 import { GenericBanner } from '../components/GenericBanner';
-import { useRxDb } from '../components/providers/RxDbProvider';
+import {
+  DatabaseCollections,
+  useRxDb,
+} from '../components/providers/RxDbProvider';
 import {
   useRawUserPreferences,
   useUserPreferences,
 } from '../components/providers/UserPreferencesProvider';
 import { useUser } from '../components/providers/UserProvider';
 import { EmptyUserPlaceholder } from '../components/EmptyUserPlaceholder';
+import {
+  NewUserFormFields,
+  EditUserModalForm,
+} from '../components/EditUserModalForm';
 import { useLocation } from 'react-router-dom';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { ArrowDownTrayIcon } from '@heroicons/react/20/solid';
+import { PencilIcon } from '@heroicons/react/24/outline';
 import { classNames } from '../utils/StyleUtils';
+import { format } from 'date-fns';
+import { RxDatabase, RxDocument } from 'rxdb';
+import { BundleEntry, Patient } from 'fhir/r2';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocumentType';
+
+function fetchPatientRecords(
+  db: RxDatabase<DatabaseCollections>,
+  user_id: string
+) {
+  return db.clinical_documents
+    .find({
+      selector: {
+        $and: [
+          { user_id: user_id },
+          { 'data_record.resource_type': `patient` },
+          {
+            'metadata.date': { $gt: 0 },
+          },
+        ],
+        sort: [{ 'metadata.date': 'desc' }],
+      },
+    })
+    .exec()
+    .then((list) => {
+      const lst = list as unknown as RxDocument<
+        ClinicalDocument<BundleEntry<Patient>>
+      >[];
+      return lst;
+    });
+}
+
+function UserCard() {
+  const user = useUser(),
+    db = useRxDb(),
+    [defaultValues, setDefaultValues] = useState<NewUserFormFields | undefined>(
+      undefined
+    ),
+    [openModal, setOpenModal] = useState(false);
+
+  useEffect(() => {
+    fetchPatientRecords(db, user.id).then((data) => {
+      const res = data.map((item) => item.toMutableJSON());
+      const firstName = parseGivenName(
+          res.filter((i) => parseGivenName(i) !== undefined)?.[0]
+        ),
+        lastName = parseFamilyName(
+          res.filter((i) => parseFamilyName(i) !== undefined)?.[0]
+        ),
+        email = parseEmail(res.filter((i) => parseEmail(i) !== undefined)?.[0]),
+        birthDate = parseBirthday(
+          res.filter((i) => parseBirthday(i) !== undefined)?.[0]
+        ),
+        gender = parseGender(
+          res.filter(
+            (i) =>
+              parseGender(i) !== undefined &&
+              parseGender(i)?.toLocaleLowerCase() !== 'unknown'
+          )?.[0]
+        );
+
+      setDefaultValues({
+        firstName,
+        lastName,
+        email,
+        birthday: birthDate,
+        gender,
+      });
+    });
+  }, [db, user.id]);
+  return (
+    <>
+      {(user === undefined || user.is_default_user) && (
+        <div className="mx-auto flex max-w-4xl flex-col px-4 sm:px-6 lg:px-8">
+          <EmptyUserPlaceholder openModal={() => setOpenModal(true)} />
+        </div>
+      )}
+      {user !== undefined && !user.is_default_user && (
+        <div className="mx-auto mt-2 flex max-w-sm flex-col px-4 sm:px-6 lg:px-8">
+          <li
+            key={user.email || user.id}
+            className="flex-colrounded-lg relative col-span-1 flex border bg-white text-center"
+          >
+            <button
+              className="absolute top-4 right-4 flex justify-center text-gray-400"
+              aria-label="Edit profile"
+              onClick={() => {
+                setOpenModal(true);
+              }}
+            >
+              <PencilIcon className="h-4 w-4" />
+            </button>
+            <div className="flex flex-1 flex-col p-8">
+              {user?.profile_picture ? (
+                <div className="mx-auto h-32 w-32 flex-shrink-0 rounded-full border border-black">
+                  <img
+                    className="h-full w-full rounded-full text-gray-300"
+                    src={URL.createObjectURL(user.profile_picture)}
+                    alt="profile"
+                  ></img>
+                </div>
+              ) : (
+                <div className="mx-auto h-32 w-32 flex-shrink-0 rounded-full border border-black">
+                  <svg
+                    className="h-full w-full rounded-full text-gray-300"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                </div>
+              )}
+              <h2 className="text-md mt-6 text-start font-medium text-gray-600">
+                Name
+              </h2>
+              <p className="text-md mt-2 text-start font-medium text-gray-900">
+                {user.first_name} {user.last_name}
+              </p>
+              <h2 className="text-md mt-6 text-start font-medium text-gray-600">
+                Birthday
+              </h2>
+              <p className="text-md mt-2 text-start font-medium text-gray-900">
+                {user.birthday && format(new Date(user.birthday), 'MM/dd/yyyy')}
+              </p>
+              <h2 className="text-md mt-6 text-start font-medium text-gray-600">
+                Email
+              </h2>
+              <p className="text-md mt-2 text-start font-medium text-gray-900">
+                {user.email}
+              </p>
+            </div>
+          </li>
+        </div>
+      )}
+      <EditUserModalForm
+        defaultValues={
+          !user.is_default_user
+            ? ({
+                birthday: user.birthday,
+                email: user.email,
+                firstName: user.first_name,
+                gender: user.gender,
+                lastName: user.last_name,
+                profilePhoto: user.profile_picture,
+              } as NewUserFormFields)
+            : defaultValues
+        }
+        modalOpen={openModal}
+        toggleModal={() => setOpenModal((x) => !x)}
+      />
+    </>
+  );
+}
+
+function parseGivenName(
+  item: ClinicalDocument<BundleEntry<Patient>>
+): string | undefined {
+  return item?.data_record.raw.resource?.name?.[0].given?.[0];
+}
+
+function parseFamilyName(
+  item: ClinicalDocument<BundleEntry<Patient>>
+): string | undefined {
+  return item?.data_record.raw.resource?.name?.[0].family?.[0];
+}
+
+function parseEmail(
+  item: ClinicalDocument<BundleEntry<Patient>>
+): string | undefined {
+  return item?.data_record.raw.resource?.telecom?.find(
+    (x) => x.system === 'email'
+  )?.value;
+}
+
+function parseBirthday(
+  item: ClinicalDocument<BundleEntry<Patient>>
+): string | undefined {
+  return item?.data_record.raw.resource?.birthDate;
+}
+
+function parseGender(
+  item: ClinicalDocument<BundleEntry<Patient>>
+): string | undefined {
+  return item?.data_record.raw.resource?.gender;
+}
 
 const SettingsTab: React.FC = () => {
   const db = useRxDb(),
@@ -54,59 +246,8 @@ const SettingsTab: React.FC = () => {
       <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 sm:px-6 lg:px-8">
         <div className="py-6 text-xl font-extrabold">About Me</div>
       </div>
-      {(user === undefined || user.is_default_user) && (
-        <div className="mx-auto flex max-w-4xl flex-col px-4 sm:px-6 lg:px-8">
-          <EmptyUserPlaceholder />
-        </div>
-      )}
-      {user !== undefined && !user.is_default_user && (
-        <div className="mx-auto mt-2 flex max-w-sm flex-col px-4 sm:px-6 lg:px-8">
-          <li
-            key={user.email || user.id}
-            className="col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white text-center"
-          >
-            <div className="flex flex-1 flex-col p-8">
-              {user?.profile_picture ? (
-                <div className="mx-auto h-32 w-32 flex-shrink-0 rounded-full border border-black">
-                  <img
-                    className="h-full w-full rounded-full text-gray-300"
-                    src={URL.createObjectURL(user.profile_picture)}
-                    alt="profile"
-                  ></img>
-                </div>
-              ) : (
-                <div className="mx-auto h-32 w-32 flex-shrink-0 rounded-full border border-black">
-                  <svg
-                    className="h-full w-full rounded-full text-gray-300"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                </div>
-              )}
-              <h2 className="text-md mt-6 text-start font-medium text-gray-600">
-                Name
-              </h2>
-              <p className="text-md mt-2 text-start font-medium text-gray-900">
-                {user.first_name} {user.last_name}
-              </p>
-              <h2 className="text-md mt-6 text-start font-medium text-gray-600">
-                Birthday
-              </h2>
-              <p className="text-md mt-2 text-start font-medium text-gray-900">
-                {user.birthday}
-              </p>
-              <h2 className="text-md mt-6 text-start font-medium text-gray-600">
-                Email
-              </h2>
-              <p className="text-md mt-2 text-start font-medium text-gray-900">
-                {user.email}
-              </p>
-            </div>
-          </li>
-        </div>
-      )}
+
+      <UserCard />
       {userPreferences !== undefined && rawUserPreferences !== undefined && (
         <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 sm:px-6 lg:px-8">
           <h1 className="py-6 text-xl font-extrabold">Settings</h1>
@@ -215,7 +356,6 @@ const SettingsTab: React.FC = () => {
                     </button>
                   )}
                 </li>
-                <li></li>
               </ul>
             </div>
           </div>

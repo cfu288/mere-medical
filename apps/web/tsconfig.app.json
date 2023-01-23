@@ -24,7 +24,8 @@
     "src/components/connection/EpicSelectModal.tsx",
     "src/components/connection/EpicSelectModelResultItem.tsx",
     "src/utils/StyleUtils.tsx",
-    "src/utils/SearchUtils.tsx"
+    "src/utils/SearchUtils.tsx",
+    "src/components/EditUserModalForm.tsx"
   ],
   "exclude": [
     "jest.config.ts",
