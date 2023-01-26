@@ -22,10 +22,6 @@ import { TimelineYearHeaderWrapper } from '../components/timeline/TimelineYearHe
  * @returns
  */
 function fetchRecords(db: RxDatabase<DatabaseCollections>, user_id: string) {
-  db.clinical_documents
-    .find({})
-    .exec()
-    .then((list) => console.log(list.map((x) => x.toMutableJSON())));
   return db.clinical_documents
     .find({
       selector: {
