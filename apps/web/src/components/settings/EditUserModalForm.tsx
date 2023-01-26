@@ -1,7 +1,7 @@
 import { Transition, Dialog } from '@headlessui/react';
 import { Fragment, useEffect, useRef } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import { useRxUserDocument } from './providers/UserProvider';
+import { useRxUserDocument } from '../providers/UserProvider';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';

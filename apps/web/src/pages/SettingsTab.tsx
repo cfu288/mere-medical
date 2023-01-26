@@ -11,11 +11,11 @@ import {
   useUserPreferences,
 } from '../components/providers/UserPreferencesProvider';
 import { useUser } from '../components/providers/UserProvider';
-import { EmptyUserPlaceholder } from '../components/EmptyUserPlaceholder';
+import { EmptyUserPlaceholder } from '../components/settings/EmptyUserPlaceholder';
 import {
   NewUserFormFields,
   EditUserModalForm,
-} from '../components/EditUserModalForm';
+} from '../components/settings/EditUserModalForm';
 import { useLocation } from 'react-router-dom';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';

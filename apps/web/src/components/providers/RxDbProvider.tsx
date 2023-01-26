@@ -7,17 +7,9 @@ import React, {
 import logo from '../../assets/logo.svg';
 import { addRxPlugin, createRxDatabase, RxDatabase } from 'rxdb';
 import { Transition } from '@headlessui/react';
-import {
-  getRxStoragePouch,
-  addPouchPlugin,
-  RxStoragePouchStatics,
-} from 'rxdb/plugins/pouchdb';
-import plugin from 'pouchdb-adapter-idb';
-
 import { RxDBDevModePlugin } from 'rxdb/plugins/dev-mode';
 import { RxDBMigrationPlugin } from 'rxdb/plugins/migration';
 import { RxDBJsonDumpPlugin } from 'rxdb/plugins/json-dump';
-
 import { RxDBUpdatePlugin } from 'rxdb/plugins/update';
 import {
   ClinicalDocumentCollection,
@@ -39,15 +31,13 @@ import { UserDocumentMigrations } from '../../models/user-document/UserDocument.
 import { RxDBAttachmentsPlugin } from 'rxdb/plugins/attachments';
 import { UserPreferencesMigrations } from '../../models/user-preferences/UserPreferences.migration';
 import { getRxStorageWorker } from 'rxdb/plugins/worker';
-import { getRxStorageDexie, RxStorageDexieStatics } from 'rxdb/plugins/dexie';
+import { RxStorageDexieStatics } from 'rxdb/plugins/dexie';
 
 addRxPlugin(RxDBUpdatePlugin);
 addRxPlugin(RxDBMigrationPlugin);
 addRxPlugin(RxDBAttachmentsPlugin);
 addRxPlugin(RxDBDevModePlugin);
 addRxPlugin(RxDBJsonDumpPlugin);
-
-addPouchPlugin(plugin);
 
 export type DatabaseCollections = {
   clinical_documents: ClinicalDocumentCollection;
@@ -65,8 +55,6 @@ type RxDbProviderProps = PropsWithChildren<unknown>;
 async function initRxDb() {
   const db = await createRxDatabase<DatabaseCollections>({
     name: 'mere_db',
-    // storage: getRxStoragePouch('idb'),
-    // storage: getRxStorageDexie(),
     storage: getRxStorageWorker({
       statics: RxStorageDexieStatics,
       workerInput: '../../assets/dexie.worker.js',

@@ -12,7 +12,7 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "resolveJsonModule": true,
-    "lib": ["dom.Iterable"]
+    "lib": ["DOM", "DOM.Iterable"]
   },
   "files": [],
   "include": [],
