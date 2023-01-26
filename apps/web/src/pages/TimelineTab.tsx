@@ -6,14 +6,13 @@ import {
   useRxDb,
 } from '../components/providers/RxDbProvider';
 import { RxDatabase, RxDocument } from 'rxdb';
-
 import { EmptyRecordsPlaceholder } from '../components/EmptyRecordsPlaceholder';
 import { useUser } from '../components/providers/UserProvider';
 import { AppPage } from '../components/AppPage';
 import { useLocation } from 'react-router-dom';
 import { JumpToPanel } from '../components/timeline/JumpToPanel';
 import { TimelineBanner } from '../components/timeline/TimelineBanner';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocumentType';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 import { TimelineItem } from '../components/timeline/TimelineItem';
 import { TimelineYearHeaderWrapper } from '../components/timeline/TimelineYearHeaderWrapper';
 
@@ -23,6 +22,10 @@ import { TimelineYearHeaderWrapper } from '../components/timeline/TimelineYearHe
  * @returns
  */
 function fetchRecords(db: RxDatabase<DatabaseCollections>, user_id: string) {
+  db.clinical_documents
+    .find({})
+    .exec()
+    .then((list) => console.log(list.map((x) => x.toMutableJSON())));
   return db.clinical_documents
     .find({
       selector: {
@@ -30,7 +33,7 @@ function fetchRecords(db: RxDatabase<DatabaseCollections>, user_id: string) {
         'data_record.resource_type': {
           $nin: ['patient', 'observation'],
         },
-        'metadata.date': { $gt: 0 },
+        'metadata.date': { $nin: [null, undefined, ''] },
       },
       sort: [{ 'metadata.date': 'desc' }],
     })
@@ -50,16 +53,19 @@ function fetchRecords(db: RxDatabase<DatabaseCollections>, user_id: string) {
         if (item.get('metadata')?.date === undefined) {
           console.warn('Date is undefined for object:');
           console.log(item.toJSON());
-        }
-        const date = item.get('metadata')?.date
-          ? format(parseISO(item.get('metadata')?.date), 'yyyy-MM-dd')
-          : '-1';
-        if (groupedRecords[date]) {
-          groupedRecords[date].push(
-            item.toMutableJSON() as ClinicalDocument<BundleEntry<FhirResource>>
-          );
         } else {
-          groupedRecords[date] = [item.toMutableJSON()];
+          const date = item.get('metadata')?.date
+            ? format(parseISO(item.get('metadata')?.date), 'yyyy-MM-dd')
+            : '-1';
+          if (groupedRecords[date]) {
+            groupedRecords[date].push(
+              item.toMutableJSON() as ClinicalDocument<
+                BundleEntry<FhirResource>
+              >
+            );
+          } else {
+            groupedRecords[date] = [item.toMutableJSON()];
+          }
         }
       });
 
@@ -106,9 +112,7 @@ function TimelineTab() {
       banner={
         <TimelineBanner
           image={
-            user?.profile_picture
-              ? URL.createObjectURL(user.profile_picture)
-              : undefined
+            user?.profile_picture?.data ? user.profile_picture.data : undefined
           }
           text={
             user?.first_name ? `Welcome back ${user.first_name}!` : 'Hello!'

@@ -27,13 +27,10 @@ function fetchUsers(
       },
     })
     .$.subscribe(async (item) => {
-      const pp = item?.getAttachment('profile_photo');
-      const ppBlob = await pp?.getData();
       handleChange({
         user: {
           ...defaultUser,
           ...item?.toMutableJSON(),
-          profile_picture: ppBlob,
         } as UserDocument,
         rawUser: item as unknown as RxDocument<UserDocument> | null,
       });

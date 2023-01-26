@@ -59,6 +59,7 @@ export const clinicalDocumentSchemaLiteral = {
       },
     },
   },
+  required: ['id'],
   indexes: [
     'metadata.date',
     'data_record.resource_type',

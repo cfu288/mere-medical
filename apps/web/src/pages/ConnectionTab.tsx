@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useState } from 'react';
-import { ConnectionDocument } from '../models/connection-document/ConnectionDocumentType';
+import { ConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
 import * as OnPatient from '../services/OnPatient';
 import { useRxDb } from '../components/providers/RxDbProvider';
 import { RxDocument } from 'rxdb';

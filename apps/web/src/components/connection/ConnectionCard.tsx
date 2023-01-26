@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ConnectionDocument } from '../../models/connection-document/ConnectionDocumentType';
+import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
 import { DatabaseCollections, useRxDb } from '../providers/RxDbProvider';
 import onpatientLogo from '../../img/onpatient_logo.jpeg';
 import epicLogo from '../../img/MyChartByEpic.png';

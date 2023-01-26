@@ -48,6 +48,25 @@ function getFileFromFileList(fileOrFileList: FileList | File | undefined) {
   return pp;
 }
 
+function getBase64(file: File): Promise<string | ArrayBuffer | null> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = (error) => reject(error);
+  });
+}
+
+type ProfilePhotoMetadata = { data: string; content_type: string };
+
+function tryCreateUrl(pp: ProfilePhotoMetadata | Blob): string {
+  try {
+    return URL.createObjectURL(pp as unknown as Blob);
+  } catch {
+    return (pp as unknown as ProfilePhotoMetadata)?.data;
+  }
+}
+
 export function EditUserModalForm({
   defaultValues,
   modalOpen,
@@ -91,13 +110,13 @@ export function EditUserModalForm({
           .then(async () => {
             const pp = getFileFromFileList(data.profilePhoto);
             if (pp) {
-              const id = 'profile_photo';
-              const dataBuf = pp;
-              const type = pp?.type;
-              await rawUser.putAttachment({
-                id,
-                data: dataBuf,
-                type, // (string) type of the attachment-data like 'image/jpeg'
+              rawUser.update({
+                $set: {
+                  profile_picture: {
+                    content_type: pp?.type,
+                    data: await getBase64(pp),
+                  },
+                },
               });
             }
             toggleModal();
@@ -319,7 +338,7 @@ export function EditUserModalForm({
                               ) : (
                                 <img
                                   className="h-full w-full text-gray-300"
-                                  src={URL.createObjectURL(pp)}
+                                  src={tryCreateUrl(pp)}
                                   alt="profile"
                                 ></img>
                               )}

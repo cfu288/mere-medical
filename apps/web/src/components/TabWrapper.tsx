@@ -68,7 +68,7 @@ export function TabWrapper() {
             <div className="group block flex-shrink-0">
               <div className="flex items-center">
                 <div className="inline-block h-10 w-10 rounded-full border-2 border-white bg-slate-100">
-                  {user.profile_picture === undefined ? (
+                  {user.profile_picture?.data === undefined ? (
                     <svg
                       className="h-full w-full rounded-full text-gray-500"
                       fill="currentColor"
@@ -79,7 +79,7 @@ export function TabWrapper() {
                   ) : (
                     <img
                       className="h-full w-full rounded-full text-gray-300"
-                      src={URL.createObjectURL(user.profile_picture)}
+                      src={user.profile_picture.data}
                       alt="profile"
                     ></img>
                   )}

@@ -1,7 +1,7 @@
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, FhirResource } from 'fhir/r2';
 import React, { PropsWithChildren } from 'react';
-import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocumentType';
+import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { TimelineYearHeader } from './TimelineYearHeader';
 
 /**

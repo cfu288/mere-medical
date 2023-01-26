@@ -17,11 +17,11 @@ import {
 } from 'fhir/r2';
 import { RxDocument, RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../components/providers/RxDbProvider';
-import { ClinicalDocumentType } from '../models/clinical-document/ClinicalDocumentCollection';
+// import { ClinicalDocumentType } from '../models/clinical-document/ClinicalDocumentCollection';
 import {
   ConnectionDocument,
   CreateConnectionDocument,
-} from '../models/connection-document/ConnectionDocumentType';
+} from '../models/connection-document/ConnectionDocument.type';
 import { Routes } from '../Routes';
 import { DSTU2 } from './DSTU2';
 import Config from '../environments/config.json';
@@ -30,7 +30,7 @@ import { JsonWebKeyWKid, signJwt } from './JWTTools';
 import { getPublicKey, IDBKeyConfig } from './WebCrypto';
 import { JsonWebKeySet } from '../services/JWTTools';
 import { UserDocument } from '../models/user-document/UserDocument.type';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocumentType';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 
 export function getDSTU2Url(baseUrl: string) {
   return `${baseUrl}/api/FHIR/DSTU2`;
@@ -136,7 +136,7 @@ async function syncFHIRResource<T extends FhirResource>(
       })
       .exec();
     if (exists.length === 0) {
-      await db.clinical_documents.insert(cd as unknown as ClinicalDocumentType);
+      await db.clinical_documents.insert(cd as unknown as ClinicalDocument);
       console.log(`Syncing document with id ${cd.id}`);
     } else {
       console.log(`Document with id ${cd.id} already exists`);
@@ -396,7 +396,7 @@ async function syncDocumentReferences(
               };
 
               await db.clinical_documents.insert(
-                cd as unknown as ClinicalDocumentType
+                cd as unknown as ClinicalDocument
               );
             }
           } else {

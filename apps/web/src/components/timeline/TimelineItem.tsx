@@ -18,7 +18,7 @@ import { ImmunizationCard } from './ImmunizationCard';
 import { MedicationCard } from './MedicationCard';
 import { ObservationCard } from './ObservationCard';
 import { ProcedureCard } from './ProcedureCard';
-import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocumentType';
+import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 
 export function TimelineItem({
   dateKey,

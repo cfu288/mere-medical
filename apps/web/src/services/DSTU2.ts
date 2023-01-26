@@ -14,10 +14,10 @@ import {
   CarePlan,
   FhirResource,
 } from 'fhir/r2';
-import { ConnectionDocument } from '../models/connection-document/ConnectionDocumentType';
+import { ConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
 import { v4 as uuidv4 } from 'uuid';
 import { UserDocument } from '../models/user-document/UserDocument.type';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocumentType';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 
 function parseId<T = FhirResource>(bundleItem: BundleEntry<T>) {
   // OnPatient returns an array instead of a string, not to spec
@@ -49,7 +49,8 @@ export namespace DSTU2 {
       },
       metadata: {
         id: parseId(bundleItem),
-        date: bundleItem.resource?.performedDateTime,
+        date:
+          bundleItem.resource?.performedDateTime || new Date(0).toISOString(),
         display_name: bundleItem.resource?.code.text,
       },
     };
@@ -75,7 +76,8 @@ export namespace DSTU2 {
         id: parseId(bundleItem),
         date:
           bundleItem.resource?.dateAsserted ||
-          bundleItem.resource?.effectivePeriod?.start,
+          bundleItem.resource?.effectivePeriod?.start ||
+          new Date(0).toISOString(),
         display_name: bundleItem.resource?.medicationCodeableConcept?.text,
       },
     };
@@ -99,7 +101,8 @@ export namespace DSTU2 {
       },
       metadata: {
         id: parseId(bundleItem),
-        date: bundleItem.resource?.effectiveDateTime,
+        date:
+          bundleItem.resource?.effectiveDateTime || new Date(0).toISOString(),
         display_name: bundleItem.resource?.code.text,
       },
     };
@@ -123,7 +126,8 @@ export namespace DSTU2 {
       },
       metadata: {
         id: parseId(bundleItem),
-        date: bundleItem.resource?.effectiveDateTime,
+        date:
+          bundleItem.resource?.effectiveDateTime || new Date(0).toISOString(),
         display_name: bundleItem.resource?.code.text,
       },
     };
@@ -158,7 +162,7 @@ export namespace DSTU2 {
       },
       metadata: {
         id: parseId(bundleItem),
-        date: new Date().toISOString(),
+        date: new Date(0).toISOString(),
       },
     };
     return cd;
@@ -181,7 +185,7 @@ export namespace DSTU2 {
       },
       metadata: {
         id: parseId(bundleItem),
-        date: bundleItem.resource?.date,
+        date: bundleItem.resource?.date || new Date(0).toISOString(),
         display_name: bundleItem.resource?.vaccineCode.text,
       },
     };
@@ -205,7 +209,7 @@ export namespace DSTU2 {
       },
       metadata: {
         id: parseId(bundleItem),
-        date: bundleItem.resource?.dateRecorded,
+        date: bundleItem.resource?.dateRecorded || new Date(0).toISOString(),
         display_name: bundleItem.resource?.code.text,
       },
     };
@@ -230,7 +234,7 @@ export namespace DSTU2 {
       metadata: {
         id: parseId(bundleItem),
 
-        date: bundleItem.resource?.recordedDate,
+        date: bundleItem.resource?.recordedDate || new Date(0).toISOString(),
         display_name: bundleItem.resource?.text?.div,
       },
     };
@@ -254,7 +258,7 @@ export namespace DSTU2 {
       },
       metadata: {
         id: parseId(bundleItem),
-        date: bundleItem.resource?.birthDate,
+        date: bundleItem.resource?.birthDate || new Date(0).toISOString(),
         display_name: bundleItem.resource?.text?.div,
       },
     };
@@ -280,7 +284,8 @@ export namespace DSTU2 {
         id: parseId(bundleItem),
         date:
           bundleItem.resource?.created ||
-          bundleItem.resource?.context?.period?.start,
+          bundleItem.resource?.context?.period?.start ||
+          new Date(0).toISOString(),
         display_name: bundleItem.resource?.type?.text,
       },
     };
@@ -304,7 +309,7 @@ export namespace DSTU2 {
       },
       metadata: {
         id: parseId(bundleItem),
-        date: bundleItem.resource?.period?.start,
+        date: bundleItem.resource?.period?.start || new Date(0).toISOString(),
         display_name: bundleItem.resource?.description,
       },
     };

@@ -7,7 +7,11 @@ import React, {
 import logo from '../../assets/logo.svg';
 import { addRxPlugin, createRxDatabase, RxDatabase } from 'rxdb';
 import { Transition } from '@headlessui/react';
-import { getRxStoragePouch, addPouchPlugin } from 'rxdb/plugins/pouchdb';
+import {
+  getRxStoragePouch,
+  addPouchPlugin,
+  RxStoragePouchStatics,
+} from 'rxdb/plugins/pouchdb';
 import plugin from 'pouchdb-adapter-idb';
 
 import { RxDBDevModePlugin } from 'rxdb/plugins/dev-mode';
@@ -18,11 +22,11 @@ import { RxDBUpdatePlugin } from 'rxdb/plugins/update';
 import {
   ClinicalDocumentCollection,
   ClinicalDocumentSchema,
-} from '../../models/clinical-document/ClinicalDocumentCollection';
+} from '../../models/clinical-document/ClinicalDocument.collection';
 import {
   ConnectionDocumentCollection,
   ConnectionDocumentSchema,
-} from '../../models/connection-document/ConnectionDocumentCollection';
+} from '../../models/connection-document/ConnectionDocument.collection';
 import {
   UserDocumentCollection,
   UserDocumentSchema,
@@ -30,10 +34,12 @@ import {
 import {
   UserPreferencesDocumentCollection,
   UserPreferencesDocumentSchema,
-} from '../../models/user-preferences/UserPreferencesCollection';
+} from '../../models/user-preferences/UserPreferences.collection';
 import { UserDocumentMigrations } from '../../models/user-document/UserDocument.migration';
 import { RxDBAttachmentsPlugin } from 'rxdb/plugins/attachments';
 import { UserPreferencesMigrations } from '../../models/user-preferences/UserPreferences.migration';
+import { getRxStorageWorker } from 'rxdb/plugins/worker';
+import { getRxStorageDexie, RxStorageDexieStatics } from 'rxdb/plugins/dexie';
 
 addRxPlugin(RxDBUpdatePlugin);
 addRxPlugin(RxDBMigrationPlugin);
@@ -59,7 +65,12 @@ type RxDbProviderProps = PropsWithChildren<unknown>;
 async function initRxDb() {
   const db = await createRxDatabase<DatabaseCollections>({
     name: 'mere_db',
-    storage: getRxStoragePouch('idb'),
+    // storage: getRxStoragePouch('idb'),
+    // storage: getRxStorageDexie(),
+    storage: getRxStorageWorker({
+      statics: RxStorageDexieStatics,
+      workerInput: '../../assets/dexie.worker.js',
+    }),
     multiInstance: true,
     ignoreDuplicate: true,
   });

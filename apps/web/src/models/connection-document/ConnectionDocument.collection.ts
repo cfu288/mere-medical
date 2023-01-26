@@ -4,7 +4,7 @@ import {
   ExtractDocumentTypeFromTypedRxJsonSchema,
   RxJsonSchema,
 } from 'rxdb';
-import { connectionSchemaLiteral } from './ConnectionDocumentSchema';
+import { connectionSchemaLiteral } from './ConnectionDocument.schema';
 
 const connectionSchemaTyped = toTypedRxJsonSchema(connectionSchemaLiteral);
 

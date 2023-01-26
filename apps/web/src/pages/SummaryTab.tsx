@@ -3,7 +3,7 @@ import {
   useRxDb,
 } from '../components/providers/RxDbProvider';
 import { GenericBanner } from '../components/GenericBanner';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocumentType';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 import {
   AllergyIntolerance,
   BundleEntry,
@@ -33,7 +33,7 @@ function fetchMedications(
       selector: {
         user_id: user_id,
         'data_record.resource_type': 'medicationstatement',
-        'metadata.date': { $gt: 0 },
+        'metadata.date': { $nin: [null, undefined, ''] },
       },
       sort: [{ 'metadata.date': 'desc' }],
     })
@@ -69,7 +69,7 @@ function fetchConditions(db: RxDatabase<DatabaseCollections>, user_id: string) {
       selector: {
         user_id: user_id,
         'data_record.resource_type': 'condition',
-        'metadata.date': { $gt: 0 },
+        'metadata.date': { $nin: [null, undefined, ''] },
       },
       sort: [{ 'metadata.date': 'desc' }],
     })
@@ -92,7 +92,7 @@ function fetchImmunizations(
       selector: {
         user_id: user_id,
         'data_record.resource_type': 'immunization',
-        'metadata.date': { $gt: 0 },
+        'metadata.date': { $nin: [null, undefined, ''] },
       },
       sort: [{ 'metadata.date': 'desc' }],
     })
@@ -111,7 +111,7 @@ function fetchAllergy(db: RxDatabase<DatabaseCollections>, user_id: string) {
       selector: {
         user_id: user_id,
         'data_record.resource_type': 'allergyintolerance',
-        'metadata.date': { $gt: 0 },
+        'metadata.date': { $nin: [null, undefined, ''] },
       },
       sort: [{ 'metadata.date': 'desc' }],
     })

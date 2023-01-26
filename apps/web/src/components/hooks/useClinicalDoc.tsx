@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { RxDatabase, RxDocument } from 'rxdb';
-import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocumentType';
+import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { DatabaseCollections, useRxDb } from '../providers/RxDbProvider';
 
 /**

@@ -3,7 +3,7 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { format, parseISO } from 'date-fns';
 import { AllergyIntolerance, BundleEntry } from 'fhir/r2';
 import { Fragment } from 'react';
-import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocumentType';
+import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 
 export function AllergyIntoleranceListCard({
   items,

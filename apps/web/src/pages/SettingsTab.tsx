@@ -25,7 +25,7 @@ import { classNames } from '../utils/StyleUtils';
 import { format } from 'date-fns';
 import { RxDatabase, RxDocument } from 'rxdb';
 import { BundleEntry, Patient } from 'fhir/r2';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocumentType';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 
 function fetchPatientRecords(
   db: RxDatabase<DatabaseCollections>,
@@ -34,15 +34,10 @@ function fetchPatientRecords(
   return db.clinical_documents
     .find({
       selector: {
-        $and: [
-          { user_id: user_id },
-          { 'data_record.resource_type': `patient` },
-          {
-            'metadata.date': { $gt: 0 },
-          },
-        ],
-        sort: [{ 'metadata.date': 'desc' }],
+        'data_record.resource_type': `patient`,
+        user_id: user_id,
       },
+      sort: [{ 'metadata.date': 'desc' }],
     })
     .exec()
     .then((list) => {
@@ -114,11 +109,11 @@ function UserCard() {
               <PencilIcon className="h-4 w-4" />
             </button>
             <div className="flex flex-1 flex-col p-8">
-              {user?.profile_picture ? (
+              {user?.profile_picture?.data ? (
                 <div className="mx-auto h-32 w-32 flex-shrink-0 rounded-full border border-black">
                   <img
                     className="h-full w-full rounded-full text-gray-300"
-                    src={URL.createObjectURL(user.profile_picture)}
+                    src={user.profile_picture.data}
                     alt="profile"
                   ></img>
                 </div>

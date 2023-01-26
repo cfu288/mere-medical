@@ -14,9 +14,8 @@ import { RxDatabase, RxDocument } from 'rxdb';
 import { DatabaseCollections } from '../components/providers/RxDbProvider';
 import { DSTU2 } from './DSTU2';
 import Config from '../environments/config.json';
-import { ConnectionDocument } from '../models/connection-document/ConnectionDocumentType';
-import { ClinicalDocumentType } from '../models/clinical-document/ClinicalDocumentCollection';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocumentType';
+import { ConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 
 export const OnPatientBaseUrl = 'https://onpatient.com';
 export const OnPatientDSTU2Url = `${OnPatientBaseUrl}/api/fhir`;
@@ -77,9 +76,7 @@ async function syncFHIRResource<T extends FhirResource>(
       })
       .exec();
     if (exists.length === 0) {
-      await db.clinical_documents.insert(
-        doc as unknown as ClinicalDocumentType
-      );
+      await db.clinical_documents.upsert(doc as unknown as ClinicalDocument);
       console.log(`Syncing document with id ${doc.id}`);
     } else {
       console.log(`Document with id ${doc.id} already exists`);
