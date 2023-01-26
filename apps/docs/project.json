@@ -7,7 +7,7 @@
       "command": "npx docusaurus build"
     },
     "serve": {
-      "command": "npx docusaurus serve"
+      "command": "npx docusaurus start"
     }
   },
   "tags": [],

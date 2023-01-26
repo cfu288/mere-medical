@@ -125,11 +125,11 @@ export default function Home() {
               </div>
             </div>
             {/* Right Hero */}
-            <div className="lg:rounded-tr-0 lg:left-100 mt-24 flex h-96 w-auto overflow-hidden rounded-bl-[80px] rounded-tr-[80px] bg-[#F1F4F9] pt-6 sm:h-[32rem] lg:absolute lg:inset-y-0 lg:left-1/2 lg:right-0 lg:mt-0 lg:block lg:h-full lg:w-full lg:overflow-visible">
+            <div className="lg:rounded-tr-0 lg:left-100 relative mt-24 flex h-80 w-auto overflow-hidden rounded-bl-[80px] rounded-tr-[80px] bg-[#F1F4F9] pt-6 sm:h-[32rem] lg:absolute lg:inset-y-0 lg:left-1/2 lg:right-0 lg:mt-0 lg:block lg:h-full lg:w-full lg:overflow-visible">
               <img
-                className="mx-auto mt-0 self-start p-10 sm:max-w-xl lg:mx-0 lg:mt-20 lg:h-full lg:w-auto lg:max-w-none lg:self-center lg:pl-20 xl:pl-40"
-                src="/img/phone-screen.webp"
-                alt="phone screenshot"
+                className="mx-auto mb-0 self-center p-5 sm:max-w-xl lg:absolute lg:bottom-10 lg:mx-0 lg:mt-20 lg:h-auto lg:w-full lg:max-w-4xl lg:self-center lg:p-0 lg:pl-10 xl:-bottom-20 xl:max-w-5xl xl:pl-10 "
+                src="/img/timeline-desktop.webp"
+                alt="web timeline screenshot"
               />
             </div>
           </div>
