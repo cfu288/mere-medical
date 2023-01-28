@@ -11,9 +11,9 @@ export function CarePlanListCard({
   items: ClinicalDocument<BundleEntry<CarePlan>>[];
 }) {
   if (
-    items.length === 0 ||
-    items?.[0]?.data_record.raw.resource?.goal === undefined ||
-    items?.[0]?.data_record.raw.resource?.goal?.length === undefined
+    items.length === 0
+    // items?.[0]?.data_record.raw.resource?.goal === undefined ||
+    // items?.[0]?.data_record.raw.resource?.goal?.length === undefined
   )
     return null;
   return (
@@ -30,7 +30,6 @@ export function CarePlanListCard({
           </Disclosure.Button>
           <Disclosure.Panel>
             <TimelineCardBase>
-              {' '}
               <div className="min-w-0 flex-1">
                 <span className="absolute inset-0" aria-hidden="true" />
                 {items.map((item) => (

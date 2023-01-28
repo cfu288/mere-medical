@@ -36,9 +36,14 @@ export function getDSTU2Url(baseUrl: string) {
   return `${baseUrl}/api/FHIR/DSTU2`;
 }
 
-export function getLoginUrl(baseUrl: string): string & Location {
+export function getLoginUrl(
+  baseUrl: string,
+  isSandbox = false
+): string & Location {
   const params = {
-    client_id: `${Config.EPIC_CLIENT_ID}`,
+    client_id: `${
+      isSandbox ? Config.EPIC_CLIENT_ID : Config.EPIC_SANDBOX_CLIENT_ID
+    }`,
     scope: 'openid fhirUser',
     redirect_uri: `${Config.PUBLIC_URL}${Routes.EpicCallback}`,
     aud: getDSTU2Url(baseUrl),
@@ -467,7 +472,11 @@ export async function fetchAccessTokenWithCode(
     },
     body: new URLSearchParams({
       grant_type: 'authorization_code',
-      client_id: `${Config.EPIC_CLIENT_ID}`,
+      client_id: `${
+        epicId === 'sandbox'
+          ? Config.EPIC_CLIENT_ID
+          : Config.EPIC_SANDBOX_CLIENT_ID
+      }`,
       redirect_uri: `${Config.PUBLIC_URL}${Routes.EpicCallback}`,
       code: code,
     }),
@@ -498,7 +507,10 @@ export async function registerDynamicClient({
   const jsonWebKeySet = await getPublicKey();
   const validJWKS = jsonWebKeySet as JsonWebKeyWKid;
   const request: EpicDynamicRegistrationRequest = {
-    software_id: Config.EPIC_CLIENT_ID,
+    software_id:
+      epicId === 'sandbox'
+        ? Config.EPIC_CLIENT_ID
+        : Config.EPIC_SANDBOX_CLIENT_ID,
     jwks: {
       keys: [
         {

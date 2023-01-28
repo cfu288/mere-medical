@@ -27,7 +27,7 @@ function fetchRecords(db: RxDatabase<DatabaseCollections>, user_id: string) {
       selector: {
         user_id: user_id,
         'data_record.resource_type': {
-          $nin: ['patient', 'observation'],
+          $nin: ['patient', 'observation', 'careplan', 'allergyintolerance'],
         },
         'metadata.date': { $nin: [null, undefined, ''] },
       },

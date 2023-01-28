@@ -269,13 +269,15 @@ function useSummaryData(): [
           reducer({ type: ActionTypes.ERROR });
         });
     }
-  }, [data.status, db]);
+  }, [data.status, db, user.id]);
 
   return [data, reducer];
 }
 
 function SummaryTab() {
   const [{ meds, cond, imm, careplan, allergy }] = useSummaryData();
+
+  console.log(careplan);
 
   return (
     <AppPage banner={<GenericBanner text="Summary" />}>

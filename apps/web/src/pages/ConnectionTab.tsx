@@ -52,7 +52,7 @@ const ConnectionTab: React.FC = () => {
       (loc: string & Location, name: string, id: string) => {
         setTenantEpicUrl(loc, name, id);
         setOpen((x) => !x);
-        window.location = getLoginUrl(loc);
+        window.location = getLoginUrl(loc, id === 'sandbox');
       },
       [setTenantEpicUrl]
     );
