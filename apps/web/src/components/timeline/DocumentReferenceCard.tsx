@@ -24,7 +24,9 @@ export function DocumentReferenceCard({
       >
         <div className="min-w-0 flex-1">
           <div className="items-top flex justify-between">
-            <div className=" pb-2 font-bold text-teal-600">Documents</div>
+            <div className=" pb-2 text-sm font-bold text-teal-600 md:text-base">
+              Documents
+            </div>
             <div className="relative py-2">
               <div className="relative flex justify-center">
                 <svg
@@ -44,15 +46,15 @@ export function DocumentReferenceCard({
               </div>
             </div>
           </div>
-          <p className="text-md font-bold text-gray-900">
+          <p className="text-sm font-bold text-gray-900 md:text-base">
             {item.metadata?.display_name}
           </p>
-          <p className="truncate text-sm font-medium text-gray-500">
+          <p className="truncate text-xs font-medium text-gray-500 md:text-sm">
             {item.metadata?.date
               ? format(parseISO(item.metadata.date), 'p')
               : ''}
           </p>
-          <p className="truncate text-sm font-medium text-gray-400">
+          <p className="truncate text-xs font-medium text-gray-400 md:text-sm">
             {conn?.get('name')}
           </p>
         </div>

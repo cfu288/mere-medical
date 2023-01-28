@@ -3,6 +3,7 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, Immunization } from 'fhir/r2';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
+import { TimelineCardBase } from '../timeline/TimelineCardBase';
 
 function getVaccineCode(item: ClinicalDocument<BundleEntry<Immunization>>) {
   let code = item.data_record.raw.resource?.vaccineCode?.coding?.filter((i) =>
@@ -57,12 +58,12 @@ export function ImmunizationListCard({
             </div>
           </Disclosure.Button>
           <Disclosure.Panel className="">
-            <div className="focus-within:ring-primary-500 focus:ring-primary-700 relative flex items-center space-x-3 rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm focus-within:ring-2  focus-within:ring-offset-2">
+            <TimelineCardBase>
               <div className="min-w-0 flex-1">
                 <span className="absolute inset-0" aria-hidden="true" />
                 {[...sortItems.entries()].map(([key, item]) => (
                   <div className="py-2" key={item?.[0].id}>
-                    <p className="text-md font-bold text-gray-900">
+                    <p className="text-sm font-bold text-gray-900 md:text-base">
                       {item?.[0].metadata?.display_name}
                     </p>
                     <ul className="truncate pl-2 text-sm font-medium text-gray-500">
@@ -80,7 +81,7 @@ export function ImmunizationListCard({
                   </div>
                 ))}
               </div>
-            </div>
+            </TimelineCardBase>
           </Disclosure.Panel>
         </>
       )}

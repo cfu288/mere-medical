@@ -25,7 +25,8 @@
     "src/components/connection/EpicSelectModelResultItem.tsx",
     "src/utils/StyleUtils.tsx",
     "src/utils/SearchUtils.tsx",
-    "src/components/settings/EditUserModalForm.tsx"
+    "src/components/settings/EditUserModalForm.tsx",
+    "./src/components/timeline/TimelineCardBase.tsx"
   ],
   "exclude": [
     "jest.config.ts",

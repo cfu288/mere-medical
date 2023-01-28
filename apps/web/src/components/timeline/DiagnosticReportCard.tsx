@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { ShowDiagnosticReportResultsExpandable } from './ShowDiagnosticReportResultsExpandable';
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
+import { TimelineCardBase } from './TimelineCardBase';
 
 export function DiagnosticReportCard({
   item,
@@ -15,14 +16,12 @@ export function DiagnosticReportCard({
 
   return (
     <>
-      <div
-        className="focus:ring-primary-700 relative flex items-center space-x-3 rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
-        onClick={() => setExpanded((x) => !x)}
-        tabIndex={0}
-      >
+      <TimelineCardBase onClick={() => setExpanded((x) => !x)} tabIndex={0}>
         <div className="min-w-0 flex-1">
           <div className="items-top flex justify-between">
-            <div className="pb-2 font-bold text-blue-600">Labs</div>
+            <div className="pb-2 text-sm font-bold text-blue-600 md:text-base">
+              Labs
+            </div>
             <div className="relative py-2">
               <div className="relative flex justify-center text-gray-400">
                 <svg
@@ -42,19 +41,22 @@ export function DiagnosticReportCard({
               </div>
             </div>
           </div>
-          <p className="text-md pb-2 font-bold text-gray-900">
+          <p
+            className="text-md pb-2 text-sm font-bold  text-gray-900
+ md:text-base"
+          >
             {item.metadata?.display_name}
           </p>
-          <p className="truncate text-sm font-medium text-gray-500">
+          <p className="truncate text-xs font-medium text-gray-500 md:text-sm">
             {item.metadata?.date
               ? format(parseISO(item.metadata.date), 'p')
               : ''}
           </p>
-          <p className="truncate text-sm font-medium text-gray-400">
+          <p className="truncate text-xs font-medium text-gray-400 md:text-sm">
             {conn?.get('name')}
           </p>
         </div>
-      </div>
+      </TimelineCardBase>
       <ShowDiagnosticReportResultsExpandable
         item={item}
         expanded={expanded}
