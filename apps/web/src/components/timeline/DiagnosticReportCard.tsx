@@ -22,7 +22,7 @@ export function DiagnosticReportCard({
             <div className="pb-2 text-sm font-bold text-blue-600 md:text-base">
               Labs
             </div>
-            <div className="relative py-2">
+            <div className="relative py-2 pr-1">
               <div className="relative flex justify-center text-gray-400">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
