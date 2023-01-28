@@ -127,7 +127,7 @@ export default function Home() {
             {/* Right Hero */}
             <div className="lg:rounded-tr-0 lg:left-100 relative mt-24 flex h-80 w-auto overflow-hidden rounded-bl-[80px] rounded-tr-[80px] bg-[#F1F4F9] px-4 pt-6 sm:h-[32rem] lg:absolute lg:inset-y-0 lg:left-1/2 lg:right-0 lg:mt-0 lg:block lg:h-full lg:w-full lg:overflow-visible lg:px-0">
               <img
-                className=" m-5 mx-auto mb-0 self-center rounded-md sm:max-w-xl lg:absolute lg:bottom-20 lg:mx-0 lg:mt-20 lg:ml-10 lg:h-auto lg:w-full lg:max-w-5xl lg:self-center lg:rounded-2xl lg:p-0 xl:-bottom-5 xl:ml-10 xl:max-w-6xl"
+                className="m-5 mx-auto mb-0 self-center rounded-md sm:max-w-xl lg:absolute lg:bottom-20 lg:mx-0 lg:mt-20 lg:ml-10 lg:h-auto lg:w-full lg:max-w-4xl lg:self-center lg:rounded-2xl lg:p-0 xl:-bottom-10 xl:ml-10 xl:max-w-5xl"
                 src="/img/timeline-desktop.webp"
                 alt="web timeline screenshot"
               />
