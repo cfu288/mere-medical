@@ -11,9 +11,8 @@ export function CarePlanListCard({
   items: ClinicalDocument<BundleEntry<CarePlan>>[];
 }) {
   if (
-    items.length === 0
-    // items?.[0]?.data_record.raw.resource?.goal === undefined ||
-    // items?.[0]?.data_record.raw.resource?.goal?.length === undefined
+    items.length === 0 ||
+    items.filter((i) => i.data_record.raw.resource?.goal).length === 0
   )
     return null;
   return (
