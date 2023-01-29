@@ -1,5 +1,5 @@
 import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment } from 'react';
 import { RxDocument } from 'rxdb';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { Modal } from '../Modal';
@@ -9,44 +9,16 @@ import { useUser } from '../providers/UserProvider';
 
 export function ShowDiagnosticReportResultsExpandable({
   item,
+  docs,
   expanded,
   setExpanded,
 }: {
   item: ClinicalDocument<BundleEntry<DiagnosticReport>>;
+  docs: RxDocument<ClinicalDocument<Observation>>[];
   expanded: boolean;
   setExpanded: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  const db = useRxDb(),
-    user = useUser(),
-    [docs, setDocs] = useState<RxDocument<ClinicalDocument<Observation>>[]>([]),
-    listToQuery = useMemo(() => {
-      return [
-        ...new Set(
-          item.data_record.raw.resource?.result?.map(
-            (item) => `${item.reference}`
-          )
-        ),
-      ] as string[];
-    }, [item.data_record.raw.resource?.result]),
-    toggleOpen = () => setExpanded((x) => !x);
-
-  useEffect(() => {
-    if (expanded && docs.length === 0) {
-      db.clinical_documents
-        .find({
-          selector: {
-            user_id: user.id,
-            'metadata.id': { $in: listToQuery },
-          },
-        })
-        .exec()
-        .then((res) => {
-          setDocs(
-            res as unknown as RxDocument<ClinicalDocument<Observation>>[]
-          );
-        });
-    }
-  }, [db.clinical_documents, docs.length, expanded, listToQuery]);
+  const toggleOpen = () => setExpanded((x) => !x);
 
   return (
     <Modal open={expanded} setOpen={setExpanded}>
@@ -136,7 +108,7 @@ function getInterpretationText(
  * Takes a RxDocument of type ClinicalDocument<Observation> and returns true if the value is out of reference range
  * @param item
  */
-function isOutOfRangeResult(
+export function isOutOfRangeResult(
   item: RxDocument<ClinicalDocument<Observation>>
 ): boolean {
   const low =

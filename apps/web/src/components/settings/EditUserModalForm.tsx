@@ -51,6 +51,8 @@ function getFileFromFileList(fileOrFileList: FileList | File | undefined) {
 function getBase64(file: File): Promise<string | ArrayBuffer | null> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
+    console.log(typeof file);
+    console.log(file);
     reader.readAsDataURL(file);
     reader.onload = () => resolve(reader.result);
     reader.onerror = (error) => reject(error);
@@ -109,7 +111,7 @@ export function EditUserModalForm({
           })
           .then(async () => {
             const pp = getFileFromFileList(data.profilePhoto);
-            if (pp) {
+            if (pp && (pp instanceof File || (pp as unknown) instanceof Blob)) {
               rawUser.update({
                 $set: {
                   profile_picture: {
@@ -118,6 +120,18 @@ export function EditUserModalForm({
                   },
                 },
               });
+            } else {
+              const ppMeta = pp as unknown as ProfilePhotoMetadata;
+              if (ppMeta) {
+                rawUser.update({
+                  $set: {
+                    profile_picture: {
+                      content_type: ppMeta?.content_type,
+                      data: ppMeta.data,
+                    },
+                  },
+                });
+              }
             }
             toggleModal();
           });

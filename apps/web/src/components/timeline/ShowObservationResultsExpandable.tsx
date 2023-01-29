@@ -1,9 +1,10 @@
 import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ClinicalDocument,
   MergeClinicalDocument,
 } from '../../models/clinical-document/ClinicalDocument.type';
+import useIntersectionObserver from '../hooks/useIntersectionObserver';
 
 export function ShowObservationResultsExpandable({
   item,

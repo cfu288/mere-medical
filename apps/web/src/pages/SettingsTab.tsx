@@ -27,7 +27,7 @@ import { RxDatabase, RxDocument, RxDumpDatabaseAny } from 'rxdb';
 import { BundleEntry, Patient } from 'fhir/r2';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 import { useNotificationDispatch } from '../components/providers/NotificationProvider';
-import { FieldValues, SubmitHandler, useForm } from 'react-hook-form';
+import { SubmitHandler, useForm } from 'react-hook-form';
 
 function fetchPatientRecords(
   db: RxDatabase<DatabaseCollections>,
@@ -205,10 +205,18 @@ function parseGender(
   return item?.data_record.raw.resource?.gender;
 }
 
-function getFileFromFileList(fileOrFileList: FileList | File | undefined) {
+function getFileFromFileList(
+  fileOrFileList: FileList | File | undefined
+): File | undefined {
   let pp: File | null;
   try {
+    if ((fileOrFileList as unknown as FileList).length === 0) {
+      return undefined;
+    }
     pp = (fileOrFileList as unknown as FileList)?.item(0);
+    if (pp == null) {
+      return undefined;
+    }
   } catch (e) {
     pp = fileOrFileList as unknown as File;
   }
@@ -219,6 +227,66 @@ type ImportFields = {
   backup?: FileList;
 };
 
+const exportData = (
+  db: RxDatabase<DatabaseCollections>,
+  setFileDownloadLink: (blob: string) => void
+) => {
+  db.exportJSON().then((json) => {
+    const jsonData = JSON.stringify(json);
+    const blobUrl = URL.createObjectURL(
+      new Blob([jsonData], { type: 'application/json' })
+    );
+    setFileDownloadLink(blobUrl);
+  });
+};
+
+const handleImport = (
+  fields: ImportFields,
+  db: RxDatabase<DatabaseCollections>
+): Promise<boolean> => {
+  return new Promise((resolve, reject) => {
+    const file = getFileFromFileList(fields.backup);
+    const reader = new FileReader();
+    console.log(file);
+    if (file) {
+      reader.onload = function (event) {
+        const res = event.target?.result;
+        console.log(res);
+        if (res) {
+          const data = JSON.parse(
+            res as string
+          ) as RxDumpDatabaseAny<DatabaseCollections>;
+          console.log(data);
+
+          db.importJSON(data)
+            .then(() => {
+              resolve(true);
+            })
+            .catch((e) => {
+              reject(
+                Error('There was an error importing your data' + e.message)
+              );
+            });
+        } else {
+          reject(Error('The file was empty or unable to be read'));
+        }
+      };
+      reader.onerror = function (e) {
+        reject(
+          Error('There was an error importing your data' + e.target?.error)
+        );
+      };
+      reader.readAsText(file);
+    } else {
+      reject(
+        Error(
+          'There was an error importing your data: Unable to parse file from file list'
+        )
+      );
+    }
+  });
+};
+
 const SettingsTab: React.FC = () => {
   const db = useRxDb(),
     user = useUser(),
@@ -226,79 +294,25 @@ const SettingsTab: React.FC = () => {
     rawUserPreferences = useRawUserPreferences(),
     { pathname, hash, key } = useLocation(),
     ref = useRef<HTMLDivElement | null>(null),
-    [fileDownloadLink, setFileDownloadLink] = useState('');
-
-  const notifyDispatch = useNotificationDispatch();
-
-  const exportData = useCallback(() => {
-    db.exportJSON().then((json) => {
-      const jsonData = JSON.stringify(json);
-      const blobUrl = URL.createObjectURL(
-        new Blob([jsonData], { type: 'application/json' })
-      );
-      setFileDownloadLink(blobUrl);
-    });
-  }, [db]);
+    [fileDownloadLink, setFileDownloadLink] = useState(''),
+    notifyDispatch = useNotificationDispatch();
 
   const importData: SubmitHandler<ImportFields> = useCallback(
-    (fields) => {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        const file = getFileFromFileList(fields.backup);
-        if (file) {
-          reader.readAsText(file, 'UTF-8');
-          reader.onload = function (evt) {
-            const res = evt.target?.result;
-            if (res) {
-              const data = JSON.parse(
-                res as string
-              ) as RxDumpDatabaseAny<DatabaseCollections>;
-              db.importJSON(data)
-                .then(() => {
-                  notifyDispatch({
-                    type: 'set_notification',
-                    message: 'Import complete',
-                    variant: 'success',
-                  });
-                  resolve(true);
-                })
-                .catch((e) => {
-                  notifyDispatch({
-                    type: 'set_notification',
-                    message:
-                      'There was an error importing your data' + e.message,
-                    variant: 'error',
-                  });
-                  reject();
-                });
-            } else {
-              notifyDispatch({
-                type: 'set_notification',
-                message: 'The file was empty or unable to be read',
-                variant: 'error',
-              });
-              reject();
-            }
-          };
-          reader.onerror = function (e) {
-            notifyDispatch({
-              type: 'set_notification',
-              message:
-                'There was an error importing your data' + e.target?.error,
-              variant: 'error',
-            });
-            reject();
-          };
-        } else {
-          notifyDispatch({
-            type: 'set_notification',
-            message:
-              'There was an error importing your data: Unable to parse file from file list',
-            variant: 'error',
-          });
-          reject('Unable to parse file from file list');
-        }
-      });
+    async (fields) => {
+      try {
+        await handleImport(fields, db);
+        notifyDispatch({
+          type: 'set_notification',
+          message: 'Import complete',
+          variant: 'success',
+        });
+      } catch (e) {
+        notifyDispatch({
+          type: 'set_notification',
+          message: (e as Error).message,
+          variant: 'error',
+        });
+      }
     },
     [db, notifyDispatch]
   );
@@ -321,7 +335,6 @@ const SettingsTab: React.FC = () => {
   }, [backupFile]);
 
   useEffect(() => {
-    // if not a hash link, scroll to top
     setTimeout(() => {
       const id = hash.replace('#', '');
       const element = document.getElementById(id);
@@ -333,7 +346,7 @@ const SettingsTab: React.FC = () => {
         });
       }
     }, 100);
-  }, [pathname, hash, key]); // do this on route change
+  }, [pathname, hash, key]);
 
   return (
     <AppPage banner={<GenericBanner text="Settings" />}>
@@ -430,7 +443,7 @@ const SettingsTab: React.FC = () => {
                     </p>
                   </div>
                   {fileDownloadLink ? (
-                    <a href={fileDownloadLink} download="export.json">
+                    <a href={fileDownloadLink} download="backup.json">
                       <button
                         type="button"
                         className="relative ml-4 inline-flex flex-shrink-0 cursor-pointer items-center rounded-md border border-transparent bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
@@ -446,7 +459,7 @@ const SettingsTab: React.FC = () => {
                     <button
                       type="button"
                       className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 relative ml-4 inline-flex flex-shrink-0 cursor-pointer items-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
-                      onClick={() => exportData()}
+                      onClick={() => exportData(db, setFileDownloadLink)}
                     >
                       <ArrowRightOnRectangleIcon
                         className="-ml-1 mr-2 h-5 w-5"
@@ -471,28 +484,31 @@ const SettingsTab: React.FC = () => {
                     className="border-0"
                   >
                     <label className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 relative ml-4 inline-flex flex-shrink-0 cursor-pointer items-center rounded-md border border-transparent px-4 py-2 text-sm font-bold  text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2">
-                      {!backupFile
+                      {getFileFromFileList(backupFile) === undefined
                         ? 'Select backup file'
-                        : `${getFileFromFileList(backupFile)?.name}`}
+                        : `${getFileFromFileList(backupFile)?.name} `}
                       <input
                         type="file"
                         id="profilePhoto"
                         accept="application/json"
                         className="hidden"
-                        {...register('backup')}
+                        {...register('backup', {
+                          required: true,
+                          validate: (value, formValues) => value !== undefined,
+                        })}
                         aria-invalid={errors.backup ? 'true' : 'false'}
                       />
+                      {errors.backup && (
+                        <p className="text-red-500">{`${errors.backup?.message}`}</p>
+                      )}
                     </label>
-                    {backupFile && (
+                    {getFileFromFileList(backupFile) !== undefined && (
                       <button
                         type="submit"
                         className="relative ml-4 inline-flex flex-shrink-0 cursor-pointer items-center rounded-md border border-transparent bg-green-600 px-4 py-2 text-sm font-bold text-white shadow-sm  hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2 disabled:bg-gray-700"
                       >
                         Start Import
                       </button>
-                    )}
-                    {errors.backup && (
-                      <p className="text-red-500">{`${errors.backup?.message}`}</p>
                     )}
                   </form>
                 </li>
