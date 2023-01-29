@@ -23,9 +23,11 @@ import { ArrowDownTrayIcon } from '@heroicons/react/20/solid';
 import { PencilIcon } from '@heroicons/react/24/outline';
 import { classNames } from '../utils/StyleUtils';
 import { format } from 'date-fns';
-import { RxDatabase, RxDocument } from 'rxdb';
+import { RxDatabase, RxDocument, RxDumpDatabaseAny } from 'rxdb';
 import { BundleEntry, Patient } from 'fhir/r2';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
+import { useNotificationDispatch } from '../components/providers/NotificationProvider';
+import { FieldValues, SubmitHandler, useForm } from 'react-hook-form';
 
 function fetchPatientRecords(
   db: RxDatabase<DatabaseCollections>,
@@ -86,6 +88,7 @@ function UserCard() {
       });
     });
   }, [db, user.id]);
+
   return (
     <>
       {(user === undefined || user.is_default_user) && (
@@ -202,6 +205,20 @@ function parseGender(
   return item?.data_record.raw.resource?.gender;
 }
 
+function getFileFromFileList(fileOrFileList: FileList | File | undefined) {
+  let pp: File | null;
+  try {
+    pp = (fileOrFileList as unknown as FileList)?.item(0);
+  } catch (e) {
+    pp = fileOrFileList as unknown as File;
+  }
+  return pp;
+}
+
+type ImportFields = {
+  backup?: FileList;
+};
+
 const SettingsTab: React.FC = () => {
   const db = useRxDb(),
     user = useUser(),
@@ -210,6 +227,8 @@ const SettingsTab: React.FC = () => {
     { pathname, hash, key } = useLocation(),
     ref = useRef<HTMLDivElement | null>(null),
     [fileDownloadLink, setFileDownloadLink] = useState('');
+
+  const notifyDispatch = useNotificationDispatch();
 
   const exportData = useCallback(() => {
     db.exportJSON().then((json) => {
@@ -220,6 +239,86 @@ const SettingsTab: React.FC = () => {
       setFileDownloadLink(blobUrl);
     });
   }, [db]);
+
+  const importData: SubmitHandler<ImportFields> = useCallback(
+    (fields) => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        const file = getFileFromFileList(fields.backup);
+        if (file) {
+          reader.readAsText(file, 'UTF-8');
+          reader.onload = function (evt) {
+            const res = evt.target?.result;
+            if (res) {
+              const data = JSON.parse(
+                res as string
+              ) as RxDumpDatabaseAny<DatabaseCollections>;
+              db.importJSON(data)
+                .then(() => {
+                  notifyDispatch({
+                    type: 'set_notification',
+                    message: 'Import complete',
+                    variant: 'success',
+                  });
+                  resolve(true);
+                })
+                .catch((e) => {
+                  notifyDispatch({
+                    type: 'set_notification',
+                    message:
+                      'There was an error importing your data' + e.message,
+                    variant: 'error',
+                  });
+                  reject();
+                });
+            } else {
+              notifyDispatch({
+                type: 'set_notification',
+                message: 'The file was empty or unable to be read',
+                variant: 'error',
+              });
+              reject();
+            }
+          };
+          reader.onerror = function (e) {
+            notifyDispatch({
+              type: 'set_notification',
+              message:
+                'There was an error importing your data' + e.target?.error,
+              variant: 'error',
+            });
+            reject();
+          };
+        } else {
+          notifyDispatch({
+            type: 'set_notification',
+            message:
+              'There was an error importing your data: Unable to parse file from file list',
+            variant: 'error',
+          });
+          reject('Unable to parse file from file list');
+        }
+      });
+    },
+    [db, notifyDispatch]
+  );
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm({
+    defaultValues: { backup: undefined },
+  });
+  const backupFile = watch('backup');
+  const formref = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    if (backupFile) {
+      formref.current?.dispatchEvent(new Event('submit', { cancelable: true }));
+    }
+  }, [backupFile]);
 
   useEffect(() => {
     // if not a hash link, scroll to top
@@ -244,8 +343,8 @@ const SettingsTab: React.FC = () => {
 
       <UserCard />
       {userPreferences !== undefined && rawUserPreferences !== undefined && (
-        <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 sm:px-6 lg:px-8">
-          <h1 className="py-6 text-xl font-extrabold">Settings</h1>
+        <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 pb-12 sm:px-6 lg:px-8">
+          <h1 className="py-6 text-xl font-extrabold">Privacy and Security</h1>
           <div className="divide-y divide-gray-200" ref={ref}>
             <div className="px-4 sm:px-6">
               <ul className="mt-2 divide-y divide-gray-200">
@@ -309,7 +408,14 @@ const SettingsTab: React.FC = () => {
                     />
                   </Switch>
                 </Switch.Group>
-                <li className="flex items-center divide-y divide-gray-200 py-2">
+              </ul>
+            </div>
+          </div>
+          <h1 className="py-6 text-xl font-extrabold">Data</h1>
+          <div className="divide-y divide-gray-200">
+            <div className="px-4 sm:px-6">
+              <ul className="mt-2 divide-y divide-gray-200">
+                <li className="flex items-center py-2">
                   <div className="flex flex-1 flex-col">
                     <h2 className="text-lg font-black leading-6 text-gray-900">
                       Export data
@@ -323,7 +429,6 @@ const SettingsTab: React.FC = () => {
                       download.
                     </p>
                   </div>
-
                   {fileDownloadLink ? (
                     <a href={fileDownloadLink} download="export.json">
                       <button
@@ -350,6 +455,46 @@ const SettingsTab: React.FC = () => {
                       <p className="font-bold">Start data export</p>
                     </button>
                   )}
+                </li>
+                <li className="flex items-center py-2">
+                  <div className="flex flex-1 flex-col">
+                    <h2 className="text-lg font-black leading-6 text-gray-900">
+                      Import data
+                    </h2>
+                    <p className="pt-2 text-sm text-gray-500">
+                      Import previously exported data
+                    </p>
+                  </div>
+                  <form
+                    ref={formref}
+                    onSubmit={handleSubmit(importData)}
+                    className="border-0"
+                  >
+                    <label className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 relative ml-4 inline-flex flex-shrink-0 cursor-pointer items-center rounded-md border border-transparent px-4 py-2 text-sm font-bold  text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2">
+                      {!backupFile
+                        ? 'Select backup file'
+                        : `${getFileFromFileList(backupFile)?.name}`}
+                      <input
+                        type="file"
+                        id="profilePhoto"
+                        accept="application/json"
+                        className="hidden"
+                        {...register('backup')}
+                        aria-invalid={errors.backup ? 'true' : 'false'}
+                      />
+                    </label>
+                    {backupFile && (
+                      <button
+                        type="submit"
+                        className="relative ml-4 inline-flex flex-shrink-0 cursor-pointer items-center rounded-md border border-transparent bg-green-600 px-4 py-2 text-sm font-bold text-white shadow-sm  hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2 disabled:bg-gray-700"
+                      >
+                        Start Import
+                      </button>
+                    )}
+                    {errors.backup && (
+                      <p className="text-red-500">{`${errors.backup?.message}`}</p>
+                    )}
+                  </form>
                 </li>
               </ul>
             </div>
