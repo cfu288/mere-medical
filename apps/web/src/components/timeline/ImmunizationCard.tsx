@@ -14,7 +14,7 @@ export function ImmunizationCard({
   return (
     <TimelineCardBase>
       <div className="min-w-0 flex-1">
-        <div className=" pb-2 text-sm font-bold text-purple-600 md:text-base">
+        <div className="pb-2 text-sm font-bold text-purple-600 md:text-base">
           Immunization
         </div>
         <span className="absolute inset-0" aria-hidden="true" />
