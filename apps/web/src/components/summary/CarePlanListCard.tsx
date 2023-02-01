@@ -40,7 +40,7 @@ export function CarePlanListCard({
                             (item) => (
                               <p
                                 key={item.id}
-                                className="font-bold text-gray-800"
+                                className="text-sm font-bold text-gray-900 md:text-base"
                               >
                                 {item.display}
                               </p>

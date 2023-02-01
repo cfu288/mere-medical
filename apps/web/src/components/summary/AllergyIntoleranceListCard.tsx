@@ -31,7 +31,7 @@ export function AllergyIntoleranceListCard({
                 <span className="absolute inset-0" aria-hidden="true" />
                 {items.map((item) => (
                   <div className="py-2" key={item.id}>
-                    <p className="font-bold text-gray-800">
+                    <p className="text-sm font-bold text-gray-900 md:text-base">
                       {item.data_record.raw.resource?.substance.text}{' '}
                       {item.data_record.raw.resource?.reaction &&
                         item.data_record.raw.resource?.reaction?.length &&
@@ -49,7 +49,6 @@ export function AllergyIntoleranceListCard({
                         </Fragment>
                       ))}
                     </p>
-
                     <p className="truncate text-xs font-medium text-gray-500 md:text-sm">
                       {item.metadata?.date
                         ? format(parseISO(item.metadata.date), 'MM/dd/yyyy')

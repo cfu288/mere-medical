@@ -104,6 +104,12 @@ export namespace DSTU2 {
         date:
           bundleItem.resource?.effectiveDateTime || new Date(0).toISOString(),
         display_name: bundleItem.resource?.code.text,
+        loinc_coding:
+          bundleItem.resource?.code.coding
+            ?.filter(
+              (i) => i.system === 'http://loinc.org' && i.code !== undefined
+            )
+            .map((i) => i.code as string) || [],
       },
     };
     return cd;

@@ -32,6 +32,7 @@ import { RxDBAttachmentsPlugin } from 'rxdb/plugins/attachments';
 import { UserPreferencesMigrations } from '../../models/user-preferences/UserPreferences.migration';
 import { getRxStorageWorker } from 'rxdb/plugins/worker';
 import { RxStorageDexieStatics } from 'rxdb/plugins/dexie';
+import { ClinicalDocumentMigrations } from '../../models/clinical-document/ClinicalDocument.migration';
 
 addRxPlugin(RxDBUpdatePlugin);
 addRxPlugin(RxDBMigrationPlugin);
@@ -65,6 +66,7 @@ async function initRxDb() {
   await db.addCollections<DatabaseCollections>({
     clinical_documents: {
       schema: ClinicalDocumentSchema,
+      migrationStrategies: ClinicalDocumentMigrations,
     },
     connection_documents: {
       schema: ConnectionDocumentSchema,

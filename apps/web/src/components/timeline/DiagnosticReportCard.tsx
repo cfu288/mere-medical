@@ -48,11 +48,22 @@ export function DiagnosticReportCard({
         })
         .exec()
         .then((res) => {
+          const sorted = res.sort((a, b) =>
+            (a.metadata?.loinc_coding?.[0] || '') <
+            (b.metadata?.loinc_coding?.[0] || '')
+              ? 1
+              : -1
+          );
+          // console.log(
+          //   sorted.map((x) =>
+          //     format(parseISO(x.toJSON().metadata?.date || ''), 'MM/dd/yyyy')
+          //   )
+          // );
           setDocs(
-            res as unknown as RxDocument<ClinicalDocument<Observation>>[]
+            sorted as unknown as RxDocument<ClinicalDocument<Observation>>[]
           );
           const abnormalLabs = (
-            res as unknown as RxDocument<ClinicalDocument<Observation>>[]
+            sorted as unknown as RxDocument<ClinicalDocument<Observation>>[]
           ).filter((i) => isOutOfRangeResult(i));
           if (abnormalLabs.length > 0) {
             setIsAbnormalResult(true);
@@ -80,13 +91,13 @@ export function DiagnosticReportCard({
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
-                  stroke-width="1.5"
+                  strokeWidth="1.5"
                   stroke="currentColor"
                   className="mr-2 inline h-4 w-4 text-red-500"
                 >
                   <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                     d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
                   />
                 </svg>

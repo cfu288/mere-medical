@@ -42,7 +42,7 @@ export function getLoginUrl(
 ): string & Location {
   const params = {
     client_id: `${
-      isSandbox ? Config.EPIC_CLIENT_ID : Config.EPIC_SANDBOX_CLIENT_ID
+      isSandbox ? Config.EPIC_SANDBOX_CLIENT_ID : Config.EPIC_CLIENT_ID
     }`,
     scope: 'openid fhirUser',
     redirect_uri: `${Config.PUBLIC_URL}${Routes.EpicCallback}`,
@@ -474,8 +474,8 @@ export async function fetchAccessTokenWithCode(
       grant_type: 'authorization_code',
       client_id: `${
         epicId === 'sandbox'
-          ? Config.EPIC_CLIENT_ID
-          : Config.EPIC_SANDBOX_CLIENT_ID
+          ? Config.EPIC_SANDBOX_CLIENT_ID
+          : Config.EPIC_CLIENT_ID
       }`,
       redirect_uri: `${Config.PUBLIC_URL}${Routes.EpicCallback}`,
       code: code,
@@ -509,8 +509,8 @@ export async function registerDynamicClient({
   const request: EpicDynamicRegistrationRequest = {
     software_id:
       epicId === 'sandbox'
-        ? Config.EPIC_CLIENT_ID
-        : Config.EPIC_SANDBOX_CLIENT_ID,
+        ? Config.EPIC_SANDBOX_CLIENT_ID
+        : Config.EPIC_CLIENT_ID,
     jwks: {
       keys: [
         {

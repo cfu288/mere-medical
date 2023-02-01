@@ -247,16 +247,16 @@ const handleImport = (
   return new Promise((resolve, reject) => {
     const file = getFileFromFileList(fields.backup);
     const reader = new FileReader();
-    console.log(file);
+    // console.log(file);
     if (file) {
       reader.onload = function (event) {
         const res = event.target?.result;
-        console.log(res);
+        // console.log(res);
         if (res) {
           const data = JSON.parse(
             res as string
           ) as RxDumpDatabaseAny<DatabaseCollections>;
-          console.log(data);
+          // console.log(data);
 
           db.importJSON(data)
             .then(() => {

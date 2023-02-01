@@ -1,6 +1,6 @@
 export const clinicalDocumentSchemaLiteral = {
   title: 'Clinical Document Schema',
-  version: 0,
+  version: 1,
   primaryKey: 'id',
   type: 'object',
   properties: {
@@ -55,6 +55,12 @@ export const clinicalDocumentSchemaLiteral = {
         },
         display_name: {
           type: 'string',
+        },
+        loinc_coding: {
+          type: 'array',
+          items: {
+            type: 'string',
+          },
         },
       },
     },

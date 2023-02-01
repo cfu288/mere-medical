@@ -26,6 +26,7 @@ export interface ClinicalDocument<T = unknown> extends BaseDocument {
     id?: string;
     date?: string;
     display_name?: string;
+    loinc_coding?: string[];
   };
 }
 

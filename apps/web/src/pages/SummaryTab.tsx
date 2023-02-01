@@ -23,6 +23,7 @@ import { AllergyIntoleranceListCard } from '../components/summary/AllergyIntoler
 import { EmptyRecordsPlaceholder } from '../components/EmptyRecordsPlaceholder';
 import { AppPage } from '../components/AppPage';
 import { useUser } from '../components/providers/UserProvider';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 
 function fetchMedications(
   db: RxDatabase<DatabaseCollections>,
@@ -139,6 +140,7 @@ type SummaryState = {
   imm: ClinicalDocument<BundleEntry<Immunization>>[];
   careplan: ClinicalDocument<BundleEntry<CarePlan>>[];
   allergy: ClinicalDocument<BundleEntry<AllergyIntolerance>>[];
+  initialized: boolean;
 };
 
 type SummaryActions =
@@ -184,6 +186,7 @@ function summaryReducer(state: SummaryState, action: SummaryActions) {
         careplan: action.data.careplan,
         allergy: action.data.allergy,
         status: ActionTypes.COMPLETED,
+        initialized: true,
       };
     }
   }
@@ -198,6 +201,7 @@ function useSummaryData(): [
     imm: ClinicalDocument<BundleEntry<Immunization>>[];
     careplan: ClinicalDocument<BundleEntry<CarePlan>>[];
     allergy: ClinicalDocument<BundleEntry<AllergyIntolerance>>[];
+    initialized: boolean;
   },
   React.Dispatch<SummaryActions>
 ] {
@@ -210,6 +214,7 @@ function useSummaryData(): [
     imm: [],
     careplan: [],
     allergy: [],
+    initialized: false,
   });
 
   useEffect(() => {
@@ -275,24 +280,27 @@ function useSummaryData(): [
 }
 
 function SummaryTab() {
-  const [{ meds, cond, imm, careplan, allergy }] = useSummaryData();
-
-  console.log(careplan);
+  const [{ meds, cond, imm, careplan, allergy, initialized }] =
+    useSummaryData();
 
   return (
     <AppPage banner={<GenericBanner text="Summary" />}>
-      <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 pb-4 sm:px-6 lg:px-8">
-        {meds.length === 0 &&
-          cond.length === 0 &&
-          imm.length === 0 &&
-          careplan.length === 0 &&
-          allergy.length === 0 && <EmptyRecordsPlaceholder />}
-        <MedicationsListCard items={meds} />
-        <ConditionsListCard items={cond} />
-        <ImmunizationListCard items={imm} />
-        <CarePlanListCard items={careplan} />
-        <AllergyIntoleranceListCard items={allergy} />
-      </div>
+      {!initialized ? (
+        <LoadingSpinner />
+      ) : (
+        <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 pb-4 sm:px-6 lg:px-8">
+          {meds.length === 0 &&
+            cond.length === 0 &&
+            imm.length === 0 &&
+            careplan.length === 0 &&
+            allergy.length === 0 && <EmptyRecordsPlaceholder />}
+          <MedicationsListCard items={meds} />
+          <ConditionsListCard items={cond} />
+          <ImmunizationListCard items={imm} />
+          <CarePlanListCard items={careplan} />
+          <AllergyIntoleranceListCard items={allergy} />
+        </div>
+      )}
     </AppPage>
   );
 }

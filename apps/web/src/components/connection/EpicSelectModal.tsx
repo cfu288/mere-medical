@@ -20,7 +20,7 @@ export function EpicSelectModal({
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   onClick: (s: string & Location, name: string, id: string) => void;
 }) {
-  const [query, setQuery] = useDebounce('', 250);
+  const [query, setQuery] = useDebounce('', 150);
   const filteredItems = useCallback((s: string) => {
     if (s === '') {
       return items.sort((x, y) => (x.name > y.name ? 1 : -1));

@@ -40,7 +40,7 @@ export function MedicationsListCard({
                   </div>
                 ))}
               </div>
-            </TimelineCardBase>{' '}
+            </TimelineCardBase>
           </Disclosure.Panel>
         </>
       )}
