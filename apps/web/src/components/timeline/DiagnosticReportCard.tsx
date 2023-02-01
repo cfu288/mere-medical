@@ -86,6 +86,7 @@ export function DiagnosticReportCard({
         <div className={'min-w-0 flex-1'} ref={ref}>
           <div className="items-top flex justify-between">
             <div className="pb-2 text-sm font-bold text-blue-600 md:text-base">
+              Labs
               {isAbnormalResult && (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -93,7 +94,7 @@ export function DiagnosticReportCard({
                   viewBox="0 0 24 24"
                   strokeWidth="1.5"
                   stroke="currentColor"
-                  className="mr-2 inline h-4 w-4 text-red-500"
+                  className="ml-2 inline h-4 w-4 text-red-500"
                 >
                   <path
                     strokeLinecap="round"
@@ -102,7 +103,6 @@ export function DiagnosticReportCard({
                   />
                 </svg>
               )}
-              Labs
             </div>
 
             <div className="relative py-2 pr-1">
@@ -135,9 +135,13 @@ export function DiagnosticReportCard({
               ? format(parseISO(item.metadata.date), 'p')
               : ''}
           </p>
-          <p className="truncate text-xs font-medium text-gray-400 md:text-sm">
-            {conn?.get('name')}
-          </p>
+          {conn?.get('name') ? (
+            <p className="h-4 truncate text-xs font-medium text-gray-400 md:text-sm">
+              {conn?.get('name')}
+            </p>
+          ) : (
+            <SkeletonLoadingText />
+          )}
         </div>
       </TimelineCardBase>
       <ShowDiagnosticReportResultsExpandable
@@ -147,5 +151,13 @@ export function DiagnosticReportCard({
         setExpanded={setExpanded}
       />
     </>
+  );
+}
+
+function SkeletonLoadingText() {
+  return (
+    <div className="flex h-4 animate-pulse flex-row items-center">
+      <div className="mt-1 h-3 w-48 rounded-sm bg-gray-100 "></div>
+    </div>
   );
 }

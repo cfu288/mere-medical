@@ -11,10 +11,10 @@ export function JumpToPanel({
 }) {
   return (
     <div className="sticky top-0 hidden h-screen min-h-full w-0 flex-col overflow-y-scroll border-gray-200 bg-gray-50 text-slate-800 lg:flex lg:w-auto lg:border-r-2">
-      <p className="sticky top-0 h-10 whitespace-nowrap bg-gray-50 p-2 font-bold">
+      <p className="sticky top-0 mr-2 h-10 whitespace-nowrap bg-gray-50 p-2 font-bold">
         Jump To
       </p>
-      <ul>
+      <ul className="">
         {list &&
           Object.entries(list).map(([key], index, elements) => (
             <Fragment key={key}>

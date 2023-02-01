@@ -23,9 +23,15 @@ export function ConditionCard({
         <p className="truncate text-xs font-medium text-gray-500 md:text-sm">
           {item.metadata?.date ? format(parseISO(item.metadata.date), 'p') : ''}
         </p>
-        <p className="truncate text-xs font-medium text-gray-400 md:text-sm">
-          {conn?.get('name')}
-        </p>
+        {conn?.get('name') ? (
+          <p className="h-4 truncate text-xs font-medium text-gray-400 md:text-sm">
+            {conn?.get('name')}
+          </p>
+        ) : (
+          <div className="flex h-4 animate-pulse flex-row items-center">
+            <div className="mt-1 h-3 w-36 rounded-sm bg-gray-100 "></div>
+          </div>
+        )}
       </div>
     </div>
   );
