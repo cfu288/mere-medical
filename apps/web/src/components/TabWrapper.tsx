@@ -8,7 +8,6 @@ import React from 'react';
 import { Routes, Route, Navigate, Link } from 'react-router-dom';
 import ConnectionTab from '../pages/ConnectionTab';
 import OnPatientRedirect from '../pages/OnPatientRedirect';
-import TimelineTab from '../pages/TimelineTab';
 import { Routes as AppRoutes } from '../Routes';
 import SummaryTab from '../pages/SummaryTab';
 import SettingsTab from '../pages/SettingsTab';
@@ -16,6 +15,7 @@ import EpicRedirect from '../pages/EpicRedirect';
 import logo from '../img/white-logo.svg';
 import { TabButton } from './TabButton';
 import { useUser } from './providers/UserProvider';
+import { TimelineTab } from '../pages/TimelineTab';
 
 export function TabWrapper() {
   const user = useUser();

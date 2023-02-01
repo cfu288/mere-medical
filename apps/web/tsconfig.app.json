@@ -29,7 +29,13 @@
     "./src/components/timeline/TimelineCardBase.tsx",
     "./src/components/connection/LoadingSpinner.tsx",
     "./src/components/connection/ButtonLoadingSpinner.tsx",
-    "./src/components/timeline/SkeletonLoadingText.tsx"
+    "./src/components/timeline/SkeletonLoadingText.tsx",
+    "src/pages/TimelineSkeleton.tsx",
+    "./src/pages/SkeletonSearchBar.tsx",
+    "./src/pages/SearchBar.tsx",
+    "./src/pages/SkeletonTimelineYearHeader.tsx",
+    "./src/pages/SkeletonJumpToPanel.tsx",
+    "./src/pages/useScrollToHash.tsx"
   ],
   "exclude": [
     "jest.config.ts",

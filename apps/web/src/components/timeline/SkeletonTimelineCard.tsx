@@ -19,7 +19,7 @@ export function SkeletonTimelineCard() {
           <div className="mt-1 h-4 w-12 rounded-md bg-gray-200 md:h-4"></div>
         </div>
         <div className="flex animate-pulse flex-row items-center">
-          <div className="mt-3 h-3 w-12 rounded-md bg-gray-100 "></div>
+          <div className="mt-4 h-4 w-12 rounded-md bg-gray-200 "></div>
         </div>
         <SkeletonLoadingText />
       </div>
