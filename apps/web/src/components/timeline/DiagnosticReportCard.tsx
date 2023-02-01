@@ -12,6 +12,7 @@ import useIntersectionObserver from '../hooks/useIntersectionObserver';
 import { RxDocument } from 'rxdb';
 import { useRxDb } from '../providers/RxDbProvider';
 import { useUser } from '../providers/UserProvider';
+import { SkeletonLoadingText } from './SkeletonLoadingText';
 
 export function DiagnosticReportCard({
   item,
@@ -151,13 +152,5 @@ export function DiagnosticReportCard({
         setExpanded={setExpanded}
       />
     </>
-  );
-}
-
-function SkeletonLoadingText() {
-  return (
-    <div className="flex h-4 animate-pulse flex-row items-center">
-      <div className="mt-1 h-3 w-48 rounded-sm bg-gray-100 "></div>
-    </div>
   );
 }

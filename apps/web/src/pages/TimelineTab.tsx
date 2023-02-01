@@ -219,11 +219,11 @@ function TimelineSkeletonUnmemoed() {
         <TimelineYearHeaderSkeleton />
         <div className="flex scroll-mt-10 flex-row gap-x-4 px-0 pt-8 md:px-2">
           {/* Left sided date */}
-          <div className="flex h-4 grow animate-pulse flex-row items-center justify-end  pt-5 ">
-            <div className="mt-1 h-3 w-12 rounded-md bg-gray-100 "></div>
+          <div className="mt-1 flex h-6 grow animate-pulse flex-row items-center justify-end pt-5">
+            <div className="h-6 w-12 rounded-md bg-gray-100 "></div>
           </div>
           {/* Spacer between date and card */}
-          <div className="flex-column  relative flex justify-center pt-3 font-black text-gray-400">
+          <div className="flex-column relative flex justify-center pt-5 font-black text-gray-400">
             <div className="">•</div>
           </div>
           {/* Clinical card rendering */}
@@ -356,7 +356,7 @@ export function TimelineYearHeaderSkeleton() {
         <div className="absolute -top-2 h-2 w-full bg-gradient-to-t from-white"></div>
         <span className="flex grow"></span>
         <div className="w-full">
-          <div className="mt-1 h-5 w-40 rounded-md bg-gray-100 "></div>
+          <div className="mt-1 h-6 w-40 rounded-md bg-gray-100 "></div>
         </div>
         <div className="absolute -bottom-4 h-4 w-full bg-gradient-to-b from-white"></div>
       </div>

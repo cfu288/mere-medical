@@ -28,7 +28,8 @@
     "src/components/settings/EditUserModalForm.tsx",
     "./src/components/timeline/TimelineCardBase.tsx",
     "./src/components/connection/LoadingSpinner.tsx",
-    "./src/components/connection/ButtonLoadingSpinner.tsx"
+    "./src/components/connection/ButtonLoadingSpinner.tsx",
+    "./src/components/timeline/SkeletonLoadingText.tsx"
   ],
   "exclude": [
     "jest.config.ts",

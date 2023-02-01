@@ -2,6 +2,7 @@ import { format, parseISO } from 'date-fns';
 import { BundleEntry, Condition } from 'fhir/r2';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
+import { SkeletonLoadingText } from './SkeletonLoadingText';
 
 export function ConditionCard({
   item,
@@ -28,9 +29,7 @@ export function ConditionCard({
             {conn?.get('name')}
           </p>
         ) : (
-          <div className="flex h-4 animate-pulse flex-row items-center">
-            <div className="mt-1 h-3 w-36 rounded-sm bg-gray-100 "></div>
-          </div>
+          <SkeletonLoadingText />
         )}
       </div>
     </div>
