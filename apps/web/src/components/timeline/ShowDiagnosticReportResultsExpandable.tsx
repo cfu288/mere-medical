@@ -1,13 +1,16 @@
 import { Disclosure } from '@headlessui/react';
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { RxDocument } from 'rxdb';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { Modal } from '../Modal';
 import { ModalHeader } from '../ModalHeader';
 import { useRxDb } from '../providers/RxDbProvider';
 import { useUser } from '../providers/UserProvider';
+import BillboardJS, { IChart } from '@billboard.js/react';
+import bb, { areaLineRange, ChartOptions } from 'billboard.js';
+import 'billboard.js/dist/billboard.css';
 
 export function ShowDiagnosticReportResultsExpandable({
   item,
@@ -50,12 +53,85 @@ export function ShowDiagnosticReportResultsExpandable({
 }
 
 function Row({ item }: { item: RxDocument<ClinicalDocument<Observation>> }) {
-  const loinc = item.metadata?.loinc_coding;
-  const db = useRxDb();
-  const user = useUser();
-  const [relatedLabs, setRelatedLabs] = useState<
-    RxDocument<ClinicalDocument<Observation>>[]
-  >([]);
+  const db = useRxDb(),
+    user = useUser(),
+    loinc = item.metadata?.loinc_coding,
+    chartComponent = useRef<IChart>(),
+    [relatedLabs, setRelatedLabs] = useState<
+      RxDocument<ClinicalDocument<Observation>>[]
+    >([]);
+  const chartMin = Math.min(
+    ...(relatedLabs.map((rl) => getReferenceRangeLow(rl)?.value) as number[])
+  );
+  const displayName = `${item.get('metadata.display_name')}`;
+  const valueUnit = `(${getValueUnit(item)})`;
+  const data = useMemo(
+    () => [
+      [
+        displayName,
+        ...relatedLabs.map((rl) => {
+          return {
+            high: getReferenceRangeHigh(rl)?.value,
+            mid: getValueQuantity(rl),
+            low: getReferenceRangeLow(rl)?.value,
+          } as { high: number; mid: number; low: number };
+        }),
+      ],
+      [
+        'x',
+        ...relatedLabs.map((rl) =>
+          format(parseISO(rl.metadata?.date || ''), 'yyyy-MM-dd')
+        ),
+      ],
+    ],
+    [displayName, relatedLabs]
+  );
+
+  const options: ChartOptions = {
+    data: {
+      x: 'x',
+      columns: data,
+      types: { [displayName]: areaLineRange() },
+      colors: {
+        [displayName]: '#00A2D5',
+      },
+    },
+    axis: {
+      y: {
+        min: chartMin,
+        label: {
+          text: valueUnit,
+          position: 'outer-middle',
+        },
+      },
+      x: {
+        padding: {
+          right: 10,
+          unit: 'px',
+        },
+        type: 'timeseries',
+        tick: {
+          count: 4,
+          rotate: 90,
+          centered: true,
+          fit: true,
+          format: '%Y-%m',
+        },
+      },
+    },
+    tooltip: {
+      format: {
+        title: (x) => {
+          return format(x, 'MMM Mo, yyyy');
+        },
+      },
+    },
+    legend: { hide: true },
+  };
+
+  useEffect(() => {
+    chartComponent.current?.instance.resize();
+  }, [data]);
 
   useEffect(() => {
     if (loinc && loinc?.length > 0) {
@@ -149,7 +225,7 @@ function Row({ item }: { item: RxDocument<ClinicalDocument<Observation>> }) {
                   </Disclosure.Button>
                 </div>
               </div>
-              <Disclosure.Panel className="mx-4 grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-100 py-2">
+              <Disclosure.Panel className="mx-4 grid grid-cols-6 gap-2 gap-y-2  py-2">
                 {relatedLabs.map((rl) => (
                   <Fragment key={`rl-${rl.id}`}>
                     <div className="col-span-3 self-center pl-4 text-xs font-bold text-gray-600">
@@ -177,14 +253,12 @@ function Row({ item }: { item: RxDocument<ClinicalDocument<Observation>> }) {
                         {getValueUnit(rl)}{' '}
                         {getInterpretationText(rl) || getValueString(rl)}
                       </p>
-                      {/* <p className="text-xs font-light text-gray-600">
-                        {getReferenceRangeString(rl)
-                          ? `Range: ${getReferenceRangeString(rl)}`
-                          : ''}
-                      </p> */}
                     </div>
                   </Fragment>
                 ))}
+              </Disclosure.Panel>
+              <Disclosure.Panel className="max-w-80 mx-4 w-80 border-b-2 border-solid border-gray-100 pr-2 sm:w-full sm:max-w-max">
+                <BillboardJS bb={bb} options={options} ref={chartComponent} />
               </Disclosure.Panel>
             </>
           )}
@@ -200,12 +274,25 @@ function getReferenceRangeString(
   return item.get('data_record.raw').resource?.referenceRange?.[0]?.text;
 }
 
+function getReferenceRangeLow(item: RxDocument<ClinicalDocument<Observation>>) {
+  return (item.get('data_record.raw') as BundleEntry<Observation>).resource
+    ?.referenceRange?.[0]?.low;
+}
+
+function getReferenceRangeHigh(
+  item: RxDocument<ClinicalDocument<Observation>>
+) {
+  return (item.get('data_record.raw') as BundleEntry<Observation>).resource
+    ?.referenceRange?.[0]?.high;
+}
+
 function getValueUnit(item: RxDocument<ClinicalDocument<Observation>>) {
   return item.get('data_record.raw').resource?.valueQuantity?.unit;
 }
 
 function getValueQuantity(item: RxDocument<ClinicalDocument<Observation>>) {
-  return item.get('data_record.raw').resource?.valueQuantity?.value;
+  return (item.get('data_record.raw') as BundleEntry<Observation>).resource
+    ?.valueQuantity?.value;
 }
 
 function getValueString(item: RxDocument<ClinicalDocument<Observation>>) {

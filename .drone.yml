@@ -75,3 +75,6 @@ volumes:
 trigger:
   branch:
     - main
+  event:
+    exclude:
+      - pull_request
