@@ -2205,7 +2205,7 @@
     "url": "https://api.valleyhealth.org/fhirproxy"
   },
   {
-    "id": "default",
+    "id": "sandbox",
     "name": "Sandbox",
     "url": "https://fhir.epic.com/interconnect-fhir-oauth"
   }
