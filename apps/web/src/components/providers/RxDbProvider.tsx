@@ -31,7 +31,11 @@ import { UserDocumentMigrations } from '../../models/user-document/UserDocument.
 import { RxDBAttachmentsPlugin } from 'rxdb/plugins/attachments';
 import { UserPreferencesMigrations } from '../../models/user-preferences/UserPreferences.migration';
 import { getRxStorageWorker } from 'rxdb/plugins/worker';
-import { RxStorageDexieStatics } from 'rxdb/plugins/dexie';
+import {
+  getRxStorageDexie,
+  RxStorageDexie,
+  RxStorageDexieStatics,
+} from 'rxdb/plugins/dexie';
 import { ClinicalDocumentMigrations } from '../../models/clinical-document/ClinicalDocument.migration';
 
 addRxPlugin(RxDBUpdatePlugin);
@@ -53,33 +57,36 @@ const RxDbContext = React.createContext<
 
 type RxDbProviderProps = PropsWithChildren<unknown>;
 
+export const databaseCollections = {
+  clinical_documents: {
+    schema: ClinicalDocumentSchema,
+    migrationStrategies: ClinicalDocumentMigrations,
+  },
+  connection_documents: {
+    schema: ConnectionDocumentSchema,
+  },
+  user_documents: {
+    schema: UserDocumentSchema,
+    migrationStrategies: UserDocumentMigrations,
+  },
+  user_preferences: {
+    schema: UserPreferencesDocumentSchema,
+    migrationStrategies: UserPreferencesMigrations,
+  },
+};
+
 async function initRxDb() {
   const db = await createRxDatabase<DatabaseCollections>({
     name: 'mere_db',
-    storage: getRxStorageWorker({
-      statics: RxStorageDexieStatics,
-      workerInput: '../../assets/dexie.worker.js',
-    }),
+    // storage: getRxStorageWorker({
+    //   statics: RxStorageDexieStatics,
+    //   workerInput: '../../assets/dexie.worker.js',
+    // }),
+    storage: getRxStorageDexie(),
     multiInstance: true,
     ignoreDuplicate: true,
   });
-  await db.addCollections<DatabaseCollections>({
-    clinical_documents: {
-      schema: ClinicalDocumentSchema,
-      migrationStrategies: ClinicalDocumentMigrations,
-    },
-    connection_documents: {
-      schema: ConnectionDocumentSchema,
-    },
-    user_documents: {
-      schema: UserDocumentSchema,
-      migrationStrategies: UserDocumentMigrations,
-    },
-    user_preferences: {
-      schema: UserPreferencesDocumentSchema,
-      migrationStrategies: UserPreferencesMigrations,
-    },
-  });
+  await db.addCollections<DatabaseCollections>(databaseCollections);
 
   return db;
 }

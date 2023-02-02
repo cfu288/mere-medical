@@ -3,6 +3,7 @@ import uuid4 from '../utils/UUIDUtils';
 import { AppPage } from '../components/AppPage';
 import { GenericBanner } from '../components/GenericBanner';
 import {
+  databaseCollections,
   DatabaseCollections,
   useRxDb,
 } from '../components/providers/RxDbProvider';
@@ -28,6 +29,7 @@ import { BundleEntry, Patient } from 'fhir/r2';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 import { useNotificationDispatch } from '../components/providers/NotificationProvider';
 import { SubmitHandler, useForm } from 'react-hook-form';
+import { ButtonLoadingSpinner } from '../components/connection/ButtonLoadingSpinner';
 
 function fetchPatientRecords(
   db: RxDatabase<DatabaseCollections>,
@@ -243,37 +245,75 @@ const exportData = (
 const handleImport = (
   fields: ImportFields,
   db: RxDatabase<DatabaseCollections>
-): Promise<boolean> => {
+): Promise<string> => {
   return new Promise((resolve, reject) => {
     const file = getFileFromFileList(fields.backup);
     const reader = new FileReader();
-    // console.log(file);
     if (file) {
       reader.onload = function (event) {
         const res = event.target?.result;
-        // console.log(res);
         if (res) {
           const data = JSON.parse(
             res as string
           ) as RxDumpDatabaseAny<DatabaseCollections>;
-          // console.log(data);
+          // debugger;
+          Promise.all([
+            db.collections.clinical_documents.remove(),
+            db.collections.connection_documents.remove(),
+            db.collections.user_documents.remove(),
+            db.collections.user_preferences.remove(),
+          ]).then(() => {
+            db.addCollections<DatabaseCollections>(databaseCollections).then(
+              () => {
+                db.importJSON(data)
+                  .then((i) => {
+                    const res = i as unknown as {
+                      error: Record<string, RxDocument>;
+                      success: Record<string, RxDocument>;
+                    }[];
+                    let errors = {};
+                    let success = {};
+                    res.forEach((item) => {
+                      errors = { ...errors, ...item.error };
+                      success = { ...success, ...item.success };
+                    });
 
-          db.importJSON(data)
-            .then(() => {
-              resolve(true);
-            })
-            .catch((e) => {
-              reject(
-                Error('There was an error importing your data' + e.message)
-              );
-            });
+                    if (Object.keys(errors).length > 0) {
+                      console.group('There were some errors with import:');
+                      console.error(errors);
+                      console.groupEnd();
+                      reject(
+                        Error(
+                          `${
+                            Object.keys(errors).length
+                          } documents were not able to be imported`
+                        )
+                      );
+                    } else {
+                      resolve(
+                        `${
+                          Object.keys(success).length
+                        } documents were successfully imported`
+                      );
+                    }
+                  })
+                  .catch((e) => {
+                    reject(
+                      Error(
+                        'There was an error importing your data' + e.message
+                      )
+                    );
+                  });
+              }
+            );
+          });
         } else {
           reject(Error('The file was empty or unable to be read'));
         }
       };
-      reader.onerror = function (e) {
+      reader.onerror = function (error) {
         reject(
-          Error('There was an error importing your data' + e.target?.error)
+          Error('There was an error importing your data' + error.target?.error)
         );
       };
       reader.readAsText(file);
@@ -295,18 +335,23 @@ const SettingsTab: React.FC = () => {
     { pathname, hash, key } = useLocation(),
     ref = useRef<HTMLDivElement | null>(null),
     [fileDownloadLink, setFileDownloadLink] = useState(''),
-    notifyDispatch = useNotificationDispatch();
+    notifyDispatch = useNotificationDispatch(),
+    [backupInProgress, setBackupInProgress] = useState(false);
 
   const importData: SubmitHandler<ImportFields> = useCallback(
     async (fields) => {
+      setBackupInProgress(true);
       try {
-        await handleImport(fields, db);
+        const message = await handleImport(fields, db);
+        setBackupInProgress(false);
         notifyDispatch({
           type: 'set_notification',
-          message: 'Import complete',
+          message: `${message}, this webpage will be reloaded automatically`,
           variant: 'success',
         });
+        setTimeout(() => window.location.reload(), 2000);
       } catch (e) {
+        setBackupInProgress(false);
         notifyDispatch({
           type: 'set_notification',
           message: (e as Error).message,
@@ -505,9 +550,17 @@ const SettingsTab: React.FC = () => {
                     {getFileFromFileList(backupFile) !== undefined && (
                       <button
                         type="submit"
+                        disabled={backupInProgress}
                         className="relative ml-4 inline-flex flex-shrink-0 cursor-pointer items-center rounded-md border border-transparent bg-green-600 px-4 py-2 text-sm font-bold text-white shadow-sm  hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2 disabled:bg-gray-700"
                       >
-                        Start Import
+                        {backupInProgress ? (
+                          <>
+                            <p className="pr-2">{'Importing'}</p>
+                            <ButtonLoadingSpinner />
+                          </>
+                        ) : (
+                          'Start Import'
+                        )}
                       </button>
                     )}
                   </form>
