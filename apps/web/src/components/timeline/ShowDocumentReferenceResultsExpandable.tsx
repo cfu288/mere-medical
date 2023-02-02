@@ -16,6 +16,29 @@ export enum CCDAStructureDefinition {
   RESULTS = '2.16.840.1.113883.10.20.22.2.3',
   VISIT_DIAGNOSIS = '2.16.840.1.113883.10.20.22.2.8',
   VITAL_SIGNS = '2.16.840.1.113883.10.20.22.2.4',
+  REASON_FOR_REFERRAL = '1.3.6.1.4.1.19376.1.5.3.1.3.1',
+  ASSESSMENT = '2.16.840.1.113883.10.20.22.2.8',
+  PROBLEMS = '2.16.840.1.113883.10.20.22.2.5',
+  PROBLEMS_1 = '2.16.840.1.113883.10.20.22.2.5.1',
+  MEDICATIONS = '2.16.840.1.113883.10.20.22.2.1',
+  MEDICATIONS_1 = '2.16.840.1.113883.10.20.22.2.1.1',
+  PROCEDURES = '2.16.840.1.113883.10.20.22.2.7',
+  PROCEDURES_1 = '2.16.840.1.113883.10.20.22.2.7.1',
+  IMMUNIZATIONS = '2.16.840.1.113883.10.20.22.2.2',
+  IMMUNIZATIONS_1 = '2.16.840.1.113883.10.20.22.2.2.1',
+  HOSPITAL_DISCHARGE_INSTRUCTIONS = '2.16.840.1.113883.10.20.22.2.41',
+  // TODO: below
+  FAMILY_HISTORY = '2.16.840.1.113883.10.20.22.2.15',
+  SOCIAL_HISTORY = '2.16.840.1.113883.10.20.22.2.17',
+  FOREIGN_TRAVEL = '1.3.6.1.4.19376.1.5.3.1.1.5.3.6',
+  HEALTH_CONCERNS = '2.16.840.1.113883.10.20.22.2.58',
+  GOALS = '2.16.840.1.113883.10.20.22.2.60',
+  NUTRITION = '2.16.840.1.113883.10.20.22.2.57',
+  MEDICAL_EQUIPMENT = '2.16.840.1.113883.10.20.22.2.23',
+  ADVANCE_DIRECTIVES = '2.16.840.1.113883.10.20.22.2.21',
+  ADVANCE_DIRECTIVES_1 = '2.16.840.1.113883.10.20.22.2.21.1',
+  ENCOUNTERS = '2.16.840.1.113883.10.20.22.2.22.1',
+  PAYERS = '2.16.840.1.113883.10.20.22.2.18',
 }
 export interface CCDAParsed {
   careTeam: string;
@@ -25,19 +48,32 @@ export interface CCDAParsed {
   planOfTreatment: string;
   visitDiagnoses: string;
   vitalSigns: string;
+  referralReason: string;
+  assessment: string;
+  problems: string;
+  medications: string;
+  procedures: string;
+  immunizations: string;
+  hospitalDischargeInstructions: string;
 }
 
 function parseCCDASection(
   sections: HTMLCollectionOf<HTMLElement>,
-  id: CCDAStructureDefinition
+  id: CCDAStructureDefinition[] | CCDAStructureDefinition
 ) {
   const matchingSections = [...(sections as unknown as HTMLElement[])]?.filter(
     (s) =>
-      s.getElementsByTagName('templateId')?.[0]?.getAttribute('root') === id
+      Array.isArray(id)
+        ? (id as string[]).includes(
+            s.getElementsByTagName('templateId')?.[0]?.getAttribute('root') ||
+              ''
+          )
+        : s.getElementsByTagName('templateId')?.[0]?.getAttribute('root') === id
   );
-  return [...(matchingSections as unknown as HTMLElement[])]?.map(
-    (x) => x.innerHTML
-  )?.[0];
+  return [...(matchingSections as unknown as HTMLElement[])]
+    ?.map((x) => x.innerHTML)
+    .flat()
+    .join();
 }
 
 function parseCCDA(raw: string): CCDAParsed {
@@ -67,6 +103,33 @@ function parseCCDA(raw: string): CCDAParsed {
     sections,
     CCDAStructureDefinition.PLAN_OF_TREATMENT
   );
+  const referralReason = parseCCDASection(
+    sections,
+    CCDAStructureDefinition.REASON_FOR_REFERRAL
+  );
+  const assessment = parseCCDASection(
+    sections,
+    CCDAStructureDefinition.ASSESSMENT
+  );
+  const problems = parseCCDASection(sections, [
+    CCDAStructureDefinition.PROBLEMS,
+    CCDAStructureDefinition.PROBLEMS_1,
+  ]);
+  const medications = parseCCDASection(sections, [
+    CCDAStructureDefinition.MEDICATIONS,
+    CCDAStructureDefinition.MEDICATIONS_1,
+  ]);
+  const procedures = parseCCDASection(sections, [
+    CCDAStructureDefinition.PROCEDURES,
+    CCDAStructureDefinition.PROCEDURES_1,
+  ]);
+  const immunizations = parseCCDASection(sections, [
+    CCDAStructureDefinition.IMMUNIZATIONS,
+    CCDAStructureDefinition.IMMUNIZATIONS_1,
+  ]);
+  const hospitalDischargeInstructions = parseCCDASection(sections, [
+    CCDAStructureDefinition.HOSPITAL_DISCHARGE_INSTRUCTIONS,
+  ]);
 
   const parsedDoc = {
     hpi,
@@ -76,6 +139,13 @@ function parseCCDA(raw: string): CCDAParsed {
     results,
     patientInstructions,
     planOfTreatment,
+    referralReason,
+    assessment,
+    problems,
+    medications,
+    procedures,
+    immunizations,
+    hospitalDischargeInstructions,
   };
   return parsedDoc;
 }
@@ -131,7 +201,13 @@ export function ShowDocumentResultsExpandable({
             } rounded-lg border border-solid border-gray-200`}
           >
             <p className="text-md whitespace-wrap overflow-x-scroll p-4 text-gray-900">
-              {!ccda && 'Loading...'}
+              {!ccda && 'Loading...'}{' '}
+              {ccda?.referralReason && (
+                <DisplayCCDASection
+                  title="Reason for Referral"
+                  content={ccda.referralReason || ''}
+                />
+              )}
               {ccda?.vitalSigns && (
                 <DisplayCCDASection
                   title="Vital Signs"
@@ -142,6 +218,24 @@ export function ShowDocumentResultsExpandable({
                 <DisplayCCDASection
                   title="History of Present Illness"
                   content={ccda.hpi || ''}
+                />
+              )}
+              {ccda?.medications && (
+                <DisplayCCDASection
+                  title="Medications"
+                  content={ccda.medications || ''}
+                />
+              )}
+              {ccda?.immunizations && (
+                <DisplayCCDASection
+                  title="Immunizations"
+                  content={ccda.immunizations || ''}
+                />
+              )}
+              {ccda?.procedures && (
+                <DisplayCCDASection
+                  title="Procedures"
+                  content={ccda.procedures || ''}
                 />
               )}
               {ccda?.results && (
@@ -156,6 +250,18 @@ export function ShowDocumentResultsExpandable({
                   content={ccda.visitDiagnoses || ''}
                 />
               )}
+              {ccda?.assessment && (
+                <DisplayCCDASection
+                  title="Assessment"
+                  content={ccda.assessment || ''}
+                />
+              )}
+              {ccda?.problems && (
+                <DisplayCCDASection
+                  title="Problems"
+                  content={ccda.problems || ''}
+                />
+              )}
               {ccda?.planOfTreatment && (
                 <DisplayCCDASection
                   title="Plan of Treatment"
@@ -166,6 +272,12 @@ export function ShowDocumentResultsExpandable({
                 <DisplayCCDASection
                   title="Patient Instructions"
                   content={ccda.patientInstructions || ''}
+                />
+              )}
+              {ccda?.hospitalDischargeInstructions && (
+                <DisplayCCDASection
+                  title="Hospital Discharge Instructions"
+                  content={ccda.hospitalDischargeInstructions || ''}
                 />
               )}
               {ccda?.careTeam && (
