@@ -51,13 +51,11 @@ steps:
   #     - docker push cfu288/mere-medical-docs:latest
   - name: docs
     image: thegeeklab/drone-docker-buildx
-    environment:
-      PASSWORD:
-        from_secret: registry_password
     privileged: true
     settings:
       username: cfu288
-      password: $PASSWORD
+      PASSWORD:
+        from_secret: registry_password
       repo: cfu288/mere-medical-docs
       tags: latest
     # depends_on:
