@@ -56,7 +56,7 @@ export function DocumentReferenceCard({
               : ''}
           </p>
           {conn?.get('name') ? (
-            <p className="h-4 truncate text-xs font-medium text-gray-400 md:text-sm">
+            <p className="truncate text-xs font-medium text-gray-400 md:text-sm">
               {conn?.get('name')}
             </p>
           ) : (

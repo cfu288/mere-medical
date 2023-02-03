@@ -1,7 +1,8 @@
+import { memo } from 'react';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
 import { TimelineCardBase } from './TimelineCardBase';
 
-export function SkeletonTimelineCard() {
+export function SkeletonTimelineCardUnmemoed() {
   return (
     <TimelineCardBase>
       <div className="w-full min-w-0 max-w-full flex-1">
@@ -26,3 +27,5 @@ export function SkeletonTimelineCard() {
     </TimelineCardBase>
   );
 }
+
+export const SkeletonTimelineCard = memo(SkeletonTimelineCardUnmemoed);

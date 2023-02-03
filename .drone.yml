@@ -36,19 +36,27 @@ steps:
   #     - npx nx print-affected --type=app --select=projects --base=HEAD~1
   #     # docs project is not detected by print affected yet
   #     - npx nx print-affected --type=app --select=projects --base=HEAD~1 | grep -q -E "docs" && echo "Files changed, start new build" || exit 78
+  # - name: docs
+  #   image: docker:dind
+  #   environment:
+  #     PASSWORD:
+  #       from_secret: registry_password
+  #   volumes:
+  #     - name: dockersock
+  #       path: /var/run
+  #   commands:
+  #     - sleep 5 # give docker enough time to start
+  #     - echo $PASSWORD | docker login --username cfu288 --password-stdin
+  #     - docker build -f Dockerfile-docs -t cfu288/mere-medical-docs .
+  #     - docker push cfu288/mere-medical-docs:latest
   - name: docs
-    image: docker:dind
-    environment:
-      PASSWORD:
-        from_secret: registry_password
-    volumes:
-      - name: dockersock
-        path: /var/run
-    commands:
-      - sleep 5 # give docker enough time to start
-      - echo $PASSWORD | docker login --username cfu288 --password-stdin
-      - docker build -f Dockerfile-docs -t cfu288/mere-medical-docs .
-      - docker push cfu288/mere-medical-docs:latest
+    image: thegeeklab/drone-docker-buildx
+    privileged: true
+    settings:
+      username: cfu288
+      password: $PASSWORD
+      repo: cfu288/mere-medical-docs
+      tags: latest
     # depends_on:
     #   - docs-check-if-changed
 
