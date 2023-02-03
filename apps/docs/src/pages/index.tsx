@@ -191,8 +191,8 @@ export default function Home() {
                   What’s the Solution?
                 </h2>
                 <p className="mt-6 max-w-3xl text-lg leading-relaxed text-white">
-                  Mere Medical is the all-new, source available, self hostable,
-                  and free medical record management web app that connects to
+                  Mere Medical is the all-new, open source, self hostable, and
+                  free medical record management web app that connects to
                   multiple patient portals and allows you to upload your own
                   paper records. With Mere Medical, you can easily manage your
                   own medical records under one digital roof.

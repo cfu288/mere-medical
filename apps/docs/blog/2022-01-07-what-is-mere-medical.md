@@ -43,7 +43,7 @@ This means that application developers can now write programs to integrate with 
 Mere Medical is still in early development and is essentially pre-release software. However, we've already accomplished a lot of goals:
 
 - Self-hostable - Run Mere Medical on your computers, no third parties
-- Source-available - Audit every line of code that touches your medical records.
+- Open source - Audit every line of code that touches your medical records.
 - Multi-platform - A progressive web application that runs on any OS or device with a browser.
 - Offline-first - Data is stored locally on device and can be accessed with no internet connection.
 - Full control of data - Backup, export, and delete your data.
