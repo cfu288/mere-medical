@@ -7,18 +7,14 @@ clone:
 
 steps:
   - name: app
-    image: docker:dind
-    environment:
+    image: thegeeklab/drone-docker-buildx
+    privileged: true
+    settings:
+      username: cfu288
       PASSWORD:
         from_secret: registry_password
-    volumes:
-      - name: dockersock
-        path: /var/run
-    commands:
-      - sleep 5 # give docker enough time to start
-      - echo $PASSWORD | docker login --username cfu288 --password-stdin
-      - docker build -f Dockerfile -t cfu288/mere-medical .
-      - docker push cfu288/mere-medical:latest
+      repo: cfu288/mere-medical
+      tags: latest
 
   - name: docs
     image: thegeeklab/drone-docker-buildx
@@ -38,18 +34,6 @@ steps:
     depends_on:
       - app
       - docs
-
-services:
-  - name: docker
-    image: docker:dind
-    privileged: true
-    volumes:
-      - name: dockersock
-        path: /var/run
-
-volumes:
-  - name: dockersock
-    temp: {}
 
 trigger:
   branch:
