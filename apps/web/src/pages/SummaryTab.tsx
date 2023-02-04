@@ -286,7 +286,9 @@ function SummaryTab() {
   return (
     <AppPage banner={<GenericBanner text="Summary" />}>
       {!initialized ? (
-        <LoadingSpinner />
+        <div className="h-full w-full opacity-5">
+          {/* <LoadingSpinner /> */}
+        </div>
       ) : (
         <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 pb-4 sm:px-6 lg:px-8">
           {meds.length === 0 &&

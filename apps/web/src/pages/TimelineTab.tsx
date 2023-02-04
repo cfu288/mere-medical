@@ -18,6 +18,7 @@ import { useDebounceCallback } from '@react-hook/debounce';
 import { TimelineSkeleton } from './TimelineSkeleton';
 import { useScrollToHash } from '../components/hooks/useScrollToHash';
 import { SearchBar } from './SearchBar';
+import { Transition } from '@headlessui/react';
 
 /**
  * This should really be a background process that runs after every data sync instead of every view
@@ -130,7 +131,8 @@ export function TimelineTab() {
     [data, status, initialized] = useRecordQuery(query),
     hasNoRecords = query === '' && (!data || Object.entries(data).length === 0),
     hasRecords =
-      (data && Object.entries(data).length) || (query !== '' && data);
+      (data !== undefined && Object.entries(data).length > 0) ||
+      (query !== '' && data !== undefined);
 
   useScrollToHash();
 
@@ -164,11 +166,31 @@ export function TimelineTab() {
         />
       }
     >
-      {!initialized &&
-        (status === QueryStatus.IDLE || status === QueryStatus.LOADING) && (
-          <TimelineSkeleton />
-        )}
-      <div className={`relative flex ${initialized ? 'block' : 'hidden'}`}>
+      <Transition
+        show={
+          !initialized &&
+          (status === QueryStatus.IDLE || status === QueryStatus.LOADING)
+        }
+        enter="transition-opacity ease-in-out duration-75"
+        enterFrom="opacity-75"
+        enterTo="opacity-100"
+        leave="transition-opacity ease-in-out duration-75"
+        leaveFrom="opacity-100"
+        leaveTo="opacity-75"
+      >
+        <TimelineSkeleton />
+      </Transition>
+      <Transition
+        as="div"
+        className={'relative flex'}
+        show={initialized && status === QueryStatus.SUCCESS}
+        enter="transition-opacity ease-in-out duration-75"
+        enterFrom="opacity-75"
+        enterTo="opacity-100"
+        leave="transition-opacity ease-in-out duration-75"
+        leaveFrom="opacity-100"
+        leaveTo="opacity-75"
+      >
         {hasRecords ? <JumpToPanel list={data} isLoading={false} /> : null}
         {hasNoRecords ? (
           <div className="mx-auto w-full max-w-4xl gap-x-4 px-4 pt-2 pb-4 sm:px-6 lg:px-8">
@@ -184,7 +206,7 @@ export function TimelineTab() {
             ) : null}
           </div>
         ) : null}
-      </div>
+      </Transition>
     </AppPage>
   );
 }
