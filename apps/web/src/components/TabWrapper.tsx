@@ -37,7 +37,7 @@ export function TabWrapper() {
         </Routes>
       </div>
       <div className="flex-0 md:bg-primary-800 absolute bottom-0 left-0 z-20 w-full bg-slate-50 md:relative md:bottom-auto md:top-0 md:h-full md:w-auto">
-        <div className="mx-auto flex w-full max-w-3xl justify-around md:h-full md:w-64 md:flex-col md:justify-start">
+        <div className="pb-safe mx-auto flex w-full max-w-3xl justify-around md:h-full md:w-64 md:flex-col md:justify-start">
           <img
             src={logo}
             className="hidden h-20 w-20 p-4 md:block"

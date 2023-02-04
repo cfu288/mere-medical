@@ -13,7 +13,7 @@ services:
       start_period: 5s # Estimated time to boot.
     stop_grace_period: 30s
     deploy:
-      replicas: 2
+      replicas: 1
       update_config:
         delay: 1m
         parallelism: 1
@@ -30,8 +30,32 @@ services:
       - '4202:80'
     stop_grace_period: 30s
     deploy:
-      replicas: 2
+      replicas: 1
       update_config:
         delay: 1m
         parallelism: 1
         failure_action: rollback
+  demo:
+    image: cfu288/mere-medical:latest
+    ports:
+      - '3366:80'
+    healthcheck:
+      test: ['CMD', 'node', '/app/healthcheck.js']
+      interval: 5s # Interval between health checks.
+      timeout: 5s # Timeout for each health checking.
+      retries: 12 # How many times retries.
+      start_period: 5s # Estimated time to boot.
+    stop_grace_period: 30s
+    deploy:
+      replicas: 1
+      update_config:
+        delay: 1m
+        parallelism: 1
+        failure_action: rollback
+    environment:
+      - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
+      - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
+      - EPIC_CLIENT_ID=${EPIC_CLIENT_ID}
+      - EPIC_SANDBOX_CLIENT_ID=${EPIC_SANDBOX_CLIENT_ID}
+      - PUBLIC_URL=${PUBLIC_URL}
+      - IS_DEMO=enabled

@@ -11,7 +11,7 @@
     <br />
     <a href="https://meremedical.co/"><strong>See Docs</strong></a>
     <span> • </span>
-    <a href="https://app.meremedical.co/"><strong>View Demo</strong></a>
+    <a href="https://demo.meremedical.co/"><strong>View Demo</strong></a>
   </p>
 </div>
 
@@ -30,7 +30,6 @@
 
 <p align="center">
   <img src="./images/timeline.png" width="400" />
-  <img src="./images/connections.png" width="400" />
 </p>
 
 Mere Medical is a self-hosted web app to aggregate and sync all of your medical records from all your doctor and hospital visits in one place. See everything in a timeline view or quickly summarize your records.

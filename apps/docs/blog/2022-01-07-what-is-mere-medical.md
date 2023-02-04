@@ -54,4 +54,4 @@ There are a few more features I'd like to wrap up before we hit v1.0, hopefully 
 
 # Demo
 
-Video walkthrough coming soon as I am still wrapping up some features. In the meantime, you can see the live demo at [app.meremedical.co](https://app.meremedical.co).
+Video walkthrough coming soon as I am still wrapping up some features. In the meantime, you can see the live demo at [demo.meremedical.co](https://demo.meremedical.co).

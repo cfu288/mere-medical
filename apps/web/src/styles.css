@@ -19,3 +19,7 @@
     height: 100svh;
   }
 }
+
+.pb-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom, 1.5rem) - 0.75rem);
+}

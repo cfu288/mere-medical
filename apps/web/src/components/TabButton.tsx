@@ -16,7 +16,7 @@ export function TabButton({
   return (
     <Link
       to={route}
-      className={`flex w-24 flex-col items-center justify-center p-2 pb-3 text-white md:m-1 md:w-auto md:flex-row md:justify-start md:rounded-md md:p-4 ${
+      className={`flex w-24 flex-col items-center justify-center p-2 text-white md:m-1 md:w-auto md:flex-row md:justify-start md:rounded-md md:p-4 ${
         location === route
           ? 'bg-gray-0 md:bg-primary-700 border-primary border-t-2 md:border-t-0'
           : ''

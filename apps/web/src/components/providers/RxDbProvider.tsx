@@ -6,7 +6,13 @@ import React, {
 } from 'react';
 import logoCol from '../../assets/logo.svg';
 import logo from '../../img/white-logo.svg';
-import { addRxPlugin, createRxDatabase, RxDatabase } from 'rxdb';
+import {
+  addRxPlugin,
+  createRxDatabase,
+  RxDatabase,
+  RxDocument,
+  RxDumpDatabaseAny,
+} from 'rxdb';
 import { Transition } from '@headlessui/react';
 import { RxDBDevModePlugin } from 'rxdb/plugins/dev-mode';
 import { RxDBMigrationPlugin } from 'rxdb/plugins/migration';
@@ -36,6 +42,8 @@ import { RxStorageDexieStatics } from 'rxdb/plugins/dexie';
 import { ClinicalDocumentMigrations } from '../../models/clinical-document/ClinicalDocument.migration';
 import { AppPage } from '../AppPage';
 import { TimelineBanner } from '../timeline/TimelineBanner';
+import Config from '../../environments/config.json';
+import { useNotificationDispatch } from './NotificationProvider';
 
 addRxPlugin(RxDBUpdatePlugin);
 addRxPlugin(RxDBMigrationPlugin);
@@ -74,6 +82,62 @@ export const databaseCollections = {
   },
 };
 
+const handleImport = (
+  jsonString: string,
+  db: RxDatabase<DatabaseCollections>
+): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    if (jsonString) {
+      const data = JSON.parse(
+        jsonString as string
+      ) as RxDumpDatabaseAny<DatabaseCollections>;
+      Promise.all(
+        Object.values(db.collections).map((col) => col?.remove())
+      ).then(() => {
+        db.addCollections<DatabaseCollections>(databaseCollections).then(() => {
+          db.importJSON(data)
+            .then((i) => {
+              const res = i as unknown as {
+                error: Record<string, RxDocument>;
+                success: Record<string, RxDocument>;
+              }[];
+              let errors = {};
+              let success = {};
+              res.forEach((item) => {
+                errors = { ...errors, ...item.error };
+                success = { ...success, ...item.success };
+              });
+
+              if (Object.keys(errors).length > 0) {
+                console.group('There were some errors with import:');
+                console.error(errors);
+                console.groupEnd();
+                reject(
+                  Error(
+                    `${
+                      Object.keys(errors).length
+                    } documents were not able to be imported`
+                  )
+                );
+              } else {
+                resolve(
+                  `${
+                    Object.keys(success).length
+                  } documents were successfully imported`
+                );
+              }
+            })
+            .catch((e) => {
+              reject(
+                Error('There was an error importing your data' + e.message)
+              );
+            });
+        });
+      });
+    }
+  });
+};
+
 async function initRxDb() {
   const db = await createRxDatabase<DatabaseCollections>({
     name: 'mere_db',
@@ -90,14 +154,42 @@ async function initRxDb() {
   return db;
 }
 
+async function loadDemoData(db: RxDatabase<DatabaseCollections>) {
+  const data = await fetch('/assets/demo.json');
+  const json = await data.json();
+  const message = await handleImport(JSON.stringify(json), db);
+  return message;
+}
+
 export function RxDbProvider(props: RxDbProviderProps) {
   const [db, setDb] = useState<RxDatabase<DatabaseCollections>>();
+  const notifyDispatch = useNotificationDispatch();
 
   useEffect(() => {
     initRxDb().then((db) => {
-      setDb(db);
+      if (Config.IS_DEMO === 'enabled') {
+        loadDemoData(db)
+          .then(() => {
+            notifyDispatch({
+              type: 'set_notification',
+              message: `Welcome to the Mere Medical demo! We have automatically added some demo data for you.`,
+              variant: 'success',
+            });
+            setDb(db);
+          })
+          .catch((error) => {
+            notifyDispatch({
+              type: 'set_notification',
+              message: (error as Error).message,
+              variant: 'error',
+            });
+            setDb(db);
+          });
+      } else {
+        setDb(db);
+      }
     });
-  }, []);
+  }, [notifyDispatch]);
 
   return (
     <>
@@ -131,7 +223,7 @@ function PageLoadingSkeleton({ ready }: { ready?: boolean }) {
             className={
               'flex h-full w-full flex-col items-center justify-center'
             }
-            show={!ready}
+            show={ready}
             leave="transition-opacity ease-in-out duration-75"
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
@@ -139,25 +231,28 @@ function PageLoadingSkeleton({ ready }: { ready?: boolean }) {
             enterFrom="opacity-0"
             enterTo="opacity-100"
           >
-            <img
-              className="h-24 w-24 opacity-25 md:h-48 md:w-48"
-              src={logoCol}
-              alt="Loading screen"
-            ></img>
+            <div className="relative h-24 w-24 md:h-48 md:w-48">
+              <img
+                className="absolute top-0 left-0 h-24 w-24 animate-ping opacity-25 md:h-48 md:w-48"
+                src={logoCol}
+                alt="Loading screen"
+              ></img>
+              <img
+                className="absolute top-0 left-0 h-24 w-24 opacity-25 md:h-48 md:w-48"
+                src={logoCol}
+                alt="Loading screen"
+              ></img>
+            </div>
           </Transition>
         </AppPage>
       </div>
       <div className="flex-0 md:bg-primary-800 absolute bottom-0 left-0 z-20 w-full bg-slate-50 md:relative md:bottom-auto md:top-0 md:h-full md:w-auto">
-        <div className="mx-auto flex w-full max-w-3xl justify-around md:h-full md:w-64 md:flex-col md:justify-start">
-          <img
-            src={logo}
-            className="hidden h-20 w-20 p-4 md:block"
-            alt="logo"
-          ></img>
+        <div className="pb-safe mx-auto flex w-full max-w-3xl justify-around md:h-full md:w-64 md:flex-col md:justify-start">
+          <img src={logo} className="hidden h-20 w-20 p-4 md:block" alt="logo_spacer"></img>
           {[...Array(4)].map((_, i) => (
             <div
               key={i}
-              className={`flex w-24 flex-col items-center justify-center p-2 pb-3 text-white md:m-1 md:w-auto md:flex-row md:justify-start md:rounded-md md:p-4 ${
+              className={`flex w-24 flex-col items-center justify-center p-2 text-white md:m-1 md:w-auto md:flex-row md:justify-start md:rounded-md md:p-4 ${
                 i === 0
                   ? 'bg-gray-0 md:bg-primary-700 border-primary border-t-2 md:border-t-0'
                   : ''
@@ -197,11 +292,11 @@ function PageLoadingSkeleton({ ready }: { ready?: boolean }) {
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <p className="text-base font-medium text-white">
+                  <div className="text-base font-medium text-white">
                     <div className="flex h-4 animate-pulse flex-row items-center md:mb-2">
                       <div className="h-4 w-32 rounded-md bg-gray-500"></div>
                     </div>
-                  </p>
+                  </div>
                   <div className="flex h-4 animate-pulse flex-row items-center">
                     <div className="h-4 w-32 rounded-md bg-gray-400"></div>
                   </div>
