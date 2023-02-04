@@ -177,7 +177,7 @@ export function TimelineTab() {
           </div>
         ) : null}
         {hasRecords ? (
-          <div className="mx-auto flex w-full max-w-4xl flex-col overflow-x-clip px-4 pb-12 sm:px-6 lg:px-8">
+          <div className="relative mx-auto flex w-full max-w-4xl flex-col overflow-x-clip px-4 pb-12 sm:px-6 lg:px-8">
             <SearchBar query={query} setQuery={setQuery} status={status} />
             {listItems}
             {hasNoRecords ? (
