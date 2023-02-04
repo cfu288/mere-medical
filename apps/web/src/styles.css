@@ -5,7 +5,7 @@
 /* You can add global styles to this file, and also import other style files */
 
 .mobile-full-height {
-  height: 100vh;
+  @apply: h-full max-w-full;
 }
 
 @supports (height: 100cqh) {

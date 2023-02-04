@@ -2,6 +2,7 @@ import { format, parseISO } from 'date-fns';
 import { BundleEntry, Observation } from 'fhir/r2';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { ShowObservationResultsExpandable } from './ShowObservationResultsExpandable';
+import { TimelineCardTitle } from './TimelineCardTitle';
 
 export function ObservationCard({
   item,
@@ -15,9 +16,7 @@ export function ObservationCard({
           Observation
         </div>
         <span className="absolute inset-0" aria-hidden="true" />
-        <p className="text-sm font-bold text-gray-900 md:text-base">
-          {item.metadata?.display_name}
-        </p>
+        <TimelineCardTitle>{item.metadata?.display_name}</TimelineCardTitle>
         <p className="truncate text-xs font-medium text-gray-500 md:text-sm">
           {item.metadata?.date ? format(parseISO(item.metadata.date), 'p') : ''}
         </p>

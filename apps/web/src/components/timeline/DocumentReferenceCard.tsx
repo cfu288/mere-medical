@@ -5,6 +5,8 @@ import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocumen
 import { ShowDocumentResultsExpandable } from './ShowDocumentReferenceResultsExpandable';
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
+import { TimelineCardBase } from './TimelineCardBase';
+import { TimelineCardTitle } from './TimelineCardTitle';
 
 export function DocumentReferenceCard({
   item,
@@ -16,8 +18,7 @@ export function DocumentReferenceCard({
 
   return (
     <>
-      <div
-        className="relative flex items-center space-x-3 rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm"
+      <TimelineCardBase
         tabIndex={0}
         onClick={() => {
           setExpanded((x) => !x);
@@ -47,9 +48,7 @@ export function DocumentReferenceCard({
               </div>
             </div>
           </div>
-          <p className="text-sm font-bold text-gray-900 md:text-base">
-            {item.metadata?.display_name}
-          </p>
+          <TimelineCardTitle>{item.metadata?.display_name}</TimelineCardTitle>
           <p className="truncate text-xs font-medium text-gray-500 md:text-sm">
             {item.metadata?.date
               ? format(parseISO(item.metadata.date), 'p')
@@ -63,7 +62,7 @@ export function DocumentReferenceCard({
             <SkeletonLoadingText />
           )}
         </div>
-      </div>
+      </TimelineCardBase>
       <ShowDocumentResultsExpandable
         item={item}
         expanded={expanded}

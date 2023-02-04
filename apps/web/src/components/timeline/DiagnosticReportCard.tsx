@@ -13,6 +13,7 @@ import { RxDocument } from 'rxdb';
 import { useRxDb } from '../providers/RxDbProvider';
 import { useUser } from '../providers/UserProvider';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
+import { TimelineCardTitle } from './TimelineCardTitle';
 
 export function DiagnosticReportCard({
   item,
@@ -55,11 +56,6 @@ export function DiagnosticReportCard({
               ? 1
               : -1
           );
-          // console.log(
-          //   sorted.map((x) =>
-          //     format(parseISO(x.toJSON().metadata?.date || ''), 'MM/dd/yyyy')
-          //   )
-          // );
           setDocs(
             sorted as unknown as RxDocument<ClinicalDocument<Observation>>[]
           );
@@ -125,12 +121,10 @@ export function DiagnosticReportCard({
               </div>
             </div>
           </div>
-          <p
-            className="text-md pb-2 text-sm font-bold text-gray-900
- md:text-base"
-          >
+          <TimelineCardTitle>
             {item.metadata?.display_name}
-          </p>
+            {/* {item.metadata?.display_name?.slice(0, 20)} */}
+          </TimelineCardTitle>
           <p className="truncate text-xs font-medium text-gray-500 md:text-sm">
             {item.metadata?.date
               ? format(parseISO(item.metadata.date), 'p')

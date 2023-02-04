@@ -4,6 +4,7 @@ import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocumen
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
 import { TimelineCardBase } from './TimelineCardBase';
+import { TimelineCardTitle } from './TimelineCardTitle';
 
 export function MedicationCard({
   item,
@@ -19,9 +20,7 @@ export function MedicationCard({
           Medication
         </div>
         <span className="absolute inset-0" aria-hidden="true" />
-        <p className="text-sm font-bold text-gray-900 md:text-base">
-          {item.metadata?.display_name}
-        </p>
+        <TimelineCardTitle>{item.metadata?.display_name}</TimelineCardTitle>
         <p className="truncate text-xs font-medium text-gray-500 md:text-sm">
           {item.metadata?.date ? format(parseISO(item.metadata.date), 'p') : ''}
         </p>

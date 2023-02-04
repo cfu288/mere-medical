@@ -26,8 +26,7 @@ export function AllergyIntoleranceListCard({
           </Disclosure.Button>
           <Disclosure.Panel>
             <TimelineCardBase>
-              {' '}
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1 shrink">
                 <span className="absolute inset-0" aria-hidden="true" />
                 {items.map((item) => (
                   <div className="py-2" key={item.id}>

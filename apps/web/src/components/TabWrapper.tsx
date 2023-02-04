@@ -21,7 +21,7 @@ export function TabWrapper() {
   const user = useUser();
 
   return (
-    <div className="mobile-full-height flex md:flex-row-reverse">
+    <div className="mobile-full-height flex max-w-[100vw] overflow-hidden md:flex-row-reverse">
       <div className="flex-grow">
         <Routes>
           <Route path={AppRoutes.Timeline} element={<TimelineTab />} />

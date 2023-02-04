@@ -32,7 +32,7 @@ export function ShowDiagnosticReportResultsExpandable({
           title={item.metadata?.display_name || ''}
           setClose={toggleOpen}
         />
-        <div className="max-h-full  scroll-py-3 p-3">
+        <div className="max-h-full scroll-py-3 p-3">
           <div
             className={`${
               expanded ? '' : 'hidden'
@@ -43,7 +43,7 @@ export function ShowDiagnosticReportResultsExpandable({
               <div className="col-span-2 text-sm font-semibold">Value</div>
             </div>
             {docs.map((item) => (
-              <Row item={item} />
+              <Row item={item} key={JSON.stringify(item).slice(0, 20)} />
             ))}
           </div>
         </div>
@@ -61,7 +61,12 @@ function Row({ item }: { item: RxDocument<ClinicalDocument<Observation>> }) {
       RxDocument<ClinicalDocument<Observation>>[]
     >([]);
   const chartMin = Math.min(
-    ...(relatedLabs.map((rl) => getReferenceRangeLow(rl)?.value) as number[])
+    ...(relatedLabs.map((rl) =>
+      (getReferenceRangeLow(rl)?.value || Math.max) >
+      (getValueQuantity(rl) || Math.max)
+        ? getValueQuantity(rl)
+        : getReferenceRangeLow(rl)?.value
+    ) as number[])
   );
   const displayName = `${item.get('metadata.display_name')}`;
   const valueUnit = `(${getValueUnit(item)})`;

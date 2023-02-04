@@ -33,13 +33,12 @@ export function TimelineItem({
       className="flex scroll-mt-10 flex-row gap-x-4 px-0 pt-8 md:px-2"
       key={dateKey}
     >
-      {/* Left sided date */}
-      <span className="text-primary-700 flex grow justify-end whitespace-nowrap pt-5 text-sm font-bold md:text-base">
-        {format(parseISO(dateKey), 'MMM dd')}
-      </span>
-      {/* Spacer between date and card */}
-      <div className="flex-column  text-primary-700 relative flex justify-center pt-5 font-black">
-        <div className="">•</div>
+      <div className="flex w-1/5 flex-row md:w-1/4">
+        {/* Left sided date */}
+        <span className="text-primary-700 flex grow justify-end gap-x-4 whitespace-nowrap pt-5 text-sm font-bold md:text-base">
+          <div>{format(parseISO(dateKey), 'MMM dd')}</div>
+          <div className="">•</div>
+        </span>
       </div>
       {/* Clinical card rendering */}
       <div className="flex w-4/5 flex-col gap-y-2 md:w-3/4">

@@ -18,8 +18,8 @@ export function JumpToPanel({
       </p>
       {isLoading ? (
         <ul>
-          {[...Array(50)].map(() => (
-            <li>
+          {[...Array(50)].map((_, index) => (
+            <li key={index}>
               <div className="flex h-4 animate-pulse flex-row items-center pt-5 ">
                 <div className="ml-4 h-3 w-12 rounded-md bg-gray-100 p-1 "></div>
               </div>
