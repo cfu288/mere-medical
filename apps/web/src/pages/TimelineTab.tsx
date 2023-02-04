@@ -183,7 +183,7 @@ export function TimelineTab() {
       <Transition
         as="div"
         className={'relative flex'}
-        show={initialized && status === QueryStatus.SUCCESS}
+        show={initialized}
         enter="transition-opacity ease-in-out duration-75"
         enterFrom="opacity-75"
         enterTo="opacity-100"
