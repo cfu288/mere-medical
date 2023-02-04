@@ -8,63 +8,86 @@ import { ModalHeader } from '../ModalHeader';
 import { useClinicalDoc } from '../hooks/useClinicalDoc';
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
 
-export enum CCDAStructureDefinition {
-  CARE_TEAMS = '2.16.840.1.113883.10.20.22.2.500',
-  HPI = '1.3.6.1.4.1.19376.1.5.3.1.3.4',
-  PATIENT_INSTRUCTIONS = '2.16.840.1.113883.10.20.22.2.45',
-  PLAN_OF_TREATMENT = '2.16.840.1.113883.10.20.22.2.10',
-  RESULTS = '2.16.840.1.113883.10.20.22.2.3',
-  VISIT_DIAGNOSIS = '2.16.840.1.113883.10.20.22.2.8',
-  VITAL_SIGNS = '2.16.840.1.113883.10.20.22.2.4',
-  REASON_FOR_REFERRAL = '1.3.6.1.4.1.19376.1.5.3.1.3.1',
-  ASSESSMENT = '2.16.840.1.113883.10.20.22.2.8',
-  PROBLEMS = '2.16.840.1.113883.10.20.22.2.5',
-  PROBLEMS_1 = '2.16.840.1.113883.10.20.22.2.5.1',
-  MEDICATIONS = '2.16.840.1.113883.10.20.22.2.1',
-  MEDICATIONS_1 = '2.16.840.1.113883.10.20.22.2.1.1',
-  PROCEDURES = '2.16.840.1.113883.10.20.22.2.7',
-  PROCEDURES_1 = '2.16.840.1.113883.10.20.22.2.7.1',
-  IMMUNIZATIONS = '2.16.840.1.113883.10.20.22.2.2',
-  IMMUNIZATIONS_1 = '2.16.840.1.113883.10.20.22.2.2.1',
-  HOSPITAL_DISCHARGE_INSTRUCTIONS = '2.16.840.1.113883.10.20.22.2.41',
+type CCDAStructureDefinitionKeys =
+  | 'CARE_TEAMS'
+  | 'HPI'
+  | 'PATIENT_INSTRUCTIONS'
+  | 'PLAN_OF_TREATMENT'
+  | 'RESULTS'
+  | 'VISIT_DIAGNOSIS'
+  | 'VITAL_SIGNS'
+  | 'REASON_FOR_REFERRAL'
+  | 'ASSESSMENT'
+  | 'PROBLEMS'
+  | 'MEDICATIONS'
+  | 'PROCEDURES'
+  | 'IMMUNIZATIONS'
+  | 'HOSPITAL_DISCHARGE_INSTRUCTIONS'
   // TODO: below
-  FAMILY_HISTORY = '2.16.840.1.113883.10.20.22.2.15',
-  SOCIAL_HISTORY = '2.16.840.1.113883.10.20.22.2.17',
-  FOREIGN_TRAVEL = '1.3.6.1.4.19376.1.5.3.1.1.5.3.6',
-  HEALTH_CONCERNS = '2.16.840.1.113883.10.20.22.2.58',
-  GOALS = '2.16.840.1.113883.10.20.22.2.60',
-  NUTRITION = '2.16.840.1.113883.10.20.22.2.57',
-  MEDICAL_EQUIPMENT = '2.16.840.1.113883.10.20.22.2.23',
-  ADVANCE_DIRECTIVES = '2.16.840.1.113883.10.20.22.2.21',
-  ADVANCE_DIRECTIVES_1 = '2.16.840.1.113883.10.20.22.2.21.1',
-  ENCOUNTERS = '2.16.840.1.113883.10.20.22.2.22.1',
-  PAYERS = '2.16.840.1.113883.10.20.22.2.18',
-}
-export interface CCDAParsed {
-  careTeam: string;
-  hpi: string;
-  patientInstructions: string;
-  results: string;
-  planOfTreatment: string;
-  visitDiagnoses: string;
-  vitalSigns: string;
-  referralReason: string;
-  assessment: string;
-  problems: string;
-  medications: string;
-  procedures: string;
-  immunizations: string;
-  hospitalDischargeInstructions: string;
-}
+  | 'FAMILY_HISTORY'
+  | 'SOCIAL_HISTORY'
+  | 'FOREIGN_TRAVEL'
+  | 'HEALTH_CONCERNS'
+  | 'GOALS'
+  | 'NUTRITION'
+  | 'MEDICAL_EQUIPMENT'
+  | 'ADVANCE_DIRECTIVES'
+  | 'ENCOUNTERS'
+  | 'PAYERS';
+
+const CCDAStructureDefinition: Record<
+  CCDAStructureDefinitionKeys,
+  string | string[]
+> = {
+  CARE_TEAMS: '2.16.840.1.113883.10.20.22.2.500',
+  HPI: '1.3.6.1.4.1.19376.1.5.3.1.3.4',
+  PATIENT_INSTRUCTIONS: '2.16.840.1.113883.10.20.22.2.45',
+  PLAN_OF_TREATMENT: '2.16.840.1.113883.10.20.22.2.10',
+  RESULTS: '2.16.840.1.113883.10.20.22.2.3',
+  VISIT_DIAGNOSIS: '2.16.840.1.113883.10.20.22.2.8',
+  VITAL_SIGNS: '2.16.840.1.113883.10.20.22.2.4',
+  REASON_FOR_REFERRAL: '1.3.6.1.4.1.19376.1.5.3.1.3.1',
+  ASSESSMENT: '2.16.840.1.113883.10.20.22.2.8',
+  PROBLEMS: [
+    '2.16.840.1.113883.10.20.22.2.5',
+    '2.16.840.1.113883.10.20.22.2.5.1',
+  ],
+  MEDICATIONS: [
+    '2.16.840.1.113883.10.20.22.2.1',
+    '2.16.840.1.113883.10.20.22.2.1.1',
+  ],
+  PROCEDURES: [
+    '2.16.840.1.113883.10.20.22.2.7',
+    '2.16.840.1.113883.10.20.22.2.7.1',
+  ],
+  IMMUNIZATIONS: [
+    '2.16.840.1.113883.10.20.22.2.2',
+    '2.16.840.1.113883.10.20.22.2.2.1',
+  ],
+  HOSPITAL_DISCHARGE_INSTRUCTIONS: '2.16.840.1.113883.10.20.22.2.41',
+  FAMILY_HISTORY: '2.16.840.1.113883.10.20.22.2.15',
+  SOCIAL_HISTORY: '2.16.840.1.113883.10.20.22.2.17',
+  FOREIGN_TRAVEL: '1.3.6.1.4.19376.1.5.3.1.1.5.3.6',
+  HEALTH_CONCERNS: '2.16.840.1.113883.10.20.22.2.58',
+  GOALS: '2.16.840.1.113883.10.20.22.2.60',
+  NUTRITION: '2.16.840.1.113883.10.20.22.2.57',
+  MEDICAL_EQUIPMENT: '2.16.840.1.113883.10.20.22.2.23',
+  ADVANCE_DIRECTIVES: [
+    '2.16.840.1.113883.10.20.22.2.21',
+    '2.16.840.1.113883.10.20.22.2.21.1',
+  ],
+  ENCOUNTERS: '2.16.840.1.113883.10.20.22.2.22.1',
+  PAYERS: '2.16.840.1.113883.10.20.22.2.18',
+};
 
 function parseCCDASection(
   sections: HTMLCollectionOf<HTMLElement>,
-  id: CCDAStructureDefinition[] | CCDAStructureDefinition
+  id: string[] | string
 ) {
   const matchingSections = [...(sections as unknown as HTMLElement[])]?.filter(
     (s) =>
       Array.isArray(id)
-        ? (id as string[]).includes(
+        ? id.includes(
             s.getElementsByTagName('templateId')?.[0]?.getAttribute('root') ||
               ''
           )
@@ -76,77 +99,19 @@ function parseCCDASection(
     .join();
 }
 
-function parseCCDA(raw: string): CCDAParsed {
+function parseCCDA(
+  raw: string
+): Partial<Record<CCDAStructureDefinitionKeys, string>> {
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(raw, 'text/xml');
   const sections = xmlDoc.getElementsByTagName('section');
+  const parsedDoc: Partial<Record<CCDAStructureDefinitionKeys, string>> = {};
 
-  const hpi = parseCCDASection(sections, CCDAStructureDefinition.HPI);
-  const vitalSigns = parseCCDASection(
-    sections,
-    CCDAStructureDefinition.VITAL_SIGNS
-  );
-  const visitDiagnoses = parseCCDASection(
-    sections,
-    CCDAStructureDefinition.VISIT_DIAGNOSIS
-  );
-  const careTeam = parseCCDASection(
-    sections,
-    CCDAStructureDefinition.CARE_TEAMS
-  );
-  const results = parseCCDASection(sections, CCDAStructureDefinition.RESULTS);
-  const patientInstructions = parseCCDASection(
-    sections,
-    CCDAStructureDefinition.PATIENT_INSTRUCTIONS
-  );
-  const planOfTreatment = parseCCDASection(
-    sections,
-    CCDAStructureDefinition.PLAN_OF_TREATMENT
-  );
-  const referralReason = parseCCDASection(
-    sections,
-    CCDAStructureDefinition.REASON_FOR_REFERRAL
-  );
-  const assessment = parseCCDASection(
-    sections,
-    CCDAStructureDefinition.ASSESSMENT
-  );
-  const problems = parseCCDASection(sections, [
-    CCDAStructureDefinition.PROBLEMS,
-    CCDAStructureDefinition.PROBLEMS_1,
-  ]);
-  const medications = parseCCDASection(sections, [
-    CCDAStructureDefinition.MEDICATIONS,
-    CCDAStructureDefinition.MEDICATIONS_1,
-  ]);
-  const procedures = parseCCDASection(sections, [
-    CCDAStructureDefinition.PROCEDURES,
-    CCDAStructureDefinition.PROCEDURES_1,
-  ]);
-  const immunizations = parseCCDASection(sections, [
-    CCDAStructureDefinition.IMMUNIZATIONS,
-    CCDAStructureDefinition.IMMUNIZATIONS_1,
-  ]);
-  const hospitalDischargeInstructions = parseCCDASection(sections, [
-    CCDAStructureDefinition.HOSPITAL_DISCHARGE_INSTRUCTIONS,
-  ]);
+  for (const [key, val] of Object.entries(CCDAStructureDefinition)) {
+    const k = key as CCDAStructureDefinitionKeys;
+    parsedDoc[k] = parseCCDASection(sections, val);
+  }
 
-  const parsedDoc = {
-    hpi,
-    vitalSigns,
-    visitDiagnoses,
-    careTeam,
-    results,
-    patientInstructions,
-    planOfTreatment,
-    referralReason,
-    assessment,
-    problems,
-    medications,
-    procedures,
-    immunizations,
-    hospitalDischargeInstructions,
-  };
   return parsedDoc;
 }
 
@@ -171,7 +136,9 @@ export function ShowDocumentResultsExpandable({
   setExpanded: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const cd = useConnectionDoc(item.connection_record_id),
-    [ccda, setCCDA] = useState<CCDAParsed | undefined>(undefined),
+    [ccda, setCCDA] = useState<
+      Partial<Record<CCDAStructureDefinitionKeys, string>> | undefined
+    >(undefined),
     attachmentUrl = item.data_record.raw.resource?.content?.[0].attachment.url,
     attachment = useClinicalDoc(attachmentUrl);
 
@@ -202,88 +169,145 @@ export function ShowDocumentResultsExpandable({
           >
             <p className="text-md whitespace-wrap overflow-x-scroll p-4 text-gray-900">
               {!ccda && 'Loading...'}{' '}
-              {ccda?.referralReason && (
+              {ccda?.REASON_FOR_REFERRAL && (
                 <DisplayCCDASection
                   title="Reason for Referral"
-                  content={ccda.referralReason || ''}
+                  content={ccda.REASON_FOR_REFERRAL || ''}
                 />
               )}
-              {ccda?.vitalSigns && (
+              {ccda?.VITAL_SIGNS && (
                 <DisplayCCDASection
                   title="Vital Signs"
-                  content={ccda.vitalSigns || ''}
+                  content={ccda.VITAL_SIGNS || ''}
                 />
               )}
-              {ccda?.hpi && (
+              {ccda?.HPI && (
                 <DisplayCCDASection
                   title="History of Present Illness"
-                  content={ccda.hpi || ''}
+                  content={ccda.HPI || ''}
                 />
               )}
-              {ccda?.medications && (
+              {ccda?.MEDICATIONS && (
                 <DisplayCCDASection
                   title="Medications"
-                  content={ccda.medications || ''}
+                  content={ccda.MEDICATIONS || ''}
                 />
               )}
-              {ccda?.immunizations && (
+              {ccda?.IMMUNIZATIONS && (
                 <DisplayCCDASection
                   title="Immunizations"
-                  content={ccda.immunizations || ''}
+                  content={ccda.IMMUNIZATIONS || ''}
                 />
               )}
-              {ccda?.procedures && (
+              {ccda?.FAMILY_HISTORY && (
+                <DisplayCCDASection
+                  title="Family History"
+                  content={ccda.FAMILY_HISTORY || ''}
+                />
+              )}
+              {ccda?.SOCIAL_HISTORY && (
+                <DisplayCCDASection
+                  title="Social History"
+                  content={ccda.SOCIAL_HISTORY || ''}
+                />
+              )}
+              {ccda?.FOREIGN_TRAVEL && (
+                <DisplayCCDASection
+                  title="Foreign Travel"
+                  content={ccda.FOREIGN_TRAVEL || ''}
+                />
+              )}
+              {ccda?.HEALTH_CONCERNS && (
+                <DisplayCCDASection
+                  title="Health Concerns"
+                  content={ccda.HEALTH_CONCERNS || ''}
+                />
+              )}
+              {ccda?.PROCEDURES && (
                 <DisplayCCDASection
                   title="Procedures"
-                  content={ccda.procedures || ''}
+                  content={ccda.PROCEDURES || ''}
                 />
               )}
-              {ccda?.results && (
+              {ccda?.RESULTS && (
                 <DisplayCCDASection
                   title="Results"
-                  content={ccda.results || ''}
+                  content={ccda.RESULTS || ''}
                 />
               )}
-              {ccda?.visitDiagnoses && (
+              {ccda?.VISIT_DIAGNOSIS && (
                 <DisplayCCDASection
                   title="Visit Diagnoses"
-                  content={ccda.visitDiagnoses || ''}
+                  content={ccda.VISIT_DIAGNOSIS || ''}
                 />
               )}
-              {ccda?.assessment && (
+              {ccda?.ASSESSMENT && (
                 <DisplayCCDASection
                   title="Assessment"
-                  content={ccda.assessment || ''}
+                  content={ccda.ASSESSMENT || ''}
                 />
               )}
-              {ccda?.problems && (
+              {ccda?.PROBLEMS && (
                 <DisplayCCDASection
                   title="Problems"
-                  content={ccda.problems || ''}
+                  content={ccda.PROBLEMS || ''}
                 />
               )}
-              {ccda?.planOfTreatment && (
+              {ccda?.NUTRITION && (
+                <DisplayCCDASection
+                  title="Nutrition"
+                  content={ccda.NUTRITION || ''}
+                />
+              )}
+              {ccda?.PLAN_OF_TREATMENT && (
                 <DisplayCCDASection
                   title="Plan of Treatment"
-                  content={ccda.planOfTreatment || ''}
+                  content={ccda.PLAN_OF_TREATMENT || ''}
                 />
               )}
-              {ccda?.patientInstructions && (
+              {ccda?.GOALS && (
+                <DisplayCCDASection title="Goals" content={ccda.GOALS || ''} />
+              )}
+              {ccda?.MEDICAL_EQUIPMENT && (
+                <DisplayCCDASection
+                  title="Medical Equipment"
+                  content={ccda.MEDICAL_EQUIPMENT || ''}
+                />
+              )}
+              {ccda?.ADVANCE_DIRECTIVES && (
+                <DisplayCCDASection
+                  title="Advance Directives"
+                  content={ccda.ADVANCE_DIRECTIVES || ''}
+                />
+              )}
+              {ccda?.PATIENT_INSTRUCTIONS && (
                 <DisplayCCDASection
                   title="Patient Instructions"
-                  content={ccda.patientInstructions || ''}
+                  content={ccda.PATIENT_INSTRUCTIONS || ''}
                 />
               )}
-              {ccda?.hospitalDischargeInstructions && (
+              {ccda?.HOSPITAL_DISCHARGE_INSTRUCTIONS && (
                 <DisplayCCDASection
                   title="Hospital Discharge Instructions"
-                  content={ccda.hospitalDischargeInstructions || ''}
+                  content={ccda.HOSPITAL_DISCHARGE_INSTRUCTIONS || ''}
                 />
               )}
-              {ccda?.careTeam && (
+              {ccda?.ENCOUNTERS && (
+                <DisplayCCDASection
+                  title="Encounters"
+                  content={ccda.ENCOUNTERS || ''}
+                />
+              )}
+              {ccda?.CARE_TEAMS && (
                 <DisplayCCDASection
                   title="Care Team"
-                  content={ccda.careTeam || ''}
+                  content={ccda.CARE_TEAMS || ''}
+                />
+              )}
+              {ccda?.PAYERS && (
+                <DisplayCCDASection
+                  title="Payers"
+                  content={ccda.PAYERS || ''}
                 />
               )}
             </p>
