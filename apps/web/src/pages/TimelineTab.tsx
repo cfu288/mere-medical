@@ -9,7 +9,6 @@ import { MangoQuerySelector, RxDatabase, RxDocument } from 'rxdb';
 import { EmptyRecordsPlaceholder } from '../components/EmptyRecordsPlaceholder';
 import { useUser } from '../components/providers/UserProvider';
 import { AppPage } from '../components/AppPage';
-import { useLocation } from 'react-router-dom';
 import { JumpToPanel } from '../components/timeline/JumpToPanel';
 import { TimelineBanner } from '../components/timeline/TimelineBanner';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';

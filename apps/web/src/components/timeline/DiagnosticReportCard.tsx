@@ -101,7 +101,6 @@ export function DiagnosticReportCard({
                 </svg>
               )}
             </div>
-
             <div className="relative py-2 pr-1">
               <div className="relative flex justify-center text-gray-400">
                 <svg
@@ -122,8 +121,9 @@ export function DiagnosticReportCard({
             </div>
           </div>
           <TimelineCardTitle>
-            {item.metadata?.display_name}
-            {/* {item.metadata?.display_name?.slice(0, 20)} */}
+            {item.metadata?.display_name
+              ?.replace(/- final result/gi, '')
+              .replace(/- final/gi, '')}
           </TimelineCardTitle>
           <p className="truncate text-xs font-medium text-gray-500 md:text-sm">
             {item.metadata?.date
