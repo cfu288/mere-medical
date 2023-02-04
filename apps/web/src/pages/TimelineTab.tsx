@@ -1,6 +1,6 @@
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, FhirResource } from 'fhir/r2';
-import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   DatabaseCollections,
   useRxDb,
@@ -191,7 +191,7 @@ export function TimelineTab() {
         leaveFrom="opacity-100"
         leaveTo="opacity-75"
       >
-        {hasRecords ? <JumpToPanel list={data} isLoading={false} /> : null}
+        {hasRecords ? <JumpToPanel items={data} isLoading={false} /> : null}
         {hasNoRecords ? (
           <div className="mx-auto w-full max-w-4xl gap-x-4 px-4 pt-2 pb-4 sm:px-6 lg:px-8">
             <EmptyRecordsPlaceholder />

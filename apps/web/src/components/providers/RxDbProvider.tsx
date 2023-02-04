@@ -100,18 +100,28 @@ export function RxDbProvider(props: RxDbProviderProps) {
   }, []);
 
   return (
-    // eslint-disable-next-line react/jsx-no-useless-fragment
     <>
-      {db ? (
+      {/* Transition added to avoid flash of white  */}
+      <Transition
+        show={!db}
+        appear={true}
+        enter="transition-opacity duration-150"
+        enterFrom="opacity-0"
+        enterTo="opacity-100"
+        leave="transition-opacity ease-linear duration-75"
+        leaveFrom="opacity-100"
+        leaveTo="opacity-[.99]"
+      >
+        <PageLoadingSkeleton ready={!db} />
+      </Transition>
+      {db && (
         <RxDbContext.Provider value={db}>{props.children}</RxDbContext.Provider>
-      ) : (
-        <PageLoadingSkeleton db={db} />
       )}
     </>
   );
 }
 
-function PageLoadingSkeleton({ db }: { db?: RxDatabase }) {
+function PageLoadingSkeleton({ ready }: { ready?: boolean }) {
   return (
     <div className="mobile-full-height flex max-w-[100vw] overflow-hidden md:flex-row-reverse">
       <div className="flex-grow">
@@ -121,7 +131,7 @@ function PageLoadingSkeleton({ db }: { db?: RxDatabase }) {
             className={
               'flex h-full w-full flex-col items-center justify-center'
             }
-            show={!db}
+            show={!ready}
             leave="transition-opacity ease-in-out duration-75"
             leaveFrom="opacity-100"
             leaveTo="opacity-0"

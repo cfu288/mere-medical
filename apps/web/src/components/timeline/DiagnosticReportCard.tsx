@@ -1,6 +1,6 @@
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import {
   isOutOfRangeResult,
@@ -15,16 +15,15 @@ import { useUser } from '../providers/UserProvider';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
 import { TimelineCardTitle } from './TimelineCardTitle';
 
-export function DiagnosticReportCard({
+function useRelatedDocuments({
+  expanded,
+  isVisible,
   item,
 }: {
+  expanded: boolean;
+  isVisible: boolean;
   item: ClinicalDocument<BundleEntry<DiagnosticReport>>;
-}) {
-  const conn = useConnectionDoc(item.connection_record_id);
-  const [expanded, setExpanded] = useState(false);
-  const ref = useRef<HTMLDivElement | null>(null);
-  const entry = useIntersectionObserver(ref, {});
-  const isVisible = !!entry?.isIntersecting;
+}): [RxDocument<ClinicalDocument<Observation>>[], boolean] {
   const db = useRxDb(),
     user = useUser(),
     [docs, setDocs] = useState<RxDocument<ClinicalDocument<Observation>>[]>([]),
@@ -76,6 +75,25 @@ export function DiagnosticReportCard({
     listToQuery,
     user.id,
   ]);
+
+  return [docs, isAbnormalResult];
+}
+
+function DiagnosticReportCardUnmemo({
+  item,
+}: {
+  item: ClinicalDocument<BundleEntry<DiagnosticReport>>;
+}) {
+  const conn = useConnectionDoc(item.connection_record_id),
+    [expanded, setExpanded] = useState(false),
+    ref = useRef<HTMLDivElement | null>(null),
+    entry = useIntersectionObserver(ref, {}),
+    isVisible = !!entry?.isIntersecting,
+    [docs, isAbnormalResult] = useRelatedDocuments({
+      expanded,
+      isVisible,
+      item,
+    });
 
   return (
     <>
@@ -148,3 +166,5 @@ export function DiagnosticReportCard({
     </>
   );
 }
+
+export const DiagnosticReportCard = memo(DiagnosticReportCardUnmemo);
