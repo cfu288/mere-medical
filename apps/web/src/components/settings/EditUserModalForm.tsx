@@ -41,9 +41,9 @@ export function parseDefaultValues(defaultValues?: NewUserFormFields) {
 function getFileFromFileList(fileOrFileList: FileList | File | undefined) {
   let pp: File | null;
   try {
-    pp = (fileOrFileList as unknown as FileList)?.item(0);
+    pp = ((fileOrFileList as unknown) as FileList)?.item(0);
   } catch (e) {
-    pp = fileOrFileList as unknown as File;
+    pp = (fileOrFileList as unknown) as File;
   }
   return pp;
 }
@@ -61,9 +61,9 @@ type ProfilePhotoMetadata = { data: string; content_type: string };
 
 function tryCreateUrl(pp: ProfilePhotoMetadata | Blob): string {
   try {
-    return URL.createObjectURL(pp as unknown as Blob);
+    return URL.createObjectURL((pp as unknown) as Blob);
   } catch {
-    return (pp as unknown as ProfilePhotoMetadata)?.data;
+    return ((pp as unknown) as ProfilePhotoMetadata)?.data;
   }
 }
 
@@ -119,7 +119,7 @@ export function EditUserModalForm({
                 },
               });
             } else {
-              const ppMeta = pp as unknown as ProfilePhotoMetadata;
+              const ppMeta = (pp as unknown) as ProfilePhotoMetadata;
               if (ppMeta) {
                 rawUser.update({
                   $set: {

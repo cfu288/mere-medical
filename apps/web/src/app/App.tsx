@@ -8,21 +8,24 @@ import { TabWrapper } from '../components/TabWrapper';
 import { RxDbProvider } from '../components/providers/RxDbProvider';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { UserPreferencesProvider } from '../components/providers/UserPreferencesProvider';
+import { StrictMode } from 'react';
 
 export default function App() {
   return (
-    <ErrorBoundary>
-      <NotificationProvider>
-        <RxDbProvider>
-          <UserProvider>
-            <UserPreferencesProvider>
-              <Router>
-                <TabWrapper />
-              </Router>
-            </UserPreferencesProvider>
-          </UserProvider>
-        </RxDbProvider>
-      </NotificationProvider>
-    </ErrorBoundary>
+    <StrictMode>
+      <ErrorBoundary>
+        <NotificationProvider>
+          <RxDbProvider>
+            <UserProvider>
+              <UserPreferencesProvider>
+                <Router>
+                  <TabWrapper />
+                </Router>
+              </UserPreferencesProvider>
+            </UserProvider>
+          </RxDbProvider>
+        </NotificationProvider>
+      </ErrorBoundary>
+    </StrictMode>
   );
 }

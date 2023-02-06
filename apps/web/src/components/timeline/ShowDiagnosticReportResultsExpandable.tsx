@@ -149,12 +149,12 @@ function Row({ item }: { item: RxDocument<ClinicalDocument<Observation>> }) {
         })
         .exec()
         .then((res) => {
-          const sorted = res.sort((a, b) =>
+          const sorted = (res.sort((a, b) =>
             new Date(a.get('metadata.date') || '') <
             new Date(b.get('metadata.date') || '')
               ? 1
               : -1
-          ) as unknown as RxDocument<ClinicalDocument<Observation>>[];
+          ) as unknown) as RxDocument<ClinicalDocument<Observation>>[];
           // console.log(sorted.map((i) => i.toJSON().metadata?.date));
           setRelatedLabs(sorted);
         });
@@ -317,10 +317,10 @@ function getInterpretationText(
 export function isOutOfRangeResult(
   item: RxDocument<ClinicalDocument<Observation>>
 ): boolean {
-  const low =
-    item.get('data_record.raw').resource?.referenceRange?.[0]?.low?.value;
-  const high =
-    item.get('data_record.raw').resource?.referenceRange?.[0]?.high?.value;
+  const low = item.get('data_record.raw').resource?.referenceRange?.[0]?.low
+    ?.value;
+  const high = item.get('data_record.raw').resource?.referenceRange?.[0]?.high
+    ?.value;
   const value = item.get('data_record.raw').resource?.valueQuantity?.value;
 
   if (!isNaN(low) && !isNaN(high) && !isNaN(value)) {

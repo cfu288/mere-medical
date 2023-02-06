@@ -84,16 +84,16 @@ function parseCCDASection(
   sections: HTMLCollectionOf<HTMLElement>,
   id: string[] | string
 ) {
-  const matchingSections = [...(sections as unknown as HTMLElement[])]?.filter(
-    (s) =>
-      Array.isArray(id)
-        ? id.includes(
-            s.getElementsByTagName('templateId')?.[0]?.getAttribute('root') ||
-              ''
-          )
-        : s.getElementsByTagName('templateId')?.[0]?.getAttribute('root') === id
+  const matchingSections = [
+    ...((sections as unknown) as HTMLElement[]),
+  ]?.filter((s) =>
+    Array.isArray(id)
+      ? id.includes(
+          s.getElementsByTagName('templateId')?.[0]?.getAttribute('root') || ''
+        )
+      : s.getElementsByTagName('templateId')?.[0]?.getAttribute('root') === id
   );
-  return [...(matchingSections as unknown as HTMLElement[])]
+  return [...((matchingSections as unknown) as HTMLElement[])]
     ?.map((x) => x.innerHTML)
     .flat()
     .join();

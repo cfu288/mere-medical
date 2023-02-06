@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { NavigateFunction, useNavigate } from 'react-router-dom';
 import { RxDatabase } from 'rxdb';
 import { AppPage } from '../components/AppPage';
@@ -40,55 +40,61 @@ function useEpicDynamicRegistrationLogin() {
     [error, setError] = useState(''),
     notifyDispatch = useNotificationDispatch(),
     userPreferences = useUserPreferences(),
-    navigate = useNavigate();
+    navigate = useNavigate(),
+    hasRun = useRef(false);
 
   useEffect(() => {
-    const searchRequest = new URLSearchParams(window.location.search),
-      code = searchRequest.get('code'),
-      epicUrl = localStorage.getItem(EpicLocalStorageKeys.EPIC_URL),
-      epicName = localStorage.getItem(EpicLocalStorageKeys.EPIC_NAME),
-      epicId = localStorage.getItem(EpicLocalStorageKeys.EPIC_ID);
+    if (!hasRun.current) {
+      //debugger;
+      const searchRequest = new URLSearchParams(window.location.search),
+        code = searchRequest.get('code'),
+        epicUrl = localStorage.getItem(EpicLocalStorageKeys.EPIC_URL),
+        epicName = localStorage.getItem(EpicLocalStorageKeys.EPIC_NAME),
+        epicId = localStorage.getItem(EpicLocalStorageKeys.EPIC_ID);
 
-    if (code && epicUrl && epicName && epicId && userPreferences && user) {
-      handleLogin({
-        code,
-        epicUrl,
-        epicId,
-        epicName,
-        db,
-        navigate,
-        user,
-        enableProxy: userPreferences?.use_proxy,
-      })
-        .then()
-        .catch((e) => {
-          if (e instanceof DynamicRegistrationError) {
-            notifyDispatch({
-              type: 'set_notification',
-              message: `${e.message}`,
-              variant: 'error',
-            });
-            redirectToConnectionsTab(navigate);
-          } else {
-            notifyDispatch({
-              type: 'set_notification',
-              message: `${(e as Error).message}`,
-              variant: 'error',
-            });
-            setError(`${(e as Error).message}`);
-          }
-        });
-    } else {
-      if (!(code && epicUrl && epicName && epicId)) {
-        setError('There was a problem trying to sign in');
+      if (code && epicUrl && epicName && epicId && userPreferences && user) {
+        debugger;
+        hasRun.current = true;
+        handleLogin({
+          code,
+          epicUrl,
+          epicId,
+          epicName,
+          db,
+          navigate,
+          user,
+          enableProxy: userPreferences?.use_proxy,
+        })
+          .then()
+          .catch((e) => {
+            if (e instanceof DynamicRegistrationError) {
+              notifyDispatch({
+                type: 'set_notification',
+                message: `${e.message}`,
+                variant: 'error',
+              });
+              redirectToConnectionsTab(navigate);
+            } else {
+              notifyDispatch({
+                type: 'set_notification',
+                message: `${(e as Error).message}`,
+                variant: 'error',
+              });
+              setError(`${(e as Error).message}`);
+            }
+          });
+      } else {
+        if (!(code && epicUrl && epicName && epicId)) {
+          setError('There was a problem trying to sign in');
+        }
+        // Otherwise, we're just pulling data
       }
-      // Otherwise, we're just pulling data
     }
   }, [
     db,
     db.connection_documents,
     notifyDispatch,
-    userPreferences,
+    userPreferences?.use_proxy,
     user,
     navigate,
   ]);

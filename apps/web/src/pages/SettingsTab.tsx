@@ -45,7 +45,7 @@ function fetchPatientRecords(
     })
     .exec()
     .then((list) => {
-      const lst = list as unknown as RxDocument<
+      const lst = (list as unknown) as RxDocument<
         ClinicalDocument<BundleEntry<Patient>>
       >[];
       return lst;
@@ -212,15 +212,15 @@ function getFileFromFileList(
 ): File | undefined {
   let pp: File | null;
   try {
-    if ((fileOrFileList as unknown as FileList).length === 0) {
+    if (((fileOrFileList as unknown) as FileList).length === 0) {
       return undefined;
     }
-    pp = (fileOrFileList as unknown as FileList)?.item(0);
+    pp = ((fileOrFileList as unknown) as FileList)?.item(0);
     if (pp == null) {
       return undefined;
     }
   } catch (e) {
-    pp = fileOrFileList as unknown as File;
+    pp = (fileOrFileList as unknown) as File;
   }
   return pp;
 }
@@ -267,7 +267,7 @@ const handleImport = (
               () => {
                 db.importJSON(data)
                   .then((i) => {
-                    const res = i as unknown as {
+                    const res = (i as unknown) as {
                       error: Record<string, RxDocument>;
                       success: Record<string, RxDocument>;
                     }[];

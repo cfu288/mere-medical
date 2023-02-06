@@ -15,11 +15,9 @@ export function ShowObservationResultsExpandable({
 
   const list = useMemo(
     () =>
-      (
-        item as MergeClinicalDocument<
-          BundleEntry<DiagnosticReport | Observation>
-        >
-      )?.data_items?.sort((a, b) => {
+      (item as MergeClinicalDocument<
+        BundleEntry<DiagnosticReport | Observation>
+      >)?.data_items?.sort((a, b) => {
         if (!a?.fullUrl?.[0]) return 0;
         return a?.fullUrl?.[0]?.localeCompare(b?.fullUrl?.[0] || '') || 0;
       }),

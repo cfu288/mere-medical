@@ -8,7 +8,7 @@ export function useConnectionDoc(id: string) {
     [conn, setConn] = useState<RxDocument<ConnectionDocument>>(),
     getList = useCallback(() => {
       getConnectionCards(id, db).then((list) => {
-        setConn(list as unknown as RxDocument<ConnectionDocument>);
+        setConn((list as unknown) as RxDocument<ConnectionDocument>);
       });
     }, [db, id]);
 
@@ -30,5 +30,5 @@ async function getConnectionCards(
       },
     })
     .exec()
-    .then((list) => list as unknown as RxDocument<ConnectionDocument>);
+    .then((list) => (list as unknown) as RxDocument<ConnectionDocument>);
 }

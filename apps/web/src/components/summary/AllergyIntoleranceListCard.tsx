@@ -13,9 +13,9 @@ export function AllergyIntoleranceListCard({
 }) {
   if (items.length === 0) return null;
   return (
-    <Disclosure defaultOpen={true}>
+    <Disclosure defaultOpen={true} key={items.map((i) => i.id).join('.')}>
       {({ open }) => (
-        <>
+        <Fragment key={`s=${items.map((i) => i.id).join('.')}`}>
           <Disclosure.Button className="w-full font-bold">
             <div className="flex w-full items-center justify-between py-6 text-xl font-extrabold">
               Allergies
@@ -36,15 +36,16 @@ export function AllergyIntoleranceListCard({
                         item.data_record.raw.resource?.reaction?.length &&
                         ' - '}
                       {item.data_record.raw.resource?.reaction?.map((rxn) => (
-                        <Fragment>
-                          {rxn.manifestation.map(
-                            (man, i) =>
-                              `${man.text}${
+                        <Fragment key={rxn.id}>
+                          {rxn.manifestation.map((man, i) => (
+                            <Fragment key={man.id}>
+                              {`${man.text}${
                                 i < (rxn.manifestation?.length - 1 || 0)
                                   ? ', '
                                   : ''
-                              }`
-                          )}
+                              }`}
+                            </Fragment>
+                          ))}
                         </Fragment>
                       ))}
                     </p>
@@ -58,7 +59,7 @@ export function AllergyIntoleranceListCard({
               </div>
             </TimelineCardBase>
           </Disclosure.Panel>
-        </>
+        </Fragment>
       )}
     </Disclosure>
   );

@@ -56,11 +56,11 @@ function useRelatedDocuments({
               : -1
           );
           setDocs(
-            sorted as unknown as RxDocument<ClinicalDocument<Observation>>[]
+            (sorted as unknown) as RxDocument<ClinicalDocument<Observation>>[]
           );
-          const abnormalLabs = (
-            sorted as unknown as RxDocument<ClinicalDocument<Observation>>[]
-          ).filter((i) => isOutOfRangeResult(i));
+          const abnormalLabs = ((sorted as unknown) as RxDocument<
+            ClinicalDocument<Observation>
+          >[]).filter((i) => isOutOfRangeResult(i));
           if (abnormalLabs.length > 0) {
             setIsAbnormalResult(true);
           }

@@ -37,9 +37,6 @@ export function ImmunizationListCard({
   items: ClinicalDocument<BundleEntry<Immunization>>[];
 }) {
   if (items.length === 0) return null;
-  // const sortItems = items.sort((a, b) => {
-  //   return getVaccineCode(a).localeCompare(getVaccineCode(b));
-  // });
   const sortItems = groupBy<
     ClinicalDocument<BundleEntry<Immunization>>,
     string
@@ -68,7 +65,7 @@ export function ImmunizationListCard({
                     </p>
                     <ul className="truncate pl-2 text-sm font-medium text-gray-500">
                       {item.map((x) => (
-                        <li>
+                        <li key={x.id}>
                           {`• ${
                             x.metadata?.date
                               ? format(parseISO(x.metadata.date), 'MM/dd/yyyy')

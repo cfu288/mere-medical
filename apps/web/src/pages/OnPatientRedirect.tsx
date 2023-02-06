@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
@@ -22,45 +22,49 @@ const OnPatientRedirect: React.FC = () => {
   const navigate = useNavigate(),
     user = useUser(),
     db = useRxDb(),
-    notifyDispatch = useNotificationDispatch();
+    notifyDispatch = useNotificationDispatch(),
+    hasRun = useRef(false);
 
   useEffect(() => {
-    const searchRequest = new URLSearchParams(window.location.search),
-      accessToken = searchRequest.get('accessToken'),
-      refreshToken = searchRequest.get('refreshToken'),
-      expiresIn = searchRequest.get('expiresIn');
+    if (!hasRun.current) {
+      hasRun.current = true;
+      const searchRequest = new URLSearchParams(window.location.search),
+        accessToken = searchRequest.get('accessToken'),
+        refreshToken = searchRequest.get('refreshToken'),
+        expiresIn = searchRequest.get('expiresIn');
 
-    if (accessToken && refreshToken && expiresIn && user.id) {
-      const nowInSeconds = Math.floor(Date.now() / 1000);
-      const dbentry: Omit<CreateConnectionDocument, 'patient' | 'scope'> = {
-        id: uuidv4(),
-        user_id: user.id,
-        source: 'onpatient',
-        location: 'https://onpatient.com',
-        name: 'OnPatient',
-        access_token: accessToken,
-        refresh_token: refreshToken,
-        expires_in: nowInSeconds + parseInt(expiresIn),
-      };
-      db.connection_documents
-        .insert(dbentry)
-        .then(() => {
-          navigate(Routes.AddConnection);
-        })
-        .catch((e: unknown) => {
-          notifyDispatch({
-            type: 'set_notification',
-            message: `Error adding connection: ${(e as Error).message}`,
-            variant: 'error',
+      if (accessToken && refreshToken && expiresIn && user.id) {
+        const nowInSeconds = Math.floor(Date.now() / 1000);
+        const dbentry: Omit<CreateConnectionDocument, 'patient' | 'scope'> = {
+          id: uuidv4(),
+          user_id: user.id,
+          source: 'onpatient',
+          location: 'https://onpatient.com',
+          name: 'OnPatient',
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          expires_in: nowInSeconds + parseInt(expiresIn),
+        };
+        db.connection_documents
+          .insert(dbentry)
+          .then(() => {
+            navigate(Routes.AddConnection);
+          })
+          .catch((e: unknown) => {
+            notifyDispatch({
+              type: 'set_notification',
+              message: `Error adding connection: ${(e as Error).message}`,
+              variant: 'error',
+            });
+            navigate(Routes.AddConnection);
           });
-          navigate(Routes.AddConnection);
+      } else {
+        notifyDispatch({
+          type: 'set_notification',
+          message: `Error completing authentication: no access token provided`,
+          variant: 'error',
         });
-    } else {
-      notifyDispatch({
-        type: 'set_notification',
-        message: `Error completing authentication: no access token provided`,
-        variant: 'error',
-      });
+      }
     }
   }, [db.connection_documents, navigate, notifyDispatch, user.id]);
 

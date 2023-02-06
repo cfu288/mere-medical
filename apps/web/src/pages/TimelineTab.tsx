@@ -50,7 +50,7 @@ function fetchRecords(
     })
     .exec()
     .then((list) => {
-      const lst = list as unknown as RxDocument<
+      const lst = (list as unknown) as RxDocument<
         ClinicalDocument<BundleEntry<FhirResource>>
       >[];
 
@@ -102,8 +102,9 @@ function useRecordQuery(
     user = useUser(),
     [queryStatus, setQueryStatus] = useState(QueryStatus.IDLE),
     [initialized, setInitialized] = useState(false),
-    [list, setList] =
-      useState<Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>>(),
+    [list, setList] = useState<
+      Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>
+    >(),
     debounceExecQuery = useDebounceCallback((query) => {
       fetchRecords(db, user.id, query)
         .then((groupedRecords) => {

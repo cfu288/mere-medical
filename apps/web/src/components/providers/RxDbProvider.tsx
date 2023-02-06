@@ -97,7 +97,7 @@ const handleImport = (
         db.addCollections<DatabaseCollections>(databaseCollections).then(() => {
           db.importJSON(data)
             .then((i) => {
-              const res = i as unknown as {
+              const res = (i as unknown) as {
                 error: Record<string, RxDocument>;
                 success: Record<string, RxDocument>;
               }[];

@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useRef, useContext } from 'react';
 import { PropsWithChildren, useEffect, useState } from 'react';
 import { RxDatabase, RxDocument } from 'rxdb';
 import { Subscription } from 'rxjs';
@@ -32,7 +32,7 @@ function fetchUsers(
           ...defaultUser,
           ...item?.toMutableJSON(),
         } as UserDocument,
-        rawUser: item as unknown as RxDocument<UserDocument> | null,
+        rawUser: (item as unknown) as RxDocument<UserDocument> | null,
       });
     });
 }
@@ -70,20 +70,22 @@ const RawUserContext = React.createContext<RxDocument<UserDocument> | null>(
 export function UserProvider(props: UserProviderProps) {
   const db = useRxDb(),
     [user, setUser] = useState<UserDocument | undefined>(undefined),
-    [rawUser, setRawUser] = useState<RxDocument<UserDocument> | null>(null);
+    [rawUser, setRawUser] = useState<RxDocument<UserDocument> | null>(null),
+    hasRun = useRef(false);
 
   useEffect(() => {
     let sub: Subscription | undefined;
-
-    createUserIfNone(db).then(() => {
-      sub = fetchUsers(db, (item) => {
-        if (item) {
-          setUser(item.user);
-          setRawUser(item.rawUser);
-        }
+    if (!hasRun.current) {
+      hasRun.current = true;
+      createUserIfNone(db).then(() => {
+        sub = fetchUsers(db, (item) => {
+          if (item) {
+            setUser(item.user);
+            setRawUser(item.rawUser);
+          }
+        });
       });
-    });
-
+    }
     return () => {
       sub?.unsubscribe();
     };

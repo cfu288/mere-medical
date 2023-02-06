@@ -27,7 +27,7 @@ function useConnectionCards() {
         },
       })
       .$.subscribe((list) =>
-        setList(list as unknown as RxDocument<ConnectionDocument>[])
+        setList((list as unknown) as RxDocument<ConnectionDocument>[])
       );
     return () => sub.unsubscribe();
   }, [db.connection_documents, user.id]);
