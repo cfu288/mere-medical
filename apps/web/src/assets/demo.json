@@ -6791,10 +6791,6 @@
                   {
                     "display": "Component: BASO (ABSOLUTE)(LABCORP)",
                     "reference": "https://fhir.epic.com/interconnect-fhir-oauth/FHIR/DSTU2/Observation/T5MzUBOkQfDhPSYQjl4aTIn2SQgJ60tnoc2hDGN-Z1n8B"
-                  },
-                  {
-                    "display": "Component: HEMATOLOGY COMMENTS:(LABCORP)",
-                    "reference": "https://fhir.epic.com/interconnect-fhir-oauth/FHIR/DSTU2/Observation/T5MzUBOkQfDhPSYQjl4aTIq5W9JWSabe-t.c22IK53zkB"
                   }
                 ]
               },
@@ -11589,72 +11585,6 @@
           },
           "_meta": {
             "lwt": 1675215250907.08
-          },
-          "_deleted": false
-        },
-        {
-          "id": "4de29e27-0784-4278-9fa2-2cf0bbef5d53",
-          "user_id": "91a8d8cb-6480-4db4-a628-18a5e44536cd",
-          "connection_record_id": "a25cd905-d981-496b-ab08-ff1fd78b3ca8",
-          "data_record": {
-            "raw": {
-              "link": [
-                {
-                  "relation": "self",
-                  "url": "https://fhir.epic.com/interconnect-fhir-oauth/FHIR/DSTU2/Observation/T5MzUBOkQfDhPSYQjl4aTIq5W9JWSabe-t.c22IK53zkB"
-                }
-              ],
-              "fullUrl": "https://fhir.epic.com/interconnect-fhir-oauth/FHIR/DSTU2/Observation/T5MzUBOkQfDhPSYQjl4aTIq5W9JWSabe-t.c22IK53zkB",
-              "resource": {
-                "resourceType": "Observation",
-                "id": "T5MzUBOkQfDhPSYQjl4aTIq5W9JWSabe-t.c22IK53zkB",
-                "status": "final",
-                "category": {
-                  "coding": [
-                    {
-                      "system": "http://hl7.org/fhir/observation-category",
-                      "code": "laboratory",
-                      "display": "Laboratory"
-                    }
-                  ],
-                  "text": "Laboratory"
-                },
-                "code": {
-                  "coding": [
-                    {
-                      "system": "http://loinc.org",
-                      "code": "18314-5",
-                      "display": "Morphology [Interpretation] in Blood Narrative"
-                    }
-                  ],
-                  "text": "HEMATOLOGY COMMENTS:(LABCORP)"
-                },
-                "subject": {
-                  "display": "Smith, John",
-                  "reference": "https://fhir.epic.com/interconnect-fhir-oauth/FHIR/DSTU2/Patient/0affb8da-afbf-417d-8b48-a71528ff7d4e"
-                },
-                "effectiveDateTime": "2023-01-01T05:38:12.432Z",
-                "issued": "2010-02-13T03:46:07.846Z",
-                "valueString": "Note:",
-                "comments": "Manual differential was performed."
-              },
-              "search": {
-                "mode": "match"
-              }
-            },
-            "format": "FHIR.DSTU2",
-            "content_type": "application/json",
-            "resource_type": "observation",
-            "version_history": []
-          },
-          "metadata": {
-            "id": "https://fhir.epic.com/interconnect-fhir-oauth/FHIR/DSTU2/Observation/T5MzUBOkQfDhPSYQjl4aTIq5W9JWSabe-t.c22IK53zkB",
-            "date": "2023-01-01T05:38:12.432Z",
-            "display_name": "HEMATOLOGY COMMENTS:",
-            "loinc_coding": ["18314-5"]
-          },
-          "_meta": {
-            "lwt": 1675215250912.04
           },
           "_deleted": false
         },
