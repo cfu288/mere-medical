@@ -3,8 +3,8 @@ import { BundleEntry, Observation } from 'fhir/r2';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { ShowObservationResultsExpandable } from './ShowObservationResultsExpandable';
 import { TimelineCardTitle } from './TimelineCardTitle';
-
-export function ObservationCard({
+import { memo } from 'react';
+export const ObservationCard = memo(function ObservationCard({
   item,
 }: {
   item: ClinicalDocument<BundleEntry<Observation>>;
@@ -24,4 +24,4 @@ export function ObservationCard({
       </div>
     </div>
   );
-}
+});

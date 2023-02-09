@@ -1,6 +1,6 @@
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, DocumentReference } from 'fhir/r2';
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { ShowDocumentResultsExpandable } from './ShowDocumentReferenceResultsExpandable';
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
@@ -8,7 +8,7 @@ import { SkeletonLoadingText } from './SkeletonLoadingText';
 import { TimelineCardBase } from './TimelineCardBase';
 import { TimelineCardTitle } from './TimelineCardTitle';
 
-export function DocumentReferenceCard({
+export const DocumentReferenceCard = memo(function DocumentReferenceCard({
   item,
 }: {
   item: ClinicalDocument<BundleEntry<DocumentReference>>;
@@ -70,4 +70,4 @@ export function DocumentReferenceCard({
       />
     </>
   );
-}
+});

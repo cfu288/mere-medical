@@ -15,7 +15,7 @@ About a year ago, I was a second-year medical student preparing to start my thir
 
 I quickly realized that getting all my old vaccine records was more difficult than I originally expected. Most of my previous vaccination records were with my old primary care physician (PCP) in my hometown, not with my current one. Luckily, my old PCP offered a patient portal I could use to see my old records. After a quick phone call to my old PCP's office to set up my online account, I could log in and see my old vaccine records. However, my current PCP used a completely different electronic medical record (EMR) system and had a different patient portal. So if I wanted to see my most recent blood work and my historical vaccine data at the same time, I needed to log in to two places at once.
 
-A few months later, I moved to a new apartment closer to my new rotation site and had to again find another new PCP closer to me. Luckily, this new PCP I chose used the same EMR and patient portal system that my original PCP did. Unluckily, I had to go through the patient portal creation process all over again. Despite using the same EMR, this new doctor was part of a different health system as my original PCP, which meant a new account still. Ultimately I had two different logins, and I had trouble manually linking the accounts after the fact.
+A few months later, I moved to a new apartment closer to my new rotation site and had to again find another new PCP closer to me. Luckily, this new PCP I chose used the same EMR and patient portal system that my original PCP did. Unluckily, I had to go through the patient portal creation process all over again. Despite using the same EMR, I was forced to create a new login for this portal as this new doctor was part of a different health system from my original PCP. I now had a total of three different logins to see my health data.
 
 Throughout this process, I kept thinking: why was getting all my medical records in one place so tricky? There had to be an easier way.
 
@@ -28,7 +28,7 @@ In my search for an app to do this for me, I found one or two decent-looking opt
 At this point, I decided it was time to build something myself to solve my problems. I had a few goals in mind for a solution that other solutions didn't solve or seem to prioritize:
 
 - Cross-platform: I should be able to access my records on any device
-- Offline-first: I should be able to access my medical records anytime, even without an internet connection. So I wanted to ensure I could access my records whenever needed, especially at doctor's offices with bad wifi-connections or even when riding public transit.
+- Offline-first: I should be able to access my medical records anytime, even without an internet connection. I wanted to ensure I could access my records whenever needed, especially at doctor's offices with bad wifi-connections or even when riding public transit.
 - Privacy focused: I shouldn't have to trust a third party to manage my records. Ideally, I could download a program or host the software on my machines.
 - Respect user preferences: Features should always be opt-in, and the user should always control their data.
 

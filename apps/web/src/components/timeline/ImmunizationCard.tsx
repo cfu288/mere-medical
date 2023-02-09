@@ -5,8 +5,8 @@ import { useConnectionDoc } from '../hooks/useConnectionDoc';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
 import { TimelineCardBase } from './TimelineCardBase';
 import { TimelineCardTitle } from './TimelineCardTitle';
-
-export function ImmunizationCard({
+import { memo } from 'react';
+export const ImmunizationCard = memo(function ImmunizationCard({
   item,
 }: {
   item: ClinicalDocument<BundleEntry<Immunization>>;
@@ -34,4 +34,4 @@ export function ImmunizationCard({
       </div>
     </TimelineCardBase>
   );
-}
+});

@@ -5,8 +5,8 @@ import { useConnectionDoc } from '../hooks/useConnectionDoc';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
 import { TimelineCardBase } from './TimelineCardBase';
 import { TimelineCardTitle } from './TimelineCardTitle';
-
-export function MedicationCard({
+import { memo } from 'react';
+export const MedicationCard = memo(function MedicationCard({
   item,
 }: {
   item: ClinicalDocument<BundleEntry<MedicationStatement>>;
@@ -34,4 +34,4 @@ export function MedicationCard({
       </div>
     </TimelineCardBase>
   );
-}
+});
