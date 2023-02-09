@@ -38,6 +38,11 @@ function fetchRecords(
     'metadata.date': { $nin: [null, undefined, ''] },
   };
   if (query) {
+    selector['data_record.resource_type']['$nin'] = [
+      'patient',
+      'careplan',
+      'allergyintolerance',
+    ];
     selector = {
       ...selector,
       'metadata.display_name': { $regex: `.*${query}.*`, $options: 'si' },
@@ -50,7 +55,7 @@ function fetchRecords(
     })
     .exec()
     .then((list) => {
-      const lst = (list as unknown) as RxDocument<
+      const lst = list as unknown as RxDocument<
         ClinicalDocument<BundleEntry<FhirResource>>
       >[];
 
@@ -102,9 +107,8 @@ function useRecordQuery(
     user = useUser(),
     [queryStatus, setQueryStatus] = useState(QueryStatus.IDLE),
     [initialized, setInitialized] = useState(false),
-    [list, setList] = useState<
-      Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>
-    >(),
+    [list, setList] =
+      useState<Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>>(),
     debounceExecQuery = useDebounceCallback((query) => {
       fetchRecords(db, user.id, query)
         .then((groupedRecords) => {

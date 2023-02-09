@@ -18,8 +18,10 @@ export function ShowDiagnosticReportResultsExpandable({
   expanded,
   setExpanded,
 }: {
-  item: ClinicalDocument<BundleEntry<DiagnosticReport>>;
-  docs: RxDocument<ClinicalDocument<Observation>>[];
+  item:
+    | ClinicalDocument<BundleEntry<DiagnosticReport>>
+    | ClinicalDocument<BundleEntry<Observation>>;
+  docs: ClinicalDocument<BundleEntry<Observation>>[];
   expanded: boolean;
   setExpanded: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
@@ -52,13 +54,13 @@ export function ShowDiagnosticReportResultsExpandable({
   );
 }
 
-function Row({ item }: { item: RxDocument<ClinicalDocument<Observation>> }) {
+function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
   const db = useRxDb(),
     user = useUser(),
     loinc = item.metadata?.loinc_coding,
     chartComponent = useRef<IChart>(),
     [relatedLabs, setRelatedLabs] = useState<
-      RxDocument<ClinicalDocument<Observation>>[]
+      RxDocument<ClinicalDocument<BundleEntry<Observation>>>[]
     >([]);
   const chartMin = Math.min(
     ...(relatedLabs.map((rl) =>
@@ -68,7 +70,7 @@ function Row({ item }: { item: RxDocument<ClinicalDocument<Observation>> }) {
         : getReferenceRangeLow(rl)?.value
     ) as number[])
   );
-  const displayName = `${item.get('metadata.display_name')}`;
+  const displayName = `${item.metadata?.display_name}`;
   const valueUnit = `(${getValueUnit(item)})`;
   const data = useMemo(
     () => [
@@ -149,12 +151,14 @@ function Row({ item }: { item: RxDocument<ClinicalDocument<Observation>> }) {
         })
         .exec()
         .then((res) => {
-          const sorted = (res.sort((a, b) =>
+          const sorted = res.sort((a, b) =>
             new Date(a.get('metadata.date') || '') <
             new Date(b.get('metadata.date') || '')
               ? 1
               : -1
-          ) as unknown) as RxDocument<ClinicalDocument<Observation>>[];
+          ) as unknown as RxDocument<
+            ClinicalDocument<BundleEntry<Observation>>
+          >[];
           // console.log(sorted.map((i) => i.toJSON().metadata?.date));
           setRelatedLabs(sorted);
         });
@@ -164,18 +168,16 @@ function Row({ item }: { item: RxDocument<ClinicalDocument<Observation>> }) {
   return (
     <Fragment
       key={`${
-        (item.get('data_record.raw')?.resource as Observation)?.id ||
-        item.metadata?.id
+        (item.data_record.raw?.resource as Observation)?.id || item.metadata?.id
       }`}
     >
-      {!(item.get('data_record.raw')?.resource as Observation)
-        ?.dataAbsentReason ? (
+      {!(item.data_record.raw?.resource as Observation)?.dataAbsentReason ? (
         <Disclosure>
           {({ open }) => (
             <>
               <div className="mx-4 grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-100 py-2">
                 <div className="col-span-3 self-center text-xs font-semibold text-gray-600">
-                  <p>{item.get('metadata.display_name')}</p>
+                  <p>{item.metadata?.display_name}</p>
                   <p className="font-light">
                     {getReferenceRangeString(item)
                       ? `Range: ${getReferenceRangeString(item)}`
@@ -274,40 +276,39 @@ function Row({ item }: { item: RxDocument<ClinicalDocument<Observation>> }) {
 }
 
 function getReferenceRangeString(
-  item: RxDocument<ClinicalDocument<Observation>>
+  item: ClinicalDocument<BundleEntry<Observation>>
 ) {
-  return item.get('data_record.raw').resource?.referenceRange?.[0]?.text;
+  return item.data_record.raw.resource?.referenceRange?.[0]?.text;
 }
 
-function getReferenceRangeLow(item: RxDocument<ClinicalDocument<Observation>>) {
-  return (item.get('data_record.raw') as BundleEntry<Observation>).resource
-    ?.referenceRange?.[0]?.low;
+function getReferenceRangeLow(
+  item: ClinicalDocument<BundleEntry<Observation>>
+) {
+  return item.data_record.raw.resource?.referenceRange?.[0]?.low;
 }
 
 function getReferenceRangeHigh(
-  item: RxDocument<ClinicalDocument<Observation>>
+  item: ClinicalDocument<BundleEntry<Observation>>
 ) {
-  return (item.get('data_record.raw') as BundleEntry<Observation>).resource
-    ?.referenceRange?.[0]?.high;
+  return item.data_record.raw.resource?.referenceRange?.[0]?.high;
 }
 
-function getValueUnit(item: RxDocument<ClinicalDocument<Observation>>) {
-  return item.get('data_record.raw').resource?.valueQuantity?.unit;
+function getValueUnit(item: ClinicalDocument<BundleEntry<Observation>>) {
+  return item.data_record.raw.resource?.valueQuantity?.unit;
 }
 
-function getValueQuantity(item: RxDocument<ClinicalDocument<Observation>>) {
-  return (item.get('data_record.raw') as BundleEntry<Observation>).resource
-    ?.valueQuantity?.value;
+function getValueQuantity(item: ClinicalDocument<BundleEntry<Observation>>) {
+  return item.data_record.raw.resource?.valueQuantity?.value;
 }
 
-function getValueString(item: RxDocument<ClinicalDocument<Observation>>) {
-  return item.get('data_record.raw').resource?.valueString;
+function getValueString(item: ClinicalDocument<BundleEntry<Observation>>) {
+  return item.data_record.raw.resource?.valueString;
 }
 
 function getInterpretationText(
-  item: RxDocument<ClinicalDocument<Observation>>
+  item: ClinicalDocument<BundleEntry<Observation>>
 ) {
-  return item.get('data_record.raw').resource?.interpretation?.text;
+  return item.data_record.raw.resource?.interpretation?.text;
 }
 
 /**
@@ -315,15 +316,13 @@ function getInterpretationText(
  * @param item
  */
 export function isOutOfRangeResult(
-  item: RxDocument<ClinicalDocument<Observation>>
+  item: ClinicalDocument<BundleEntry<Observation>>
 ): boolean {
-  const low = item.get('data_record.raw').resource?.referenceRange?.[0]?.low
-    ?.value;
-  const high = item.get('data_record.raw').resource?.referenceRange?.[0]?.high
-    ?.value;
-  const value = item.get('data_record.raw').resource?.valueQuantity?.value;
+  const low = item.data_record.raw.resource?.referenceRange?.[0]?.low?.value;
+  const high = item.data_record.raw.resource?.referenceRange?.[0]?.high?.value;
+  const value = item.data_record.raw.resource?.valueQuantity?.value;
 
-  if (!isNaN(low) && !isNaN(high) && !isNaN(value)) {
+  if (low && high && value && !isNaN(low) && !isNaN(high) && !isNaN(value)) {
     return value < low || value > high;
   }
   return false;

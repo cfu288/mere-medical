@@ -23,10 +23,12 @@ function useRelatedDocuments({
   expanded: boolean;
   isVisible: boolean;
   item: ClinicalDocument<BundleEntry<DiagnosticReport>>;
-}): [RxDocument<ClinicalDocument<Observation>>[], boolean] {
+}): [RxDocument<ClinicalDocument<BundleEntry<Observation>>>[], boolean] {
   const db = useRxDb(),
     user = useUser(),
-    [docs, setDocs] = useState<RxDocument<ClinicalDocument<Observation>>[]>([]),
+    [docs, setDocs] = useState<
+      RxDocument<ClinicalDocument<BundleEntry<Observation>>>[]
+    >([]),
     listToQuery = useMemo(() => {
       return [
         ...new Set(
@@ -56,11 +58,15 @@ function useRelatedDocuments({
               : -1
           );
           setDocs(
-            (sorted as unknown) as RxDocument<ClinicalDocument<Observation>>[]
+            sorted as unknown as RxDocument<
+              ClinicalDocument<BundleEntry<Observation>>
+            >[]
           );
-          const abnormalLabs = ((sorted as unknown) as RxDocument<
-            ClinicalDocument<Observation>
-          >[]).filter((i) => isOutOfRangeResult(i));
+          const abnormalLabs = (
+            sorted as unknown as RxDocument<
+              ClinicalDocument<BundleEntry<Observation>>
+            >[]
+          ).filter((i) => isOutOfRangeResult(i));
           if (abnormalLabs.length > 0) {
             setIsAbnormalResult(true);
           }
