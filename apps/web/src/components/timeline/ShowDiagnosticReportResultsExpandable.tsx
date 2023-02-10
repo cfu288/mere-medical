@@ -151,12 +151,12 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
         })
         .exec()
         .then((res) => {
-          const sorted = res.sort((a, b) =>
+          const sorted = (res.sort((a, b) =>
             new Date(a.get('metadata.date') || '') <
             new Date(b.get('metadata.date') || '')
               ? 1
               : -1
-          ) as unknown as RxDocument<
+          ) as unknown) as RxDocument<
             ClinicalDocument<BundleEntry<Observation>>
           >[];
           // console.log(sorted.map((i) => i.toJSON().metadata?.date));

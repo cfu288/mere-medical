@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
 import { DatabaseCollections, useRxDb } from '../providers/RxDbProvider';
 import onpatientLogo from '../../img/onpatient_logo.jpeg';
@@ -156,15 +156,20 @@ export function ConnectionCard({
           });
           setSyncing(false);
         });
-    }, [baseUrl, db, item, notifyDispatch, userPreferences?.use_proxy]);
+    }, [baseUrl, db, item, notifyDispatch, userPreferences?.use_proxy]),
+    hasRun = useRef(false);
 
   useEffect(() => {
-    if (
-      !item.get('last_refreshed') ||
-      (item.get('last_refreshed') &&
-        differenceInDays(parseISO(item.get('last_refreshed')), new Date()) >= 1)
-    ) {
-      handleFetchData();
+    if (!hasRun.current) {
+      hasRun.current = true;
+      if (
+        !item.get('last_refreshed') ||
+        (item.get('last_refreshed') &&
+          differenceInDays(parseISO(item.get('last_refreshed')), new Date()) >=
+            1)
+      ) {
+        handleFetchData();
+      }
     }
   }, [baseUrl, db, handleFetchData, item]);
 
