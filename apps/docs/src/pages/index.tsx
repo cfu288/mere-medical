@@ -1,10 +1,13 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useState } from 'react';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Head from '@docusaurus/Head';
+import { Dialog } from '@headlessui/react';
+import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 
 const footerNavigation = {
   main: [
-    { name: 'About', href: 'https://meremedical.co/docs/' },
+    { name: 'About', href: '/docs' },
+    { name: 'Documentation', href: '/docs' },
     { name: 'Blog', href: '/blog' },
   ],
   social: [],
@@ -50,14 +53,15 @@ const features = [
 ];
 
 const navigation = [
-  { name: 'Product', href: '#' },
-  { name: 'Features', href: '#' },
-  { name: 'Marketplace', href: '#' },
-  { name: 'Company', href: '#' },
+  { name: 'About Mere', href: '/docs' },
+  { name: 'Documentation', href: '/docs' },
+  { name: 'Blog', href: '/blog' },
 ];
 
 export default function Home() {
   const { siteConfig } = useDocusaurusContext();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <>
       <Head>
@@ -78,6 +82,87 @@ export default function Home() {
           ></script>
         )}
       </Head>
+      <div className="absolute top-0 left-0 isolate z-50 w-full">
+        <div className="px-6 py-6 lg:px-8">
+          <nav
+            className="flex w-full items-center justify-between"
+            aria-label="Global"
+          >
+            <div className="flex lg:flex-1">
+              <a href="#" className="-m-1.5 p-1.5">
+                <img
+                  className="block h-10 lg:hidden"
+                  src="/img/logo.svg"
+                  alt=""
+                />
+              </a>
+            </div>
+            <div className="flex lg:hidden">
+              <button
+                type="button"
+                className="-m-2.5 inline-flex items-center justify-center rounded-md border-0 bg-gray-50 p-2.5 text-gray-700 hover:bg-gray-100"
+                onClick={() => setMobileMenuOpen(true)}
+              >
+                <span className="sr-only">Open main menu</span>
+                <Bars3Icon className="h-6 w-6" aria-hidden="true" />
+              </button>
+            </div>
+            <div className="hidden lg:flex lg:gap-x-12">
+              {navigation.map((item) => (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  className="text-sm leading-6 text-gray-700"
+                >
+                  {item.name}
+                </a>
+              ))}
+            </div>
+            {mobileMenuOpen && (
+              <div className="fixed inset-0 z-10 overflow-y-auto bg-white px-6 py-6 lg:hidden">
+                <div className="flex items-center justify-between">
+                  <a href="#" className="-m-1.5 p-1.5">
+                    <img
+                      className="h-10 w-auto"
+                      src="/img/logo.svg"
+                      alt="logo"
+                    />
+                  </a>
+                  <button
+                    type="button"
+                    className="-m-2.5 inline-flex items-center justify-center rounded-md border-0 bg-gray-50 p-2.5 text-gray-700 hover:bg-gray-100"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <span className="sr-only">Close menu</span>
+                    <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+                  </button>
+                </div>
+                <div className="mt-6 flow-root">
+                  <div className="-my-6 divide-y divide-gray-500/10">
+                    <div className="space-y-2 py-6">
+                      {navigation.map((item) => (
+                        <a
+                          key={item.name}
+                          href={item.href}
+                          className="-mx-3 block rounded-lg py-2 px-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-400/10"
+                        >
+                          {item.name}
+                        </a>
+                      ))}
+                    </div>
+                    <div className="py-6">
+                      <a
+                        href="#"
+                        className="-mx-3 block rounded-lg py-2.5 px-3 text-base font-semibold leading-6 text-gray-900 hover:bg-gray-400/10"
+                      ></a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </nav>
+        </div>
+      </div>
       <main className="relative overflow-x-hidden overflow-y-hidden bg-white">
         {/* Hero section */}
         <div className="pt-8 sm:pt-12 lg:relative lg:py-48">
@@ -86,9 +171,9 @@ export default function Home() {
             <div>
               <div>
                 <img
-                  className="h-11 w-auto"
+                  className="hidden h-11 w-auto lg:block"
                   src="/img/logo.svg"
-                  alt="Workflow"
+                  alt="logo"
                 />
               </div>
               <div className="mt-12">
@@ -115,7 +200,7 @@ export default function Home() {
                   </div>
                   <div className="mt-3 rounded-md shadow sm:mt-0 sm:ml-3">
                     <a
-                      href={`${siteConfig.url}/docs`}
+                      href={`/docs`}
                       className="text-primary-700 hover:text-primary-600 flex w-full items-center justify-center rounded-md border border-transparent bg-white px-8 py-3 text-base font-medium hover:bg-gray-50 md:py-4 md:px-10 md:text-lg"
                     >
                       Go to Docs
@@ -124,6 +209,7 @@ export default function Home() {
                 </div>
               </div>
             </div>
+
             {/* Right Hero */}
             <div className="lg:rounded-tr-0 lg:left-100 relative mt-24 flex h-80 w-auto overflow-hidden rounded-bl-[80px] rounded-tr-[80px] bg-[#F1F4F9] px-4 pt-6 sm:h-[32rem] lg:absolute lg:inset-y-0 lg:left-1/2 lg:right-0 lg:mt-0 lg:block lg:h-full lg:w-full lg:overflow-visible lg:px-0">
               <img
