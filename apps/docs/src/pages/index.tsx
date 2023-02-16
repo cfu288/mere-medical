@@ -68,11 +68,11 @@ export default function Home() {
       <Head>
         <meta
           name="description"
-          content="Manage all of your medical records in one place. Mere syncs your records across hospital systems for you. Self-hosted and offline-first"
+          content="Manage all of your medical records in one place. Mere is a personal health record that syncs your records across hospital systems for you. Open-source, self-hostable, and offline-first"
         />
         <meta
           property="og:description"
-          content="Manage all of your medical records in one place. Mere syncs your records across hospital systems for you. Self-hosted and offline-first"
+          content="Manage all of your medical records in one place. Mere is a personal health record that syncs your records across hospital systems for you. Open-source, self-hostable, and offline-first"
         />
         {process.env.NODE_ENV === 'production' && (
           <script
