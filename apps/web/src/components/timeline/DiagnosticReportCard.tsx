@@ -14,6 +14,7 @@ import { useRxDb } from '../providers/RxDbProvider';
 import { useUser } from '../providers/UserProvider';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
 import { TimelineCardTitle } from './TimelineCardTitle';
+import { TimelineCardCategoryTitle } from './TimelineCardCategoryTitle';
 
 function useRelatedDocuments({
   expanded,
@@ -58,13 +59,15 @@ function useRelatedDocuments({
               : -1
           );
           setDocs(
-            (sorted as unknown) as RxDocument<
+            sorted as unknown as RxDocument<
               ClinicalDocument<BundleEntry<Observation>>
             >[]
           );
-          const abnormalLabs = ((sorted as unknown) as RxDocument<
-            ClinicalDocument<BundleEntry<Observation>>
-          >[]).filter((i) => isOutOfRangeResult(i));
+          const abnormalLabs = (
+            sorted as unknown as RxDocument<
+              ClinicalDocument<BundleEntry<Observation>>
+            >[]
+          ).filter((i) => isOutOfRangeResult(i));
           if (abnormalLabs.length > 0) {
             setIsAbnormalResult(true);
           }
@@ -104,25 +107,30 @@ function DiagnosticReportCardUnmemo({
       <TimelineCardBase onClick={() => setExpanded((x) => !x)} tabIndex={0}>
         <div className={'min-w-0 flex-1'} ref={ref}>
           <div className="items-top flex justify-between">
-            <div className="pb-2 text-sm font-bold text-blue-600 md:text-base">
-              Labs
-              {isAbnormalResult && (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  className="ml-2 inline h-4 w-4 text-red-500"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
-                  />
-                </svg>
-              )}
-            </div>
+            <TimelineCardCategoryTitle
+              title={
+                <>
+                  Labs
+                  {isAbnormalResult && (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth="1.5"
+                      stroke="currentColor"
+                      className="ml-1 inline h-4 w-4 text-red-500 sm:ml-2 sm:h-4 sm:w-4"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                      />
+                    </svg>
+                  )}
+                </>
+              }
+              color="blue"
+            />
             <div className="relative py-2 pr-1">
               <div className="relative flex justify-center text-gray-400">
                 <svg

@@ -31,7 +31,7 @@ export function TimelineYearHeaderWrapper({
           format(parseISO(elements[index + 1][0]), 'yyyy') !==
             format(parseISO(dateKey), 'yyyy') && (
             <>
-              <div className="h-12" />
+              <div className="h-4 sm:h-12" />
               <TimelineYearHeader
                 key={`${dateKey}${index}`}
                 year={format(parseISO(elements[index + 1][0]), 'yyyy')}

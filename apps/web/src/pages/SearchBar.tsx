@@ -12,7 +12,7 @@ export function SearchBar({
   status: QueryStatus;
 }) {
   return (
-    <div className="mt-6 mb-1 w-full">
+    <div className="mt-4 mb-1 w-full sm:mt-6">
       <div className="relative flex items-center">
         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 ">
           <svg

@@ -7,6 +7,7 @@ import { useConnectionDoc } from '../hooks/useConnectionDoc';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
 import { TimelineCardBase } from './TimelineCardBase';
 import { TimelineCardTitle } from './TimelineCardTitle';
+import { TimelineCardCategoryTitle } from './TimelineCardCategoryTitle';
 
 export const DocumentReferenceCard = memo(function DocumentReferenceCard({
   item,
@@ -26,9 +27,7 @@ export const DocumentReferenceCard = memo(function DocumentReferenceCard({
       >
         <div className="min-w-0 flex-1">
           <div className="items-top flex justify-between">
-            <div className=" pb-2 text-sm font-bold text-teal-600 md:text-base">
-              Documents
-            </div>
+            <TimelineCardCategoryTitle title="Documents" color="teal" />
             <div className="relative py-2">
               <div className="relative flex justify-center">
                 <svg

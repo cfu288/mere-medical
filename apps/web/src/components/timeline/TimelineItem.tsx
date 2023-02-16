@@ -30,7 +30,7 @@ export function TimelineItem({
   return (
     <div
       id={format(parseISO(dateKey), 'MMM-dd-yyyy')}
-      className="flex scroll-mt-10 flex-row gap-x-4 px-0 pt-8 md:px-2"
+      className="flex scroll-mt-10 flex-row gap-x-4 px-0 pt-4 sm:pt-8 md:px-2"
       key={dateKey}
     >
       <div className="flex w-1/5 flex-row md:w-1/4">

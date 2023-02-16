@@ -13,7 +13,7 @@ function TimelineSkeletonUnmemoed() {
         {[...Array(2)].map((_, index) => (
           <Fragment key={index}>
             <SkeletonTimelineYearHeader />
-            <div className="flex scroll-mt-10 flex-row gap-x-4 px-0 pt-8 md:px-2">
+            <div className="flex scroll-mt-10 flex-row gap-x-4 px-0 pt-4 sm:pt-8 md:px-2">
               {/* Left sided date */}
               <div className="mt-2 flex h-6 grow animate-pulse items-center justify-end gap-x-4 pt-5">
                 <div className="h-6 w-12 rounded-md bg-gray-100"></div>
@@ -25,7 +25,7 @@ function TimelineSkeletonUnmemoed() {
                 <SkeletonTimelineCard />
               </div>
             </div>
-            <div className="flex scroll-mt-10 flex-row gap-x-4 px-0 pt-8 md:px-2">
+            <div className="flex scroll-mt-10 flex-row gap-x-4 px-0 pt-4 sm:pt-8 md:px-2">
               {/* Left sided date */}
               <div className="mt-2 flex h-6 grow animate-pulse flex-row items-center justify-end pt-5">
                 <div className="h-6 w-12 rounded-md bg-gray-100"></div>

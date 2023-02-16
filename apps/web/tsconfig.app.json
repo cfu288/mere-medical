@@ -36,7 +36,8 @@
     "./src/pages/SkeletonTimelineYearHeader.tsx",
     "./src/pages/SkeletonJumpToPanel.tsx",
     "./src/pages/useScrollToHash.tsx",
-    "./src/components/timeline/TimelineCardTitle.tsx"
+    "./src/components/timeline/TimelineCardTitle.tsx",
+    "./src/components/timeline/TimelineCardCategoryTitle.tsx"
   ],
   "exclude": [
     "jest.config.ts",
