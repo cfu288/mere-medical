@@ -9,6 +9,7 @@ const footerNavigation = {
     { name: 'About', href: '/docs' },
     { name: 'Documentation', href: '/docs' },
     { name: 'Blog', href: '/blog' },
+    { name: 'Contact', href: 'mailto:cfu288@meremedical.co' },
   ],
   social: [],
 };
