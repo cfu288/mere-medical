@@ -129,7 +129,7 @@ function DiagnosticReportCardUnmemo({
                   )}
                 </>
               }
-              color="blue"
+              color="text-blue-600"
             />
             <div className="relative py-2 pr-1">
               <div className="relative flex justify-center text-gray-400">

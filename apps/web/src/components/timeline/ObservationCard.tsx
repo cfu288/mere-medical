@@ -7,6 +7,7 @@ import { useConnectionDoc } from '../hooks/useConnectionDoc';
 import { TimelineCardBase } from './TimelineCardBase';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
 import { ShowDiagnosticReportResultsExpandable } from './ShowDiagnosticReportResultsExpandable';
+import { TimelineCardCategoryTitle } from './TimelineCardCategoryTitle';
 
 export const ObservationCard = memo(function ObservationCard({
   item,
@@ -26,9 +27,7 @@ export const ObservationCard = memo(function ObservationCard({
       >
         <div className="min-w-0 flex-1">
           <div className="items-top flex justify-between">
-            <div className=" pb-2 text-sm font-bold text-sky-600 md:text-base">
-              Observation
-            </div>
+            <TimelineCardCategoryTitle title="Observation" color="text-sky-600" />
             <div className="relative py-2">
               <div className="relative flex justify-center">
                 <svg

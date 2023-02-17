@@ -27,7 +27,7 @@ export const DocumentReferenceCard = memo(function DocumentReferenceCard({
       >
         <div className="min-w-0 flex-1">
           <div className="items-top flex justify-between">
-            <TimelineCardCategoryTitle title="Documents" color="teal" />
+            <TimelineCardCategoryTitle title="Documents" color="text-teal-600" />
             <div className="relative py-2">
               <div className="relative flex justify-center">
                 <svg

@@ -6,6 +6,7 @@ import { SkeletonLoadingText } from './SkeletonLoadingText';
 import { TimelineCardBase } from './TimelineCardBase';
 import { TimelineCardTitle } from './TimelineCardTitle';
 import { memo } from 'react';
+import { TimelineCardCategoryTitle } from './TimelineCardCategoryTitle';
 
 export const ConditionCard = memo(function ConditionCard({
   item,
@@ -17,9 +18,7 @@ export const ConditionCard = memo(function ConditionCard({
   return (
     <TimelineCardBase>
       <div className="min-w-0 flex-1">
-        <div className=" pb-2 text-sm font-bold text-green-600 md:text-base">
-          Condition
-        </div>
+        <TimelineCardCategoryTitle title="Condition" color="text-green-600" />
         <span className="absolute inset-0" aria-hidden="true" />
         <TimelineCardTitle>{item.metadata?.display_name}</TimelineCardTitle>
         <p className="truncate text-xs font-medium text-gray-500 md:text-sm">

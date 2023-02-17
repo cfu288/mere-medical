@@ -9,7 +9,7 @@ export function TimelineCardCategoryTitle({
 }) {
   return (
     <div
-      className={`pb-1 text-sm font-bold sm:pb-2 text-${color}-600 flex flex-row items-center justify-center align-middle md:text-base`}
+      className={`pb-1 text-sm font-bold sm:pb-2 flex flex-row items-center align-middle md:text-base ${color}`}
     >
       {title}
     </div>
