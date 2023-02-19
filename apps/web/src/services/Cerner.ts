@@ -8,6 +8,7 @@ import {
   Condition,
   DiagnosticReport,
   DocumentReference,
+  Encounter,
   FhirResource,
   Immunization,
   MedicationStatement,
@@ -18,71 +19,104 @@ import {
 import { RxDocument, RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../components/providers/RxDbProvider';
 import {
-  CreateEpicConnectionDocument,
-  EpicConnectionDocument,
+  CernerConnectionDocument,
+  ConnectionDocument,
+  CreateCernerConnectionDocument,
 } from '../models/connection-document/ConnectionDocument.type';
 import { Routes } from '../Routes';
 import { DSTU2 } from './DSTU2';
 import Config from '../environments/config.json';
 import { v4 as uuidv4 } from 'uuid';
-import { JsonWebKeyWKid, signJwt } from './JWTTools';
-import { getPublicKey, IDBKeyConfig } from './WebCrypto';
-import { JsonWebKeySet } from '../services/JWTTools';
-import { UserDocument } from '../models/user-document/UserDocument.type';
+import { JsonWebKeySet } from './JWTTools';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
+import { UserDocument } from '../models/user-document/UserDocument.type';
 
-export function getDSTU2Url(baseUrl: string) {
-  return `${baseUrl}/api/FHIR/DSTU2`;
+export enum CernerLocalStorageKeys {
+  CERNER_BASE_URL = 'cernerBaseUrl',
+  CERNER_AUTH_URL = 'cernerAuthUrl',
+  CERNER_TOKEN_URL = 'cernerTokenUrl',
+  CERNER_NAME = 'cernerName',
+  CERNER_ID = 'cernerId',
 }
 
 export function getLoginUrl(
   baseUrl: string,
-  isSandbox = false
+  authorizeUrl: string
 ): string & Location {
   const params = {
-    client_id: `${
-      isSandbox ? Config.EPIC_SANDBOX_CLIENT_ID : Config.EPIC_CLIENT_ID
-    }`,
-    scope: 'openid fhirUser',
-    redirect_uri: `${Config.PUBLIC_URL}${Routes.EpicCallback}`,
-    aud: getDSTU2Url(baseUrl),
+    client_id: `${Config.CERNER_CLIENT_ID}`,
+    scope: [
+      'fhirUser',
+      'offline_access',
+      'openid',
+      'user/AllergyIntolerance.read',
+      'user/Appointment.read',
+      'user/Binary.read',
+      'user/CarePlan.read',
+      'user/CareTeam.read',
+      'user/Condition.read',
+      'user/DiagnosticReport.read',
+      'user/DocumentReference.read',
+      'user/Device.read',
+      'user/Encounter.read',
+      'user/Goal.read',
+      'user/Immunization.read',
+      'user/MedicationAdministration.read',
+      'user/MedicationRequest.read',
+      'user/MedicationStatement.read',
+      'user/Observation.read',
+      'user/Patient.read',
+      'user/Practitioner.read',
+      'user/Procedure.read',
+    ].join(' '),
+    redirect_uri: `${Config.PUBLIC_URL}${Routes.CernerCallback}`,
+    aud: baseUrl,
     response_type: 'code',
   };
 
-  return `${baseUrl}/oauth2/authorize?${new URLSearchParams(
-    params
-  )}` as string & Location;
+  return `${authorizeUrl}?${new URLSearchParams(params)}` as string & Location;
 }
 
-export enum EpicLocalStorageKeys {
-  EPIC_URL = 'epicUrl',
-  EPIC_NAME = 'epicName',
-  EPIC_ID = 'epicId',
+function parseIdToken(token: string) {
+  const base64Url = token.split('.')[1];
+  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  const jsonPayload = decodeURIComponent(
+    window
+      .atob(base64)
+      .split('')
+      .map(function (c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      })
+      .join('')
+  );
+
+  return JSON.parse(jsonPayload) as {
+    sub: string;
+    aud: string;
+    profile: string;
+    iss: string;
+    name: string;
+    exp: number;
+    iat: number;
+    fhirUser: string;
+    email: string;
+  };
 }
 
 async function getFHIRResource<T extends FhirResource>(
   baseUrl: string,
-  connectionDocument: RxDocument<EpicConnectionDocument>,
+  connectionDocument: RxDocument<CernerConnectionDocument>,
   fhirResourceUrl: string,
-  params?: Record<string, string>,
-  useProxy = false
+  params?: Record<string, string>
 ): Promise<BundleEntry<T>[]> {
-  const epicId = connectionDocument.get('tenant_id');
-  const defaultUrl = `${getDSTU2Url(
-      baseUrl
-    )}/${fhirResourceUrl}?_format=${encodeURIComponent(
-      `application/fhir+json`
-    )}&${new URLSearchParams(params)}`,
-    proxyUrl = `${
-      Config.PUBLIC_URL
-    }/api/proxy?serviceId=${epicId}&target=${`${encodeURIComponent(
-      `/api/FHIR/DSTU2/${fhirResourceUrl}?${new URLSearchParams(params)}`
-    )}`}`;
+  const defaultUrl = `${baseUrl}${fhirResourceUrl}?${new URLSearchParams(
+    params
+  )}`;
 
-  const res = await fetch(useProxy ? proxyUrl : defaultUrl, {
+  const res = await fetch(defaultUrl, {
     headers: {
       Authorization: `Bearer ${connectionDocument.get('access_token')}`,
-      Accept: 'application/fhir+json',
+      Accept: 'application/json+fhir',
     },
   })
     .then((res) => res.json())
@@ -106,19 +140,17 @@ async function getFHIRResource<T extends FhirResource>(
  */
 async function syncFHIRResource<T extends FhirResource>(
   baseUrl: string,
-  connectionDocument: RxDocument<EpicConnectionDocument>,
+  connectionDocument: RxDocument<CernerConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
   mapper: (proc: BundleEntry<T>) => ClinicalDocument<BundleEntry<T>>,
-  params: Record<string, string>,
-  useProxy = false
+  params?: Record<string, string>
 ) {
   const resc = await getFHIRResource<T>(
     baseUrl,
     connectionDocument,
     fhirResourceUrl,
-    params,
-    useProxy
+    params
   );
 
   const cds = resc
@@ -159,9 +191,8 @@ async function syncFHIRResource<T extends FhirResource>(
  */
 export async function syncAllRecords(
   baseUrl: string,
-  connectionDocument: RxDocument<EpicConnectionDocument>,
-  db: RxDatabase<DatabaseCollections>,
-  useProxy = false
+  connectionDocument: RxDocument<CernerConnectionDocument>,
+  db: RxDatabase<DatabaseCollections>
 ): Promise<unknown[][]> {
   const newCd = connectionDocument.toMutableJSON();
   newCd.last_refreshed = new Date().toISOString();
@@ -190,8 +221,13 @@ export async function syncAllRecords(
       a,
       connectionDocument.toJSON()
     );
-  const carePlanMapper = (dr: BundleEntry<CarePlan>) =>
-    DSTU2.mapCarePlanToClinicalDocument(dr, connectionDocument.toJSON());
+
+  const encounterMapper = (a: BundleEntry<Encounter>) =>
+    DSTU2.mapEncounterToClinicalDocument(a, connectionDocument.toJSON());
+
+  const patientId = parseIdToken(connectionDocument.get('id_token'))
+    .fhirUser.split('/')
+    .slice(-1)[0];
 
   const syncJob = await Promise.all([
     syncFHIRResource<Procedure>(
@@ -201,9 +237,8 @@ export async function syncAllRecords(
       'Procedure',
       procMapper,
       {
-        patient: connectionDocument.get('patient'),
-      },
-      useProxy
+        patient: patientId,
+      }
     ),
     syncFHIRResource<Patient>(
       baseUrl,
@@ -212,9 +247,8 @@ export async function syncAllRecords(
       'Patient',
       patientMapper,
       {
-        id: connectionDocument.get('patient'),
-      },
-      useProxy
+        id: patientId,
+      }
     ),
     syncFHIRResource<Observation>(
       baseUrl,
@@ -223,10 +257,9 @@ export async function syncAllRecords(
       'Observation',
       obsMapper,
       {
-        patient: connectionDocument.get('patient'),
+        patient: patientId,
         category: 'laboratory',
-      },
-      useProxy
+      }
     ),
     syncFHIRResource<DiagnosticReport>(
       baseUrl,
@@ -235,9 +268,8 @@ export async function syncAllRecords(
       'DiagnosticReport',
       drMapper,
       {
-        patient: connectionDocument.get('patient'),
-      },
-      useProxy
+        patient: patientId,
+      }
     ),
     syncFHIRResource<MedicationStatement>(
       baseUrl,
@@ -246,9 +278,8 @@ export async function syncAllRecords(
       'MedicationStatement',
       medStatementMapper,
       {
-        patient: connectionDocument.get('patient'),
-      },
-      useProxy
+        patient: patientId,
+      }
     ),
     syncFHIRResource<Immunization>(
       baseUrl,
@@ -257,9 +288,8 @@ export async function syncAllRecords(
       'Immunization',
       immMapper,
       {
-        patient: connectionDocument.get('patient'),
-      },
-      useProxy
+        patient: patientId,
+      }
     ),
     syncFHIRResource<Condition>(
       baseUrl,
@@ -268,29 +298,21 @@ export async function syncAllRecords(
       'Condition',
       conditionMapper,
       {
-        patient: connectionDocument.get('patient'),
-      },
-      useProxy
+        patient: patientId,
+      }
     ),
-    syncDocumentReferences(
+    syncDocumentReferences(baseUrl, connectionDocument, db, {
+      patient: patientId,
+    }),
+    syncFHIRResource<Encounter>(
       baseUrl,
       connectionDocument,
       db,
+      'Encounter',
+      encounterMapper,
       {
-        patient: connectionDocument.get('patient'),
-      },
-      useProxy
-    ),
-    syncFHIRResource<CarePlan>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'CarePlan',
-      carePlanMapper,
-      {
-        patient: connectionDocument.get('patient'),
-      },
-      useProxy
+        patient: patientId,
+      }
     ),
     syncFHIRResource<AllergyIntolerance>(
       baseUrl,
@@ -299,9 +321,8 @@ export async function syncAllRecords(
       'AllergyIntolerance',
       allergyIntoleranceMapper,
       {
-        patient: connectionDocument.get('patient'),
-      },
-      useProxy
+        patient: patientId,
+      }
     ),
     db.connection_documents.upsert(newCd).then(() => []),
   ]);
@@ -310,11 +331,9 @@ export async function syncAllRecords(
 
 async function syncDocumentReferences(
   baseUrl: string,
-  connectionDocument: RxDocument<EpicConnectionDocument>,
+  connectionDocument: RxDocument<CernerConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
-  // fhirResourceUrl: string,
-  params: Record<string, string>,
-  useProxy = false
+  params: Record<string, string>
 ) {
   const documentReferenceMapper = (dr: BundleEntry<DocumentReference>) =>
     DSTU2.mapDocumentReferenceToClinicalDocument(
@@ -328,8 +347,7 @@ async function syncDocumentReferences(
     db,
     'DocumentReference',
     documentReferenceMapper,
-    params,
-    useProxy
+    params
   );
 
   const docs = await db.clinical_documents
@@ -421,8 +439,8 @@ async function syncDocumentReferences(
  */
 async function fetchAttachmentData(
   url: string,
-  cd: RxDocument<EpicConnectionDocument>
-): Promise<{ contentType: string | null; raw: string | undefined }> {
+  cd: RxDocument<CernerConnectionDocument>
+): Promise<{ contentType: string | null; raw: string | Blob | undefined }> {
   try {
     const res = await fetch(url, {
       headers: {
@@ -438,6 +456,10 @@ async function fetchAttachmentData(
     let raw = undefined;
     if (contentType === 'application/xml') {
       raw = await res.text();
+    }
+
+    if (contentType === 'application/pdf') {
+      raw = await res.blob();
     }
 
     return { contentType, raw };
@@ -457,176 +479,79 @@ async function fetchAttachmentData(
  */
 export async function fetchAccessTokenWithCode(
   code: string,
-  epicUrl: string,
-  epicName: string,
-  epicId?: string,
-  useProxy = false
-): Promise<EpicAuthResponse> {
-  const defaultUrl = `${epicUrl}/oauth2/token`;
-  const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${epicId}&target=/oauth2/token`;
-  const res = await fetch(useProxy ? proxyUrl : defaultUrl, {
+  cernerTokenUrl: string
+): Promise<CernerAuthResponse> {
+  const defaultUrl = `${cernerTokenUrl}`;
+  const res = await fetch(defaultUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: new URLSearchParams({
       grant_type: 'authorization_code',
-      client_id: `${
-        epicId === 'sandbox'
-          ? Config.EPIC_SANDBOX_CLIENT_ID
-          : Config.EPIC_CLIENT_ID
-      }`,
-      redirect_uri: `${Config.PUBLIC_URL}${Routes.EpicCallback}`,
+      client_id: `${Config.CERNER_CLIENT_ID}`,
+      redirect_uri: `${Config.PUBLIC_URL}${Routes.CernerCallback}`,
       code: code,
     }),
   });
   if (!res.ok) {
     console.error(await res.text());
-    throw new Error('Error getting authorization token in ' + epicName);
+    throw new Error('Error getting authorization token ');
   }
   return res.json();
 }
-
-export async function registerDynamicClient({
-  res,
-  epicUrl,
-  epicName,
-  epicId,
-  useProxy = false,
-}: {
-  res: EpicAuthResponse;
-  epicUrl: string;
-  epicName: string;
-  epicId?: string;
-  useProxy?: boolean;
-}): Promise<EpicDynamicRegistrationResponse> {
-  const defaultUrl = `${epicUrl}/oauth2/register`;
-  const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${epicId}&target=/oauth2/register`;
-
-  const jsonWebKeySet = await getPublicKey();
-  const validJWKS = jsonWebKeySet as JsonWebKeyWKid;
-  const request: EpicDynamicRegistrationRequest = {
-    software_id:
-      epicId === 'sandbox'
-        ? Config.EPIC_SANDBOX_CLIENT_ID
-        : Config.EPIC_CLIENT_ID,
-    jwks: {
-      keys: [
-        {
-          e: validJWKS.e,
-          kty: validJWKS.kty,
-          n: validJWKS.n,
-          kid: `${IDBKeyConfig.KEY_ID}`,
-        },
-      ],
-    },
-  };
-  // We've got a temp access token and public key, now we can register this app as a dynamic client
-  try {
-    const registerRes = await fetch(useProxy ? proxyUrl : defaultUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${res.access_token}`,
-      },
-      body: JSON.stringify(request),
-    });
-
-    if (!registerRes.ok) {
-      if (registerRes.status === 404) {
-        throw new DynamicRegistrationError(
-          'This site does not support dynamic client registration.',
-          res
-        );
-      }
-      console.log(await registerRes.text());
-      throw new Error('Error registering dynamic client with ' + epicName);
-    }
-    return await registerRes.json();
-  } catch (e) {
-    throw new DynamicRegistrationError(
-      'This site does not support dynamic client registration.',
-      res
-    );
-  }
-}
-
-export class DynamicRegistrationError extends Error {
-  public data: EpicAuthResponse;
-
-  constructor(message: string, data: EpicAuthResponse) {
-    super(message);
-    this.name = 'DynamicRegistrationError';
-    this.data = data;
-  }
-}
-
-export async function fetchAccessTokenUsingJWT(
-  clientId: string,
-  epicUrl: string,
-  epicId?: string,
-  useProxy = false
-): Promise<EpicAuthResponseWithClientId> {
-  const defaultUrl = `${epicUrl}/oauth2/token`;
-  const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${epicId}&target=/oauth2/token`;
-
-  // We've registered, now we can get another access token with our signed JWT
-  const jwtBody = {
-    sub: clientId,
-    iss: clientId,
-    aud: `${epicUrl}/oauth2/token`,
-    jti: uuidv4(),
-  };
-  const signedJwt = await signJwt(jwtBody);
-  const tokenRes = await fetch(useProxy ? proxyUrl : defaultUrl, {
+//tenants/ec2458f2-1e24-41c8-b71b-0e701af7583d/protocols/oauth2/profiles/smart-v1/token
+export async function fetchAccessTokenWithRefreshToken(
+  refreshToken: string,
+  cernerTokenUrl: string
+): Promise<CernerAuthResponse> {
+  const defaultUrl = cernerTokenUrl;
+  const res = await fetch(defaultUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      client_id: clientId,
-      assertion: signedJwt,
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
     }),
   });
-  if (!tokenRes.ok) {
-    console.log(await tokenRes.text());
-    throw new Error('Error getting access token');
+  if (!res.ok) {
+    console.error(await res.text());
+    throw new Error('Error getting authorization token ');
   }
-  const result = await tokenRes.json();
-  return { ...result, client_id: clientId };
+  return res.json();
 }
 
-export async function getConnectionCardByUrl(
+export async function getConnectionCardByUrl<T extends ConnectionDocument>(
   url: string,
   db: RxDatabase<DatabaseCollections>
-) {
+): Promise<RxDocument<T>> {
   return db.connection_documents
     .findOne({
       selector: { location: url },
     })
     .exec()
-    .then((list) => list as unknown as RxDocument<EpicConnectionDocument>);
+    .then((list) => list as unknown as RxDocument<T>);
 }
 
 export async function saveConnectionToDb({
   res,
-  epicUrl,
-  epicName,
+  cernerBaseUrl,
   db,
-  epicId,
   user,
 }: {
-  res: EpicAuthResponseWithClientId | EpicAuthResponse;
-  epicUrl: string;
-  epicName: string;
+  res: CernerAuthResponseWithClientId | CernerAuthResponse;
+  cernerBaseUrl: string;
   db: RxDatabase<DatabaseCollections>;
-  epicId: string;
   user: UserDocument;
 }) {
-  const doc = await getConnectionCardByUrl(epicUrl, db);
+  const doc = await getConnectionCardByUrl<CernerConnectionDocument>(
+    cernerBaseUrl,
+    db
+  );
   return new Promise((resolve, reject) => {
-    if (res?.access_token && res?.expires_in && res?.patient) {
+    if (res?.access_token && res?.expires_in && res?.id_token) {
       if (doc) {
         // If we already have a connection card for this URL, update it
         try {
@@ -634,14 +559,12 @@ export async function saveConnectionToDb({
           doc
             .update({
               $set: {
-                client_id:
-                  (res as EpicAuthResponseWithClientId)?.client_id ||
-                  doc.client_id,
+                // client_id:
+                //   (res as CernerAuthResponseWithClientId)?.client_id ||
+                //   doc.client_id,
                 access_token: res.access_token,
                 expires_in: nowInSeconds + res.expires_in,
                 scope: res.scope,
-                patient: res.patient,
-                tenant_id: epicId,
               },
             })
             .then(() => {
@@ -660,18 +583,21 @@ export async function saveConnectionToDb({
       } else {
         const nowInSeconds = Math.floor(Date.now() / 1000);
         // Otherwise, create a new connection card
-        const dbentry: Omit<CreateEpicConnectionDocument, 'refresh_token'> = {
+        const dbentry: Omit<CreateCernerConnectionDocument, 'refresh_token'> = {
           id: uuidv4(),
           user_id: user.id,
-          source: 'epic',
-          location: epicUrl,
-          name: epicName,
+          source: 'cerner',
+          location: cernerBaseUrl,
+          name: 'Cerner',
           access_token: res.access_token,
           expires_in: nowInSeconds + res.expires_in,
           scope: res.scope,
-          patient: res.patient,
-          client_id: (res as EpicAuthResponseWithClientId)?.client_id,
-          tenant_id: epicId,
+          // client_id: (res as CernerAuthResponseWithClientId)?.client_id,
+          id_token: res.id_token,
+          auth_uri:
+            'https://authorization.cerner.com/tenants/ec2458f2-1e24-41c8-b71b-0e701af7583d/protocols/oauth2/profiles/smart-v1/personas/patient/authorize',
+          token_uri:
+            'https://authorization.cerner.com/tenants/ec2458f2-1e24-41c8-b71b-0e701af7583d/protocols/oauth2/profiles/smart-v1/token',
         };
         try {
           db.connection_documents.insert(dbentry).then(() => {
@@ -690,8 +616,9 @@ export async function saveConnectionToDb({
   });
 }
 
-export interface EpicAuthResponse {
+export interface CernerAuthResponse {
   access_token: string;
+  id_token: string;
   expires_in: number;
   patient: string;
   refresh_token: string;
@@ -699,7 +626,7 @@ export interface EpicAuthResponse {
   token_type: string;
 }
 
-export interface EpicAuthResponseWithClientId extends EpicAuthResponse {
+export interface CernerAuthResponseWithClientId extends CernerAuthResponse {
   client_id: string;
 }
 

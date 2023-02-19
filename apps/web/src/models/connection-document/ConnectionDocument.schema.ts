@@ -1,6 +1,6 @@
 export const connectionSchemaLiteral = {
   title: 'Connection Document Schema',
-  version: 0,
+  version: 2,
   primaryKey: 'id',
   type: 'object',
   properties: {
@@ -51,6 +51,15 @@ export const connectionSchemaLiteral = {
       type: 'string',
     },
     tenant_id: {
+      type: 'string',
+    },
+    auth_uri: {
+      type: 'string',
+    },
+    token_uri: {
+      type: 'string',
+    },
+    id_token: {
       type: 'string',
     },
   },

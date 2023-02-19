@@ -13,6 +13,7 @@ import {
   DocumentReference,
   CarePlan,
   FhirResource,
+  Encounter,
 } from 'fhir/r2';
 import { ConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
 import { v4 as uuidv4 } from 'uuid';
@@ -217,6 +218,30 @@ export namespace DSTU2 {
         id: parseId(bundleItem),
         date: bundleItem.resource?.dateRecorded || new Date(0).toISOString(),
         display_name: bundleItem.resource?.code.text,
+      },
+    };
+    return cd;
+  }
+
+  export function mapEncounterToClinicalDocument(
+    bundleItem: BundleEntry<Encounter>,
+    connectionDocument: ConnectionDocument
+  ) {
+    const cd: ClinicalDocument<BundleEntry<Encounter>> = {
+      id: uuidv4(),
+      user_id: connectionDocument.user_id,
+      connection_record_id: connectionDocument.id,
+      data_record: {
+        raw: bundleItem,
+        format: 'FHIR.DSTU2',
+        content_type: 'application/json',
+        resource_type: 'encounter',
+        version_history: [],
+      },
+      metadata: {
+        id: parseId(bundleItem),
+        date: bundleItem.resource?.period?.start || new Date(0).toISOString(),
+        display_name: bundleItem.resource?.text?.div,
       },
     };
     return cd;

@@ -247,7 +247,7 @@ export function verifyPayload(
  * @returns base64Url string
  */
 export function base64StringToBase64UrlString(base64: string): string {
-  let base64Formatted = base64
+  const base64Formatted = base64
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=/g, '');

@@ -44,6 +44,7 @@ import { AppPage } from '../AppPage';
 import { TimelineBanner } from '../timeline/TimelineBanner';
 import Config from '../../environments/config.json';
 import { useNotificationDispatch } from './NotificationProvider';
+import { ConnectionDocumentMigrations } from '../../models/connection-document/ConnectionDocument.migration';
 
 addRxPlugin(RxDBUpdatePlugin);
 addRxPlugin(RxDBMigrationPlugin);
@@ -71,6 +72,7 @@ export const databaseCollections = {
   },
   connection_documents: {
     schema: ConnectionDocumentSchema,
+    migrationStrategies: ConnectionDocumentMigrations,
   },
   user_documents: {
     schema: UserDocumentSchema,
@@ -97,7 +99,7 @@ const handleImport = (
         db.addCollections<DatabaseCollections>(databaseCollections).then(() => {
           db.importJSON(data)
             .then((i) => {
-              const res = (i as unknown) as {
+              const res = i as unknown as {
                 error: Record<string, RxDocument>;
                 success: Record<string, RxDocument>;
               }[];

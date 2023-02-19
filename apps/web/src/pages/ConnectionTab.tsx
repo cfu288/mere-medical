@@ -6,6 +6,10 @@ import { RxDocument } from 'rxdb';
 import { GenericBanner } from '../components/GenericBanner';
 import { ConnectionCard } from '../components/connection/ConnectionCard';
 import { EpicLocalStorageKeys, getLoginUrl } from '../services/Epic';
+import {
+  CernerLocalStorageKeys,
+  getLoginUrl as getCernerLoginUrl,
+} from '../services/Cerner';
 import { AppPage } from '../components/AppPage';
 import { EpicSelectModal } from '../components/connection/EpicSelectModal';
 import { EpicSelectModelResultItem } from '../components/connection/EpicSelectModelResultItem';
@@ -13,6 +17,7 @@ import { useUserPreferences } from '../components/providers/UserPreferencesProvi
 import { Routes } from '../Routes';
 import { Link } from 'react-router-dom';
 import { useUser } from '../components/providers/UserProvider';
+import { CernerSelectModal } from '../components/connection/CernerSelectModal';
 
 function useConnectionCards() {
   const db = useRxDb(),
@@ -27,7 +32,7 @@ function useConnectionCards() {
         },
       })
       .$.subscribe((list) =>
-        setList((list as unknown) as RxDocument<ConnectionDocument>[])
+        setList(list as unknown as RxDocument<ConnectionDocument>[])
       );
     return () => sub.unsubscribe();
   }, [db.connection_documents, user.id]);
@@ -37,7 +42,8 @@ function useConnectionCards() {
 
 const ConnectionTab: React.FC = () => {
   const list = useConnectionCards(),
-    [open, setOpen] = useState(false),
+    [epicOpen, setEpicOpen] = useState(false),
+    [cernerOpen, setCernerOpen] = useState(false),
     userPreferences = useUserPreferences(),
     onpatientLoginUrl = OnPatient.getLoginUrl(),
     setTenantEpicUrl = useCallback(
@@ -48,13 +54,43 @@ const ConnectionTab: React.FC = () => {
       },
       []
     ),
+    setTenantCernerUrl = useCallback(
+      (
+        base: string & Location,
+        auth: string & Location,
+        token: string & Location,
+        name: string,
+        id: string
+      ) => {
+        localStorage.setItem(CernerLocalStorageKeys.CERNER_BASE_URL, base);
+        localStorage.setItem(CernerLocalStorageKeys.CERNER_AUTH_URL, auth);
+        localStorage.setItem(CernerLocalStorageKeys.CERNER_TOKEN_URL, token);
+        localStorage.setItem(CernerLocalStorageKeys.CERNER_NAME, name);
+        localStorage.setItem(CernerLocalStorageKeys.CERNER_ID, id);
+      },
+      []
+    ),
     handleToggleEpicPanel = useCallback(
       (loc: string & Location, name: string, id: string) => {
         setTenantEpicUrl(loc, name, id);
-        setOpen((x) => !x);
+        setEpicOpen((x) => !x);
         window.location = getLoginUrl(loc, id === 'sandbox');
       },
       [setTenantEpicUrl]
+    ),
+    handleToggleCernerPanel = useCallback(
+      (
+        base: string & Location,
+        auth: string & Location,
+        token: string & Location,
+        name: string,
+        id: string
+      ) => {
+        setTenantCernerUrl(base, auth, token, name, id);
+        setCernerOpen((x) => !x);
+        window.location = getCernerLoginUrl(base, auth);
+      },
+      [setTenantCernerUrl]
     );
 
   return (
@@ -112,16 +148,36 @@ const ConnectionTab: React.FC = () => {
         <div className="mb-4 box-border	flex w-full justify-center align-middle">
           <button
             className="bg-primary hover:bg-primary-600 w-full rounded-lg p-4 text-white"
-            onClick={() => setOpen((x) => !x)}
+            onClick={() => setEpicOpen((x) => !x)}
           >
             <p className="font-bold">Log in to Epic MyChart</p>
           </button>
         </div>
+        <div className="mb-4 box-border	flex w-full justify-center align-middle">
+          {/* <a
+            className="w-full"
+            href={getCernerLoginUrl('https://fhir-myrecord.cerner.com')}
+          > */}
+          <button
+            className="bg-primary hover:bg-primary-600 w-full rounded-lg p-4 text-white"
+            onClick={() => {
+              setCernerOpen((x) => !x);
+            }}
+          >
+            <p className="font-bold">Log in to Cerner</p>
+          </button>
+          {/* </a> */}
+        </div>
       </div>
       <EpicSelectModal
-        open={open}
-        setOpen={setOpen}
+        open={epicOpen}
+        setOpen={setEpicOpen}
         onClick={handleToggleEpicPanel}
+      />
+      <CernerSelectModal
+        open={cernerOpen}
+        setOpen={setCernerOpen}
+        onClick={handleToggleCernerPanel}
       />
     </AppPage>
   );
@@ -132,7 +188,9 @@ export default ConnectionTab;
 export interface SelectOption {
   id: string;
   name: string;
-  url: string & Location;
+  baseUrl: string & Location;
+  authUrl: string & Location;
+  tokenUrl: string & Location;
 }
 
 export const MemoizedResultItem = memo(EpicSelectModelResultItem);

@@ -16,6 +16,7 @@ import logo from '../img/white-logo.svg';
 import { TabButton } from './TabButton';
 import { useUser } from './providers/UserProvider';
 import { TimelineTab } from '../pages/TimelineTab';
+import CernerRedirect from '../pages/CernerRedirect';
 
 export function TabWrapper() {
   const user = useUser();
@@ -33,6 +34,7 @@ export function TabWrapper() {
             element={<OnPatientRedirect />}
           />
           <Route path={AppRoutes.EpicCallback} element={<EpicRedirect />} />
+          <Route path={AppRoutes.CernerCallback} element={<CernerRedirect />} />
           <Route path="*" element={<Navigate to={AppRoutes.Timeline} />} />
         </Routes>
       </div>

@@ -23,7 +23,6 @@ import { AllergyIntoleranceListCard } from '../components/summary/AllergyIntoler
 import { EmptyRecordsPlaceholder } from '../components/EmptyRecordsPlaceholder';
 import { AppPage } from '../components/AppPage';
 import { useUser } from '../components/providers/UserProvider';
-import { LoadingSpinner } from '../components/LoadingSpinner';
 
 function fetchMedications(
   db: RxDatabase<DatabaseCollections>,
@@ -40,7 +39,7 @@ function fetchMedications(
     })
     .exec()
     .then((list) => {
-      const lst = (list as unknown) as RxDocument<
+      const lst = list as unknown as RxDocument<
         ClinicalDocument<BundleEntry<FhirResource>>
       >[];
       return lst;
@@ -57,7 +56,7 @@ function fetchCarePlan(db: RxDatabase<DatabaseCollections>, user_id: string) {
     })
     .exec()
     .then((list) => {
-      const lst = (list as unknown) as RxDocument<
+      const lst = list as unknown as RxDocument<
         ClinicalDocument<BundleEntry<FhirResource>>
       >[];
       return lst;
@@ -76,7 +75,7 @@ function fetchConditions(db: RxDatabase<DatabaseCollections>, user_id: string) {
     })
     .exec()
     .then((list) => {
-      const lst = (list as unknown) as RxDocument<
+      const lst = list as unknown as RxDocument<
         ClinicalDocument<BundleEntry<FhirResource>>
       >[];
 
@@ -99,7 +98,7 @@ function fetchImmunizations(
     })
     .exec()
     .then((list) => {
-      const lst = (list as unknown) as RxDocument<
+      const lst = list as unknown as RxDocument<
         ClinicalDocument<BundleEntry<FhirResource>>
       >[];
 
@@ -118,7 +117,7 @@ function fetchAllergy(db: RxDatabase<DatabaseCollections>, user_id: string) {
     })
     .exec()
     .then((list) => {
-      const lst = (list as unknown) as RxDocument<
+      const lst = list as unknown as RxDocument<
         ClinicalDocument<BundleEntry<FhirResource>>
       >[];
 
@@ -280,9 +279,8 @@ function useSummaryData(): [
 }
 
 function SummaryTab() {
-  const [
-    { meds, cond, imm, careplan, allergy, initialized },
-  ] = useSummaryData();
+  const [{ meds, cond, imm, careplan, allergy, initialized }] =
+    useSummaryData();
 
   return (
     <AppPage banner={<GenericBanner text="Summary" />}>

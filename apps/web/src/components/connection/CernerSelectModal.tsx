@@ -1,24 +1,31 @@
-import { useCallback } from 'react';
+import { memo, useCallback } from 'react';
 import { Combobox } from '@headlessui/react';
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid';
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import { useDebounce } from '@react-hook/debounce';
 import { Modal } from '../Modal';
 import { ModalHeader } from '../ModalHeader';
-import { SelectOption, MemoizedResultItem } from '../../pages/ConnectionTab';
+import { SelectOption } from '../../pages/ConnectionTab';
 import { stringSimilarity } from '../../utils/SearchUtils';
-import { EpicDSTU2TenantEndpoints } from '@mere/epic';
+import { CernerDSTU2TenantEndpoints } from '@mere/cerner';
+import { CernerSelectModelResultItem } from './CernerSelectmodalResultItem';
 
-const items = EpicDSTU2TenantEndpoints;
+const items = CernerDSTU2TenantEndpoints;
 
-export function EpicSelectModal({
+export function CernerSelectModal({
   open,
   setOpen,
   onClick,
 }: {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  onClick: (s: string & Location, name: string, id: string) => void;
+  onClick: (
+    base: string & Location,
+    auth: string & Location,
+    token: string & Location,
+    name: string,
+    id: string
+  ) => void;
 }) {
   const [query, setQuery] = useDebounce('', 150);
   const filteredItems = useCallback((s: string) => {
@@ -48,12 +55,12 @@ export function EpicSelectModal({
       overflowHidden
     >
       <ModalHeader
-        title={'Select your EPIC health system to log in'}
+        title={'Select your Cerner health system to log in'}
         setClose={() => setOpen((x) => !x)}
       />
       <Combobox
         onChange={(s: SelectOption) => {
-          onClick(s.baseUrl, s.name, s.id);
+          onClick(s.baseUrl, s.authUrl, s.tokenUrl, s.name, s.id);
           setOpen(false);
         }}
       >
@@ -75,11 +82,13 @@ export function EpicSelectModal({
             className="max-h-full scroll-py-3 overflow-y-scroll p-3 sm:max-h-96"
           >
             {filteredItems(query).map((item) => (
-              <MemoizedResultItem
+              <MemoizedCernerResultItem
                 key={item.id}
                 id={item.id}
                 name={item.name}
-                url={item.url}
+                baseUrl={item.url}
+                tokenUrl={item.token}
+                authUrl={item.authorize}
               />
             ))}
           </Combobox.Options>
@@ -102,3 +111,5 @@ export function EpicSelectModal({
     </Modal>
   );
 }
+
+export const MemoizedCernerResultItem = memo(CernerSelectModelResultItem);

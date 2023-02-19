@@ -19,7 +19,8 @@ export interface ClinicalDocument<T = unknown> extends BaseDocument {
       | 'practitioner'
       | 'documentreference'
       | 'documentreference_attachment'
-      | 'careplan';
+      | 'careplan'
+      | 'encounter';
     version_history: T[];
   };
   metadata?: {

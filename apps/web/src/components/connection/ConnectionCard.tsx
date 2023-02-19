@@ -1,24 +1,39 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
+import {
+  CernerConnectionDocument,
+  ConnectionDocument,
+  EpicConnectionDocument,
+} from '../../models/connection-document/ConnectionDocument.type';
 import { DatabaseCollections, useRxDb } from '../providers/RxDbProvider';
 import onpatientLogo from '../../img/onpatient_logo.jpeg';
 import epicLogo from '../../img/MyChartByEpic.png';
-import { differenceInDays, format, parseISO } from 'date-fns';
+import cernerLogo from '../../img/cerner-logo.png';
+import {
+  differenceInDays,
+  differenceInHours,
+  format,
+  parseISO,
+} from 'date-fns';
 import { RxDatabase, RxDocument } from 'rxdb';
 import * as OnPatient from '../../services/OnPatient';
 import * as Epic from '../../services/Epic';
+import * as Cerner from '../../services/Cerner';
 import { useNotificationDispatch } from '../providers/NotificationProvider';
 import { useUserPreferences } from '../providers/UserPreferencesProvider';
 import { useUser } from '../providers/UserProvider';
 import { ButtonLoadingSpinner } from './ButtonLoadingSpinner';
+import Config from '../../environments/config.json';
 
-function getImage(logo: 'onpatient' | 'epic') {
+function getImage(logo: 'onpatient' | 'epic' | 'cerner') {
   switch (logo) {
     case 'onpatient': {
       return onpatientLogo;
     }
     case 'epic': {
       return epicLogo;
+    }
+    case 'cerner': {
+      return cernerLogo;
     }
     default: {
       return undefined;
@@ -38,16 +53,49 @@ async function fetchMedicalRecords(
     }
     case 'epic': {
       try {
-        await refreshConnectionTokenIfNeeded(connectionDocument, db, useProxy);
+        await refreshEpicConnectionTokenIfNeeded(
+          connectionDocument,
+          db,
+          useProxy
+        );
         return await Epic.syncAllRecords(
           baseUrl,
-          connectionDocument,
+          connectionDocument as unknown as RxDocument<EpicConnectionDocument>,
           db,
           useProxy
         );
       } catch (e) {
         console.error(e);
-        throw new Error('Error refreshing token  - try logging in again');
+        const name = connectionDocument.get('name');
+        throw new Error(
+          `Error refreshing ${name} access - try logging in again`
+        );
+      }
+    }
+    case 'cerner': {
+      try {
+        await refreshCernerConnectionTokenIfNeeded(connectionDocument, db);
+        return await Cerner.syncAllRecords(
+          baseUrl,
+          connectionDocument as unknown as RxDocument<CernerConnectionDocument>,
+          db
+        );
+      } catch (e) {
+        console.error(e);
+        const name = connectionDocument.get('name');
+        throw new Error(
+          `Error refreshing ${name} access - try logging in again`
+        );
+      }
+      try {
+        return await Cerner.syncAllRecords(
+          baseUrl,
+          connectionDocument as unknown as RxDocument<CernerConnectionDocument>,
+          db
+        );
+      } catch (e) {
+        console.error(e);
+        throw new Error('Error syncing some data from your Cerner account');
       }
     }
     default: {
@@ -63,7 +111,44 @@ async function fetchMedicalRecords(
  * @param connectionDocument the connection document to refresh the access token for
  * @param db
  */
-async function refreshConnectionTokenIfNeeded(
+async function refreshCernerConnectionTokenIfNeeded(
+  connectionDocument: RxDocument<ConnectionDocument>,
+  db: RxDatabase<DatabaseCollections>
+) {
+  const nowInSeconds = Math.floor(Date.now() / 1000);
+  if (connectionDocument.get('expires_in') <= nowInSeconds) {
+    try {
+      const baseUrl = connectionDocument.get('location'),
+        refreshToken = connectionDocument.get('refresh_token'),
+        tokenUri = connectionDocument.get('token_uri'),
+        user = connectionDocument.get('user_id');
+
+      const access_token_data = await Cerner.fetchAccessTokenWithRefreshToken(
+        refreshToken,
+        tokenUri
+      );
+
+      debugger;
+
+      return await Cerner.saveConnectionToDb({
+        res: access_token_data,
+        cernerBaseUrl: baseUrl,
+        db,
+        user,
+      });
+    } catch (e) {
+      console.error(e);
+      throw new Error('Error refreshing token  - try logging in again');
+    }
+  }
+}
+
+/**
+ * For a connection document, if the access token is expired, refresh it and save it to the db
+ * @param connectionDocument the connection document to refresh the access token for
+ * @param db
+ */
+async function refreshEpicConnectionTokenIfNeeded(
   connectionDocument: RxDocument<ConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
   useProxy = false
@@ -107,6 +192,7 @@ export function ConnectionCard({
   baseUrl: string;
 }) {
   const db = useRxDb(),
+    isDemo = Config.IS_DEMO === 'enabled',
     user = useUser(),
     [deleting, setDeleting] = useState(false),
     userPreferences = useUserPreferences(),
@@ -160,18 +246,24 @@ export function ConnectionCard({
     hasRun = useRef(false);
 
   useEffect(() => {
-    if (!hasRun.current) {
-      hasRun.current = true;
-      if (
-        !item.get('last_refreshed') ||
-        (item.get('last_refreshed') &&
-          differenceInDays(parseISO(item.get('last_refreshed')), new Date()) >=
-            1)
-      ) {
-        handleFetchData();
+    if (!isDemo) {
+      if (!hasRun.current) {
+        hasRun.current = true;
+        if (
+          !item.get('last_refreshed') ||
+          (item.get('last_refreshed') &&
+            Math.abs(
+              differenceInHours(
+                parseISO(item.get('last_refreshed')),
+                new Date()
+              )
+            ) >= 1)
+        ) {
+          handleFetchData();
+        }
       }
     }
-  }, [baseUrl, db, handleFetchData, item]);
+  }, [baseUrl, db, handleFetchData, isDemo, item]);
 
   return (
     <li
@@ -189,15 +281,19 @@ export function ConnectionCard({
             <h3 className="truncate text-sm font-semibold  text-gray-900">
               {item.get('source') === 'epic'
                 ? `MyChart - ${item.get('name')}`
+                : item.get('source') === 'cerner'
+                ? `Cerner - ${item.get('name')}`
                 : item.get('name')}
             </h3>
           </div>
           <p className="mt-1 truncate text-sm font-medium text-gray-500">
             Connected
             {item.get('last_refreshed') &&
-              (differenceInDays(
-                parseISO(item.get('last_refreshed')),
-                new Date()
+              (Math.abs(
+                differenceInDays(
+                  parseISO(item.get('last_refreshed')),
+                  new Date()
+                )
               ) >= 1
                 ? ` - synced on ${format(
                     parseISO(item.get('last_refreshed')),

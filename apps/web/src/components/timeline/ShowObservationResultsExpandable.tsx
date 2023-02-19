@@ -1,10 +1,9 @@
 import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ClinicalDocument,
   MergeClinicalDocument,
 } from '../../models/clinical-document/ClinicalDocument.type';
-import useIntersectionObserver from '../hooks/useIntersectionObserver';
 
 export function ShowObservationResultsExpandable({
   item,
@@ -15,9 +14,11 @@ export function ShowObservationResultsExpandable({
 
   const list = useMemo(
     () =>
-      (item as MergeClinicalDocument<
-        BundleEntry<DiagnosticReport | Observation>
-      >)?.data_items?.sort((a, b) => {
+      (
+        item as MergeClinicalDocument<
+          BundleEntry<DiagnosticReport | Observation>
+        >
+      )?.data_items?.sort((a, b) => {
         if (!a?.fullUrl?.[0]) return 0;
         return a?.fullUrl?.[0]?.localeCompare(b?.fullUrl?.[0] || '') || 0;
       }),

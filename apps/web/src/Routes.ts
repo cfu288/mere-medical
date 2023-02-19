@@ -5,4 +5,5 @@ export enum Routes {
   Settings = '/settings',
   OnPatientCallback = '/onpatient/callback',
   EpicCallback = '/epic/callback',
+  CernerCallback = '/cerner/callback',
 }

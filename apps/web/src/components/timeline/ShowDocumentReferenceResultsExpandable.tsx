@@ -84,16 +84,16 @@ function parseCCDASection(
   sections: HTMLCollectionOf<HTMLElement>,
   id: string[] | string
 ) {
-  const matchingSections = [
-    ...((sections as unknown) as HTMLElement[]),
-  ]?.filter((s) =>
-    Array.isArray(id)
-      ? id.includes(
-          s.getElementsByTagName('templateId')?.[0]?.getAttribute('root') || ''
-        )
-      : s.getElementsByTagName('templateId')?.[0]?.getAttribute('root') === id
+  const matchingSections = [...(sections as unknown as HTMLElement[])]?.filter(
+    (s) =>
+      Array.isArray(id)
+        ? id.includes(
+            s.getElementsByTagName('templateId')?.[0]?.getAttribute('root') ||
+              ''
+          )
+        : s.getElementsByTagName('templateId')?.[0]?.getAttribute('root') === id
   );
-  return [...((matchingSections as unknown) as HTMLElement[])]
+  return [...(matchingSections as unknown as HTMLElement[])]
     ?.map((x) => x.innerHTML)
     .flat()
     .join();
@@ -140,7 +140,8 @@ export function ShowDocumentResultsExpandable({
       Partial<Record<CCDAStructureDefinitionKeys, string>> | undefined
     >(undefined),
     attachmentUrl = item.data_record.raw.resource?.content?.[0].attachment.url,
-    attachment = useClinicalDoc(attachmentUrl);
+    attachment = useClinicalDoc(attachmentUrl),
+    [hasLoadedDocument, setHasLoadedDocument] = useState(false);
 
   useEffect(() => {
     if (expanded) {
@@ -149,6 +150,7 @@ export function ShowDocumentResultsExpandable({
         checkIfXmlIsCCDA(attachment.get('data_record.raw'))
       ) {
         const parsedDoc = parseCCDA(attachment.get('data_record.raw'));
+        setHasLoadedDocument(true);
         setCCDA(parsedDoc);
       }
     }
@@ -168,153 +170,155 @@ export function ShowDocumentResultsExpandable({
             } rounded-lg border border-solid border-gray-200`}
           >
             <p className="text-md whitespace-wrap overflow-x-scroll p-4 text-gray-900">
-              {!ccda && 'Loading...'}{' '}
-              {ccda?.REASON_FOR_REFERRAL && (
-                <DisplayCCDASection
-                  title="Reason for Referral"
-                  content={ccda.REASON_FOR_REFERRAL || ''}
-                />
-              )}
-              {ccda?.VITAL_SIGNS && (
-                <DisplayCCDASection
-                  title="Vital Signs"
-                  content={ccda.VITAL_SIGNS || ''}
-                />
-              )}
-              {ccda?.HPI && (
-                <DisplayCCDASection
-                  title="History of Present Illness"
-                  content={ccda.HPI || ''}
-                />
-              )}
-              {ccda?.MEDICATIONS && (
-                <DisplayCCDASection
-                  title="Medications"
-                  content={ccda.MEDICATIONS || ''}
-                />
-              )}
-              {ccda?.IMMUNIZATIONS && (
-                <DisplayCCDASection
-                  title="Immunizations"
-                  content={ccda.IMMUNIZATIONS || ''}
-                />
-              )}
-              {ccda?.FAMILY_HISTORY && (
-                <DisplayCCDASection
-                  title="Family History"
-                  content={ccda.FAMILY_HISTORY || ''}
-                />
-              )}
-              {ccda?.SOCIAL_HISTORY && (
-                <DisplayCCDASection
-                  title="Social History"
-                  content={ccda.SOCIAL_HISTORY || ''}
-                />
-              )}
-              {ccda?.FOREIGN_TRAVEL && (
-                <DisplayCCDASection
-                  title="Foreign Travel"
-                  content={ccda.FOREIGN_TRAVEL || ''}
-                />
-              )}
-              {ccda?.HEALTH_CONCERNS && (
-                <DisplayCCDASection
-                  title="Health Concerns"
-                  content={ccda.HEALTH_CONCERNS || ''}
-                />
-              )}
-              {ccda?.PROCEDURES && (
-                <DisplayCCDASection
-                  title="Procedures"
-                  content={ccda.PROCEDURES || ''}
-                />
-              )}
-              {ccda?.RESULTS && (
-                <DisplayCCDASection
-                  title="Results"
-                  content={ccda.RESULTS || ''}
-                />
-              )}
-              {ccda?.VISIT_DIAGNOSIS && (
-                <DisplayCCDASection
-                  title="Visit Diagnoses"
-                  content={ccda.VISIT_DIAGNOSIS || ''}
-                />
-              )}
-              {ccda?.ASSESSMENT && (
-                <DisplayCCDASection
-                  title="Assessment"
-                  content={ccda.ASSESSMENT || ''}
-                />
-              )}
-              {ccda?.PROBLEMS && (
-                <DisplayCCDASection
-                  title="Problems"
-                  content={ccda.PROBLEMS || ''}
-                />
-              )}
-              {ccda?.NUTRITION && (
-                <DisplayCCDASection
-                  title="Nutrition"
-                  content={ccda.NUTRITION || ''}
-                />
-              )}
-              {ccda?.PLAN_OF_TREATMENT && (
-                <DisplayCCDASection
-                  title="Plan of Treatment"
-                  content={ccda.PLAN_OF_TREATMENT || ''}
-                />
-              )}
-              {ccda?.GOALS && (
-                <DisplayCCDASection title="Goals" content={ccda.GOALS || ''} />
-              )}
-              {ccda?.MEDICAL_EQUIPMENT && (
-                <DisplayCCDASection
-                  title="Medical Equipment"
-                  content={ccda.MEDICAL_EQUIPMENT || ''}
-                />
-              )}
-              {ccda?.ADVANCE_DIRECTIVES && (
-                <DisplayCCDASection
-                  title="Advance Directives"
-                  content={ccda.ADVANCE_DIRECTIVES || ''}
-                />
-              )}
-              {ccda?.PATIENT_INSTRUCTIONS && (
-                <DisplayCCDASection
-                  title="Patient Instructions"
-                  content={ccda.PATIENT_INSTRUCTIONS || ''}
-                />
-              )}
-              {ccda?.HOSPITAL_DISCHARGE_INSTRUCTIONS && (
-                <DisplayCCDASection
-                  title="Hospital Discharge Instructions"
-                  content={ccda.HOSPITAL_DISCHARGE_INSTRUCTIONS || ''}
-                />
-              )}
-              {ccda?.ENCOUNTERS && (
-                <DisplayCCDASection
-                  title="Encounters"
-                  content={ccda.ENCOUNTERS || ''}
-                />
-              )}
-              {ccda?.CARE_TEAMS && (
-                <DisplayCCDASection
-                  title="Care Team"
-                  content={ccda.CARE_TEAMS || ''}
-                />
-              )}
-              {ccda?.PAYERS && (
-                <DisplayCCDASection
-                  title="Payers"
-                  content={ccda.PAYERS || ''}
-                />
+              {!hasLoadedDocument && 'Loading...'}
+              <DisplayCCDADocument ccda={ccda} />
+              {hasLoadedDocument && !ccda && (
+                <p>
+                  Sorry, looks like we were unable to get the linked document
+                </p>
               )}
             </p>
           </div>
         </div>
       </div>
     </Modal>
+  );
+}
+
+function DisplayCCDADocument({
+  ccda,
+}: {
+  ccda: Partial<Record<CCDAStructureDefinitionKeys, string>> | undefined;
+}) {
+  return (
+    <>
+      {ccda?.REASON_FOR_REFERRAL && (
+        <DisplayCCDASection
+          title="Reason for Referral"
+          content={ccda.REASON_FOR_REFERRAL || ''}
+        />
+      )}
+      {ccda?.VITAL_SIGNS && (
+        <DisplayCCDASection
+          title="Vital Signs"
+          content={ccda.VITAL_SIGNS || ''}
+        />
+      )}
+      {ccda?.HPI && (
+        <DisplayCCDASection
+          title="History of Present Illness"
+          content={ccda.HPI || ''}
+        />
+      )}
+      {ccda?.MEDICATIONS && (
+        <DisplayCCDASection
+          title="Medications"
+          content={ccda.MEDICATIONS || ''}
+        />
+      )}
+      {ccda?.IMMUNIZATIONS && (
+        <DisplayCCDASection
+          title="Immunizations"
+          content={ccda.IMMUNIZATIONS || ''}
+        />
+      )}
+      {ccda?.FAMILY_HISTORY && (
+        <DisplayCCDASection
+          title="Family History"
+          content={ccda.FAMILY_HISTORY || ''}
+        />
+      )}
+      {ccda?.SOCIAL_HISTORY && (
+        <DisplayCCDASection
+          title="Social History"
+          content={ccda.SOCIAL_HISTORY || ''}
+        />
+      )}
+      {ccda?.FOREIGN_TRAVEL && (
+        <DisplayCCDASection
+          title="Foreign Travel"
+          content={ccda.FOREIGN_TRAVEL || ''}
+        />
+      )}
+      {ccda?.HEALTH_CONCERNS && (
+        <DisplayCCDASection
+          title="Health Concerns"
+          content={ccda.HEALTH_CONCERNS || ''}
+        />
+      )}
+      {ccda?.PROCEDURES && (
+        <DisplayCCDASection
+          title="Procedures"
+          content={ccda.PROCEDURES || ''}
+        />
+      )}
+      {ccda?.RESULTS && (
+        <DisplayCCDASection title="Results" content={ccda.RESULTS || ''} />
+      )}
+      {ccda?.VISIT_DIAGNOSIS && (
+        <DisplayCCDASection
+          title="Visit Diagnoses"
+          content={ccda.VISIT_DIAGNOSIS || ''}
+        />
+      )}
+      {ccda?.ASSESSMENT && (
+        <DisplayCCDASection
+          title="Assessment"
+          content={ccda.ASSESSMENT || ''}
+        />
+      )}
+      {ccda?.PROBLEMS && (
+        <DisplayCCDASection title="Problems" content={ccda.PROBLEMS || ''} />
+      )}
+      {ccda?.NUTRITION && (
+        <DisplayCCDASection title="Nutrition" content={ccda.NUTRITION || ''} />
+      )}
+      {ccda?.PLAN_OF_TREATMENT && (
+        <DisplayCCDASection
+          title="Plan of Treatment"
+          content={ccda.PLAN_OF_TREATMENT || ''}
+        />
+      )}
+      {ccda?.GOALS && (
+        <DisplayCCDASection title="Goals" content={ccda.GOALS || ''} />
+      )}
+      {ccda?.MEDICAL_EQUIPMENT && (
+        <DisplayCCDASection
+          title="Medical Equipment"
+          content={ccda.MEDICAL_EQUIPMENT || ''}
+        />
+      )}
+      {ccda?.ADVANCE_DIRECTIVES && (
+        <DisplayCCDASection
+          title="Advance Directives"
+          content={ccda.ADVANCE_DIRECTIVES || ''}
+        />
+      )}
+      {ccda?.PATIENT_INSTRUCTIONS && (
+        <DisplayCCDASection
+          title="Patient Instructions"
+          content={ccda.PATIENT_INSTRUCTIONS || ''}
+        />
+      )}
+      {ccda?.HOSPITAL_DISCHARGE_INSTRUCTIONS && (
+        <DisplayCCDASection
+          title="Hospital Discharge Instructions"
+          content={ccda.HOSPITAL_DISCHARGE_INSTRUCTIONS || ''}
+        />
+      )}
+      {ccda?.ENCOUNTERS && (
+        <DisplayCCDASection
+          title="Encounters"
+          content={ccda.ENCOUNTERS || ''}
+        />
+      )}
+      {ccda?.CARE_TEAMS && (
+        <DisplayCCDASection title="Care Team" content={ccda.CARE_TEAMS || ''} />
+      )}
+      {ccda?.PAYERS && (
+        <DisplayCCDASection title="Payers" content={ccda.PAYERS || ''} />
+      )}
+    </>
   );
 }
 

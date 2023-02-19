@@ -45,7 +45,6 @@ function useEpicDynamicRegistrationLogin() {
 
   useEffect(() => {
     if (!hasRun.current) {
-      //debugger;
       const searchRequest = new URLSearchParams(window.location.search),
         code = searchRequest.get('code'),
         epicUrl = localStorage.getItem(EpicLocalStorageKeys.EPIC_URL),
@@ -53,7 +52,6 @@ function useEpicDynamicRegistrationLogin() {
         epicId = localStorage.getItem(EpicLocalStorageKeys.EPIC_ID);
 
       if (code && epicUrl && epicName && epicId && userPreferences && user) {
-        debugger;
         hasRun.current = true;
         handleLogin({
           code,
@@ -97,6 +95,7 @@ function useEpicDynamicRegistrationLogin() {
     userPreferences?.use_proxy,
     user,
     navigate,
+    userPreferences,
   ]);
 
   return [error];

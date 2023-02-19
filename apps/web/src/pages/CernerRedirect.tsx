@@ -1,24 +1,19 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
-import { CreateOnPatientConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
+import { CreateCernerConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
 import { useRxDb } from '../components/providers/RxDbProvider';
 import { Routes } from '../Routes';
 import { useNotificationDispatch } from '../components/providers/NotificationProvider';
 import { AppPage } from '../components/AppPage';
 import { GenericBanner } from '../components/GenericBanner';
 import { useUser } from '../components/providers/UserProvider';
+import {
+  CernerLocalStorageKeys,
+  fetchAccessTokenWithCode,
+} from '../services/Cerner';
 
-export interface OnPatientAuthResponse {
-  access_token: string;
-  expires_in: number;
-  patient: string;
-  refresh_token: string;
-  scope: string;
-  token_type: string;
-}
-
-const OnPatientRedirect: React.FC = () => {
+const CernerRedirect: React.FC = () => {
   const navigate = useNavigate(),
     user = useUser(),
     db = useRxDb(),
@@ -29,43 +24,75 @@ const OnPatientRedirect: React.FC = () => {
     if (!hasRun.current) {
       hasRun.current = true;
       const searchRequest = new URLSearchParams(window.location.search),
-        accessToken = searchRequest.get('accessToken'),
-        refreshToken = searchRequest.get('refreshToken'),
-        expiresIn = searchRequest.get('expiresIn');
+        code = searchRequest.get('code'),
+        cernerUrl = localStorage.getItem(
+          CernerLocalStorageKeys.CERNER_BASE_URL
+        ),
+        cernerName = localStorage.getItem(CernerLocalStorageKeys.CERNER_NAME),
+        cernerId = localStorage.getItem(CernerLocalStorageKeys.CERNER_ID),
+        cernerAuthUrl = localStorage.getItem(
+          CernerLocalStorageKeys.CERNER_AUTH_URL
+        ),
+        cernerTokenUrl = localStorage.getItem(
+          CernerLocalStorageKeys.CERNER_TOKEN_URL
+        );
 
-      if (accessToken && refreshToken && expiresIn && user.id) {
-        const nowInSeconds = Math.floor(Date.now() / 1000);
-        const dbentry: Omit<
-          CreateOnPatientConnectionDocument,
-          'patient' | 'scope'
-        > = {
-          id: uuidv4(),
-          user_id: user.id,
-          source: 'onpatient',
-          location: 'https://onpatient.com',
-          name: 'OnPatient',
-          access_token: accessToken,
-          refresh_token: refreshToken,
-          expires_in: nowInSeconds + parseInt(expiresIn),
-        };
-        db.connection_documents
-          .insert(dbentry)
-          .then(() => {
-            navigate(Routes.AddConnection);
-          })
-          .catch((e: unknown) => {
+      console.log(code);
+      if (
+        code &&
+        cernerUrl &&
+        cernerName &&
+        cernerId &&
+        cernerAuthUrl &&
+        cernerTokenUrl
+      ) {
+        const tokenEndpoint = cernerTokenUrl;
+        fetchAccessTokenWithCode(code, tokenEndpoint).then((res) => {
+          console.log(res);
+          if (
+            res.access_token &&
+            res.refresh_token &&
+            res.expires_in &&
+            res.id_token &&
+            user.id
+          ) {
+            const nowInSeconds = Math.floor(Date.now() / 1000);
+            const dbentry: Omit<
+              CreateCernerConnectionDocument,
+              'patient' | 'scope'
+            > = {
+              id: uuidv4(),
+              user_id: user.id,
+              source: 'cerner',
+              location: cernerUrl,
+              name: cernerName,
+              access_token: res.access_token,
+              id_token: res.id_token,
+              refresh_token: res.refresh_token,
+              expires_in: nowInSeconds + res.expires_in,
+              auth_uri: cernerAuthUrl,
+              token_uri: cernerTokenUrl,
+            };
+            db.connection_documents
+              .insert(dbentry)
+              .then(() => {
+                navigate(Routes.AddConnection);
+              })
+              .catch((e: unknown) => {
+                notifyDispatch({
+                  type: 'set_notification',
+                  message: `Error adding connection: ${(e as Error).message}`,
+                  variant: 'error',
+                });
+                navigate(Routes.AddConnection);
+              });
+          } else {
             notifyDispatch({
               type: 'set_notification',
-              message: `Error adding connection: ${(e as Error).message}`,
+              message: `Error completing authentication: no access token provided`,
               variant: 'error',
             });
-            navigate(Routes.AddConnection);
-          });
-      } else {
-        notifyDispatch({
-          type: 'set_notification',
-          message: `Error completing authentication: no access token provided`,
-          variant: 'error',
+          }
         });
       }
     }
@@ -95,4 +122,4 @@ const OnPatientRedirect: React.FC = () => {
   );
 };
 
-export default OnPatientRedirect;
+export default CernerRedirect;

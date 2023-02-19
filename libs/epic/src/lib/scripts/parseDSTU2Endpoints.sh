@@ -4,7 +4,6 @@ jq \
 [
     .entry[] | { id: .resource.id, name: .resource.name, url: .resource.address }
 ] | 
-.[].url |= sub("/api/FHIR/DSTU2/"; "") | 
 . += [
     {
         "id": "sandbox",
