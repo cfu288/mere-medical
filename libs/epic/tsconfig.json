@@ -16,7 +16,7 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "resolveJsonModule": true,
-    "lib": ["ES2022"],
+    "lib": ["ES2022", "dom"],
     "module": "ES2022"
   }
 }

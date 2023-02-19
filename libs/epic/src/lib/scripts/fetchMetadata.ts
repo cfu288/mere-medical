@@ -1,5 +1,5 @@
+// @ts-nocheck
 // deno run --allow-read --allow-write --allow-net fetchMetadata.ts
-
 try {
   const data: string = await Deno.readTextFile('./DSTU2Endpoints.json');
 
