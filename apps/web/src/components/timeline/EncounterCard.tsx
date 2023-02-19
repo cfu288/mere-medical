@@ -1,5 +1,5 @@
 import { format, parseISO } from 'date-fns';
-import { BundleEntry, Encounter, Observation } from 'fhir/r2';
+import { BundleEntry, Encounter } from 'fhir/r2';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { TimelineCardTitle } from './TimelineCardTitle';
 import { memo, useState } from 'react';
