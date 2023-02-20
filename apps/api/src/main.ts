@@ -1,14 +1,10 @@
-/**
- * This is not a production server yet!
- * This is only a minimal backend to get started.
- */
-
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 
 import * as fs from 'fs';
 import * as path from 'path';
 import { RootModule } from './app/root.module';
+import * as compression from 'compression';
 
 async function bootstrap() {
   const globalPrefix = 'api';
@@ -35,6 +31,7 @@ async function bootstrap() {
 
   const app = await NestFactory.create(RootModule, { httpsOptions });
   app.setGlobalPrefix(globalPrefix);
+  app.use(compression());
   const port = process.env.PORT || 80;
   await app.listen(port);
   Logger.log(
