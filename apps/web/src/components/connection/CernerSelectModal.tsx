@@ -7,7 +7,7 @@ import { Modal } from '../Modal';
 import { ModalHeader } from '../ModalHeader';
 import { SelectOption } from '../../pages/ConnectionTab';
 import { DSTU2Endpoint } from '@mere/cerner';
-import { CernerSelectModelResultItem } from './CernerSelectModalResultItem';
+import { CernerSelectModelResultItem } from './CernerSelectModalItem';
 import { useNotificationDispatch } from '../providers/NotificationProvider';
 
 export function CernerSelectModal({
