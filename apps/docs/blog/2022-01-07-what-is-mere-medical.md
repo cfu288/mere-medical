@@ -48,7 +48,7 @@ Mere Medical is still in early development and is essentially pre-release softwa
 - Offline-first - Data is stored locally on device and can be accessed with no internet connection.
 - Full control of data - Backup, export, and delete your data.
 - Automatic sync to patient portals - Reduce the work you need to do to get your records.
-- Multiple EMR support - Integrations to two different EMR systems, which includes 450+ health systems and practices.
+- Multiple EMR support - Integrations to two different EMR systems, which includes 1000+ health systems and practices.
 
 There are a few more features I'd like to wrap up before we hit v1.0, hopefully coming soon.
 
