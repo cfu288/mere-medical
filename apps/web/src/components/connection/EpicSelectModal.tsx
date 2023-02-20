@@ -48,12 +48,12 @@ export function EpicSelectModal({
       overflowHidden
     >
       <ModalHeader
-        title={'Select your EPIC health system to log in'}
+        title={'Select your Epic health system to log in'}
         setClose={() => setOpen((x) => !x)}
       />
       <Combobox
-        onChange={(s: SelectOption) => {
-          onClick(s.baseUrl, s.name, s.id);
+        onChange={(s: {url: string & Location; name: string; id: string}) => {
+          onClick(s.url, s.name, s.id);
           setOpen(false);
         }}
       >
