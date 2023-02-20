@@ -3,8 +3,13 @@ import { OnPatientModule } from './onpatient/onpatient.module';
 import { RootController } from './root.controller';
 import { StaticModule } from './static.module';
 import { LoginProxyModule } from './proxy/proxy.module';
+import { CernerModule } from './cerner/cerner.module';
 
-const imports: ModuleMetadata['imports'] = [StaticModule, LoginProxyModule];
+const imports: ModuleMetadata['imports'] = [
+  StaticModule,
+  LoginProxyModule,
+  CernerModule,
+];
 
 if (checkIfOnPatientConfigured()) {
   imports.push(
