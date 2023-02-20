@@ -14,4 +14,4 @@ Currently, only the following patient portals are supported:
 
 Support for more patient portals is coming soon.
 
-Mere Medical is still in active development. If you run into any issues when connecting using a supported portal,[please submit a bug report](mailto:cfu288@meremedical.co) .
+Mere Medical is still in active development. If you run into any issues when connecting using a supported portal, [please submit a bug report](mailto:cfu288@meremedical.co).
