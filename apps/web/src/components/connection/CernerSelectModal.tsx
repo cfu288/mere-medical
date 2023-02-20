@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { Combobox } from '@headlessui/react';
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid';
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
@@ -6,9 +6,9 @@ import { useDebounce } from '@react-hook/debounce';
 import { Modal } from '../Modal';
 import { ModalHeader } from '../ModalHeader';
 import { SelectOption } from '../../pages/ConnectionTab';
-import { stringSimilarity } from '../../utils/SearchUtils';
-import { CernerDSTU2TenantEndpoints, DSTU2Endpoint } from '@mere/cerner';
+import { DSTU2Endpoint } from '@mere/cerner';
 import { CernerSelectModelResultItem } from './CernerSelectModalResultItem';
+import { useNotificationDispatch } from '../providers/NotificationProvider';
 
 export function CernerSelectModal({
   open,
@@ -25,14 +25,22 @@ export function CernerSelectModal({
     id: string
   ) => void;
 }) {
-  const [query, setQuery] = useDebounce('', 150);
-  const [items, setItems] = useState<DSTU2Endpoint[]>([]);
+  const [query, setQuery] = useDebounce('', 150),
+    [items, setItems] = useState<DSTU2Endpoint[]>([]),
+    notifyDispatch = useNotificationDispatch();
 
   useEffect(() => {
     fetch(`/api/v1/cerner/tenants?` + new URLSearchParams({ query }))
       .then((x) => x.json())
-      .then((x) => setItems(x));
-  }, [query]);
+      .then((x) => setItems(x))
+      .catch(() => {
+        notifyDispatch({
+          type: 'set_notification',
+          message: `Unable to search for health systems`,
+          variant: 'error',
+        });
+      });
+  }, [notifyDispatch, query]);
 
   return (
     <Modal

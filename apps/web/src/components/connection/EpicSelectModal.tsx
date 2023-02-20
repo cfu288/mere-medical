@@ -1,15 +1,13 @@
-import { useCallback } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { Combobox } from '@headlessui/react';
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid';
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import { useDebounce } from '@react-hook/debounce';
 import { Modal } from '../Modal';
 import { ModalHeader } from '../ModalHeader';
-import { SelectOption, MemoizedResultItem } from '../../pages/ConnectionTab';
-import { stringSimilarity } from '../../utils/SearchUtils';
-import { EpicDSTU2TenantEndpoints } from '@mere/epic';
-
-const items = EpicDSTU2TenantEndpoints;
+import { DSTU2Endpoint } from '@mere/epic';
+import { EpicSelectModelResultItem } from './EpicSelectModelResultItem';
+import { useNotificationDispatch } from '../providers/NotificationProvider';
 
 export function EpicSelectModal({
   open,
@@ -21,24 +19,21 @@ export function EpicSelectModal({
   onClick: (s: string & Location, name: string, id: string) => void;
 }) {
   const [query, setQuery] = useDebounce('', 150);
-  const filteredItems = useCallback((s: string) => {
-    if (s === '') {
-      return items.sort((x, y) => (x.name > y.name ? 1 : -1)).slice(0, 100);
-    }
-    return items
-      .map((item) => {
-        // Match against each token, take highest score
-        const vals = item.name
-          .split(' ')
-          .map((token) => stringSimilarity(token, s));
-        const rating = Math.max(...vals);
-        return { rating, item };
-      })
-      .filter((item) => item.rating > 0.05)
-      .sort((a, b) => b.rating - a.rating)
-      .slice(0, 50)
-      .map((item) => item.item);
-  }, []);
+  const [items, setItems] = useState<DSTU2Endpoint[]>([]),
+    notifyDispatch = useNotificationDispatch();
+
+  useEffect(() => {
+    fetch(`/api/v1/epic/tenants?` + new URLSearchParams({ query }))
+      .then((x) => x.json())
+      .then((x) => setItems(x))
+      .catch(() => {
+        notifyDispatch({
+          type: 'set_notification',
+          message: `Unable to search for health systems`,
+          variant: 'error',
+        });
+      });
+  }, [notifyDispatch, query]);
 
   return (
     <Modal
@@ -52,7 +47,7 @@ export function EpicSelectModal({
         setClose={() => setOpen((x) => !x)}
       />
       <Combobox
-        onChange={(s: {url: string & Location; name: string; id: string}) => {
+        onChange={(s: { url: string & Location; name: string; id: string }) => {
           onClick(s.url, s.name, s.id);
           setOpen(false);
         }}
@@ -69,12 +64,12 @@ export function EpicSelectModal({
             autoFocus={true}
           />
         </div>
-        {filteredItems(query).length > 0 && (
+        {items.length > 0 && (
           <Combobox.Options
             static
             className="max-h-full scroll-py-3 overflow-y-scroll p-3 sm:max-h-96"
           >
-            {filteredItems(query).map((item) => (
+            {items.map((item) => (
               <MemoizedResultItem
                 key={item.id}
                 id={item.id}
@@ -85,7 +80,7 @@ export function EpicSelectModal({
           </Combobox.Options>
         )}
 
-        {query !== '' && filteredItems(query).length === 0 && (
+        {query !== '' && items.length === 0 && (
           <div className="py-14 px-6 text-center text-sm sm:px-14">
             <ExclamationCircleIcon
               type="outline"
@@ -102,3 +97,5 @@ export function EpicSelectModal({
     </Modal>
   );
 }
+
+const MemoizedResultItem = memo(EpicSelectModelResultItem);

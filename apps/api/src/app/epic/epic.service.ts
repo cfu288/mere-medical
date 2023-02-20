@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { CernerDSTU2TenantEndpoints, DSTU2Endpoint } from '@mere/cerner';
+import { EpicDSTU2TenantEndpoints, DSTU2Endpoint } from '@mere/epic';
 
 @Injectable()
-export class CernerService {
-  private readonly items = CernerDSTU2TenantEndpoints;
+export class EpicService {
+  private readonly items = EpicDSTU2TenantEndpoints;
 
   async queryTenants(query: string): Promise<DSTU2Endpoint[]> {
     return filteredItemsWithQuery(this.items, query);

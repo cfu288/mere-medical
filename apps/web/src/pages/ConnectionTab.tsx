@@ -192,5 +192,3 @@ export interface SelectOption {
   authUrl: string & Location;
   tokenUrl: string & Location;
 }
-
-export const MemoizedResultItem = memo(EpicSelectModelResultItem);

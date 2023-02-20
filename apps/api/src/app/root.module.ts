@@ -1,14 +1,16 @@
 import { Logger, Module, ModuleMetadata } from '@nestjs/common';
 import { OnPatientModule } from './onpatient/onpatient.module';
 import { RootController } from './root.controller';
-import { StaticModule } from './static.module';
+import { StaticModule } from './static/static.module';
 import { LoginProxyModule } from './proxy/proxy.module';
 import { CernerModule } from './cerner/cerner.module';
+import { EpicModule } from './epic/epic.module';
 
 const imports: ModuleMetadata['imports'] = [
   StaticModule,
   LoginProxyModule,
   CernerModule,
+  EpicModule,
 ];
 
 if (checkIfOnPatientConfigured()) {
