@@ -8,12 +8,7 @@ import { DatabaseCollections, useRxDb } from '../providers/RxDbProvider';
 import onpatientLogo from '../../img/onpatient_logo.jpeg';
 import epicLogo from '../../img/MyChartByEpic.png';
 import cernerLogo from '../../img/cerner-logo.png';
-import {
-  differenceInDays,
-  differenceInHours,
-  format,
-  parseISO,
-} from 'date-fns';
+import { differenceInDays, format, parseISO } from 'date-fns';
 import { RxDatabase, RxDocument } from 'rxdb';
 import * as OnPatient from '../../services/OnPatient';
 import * as Epic from '../../services/Epic';
@@ -86,16 +81,6 @@ async function fetchMedicalRecords(
         throw new Error(
           `Error refreshing ${name} access - try logging in again`
         );
-      }
-      try {
-        return await Cerner.syncAllRecords(
-          baseUrl,
-          connectionDocument as unknown as RxDocument<CernerConnectionDocument>,
-          db
-        );
-      } catch (e) {
-        console.error(e);
-        throw new Error('Error syncing some data from your Cerner account');
       }
     }
     default: {
@@ -253,10 +238,7 @@ export function ConnectionCard({
           !item.get('last_refreshed') ||
           (item.get('last_refreshed') &&
             Math.abs(
-              differenceInHours(
-                parseISO(item.get('last_refreshed')),
-                new Date()
-              )
+              differenceInDays(parseISO(item.get('last_refreshed')), new Date())
             ) >= 1)
         ) {
           handleFetchData();
