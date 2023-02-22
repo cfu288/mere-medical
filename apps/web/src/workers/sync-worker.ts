@@ -11,6 +11,7 @@ import {
 } from '../models/connection-document/ConnectionDocument.type';
 
 (async () => {
+  debugger;
   const db = await initRxDb();
 
   self.onmessage = async ({
