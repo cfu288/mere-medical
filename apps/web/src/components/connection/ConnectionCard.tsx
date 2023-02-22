@@ -85,6 +85,7 @@ async function fetchMedicalRecords(
     data: {
       baseUrl,
       connectionDocumentId: connectionDocument.toMutableJSON().id,
+      useProxy,
     },
   });
 }

@@ -9,7 +9,7 @@ export const syncWorkerDispatch = ({
   data,
 }: {
   action: SyncActions;
-  data: { baseUrl: string; connectionDocumentId: string };
+  data: { baseUrl: string; connectionDocumentId: string; useProxy: boolean };
 }) => SyncWorker.postMessage({ action, data });
 
 SyncWorker.onmessage = (event: MessageEvent<{ error: string }>) => {
