@@ -47,6 +47,7 @@ const OnPatientRedirect: React.FC = () => {
           access_token: accessToken,
           refresh_token: refreshToken,
           expires_in: nowInSeconds + parseInt(expiresIn),
+          is_syncing: false,
         };
         db.connection_documents
           .insert(dbentry)

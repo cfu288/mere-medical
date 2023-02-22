@@ -11,4 +11,8 @@ export const ConnectionDocumentMigrations: MigrationStrategies = {
     oldDoc.token_uri = '';
     return oldDoc;
   },
+  3: function (oldDoc) {
+    oldDoc.is_syncing = false;
+    return oldDoc;
+  },
 };

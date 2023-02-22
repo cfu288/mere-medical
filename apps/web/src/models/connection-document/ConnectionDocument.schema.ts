@@ -1,6 +1,6 @@
 export const connectionSchemaLiteral = {
   title: 'Connection Document Schema',
-  version: 2,
+  version: 3,
   primaryKey: 'id',
   type: 'object',
   properties: {
@@ -61,6 +61,9 @@ export const connectionSchemaLiteral = {
     },
     id_token: {
       type: 'string',
+    },
+    is_syncing: {
+      type: 'boolean',
     },
   },
   indexes: ['last_refreshed', 'user_id'],

@@ -72,6 +72,7 @@ const CernerRedirect: React.FC = () => {
               expires_in: nowInSeconds + res.expires_in,
               auth_uri: cernerAuthUrl,
               token_uri: cernerTokenUrl,
+              is_syncing: false,
             };
             db.connection_documents
               .insert(dbentry)

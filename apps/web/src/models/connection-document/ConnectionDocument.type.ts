@@ -10,6 +10,7 @@ export interface ConnectionDocument extends BaseDocument {
   name: string;
   location: string;
   last_refreshed: string;
+  is_syncing: boolean;
 }
 
 export interface EpicConnectionDocument extends ConnectionDocument {

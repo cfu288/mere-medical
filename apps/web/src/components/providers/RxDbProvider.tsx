@@ -140,7 +140,7 @@ const handleImport = (
   });
 };
 
-async function initRxDb() {
+export async function initRxDb() {
   const db = await createRxDatabase<DatabaseCollections>({
     name: 'mere_db',
     storage: getRxStorageWorker({

@@ -10,6 +10,7 @@ module.exports = function (webpackConfig, nxConfig) {
   const config = nxReactBaseConfig(webpackConfig);
 
   const mergeWebpackConfigs = [config];
+
   mergeWebpackConfigs.push({
     resolve: {
       fallback: {
@@ -19,10 +20,19 @@ module.exports = function (webpackConfig, nxConfig) {
   });
 
   mergeWebpackConfigs.push({
+    output: {
+      scriptType: "text/javascript"
+    }
+  })
+
+
+  if (config.mode === 'production') {
+  mergeWebpackConfigs.push({
     plugins: [
       new BundleAnalyzerPlugin()
     ]
   })
+  }
 
   // For production we add the service worker
   if (config.mode === 'production') {

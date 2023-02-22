@@ -18,6 +18,7 @@ import {
 import { RxDocument, RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../components/providers/RxDbProvider';
 import {
+  ConnectionDocument,
   CreateEpicConnectionDocument,
   EpicConnectionDocument,
 } from '../models/connection-document/ConnectionDocument.type';
@@ -62,12 +63,12 @@ export enum EpicLocalStorageKeys {
 
 async function getFHIRResource<T extends FhirResource>(
   baseUrl: string,
-  connectionDocument: RxDocument<EpicConnectionDocument>,
+  connectionDocument: EpicConnectionDocument,
   fhirResourceUrl: string,
   params?: Record<string, string>,
   useProxy = false
 ): Promise<BundleEntry<T>[]> {
-  const epicId = connectionDocument.get('tenant_id');
+  const epicId = connectionDocument.tenant_id;
   const defaultUrl = `${getDSTU2Url(
       baseUrl
     )}/${fhirResourceUrl}?_format=${encodeURIComponent(
@@ -81,7 +82,7 @@ async function getFHIRResource<T extends FhirResource>(
 
   const res = await fetch(useProxy ? proxyUrl : defaultUrl, {
     headers: {
-      Authorization: `Bearer ${connectionDocument.get('access_token')}`,
+      Authorization: `Bearer ${connectionDocument.access_token}`,
       Accept: 'application/fhir+json',
     },
   })
@@ -97,7 +98,7 @@ async function getFHIRResource<T extends FhirResource>(
 /**
  * Sync a FHIR resource to the database
  * @param baseUrl Base url of the FHIR server
- * @param connectionDocument RxDocument of the connection document
+ * @param connectionDocument EpicConnectionDocument connection document
  * @param db RxDatabase to save to
  * @param fhirResourceUrl URL path FHIR resource to sync. e.g. Patient, Procedure, etc. Exclude the leading slash.
  * @param mapper Function to map the FHIR resource to a ClinicalDocument
@@ -106,7 +107,7 @@ async function getFHIRResource<T extends FhirResource>(
  */
 async function syncFHIRResource<T extends FhirResource>(
   baseUrl: string,
-  connectionDocument: RxDocument<EpicConnectionDocument>,
+  connectionDocument: EpicConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
   mapper: (proc: BundleEntry<T>) => ClinicalDocument<BundleEntry<T>>,
@@ -159,39 +160,31 @@ async function syncFHIRResource<T extends FhirResource>(
  */
 export async function syncAllRecords(
   baseUrl: string,
-  connectionDocument: RxDocument<EpicConnectionDocument>,
+  connectionDocument: EpicConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   useProxy = false
 ): Promise<unknown[][]> {
-  const newCd = connectionDocument.toMutableJSON();
+  const newCd = connectionDocument;
   newCd.last_refreshed = new Date().toISOString();
+
   const procMapper = (proc: BundleEntry<Procedure>) =>
-    DSTU2.mapProcedureToClinicalDocument(proc, connectionDocument.toJSON());
+    DSTU2.mapProcedureToClinicalDocument(proc, connectionDocument);
   const patientMapper = (pt: BundleEntry<Patient>) =>
     DSTU2.mapPatientToClinicalDocument(pt, connectionDocument);
   const obsMapper = (imm: BundleEntry<Observation>) =>
-    DSTU2.mapObservationToClinicalDocument(imm, connectionDocument.toJSON());
+    DSTU2.mapObservationToClinicalDocument(imm, connectionDocument);
   const drMapper = (dr: BundleEntry<DiagnosticReport>) =>
-    DSTU2.mapDiagnosticReportToClinicalDocument(
-      dr,
-      connectionDocument.toJSON()
-    );
+    DSTU2.mapDiagnosticReportToClinicalDocument(dr, connectionDocument);
   const medStatementMapper = (dr: BundleEntry<MedicationStatement>) =>
-    DSTU2.mapMedicationStatementToClinicalDocument(
-      dr,
-      connectionDocument.toJSON()
-    );
+    DSTU2.mapMedicationStatementToClinicalDocument(dr, connectionDocument);
   const immMapper = (dr: BundleEntry<Immunization>) =>
-    DSTU2.mapImmunizationToClinicalDocument(dr, connectionDocument.toJSON());
+    DSTU2.mapImmunizationToClinicalDocument(dr, connectionDocument);
   const conditionMapper = (dr: BundleEntry<Condition>) =>
-    DSTU2.mapConditionToClinicalDocument(dr, connectionDocument.toJSON());
+    DSTU2.mapConditionToClinicalDocument(dr, connectionDocument);
   const allergyIntoleranceMapper = (a: BundleEntry<AllergyIntolerance>) =>
-    DSTU2.mapAllergyIntoleranceToClinicalDocument(
-      a,
-      connectionDocument.toJSON()
-    );
+    DSTU2.mapAllergyIntoleranceToClinicalDocument(a, connectionDocument);
   const carePlanMapper = (dr: BundleEntry<CarePlan>) =>
-    DSTU2.mapCarePlanToClinicalDocument(dr, connectionDocument.toJSON());
+    DSTU2.mapCarePlanToClinicalDocument(dr, connectionDocument);
 
   const syncJob = await Promise.all([
     syncFHIRResource<Procedure>(
@@ -201,7 +194,7 @@ export async function syncAllRecords(
       'Procedure',
       procMapper,
       {
-        patient: connectionDocument.get('patient'),
+        patient: connectionDocument.patient,
       },
       useProxy
     ),
@@ -212,7 +205,7 @@ export async function syncAllRecords(
       'Patient',
       patientMapper,
       {
-        id: connectionDocument.get('patient'),
+        id: connectionDocument.patient,
       },
       useProxy
     ),
@@ -223,7 +216,7 @@ export async function syncAllRecords(
       'Observation',
       obsMapper,
       {
-        patient: connectionDocument.get('patient'),
+        patient: connectionDocument.patient,
         category: 'laboratory',
       },
       useProxy
@@ -235,7 +228,7 @@ export async function syncAllRecords(
       'DiagnosticReport',
       drMapper,
       {
-        patient: connectionDocument.get('patient'),
+        patient: connectionDocument.patient,
       },
       useProxy
     ),
@@ -246,7 +239,7 @@ export async function syncAllRecords(
       'MedicationStatement',
       medStatementMapper,
       {
-        patient: connectionDocument.get('patient'),
+        patient: connectionDocument.patient,
       },
       useProxy
     ),
@@ -257,7 +250,7 @@ export async function syncAllRecords(
       'Immunization',
       immMapper,
       {
-        patient: connectionDocument.get('patient'),
+        patient: connectionDocument.patient,
       },
       useProxy
     ),
@@ -268,7 +261,7 @@ export async function syncAllRecords(
       'Condition',
       conditionMapper,
       {
-        patient: connectionDocument.get('patient'),
+        patient: connectionDocument.patient,
       },
       useProxy
     ),
@@ -277,7 +270,7 @@ export async function syncAllRecords(
       connectionDocument,
       db,
       {
-        patient: connectionDocument.get('patient'),
+        patient: connectionDocument.patient,
       },
       useProxy
     ),
@@ -288,7 +281,7 @@ export async function syncAllRecords(
       'CarePlan',
       carePlanMapper,
       {
-        patient: connectionDocument.get('patient'),
+        patient: connectionDocument.patient,
       },
       useProxy
     ),
@@ -299,7 +292,7 @@ export async function syncAllRecords(
       'AllergyIntolerance',
       allergyIntoleranceMapper,
       {
-        patient: connectionDocument.get('patient'),
+        patient: connectionDocument.patient,
       },
       useProxy
     ),
@@ -310,17 +303,13 @@ export async function syncAllRecords(
 
 async function syncDocumentReferences(
   baseUrl: string,
-  connectionDocument: RxDocument<EpicConnectionDocument>,
+  connectionDocument: EpicConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
-  // fhirResourceUrl: string,
   params: Record<string, string>,
   useProxy = false
 ) {
   const documentReferenceMapper = (dr: BundleEntry<DocumentReference>) =>
-    DSTU2.mapDocumentReferenceToClinicalDocument(
-      dr,
-      connectionDocument.toJSON()
-    );
+    DSTU2.mapDocumentReferenceToClinicalDocument(dr, connectionDocument);
   // Sync document references and return them
   await syncFHIRResource<DocumentReference>(
     baseUrl,
@@ -339,7 +328,7 @@ async function syncDocumentReferences(
         'data_record.resource_type': {
           $eq: 'documentreference',
         },
-        connection_record_id: `${connectionDocument.get('id')}`,
+        connection_record_id: `${connectionDocument.id}`,
       },
     })
     .exec();
@@ -421,12 +410,12 @@ async function syncDocumentReferences(
  */
 async function fetchAttachmentData(
   url: string,
-  cd: RxDocument<EpicConnectionDocument>
+  cd: EpicConnectionDocument
 ): Promise<{ contentType: string | null; raw: string | undefined }> {
   try {
     const res = await fetch(url, {
       headers: {
-        Authorization: `Bearer ${cd.get('access_token')}`,
+        Authorization: `Bearer ${cd.access_token}`,
       },
     });
     if (!res.ok) {
@@ -672,6 +661,7 @@ export async function saveConnectionToDb({
           patient: res.patient,
           client_id: (res as EpicAuthResponseWithClientId)?.client_id,
           tenant_id: epicId,
+          is_syncing: false,
         };
         try {
           db.connection_documents.insert(dbentry).then(() => {
@@ -688,6 +678,47 @@ export async function saveConnectionToDb({
       );
     }
   });
+}
+
+/**
+ * For a connection document, if the access token is expired, refresh it and save it to the db
+ * @param connectionDocument the connection document to refresh the access token for
+ * @param db
+ */
+export async function refreshEpicConnectionTokenIfNeeded(
+  connectionDocument: RxDocument<ConnectionDocument>,
+  db: RxDatabase<DatabaseCollections>,
+  useProxy = false
+) {
+  const nowInSeconds = Math.floor(Date.now() / 1000);
+  if (connectionDocument.get('expires_in') <= nowInSeconds) {
+    try {
+      const epicUrl = connectionDocument.get('location'),
+        epicName = connectionDocument.get('name'),
+        clientId = connectionDocument.get('client_id'),
+        epicId = connectionDocument.get('tenant_id'),
+        user = connectionDocument.get('user_id');
+
+      const access_token_data = await fetchAccessTokenUsingJWT(
+        clientId,
+        epicUrl,
+        epicId,
+        useProxy
+      );
+
+      return await saveConnectionToDb({
+        res: access_token_data,
+        epicUrl,
+        epicName,
+        db,
+        epicId,
+        user,
+      });
+    } catch (e) {
+      console.error(e);
+      throw new Error('Error refreshing token  - try logging in again');
+    }
+  }
 }
 
 export interface EpicAuthResponse {

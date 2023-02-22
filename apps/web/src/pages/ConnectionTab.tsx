@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
 import * as OnPatient from '../services/OnPatient';
 import { useRxDb } from '../components/providers/RxDbProvider';
@@ -12,7 +12,6 @@ import {
 } from '../services/Cerner';
 import { AppPage } from '../components/AppPage';
 import { EpicSelectModal } from '../components/connection/EpicSelectModal';
-import { EpicSelectModelResultItem } from '../components/connection/EpicSelectModelResultItem';
 import { useUserPreferences } from '../components/providers/UserPreferencesProvider';
 import { Routes } from '../Routes';
 import { Link } from 'react-router-dom';
