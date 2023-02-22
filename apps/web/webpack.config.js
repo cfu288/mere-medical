@@ -20,13 +20,11 @@ module.exports = function (webpackConfig, nxConfig) {
     },
   });
 
-  if (config.mode !== 'production') {
-    mergeWebpackConfigs.push({
-      output: {
-        scriptType: 'text/javascript',
-      },
-    });
-  }
+  mergeWebpackConfigs.push({
+    output: {
+      scriptType: 'text/javascript',
+    },
+  });
 
   if (config.mode === 'production') {
     mergeWebpackConfigs.push({
