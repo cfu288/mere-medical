@@ -2,7 +2,8 @@ const nxReactBaseConfig = require('@nrwl/react/plugins/webpack');
 const { merge } = require('webpack-merge');
 const { InjectManifest } = require('workbox-webpack-plugin');
 const path = require('path');
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const BundleAnalyzerPlugin =
+  require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 module.exports = function (webpackConfig, nxConfig) {
   // Fix that Nx uses a different attribute when serving the app
@@ -19,19 +20,18 @@ module.exports = function (webpackConfig, nxConfig) {
     },
   });
 
-  mergeWebpackConfigs.push({
-    output: {
-      scriptType: "text/javascript"
-    }
-  })
-
+  if (config.mode !== 'production') {
+    mergeWebpackConfigs.push({
+      output: {
+        scriptType: 'text/javascript',
+      },
+    });
+  }
 
   if (config.mode === 'production') {
-  mergeWebpackConfigs.push({
-    plugins: [
-      new BundleAnalyzerPlugin()
-    ]
-  })
+    mergeWebpackConfigs.push({
+      plugins: [new BundleAnalyzerPlugin()],
+    });
   }
 
   // For production we add the service worker
