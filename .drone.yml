@@ -2,9 +2,6 @@ kind: pipeline
 name: default
 type: docker
 
-clone:
-  depth: 2
-
 steps:
   - name: app
     image: thegeeklab/drone-docker-buildx
