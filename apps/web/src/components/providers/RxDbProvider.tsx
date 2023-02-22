@@ -143,11 +143,11 @@ const handleImport = (
 export async function initRxDb() {
   const db = await createRxDatabase<DatabaseCollections>({
     name: 'mere_db',
-    // storage: getRxStorageWorker({
-    //   statics: RxStorageDexieStatics,
-    //   workerInput: '../../assets/dexie.worker.js',
-    // }),
-    storage: getRxStorageDexie(),
+    storage: getRxStorageWorker({
+      statics: RxStorageDexieStatics,
+      workerInput: '../../assets/dexie.worker.js',
+    }),
+    // storage: getRxStorageDexie(),
     multiInstance: true,
     ignoreDuplicate: true,
   });
