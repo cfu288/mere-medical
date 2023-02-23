@@ -14,7 +14,7 @@ steps:
       PASSWORD:
         from_secret: registry_password
       repo: cfu288/mere-medical
-      tags: latest
+      tags: beta
 
   - name: docs
     image: thegeeklab/drone-docker-buildx
@@ -25,7 +25,7 @@ steps:
         from_secret: registry_password
       dockerfile: Dockerfile-docs
       repo: cfu288/mere-medical-docs
-      tags: latest
+      tags: beta
 
   - name: parallelize builds
     image: docker:dind
