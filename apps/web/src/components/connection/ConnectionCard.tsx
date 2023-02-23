@@ -113,8 +113,6 @@ async function refreshCernerConnectionTokenIfNeeded(
         tokenUri
       );
 
-      debugger;
-
       return await Cerner.saveConnectionToDb({
         res: access_token_data,
         cernerBaseUrl: baseUrl,
