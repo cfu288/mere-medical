@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+sidebar_position: 3
 slug: /which-patient-portals-are-supported
 description: Which Patient Portals are Supported?
 ---
