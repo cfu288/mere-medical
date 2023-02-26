@@ -10,7 +10,7 @@ import {
   Patient,
   FhirResource,
 } from 'fhir/r2';
-import { RxDatabase, RxDocument } from 'rxdb';
+import { RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../components/providers/RxDbProvider';
 import { DSTU2 } from './DSTU2';
 import Config from '../environments/config.json';
@@ -30,12 +30,12 @@ export function getLoginUrl() {
 }
 
 async function getFHIRResource<T extends FhirResource>(
-  connectionDocument: RxDocument<ConnectionDocument>,
+  connectionDocument: ConnectionDocument,
   fhirResourcePathUrl: string
 ): Promise<BundleEntry<T>[]> {
   const res = await fetch(`${OnPatientDSTU2Url}/${fhirResourcePathUrl}`, {
     headers: {
-      Authorization: `Bearer ${connectionDocument.get('access_token')}`,
+      Authorization: `Bearer ${connectionDocument.access_token}`,
     },
   })
     .then((res) => res.json())
@@ -48,7 +48,7 @@ async function getFHIRResource<T extends FhirResource>(
 }
 
 async function syncFHIRResource<T extends FhirResource>(
-  connectionDocument: RxDocument<ConnectionDocument>,
+  connectionDocument: ConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
   mapper: (proc: BundleEntry<T>) => ClinicalDocument<BundleEntry<T>>
@@ -86,32 +86,28 @@ async function syncFHIRResource<T extends FhirResource>(
 }
 
 export async function syncAllRecords(
-  connectionDocument: RxDocument<ConnectionDocument>,
+  connectionDocument: ConnectionDocument,
   db: RxDatabase<DatabaseCollections>
-): Promise<unknown[][]> {
-  const newCd = connectionDocument.toMutableJSON();
+): Promise<PromiseSettledResult<void[]>[]> {
+  const newCd = connectionDocument;
   newCd.last_refreshed = new Date().toISOString();
+
   const immMapper = (dr: BundleEntry<Immunization>) =>
-    DSTU2.mapImmunizationToClinicalDocument(dr, connectionDocument.toJSON());
+    DSTU2.mapImmunizationToClinicalDocument(dr, connectionDocument);
   const procMapper = (proc: BundleEntry<Procedure>) =>
-    DSTU2.mapProcedureToClinicalDocument(proc, connectionDocument.toJSON());
+    DSTU2.mapProcedureToClinicalDocument(proc, connectionDocument);
   const patientMapper = (pt: BundleEntry<Patient>) =>
     DSTU2.mapPatientToClinicalDocument(pt, connectionDocument);
   const obsMapper = (imm: BundleEntry<Observation>) =>
-    DSTU2.mapObservationToClinicalDocument(imm, connectionDocument.toJSON());
+    DSTU2.mapObservationToClinicalDocument(imm, connectionDocument);
   const drMapper = (dr: BundleEntry<DiagnosticReport>) =>
-    DSTU2.mapDiagnosticReportToClinicalDocument(
-      dr,
-      connectionDocument.toJSON()
-    );
+    DSTU2.mapDiagnosticReportToClinicalDocument(dr, connectionDocument);
   const medStatementMapper = (dr: BundleEntry<MedicationStatement>) =>
-    DSTU2.mapMedicationStatementToClinicalDocument(
-      dr,
-      connectionDocument.toJSON()
-    );
+    DSTU2.mapMedicationStatementToClinicalDocument(dr, connectionDocument);
   const conditionMapper = (dr: BundleEntry<Condition>) =>
-    DSTU2.mapConditionToClinicalDocument(dr, connectionDocument.toJSON());
-  const syncJob = await Promise.all([
+    DSTU2.mapConditionToClinicalDocument(dr, connectionDocument);
+
+  const syncJob = await Promise.allSettled([
     syncFHIRResource<Immunization>(
       connectionDocument,
       db,
@@ -149,8 +145,9 @@ export async function syncAllRecords(
       medStatementMapper
     ),
     syncFHIRResource<Patient>(connectionDocument, db, 'Patient', patientMapper),
-    db.connection_documents.upsert(newCd).then(() => []),
   ]);
+
+  await db.connection_documents.upsert(newCd).then(() => []);
 
   return syncJob;
 }

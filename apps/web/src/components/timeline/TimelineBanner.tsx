@@ -29,7 +29,7 @@ export function TimelineBanner({
             )}
           </div>
         </div>
-        <div className="flex-column  align-middle">
+        <div className="flex-column align-middle">
           <p className="text-2xl font-bold text-white">{text}</p>
           <p className="text-md text-white">{subtext}</p>
         </div>

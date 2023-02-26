@@ -4,7 +4,6 @@ import {
   AllergyIntolerance,
   Bundle,
   BundleEntry,
-  CarePlan,
   Condition,
   DiagnosticReport,
   DocumentReference,
@@ -81,7 +80,8 @@ function parseIdToken(token: string) {
   const base64Url = token.split('.')[1];
   const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
   const jsonPayload = decodeURIComponent(
-    window
+    // eslint-disable-next-line no-restricted-globals
+    self
       .atob(base64)
       .split('')
       .map(function (c) {
@@ -105,7 +105,7 @@ function parseIdToken(token: string) {
 
 async function getFHIRResource<T extends FhirResource>(
   baseUrl: string,
-  connectionDocument: RxDocument<CernerConnectionDocument>,
+  connectionDocument: CernerConnectionDocument,
   fhirResourceUrl: string,
   params?: Record<string, string>
 ): Promise<BundleEntry<T>[]> {
@@ -115,7 +115,7 @@ async function getFHIRResource<T extends FhirResource>(
 
   const res = await fetch(defaultUrl, {
     headers: {
-      Authorization: `Bearer ${connectionDocument.get('access_token')}`,
+      Authorization: `Bearer ${connectionDocument.access_token}`,
       Accept: 'application/json+fhir',
     },
   })
@@ -140,7 +140,7 @@ async function getFHIRResource<T extends FhirResource>(
  */
 async function syncFHIRResource<T extends FhirResource>(
   baseUrl: string,
-  connectionDocument: RxDocument<CernerConnectionDocument>,
+  connectionDocument: CernerConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
   mapper: (proc: BundleEntry<T>) => ClinicalDocument<BundleEntry<T>>,
@@ -191,45 +191,37 @@ async function syncFHIRResource<T extends FhirResource>(
  */
 export async function syncAllRecords(
   baseUrl: string,
-  connectionDocument: RxDocument<CernerConnectionDocument>,
+  connectionDocument: CernerConnectionDocument,
   db: RxDatabase<DatabaseCollections>
-): Promise<unknown[][]> {
-  const newCd = connectionDocument.toMutableJSON();
+): Promise<PromiseSettledResult<void[]>[]> {
+  const newCd = connectionDocument;
   newCd.last_refreshed = new Date().toISOString();
+
   const procMapper = (proc: BundleEntry<Procedure>) =>
-    DSTU2.mapProcedureToClinicalDocument(proc, connectionDocument.toJSON());
+    DSTU2.mapProcedureToClinicalDocument(proc, connectionDocument);
   const patientMapper = (pt: BundleEntry<Patient>) =>
     DSTU2.mapPatientToClinicalDocument(pt, connectionDocument);
   const obsMapper = (imm: BundleEntry<Observation>) =>
-    DSTU2.mapObservationToClinicalDocument(imm, connectionDocument.toJSON());
+    DSTU2.mapObservationToClinicalDocument(imm, connectionDocument);
   const drMapper = (dr: BundleEntry<DiagnosticReport>) =>
-    DSTU2.mapDiagnosticReportToClinicalDocument(
-      dr,
-      connectionDocument.toJSON()
-    );
+    DSTU2.mapDiagnosticReportToClinicalDocument(dr, connectionDocument);
   const medStatementMapper = (dr: BundleEntry<MedicationStatement>) =>
-    DSTU2.mapMedicationStatementToClinicalDocument(
-      dr,
-      connectionDocument.toJSON()
-    );
+    DSTU2.mapMedicationStatementToClinicalDocument(dr, connectionDocument);
   const immMapper = (dr: BundleEntry<Immunization>) =>
-    DSTU2.mapImmunizationToClinicalDocument(dr, connectionDocument.toJSON());
+    DSTU2.mapImmunizationToClinicalDocument(dr, connectionDocument);
   const conditionMapper = (dr: BundleEntry<Condition>) =>
-    DSTU2.mapConditionToClinicalDocument(dr, connectionDocument.toJSON());
+    DSTU2.mapConditionToClinicalDocument(dr, connectionDocument);
   const allergyIntoleranceMapper = (a: BundleEntry<AllergyIntolerance>) =>
-    DSTU2.mapAllergyIntoleranceToClinicalDocument(
-      a,
-      connectionDocument.toJSON()
-    );
+    DSTU2.mapAllergyIntoleranceToClinicalDocument(a, connectionDocument);
 
   const encounterMapper = (a: BundleEntry<Encounter>) =>
-    DSTU2.mapEncounterToClinicalDocument(a, connectionDocument.toJSON());
+    DSTU2.mapEncounterToClinicalDocument(a, connectionDocument);
 
-  const patientId = parseIdToken(connectionDocument.get('id_token'))
+  const patientId = parseIdToken(connectionDocument.id_token)
     .fhirUser.split('/')
     .slice(-1)[0];
 
-  const syncJob = await Promise.all([
+  const syncJob = await Promise.allSettled([
     syncFHIRResource<Procedure>(
       baseUrl,
       connectionDocument,
@@ -324,22 +316,21 @@ export async function syncAllRecords(
         patient: patientId,
       }
     ),
-    db.connection_documents.upsert(newCd).then(() => []),
   ]);
+
+  await db.connection_documents.upsert(newCd).then(() => []);
+
   return syncJob;
 }
 
 async function syncDocumentReferences(
   baseUrl: string,
-  connectionDocument: RxDocument<CernerConnectionDocument>,
+  connectionDocument: CernerConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   params: Record<string, string>
 ) {
   const documentReferenceMapper = (dr: BundleEntry<DocumentReference>) =>
-    DSTU2.mapDocumentReferenceToClinicalDocument(
-      dr,
-      connectionDocument.toJSON()
-    );
+    DSTU2.mapDocumentReferenceToClinicalDocument(dr, connectionDocument);
   // Sync document references and return them
   await syncFHIRResource<DocumentReference>(
     baseUrl,
@@ -357,7 +348,7 @@ async function syncDocumentReferences(
         'data_record.resource_type': {
           $eq: 'documentreference',
         },
-        connection_record_id: `${connectionDocument.get('id')}`,
+        connection_record_id: `${connectionDocument.id}`,
       },
     })
     .exec();
@@ -439,12 +430,12 @@ async function syncDocumentReferences(
  */
 async function fetchAttachmentData(
   url: string,
-  cd: RxDocument<CernerConnectionDocument>
+  cd: CernerConnectionDocument
 ): Promise<{ contentType: string | null; raw: string | Blob | undefined }> {
   try {
     const res = await fetch(url, {
       headers: {
-        Authorization: `Bearer ${cd.get('access_token')}`,
+        Authorization: `Bearer ${cd.access_token}`,
       },
     });
     if (!res.ok) {
@@ -500,7 +491,7 @@ export async function fetchAccessTokenWithCode(
   }
   return res.json();
 }
-//tenants/ec2458f2-1e24-41c8-b71b-0e701af7583d/protocols/oauth2/profiles/smart-v1/token
+
 export async function fetchAccessTokenWithRefreshToken(
   refreshToken: string,
   cernerTokenUrl: string
@@ -559,9 +550,6 @@ export async function saveConnectionToDb({
           doc
             .update({
               $set: {
-                // client_id:
-                //   (res as CernerAuthResponseWithClientId)?.client_id ||
-                //   doc.client_id,
                 access_token: res.access_token,
                 expires_in: nowInSeconds + res.expires_in,
                 scope: res.scope,
@@ -592,7 +580,6 @@ export async function saveConnectionToDb({
           access_token: res.access_token,
           expires_in: nowInSeconds + res.expires_in,
           scope: res.scope,
-          // client_id: (res as CernerAuthResponseWithClientId)?.client_id,
           id_token: res.id_token,
           auth_uri:
             'https://authorization.cerner.com/tenants/ec2458f2-1e24-41c8-b71b-0e701af7583d/protocols/oauth2/profiles/smart-v1/personas/patient/authorize',
@@ -614,6 +601,41 @@ export async function saveConnectionToDb({
       );
     }
   });
+}
+
+/**
+ * For a connection document, if the access token is expired, refresh it and save it to the db
+ * @param connectionDocument the connection document to refresh the access token for
+ * @param db
+ */
+export async function refreshCernerConnectionTokenIfNeeded(
+  connectionDocument: RxDocument<ConnectionDocument>,
+  db: RxDatabase<DatabaseCollections>
+) {
+  const nowInSeconds = Math.floor(Date.now() / 1000);
+  if (connectionDocument.get('expires_in') <= nowInSeconds) {
+    try {
+      const baseUrl = connectionDocument.get('location'),
+        refreshToken = connectionDocument.get('refresh_token'),
+        tokenUri = connectionDocument.get('token_uri'),
+        user = connectionDocument.get('user_id');
+
+      const access_token_data = await fetchAccessTokenWithRefreshToken(
+        refreshToken,
+        tokenUri
+      );
+
+      return await saveConnectionToDb({
+        res: access_token_data,
+        cernerBaseUrl: baseUrl,
+        db,
+        user,
+      });
+    } catch (e) {
+      console.error(e);
+      throw new Error('Error refreshing token  - try logging in again');
+    }
+  }
 }
 
 export interface CernerAuthResponse {

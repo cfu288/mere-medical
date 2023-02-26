@@ -23,7 +23,11 @@ export function EpicSelectModal({
     notifyDispatch = useNotificationDispatch();
 
   useEffect(() => {
-    fetch(`/api/v1/epic/tenants?` + new URLSearchParams({ query }))
+    const abortController = new AbortController();
+
+    fetch(`/api/v1/epic/tenants?` + new URLSearchParams({ query }), {
+      signal: abortController.signal,
+    })
       .then((x) => x.json())
       .then((x) => setItems(x))
       .catch(() => {
@@ -33,6 +37,10 @@ export function EpicSelectModal({
           variant: 'error',
         });
       });
+
+    return () => {
+      abortController.abort();
+    };
   }, [notifyDispatch, query]);
 
   return (
