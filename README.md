@@ -93,7 +93,15 @@ services:
    vim apps/web/src/environments/config.json
    ```
 
-4. Serve each one on its own:
+4. Generate localhost ssl certs
+
+   ```
+   mkdir -p dev-stack/certs
+   mkcert -key-file dev-stack/certs/localhost-key.pem -cert-file dev-stack/certs/localhost.pem localhost
+   mkcert -install
+   ```
+
+5. Serve each one on its own:
 
    ```bash
    nx serve web
@@ -106,7 +114,7 @@ services:
    npx nx run-many --target=serve --projects=api,web
    ```
 
-5. Build and serve in docker container:
+6. Build and serve in docker container:
 
    ```bash
    docker build -t mere-medical .

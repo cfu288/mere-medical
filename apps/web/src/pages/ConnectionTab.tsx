@@ -12,7 +12,6 @@ import {
 } from '../services/Cerner';
 import { AppPage } from '../components/AppPage';
 import { EpicSelectModal } from '../components/connection/EpicSelectModal';
-import { EpicSelectModelResultItem } from '../components/connection/EpicSelectModelResultItem';
 import { useUserPreferences } from '../components/providers/UserPreferencesProvider';
 import { Routes } from '../Routes';
 import { Link } from 'react-router-dom';
