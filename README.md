@@ -66,6 +66,7 @@ services:
 - npm
 - nvm
 - Docker
+- nx
 
 ### Installation
 
@@ -83,7 +84,19 @@ services:
    npm install
    ```
 
-3. Create `.env` files for each project to run and fill with values
+3. If Nx is not installed, install it
+
+   ```sh
+   npm i nx -g
+   ```
+
+   if you are prompted to run migrations, run the following:
+
+   ```sh
+   npx nx migrate --run-migrations
+   ```
+
+4. Create `.env` files for each project to run and fill with values
 
    ```sh
    cp apps/api/.example.env apps/api/.env
@@ -93,7 +106,7 @@ services:
    vim apps/web/src/environments/config.json
    ```
 
-4. Generate localhost ssl certs
+5. Generate localhost ssl certs
 
    ```
    mkdir -p dev-stack/certs
@@ -101,7 +114,7 @@ services:
    mkcert -install
    ```
 
-5. Serve each one on its own:
+6. Serve each one on its own:
 
    ```bash
    nx serve web
@@ -114,7 +127,7 @@ services:
    npx nx run-many --target=serve --projects=api,web
    ```
 
-6. Build and serve in docker container:
+7. Build and serve in docker container:
 
    ```bash
    docker build -t mere-medical .
