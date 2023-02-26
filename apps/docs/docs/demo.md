@@ -4,7 +4,7 @@ slug: /demo-of-mere-medical
 description: What can Mere Medical do?
 ---
 
-# A quick demo
+# What can Mere Medical do?
 
 You can see the live demo of Mere Medical at [demo.meremedical.co](https://demo.meremedical.co), or keep scrolling to see videos of it in action.
 
