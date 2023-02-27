@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { PropsWithChildren } from 'react';
 import { RxDocument, RxDatabase } from 'rxdb';
 import {
@@ -6,7 +6,7 @@ import {
   EpicConnectionDocument,
   CernerConnectionDocument,
 } from '../../models/connection-document/ConnectionDocument.type';
-import { DatabaseCollections, useRxDb } from './RxDbProvider';
+import { DatabaseCollections } from './RxDbProvider';
 import * as OnPatient from '../../services/OnPatient';
 import * as Epic from '../../services/Epic';
 import * as Cerner from '../../services/Cerner';

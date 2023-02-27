@@ -2,6 +2,7 @@
   "name": "onpatient",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/onpatient/src",
+  "root": "libs/onpatient",
   "projectType": "library",
   "targets": {
     "build": {

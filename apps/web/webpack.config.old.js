@@ -19,9 +19,11 @@ module.exports = function (webpackConfig, nxConfig) {
     },
   });
 
-  mergeWebpackConfigs.push({
-    plugins: [new BundleAnalyzerPlugin()],
-  });
+  if (config.mode === 'production') {
+    mergeWebpackConfigs.push({
+      plugins: [new BundleAnalyzerPlugin()],
+    });
+  }
 
   // For production we add the service worker
   if (config.mode === 'production') {
@@ -29,8 +31,10 @@ module.exports = function (webpackConfig, nxConfig) {
       plugins: [
         new InjectManifest({
           swSrc: path.resolve(
-            nxConfig.options.root,
-            nxConfig.options.sourceRoot,
+            nxConfig.root,
+            'apps',
+            'web',
+            'src',
             'service-worker.ts'
           ),
           dontCacheBustURLsMatching: /\.[0-9a-f]{8}\./,

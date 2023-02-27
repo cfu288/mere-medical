@@ -2,6 +2,7 @@
   "name": "search",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/search/src",
+  "root": "libs/search",
   "projectType": "library",
   "targets": {
     "build": {

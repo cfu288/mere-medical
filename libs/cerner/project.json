@@ -2,6 +2,7 @@
   "name": "cerner",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/cerner/src",
+  "root": "libs/cerner",
   "projectType": "library",
   "targets": {
     "build": {

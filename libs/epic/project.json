@@ -2,6 +2,7 @@
   "name": "epic",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/epic/src",
+  "root": "libs/epic",
   "projectType": "library",
   "targets": {
     "build": {
