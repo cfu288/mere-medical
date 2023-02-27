@@ -18,7 +18,7 @@ COPY package*.json /app/
 RUN npm install
 COPY ./ /app/
 COPY ./nginx.conf /nginx.conf
-RUN npx nx build web --prod
+RUN npx nx build web:build:production
 
 
 # Package React App and API together
