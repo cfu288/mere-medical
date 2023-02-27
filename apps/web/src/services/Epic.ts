@@ -421,7 +421,7 @@ async function fetchAttachmentData(
     const defaultUrl = url;
     const proxyUrlExtension = url.replace(baseUrl, '');
     const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${
-      epicId === 'sandbox'
+      epicId === 'sandbox' ? Config.EPIC_SANDBOX_CLIENT_ID : epicId
     }&target=${`${encodeURIComponent(proxyUrlExtension)}`}`;
     const res = await fetch(useProxy ? proxyUrl : defaultUrl, {
       headers: {
