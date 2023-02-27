@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package*.json /app/
 RUN npm install 
 COPY . /app/
-RUN npx nx build api:build:production  
+RUN npx nx build api:build:production --prod
 
 RUN curl -sf https://gobinaries.com/tj/node-prune | sh
 RUN npm prune --production

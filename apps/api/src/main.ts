@@ -10,6 +10,7 @@ async function bootstrap() {
   const globalPrefix = 'api';
   // only enable ssl in dev, prod has a reverse proxy
   const ssl = process.env.NODE_ENV === 'development';
+  console.log(process.env.NODE_ENV);
   Logger.log(
     `Running in ${
       process.env.NODE_ENV === 'production' ? 'production' : 'development'
