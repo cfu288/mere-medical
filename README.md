@@ -109,8 +109,8 @@ services:
 5. Generate localhost ssl certs
 
    ```
-   mkdir -p dev-stack/certs
-   mkcert -key-file dev-stack/certs/localhost-key.pem -cert-file dev-stack/certs/localhost.pem localhost
+   mkdir -p .dev/certs
+   mkcert -key-file .dev/certs/localhost-key.pem -cert-file .dev/certs/localhost.pem localhost
    mkcert -install
    ```
 

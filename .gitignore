@@ -3,6 +3,7 @@
 .local.env
 .production.env
 /dev-stack
+.dev/
 
 .vscode/
 

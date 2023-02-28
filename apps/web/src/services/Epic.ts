@@ -1,3 +1,7 @@
+/**
+ * Functions related to authenticating against the Epic MyChart patient portal and syncing data
+ */
+
 /* eslint-disable no-inner-declarations */
 /* eslint-disable @typescript-eslint/no-namespace */
 import {

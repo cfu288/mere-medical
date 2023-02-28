@@ -1,3 +1,7 @@
+/**
+ * Functions related to authenticating against the OnPatient patient portal and syncing data
+ */
+
 import {
   Bundle,
   BundleEntry,

@@ -1,3 +1,9 @@
+/**
+ * A set of WebCrypto abstractions and configuration objects. Abstracts away
+ * the underlying use of IndexedDB in order to persist generated CryptoKey's
+ * between browser sessions
+ */
+
 type Signature = ArrayBuffer;
 type Data = ArrayBuffer;
 

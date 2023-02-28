@@ -59,8 +59,8 @@
         "hmr": true,
         "proxyConfig": "apps/web/proxy.conf.json",
         "ssl": true,
-        "sslKey": "./dev-stack/certs/localhost-key.pem",
-        "sslCert": "./dev-stack/certs/localhost.pem"
+        "sslKey": "./.dev/certs/localhost-key.pem",
+        "sslCert": "./.dev/certs/localhost.pem"
       },
       "configurations": {
         "development": {

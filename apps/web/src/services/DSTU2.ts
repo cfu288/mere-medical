@@ -1,3 +1,7 @@
+/**
+ * Mapper functions that map DSTU2 objects to internal ClinicalDocuemnt objects
+ */
+
 /* eslint-disable @typescript-eslint/no-namespace */
 import {
   BundleEntry,

@@ -19,8 +19,8 @@ async function bootstrap() {
 
   let httpsOptions = null;
   if (ssl) {
-    const keyPath = '../../../dev-stack/certs/localhost-key.pem' || '';
-    const certPath = '../../../dev-stack/certs/localhost.pem' || '';
+    const keyPath = '../../../.dev/certs/localhost-key.pem' || '';
+    const certPath = '../../../.dev/certs/localhost.pem' || '';
     httpsOptions = {
       key: fs.readFileSync(path.join(__dirname, keyPath)),
       cert: fs.readFileSync(path.join(__dirname, certPath)),
