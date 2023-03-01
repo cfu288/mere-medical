@@ -16,6 +16,11 @@ import { SkeletonLoadingText } from './SkeletonLoadingText';
 import { TimelineCardTitle } from './TimelineCardTitle';
 import { TimelineCardCategoryTitle } from './TimelineCardCategoryTitle';
 
+/**
+ * Fetches a set of Observations linked to a DiagnosticReport and indicates if there is an abnormal value in the set
+ * @param ClinicalDocument<BundleEntry<DiagnosticReport>>, Whether or not the card is visible to the user, and whether or not the card is expanded
+ * @returns a Tuple containing related observations and whether or not there is an abnormal value in the set
+ */
 function useRelatedDocuments({
   expanded,
   isVisible,
