@@ -14,8 +14,8 @@ import {
 import { useUser } from '../components/providers/UserProvider';
 import { EmptyUserPlaceholder } from '../components/settings/EmptyUserPlaceholder';
 import {
+  EditUserForm,
   NewUserFormFields,
-  EditUserModalForm,
 } from '../components/settings/EditUserModalForm';
 import { useLocation } from 'react-router-dom';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -30,6 +30,7 @@ import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.t
 import { useNotificationDispatch } from '../components/providers/NotificationProvider';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { ButtonLoadingSpinner } from '../components/connection/ButtonLoadingSpinner';
+import { Modal } from '../components/Modal';
 
 function fetchPatientRecords(
   db: RxDatabase<DatabaseCollections>,
@@ -45,7 +46,7 @@ function fetchPatientRecords(
     })
     .exec()
     .then((list) => {
-      const lst = (list as unknown) as RxDocument<
+      const lst = list as unknown as RxDocument<
         ClinicalDocument<BundleEntry<Patient>>
       >[];
       return lst;
@@ -58,7 +59,7 @@ function UserCard() {
     [defaultValues, setDefaultValues] = useState<NewUserFormFields | undefined>(
       undefined
     ),
-    [openModal, setOpenModal] = useState(false);
+    [openEditUserModal, setOpenEditUserModal] = useState(false);
 
   useEffect(() => {
     fetchPatientRecords(db, user.id).then((data) => {
@@ -95,7 +96,11 @@ function UserCard() {
     <>
       {(user === undefined || user.is_default_user) && (
         <div className="mx-auto flex max-w-4xl flex-col px-4 sm:px-6 lg:px-8">
-          <EmptyUserPlaceholder openModal={() => setOpenModal(true)} />
+          <EmptyUserPlaceholder
+            openModal={() => {
+              setOpenEditUserModal(true);
+            }}
+          />
         </div>
       )}
       {user !== undefined && !user.is_default_user && (
@@ -108,7 +113,7 @@ function UserCard() {
               className="absolute top-4 right-4 flex justify-center text-gray-400"
               aria-label="Edit profile"
               onClick={() => {
-                setOpenModal(true);
+                setOpenEditUserModal(true);
               }}
             >
               <PencilIcon className="h-4 w-4" />
@@ -155,22 +160,26 @@ function UserCard() {
           </li>
         </div>
       )}
-      <EditUserModalForm
-        defaultValues={
-          !user.is_default_user
-            ? ({
-                birthday: user.birthday,
-                email: user.email,
-                firstName: user.first_name,
-                gender: user.gender,
-                lastName: user.last_name,
-                profilePhoto: user.profile_picture,
-              } as NewUserFormFields)
-            : defaultValues
-        }
-        modalOpen={openModal}
-        toggleModal={() => setOpenModal((x) => !x)}
-      />
+      <Modal
+        open={openEditUserModal}
+        setOpen={() => setOpenEditUserModal((x) => !x)}
+      >
+        <EditUserForm
+          defaultValues={
+            !user.is_default_user
+              ? ({
+                  birthday: user.birthday,
+                  email: user.email,
+                  firstName: user.first_name,
+                  gender: user.gender,
+                  lastName: user.last_name,
+                  profilePhoto: user.profile_picture,
+                } as NewUserFormFields)
+              : defaultValues
+          }
+          toggleModal={() => setOpenEditUserModal((x) => !x)}
+        />
+      </Modal>
     </>
   );
 }
@@ -212,15 +221,15 @@ function getFileFromFileList(
 ): File | undefined {
   let pp: File | null;
   try {
-    if (((fileOrFileList as unknown) as FileList).length === 0) {
+    if ((fileOrFileList as unknown as FileList).length === 0) {
       return undefined;
     }
-    pp = ((fileOrFileList as unknown) as FileList)?.item(0);
+    pp = (fileOrFileList as unknown as FileList)?.item(0);
     if (pp == null) {
       return undefined;
     }
   } catch (e) {
-    pp = (fileOrFileList as unknown) as File;
+    pp = fileOrFileList as unknown as File;
   }
   return pp;
 }
@@ -267,7 +276,7 @@ const handleImport = (
               () => {
                 db.importJSON(data)
                   .then((i) => {
-                    const res = (i as unknown) as {
+                    const res = i as unknown as {
                       error: Record<string, RxDocument>;
                       success: Record<string, RxDocument>;
                     }[];
