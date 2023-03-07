@@ -37,7 +37,10 @@
     "./src/pages/SkeletonJumpToPanel.tsx",
     "./src/pages/useScrollToHash.tsx",
     "./src/components/timeline/TimelineCardTitle.tsx",
-    "./src/components/timeline/TimelineCardCategoryTitle.tsx"
+    "./src/components/timeline/TimelineCardCategoryTitle.tsx",
+    "src/components/settings/PrivacyAndSecuritySettingsGroup.tsx",
+    "src/components/settings/UserDataSettingsGroup.tsx",
+    "src/components/settings/UserCard.tsx"
   ],
   "exclude": [
     "jest.config.ts",

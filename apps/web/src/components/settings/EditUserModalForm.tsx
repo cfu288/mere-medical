@@ -1,5 +1,5 @@
-import { Transition, Dialog } from '@headlessui/react';
-import { Fragment, PropsWithChildren, useEffect, useRef } from 'react';
+import { Dialog } from '@headlessui/react';
+import { useEffect } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useRxUserDocument } from '../providers/UserProvider';
 import { SubmitHandler, useForm } from 'react-hook-form';
