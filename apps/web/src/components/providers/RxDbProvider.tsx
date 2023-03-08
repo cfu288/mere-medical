@@ -38,7 +38,7 @@ import { UserDocumentMigrations } from '../../models/user-document/UserDocument.
 import { RxDBAttachmentsPlugin } from 'rxdb/plugins/attachments';
 import { UserPreferencesMigrations } from '../../models/user-preferences/UserPreferences.migration';
 import { getRxStorageWorker } from 'rxdb/plugins/worker';
-import { RxStorageDexieStatics } from 'rxdb/plugins/dexie';
+import { getRxStorageDexie, RxStorageDexieStatics } from 'rxdb/plugins/dexie';
 import { ClinicalDocumentMigrations } from '../../models/clinical-document/ClinicalDocument.migration';
 import { AppPage } from '../AppPage';
 import { TimelineBanner } from '../timeline/TimelineBanner';
@@ -143,11 +143,11 @@ const handleImport = (
 async function initRxDb() {
   const db = await createRxDatabase<DatabaseCollections>({
     name: 'mere_db',
-    storage: getRxStorageWorker({
-      statics: RxStorageDexieStatics,
-      workerInput: '../../assets/dexie.worker.js',
-    }),
-    // storage: getRxStorageDexie(),
+    // storage: getRxStorageWorker({
+    //   statics: RxStorageDexieStatics,
+    //   workerInput: '../../assets/dexie.worker.js',
+    // }),
+    storage: getRxStorageDexie(),
     multiInstance: true,
     ignoreDuplicate: true,
   });
