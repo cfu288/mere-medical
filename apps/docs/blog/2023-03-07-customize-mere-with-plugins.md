@@ -11,7 +11,7 @@ authors:
 
 So, at the moment, Mere does a great job of syncing and showing you your medical records across different health care providers. Mere makes it easy to read and search for your medical records across multiple health systems. Want to see what your last red blood cell count was? Mere can show you. Want to compare your last red blood cell count to your previous lab results? Mere will generate a graph for you. Don't remember which vaccines you've already gotten? Mere can group and summarize your entire vaccine history in one view.
 
-Mere is great at storing and showing you your data. But theres a big difference between just showing you your data and providing insights on your data to help you decide what actions you can take to improve your health.
+Mere is great at storing and showing you your data. But theres a big difference between just _showing_ you your data and a*providing insights* on your data to help you decide what actions you can take to improve your health.
 
 The next problem Mere wants to solve is this: how can Mere make your data _actionable_? How can Mere help you learn more about yourself and your conditions? Can Mere recommend actions you can take to improve your health? And can Mere do all of this while maintaining its core tenants of privacy, local-first data, and user autonomy?
 
@@ -33,6 +33,8 @@ In this post, we're going to dive deeper on how PHR's can adopt CDS hooks to ena
 # Looking to the future
 
 The point of this post isn't to say that Mere has already implemented this standard and is ready for CDS hook based plugins today, but to discuss the CDS hook standard and how it may need to be updated to handle PHRs. This next part might not make sense unless you've already read the [HL7 Clinical Decision Support (CDS) hooks standard](https://cds-hooks.org/).
+
+The great thing about building off a current standard like CDS hooks is that hooks built for one PHR could be used for any PHR!
 
 To quickly summarize CDS hooks - they're basically HTTP web hooks that get called whenever a user of an EMR takes a specific action, like when a provider opens a patients chart or starts a medication order for a patient. The idea is that registered third-party apps canbe called whenever one of these actions is triggered and provide real time feedback to the user about their actions. For example, an CDS medication checking application can listen to when a doctor is entering a medication order for a specific drug in the EMR and the app suggest a different medication via a card in the UI of the EMR:
 
