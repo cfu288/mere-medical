@@ -21,9 +21,9 @@ That's why one of the future goals of Mere is to allow for customization through
 
 # Where HL7 comes into play
 
-There are a few ways that Mere can offer this plugin-ability from a technical standpoint. Given Mere's strong basis in healthcare standards, it makes sense to explore what other standards exist already that allow for extensibility via custom apps in healthcare. There have not been many proposals exploring extensibility in personal health records (PHRs) specifically, but HL7 has established some standards that allow for extensibility in other clinical client applications like electronic medical records (EMRs) that doctors and providers use.
+There are a few ways that Mere can offer this plugin-ability from a technical standpoint. Given Mere's strong basis in HL7 healthcare standards, it makes sense to explore what other HL7 standards exist already that allow for clinical client extensibility in healthcare. There have not been many proposals exploring extensibility in personal health records (PHRs) specifically, but HL7 has established some standards that allow for extensibility in other clinical client applications like electronic medical records (EMRs) that doctors and providers use.
 
-HL7 documents two significant ways that clinical clients, usually referring to EMRs, can implement extensibility:
+HL7 specifies two significant ways that clinical clients, usually referring to EMRs, can implement extensibility:
 
 - Using [HL7 Clinical Decision Support (CDS) hooks standard](https://cds-hooks.org/). CDS hooks allow third-party developers to create actionable cards displayed directly to providers inside the EMR. These cards augment the providers' experience, providing real-time insights into their data.
 - Using [SMART on FHIR applications](https://www.hl7.org/fhir/smart-app-launch/) to embed third-party clinical apps that can be embedded in the EHR and provide completely different experiences currently not possible in the EMR.
@@ -32,7 +32,7 @@ In this post, we will dive deeper into how PHRs can adopt CDS hooks to enable ex
 
 # Looking to the future
 
-The point of this post isn't to say that Mere has already implemented this standard and is ready for CDS hook-based plugins today but to lay the groundwork and discuss how the CDS hook standard may need to be updated to handle the use cases of PHRs. This following paragraphs might only make sense if you've already read the [HL7 Clinical Decision Support (CDS) hooks standard](https://cds-hooks.org/).
+The point of this post isn't to say that Mere has already implemented this standard and is ready for CDS hook-based plugins today but to lay the groundwork and discuss how the CDS hook standard may need to be updated to handle PHR use cases. This following paragraphs might only make sense if you've already read the [HL7 Clinical Decision Support (CDS) hooks standard](https://cds-hooks.org/).
 
 The great thing about building off a current standard like CDS hooks is that CDS hooks built for one PHR could be used for any PHR!
 
@@ -43,15 +43,15 @@ To quickly summarize CDS hooks - they're HTTP web hooks that get called whenever
 The CDS hook standard was primarily built for EMR systems and makes several assumptions:
 
 - There is a single FHIR store from which the third-party CDS hook can fetch the current patients records from
-- The hook trigger types currently specified are clinical/EMR focused.
+- The hook trigger types currently specified used in a clinical/EMR context.
 
-There are a few reasons why these assumptions cause issues for PHRs
+There are a few reasons why these assumptions cause issues for PHRs:
 
-- PHRs may pull data from multiple sources
-- Most of the currenly specified hook types, e.g. the `patient-view` hook, don't really make sense in PHRs as every view is a patient view. Other hooks like `medication-prescribe` and `order-review` don't make much sense in the context of a PHR.
-- PHRs may not expose a FHIR endpoint, especially if they are local-first like Mere is. It is unreasonable to expect PHRs to implement the entire FHIR server standard to spec.
+- PHRs may pull data from multiple sources, not a single FHIR resource
+- Most of the currenly specified hook types, e.g. the `patient-view` hook, don't really make sense in PHRs as every view is a patient view. Other hooks like `medication-prescribe` and `ordesr-review` are not actions users of a PHR would make.
+- PHRs may not expose a FHIR endpoint, especially if they are local-first like Mere is. It is unreasonable to expect client PHRs to implement the entire FHIR server standard.
 
-These assumptions limit the ability of PHRs to use CDS hooks today. Digging a little deeper into the anatomy of a CDS HTTP call, we can see how we can update the spec to better work around these limitations.
+These assumptions limit the ability of PHRs to use CDS hooks in their current state today. Digging a little deeper into the anatomy of a CDS HTTP call, we can see how we can update the spec to better work around these limitations.
 
 Currently, CDS hooks expect the following properties in the JSON body of a call :
 
@@ -69,10 +69,9 @@ An example of a call to a CDS endpoint from a clinical client would currently lo
 ```bash
 curl
 -X POST \
- -H 'Content-type: application/json' \
- --data @hook-details-see-example-below
-"https://example.com/cds-services/static-patient-greeter"
-
+  -H 'Content-type: application/json' \
+  --data @hook-details-see-example-below \
+  "https://example.com/cds-services/static-patient-greeter"
 ```
 
 ```json
@@ -155,5 +154,7 @@ Based on some of the limitations we discussed above, I'd suggest the following u
   }
 }
 ```
+
+Note that there are still some problems that need to be solved with this approach, like how a PHR will get access tokens to their sources that have a different scope provided to the PHR app itself (e.g. the PHR may have read access to all resource types but may only want to provide an access token to a hook with read access to AlleryIntolerance resources)
 
 This post is still a work in progress and will likely evolve as PHR use cases are discovered and solidified. If you have more ideas about CDS hooks for PHR or want to start a discussion, please [shoot me an email](mailto:cfu288@meremedical.co) and I can edit this post.
