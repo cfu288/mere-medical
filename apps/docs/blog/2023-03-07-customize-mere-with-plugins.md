@@ -43,11 +43,11 @@ To quickly summarize CDS hooks - they're HTTP web hooks that get called whenever
 The CDS hook standard was primarily built for EMR systems and makes several assumptions:
 
 - There is a single FHIR store from which the third-party CDS hook can fetch the current patients records from
-- The hook trigger types currently specified used in a clinical/EMR context.
+- The hook trigger types are related to a clinical or EMR action.
 
 There are a few reasons why these assumptions cause issues for PHRs:
 
-- PHRs may pull data from multiple sources, not a single FHIR resource
+- PHRs may pull data from multiple sources, not a single FHIR source
 - Most of the currenly specified hook types, e.g. the `patient-view` hook, don't really make sense in PHRs as every view is a patient view. Other hooks like `medication-prescribe` and `ordesr-review` are not actions users of a PHR would make.
 - PHRs may not expose a FHIR endpoint, especially if they are local-first like Mere is. It is unreasonable to expect client PHRs to implement the entire FHIR server standard.
 
