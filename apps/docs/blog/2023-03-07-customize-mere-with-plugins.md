@@ -64,7 +64,7 @@ Currently, CDS hooks expect the following properties in the JSON body of a call 
 | context           | REQUIRED    | object | Hook-specific contextual data that the CDS service will need.For example, with the patient-view hook this will include the FHIR id of the Patient being viewed. For details, see the Hooks specific specification page (example: patient-view). |
 | prefetch          | OPTIONAL    | object | The FHIR data that was prefetched by the CDS Client (see more information below).                                                                                                                                                               |
 
-An example of a call to a CDS endpoint from a clinical client would currently look like this:
+An example of a request to a CDS endpoint from a clinical client would currently look like this:
 
 ```bash
 curl
@@ -100,6 +100,23 @@ curl
       "active": true
     }
   }
+}
+```
+
+Which would return the following response to be rendered to the clinical client:
+
+```json
+{
+  "cards": [
+    {
+      "uuid": "44a7eb84-ce90-45ac-a85b-04fdb4e76679",
+      "summary": "Now seeing: Daniel",
+      "source": {
+        "label": "Patient greeting service"
+      },
+      "indicator": "info"
+    }
+  ]
 }
 ```
 
