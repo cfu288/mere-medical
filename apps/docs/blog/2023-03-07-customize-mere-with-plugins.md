@@ -1,7 +1,7 @@
 ---
-slug: exploring-customization-with-cds-hooks
-title: Exploring How to Enable Customization of Mere with Plugins
-description: Supercharge your personal health records with third-party CDS hooks
+slug: exploring-extensibility-with-cds-hooks
+title: Personalizing Your Personal Health Record with Plugins
+description: A proposal to supercharge your personal health record with third-party CDS hooks
 authors:
   name: Christopher Fu
   title: Developer of Mere Medical
@@ -9,19 +9,19 @@ authors:
   image_url: https://files.mari.casa/profile.jpg
 ---
 
-Currently, Mere does a great job of syncing and showing you your medical records across different healthcare providers. Mere makes it easy to read and search for your medical records across multiple health systems. Want to see what your last red blood cell count was? Mere can show you. Want to compare your last red blood cell count to your previous lab results? Mere will generate a graph for you. Don't remember which vaccines you've already gotten? Mere can group and summarize your entire vaccine history in one view.
+Currently, personal health records (PHRs) such as Mere do a great job of syncing and showing you your medical records across different healthcare providers. Mere makes it easy to read and search for your medical records across multiple health systems. Want to see what your last red blood cell count was? Mere can show you. Want to compare your last red blood cell count to your previous lab results? Mere will generate a graph for you. Don't remember which vaccines you've already gotten? Mere can group and summarize your entire vaccine history in one view.
 
-Mere is excellent at storing and showing you your data. But there's a big difference between just _showing_ your data and actually _providing insights_ into your data. Insights could help you decide what actions you can take to improve your health.
+PHRs such as Mere are excellent at storing and showing you your medical data. But there's a big difference between just _showing_ you your data and actually _providing insights_ into your data.
 
 The next problem Mere wants to solve is this: how can Mere make your data _actionable_? How can Mere help you learn more about yourself and your conditions? Can Mere recommend actions you can take to improve your health? And can Mere do all this while maintaining its core tenants of privacy, local-first data, and user autonomy?
 
-There are many ways Mere _could_ provide health insights to users. If you're using Mere to manage medical records for your child, you could track their vaccine immunization history, and Mere could remind you when your next vaccine appointment should be. If you've recently become pregnant, Mere could help remind you when you should see your doctor, which screenings to get, and when. Mere could help you find the lowest prices for your current medications. Given your history, Mere could use AI to make more intelligent predictions or highlight risk factors. Mere could implement many possible features like this - but features that may be helpful for one person would be useless to another. Even if we could build every feature, only some people want their data to be used in such ways.
+There are many different ways Mere _could_ provide health insights to users where it currently does not. If you're using Mere to manage medical records for your child, you could track their vaccine immunization history, and Mere could remind you when your next vaccine appointment should be. If you've recently become pregnant, Mere could help remind you when you should see your doctor, which screenings to get, and when. Mere could help you find the lowest prices for your current medications. Given your history, Mere could use AI to make more intelligent predictions or highlight risk factors. Mere could implement many possible features like this - but features that may be helpful for one person may be useless to another. Even if Mere could build every feature, only some people may want to enable such features.
 
 That's why one of the future goals of Mere is to allow for customization through opt-in plugins that users can enable. The long-term goal is to offer a plugin marketplace to allow for third-party developers to publish extensions to Mere so that users and patients can customize their experience.
 
 # Where HL7 comes into play
 
-There are a few ways that Mere can offer this plugin-ability from a technical standpoint. Given Mere's strong basis in healthcare standards, it makes sense to explore what other standards exist already that allow for extensibility via custom apps in healthcare. There have not been many proposals exploring extendability in personal health records (PHRs) specifically, but HL7 has established some standards that allow for extendability in other clinical client applications like electronic medical records (EMRs) that doctors and providers use.
+There are a few ways that Mere can offer this plugin-ability from a technical standpoint. Given Mere's strong basis in healthcare standards, it makes sense to explore what other standards exist already that allow for extensibility via custom apps in healthcare. There have not been many proposals exploring extensibility in personal health records (PHRs) specifically, but HL7 has established some standards that allow for extensibility in other clinical client applications like electronic medical records (EMRs) that doctors and providers use.
 
 HL7 documents two significant ways that clinical clients, usually referring to EMRs, can implement extensibility:
 
