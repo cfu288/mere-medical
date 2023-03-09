@@ -48,7 +48,7 @@ The CDS hook standard was primarily built for EMR systems and makes several assu
 There are a few reasons why these assumptions cause issues for PHRs:
 
 - PHRs may pull data from multiple sources, not a single FHIR source
-- Most of the currenly specified hook types, e.g. the `patient-view` hook, don't really make sense in PHRs as every view is a patient view. Other hooks like `medication-prescribe` and `ordesr-review` are not actions users of a PHR would make.
+- Most of the currenly specified hook types, e.g. the `patient-view` hook, don't really make sense in PHRs as every view is a patient view. Other hooks like `medication-prescribe` and `order-review` are not actions users of a PHR would make.
 - PHRs may not expose a FHIR endpoint, especially if they are local-first like Mere is. It is unreasonable to expect client PHRs to implement the entire FHIR server standard.
 
 These assumptions limit the ability of PHRs to use CDS hooks in their current state today. Digging a little deeper into the anatomy of a CDS HTTP call, we can see how we can update the spec to better work around these limitations.
