@@ -108,53 +108,52 @@ Based on some of the limitations we discussed above, I'd suggest the following u
 
 1. The `hook` field should be expanded to handle use cases commonly found in a PHR. This isn't a technical limitation of the current spec, but as common use cases start to converge from multiple PHR implementations, it may make sense to standardize several of them so that hooks can be transferrable across PHR implementations.
 
-2. The `fhirServer` and `fhirAuthorization` fields may need to handle multiple or zero FHIR servers. Since not all PHRs may implement their own FHIR endpoint but may want to provide credentials to their sources, those fields should be able to handle multiple servers with multiple authorization credentials. On the other hand, some PHRs may just want to send over the relevant FHIR resources in the context, with zero related fhirServices. One way to do this while maintaining backward compatibility with existing hooks would be to allow for a `fhirSources` array, where each array element contains a `fhirServer` element and a `fhirAuthorization` element. An example of this would be below:
+2. The `fhirServer` and `fhirAuthorization` fields may need to handle multiple or zero FHIR servers. Since not all PHRs may implement their own FHIR endpoint but may want to provide credentials to their sources, those fields should be able to handle multiple servers with multiple authorization credentials. On the other hand, some PHRs may just want to send over the relevant FHIR resources in the context, with zero references to external FHIR sources. One way to do this (while maintaining backward compatibility with existing hooks) would be to allow for a `fhirSources` array, where each array element contains a `fhirServer` element and a `fhirAuthorization` element. An example of this would be below:
 
 ```json
 {
-"hookInstance": "d1577c69-dfbe-44ad-ba6d-3e05e953b2ea",
-"hook": "patient-view",
-"fhirServices": [
-{
-"fhirServer": "http://hooks.smarthealthit.org:9080",
-"fhirAuthorization": {
-"access_token": "some-opaque-fhir-access-token",
-"token_type": "Bearer",
-"expires_in": 300,
-"scope": "user/Patient.read user/Observation.read",
-"subject": "cds-service4"
+  "hookInstance": "d1577c69-dfbe-44ad-ba6d-3e05e953b2ea",
+  "hook": "patient-view",
+  "fhirServices": [
+    {
+      "fhirServer": "http://hooks.smarthealthit.org:9080",
+      "fhirAuthorization": {
+        "access_token": "some-opaque-fhir-access-token",
+        "token_type": "Bearer",
+        "expires_in": 300,
+        "scope": "user/Patient.read user/Observation.read",
+        "subject": "cds-service4"
+      }
+    },
+    {
+      "fhirServer": "http://hooks.smarthealthit.org:9090",
+      "fhirAuthorization": {
+        "access_token": "some-opaque-fhir-access-token",
+        "token_type": "Bearer",
+        "expires_in": 300,
+        "scope": "user/Patient.read user/Observation.read",
+        "subject": "cds-service4"
+      }
+    }
+  ],
+  "context": {
+    "userId": "Practitioner/example",
+    "patientId": "1288992",
+    "encounterId": "89284",
+    "additionalData": {
+      ...
+    }
+  },
+  "prefetch": {
+    "patientToGreet": {
+      "resourceType": "Patient",
+      "gender": "male",
+      "birthDate": "1925-12-23",
+      "id": "1288992",
+      "active": true
+    }
+  }
 }
-},
-{
-"fhirServer": "http://hooks.smarthealthit.org:9090",
-"fhirAuthorization": {
-"access_token": "some-opaque-fhir-access-token",
-"token_type": "Bearer",
-"expires_in": 300,
-"scope": "user/Patient.read user/Observation.read",
-"subject": "cds-service4"
-}
-}
-],
-"context": {
-"userId": "Practitioner/example",
-"patientId": "1288992",
-"encounterId": "89284",
-"additionalData": {
-...
-}
-},
-"prefetch": {
-"patientToGreet": {
-"resourceType": "Patient",
-"gender": "male",
-"birthDate": "1925-12-23",
-"id": "1288992",
-"active": true
-}
-}
-}
-
 ```
 
 This post is still a work in progress and will likely be updated as PHR use cases are discovered and solidified. If you have more ideas about CDS hooks for PHR or want to start a discussion, please [shoot me an email](mailto:cfu288@meremedical.co) and I can edit this post.
