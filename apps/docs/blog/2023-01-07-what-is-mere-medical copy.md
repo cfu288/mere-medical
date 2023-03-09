@@ -6,10 +6,7 @@ authors:
   title: Developer of Mere Medical
   url: https://cfu288.com
   image_url: https://files.mari.casa/profile.jpg
-# tags: [hola, docusaurus]
 ---
-
-# Why Mere Medical
 
 About a year ago, I was a second-year medical student preparing to start my third-year clinical rotations. It was a pretty exciting but terrifying time - I was also getting ready to take my first set of board exams. On top of long days of studying, I had to complete a lot of paperwork required by the school and the hospitals I would be rotating at. One of the biggest things I needed to get done before starting my rotations was ensuring I was up to date on my vaccinations and had my latest health records.
 

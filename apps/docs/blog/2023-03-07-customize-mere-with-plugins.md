@@ -1,0 +1,154 @@
+---
+slug: exploring-customization-with-cds-hooks
+title: Exploring How to Enable Customization of Mere with Plugins
+description: Supercharge your personal health records with third-party CDS hooks
+authors:
+  name: Christopher Fu
+  title: Developer of Mere Medical
+  url: https://cfu288.com
+  image_url: https://files.mari.casa/profile.jpg
+---
+
+So, at the moment, Mere does a great job of syncing and showing you your medical records across different health care providers. Mere makes it easy to read and search for your medical records across multiple health systems. Want to see what your last red blood cell count was? Mere can show you. Want to compare your last red blood cell count to your previous lab results? Mere will generate a graph for you. Don't remember which vaccines you've already gotten? Mere can group and summarize your entire vaccine history in one view.
+
+Mere is great at storing and showing you your data. But theres a big difference between just showing you your data and providing insights on your data to help you decide what actions you can take to improve your health.
+
+The next problem Mere wants to solve is this: how can Mere make your data _actionable_? How can Mere help you learn more about yourself and your conditions? Can Mere recommend actions you can take to improve your health? And can Mere do all of this while maintaining its core tenants of privacy, local-first data, and user autonomy?
+
+There are so many ways Mere could theoretically provide health insights to users. If you're using Mere to manage medical records for your child, you could track their vaccine immunization history and Mere could remind you when your next doctor's visit should be according to your local vaccine schedule. If you've recently become pregnant, Mere could help remind you when you should see your doctor and which screenings to get and when. Mere could help you find the cheapest prices for your current medications. Mere could potentially use AI to make smarter predictions or highlight risk factors given your history. Realistically, not all of these features could be built into the main app - the field of medicine is extremely broad and features that may be helpful for one person would be useless to another. Even if we could build every feature, not everyone wants their data to be used in such ways.
+
+That's why one of the goals of Mere is to allow for customization through opt-in plugins that users can enable. The hope is to offer a plugin marketplace for third party developers to publish their plugins.
+
+# Where HL7 comes into play
+
+There are a few ways that Mere can offer plugin-ability from a technical standpoint. Given Mere's strong basis in healthcare standards, it makes sense to explore what other standards exist already that allow for extensibility via custom apps in healthcare. Theres has not been a lot of proposals exploring extendability in personal health records (PHRs) specifically, but HL7 has established some standards that allow for extendability in existing electronic medical records (EMRs) that doctors and providers use.
+
+HL7 documents two major ways that clinical clients, usually referring to EMRs, can implement extensibility:
+
+- Using [HL7 Clinical Decision Support (CDS) hooks standard](https://cds-hooks.org/). This allows third-party developers to create actionable cards that are shown to providers using a EHR. These cards augment the providers experience, providing real time insights on their data.
+- Using [SMART on FHIR applications](https://www.hl7.org/fhir/smart-app-launch/) to embed third-party clinical apps that can be embedded in the EHR and provide completely different experiences currently not possible in the EMR.
+
+In this post, we're going to dive deeper on how PHR's can adopt CDS hooks to enable extensibility. We'll dig into how PHRs can adopt the SMART on FHIR standard in the future - that is a much more complex standard for PHRs to implement.
+
+# Looking to the future
+
+The point of this post isn't to say that Mere has already implemented this standard and is ready for CDS hook based plugins today, but to discuss the CDS hook standard and how it may need to be updated to handle PHRs. This next part might not make sense unless you've already read the [HL7 Clinical Decision Support (CDS) hooks standard](https://cds-hooks.org/).
+
+To quickly summarize CDS hooks - they're basically HTTP web hooks that get called whenever a user of an EMR takes a specific action, like when a provider opens a patients chart or starts a medication order for a patient. The idea is that registered third-party apps canbe called whenever one of these actions is triggered and provide real time feedback to the user about their actions. For example, an CDS medication checking application can listen to when a doctor is entering a medication order for a specific drug in the EMR and the app suggest a different medication via a card in the UI of the EMR:
+
+![CDS hook flow](https://cds-hooks.org/images/overview.png)
+
+The CDS hook standard was primarily built for EMR systems and makes several assumptions:
+
+- There is a single FHIR store which the third-party service can fetch the current patients records from
+- The hook trigger types currently specified are very clinical/EMR focused: `medication-prescribe`, `order-review`, etc.
+
+There are a few reasons why these assumptions cause issues for PHRs
+
+- PHRs may pull data from multiple sources
+- Most hook categories, e.g. the `patient-view` hook, don't really make sense in PHRs as every view is a patient view
+- PHRs may not expose a FHIR endpoint, especially if they are local-first like Mere is. It might not be reasonable to expect all PHRs to implement the entire FHIR server standard to spec.
+
+Currently, CDS hooks expect the following properties in the JSON body of a call :
+
+| Field             | Optionality | Type   | Description                                                                                                                                                                                                                                     |
+| ----------------- | ----------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| hook              | REQUIRED    | string | The hook that triggered this CDS Service call. See Hooks.                                                                                                                                                                                       |
+| hookInstance      | REQUIRED    | string | A universally unique identifier (UUID) for this particular hook call (see more information below).                                                                                                                                              |
+| fhirServer        | CONDITIONAL | URL    | The base URL of the CDS Client's FHIR server. If fhirAuthorization is provided, this field is REQUIRED. The scheme MUST be https when production data is exchanged.                                                                             |
+| fhirAuthorization | OPTIONAL    | object | A structure holding an OAuth 2.0 bearer access token granting the CDS Service access to FHIR resources, along with supplemental information relating to the token. See the FHIR Resource Access section for more information.                   |
+| context           | REQUIRED    | object | Hook-specific contextual data that the CDS service will need.For example, with the patient-view hook this will include the FHIR id of the Patient being viewed. For details, see the Hooks specific specification page (example: patient-view). |
+| prefetch          | OPTIONAL    | object | The FHIR data that was prefetched by the CDS Client (see more information below).                                                                                                                                                               |
+
+An example of a call to a CDS endpoint from a clinical client would currently look like this:
+
+```bash
+curl
+  -X POST \
+  -H 'Content-type: application/json' \
+  --data @hook-details-see-example-below
+  "https://example.com/cds-services/static-patient-greeter"
+```
+
+```json
+{
+  "hookInstance": "d1577c69-dfbe-44ad-ba6d-3e05e953b2ea",
+  "fhirServer": "http://hooks.smarthealthit.org:9080",
+  "hook": "patient-view",
+  "fhirAuthorization": {
+    "access_token": "some-opaque-fhir-access-token",
+    "token_type": "Bearer",
+    "expires_in": 300,
+    "scope": "user/Patient.read user/Observation.read",
+    "subject": "cds-service4"
+  },
+  "context": {
+    "userId": "Practitioner/example",
+    "patientId": "1288992",
+    "encounterId": "89284"
+  },
+  "prefetch": {
+    "patientToGreet": {
+      "resourceType": "Patient",
+      "gender": "male",
+      "birthDate": "1925-12-23",
+      "id": "1288992",
+      "active": true
+    }
+  }
+}
+```
+
+Based on some of the limitations we discussed above, I'd suggest certain updates to the spec:
+
+1. The `hook` field should be expanded to handle usecases commonly found in a PHR. This isn't so much a technical limitation of the current spec, but as common usecases start to converge from multiple PHR implementations it may make sense to standardize several of them so that hooks can be transferrable across PHR implementations.
+
+2. The `fhirServer` and `fhirAuthorization` may need to handle multiple or zero FHIR servers. Since not all PHRs may implement their own FHIR endpoint but may want to provide credentials to their own sources, those fields should be able to handle multiple servers with multiple authorization credentials. Some PHRs may just want to send over the relevant FHIR resources in the context, with zero related fhirServices. One way to do this while maintaining backwards compatibility with existing hooks would be to allow for a `fhirSources` array, where each element of the array contains a `fhirServer` element and a `fhirAuthorization` element. An example of this would be below:
+
+```json
+{
+  "hookInstance": "d1577c69-dfbe-44ad-ba6d-3e05e953b2ea",
+  "hook": "patient-view",
+  "fhirServices": [
+    {
+      "fhirServer": "http://hooks.smarthealthit.org:9080",
+      "fhirAuthorization": {
+        "access_token": "some-opaque-fhir-access-token",
+        "token_type": "Bearer",
+        "expires_in": 300,
+        "scope": "user/Patient.read user/Observation.read",
+        "subject": "cds-service4"
+      }
+    },
+    {
+      "fhirServer": "http://hooks.smarthealthit.org:9090",
+      "fhirAuthorization": {
+        "access_token": "some-opaque-fhir-access-token",
+        "token_type": "Bearer",
+        "expires_in": 300,
+        "scope": "user/Patient.read user/Observation.read",
+        "subject": "cds-service4"
+      }
+    }
+  ],
+  "context": {
+    "userId": "Practitioner/example",
+    "patientId": "1288992",
+    "encounterId": "89284",
+    "additionalData": {
+      ...
+    }
+  },
+  "prefetch": {
+    "patientToGreet": {
+      "resourceType": "Patient",
+      "gender": "male",
+      "birthDate": "1925-12-23",
+      "id": "1288992",
+      "active": true
+    }
+  }
+}
+```
+
+This post is still a work in progress, and will likely be updated as PHR usecases are discovered are solidified. If you have more ideas about CDS hooks for PHR or just want to start a discussion, please [shoot me an email](mailto:cfu288@meremedical.co) and I can add to this post.
