@@ -36,7 +36,7 @@ The point of this post isn't to say that Mere has already implemented this stand
 
 The great thing about building off a current standard like CDS hooks is that hooks built for one PHR could be used for any PHR!
 
-To quickly summarize CDS hooks - they're basically HTTP web hooks that get called whenever a user of an EMR takes a specific action, like when a provider opens a patients chart or starts a medication order for a patient. The idea is that registered third-party apps canbe called whenever one of these actions is triggered and provide real time feedback to the user about their actions. For example, an CDS medication checking application can listen to when a doctor is entering a medication order for a specific drug in the EMR and the app suggest a different medication via a card in the UI of the EMR:
+To quickly summarize CDS hooks - they're basically HTTP web hooks that get called whenever a user of an EMR takes a specific action, like when a provider opens a patients chart or starts a medication order for a patient. The idea is that registered third-party apps can be called whenever one of these actions is triggered and provide real time feedback to the user about their actions. For example, an CDS medication checking application can listen to when a doctor is entering a medication order for a specific drug in the EMR and the app suggest a different medication via a card in the UI of the EMR:
 
 ![CDS hook flow](https://cds-hooks.org/images/overview.png)
 
