@@ -36,7 +36,7 @@ The point of this post isn't to say that Mere has already implemented this stand
 
 The great thing about building off a current standard like CDS hooks is that CDS hooks built for one PHR could be used for any PHR!
 
-To quickly summarize CDS hooks - they're HTTP web hooks that get called whenever a user of an EMR takes a specific action, like when a provider opens a patient's chart or starts a medication order for a patient. The idea is that registered third-party apps can be called whenever one of these actions is triggered and provide real-time feedback to the user about their actions. So, for example, a CDS application that can listen for when a doctor is entering a medication order for a specific drug in the EMR can suggest a different medication via a card in the UI of the EMR:
+To quickly summarize CDS hooks - they're HTTP web hooks that get called whenever a user of a clinical client, such as a EMR, takes a specific action, like when a provider opens a patient's chart or starts a medication order for a patient. The idea is that registered third-party apps can be called whenever one of these actions is triggered and provide real-time feedback to the user about their actions. So, for example, a CDS application that can listen for when a doctor is entering a medication order for a specific drug in the EMR can suggest a different medication via a card in the UI of the EMR:
 
 ![CDS hook flow](https://cds-hooks.org/images/overview.png)
 
@@ -108,7 +108,7 @@ Based on some of the limitations we discussed above, I'd suggest the following u
 
 1. The `hook` field should be expanded to handle use cases commonly found in a PHR. This isn't a technical limitation of the current spec, but as common use cases start to converge from multiple PHR implementations, it may make sense to standardize several of them so that hooks can be transferrable across PHR implementations.
 
-2. The `fhirServer` and `fhirAuthorization` may need to handle multiple or zero FHIR servers. Since not all PHRs may implement their own FHIR endpoint but may want to provide credentials to their sources, those fields should be able to handle multiple servers with multiple authorization credentials. On the other hand, some PHRs may just want to send over the relevant FHIR resources in the context, with zero related fhirServices. One way to do this while maintaining backward compatibility with existing hooks would be to allow for a `fhirSources` array, where each array element contains a `fhirServer` element and a `fhirAuthorization` element. An example of this would be below:
+2. The `fhirServer` and `fhirAuthorization` fields may need to handle multiple or zero FHIR servers. Since not all PHRs may implement their own FHIR endpoint but may want to provide credentials to their sources, those fields should be able to handle multiple servers with multiple authorization credentials. On the other hand, some PHRs may just want to send over the relevant FHIR resources in the context, with zero related fhirServices. One way to do this while maintaining backward compatibility with existing hooks would be to allow for a `fhirSources` array, where each array element contains a `fhirServer` element and a `fhirAuthorization` element. An example of this would be below:
 
 ```json
 {
