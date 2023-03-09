@@ -17,7 +17,7 @@ The next problem Mere wants to solve is this: how can Mere make your data _actio
 
 There are many ways Mere _could_ provide health insights to users. If you're using Mere to manage medical records for your child, you could track their vaccine immunization history, and Mere could remind you when your next vaccine appointment should be. If you've recently become pregnant, Mere could help remind you when you should see your doctor, which screenings to get, and when. Mere could help you find the lowest prices for your current medications. Given your history, Mere could use AI to make more intelligent predictions or highlight risk factors. Mere could implement many possible features like this - but features that may be helpful for one person would be useless to another. Even if we could build every feature, only some people want their data to be used in such ways.
 
-That's why one of the future goals of Mere is to allow for customization through opt-in plugins that users can enable. The long-term goal is to offer a plugin marketplace for third-party developers that users could explore.
+That's why one of the future goals of Mere is to allow for customization through opt-in plugins that users can enable. The long-term goal is to offer a plugin marketplace to allow for third-party developers to publish extensions to Mere so that users and patients can customize their experience.
 
 # Where HL7 comes into play
 
