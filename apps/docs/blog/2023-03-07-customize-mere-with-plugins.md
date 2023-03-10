@@ -187,7 +187,7 @@ Based on the limitations discussed above, I'd suggest the following updates to t
 
 The `hook` field should be expanded to handle use cases commonly found in a PHR. Current hook types such as `patient-view`, `medication-prescribe` and `order-review` are very EMR centric and don't apply to PHRs.
 
-It may make sense to introduce hooks that tie into lifecycle events of the PHR, like a `onload` hook that is run when the PHR is initally opened.
+It may make sense to introduce hooks that tie into lifecycle events of the PHR, like a `onload` hook that is run when the PHR is initially opened.
 
 This isn't a technical limitation of the current spec, but as common use cases start to converge from multiple PHR implementations, it may make sense to standardize several of them so that hooks can be transferrable across PHR implementations.
 
