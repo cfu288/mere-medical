@@ -260,7 +260,7 @@ So to summarize, in a CDS hook that does not require any external `fhirServer` t
 
 The `context` property would need to be updates as well. The `context` property technically can contain any data, but currently most hooks usually provide a `userId`, `patientId`, and `encounterId` as fields. These are variables that are primarily intended to be passed to the hook as "parameters" but can also be parameters used within the prefetch templates (as well as our newly defined parameter templates). However, these three properties are usually specific to a single FHIR server. If we want to pass multiple `fhirServers` as specified above, each will now require their own context to reference, especially when referring to prefetch templates or parameter templates.
 
-To solve this problem in a backwards compatible way, we would introduce a new `contexts` root property that would act similarly to the current `context` property, however the `contexts` object would contain key:value properties where the key would be the value of the `fhirServer` to apply the context to and the value would be a context values specific to the `fhirServer` specified.
+To solve this problem in a backwards compatible way, we would introduce a new `contexts` root property that would act similarly to the current `context` property, however the `contexts` object would contain key:value properties where the key would be the value of the `fhirServer` to apply the context to and the value would be a context values specific to the `fhirServer` specified. Any objects provided inside the `contexts` object would act as an override for the more generic `context` object. For this reason, both the `context` and `contexts` root properties can co-exist.
 
 An example of how the new `fhirServices` property and the new `contexts` property would work together is shown below:
 
@@ -275,7 +275,7 @@ An example of how the new `fhirServices` property and the new `contexts` propert
       "description": "An example of a CDS Service that returns a static set of cards",
       "id": "static-patient-greeter",
       "parameters": {
-        "patientsToGreet": "Patient/{{contexts.patientId}}"
+        "patientsToGreet": "Patient/{{context.patientId}}"
       }
     }
   ]
