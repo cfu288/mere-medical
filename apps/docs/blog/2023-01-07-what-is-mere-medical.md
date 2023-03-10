@@ -16,6 +16,8 @@ A few months later, I moved to a new apartment closer to my new rotation site an
 
 Throughout this process, I kept thinking: why was getting all my medical records in one place so tricky? There had to be an easier way.
 
+<!--truncate-->
+
 # Looking for an existing solution
 
 I searched for other services and apps that would automatically sync to multiple patient portals and aggregate my records. I thought to myself that there was no way I was the first one to have this problem.

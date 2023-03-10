@@ -18,6 +18,8 @@ PHRs such as Mere are excellent at storing and showing you your medical data. Bu
 
 The next problem Mere wants to solve is this: how can Mere make your data _actionable_? How can Mere help you learn more about yourself and your conditions? Can Mere recommend actions you can take to improve your health? And can Mere do all this while maintaining its core tenants of privacy, local-first data, and user autonomy?
 
+<!--truncate-->
+
 There are many different ways Mere _could_ provide health insights to users where it currently does not. If you're using Mere to manage medical records for your child, you could track their vaccine immunization history, and Mere could remind you when your next vaccine appointment should be. If you've recently become pregnant, Mere could help remind you when you should see your doctor, which screenings to get, and when. Mere could help you find the lowest prices for your current medications. Given your history, Mere could use AI to make more intelligent predictions or highlight risk factors. Mere could implement many possible features like this - but features that may be helpful for one person may be useless to another. Even if Mere could build every feature, only some people may want to enable such features.
 
 That's why one of the future goals of Mere is to allow for customization through opt-in plugins that users can enable. The long-term goal is to offer a plugin marketplace to allow for third-party developers to publish extensions to Mere so that users and patients can customize their experience.
@@ -179,7 +181,7 @@ Which would return the following response to be rendered to the clinical client:
 
 ## What needs to change with CDS hooks to work with Personal Health Records
 
-Based on some of the limitations we discussed above, I'd suggest the following updates to the CDS specification.
+Based on some of the limitations we discussed above, I'd suggest the following updates to the CDS specification:
 
 #### Updating the `hook` Field to handle PHR use cases
 

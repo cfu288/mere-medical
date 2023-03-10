@@ -41,6 +41,9 @@ const config = {
           //   'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
         },
         blog: {
+          blogTitle: 'Mere Medical Blog',
+          blogDescription:
+            'Ideas about interoperability, personal health records, and development of Mere',
           showReadingTime: true,
         },
         // showReadingTime: true,
