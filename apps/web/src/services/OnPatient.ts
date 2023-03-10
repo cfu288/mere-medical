@@ -16,7 +16,7 @@ import {
 } from 'fhir/r2';
 import { RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../components/providers/RxDbProvider';
-import { DSTU2 } from './DSTU2';
+import { DSTU2 } from '.';
 import Config from '../environments/config.json';
 import { ConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';

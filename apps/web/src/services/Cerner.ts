@@ -3,7 +3,6 @@
  */
 
 /* eslint-disable no-inner-declarations */
-/* eslint-disable @typescript-eslint/no-namespace */
 import {
   AllergyIntolerance,
   Bundle,
@@ -27,7 +26,7 @@ import {
   CreateCernerConnectionDocument,
 } from '../models/connection-document/ConnectionDocument.type';
 import { Routes } from '../Routes';
-import { DSTU2 } from './DSTU2';
+import { DSTU2 } from '.';
 import Config from '../environments/config.json';
 import { v4 as uuidv4 } from 'uuid';
 import { JsonWebKeySet } from './JWTTools';
