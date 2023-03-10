@@ -323,22 +323,25 @@ An example of how the new `fhirServices` property and the new `contexts` propert
     }
   },
   "prefetch": {
-    "patientsToGreet": [
-      {
-        "resourceType": "Patient",
-        "gender": "male",
-        "birthDate": "1925-12-23",
-        "id": "1288992",
-        "active": true
-      },
-      {
-        "resourceType": "Patient",
-        "gender": "male",
-        "birthDate": "1925-12-23",
-        "id": "1288993",
-        "active": true
-      }
-    ]
+    "patientsToGreet": {
+      "resourceType": "Bundle",
+      "entry": [
+        {
+          "resourceType": "Patient",
+          "gender": "male",
+          "birthDate": "1925-12-23",
+          "id": "1288992",
+          "active": true
+        },
+        {
+          "resourceType": "Patient",
+          "gender": "male",
+          "birthDate": "1925-12-23",
+          "id": "1288993",
+          "active": true
+        }
+      ]
+    }
   }
 }
 ```
