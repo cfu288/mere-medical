@@ -12,7 +12,7 @@ toc_max_heading_level: 5
 hide_table_of_contents: false
 ---
 
-Currently, personal health records (PHRs) such as Mere do a great job of syncing and showing you your medical records across different healthcare providers. Mere makes it easy to read and search for your medical records across multiple health systems. Want to see what your last red blood cell count was? Mere can show you. Want to compare your last red blood cell count to your previous lab results? Mere will generate a graph for you. Don't remember which vaccines you've already gotten? Mere can group and summarize your entire vaccine history in one view.
+Currently, personal health records (PHRs) such as Mere do a great job of syncing and showing you your medical records across different healthcare providers. Mere makes it easy to read and search for your medical records across multiple health systems. Want to compare your last red blood cell count to your previous lab results? Mere will generate a graph for you. Don't remember which vaccines you've already gotten? Mere can group and summarize your entire vaccine history in one view.
 
 PHRs such as Mere are excellent at storing and showing you your medical data. But there's a big difference between just _showing_ you your data and actually _providing insights_ into your data.
 
