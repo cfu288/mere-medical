@@ -6,7 +6,7 @@ authors:
   name: Christopher Fu
   title: Developer of Mere Medical
   url: https://cfu288.com
-  image_url: https://files.mari.casa/profile.jpg
+  image_url: https://files.meremedical.co/profile.jpg
 ---
 
 Currently, personal health records (PHRs) such as Mere do a great job of syncing and showing you your medical records across different healthcare providers. Mere makes it easy to read and search for your medical records across multiple health systems. Want to see what your last red blood cell count was? Mere can show you. Want to compare your last red blood cell count to your previous lab results? Mere will generate a graph for you. Don't remember which vaccines you've already gotten? Mere can group and summarize your entire vaccine history in one view.
