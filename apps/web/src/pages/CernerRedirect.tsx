@@ -57,16 +57,14 @@ const CernerRedirect: React.FC = () => {
             user.id
           ) {
             const nowInSeconds = Math.floor(Date.now() / 1000);
-            const dbentry: Omit<
-              CreateCernerConnectionDocument,
-              'patient' | 'scope'
-            > = {
+            const dbentry: Omit<CreateCernerConnectionDocument, 'patient'> = {
               id: uuidv4(),
               user_id: user.id,
               source: 'cerner',
               location: cernerUrl,
               name: cernerName,
               access_token: res.access_token,
+              scope: res.scope,
               id_token: res.id_token,
               refresh_token: res.refresh_token,
               expires_in: nowInSeconds + res.expires_in,
