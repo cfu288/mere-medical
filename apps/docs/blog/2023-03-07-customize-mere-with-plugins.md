@@ -64,7 +64,7 @@ Another current limitation of the existing spec is that these hooks don't curren
 
 Lets dig deeper on how CDS hooks work technically.
 
-First, all CDS hooks are exposed via a discovery endpoint. This is essentially metadata that lets a client know which CDS hooks are available to them. It would normally be found on `{baseURL}/cds-services` and would return an array of hook metadata objects. Each object would have the following properties:
+First, all CDS hooks are exposed via a discovery endpoint. This is metadata that lets a clinical client know which CDS hooks are available to them. It would normally be found on `{baseURL}/cds-services` and would return an array of hook metadata objects. Each object would have the following properties:
 
 | Field             | Optionality | Type   | Description                                                                                                                                                                                                                                                                                       |
 | ----------------- | ----------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -181,7 +181,7 @@ Which would return the following response to be rendered to the clinical client:
 
 ## What needs to change with CDS hooks to work with Personal Health Records
 
-Based on some of the limitations we discussed above, I'd suggest the following updates to the CDS specification:
+Based on the limitations discussed above, I'd suggest the following updates to the CDS specification:
 
 #### Updating the `hook` Field to handle PHR use cases
 
@@ -189,7 +189,7 @@ The `hook` field should be expanded to handle use cases commonly found in a PHR.
 
 #### Adding a `parameters` Field to the CDS Hook Body
 
-Introduction of a new root property to the hook JSON body called `parameters`. This field would function similarly the pre-existing `prefetch` field, where each key would be a string and each value would be a prefetch template (possibly renamed parameter templates when used in the `parameters` field).
+Introduction of a new root property to the hook body called `parameters`. This field would function similarly the pre-existing `prefetch` field, where each key would be a string and each value would be a prefetch template (possibly renamed parameter templates when used in the `parameters` field).
 
 The main difference between the newly introduced parameter templates and prefetch templates is their intent. Prefetch templates are really intended as a "performance hack" to allow the clinical client to provide information to the hook with the intention of speeding up execution, however the output of the hook should be the same even if the prefetch data is not provided. On the other hand, parameter templates would specify mandatory FHIR resources to be provided by the client. These would be mandatory parameters required by the hook to perform its duties. The context template would be a query for FHIR resources on the clinical client.
 
@@ -260,7 +260,29 @@ So to summarize, in a CDS hook that does not require any external `fhirServer` t
 
 The `context` property would need to be updates as well. The `context` property technically can contain any data, but currently most hooks usually provide a `userId`, `patientId`, and `encounterId` as fields. These are variables that are primarily intended to be passed to the hook as "parameters" but can also be parameters used within the prefetch templates (as well as our newly defined parameter templates). However, these three properties are usually specific to a single FHIR server. If we want to pass multiple `fhirServers` as specified above, each will now require their own context to reference, especially when referring to prefetch templates or parameter templates.
 
-An example of how the new `fhirServices` property and the new `contexts` property would work is shown below:
+To solve this problem in a backwards compatible way, we would introduce a new `contexts` root property that would act similarly to the current `context` property, however the `contexts` object would contain key:value properties where the key would be the value of the `fhirServer` to apply the context to and the value would be a context values specific to the `fhirServer` specified.
+
+An example of how the new `fhirServices` property and the new `contexts` property would work together is shown below:
+
+**Discovery Endpoint**
+
+```json
+{
+  "services": [
+    {
+      "hook": "patient-view",
+      "title": "Static CDS Service Example",
+      "description": "An example of a CDS Service that returns a static set of cards",
+      "id": "static-patient-greeter",
+      "parameters": {
+        "patientsToGreet": "Patient/{{contexts.patientId}}"
+      }
+    }
+  ]
+}
+```
+
+**CDS Hook Body**
 
 ```json
 {
@@ -301,13 +323,22 @@ An example of how the new `fhirServices` property and the new `contexts` propert
     }
   },
   "prefetch": {
-    "patientToGreet": {
-      "resourceType": "Patient",
-      "gender": "male",
-      "birthDate": "1925-12-23",
-      "id": "1288992",
-      "active": true
-    }
+    "patientsToGreet": [
+      {
+        "resourceType": "Patient",
+        "gender": "male",
+        "birthDate": "1925-12-23",
+        "id": "1288992",
+        "active": true
+      },
+      {
+        "resourceType": "Patient",
+        "gender": "male",
+        "birthDate": "1925-12-23",
+        "id": "1288993",
+        "active": true
+      }
+    ]
   }
 }
 ```
@@ -316,7 +347,40 @@ Note that there are still some problems that need to be solved with this approac
 
 #### Make the Discovery Endpoint Expose what Properties are Expected in the Context Object
 
-The `context` field should be added to the CDS discovery endpoint, and should define which properties are expected from the clinical client. By doing this we make parsing the required fields for a hook machine parsable and generalizable, clinical clients can decide themselves whether or not they can provide the information needed to the hook automatically without an external developer needing to add explicit support for the hook.
+The `context` field should be added to the CDS discovery endpoint, and should define which properties are expected from the clinical client. By doing this we make parsing the required fields for a hook machine parsable and generalizable, clinical clients can decide themselves whether or not they can provide the information needed to the hook automatically without an external developer needing to add explicit support for the hook. Each element in the `context` field of the discovery endpoint would be a key:value pair, where the key was the name of the context item, and the value was a [CodableConcept] representing the data type to be populated by the clinical client. See below for an example.
+
+```json
+{
+  "services": [
+    {
+      "hook": "patient-view",
+      "title": "Static CDS Service Example",
+      "description": "An example of a CDS Service that returns a static set of cards",
+      "id": "static-patient-greeter",
+      "context": {
+        "userId": {
+          "system": "https://cds-hooks.org/hooks/patient-view/#context",
+          "code": "1",
+          "display": "The id of the current user. Must be in the format [ResourceType]/[id]"
+        },
+        "patientId": {
+          "system": "https://cds-hooks.org/hooks/patient-view/#context",
+          "code": "2",
+          "display": "The FHIR Patient.id of the current patient in context"
+        },
+        "encounterId": {
+          "system": "https://cds-hooks.org/hooks/patient-view/#context",
+          "code": "3",
+          "display": "The FHIR Encounter.id of the current encounter in context"
+        }
+      },
+      "parameters": {
+        "patientsToGreet": "Patient/{{contexts.patientId}}"
+      }
+    }
+  ]
+}
+```
 
 ## To Be Continued?
 
