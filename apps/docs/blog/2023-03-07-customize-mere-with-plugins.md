@@ -155,10 +155,7 @@ Based on some of the limitations we discussed above, I'd suggest the following u
   "context": {
     "userId": "Practitioner/example",
     "patientId": "1288992",
-    "encounterId": "89284",
-    "additionalData": {
-      ...
-    }
+    "encounterId": "89284"
   },
   "prefetch": {
     "patientToGreet": {
@@ -172,6 +169,6 @@ Based on some of the limitations we discussed above, I'd suggest the following u
 }
 ```
 
-Note that there are still some problems that need to be solved with this approach, like how a PHR will get access tokens to their sources that have a different scope provided to the PHR app itself (e.g. the PHR may have read access to all resource types but may only want to provide an access token to a hook with read access to AlleryIntolerance resources)
+Note that there are still some problems that need to be solved with this approach, like how a PHR will get access tokens to their sources that have a different scope provided to the PHR app itself (e.g. the PHR may have read access to all resource types but may only want to provide an access token to a hook with read access to AlleryIntolerance resources).
 
 This post is still a work in progress and will likely evolve as PHR use cases are discovered and solidified. If you have more ideas about CDS hooks for PHR or want to start a discussion, please [shoot me an email](mailto:cfu288@meremedical.co) and I can edit this post.
