@@ -347,7 +347,7 @@ Note that there are still some problems that need to be solved with this approac
 
 #### Make the Discovery Endpoint Expose what Properties are Expected in the Context Object
 
-The `context` field should be added to the CDS discovery endpoint, and should define which properties are expected from the clinical client. By doing this we make parsing the required fields for a hook machine parsable and generalizable, clinical clients can decide themselves whether or not they can provide the information needed to the hook automatically without an external developer needing to add explicit support for the hook. Each element in the `context` field of the discovery endpoint would be a key:value pair, where the key was the name of the context item, and the value was a [Coding](https://build.fhir.org/datatypes.html#codesystem) representing the data type to be populated by the clinical client. See below for an example. I'm ok with changing Coding to another FHIR resource like [CodableConcept](https://build.fhir.org/datatypes.html#CodeableConcept) as long as it is machine parsable.
+The `context` field should be added to the CDS discovery endpoint, and should define which properties are expected from the clinical client. By doing this we make parsing the required fields for a hook machine parsable and generalizable, clinical clients can decide themselves whether or not they can provide the information needed to the hook automatically without an external developer needing to add explicit support for the hook. Each element in the `context` field of the discovery endpoint would be a key:value pair, where the key was the name of the context item, and the value was a [CodableConcept](https://build.fhir.org/datatypes.html#CodeableConcept) representing the data type to be populated by the clinical client. See below for an example.
 
 ```json
 {
@@ -359,19 +359,34 @@ The `context` field should be added to the CDS discovery endpoint, and should de
       "id": "static-patient-greeter",
       "context": {
         "userId": {
-          "system": "https://cds-hooks.org/hooks/patient-view/#context",
-          "code": "1",
-          "display": "The id of the current user. Must be in the format [ResourceType]/[id]"
+          "coding": [
+            {
+              "system": "https://cds-hooks.org/hooks/patient-view/#context",
+              "code": "1",
+              "display": "The id of the current user. Must be in the format [ResourceType]/[id]"
+            }
+          ],
+          "text": "The id of the current user. Must be in the format [ResourceType]/[id]"
         },
         "patientId": {
-          "system": "https://cds-hooks.org/hooks/patient-view/#context",
-          "code": "2",
-          "display": "The FHIR Patient.id of the current patient in context"
+          "coding": [
+            {
+              "system": "https://cds-hooks.org/hooks/patient-view/#context",
+              "code": "2",
+              "display": "The FHIR Patient.id of the current patient in context"
+            }
+          ],
+          "text": "The FHIR Patient.id of the current patient in context"
         },
         "encounterId": {
-          "system": "https://cds-hooks.org/hooks/patient-view/#context",
-          "code": "3",
-          "display": "The FHIR Encounter.id of the current encounter in context"
+          "coding": [
+            {
+              "system": "https://cds-hooks.org/hooks/patient-view/#context",
+              "code": "3",
+              "display": "The FHIR Encounter.id of the current encounter in context"
+            }
+          ],
+          "text": "The FHIR Encounter.id of the current encounter in context"
         }
       },
       "parameters": {
