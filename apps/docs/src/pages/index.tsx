@@ -9,6 +9,7 @@ const footerNavigation = {
     { name: 'About', href: '/docs' },
     { name: 'Documentation', href: '/docs' },
     { name: 'Blog', href: '/blog' },
+    { name: 'Privacy', href: '/privacy-policy' },
     { name: 'Contact', href: 'mailto:cfu288@meremedical.co' },
   ],
   social: [],
@@ -400,6 +401,7 @@ export default function Home() {
                 </a>
               ))}
             </div> */}
+
           <p className="mt-8 text-center text-base text-gray-400">
             &copy; 2022 Mere Medical. All rights reserved.
           </p>
