@@ -2,42 +2,29 @@ import React from 'react';
 
 export default function PrivacyPolicy() {
   return (
-    <div className="mx-auto max-w-md px-4 py-4 sm:max-w-3xl sm:px-6 lg:px-0">
+    <div className="mx-auto max-w-md px-4 py-8 sm:max-w-3xl sm:px-6 lg:px-0">
       <div dangerouslySetInnerHTML={{ __html: policy }} />
       <p>
         You are advised to review this Privacy Policy periodically for any
         changes. Changes to this Privacy Policy are effective when they are
         posted on this page.
       </p>
-      <h1>Contact Us</h1>
-      <p>
-        If you have any questions about this Privacy Policy, You can contact us:
-      </p>
-      <ul>
-        <li>By email: cfu288@meremedical.co</li>
-      </ul>
     </div>
   );
 }
 
 const policy = `
 <style>
-  body {
-    margin: 0px;
-    font-family: system-ui, Roboto, Helvetica, sans-serif;
-    line-height: 1.5rem;
-  }
   h2 {
-    color: #3dace3;
+    color: #006183;
     font-weight: 400;
     background-color: #ebebeb;
-    padding: 1.5rem;
-    margin-bottom: 0px;
+    padding: 1rem;
+    margin-bottom: 16px;
   }
   a {
-    color: #3dace3;
+    color: #006183;
   }
-
   /* Table styles */
   table {
     width: 100%;
@@ -105,18 +92,6 @@ const policy = `
     opacity: 1;
   }  
 
-  .half {
-    display: inline-block;
-    width:49%;
-  }
-
-  @media only screen and (max-width: 600px) {
-    .half {
-      display: inline-block;
-      width: 100%;
-    }
-  }
-
 </style>
 <h1 id="meremedicalmodelprivacynotice">Mere Medical Model Privacy Notice</h1>
 <p><strong>Note:</strong> Developers of consumer health technology or apps (“health technology developers”) that collect 
@@ -143,7 +118,7 @@ privacy and security policies. <strong>"We"</strong> refers to the health techno
   </div>
 </span>
 of the app or technology</li></ul>
-<p><br></br>  </p>
+
 <h2 id="sharehowweshareyourdataexternallywithothercompaniesorentities">Share: How we share your data externally with other companies or entities</h2>
 <h3>
   We share your 
@@ -162,11 +137,10 @@ of the app or technology</li></ul>
   </div>
 </span>
 </li></ul>
-<p><br></br>  </p>
+
 <h3 id="weshareyourdataafterremovingidentifiersnotethatremainingdatamaynotbeanonymous">We share your data AFTER removing identifiers (note that remaining data may not be anonymous):</h3>
 <ul>
-<li>We DO NOT share your data after removing identifiers<br />
-<br></br>  </li>
+<li>We DO NOT share your data after removing identifiers
 </ul>
 <h2 id="sellwhowesellyourdatato">Sell: Who we sell your data to</h2>
 <table>
@@ -208,7 +182,7 @@ of the app or technology</li></ul>
     <td> No </td>
   </tr>
 </table>
-<p><br></br></p>
+<p></p>
 <h2 id="storehowwestoreyourdata">Store: How we store your data</h2>
 <table>
   <tr>
@@ -225,7 +199,7 @@ of the app or technology</li></ul>
   </tr>
 </table>
 <p><br />
-<br></br></p>
+</p>
 <h2 id="encryptionhowweencryptyourdata">Encryption: How we encrypt your data</h2>
 <table>
   <tr>
@@ -274,7 +248,7 @@ of the app or technology</li></ul>
   </tr>
 </table>
 <p>
-<br></br>  </p>
+  </p>
 <h2 id="privacyhowthistechnologyaccessesotherdata">Privacy: How this technology accesses other data</h2>
 <table style='vertical-align: top'>
   <tr>
@@ -290,7 +264,7 @@ of the app or technology</li></ul>
     <td> No</td>
   </tr>
 </table>
-<p><br></br></p>
+<p></p>
 <h2 id="useroptionswhatyoucandowiththedatathatwecollect">User Options: What you can do with the data that we collect</h2>
 <table>
   <tr>
@@ -301,7 +275,7 @@ Step 2) Click "Start data export" under "Export data"
   </tr>
 </table>
 <p>
-<br></br></p>
+</p>
 <h2>
   <div class="tooltip">
     Deactivation
@@ -316,11 +290,11 @@ Step 2) Click "Start data export" under "Export data"
     <td>   Deleted immediately </td>
   </tr>
 </table>
-<p><br></br></p>
+<p></p>
 <h2 id="policychangeshowwewillnotifyyouifourprivacypolicychanges">Policy Changes: How we will notify you if our privacy policy changes</h2>
 <p>Via update to our privacy policy</p>
 <div>Find out more in the <a href='https://meremedical.co/privacy-policy' target='_blank'>Changes section of our Privacy Policy</a> (https://meremedical.co/privacy-policy)<br></div>
-<p><br></br></p>
+<p></p>
 <h2>
   <div class="tooltip">
     Breach
@@ -332,7 +306,7 @@ Step 2) Click "Start data export" under "Export data"
 <p>Mere Medical complies with all applicable laws regarding breaches.<br />
 Via blog post and update to our privacy policy</p>
 <div>Find out more in the <a href='https://meremedical.co/privacy-policy' target='_blank'>Breach section of our Privacy Policy</a> (https://meremedical.co/privacy-policy)<br></div>
-<p><br></br></p>
+<p></p>
 <h2 id="contactus">Contact Us</h2>
 <h3 id="meremedical">Mere Medical</h3>
 <div><a href='https://meremedical.co/privacy-policy' target='_blank'>Privacy Policy</a> (https://meremedical.co/privacy-policy)<br></div>
