@@ -14,7 +14,15 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ['Lato', ...defaultTheme.fontFamily.sans],
+        sans: [
+          'Avenir',
+          'Avenir Next LT Pro',
+          'Montserrat',
+          'Corbel',
+          'URW Gothic',
+          'source-sans-pro',
+          'sans-serif',
+        ],
       },
       colors: {
         primary: {

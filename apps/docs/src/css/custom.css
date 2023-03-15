@@ -51,10 +51,8 @@
   --ifm-color-primary-lightest: #00c5fd;
   --ifm-code-font-size: 95%;
   --docusaurus-highlighted-code-line-bg: #232e500a;
-  --ifm-font-family-base: Lato, system-ui, -apple-system, Segoe UI, Roboto,
-    Ubuntu, Cantarell, Noto Sans, sans-serif, BlinkMacSystemFont, 'Segoe UI',
-    Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-    'Segoe UI Symbol';
+  --ifm-font-family-base: 'Lato', 'Avenir', 'Avenir Next LT Pro', 'Montserrat',
+    'Corbel', 'URW Gothic', 'source-sans-pro', 'sans-serif';
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
