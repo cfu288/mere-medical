@@ -60,9 +60,96 @@ const navigation = [
   { name: 'Blog', href: '/blog' },
 ];
 
+export function NavigationBar({ absolute = true }: { absolute?: boolean }) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  return (
+    <div
+      className={`${
+        absolute ? 'absolute' : ''
+      } top-0 left-0 isolate z-50 w-full`}
+    >
+      <div className="px-6 py-6 lg:px-8">
+        <nav
+          className="flex w-full items-center justify-between"
+          aria-label="Global"
+        >
+          <div className="flex lg:flex-1">
+            <a href="#" className="-m-1.5 p-1.5">
+              <img
+                className="block h-10 lg:hidden"
+                src="/img/logo.svg"
+                alt=""
+              />
+            </a>
+          </div>
+          <div className="flex lg:hidden">
+            <button
+              type="button"
+              className="-m-2.5 inline-flex items-center justify-center rounded-md border-0 bg-gray-50 p-2.5 text-gray-700 hover:bg-gray-100"
+              onClick={() => setMobileMenuOpen(true)}
+            >
+              <span className="sr-only">Open main menu</span>
+              <Bars3Icon className="h-6 w-6" aria-hidden="true" />
+            </button>
+          </div>
+          <div className="hidden lg:flex lg:gap-x-12">
+            {navigation.map((item) => (
+              <a
+                key={item.name}
+                href={item.href}
+                className="text-sm leading-6 text-gray-700"
+              >
+                {item.name}
+              </a>
+            ))}
+          </div>
+          {mobileMenuOpen && (
+            <div className="fixed inset-0 z-10 overflow-y-auto bg-white px-6 py-6 lg:hidden">
+              <div className="flex items-center justify-between">
+                <a href="#" className="-m-1.5 p-1.5">
+                  <img className="h-10 w-auto" src="/img/logo.svg" alt="logo" />
+                </a>
+                <button
+                  type="button"
+                  className="-m-2.5 inline-flex items-center justify-center rounded-md border-0 bg-gray-50 p-2.5 text-gray-700 hover:bg-gray-100"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <span className="sr-only">Close menu</span>
+                  <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+                </button>
+              </div>
+              <div className="mt-6 flow-root">
+                <div className="-my-6 divide-y divide-gray-500/10">
+                  <div className="space-y-2 py-6">
+                    {navigation.map((item) => (
+                      <a
+                        key={item.name}
+                        href={item.href}
+                        className="-mx-3 block rounded-lg py-2 px-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-400/10"
+                      >
+                        {item.name}
+                      </a>
+                    ))}
+                  </div>
+                  <div className="py-6">
+                    <a
+                      href="#"
+                      className="-mx-3 block rounded-lg py-2.5 px-3 text-base font-semibold leading-6 text-gray-900 hover:bg-gray-400/10"
+                    ></a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </nav>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const { siteConfig } = useDocusaurusContext();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <>
@@ -84,87 +171,8 @@ export default function Home() {
           ></script>
         )}
       </Head>
-      <div className="absolute top-0 left-0 isolate z-50 w-full">
-        <div className="px-6 py-6 lg:px-8">
-          <nav
-            className="flex w-full items-center justify-between"
-            aria-label="Global"
-          >
-            <div className="flex lg:flex-1">
-              <a href="#" className="-m-1.5 p-1.5">
-                <img
-                  className="block h-10 lg:hidden"
-                  src="/img/logo.svg"
-                  alt=""
-                />
-              </a>
-            </div>
-            <div className="flex lg:hidden">
-              <button
-                type="button"
-                className="-m-2.5 inline-flex items-center justify-center rounded-md border-0 bg-gray-50 p-2.5 text-gray-700 hover:bg-gray-100"
-                onClick={() => setMobileMenuOpen(true)}
-              >
-                <span className="sr-only">Open main menu</span>
-                <Bars3Icon className="h-6 w-6" aria-hidden="true" />
-              </button>
-            </div>
-            <div className="hidden lg:flex lg:gap-x-12">
-              {navigation.map((item) => (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  className="text-sm leading-6 text-gray-700"
-                >
-                  {item.name}
-                </a>
-              ))}
-            </div>
-            {mobileMenuOpen && (
-              <div className="fixed inset-0 z-10 overflow-y-auto bg-white px-6 py-6 lg:hidden">
-                <div className="flex items-center justify-between">
-                  <a href="#" className="-m-1.5 p-1.5">
-                    <img
-                      className="h-10 w-auto"
-                      src="/img/logo.svg"
-                      alt="logo"
-                    />
-                  </a>
-                  <button
-                    type="button"
-                    className="-m-2.5 inline-flex items-center justify-center rounded-md border-0 bg-gray-50 p-2.5 text-gray-700 hover:bg-gray-100"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <span className="sr-only">Close menu</span>
-                    <XMarkIcon className="h-6 w-6" aria-hidden="true" />
-                  </button>
-                </div>
-                <div className="mt-6 flow-root">
-                  <div className="-my-6 divide-y divide-gray-500/10">
-                    <div className="space-y-2 py-6">
-                      {navigation.map((item) => (
-                        <a
-                          key={item.name}
-                          href={item.href}
-                          className="-mx-3 block rounded-lg py-2 px-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-400/10"
-                        >
-                          {item.name}
-                        </a>
-                      ))}
-                    </div>
-                    <div className="py-6">
-                      <a
-                        href="#"
-                        className="-mx-3 block rounded-lg py-2.5 px-3 text-base font-semibold leading-6 text-gray-900 hover:bg-gray-400/10"
-                      ></a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </nav>
-        </div>
-      </div>
+      <NavigationBar />
+
       <main className="relative overflow-x-hidden overflow-y-hidden bg-white">
         {/* Hero section */}
         <div className="pt-8 sm:pt-12 lg:relative lg:py-48">
@@ -365,48 +373,41 @@ export default function Home() {
         {/* CTA section */}
         <div className="relative sm:py-16"></div>
       </main>
-      <footer className="bg-primary-900">
-        <div className="mx-auto max-w-md overflow-hidden py-12 px-4 sm:max-w-3xl sm:px-6 lg:max-w-7xl lg:px-8">
-          <div className="mx-auto flex w-full items-center pb-4">
-            <img
-              aria-hidden="true"
-              className="mx-auto"
-              src="/img/white-logo.svg"
-            ></img>
-          </div>
-          <nav
-            className="-mx-5 -my-2 flex flex-wrap justify-center"
-            aria-label="Footer"
-          >
-            {footerNavigation.main.map((item) => (
-              <div key={item.name} className="px-5 py-2">
-                <a
-                  href={item.href}
-                  className="text-base text-gray-400 hover:text-gray-300"
-                >
-                  {item.name}
-                </a>
-              </div>
-            ))}
-          </nav>
-          {/* <div className="mt-8 flex justify-center space-x-6">
-              {footerNavigation.social.map((item) => (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  className="text-gray-400 hover:text-gray-300"
-                >
-                  <span className="sr-only">{item.name}</span>
-                  <item.icon className="h-6 w-6" aria-hidden="true" />
-                </a>
-              ))}
-            </div> */}
-
-          <p className="mt-8 text-center text-base text-gray-400">
-            &copy; 2022 Mere Medical. All rights reserved.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </>
+  );
+}
+
+export function Footer() {
+  return (
+    <footer className="bg-primary-900">
+      <div className="mx-auto max-w-md overflow-hidden py-12 px-4 sm:max-w-3xl sm:px-6 lg:max-w-7xl lg:px-8">
+        <div className="mx-auto flex w-full items-center pb-4">
+          <img
+            aria-hidden="true"
+            className="mx-auto"
+            src="/img/white-logo.svg"
+          ></img>
+        </div>
+        <nav
+          className="-mx-5 -my-2 flex flex-wrap justify-center"
+          aria-label="Footer"
+        >
+          {footerNavigation.main.map((item) => (
+            <div key={item.name} className="px-5 py-2">
+              <a
+                href={item.href}
+                className="text-base text-gray-400 hover:text-gray-300"
+              >
+                {item.name}
+              </a>
+            </div>
+          ))}
+        </nav>
+        <p className="mt-8 text-center text-base text-gray-400">
+          &copy; 2022 Mere Medical. All rights reserved.
+        </p>
+      </div>
+    </footer>
   );
 }

@@ -1,16 +1,35 @@
 import React from 'react';
+import { Footer, NavigationBar } from '.';
 import './privacy-policy.css';
+import Head from '@docusaurus/Head';
 
 export default function PrivacyPolicy() {
   return (
-    <div className="mx-auto max-w-md px-4 py-8 sm:max-w-3xl sm:px-6 lg:px-0">
-      <div dangerouslySetInnerHTML={{ __html: policy }}></div>
-      <p>
-        You are advised to review this Privacy Policy periodically for any
-        changes. Changes to this Privacy Policy are effective when they are
-        posted on this page.
-      </p>
-    </div>
+    <>
+      <Head>
+        <title>Mere Medical Privacy Policy</title>
+        <meta name="description" content="How Mere handles your data" />
+        <meta property="og:description" content="How Mere handles your data" />
+        {process.env.NODE_ENV === 'production' && (
+          <script
+            async
+            defer
+            data-website-id="923df902-e3c6-4d55-8c84-51cd5881ed81"
+            src="https://umami.mari.casa/umami.js"
+          ></script>
+        )}
+      </Head>
+      <NavigationBar absolute={false} />
+      <div className="mx-auto max-w-md px-4 py-8 sm:max-w-3xl sm:px-6 lg:px-0">
+        <div dangerouslySetInnerHTML={{ __html: policy }}></div>
+        <p>
+          You are advised to review this Privacy Policy periodically for any
+          changes. Changes to this Privacy Policy are effective when they are
+          posted on this page.
+        </p>
+      </div>
+      <Footer />
+    </>
   );
 }
 
