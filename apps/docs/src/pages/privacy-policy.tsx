@@ -1,9 +1,10 @@
 import React from 'react';
+import './privacy-policy.css';
 
 export default function PrivacyPolicy() {
   return (
     <div className="mx-auto max-w-md px-4 py-8 sm:max-w-3xl sm:px-6 lg:px-0">
-      <div dangerouslySetInnerHTML={{ __html: policy }} />
+      <div dangerouslySetInnerHTML={{ __html: policy }}></div>
       <p>
         You are advised to review this Privacy Policy periodically for any
         changes. Changes to this Privacy Policy are effective when they are
@@ -14,85 +15,7 @@ export default function PrivacyPolicy() {
 }
 
 const policy = `
-<style>
-  h2 {
-    color: #006183;
-    font-weight: 400;
-    background-color: #ebebeb;
-    padding: 1rem;
-    margin-bottom: 16px;
-  }
-  a {
-    color: #006183;
-  }
-  /* Table styles */
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  th, td {
-    padding: 1.5rem;
-    vertical-align: top;
-    border: 1px solid #eee
-  }
-  th {
-    background-color: #f7f7f7;
-  }
-  th:last-child, td:last-child {
-    width: 40%;
-  }
-
-  /* Tooltip container */
-  .tooltip {
-    position: relative;
-    display: inline-block;
-    border-bottom: 3px solid #ccc;
-  }
-
-  /* Tooltip text */
-  .tooltip .tooltiptext {
-    visibility: hidden;
-    width: 200px;
-    font-weight: 400;
-    font-size: 12px;
-    line-height: 15px;
-    background-color: #555;
-    color: #fff;
-    text-align: left;
-    padding: 5px 7px;
-    border-radius: 3px;
-
-    /* Position the tooltip text */
-    position: absolute;
-    z-index: 1;
-    bottom: 125%;
-    left: 50%;
-    margin-left: -60px;
-
-    /* Fade in tooltip */
-    opacity: 0;
-    transition: opacity 1s;
-  }
-
-  /* Tooltip arrow */
-  .tooltip .tooltiptext::after {
-    content: "";
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    margin-left: -5px;
-    border-width: 5px;
-    border-style: solid;
-    border-color: #555 transparent transparent transparent;
-  }
-
-  /* Show the tooltip text when you mouse over the tooltip container */
-  .tooltip:hover .tooltiptext {
-    visibility: visible;
-    opacity: 1;
-  }  
-
-</style>
+<div>
 <h1 id="meremedicalmodelprivacynotice">Mere Medical Model Privacy Notice</h1>
 <p><strong>Note:</strong> Developers of consumer health technology or apps (“health technology developers”) that collect 
 digital health data about individuals would use this template to disclose to consumers the developer’s 
@@ -312,4 +235,5 @@ Via blog post and update to our privacy policy</p>
 <div><a href='https://meremedical.co/privacy-policy' target='_blank'>Privacy Policy</a> (https://meremedical.co/privacy-policy)<br></div>
 <div><a href='https://meremedical.co' target='_blank'>Contact Page</a> (https://meremedical.co)<br></div>
 <p><a href="mailto:cfu288@meremedical.co">cfu288@meremedical.co</a><br />
+</div>
 `;
