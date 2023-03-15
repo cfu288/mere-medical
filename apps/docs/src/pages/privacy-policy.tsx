@@ -110,7 +110,6 @@ export default function PrivacyPolicy() {
           posted on this page.
         </p>
       </div>
-      <Footer />
     </>
   );
 }
