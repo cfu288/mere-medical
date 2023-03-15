@@ -14,7 +14,15 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Quicksand', ...defaultTheme.fontFamily.sans],
+        sans: [
+          'Avenir',
+          'Avenir Next LT Pro',
+          'Montserrat',
+          'Corbel',
+          'URW Gothic',
+          'source-sans-pro',
+          'sans-serif',
+        ],
       },
       colors: {
         primary: {

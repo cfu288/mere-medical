@@ -1,5 +1,5 @@
 import '../theme/fonts.css';
-import '../theme/tailwind.css';
+import '../styles.css';
 
 import { BrowserRouter as Router } from 'react-router-dom';
 import { UserProvider } from '../components/providers/UserProvider';
