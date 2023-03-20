@@ -17,7 +17,7 @@ const footerNavigation = {
 
 const features = [
   {
-    name: 'Sync to multiple patient portals',
+    name: 'Sync from multiple patient portals',
     img: '/img/sync.svg',
     description:
       'Connect to all of your patient portals across doctors and hospitals and see all of your data in one place. Let us help you manage your medical records.',
@@ -38,7 +38,7 @@ const features = [
     name: 'Reminders',
     img: '/img/reminders.svg',
     description:
-      'Advanced AI technology means you’ll get convenient health recommendations, wellness metrics, and reminders when it’s time to see the doctor again – all from one intuitive dashboard.',
+      'Use your data to generate health recommendations, wellness metrics, and reminders when it’s time to see the doctor again – all from one intuitive dashboard.',
   },
   {
     name: 'Anonymous & Secure',
@@ -175,7 +175,7 @@ export default function Home() {
 
       <main className="relative overflow-x-hidden overflow-y-hidden bg-white">
         {/* Hero section */}
-        <div className="pt-8 sm:pt-12 lg:relative lg:py-48">
+        <div className="flex min-h-screen flex-col items-center justify-center pt-8 sm:pt-12 lg:relative lg:py-48">
           <div className="mx-auto max-w-md px-4 sm:max-w-3xl sm:grid-cols-1 sm:px-6 lg:grid lg:max-w-7xl lg:grid-cols-2 lg:gap-24 lg:px-8">
             {/* Left Hero */}
             <div>
@@ -196,7 +196,8 @@ export default function Home() {
                   </h1>
                   <p className="mt-6 text-xl leading-relaxed text-gray-600">
                     With Mere Medical, you can finally manage all of your
-                    medical records from one place via a self-hostable web app.
+                    medical records from Epic MyChart, Cerner, and OnPatient
+                    patient portals in one place.
                   </p>
                 </div>
                 <div className=" mt-5 max-w-md sm:flex sm:justify-start md:mt-8">
@@ -221,9 +222,9 @@ export default function Home() {
             </div>
 
             {/* Right Hero */}
-            <div className="lg:rounded-tr-0 lg:left-100 relative mt-24 flex h-80 w-auto overflow-hidden rounded-bl-[80px] rounded-tr-[80px] bg-[#F1F4F9] px-4 sm:h-[32rem] lg:absolute lg:inset-y-0 lg:left-1/2 lg:right-0 lg:mt-0 lg:block lg:h-full lg:w-full lg:overflow-visible lg:px-0 lg:pt-6">
+            <div className="lg:rounded-tr-0 lg:left-100 relative mt-24 flex h-80 w-auto overflow-hidden rounded-bl-[80px] rounded-tr-[80px] bg-[#F1F4F9] px-4 sm:h-[32rem] lg:absolute lg:inset-y-0 lg:left-1/2 lg:right-0 lg:mt-0 lg:block lg:h-5/6 lg:w-full lg:overflow-visible lg:px-0 lg:pt-6">
               <img
-                className="m-5 mx-auto mb-0 self-center rounded-md sm:max-w-xl lg:absolute lg:bottom-20 lg:mx-0 lg:mt-20 lg:ml-10 lg:h-auto lg:w-full lg:max-w-4xl lg:self-center lg:rounded-2xl lg:p-0 xl:-bottom-10 xl:ml-10 xl:max-w-5xl"
+                className="m-5 mx-auto self-center rounded-md sm:max-w-xl lg:absolute lg:-bottom-10 lg:mx-0 lg:mb-0 lg:mt-20 lg:ml-10 lg:h-auto lg:w-full lg:max-w-5xl lg:self-center lg:rounded-2xl lg:p-0"
                 src="/img/timeline-desktop.webp"
                 alt="web timeline screenshot"
               />
@@ -233,7 +234,7 @@ export default function Home() {
 
         {/* Problem section */}
         <div className="relative mt-24 md:mt-36 lg:mt-48">
-          <div className=" mx-auto flex max-w-md flex-col-reverse items-center justify-center px-4 sm:max-w-3xl sm:px-6 lg:max-w-7xl lg:flex-row-reverse lg:items-start lg:gap-24 lg:px-8 lg:px-8">
+          <div className=" mx-auto flex max-w-md flex-col-reverse items-center justify-center px-4 sm:max-w-3xl sm:px-6 lg:max-w-7xl lg:flex-row-reverse lg:items-start lg:gap-24 lg:px-8">
             {/* <div className="flex h-full grow items-center justify-center overflow-hidden lg:order-1 lg:w-full"> */}
             <img
               className="mt-12 h-auto max-h-[512px] w-full max-w-[512px] self-center justify-self-center object-cover lg:order-1 lg:mt-0"
@@ -244,7 +245,7 @@ export default function Home() {
 
             <div className="mx-auto max-w-md px-4 sm:max-w-3xl sm:px-6 lg:px-0">
               {/* Content area */}
-              <div className="lg:pt-20">
+              <div>
                 <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
                   What’s the Problem?
                 </h2>
@@ -253,14 +254,7 @@ export default function Home() {
                     Your medical records are yours. So, why is it so hard to
                     access them?
                   </p>
-                  <p className="text-lg leading-relaxed">
-                    Maintaining your well being can seem impossible when you
-                    can’t recall what month you last saw your doctor – or
-                    whether you had that specific vaccine. Did you ever get your
-                    lab results back? When was the last time you got your flu
-                    shot?
-                    {/* Are all of your different doctors on the same page? */}
-                  </p>
+
                   <p className="text-lg leading-relaxed">
                     Medical record organization is critical. With the rise of
                     the digital age, managing your patient profile should be
@@ -268,9 +262,9 @@ export default function Home() {
                   </p>
                   <p className="text-lg leading-relaxed">
                     However, you shouldn't need to trust 3rd parties with your
-                    medical records. That's why Mere Medical is a self-hosted
-                    progressive web app - keep full control of your medical
-                    records by deploying it on your own computer or servers!
+                    medical records. That's why Mere Medical focuses on
+                    empowering users - keep full control of your medical records
+                    by running Mere on your own computers!
                   </p>
                 </div>
               </div>
@@ -287,18 +281,18 @@ export default function Home() {
                   What’s the Solution?
                 </h2>
                 <p className="mt-6 max-w-3xl text-lg leading-relaxed text-white">
-                  Mere Medical is the all-new, open source, self hostable, and
-                  free medical record management web app that connects to
-                  multiple patient portals and allows you to upload your own
-                  paper records. With Mere Medical, you can easily manage your
-                  own medical records under one digital roof.
+                  Mere Medical is the all-new, open-source, self-hostable,
+                  local-first, and free medical record management web app that
+                  connects to multiple patient portals and allows you to upload
+                  your own paper records. With Mere Medical, you can easily
+                  manage your own medical records under one digital roof.
                 </p>
                 <div className="mb-0 mt-8 flex items-center justify-start rounded-md bg-[#8799D040] p-4">
                   <div className="ml-2 mr-4 flex aspect-square h-[35px] w-[35px] items-center justify-center rounded-full bg-[#7CE8C7]">
                     <p className="text-primary-900 mb-0 text-lg">1</p>
                   </div>
                   <p className=" text-md mb-0 flex h-max max-w-xl items-center justify-center align-bottom font-semibold leading-7 text-white">
-                    Offline first - Everything is saved locally to your device
+                    Offline first - Everything is stored locally on your device
                   </p>
                 </div>
                 <div className="mt-8 flex items-center justify-start rounded-md bg-[#8799D040] p-4">
