@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { v4 as uuidv4 } from 'uuid';
+import uuid4 from '../utils/UUIDUtils';
 import { CreateOnPatientConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
 import { useRxDb } from '../components/providers/RxDbProvider';
 import { Routes } from '../Routes';
@@ -39,7 +39,7 @@ const OnPatientRedirect: React.FC = () => {
           CreateOnPatientConnectionDocument,
           'patient' | 'scope'
         > = {
-          id: uuidv4(),
+          id: uuid4(),
           user_id: user.id,
           source: 'onpatient',
           location: 'https://onpatient.com',

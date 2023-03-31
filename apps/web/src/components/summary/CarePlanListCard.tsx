@@ -30,7 +30,6 @@ export function CarePlanListCard({
           <Disclosure.Panel>
             <TimelineCardBase>
               <div className="min-w-0 flex-1">
-                <span className="absolute inset-0" aria-hidden="true" />
                 {items.map((item) => (
                   <Fragment key={item.metadata?.id}>
                     {item.data_record.raw.resource?.goal &&

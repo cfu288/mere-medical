@@ -11,12 +11,14 @@ import { useUser } from '../providers/UserProvider';
 import BillboardJS, { IChart } from '@billboard.js/react';
 import bb, { areaLineRange, ChartOptions } from 'billboard.js';
 import 'billboard.js/dist/billboard.css';
+import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
 
 export function ShowDiagnosticReportResultsExpandable({
   item,
   docs,
   expanded,
   setExpanded,
+  loading,
 }: {
   item:
     | ClinicalDocument<BundleEntry<DiagnosticReport>>
@@ -24,14 +26,33 @@ export function ShowDiagnosticReportResultsExpandable({
   docs: ClinicalDocument<BundleEntry<Observation>>[];
   expanded: boolean;
   setExpanded: React.Dispatch<React.SetStateAction<boolean>>;
+  loading?: boolean;
 }) {
   const toggleOpen = () => setExpanded((x) => !x);
+
+  useEffect(() => {
+    if (expanded) {
+      console.log(item);
+    }
+  }, [expanded, item]);
 
   return (
     <Modal open={expanded} setOpen={setExpanded}>
       <div className="flex flex-col">
         <ModalHeader
           title={item.metadata?.display_name || ''}
+          subtitle={
+            <div className="flex flex-col">
+              <p className="text-sm font-light">
+                {format(parseISO(item.metadata?.date || ''), 'LLLL do yyyy')}
+              </p>
+              <p className="text-sm font-light">
+                {Array.isArray(item.data_record.raw.resource?.performer)
+                  ? item.data_record.raw.resource?.performer?.[0].display
+                  : item.data_record.raw.resource?.performer?.display}
+              </p>
+            </div>
+          }
           setClose={toggleOpen}
         />
         <div className="max-h-full scroll-py-3 p-3">
@@ -44,6 +65,16 @@ export function ShowDiagnosticReportResultsExpandable({
               <div className="col-span-3 text-sm font-semibold">Name</div>
               <div className="col-span-2 text-sm font-semibold">Value</div>
             </div>
+            {loading ? (
+              <p className="mx-4 grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-100 py-2">
+                <div className="col-span-3 self-center text-xs font-semibold text-gray-600">
+                  Loading data
+                </div>
+                <div className="col-span-3 self-center text-xs font-semibold text-gray-600">
+                  <ButtonLoadingSpinner height="h-3" width="w-3" />
+                </div>
+              </p>
+            ) : null}
             {docs.map((item) => (
               <Row item={item} key={JSON.stringify(item).slice(0, 20)} />
             ))}
@@ -151,12 +182,12 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
         })
         .exec()
         .then((res) => {
-          const sorted = (res.sort((a, b) =>
+          const sorted = res.sort((a, b) =>
             new Date(a.get('metadata.date') || '') <
             new Date(b.get('metadata.date') || '')
               ? 1
               : -1
-          ) as unknown) as RxDocument<
+          ) as unknown as RxDocument<
             ClinicalDocument<BundleEntry<Observation>>
           >[];
           // console.log(sorted.map((i) => i.toJSON().metadata?.date));
@@ -197,80 +228,110 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
                   {/* {getCommentString(item)} */}
                 </div>
                 <div className="col-span-1 flex flex-col items-center justify-center">
-                  <Disclosure.Button>
-                    {open ? (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth="1.5"
-                        stroke="currentColor"
-                        className="h-6 w-6"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    ) : (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth="1.5"
-                        stroke="currentColor"
-                        className="h-6 w-6"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"
-                        />
-                      </svg>
+                  {relatedLabs.length > 0 &&
+                    getValueQuantity(item) !== undefined && (
+                      <Disclosure.Button>
+                        {open ? (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth="1.5"
+                            stroke="currentColor"
+                            className="h-6 w-6"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        ) : (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth="1.5"
+                            stroke="currentColor"
+                            className="h-6 w-6"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"
+                            />
+                          </svg>
+                        )}
+                      </Disclosure.Button>
                     )}
-                  </Disclosure.Button>
                 </div>
               </div>
-              <Disclosure.Panel className="mx-4 grid grid-cols-6 gap-2 gap-y-2  py-2">
-                {relatedLabs.map((rl) => (
-                  <Fragment key={`rl-${rl.id}`}>
-                    <div className="col-span-3 self-center pl-4 text-xs font-bold text-gray-600">
-                      <p className="">
-                        {format(
-                          parseISO(rl.metadata?.date || ''),
-                          'MM/dd/yyyy'
-                        )}
-                      </p>
-                      <p className="text-xs font-light text-gray-600">
-                        {getReferenceRangeString(rl)
-                          ? `Range: ${getReferenceRangeString(rl)}`
-                          : ''}
-                      </p>
-                    </div>
-                    <div
-                      className={`col-span-2 flex flex-col self-center text-sm ${
-                        isOutOfRangeResult(rl) && 'text-red-700'
-                      }`}
-                    >
-                      <p>
-                        {getValueQuantity(rl) !== undefined
-                          ? `  ${getValueQuantity(rl)}`
-                          : ''}
-                        {getValueUnit(rl)}{' '}
-                        {getInterpretationText(rl) || getValueString(rl)}
-                      </p>
-                    </div>
-                  </Fragment>
-                ))}
-              </Disclosure.Panel>
-              <Disclosure.Panel className="max-w-80 mx-4 w-80 border-b-2 border-solid border-gray-100 pr-2 sm:w-full sm:max-w-max">
-                <BillboardJS bb={bb} options={options} ref={chartComponent} />
-              </Disclosure.Panel>
+              {relatedLabs.length > 0 && (
+                <>
+                  <Disclosure.Panel className="mx-4 grid grid-cols-6 gap-2 gap-y-2 py-2">
+                    {relatedLabs.map((rl) => (
+                      <Fragment key={`rl-${rl.id}`}>
+                        <div className="col-span-3 self-center pl-4 text-xs font-bold text-gray-600">
+                          <p className="">
+                            {format(
+                              parseISO(rl.metadata?.date || ''),
+                              'MM/dd/yyyy'
+                            )}
+                          </p>
+                          <p className="text-xs font-light text-gray-600">
+                            {getReferenceRangeString(rl)
+                              ? `Range: ${getReferenceRangeString(rl)}`
+                              : ''}
+                          </p>
+                        </div>
+                        <div
+                          className={`col-span-2 flex flex-col self-center text-sm ${
+                            isOutOfRangeResult(rl) && 'text-red-700'
+                          }`}
+                        >
+                          <p>
+                            {getValueQuantity(rl) !== undefined
+                              ? `  ${getValueQuantity(rl)}`
+                              : ''}
+                            {getValueUnit(rl)}{' '}
+                            {getInterpretationText(rl) || getValueString(rl)}
+                          </p>
+                        </div>
+                      </Fragment>
+                    ))}
+                  </Disclosure.Panel>
+                  {getValueQuantity(item) !== undefined && (
+                    <Disclosure.Panel className="max-w-80 mx-4 w-80 border-b-2 border-solid border-gray-100 pr-2 sm:w-full sm:max-w-max">
+                      <BillboardJS
+                        bb={bb}
+                        options={options}
+                        ref={chartComponent}
+                      />
+                    </Disclosure.Panel>
+                  )}
+                </>
+              )}
             </>
           )}
         </Disclosure>
-      ) : null}
+      ) : (
+        <p>
+          {
+            <div className="mx-4 grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-100 py-2">
+              <div className="col-span-3 self-center text-xs font-semibold text-gray-600">
+                Data missing reason
+              </div>
+              <div className="col-span-2 flex self-center text-sm ">
+                {
+                  (item.data_record.raw?.resource as Observation)
+                    ?.dataAbsentReason?.text
+                }
+              </div>
+              <div className="col-span-1 flex flex-col items-center justify-center"></div>
+            </div>
+          }
+        </p>
+      )}
     </Fragment>
   );
 }

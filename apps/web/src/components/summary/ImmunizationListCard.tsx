@@ -57,7 +57,6 @@ export function ImmunizationListCard({
           <Disclosure.Panel className="">
             <TimelineCardBase>
               <div className="min-w-0 flex-1">
-                <span className="absolute inset-0" aria-hidden="true" />
                 {[...sortItems.entries()].map(([key, item]) => (
                   <div className="py-2" key={item?.[0].id}>
                     <p className="text-sm font-bold text-gray-900 md:text-base">

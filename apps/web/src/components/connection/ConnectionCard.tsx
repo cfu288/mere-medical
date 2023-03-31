@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
+import {
+  ConnectionDocument,
+  ConnectionSources,
+} from '../../models/connection-document/ConnectionDocument.type';
 import { useRxDb } from '../providers/RxDbProvider';
 import onpatientLogo from '../../img/onpatient_logo.jpeg';
 import epicLogo from '../../img/MyChartByEpic.png';
 import cernerLogo from '../../img/cerner-logo.png';
+import allscriptsConnectLogo from '../../img/allscripts-logo.png';
 import { differenceInDays, format, parseISO } from 'date-fns';
 import { RxDocument } from 'rxdb';
 import { useNotificationDispatch } from '../providers/NotificationProvider';
@@ -16,7 +20,7 @@ import {
   useSyncJobDispatchContext,
 } from '../providers/SyncJobProvider';
 
-function getImage(logo: 'onpatient' | 'epic' | 'cerner') {
+function getImage(logo: ConnectionSources) {
   switch (logo) {
     case 'onpatient': {
       return onpatientLogo;
@@ -26,6 +30,9 @@ function getImage(logo: 'onpatient' | 'epic' | 'cerner') {
     }
     case 'cerner': {
       return cernerLogo;
+    }
+    case 'veradigm': {
+      return allscriptsConnectLogo;
     }
     default: {
       return undefined;
@@ -131,6 +138,8 @@ export function ConnectionCard({
                 ? `MyChart - ${item.get('name')}`
                 : item.get('source') === 'cerner'
                 ? `Cerner - ${item.get('name')}`
+                : item.get('source') === 'veradigm'
+                ? `Veradigm - ${item.get('name')}`
                 : item.get('name')}
             </h3>
           </div>

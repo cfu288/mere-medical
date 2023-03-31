@@ -85,6 +85,8 @@ function fetchRecords(
         }
       });
 
+      console.debug(groupedRecords);
+
       return groupedRecords;
     });
 }

@@ -18,8 +18,11 @@ export const ImmunizationCard = memo(function ImmunizationCard({
   return (
     <TimelineCardBase>
       <div className="min-w-0 flex-1">
-        <TimelineCardCategoryTitle title="Immunization" color="text-purple-600" />
-        <span className="absolute inset-0" aria-hidden="true" />
+        <TimelineCardCategoryTitle
+          title="Immunization"
+          color="text-purple-600"
+        />
+
         <TimelineCardTitle>{item.metadata?.display_name}</TimelineCardTitle>
         <p className="truncate text-xs font-medium text-gray-500 md:text-sm">
           {item.metadata?.date ? format(parseISO(item.metadata.date), 'p') : ''}

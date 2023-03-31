@@ -1,9 +1,15 @@
-export function ButtonLoadingSpinner() {
+export function ButtonLoadingSpinner({
+  height = 'h-4',
+  width = 'w-4',
+}: {
+  height?: string;
+  width?: string;
+}) {
   return (
     <div role="status">
       <svg
         aria-hidden="true"
-        className="fill-primary-700 mr-2 h-4 w-4 animate-spin text-gray-200 dark:text-gray-600"
+        className={`fill-primary-700 mr-2 animate-spin text-gray-200 dark:text-gray-600 ${height} ${width}`}
         viewBox="0 0 100 101"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"

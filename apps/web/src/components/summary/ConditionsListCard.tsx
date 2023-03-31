@@ -26,7 +26,6 @@ export function ConditionsListCard({
           <Disclosure.Panel>
             <TimelineCardBase>
               <div className="min-w-0 flex-1">
-                <span className="absolute inset-0" aria-hidden="true" />
                 {items.map((item) => (
                   <div className="py-2" key={item.id}>
                     <p className="text-sm font-bold text-gray-900 md:text-base">

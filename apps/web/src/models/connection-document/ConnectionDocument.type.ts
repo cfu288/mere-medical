@@ -1,12 +1,14 @@
 import { BaseDocument } from '../BaseDocument';
 
+export type ConnectionSources = 'epic' | 'onpatient' | 'cerner' | 'veradigm';
+
 export interface ConnectionDocument extends BaseDocument {
   user_id: string;
   access_token: string;
   expires_in: number;
   refresh_token: string;
   scope: string;
-  source: 'epic' | 'onpatient' | 'cerner';
+  source: ConnectionSources;
   name: string;
   location: string;
   last_refreshed: string;
@@ -30,6 +32,17 @@ export interface CernerConnectionDocument extends ConnectionDocument {
 export type CreateCernerConnectionDocument = Omit<
   CernerConnectionDocument,
   'last_refreshed'
+>;
+
+export interface VeradigmConnectionDocument extends ConnectionDocument {
+  id_token: string; // An OAuth ID token
+  auth_uri: string; // the OAuth authorization url
+  token_uri: string; // the OAuth token url
+}
+
+export type CreateVeradigmConnectionDocument = Omit<
+  VeradigmConnectionDocument,
+  'last_refreshed' | 'refresh_token' | 'scope'
 >;
 
 export type CreateEpicConnectionDocument = Omit<

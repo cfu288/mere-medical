@@ -15,6 +15,9 @@ import { useUser } from '../providers/UserProvider';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
 import { TimelineCardTitle } from './TimelineCardTitle';
 import { TimelineCardCategoryTitle } from './TimelineCardCategoryTitle';
+import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
+import { LoadingSpinner } from '../LoadingSpinner';
+import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
 
 /**
  * Fetches a set of Observations linked to a DiagnosticReport and indicates if there is an abnormal value in the set
@@ -25,29 +28,44 @@ function useRelatedDocuments({
   expanded,
   isVisible,
   item,
+  conn,
 }: {
   expanded: boolean;
   isVisible: boolean;
   item: ClinicalDocument<BundleEntry<DiagnosticReport>>;
-}): [RxDocument<ClinicalDocument<BundleEntry<Observation>>>[], boolean] {
+  conn?: ConnectionDocument;
+}): [
+  RxDocument<ClinicalDocument<BundleEntry<Observation>>>[],
+  boolean,
+  'loading' | 'idle' | 'success'
+] {
   const db = useRxDb(),
     user = useUser(),
     [docs, setDocs] = useState<
       RxDocument<ClinicalDocument<BundleEntry<Observation>>>[]
     >([]),
+    [status, setStatus] = useState<'loading' | 'idle' | 'success'>('idle'),
     listToQuery = useMemo(() => {
-      return [
-        ...new Set(
-          item.data_record.raw.resource?.result?.map(
-            (item) => `${item.reference}`
-          )
-        ),
-      ] as string[];
-    }, [item.data_record.raw.resource?.result]);
+      const retList: string[] = [];
+      const isDrResult = item.data_record.raw.resource?.result;
+      const allScripts = conn?.source === 'veradigm';
+      if (isDrResult) {
+        const references = allScripts
+          ? new Set(
+              isDrResult.map((item) => `${conn.location}${item.reference}`)
+            )
+          : new Set(isDrResult.map((item) => `${item.reference}`));
+        return [...references] as string[];
+      }
+      return retList;
+    }, [conn?.location, conn?.source, item.data_record.raw.resource]);
+
   const [isAbnormalResult, setIsAbnormalResult] = useState(false);
 
   useEffect(() => {
     if ((isVisible && docs.length === 0) || (expanded && docs.length === 0)) {
+      // console.log(listToQuery);
+      setStatus('loading');
       db.clinical_documents
         .find({
           selector: {
@@ -68,6 +86,7 @@ function useRelatedDocuments({
               ClinicalDocument<BundleEntry<Observation>>
             >[]
           );
+          setStatus('success');
           const abnormalLabs = (
             sorted as unknown as RxDocument<
               ClinicalDocument<BundleEntry<Observation>>
@@ -88,7 +107,7 @@ function useRelatedDocuments({
     user.id,
   ]);
 
-  return [docs, isAbnormalResult];
+  return [docs, isAbnormalResult, status];
 }
 
 function DiagnosticReportCardUnmemo({
@@ -101,10 +120,11 @@ function DiagnosticReportCardUnmemo({
     ref = useRef<HTMLDivElement | null>(null),
     entry = useIntersectionObserver(ref, {}),
     isVisible = !!entry?.isIntersecting,
-    [docs, isAbnormalResult] = useRelatedDocuments({
+    [docs, isAbnormalResult, status] = useRelatedDocuments({
       expanded,
       isVisible,
       item,
+      conn,
     });
 
   return (
@@ -116,6 +136,11 @@ function DiagnosticReportCardUnmemo({
               title={
                 <>
                   Labs
+                  {status === 'loading' && (
+                    <div className="ml-2">
+                      <ButtonLoadingSpinner height="h-3" width="w-3" />
+                    </div>
+                  )}
                   {isAbnormalResult && (
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -179,6 +204,7 @@ function DiagnosticReportCardUnmemo({
         item={item}
         expanded={expanded}
         setExpanded={setExpanded}
+        loading={status === 'loading'}
       />
     </>
   );

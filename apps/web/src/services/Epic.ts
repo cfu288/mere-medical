@@ -28,7 +28,7 @@ import {
 import { Routes } from '../Routes';
 import { DSTU2 } from '.';
 import Config from '../environments/config.json';
-import { v4 as uuidv4 } from 'uuid';
+import uuid4 from '../utils/UUIDUtils';
 import { JsonWebKeyWKid, signJwt } from './JWTTools';
 import { getPublicKey, IDBKeyConfig } from './WebCrypto';
 import { JsonWebKeySet } from '../services/JWTTools';
@@ -75,9 +75,9 @@ async function getFHIRResource<T extends FhirResource>(
   const defaultUrl = `${getDSTU2Url(
       baseUrl
     )}/${fhirResourceUrl}?${new URLSearchParams(params)}`,
-    proxyUrl = `${
-      Config.PUBLIC_URL
-    }/api/proxy?serviceId=${epicId}&target=${`${encodeURIComponent(
+    proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${
+      epicId === Config.EPIC_SANDBOX_CLIENT_ID ? 'sandbox' : epicId
+    }&target=${`${encodeURIComponent(
       `/api/FHIR/DSTU2/${fhirResourceUrl}?${new URLSearchParams(params)}`
     )}`}`;
 
@@ -374,7 +374,7 @@ async function syncDocumentReferences(
             if (raw && contentType) {
               // save as ClinicalDocument
               const cd: ClinicalDocument = {
-                id: uuidv4(),
+                id: uuid4(),
                 user_id: connectionDocument.user_id,
                 connection_record_id: connectionDocument.id,
                 data_record: {
@@ -577,7 +577,7 @@ export async function fetchAccessTokenUsingJWT(
     sub: clientId,
     iss: clientId,
     aud: `${epicUrl}/oauth2/token`,
-    jti: uuidv4(),
+    jti: uuid4(),
   };
   const signedJwt = await signJwt(jwtBody);
   const tokenRes = await fetch(useProxy ? proxyUrl : defaultUrl, {
@@ -663,7 +663,7 @@ export async function saveConnectionToDb({
         const nowInSeconds = Math.floor(Date.now() / 1000);
         // Otherwise, create a new connection card
         const dbentry: Omit<CreateEpicConnectionDocument, 'refresh_token'> = {
-          id: uuidv4(),
+          id: uuid4(),
           user_id: user.id,
           source: 'epic',
           location: epicUrl,

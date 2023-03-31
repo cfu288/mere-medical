@@ -10,6 +10,7 @@ import {
   CernerLocalStorageKeys,
   getLoginUrl as getCernerLoginUrl,
 } from '../services/Cerner';
+
 import { AppPage } from '../components/AppPage';
 import { EpicSelectModal } from '../components/connection/EpicSelectModal';
 import { useUserPreferences } from '../components/providers/UserPreferencesProvider';
@@ -17,6 +18,11 @@ import { Routes } from '../Routes';
 import { Link } from 'react-router-dom';
 import { useUser } from '../components/providers/UserProvider';
 import { CernerSelectModal } from '../components/connection/CernerSelectModal';
+import { VeradigmSelectModal } from '../components/connection/VeradigmSelectModal';
+import {
+  VeradigmLocalStorageKeys,
+  getLoginUrl as getVeradigmLoginUrl,
+} from '../services/Veradigm';
 
 function useConnectionCards() {
   const db = useRxDb(),
@@ -43,6 +49,7 @@ const ConnectionTab: React.FC = () => {
   const list = useConnectionCards(),
     [epicOpen, setEpicOpen] = useState(false),
     [cernerOpen, setCernerOpen] = useState(false),
+    [veradigmOpen, setVeradigmOpen] = useState(false),
     userPreferences = useUserPreferences(),
     onpatientLoginUrl = OnPatient.getLoginUrl(),
     setTenantEpicUrl = useCallback(
@@ -69,6 +76,25 @@ const ConnectionTab: React.FC = () => {
       },
       []
     ),
+    setTenantVeradigmUrl = useCallback(
+      (
+        base: string & Location,
+        auth: string & Location,
+        token: string & Location,
+        name: string,
+        id: string
+      ) => {
+        localStorage.setItem(VeradigmLocalStorageKeys.VERADIGM_BASE_URL, base);
+        localStorage.setItem(VeradigmLocalStorageKeys.VERADIGM_AUTH_URL, auth);
+        localStorage.setItem(
+          VeradigmLocalStorageKeys.VERADIGM_TOKEN_URL,
+          token
+        );
+        localStorage.setItem(VeradigmLocalStorageKeys.VERADIGM_NAME, name);
+        localStorage.setItem(VeradigmLocalStorageKeys.VERADIGM_ID, id);
+      },
+      []
+    ),
     handleToggleEpicPanel = useCallback(
       (loc: string & Location, name: string, id: string) => {
         setTenantEpicUrl(loc, name, id);
@@ -90,6 +116,20 @@ const ConnectionTab: React.FC = () => {
         window.location = getCernerLoginUrl(base, auth);
       },
       [setTenantCernerUrl]
+    ),
+    handleToggleVeradigmPanel = useCallback(
+      (
+        base: string & Location,
+        auth: string & Location,
+        token: string & Location,
+        name: string,
+        id: string
+      ) => {
+        setTenantVeradigmUrl(base, auth, token, name, id);
+        setVeradigmOpen((x) => !x);
+        window.location = getVeradigmLoginUrl(base, auth);
+      },
+      [setTenantVeradigmUrl]
     );
 
   return (
@@ -113,11 +153,40 @@ const ConnectionTab: React.FC = () => {
             />
           ))}
         </ul>
-        <div className="box-border flex	w-full justify-center align-middle">
+
+        <div className="mb-4 box-border	flex w-full justify-center align-middle">
+          <button
+            className="bg-primary hover:bg-primary-600 w-full rounded-lg p-4 text-white"
+            onClick={() => setEpicOpen((x) => !x)}
+          >
+            <p className="font-bold">Log in to Epic MyChart</p>
+          </button>
+        </div>
+        <div className="mb-4 box-border	flex w-full justify-center align-middle">
+          <button
+            className="bg-primary hover:bg-primary-600 w-full rounded-lg p-4 text-white"
+            onClick={() => {
+              setCernerOpen((x) => !x);
+            }}
+          >
+            <p className="font-bold">Log in to Cerner</p>
+          </button>
+        </div>
+        <div className="mb-4 box-border	flex w-full justify-center align-middle">
+          <button
+            className="bg-primary hover:bg-primary-600 w-full rounded-lg p-4 text-center text-white"
+            onClick={() => {
+              setVeradigmOpen((x) => !x);
+            }}
+          >
+            <p className="font-bold">Log in to Allscripts Connect</p>
+          </button>
+        </div>
+        <div className="mb-4 box-border	flex w-full justify-center align-middle">
           {userPreferences?.use_proxy ? (
             <a
               href={onpatientLoginUrl}
-              className="bg-primary hover:bg-primary-600 mb-4 w-full rounded-lg p-4 text-center text-white"
+              className="bg-primary hover:bg-primary-600 w-full rounded-lg p-4  text-center text-white"
             >
               <button>
                 <p className="font-bold">Log in to OnPatient</p>
@@ -144,29 +213,6 @@ const ConnectionTab: React.FC = () => {
             </div>
           )}
         </div>
-        <div className="mb-4 box-border	flex w-full justify-center align-middle">
-          <button
-            className="bg-primary hover:bg-primary-600 w-full rounded-lg p-4 text-white"
-            onClick={() => setEpicOpen((x) => !x)}
-          >
-            <p className="font-bold">Log in to Epic MyChart</p>
-          </button>
-        </div>
-        <div className="mb-4 box-border	flex w-full justify-center align-middle">
-          {/* <a
-            className="w-full"
-            href={getCernerLoginUrl('https://fhir-myrecord.cerner.com')}
-          > */}
-          <button
-            className="bg-primary hover:bg-primary-600 w-full rounded-lg p-4 text-white"
-            onClick={() => {
-              setCernerOpen((x) => !x);
-            }}
-          >
-            <p className="font-bold">Log in to Cerner</p>
-          </button>
-          {/* </a> */}
-        </div>
       </div>
       <EpicSelectModal
         open={epicOpen}
@@ -177,6 +223,11 @@ const ConnectionTab: React.FC = () => {
         open={cernerOpen}
         setOpen={setCernerOpen}
         onClick={handleToggleCernerPanel}
+      />
+      <VeradigmSelectModal
+        open={veradigmOpen}
+        setOpen={setVeradigmOpen}
+        onClick={handleToggleVeradigmPanel}
       />
     </AppPage>
   );

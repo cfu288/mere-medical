@@ -6,4 +6,5 @@ export enum Routes {
   OnPatientCallback = '/onpatient/callback',
   EpicCallback = '/epic/callback',
   CernerCallback = '/cerner/callback',
+  VeradigmCallback = '/veradigm/callback',
 }

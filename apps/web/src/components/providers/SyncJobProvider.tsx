@@ -5,11 +5,14 @@ import {
   ConnectionDocument,
   EpicConnectionDocument,
   CernerConnectionDocument,
+  ConnectionSources,
+  VeradigmConnectionDocument,
 } from '../../models/connection-document/ConnectionDocument.type';
 import { DatabaseCollections } from './RxDbProvider';
 import * as OnPatient from '../../services/OnPatient';
 import * as Epic from '../../services/Epic';
 import * as Cerner from '../../services/Cerner';
+import * as Veradigm from '../../services/Veradigm';
 import { from, Subject } from 'rxjs';
 import { useNotificationDispatch } from './NotificationProvider';
 
@@ -133,32 +136,6 @@ function OnHandleUnsubscribeJobs({ children }: PropsWithChildren) {
     });
   }, [notifyDispatch, syncD, syncJobs]);
 
-  // .then((res) => {
-  //   const successRes = res.filter((i) => i.status === 'fulfilled');
-  //   const errors = res.filter((i) => i.status === 'rejected');
-
-  //   if (errors.length === 0) {
-  //     notifyDispatch({
-  //       type: 'set_notification',
-  //       message: `Successfuly synced ${successRes.length} records`,
-  //       variant: 'success',
-  //     });
-  //   } else {
-  //     notifyDispatch({
-  //       type: 'set_notification',
-  //       message: `Successfuly synced ${successRes.length} records, unable to sync ${errors.length} records`,
-  //       variant: 'error',
-  //     });
-  //   }
-  // })
-  // .catch((e) => {
-  //   notifyDispatch({
-  //     type: 'set_notification',
-  //     message: `Error fetching data: ${e.message}`,
-  //     variant: 'error',
-  //   });
-  // }),
-
   return <>{children}</>;
 }
 
@@ -178,7 +155,7 @@ async function fetchMedicalRecords(
   baseUrl: string,
   useProxy = false
 ) {
-  switch (connectionDocument.get('source')) {
+  switch (connectionDocument.get('source') as ConnectionSources) {
     case 'onpatient': {
       return await OnPatient.syncAllRecords(
         connectionDocument.toMutableJSON(),
@@ -212,6 +189,21 @@ async function fetchMedicalRecords(
         return await Cerner.syncAllRecords(
           baseUrl,
           connectionDocument.toMutableJSON() as unknown as CernerConnectionDocument,
+          db
+        );
+      } catch (e) {
+        console.error(e);
+        const name = connectionDocument.get('name');
+        throw new Error(
+          `Error refreshing ${name} access - try logging in again`
+        );
+      }
+    }
+    case 'veradigm': {
+      try {
+        return await Veradigm.syncAllRecords(
+          Veradigm.VeradigmBaseUrl,
+          connectionDocument.toMutableJSON() as unknown as VeradigmConnectionDocument,
           db
         );
       } catch (e) {

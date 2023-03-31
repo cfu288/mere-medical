@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { v4 as uuidv4 } from 'uuid';
+import uuid4 from '../utils/UUIDUtils';
 import { CreateCernerConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
 import { useRxDb } from '../components/providers/RxDbProvider';
 import { Routes } from '../Routes';
@@ -29,7 +29,6 @@ const CernerRedirect: React.FC = () => {
           CernerLocalStorageKeys.CERNER_BASE_URL
         ),
         cernerName = localStorage.getItem(CernerLocalStorageKeys.CERNER_NAME),
-        cernerId = localStorage.getItem(CernerLocalStorageKeys.CERNER_ID),
         cernerAuthUrl = localStorage.getItem(
           CernerLocalStorageKeys.CERNER_AUTH_URL
         ),
@@ -38,14 +37,7 @@ const CernerRedirect: React.FC = () => {
         );
 
       console.log(code);
-      if (
-        code &&
-        cernerUrl &&
-        cernerName &&
-        cernerId &&
-        cernerAuthUrl &&
-        cernerTokenUrl
-      ) {
+      if (code && cernerUrl && cernerName && cernerAuthUrl && cernerTokenUrl) {
         const tokenEndpoint = cernerTokenUrl;
         fetchAccessTokenWithCode(code, tokenEndpoint).then((res) => {
           console.log(res);
@@ -58,7 +50,7 @@ const CernerRedirect: React.FC = () => {
           ) {
             const nowInSeconds = Math.floor(Date.now() / 1000);
             const dbentry: Omit<CreateCernerConnectionDocument, 'patient'> = {
-              id: uuidv4(),
+              id: uuid4(),
               user_id: user.id,
               source: 'cerner',
               location: cernerUrl,

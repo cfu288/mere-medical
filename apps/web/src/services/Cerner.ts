@@ -28,7 +28,7 @@ import {
 import { Routes } from '../Routes';
 import { DSTU2 } from '.';
 import Config from '../environments/config.json';
-import { v4 as uuidv4 } from 'uuid';
+import uuid4 from '../utils/UUIDUtils';
 import { JsonWebKeySet } from './JWTTools';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 import { UserDocument } from '../models/user-document/UserDocument.type';
@@ -392,7 +392,7 @@ async function syncDocumentReferences(
             if (raw && contentType) {
               // save as ClinicalDocument
               const cd: ClinicalDocument = {
-                id: uuidv4(),
+                id: uuid4(),
                 user_id: connectionDocument.user_id,
                 connection_record_id: connectionDocument.id,
                 data_record: {
@@ -465,11 +465,11 @@ async function fetchAttachmentData(
 }
 
 /**
- * Using the code from the Epic callback, fetch the access token
- * @param code code from the Epic callback, usually a query param
- * @param epicUrl url of the Epic server we are connecting to
- * @param epicName user friendly name of the Epic server we are connecting to
- * @returns Promise of the auth response from the Epic server
+ * Using the code from the Cerner callback, fetch the access token
+ * @param code code from the Cerner callback, usually a query param
+ * @param CernerUrl url of the Cerner server we are connecting to
+ * @param CernerName user friendly name of the Cerner server we are connecting to
+ * @returns Promise of the auth response from the Cerner server
  */
 export async function fetchAccessTokenWithCode(
   code: string,
@@ -575,7 +575,7 @@ export async function saveConnectionToDb({
         const nowInSeconds = Math.floor(Date.now() / 1000);
         // Otherwise, create a new connection card
         const dbentry: Omit<CreateCernerConnectionDocument, 'refresh_token'> = {
-          id: uuidv4(),
+          id: uuid4(),
           user_id: user.id,
           source: 'cerner',
           location: cernerBaseUrl,
@@ -655,7 +655,7 @@ export interface CernerAuthResponseWithClientId extends CernerAuthResponse {
   client_id: string;
 }
 
-export interface EpicDynamicRegistrationResponse {
+export interface CernerDynamicRegistrationResponse {
   redirect_uris: string[];
   token_endpoint_auth_method: string;
   grant_types: string[];
@@ -665,7 +665,7 @@ export interface EpicDynamicRegistrationResponse {
   jwks: JsonWebKeySet;
 }
 
-export interface EpicDynamicRegistrationRequest {
+export interface CernerDynamicRegistrationRequest {
   software_id: string;
   jwks: JsonWebKeySet;
 }

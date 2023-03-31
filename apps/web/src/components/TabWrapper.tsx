@@ -17,6 +17,7 @@ import { TabButton } from './TabButton';
 import { useUser } from './providers/UserProvider';
 import { TimelineTab } from '../pages/TimelineTab';
 import CernerRedirect from '../pages/CernerRedirect';
+import VeradigmRedirect from '../pages/VeradigmRedirect';
 
 export function TabWrapper() {
   const user = useUser();
@@ -35,6 +36,10 @@ export function TabWrapper() {
           />
           <Route path={AppRoutes.EpicCallback} element={<EpicRedirect />} />
           <Route path={AppRoutes.CernerCallback} element={<CernerRedirect />} />
+          <Route
+            path={AppRoutes.VeradigmCallback}
+            element={<VeradigmRedirect />}
+          />
           <Route path="*" element={<Navigate to={AppRoutes.Timeline} />} />
         </Routes>
       </div>
