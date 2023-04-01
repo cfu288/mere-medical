@@ -60,6 +60,7 @@ services:
       - EPIC_CLIENT_ID=${EPIC_CLIENT_ID}
       - EPIC_SANDBOX_CLIENT_ID=${EPIC_SANDBOX_CLIENT_ID}
       - CERNER_CLIENT_ID=${CERNER_CLIENT_ID}
+      - VERADIGM_CLIENT_ID=${VERADIGM_CLIENT_ID}
       - PUBLIC_URL=${PUBLIC_URL}
 ```
 
@@ -144,6 +145,7 @@ services:
      -e EPIC_CLIENT_ID=<> \
      -e EPIC_SANDBOX_CLIENT_ID=<> \
      -e CERNER_CLIENT_ID=<> \
+     -e VERADIGM_CLIENT_ID=<ID_HERE> \
      -e PUBLIC_URL=https://localhost:4200 \
      mere-medical:latest
    ```

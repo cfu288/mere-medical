@@ -41,6 +41,7 @@ services:
       - EPIC_CLIENT_ID=${EPIC_CLIENT_ID}
       - EPIC_SANDBOX_CLIENT_ID=${EPIC_SANDBOX_CLIENT_ID}
       - CERNER_CLIENT_ID=${CERNER_CLIENT_ID}
+      - VERADIGM_CLIENT_ID=${VERADIGM_CLIENT_ID}
       - PUBLIC_URL=https://meremedical.local
 ```
 
@@ -126,6 +127,7 @@ docker run -p 4200:80 -i -t \
   -e EPIC_CLIENT_ID=<ID_HERE> \
   -e EPIC_SANDBOX_CLIENT_ID=<ID_HERE> \
   -e CERNER_CLIENT_ID=<ID_HERE> \
+  -e VERADIGM_CLIENT_ID=<ID_HERE> \
   -e PUBLIC_URL=https://localhost:4200 \
   cfu288/mere-medical:latest
 ```
@@ -144,6 +146,7 @@ docker run -p 4200:80 \
   -e EPIC_CLIENT_ID=<ID_HERE> \
   -e EPIC_SANDBOX_CLIENT_ID=<ID_HERE> \
   -e CERNER_CLIENT_ID=<ID_HERE> \
+  -e VERADIGM_CLIENT_ID=<ID_HERE> \
   -e PUBLIC_URL=https://localhost:4200 \
   cfu288/mere-medical:latest
 ```
@@ -170,6 +173,7 @@ services:
       - EPIC_CLIENT_ID=${EPIC_CLIENT_ID}
       - EPIC_SANDBOX_CLIENT_ID=${EPIC_SANDBOX_CLIENT_ID}
       - CERNER_CLIENT_ID=${CERNER_CLIENT_ID}
+      - VERADIGM_CLIENT_ID=${VERADIGM_CLIENT_ID}
       - PUBLIC_URL=${PUBLIC_URL}
 ```
 
