@@ -9,8 +9,9 @@ description: Which Patient Portals are Supported?
 Currently, only the following patient portals are supported:
 
 - MyChart/Epic
-- DrChrono/OnPatient
 - Cerner Health
+- Allscripts Connect
+- DrChrono/OnPatient
 
 Support for more patient portals is coming soon.
 

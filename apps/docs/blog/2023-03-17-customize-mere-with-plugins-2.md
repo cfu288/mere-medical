@@ -16,6 +16,8 @@ This post will dive deeper into how personal health records (PHRs) can adopt the
 
 The point of this post is to lay the groundwork and discuss how the CDS hook standard may need to be updated to handle PHR use cases. The great thing about building off a current standard like CDS hooks is that CDS hooks built for one PHR could be used for any PHR. For a deeper dive on CDS Hooks, read the [HL7 Clinical Decision Support (CDS) hooks documentation](https://cds-hooks.org/).
 
+<!--truncate-->
+
 ## Overview of CDS Hooks and their Limitations in Personal Health Records
 
 To quickly summarize CDS hooks - they're HTTP webhooks that get called whenever a user of a clinical client, such as an Electronic Medical Record (EMR), takes a specific action. Examples of these actions include when a provider opens a patient's chart or when a provider starts a medication order for a patient. The idea is that registered third-party apps can be called whenever one of these actions is triggered and provide real-time feedback to the user about their actions. So, for example, a CDS application that can listen for when a doctor is entering a medication order for a specific drug in the EMR can suggest a different medication via a card in the UI of the EMR:
