@@ -1,3 +1,4 @@
+// @ts-nocheck
 // deno run --allow-read --allow-write --allow-net fetchMetadata.ts
 const jobSet: Set<string> = new Set();
 
