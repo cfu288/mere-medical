@@ -36,54 +36,61 @@ const CernerRedirect: React.FC = () => {
           CernerLocalStorageKeys.CERNER_TOKEN_URL
         );
 
-      console.log(code);
       if (code && cernerUrl && cernerName && cernerAuthUrl && cernerTokenUrl) {
         const tokenEndpoint = cernerTokenUrl;
-        fetchAccessTokenWithCode(code, tokenEndpoint).then((res) => {
-          console.log(res);
-          if (
-            res.access_token &&
-            res.refresh_token &&
-            res.expires_in &&
-            res.id_token &&
-            user.id
-          ) {
-            const nowInSeconds = Math.floor(Date.now() / 1000);
-            const dbentry: Omit<CreateCernerConnectionDocument, 'patient'> = {
-              id: uuid4(),
-              user_id: user.id,
-              source: 'cerner',
-              location: cernerUrl,
-              name: cernerName,
-              access_token: res.access_token,
-              scope: res.scope,
-              id_token: res.id_token,
-              refresh_token: res.refresh_token,
-              expires_in: nowInSeconds + res.expires_in,
-              auth_uri: cernerAuthUrl,
-              token_uri: cernerTokenUrl,
-            };
-            db.connection_documents
-              .insert(dbentry)
-              .then(() => {
-                navigate(Routes.AddConnection);
-              })
-              .catch((e: unknown) => {
-                notifyDispatch({
-                  type: 'set_notification',
-                  message: `Error adding connection: ${(e as Error).message}`,
-                  variant: 'error',
+        fetchAccessTokenWithCode(code, tokenEndpoint)
+          .then((res) => {
+            if (
+              res.access_token &&
+              res.refresh_token &&
+              res.expires_in &&
+              res.id_token &&
+              user.id
+            ) {
+              const nowInSeconds = Math.floor(Date.now() / 1000);
+              const dbentry: Omit<CreateCernerConnectionDocument, 'patient'> = {
+                id: uuid4(),
+                user_id: user.id,
+                source: 'cerner',
+                location: cernerUrl,
+                name: cernerName,
+                access_token: res.access_token,
+                scope: res.scope,
+                id_token: res.id_token,
+                refresh_token: res.refresh_token,
+                expires_in: nowInSeconds + res.expires_in,
+                auth_uri: cernerAuthUrl,
+                token_uri: cernerTokenUrl,
+              };
+              db.connection_documents
+                .insert(dbentry)
+                .then(() => {
+                  navigate(Routes.AddConnection);
+                })
+                .catch((e: unknown) => {
+                  notifyDispatch({
+                    type: 'set_notification',
+                    message: `Error adding connection: ${(e as Error).message}`,
+                    variant: 'error',
+                  });
+                  navigate(Routes.AddConnection);
                 });
-                navigate(Routes.AddConnection);
+            } else {
+              notifyDispatch({
+                type: 'set_notification',
+                message: `Error completing authentication: no access token provided`,
+                variant: 'error',
               });
-          } else {
+            }
+          })
+          .catch((e) => {
             notifyDispatch({
               type: 'set_notification',
-              message: `Error completing authentication: no access token provided`,
+              message: `Error adding connection: ${(e as Error).message}`,
               variant: 'error',
             });
-          }
-        });
+            navigate(Routes.AddConnection);
+          });
       }
     }
   }, [db.connection_documents, navigate, notifyDispatch, user.id]);

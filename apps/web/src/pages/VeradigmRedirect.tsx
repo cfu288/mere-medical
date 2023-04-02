@@ -10,11 +10,15 @@ import { GenericBanner } from '../components/GenericBanner';
 import { useUser } from '../components/providers/UserProvider';
 import {
   fetchAccessTokenWithCode,
-  VeradigmAuthUrl,
-  VeradigmBaseUrl,
   VeradigmLocalStorageKeys,
-  VeradigmTokenUrl,
 } from '../services/Veradigm';
+
+function removeEndSlash(url: string) {
+  if (url?.endsWith('/')) {
+    return `${url.substring(0, url.length - 1)}` as string & Location;
+  }
+  return url as string & Location;
+}
 
 const VeradigmRedirect: React.FC = () => {
   const navigate = useNavigate(),
@@ -49,43 +53,57 @@ const VeradigmRedirect: React.FC = () => {
         veradigmUrl &&
         veradigmName
       ) {
-        fetchAccessTokenWithCode(code, VeradigmTokenUrl).then((res) => {
-          console.log(res);
-          if (res.access_token && res.expires_in && res.token_type && user.id) {
-            const nowInSeconds = Math.floor(Date.now() / 1000);
-            const dbentry: Omit<CreateVeradigmConnectionDocument, 'patient'> = {
-              id: uuid4(),
-              user_id: user.id,
-              source: 'veradigm',
-              location: veradigmUrl,
-              name: veradigmName,
-              access_token: res.access_token,
-              expires_in: nowInSeconds + res.expires_in,
-              id_token: res.id_token,
-              auth_uri: veradigmAuthUrl,
-              token_uri: veradigmTokenUrl,
-            };
-            db.connection_documents
-              .insert(dbentry)
-              .then(() => {
-                navigate(Routes.AddConnection);
-              })
-              .catch((e: unknown) => {
-                notifyDispatch({
-                  type: 'set_notification',
-                  message: `Error adding connection: ${(e as Error).message}`,
-                  variant: 'error',
+        fetchAccessTokenWithCode(code, removeEndSlash(veradigmTokenUrl))
+          .then((res) => {
+            if (
+              res.access_token &&
+              res.expires_in &&
+              res.token_type &&
+              user.id
+            ) {
+              const nowInSeconds = Math.floor(Date.now() / 1000);
+              const dbentry: Omit<CreateVeradigmConnectionDocument, 'patient'> =
+                {
+                  id: uuid4(),
+                  user_id: user.id,
+                  source: 'veradigm',
+                  location: veradigmUrl,
+                  name: veradigmName,
+                  access_token: res.access_token,
+                  expires_in: nowInSeconds + res.expires_in,
+                  id_token: res.id_token,
+                  auth_uri: veradigmAuthUrl,
+                  token_uri: veradigmTokenUrl,
+                };
+              db.connection_documents
+                .insert(dbentry)
+                .then(() => {
+                  navigate(Routes.AddConnection);
+                })
+                .catch((e: unknown) => {
+                  notifyDispatch({
+                    type: 'set_notification',
+                    message: `Error adding connection: ${(e as Error).message}`,
+                    variant: 'error',
+                  });
+                  navigate(Routes.AddConnection);
                 });
-                navigate(Routes.AddConnection);
+            } else {
+              notifyDispatch({
+                type: 'set_notification',
+                message: `Error completing authentication: no access token provided`,
+                variant: 'error',
               });
-          } else {
+            }
+          })
+          .catch((e) => {
             notifyDispatch({
               type: 'set_notification',
-              message: `Error completing authentication: no access token provided`,
+              message: `Error adding connection: ${(e as Error).message}`,
               variant: 'error',
             });
-          }
-        });
+            navigate(Routes.AddConnection);
+          });
       }
     }
   }, [db.connection_documents, navigate, notifyDispatch, user.id]);

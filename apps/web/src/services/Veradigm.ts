@@ -13,7 +13,6 @@ import {
   Immunization,
   Condition,
   AllergyIntolerance,
-  Encounter,
   Bundle,
   DocumentReference,
 } from 'fhir/r2';
@@ -51,16 +50,6 @@ OAuth Scope	One or more of the values from the Smart on FHIR Scopes	If you are u
 Patient Username	allison.allscripts@tw181unityfhir.edu	Patient id is 19
 Patient Password	Allscripts#1	
  */
-
-export const VeradigmAuthUrl =
-  // 'https://open.allscripts.com/fhirroute/fmhpatientauth/0cd760ae-6ec5-4137-bf26-4269636b94ef/connect/authorize';
-  'https://open.allscripts.com/fhirroute/patientauth/e75746a4-7f05-4b95-9ff5-44082c988959/connect/authorize';
-export const VeradigmTokenUrl =
-  // 'https://open.allscripts.com/fhirroute/fmhpatientauth/0cd760ae-6ec5-4137-bf26-4269636b94ef/connect/token';
-  'https://open.allscripts.com/fhirroute/patientauth/e75746a4-7f05-4b95-9ff5-44082c988959/connect/token';
-export const VeradigmBaseUrl =
-  // 'https://fhir.fhirpoint.open.allscripts.com/fhirroute/open/CustProProdSand201SMART';
-  'https://tw181unityfhir.open.allscripts.com/OPEN/';
 
 export function getLoginUrl(
   baseUrl: string,

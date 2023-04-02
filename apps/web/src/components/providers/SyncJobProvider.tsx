@@ -202,7 +202,7 @@ async function fetchMedicalRecords(
     case 'veradigm': {
       try {
         return await Veradigm.syncAllRecords(
-          Veradigm.VeradigmBaseUrl,
+          baseUrl,
           connectionDocument.toMutableJSON() as unknown as VeradigmConnectionDocument,
           db
         );
