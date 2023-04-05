@@ -231,7 +231,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="mt-12 after:bg-white sm:mt-0">
+        <div className="mt-24 after:bg-white lg:mt-12">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <h2 className="text-center text-lg font-semibold leading-8 text-gray-900">
               Mere supports many popular patient portals
@@ -413,7 +413,7 @@ export default function Home() {
         </div>
 
         {/* Goals section */}
-        <div className="relative sm:pt-12"></div>
+        <div className="relative pb-12 sm:pt-12"></div>
       </main>
       <Footer />
     </>
