@@ -196,8 +196,8 @@ export default function Home() {
                   </h1>
                   <p className="mt-6 text-xl leading-relaxed text-gray-600">
                     With Mere Medical, you can finally manage all of your
-                    medical records from Epic MyChart, Cerner, and OnPatient
-                    patient portals in one place.
+                    medical records from your Epic MyChart, Cerner, and
+                    OnPatient patient portals in one personal health records.
                   </p>
                 </div>
                 <div className=" mt-5 max-w-md sm:flex sm:justify-start md:mt-8">
