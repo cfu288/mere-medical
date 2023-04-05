@@ -254,17 +254,15 @@ export default function Home() {
                     Your medical records are yours. So, why is it so hard to
                     access them?
                   </p>
-
                   <p className="text-lg leading-relaxed">
                     Medical record organization is critical. With the rise of
                     the digital age, managing your patient profile should be
-                    easier.
+                    easy.
                   </p>
                   <p className="text-lg leading-relaxed">
-                    However, you shouldn't need to trust 3rd parties with your
-                    medical records. That's why Mere Medical focuses on
-                    empowering users - keep full control of your medical records
-                    by running Mere on your own computers!
+                    Mere Medical is a personal health record focused on
+                    empowering patients by prioritizing user privacy, control,
+                    and experience.
                   </p>
                 </div>
               </div>
@@ -282,10 +280,10 @@ export default function Home() {
                 </h2>
                 <p className="mt-6 max-w-3xl text-lg leading-relaxed text-white">
                   Mere Medical is the all-new, open-source, self-hostable,
-                  local-first, and free medical record management web app that
-                  connects to multiple patient portals and allows you to upload
-                  your own paper records. With Mere Medical, you can easily
-                  manage your own medical records under one digital roof.
+                  local-first, and free personal health record that connects to
+                  multiple patient portals and allows you to upload your own
+                  paper records. With Mere Medical, you can easily manage your
+                  own medical records under one digital roof.
                 </p>
                 <div className="mb-0 mt-8 flex items-center justify-start rounded-md bg-[#8799D040] p-4">
                   <div className="ml-2 mr-4 flex aspect-square h-[35px] w-[35px] items-center justify-center rounded-full bg-[#7CE8C7]">
