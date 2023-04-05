@@ -172,7 +172,6 @@ export default function Home() {
         )}
       </Head>
       <NavigationBar />
-
       <main className="relative overflow-x-hidden overflow-y-hidden bg-white">
         {/* Hero section */}
         <div className="flex min-h-screen flex-col items-center justify-center pt-8 sm:pt-12 lg:relative lg:py-48">
@@ -196,8 +195,8 @@ export default function Home() {
                   </h1>
                   <p className="mt-6 text-xl leading-relaxed text-gray-600">
                     With Mere Medical, you can finally manage all of your
-                    medical records from your Epic MyChart, Cerner, and
-                    OnPatient patient portals in one personal health record.
+                    medical records from MyChart, Cerner, Allscripts, and
+                    OnPatient in one personal health record.
                   </p>
                 </div>
                 <div className=" mt-5 max-w-md sm:flex sm:justify-start md:mt-8">
@@ -232,9 +231,54 @@ export default function Home() {
           </div>
         </div>
 
+        <div className="mt-12 after:bg-white sm:mt-0">
+          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+            <h2 className="text-center text-lg font-semibold leading-8 text-gray-900">
+              Mere supports many popular patient portals
+            </h2>
+            <div className="mx-auto mt-10 grid max-w-lg grid-cols-4 items-center gap-x-8 gap-y-10 sm:max-w-xl sm:grid-cols-6 sm:gap-x-10 lg:mx-0 lg:max-w-none lg:grid-cols-4">
+              <img
+                className="col-span-2 max-h-12 w-full object-contain lg:col-span-1"
+                src="/img/MyChartLogo.png"
+                alt="Epic MyChart Patient Portal"
+                width={158}
+                height={48}
+              />
+              <img
+                className="col-span-2 max-h-12 w-full object-contain lg:col-span-1"
+                src="/img/CernerHealthLogo.png"
+                alt="Cerner Health Patient Portal"
+                width={158}
+                height={48}
+              />
+              <img
+                className="col-span-2 max-h-12 w-full object-contain lg:col-span-1"
+                src="/img/AllscriptsLogo.png"
+                alt="Allscripts Connect Patient Portal"
+                width={158}
+                height={48}
+              />
+              <img
+                className="col-span-2 max-h-12 w-full object-contain sm:col-start-2 lg:col-span-1"
+                src="/img/OnpatientLogo.png"
+                alt="Onpatient Patient Portal"
+                width={158}
+                height={48}
+              />
+              {/* <img
+                className="col-span-2 col-start-2 max-h-12 w-full object-contain sm:col-start-auto lg:col-span-1"
+                src="https://tailwindui.com/img/logos/158x48/statamic-logo-gray-900.svg"
+                alt="Statamic"
+                width={158}
+                height={48}
+              /> */}
+            </div>
+          </div>
+        </div>
+
         {/* Problem section */}
-        <div className="relative mt-24 md:mt-36 lg:mt-48">
-          <div className=" mx-auto flex max-w-md flex-col-reverse items-center justify-center px-4 sm:max-w-3xl sm:px-6 lg:max-w-7xl lg:flex-row-reverse lg:items-start lg:gap-24 lg:px-8">
+        <div className="relative mt-24">
+          <div className="mx-auto flex max-w-md flex-col-reverse items-center justify-center px-4 sm:max-w-3xl sm:px-6 lg:max-w-7xl lg:flex-row-reverse lg:items-start lg:gap-24 lg:px-8">
             {/* <div className="flex h-full grow items-center justify-center overflow-hidden lg:order-1 lg:w-full"> */}
             <img
               className="mt-12 h-auto max-h-[512px] w-full max-w-[512px] self-center justify-self-center object-cover lg:order-1 lg:mt-0"
@@ -243,7 +287,7 @@ export default function Home() {
             />
             {/* </div> */}
 
-            <div className="mx-auto max-w-md px-4 sm:max-w-3xl sm:px-6 lg:px-0">
+            <div className="mx-auto max-w-md sm:max-w-3xl sm:px-6 lg:px-0">
               {/* Content area */}
               <div>
                 <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
@@ -274,7 +318,7 @@ export default function Home() {
         </div>
 
         {/* Solution section */}
-        <div className="mt-20 bg-[#006182] py-10 lg:py-20">
+        <div className="mt-24 bg-[#006182] py-24">
           <div className="mx-auto max-w-md px-4 sm:max-w-3xl sm:px-6 lg:max-w-7xl lg:px-8">
             <div className="lg:grid lg:grid-cols-2 lg:items-center lg:gap-24">
               <div>
@@ -333,45 +377,43 @@ export default function Home() {
         </div>
 
         {/* Features */}
-        <div className="mt-10">
-          <div className="bg-white">
-            <div className="mx-auto max-w-7xl py-16 px-4 sm:px-6 lg:py-20 lg:px-8">
-              <div className="mx-auto max-w-3xl text-center">
-                <h2 className="text-3xl font-extrabold text-gray-900">
-                  Our Goals
-                </h2>
-                <p className="mt-4 text-lg text-gray-600">
-                  {/* Decentralizing Patient Data */}
-                </p>
-              </div>
-              <dl className="mt-12 space-y-10 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:gap-y-12 sm:space-y-0 lg:grid-cols-3 lg:gap-x-8">
-                {features.map((feature) => (
-                  <div
-                    key={feature.name}
-                    className="flex min-h-[250px] flex-col rounded-md border border-2 border-solid border-slate-100 p-6"
-                  >
-                    <dt className="flex flex-col">
-                      <img
-                        src={feature.img}
-                        className="h-[84px] w-[84px] text-green-600"
-                        aria-hidden="true"
-                      />
-                      <p className="mt-8 text-2xl font-semibold text-gray-900">
-                        {feature.name}
-                      </p>
-                    </dt>
-                    <dd className="text- mt-4 ml-0 font-light text-gray-600">
-                      {feature.description}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
+        <div className="mt-24 bg-white">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <div className="mx-auto max-w-3xl text-center">
+              <h2 className="text-3xl font-extrabold text-gray-900">
+                Our Goals
+              </h2>
+              <p className="mt-4 text-lg text-gray-600">
+                {/* Decentralizing Patient Data */}
+              </p>
             </div>
+            <dl className="mt-12 space-y-4 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:gap-y-12 sm:space-y-0 lg:grid-cols-3 lg:gap-x-8">
+              {features.map((feature) => (
+                <div
+                  key={feature.name}
+                  className="flex min-h-[250px] flex-col rounded-md border-2 border-solid border-slate-100 p-6"
+                >
+                  <dt className="flex flex-col">
+                    <img
+                      src={feature.img}
+                      className="h-[84px] w-[84px] text-green-600"
+                      aria-hidden="true"
+                    />
+                    <p className="mt-8 text-2xl font-semibold text-gray-900">
+                      {feature.name}
+                    </p>
+                  </dt>
+                  <dd className="mt-4 ml-0 font-light text-gray-600">
+                    {feature.description}
+                  </dd>
+                </div>
+              ))}
+            </dl>
           </div>
         </div>
 
-        {/* CTA section */}
-        <div className="relative sm:py-16"></div>
+        {/* Goals section */}
+        <div className="relative sm:pt-12"></div>
       </main>
       <Footer />
     </>
