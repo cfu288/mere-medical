@@ -17,7 +17,7 @@ const footerNavigation = {
 
 const features = [
   {
-    name: 'Sync from multiple patient portals',
+    name: 'Sync from patient portals',
     img: '/img/sync.svg',
     description:
       'Connect to all of your patient portals across doctors and hospitals and see all of your data in one place. Let us help you manage your medical records.',
