@@ -260,9 +260,12 @@ export default function Home() {
                     easy.
                   </p>
                   <p className="text-lg leading-relaxed">
-                    Mere Medical is a personal health record focused on
-                    empowering patients by prioritizing user privacy, control,
-                    and experience.
+                    Today, our medical records are all over the place - saved as
+                    PDF's on a computer, as images on our phones, even in tall
+                    stacks of paper in some filing cabinet. Even when we have
+                    access to our medical records via online patient portals, we
+                    have a different portal for each hospital and doctor we
+                    visit.
                   </p>
                 </div>
               </div>
@@ -279,11 +282,16 @@ export default function Home() {
                   What’s the Solution?
                 </h2>
                 <p className="mt-6 max-w-3xl text-lg leading-relaxed text-white">
-                  Mere Medical is the all-new, open-source, self-hostable,
-                  local-first, and free personal health record that connects to
-                  multiple patient portals and allows you to upload your own
-                  paper records. With Mere Medical, you can easily manage your
-                  own medical records under one digital roof.
+                  Mere Medical is a personal health record focused on empowering
+                  patients by prioritizing user privacy, control, and
+                  experience.
+                </p>
+                <p className="mt-6 max-w-3xl text-lg leading-relaxed text-white">
+                  Mere is an open-source, self-hostable, local-first, and free
+                  personal health record that connects to multiple patient
+                  portals and allows you to upload your own paper records. With
+                  Mere, you can easily manage your own medical records under one
+                  digital roof.
                 </p>
                 <div className="mb-0 mt-8 flex items-center justify-start rounded-md bg-[#8799D040] p-4">
                   <div className="ml-2 mr-4 flex aspect-square h-[35px] w-[35px] items-center justify-center rounded-full bg-[#7CE8C7]">
