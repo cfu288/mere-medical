@@ -199,7 +199,7 @@ export default function Home() {
                     OnPatient in one personal health record.
                   </p>
                 </div>
-                <div className=" mt-5 max-w-md sm:flex sm:justify-start md:mt-8">
+                <div className="mt-5 max-w-md sm:flex sm:justify-start md:mt-8">
                   <div className="rounded-md shadow">
                     <a
                       href="https://demo.meremedical.co"
@@ -217,61 +217,62 @@ export default function Home() {
                     </a>
                   </div>
                 </div>
+                <div className="mt-24">
+                  <h2 className="text-sm font-normal leading-8 text-gray-700">
+                    Support for popular patient portals
+                  </h2>
+                  <div className="mx-auto mt-10 grid max-w-lg grid-cols-4 items-center gap-x-8 gap-y-10 sm:grid-cols-6 sm:gap-x-10 lg:mx-0 lg:grid-cols-6">
+                    <img
+                      className="col-span-2 max-h-12 w-full object-contain grayscale lg:col-span-2"
+                      src="/img/MyChartLogo.png"
+                      alt="Epic MyChart Patient Portal"
+                      width={158 * 0.75}
+                      height={48 * 0.75}
+                    />
+                    <img
+                      className="col-span-2 max-h-12 w-full object-contain grayscale lg:col-span-2"
+                      src="/img/CernerHealthLogo.png"
+                      alt="Cerner Health Patient Portal"
+                      width={158 * 0.75}
+                      height={48 * 0.75}
+                      style={{
+                        filter:
+                          'grayscale invert(17%) sepia(60%) saturate(5044%) hue-rotate(182deg) brightness(91%) contrast(101%)',
+                      }}
+                    />
+                    <img
+                      className="col-span-2 max-h-12 w-full object-contain grayscale lg:col-span-2"
+                      src="/img/AllscriptsLogo.png"
+                      alt="Allscripts Connect Patient Portal"
+                      width={158 * 0.75}
+                      height={48 * 0.75}
+                    />
+                    <img
+                      className="col-span-2 max-h-12 w-full object-contain grayscale sm:col-start-2 lg:col-span-2 lg:col-start-2"
+                      src="/img/OnpatientLogo.png"
+                      alt="Onpatient Patient Portal"
+                      width={158 * 0.75}
+                      height={48 * 0.75}
+                    />
+                    <img
+                      className="col-span-2 col-start-2 max-h-12 w-full object-contain grayscale sm:col-start-auto lg:col-span-2"
+                      src="/img/FollowMyHealthLogo.png"
+                      alt="Onpatient Patient Portal"
+                      width={158 * 0.75}
+                      height={48 * 0.75}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Right Hero */}
-            <div className="lg:rounded-tr-0 lg:left-100 relative mt-24 flex h-80 w-auto overflow-hidden rounded-bl-[80px] rounded-tr-[80px] bg-[#F1F4F9] px-4 sm:h-[32rem] lg:absolute lg:inset-y-0 lg:left-1/2 lg:right-0 lg:mt-0 lg:block lg:h-5/6 lg:w-full lg:overflow-visible lg:px-0 lg:pt-6">
+            <div className="lg:rounded-tr-0 lg:left-100 relative mt-24 flex h-80 w-auto overflow-hidden rounded-bl-[80px] rounded-tr-[80px] bg-[#F1F4F9] px-4 sm:h-[32rem] lg:absolute lg:inset-y-0 lg:left-1/2 lg:right-0 lg:mt-0 lg:block lg:h-4/5 lg:w-full lg:overflow-visible lg:px-0 lg:pt-6">
               <img
                 className="m-5 mx-auto self-center rounded-md sm:max-w-xl lg:absolute lg:-bottom-10 lg:mx-0 lg:mb-0 lg:mt-20 lg:ml-10 lg:h-auto lg:w-full lg:max-w-5xl lg:self-center lg:rounded-2xl lg:p-0"
                 src="/img/timeline-desktop.webp"
                 alt="web timeline screenshot"
               />
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-24 after:bg-white lg:mt-12">
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <h2 className="text-center text-lg font-semibold leading-8 text-gray-900">
-              Mere supports many popular patient portals
-            </h2>
-            <div className="mx-auto mt-10 grid max-w-lg grid-cols-4 items-center gap-x-8 gap-y-10 sm:max-w-xl sm:grid-cols-6 sm:gap-x-10 lg:mx-0 lg:max-w-none lg:grid-cols-4">
-              <img
-                className="col-span-2 max-h-12 w-full object-contain lg:col-span-1"
-                src="/img/MyChartLogo.png"
-                alt="Epic MyChart Patient Portal"
-                width={158}
-                height={48}
-              />
-              <img
-                className="col-span-2 max-h-12 w-full object-contain lg:col-span-1"
-                src="/img/CernerHealthLogo.png"
-                alt="Cerner Health Patient Portal"
-                width={158}
-                height={48}
-              />
-              <img
-                className="col-span-2 max-h-12 w-full object-contain lg:col-span-1"
-                src="/img/AllscriptsLogo.png"
-                alt="Allscripts Connect Patient Portal"
-                width={158}
-                height={48}
-              />
-              <img
-                className="col-span-2 max-h-12 w-full object-contain sm:col-start-2 lg:col-span-1"
-                src="/img/OnpatientLogo.png"
-                alt="Onpatient Patient Portal"
-                width={158}
-                height={48}
-              />
-              {/* <img
-                className="col-span-2 col-start-2 max-h-12 w-full object-contain sm:col-start-auto lg:col-span-1"
-                src="https://tailwindui.com/img/logos/158x48/statamic-logo-gray-900.svg"
-                alt="Statamic"
-                width={158}
-                height={48}
-              /> */}
             </div>
           </div>
         </div>
