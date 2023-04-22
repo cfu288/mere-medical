@@ -70,3 +70,47 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.fadeIn {
+  animation: 0.5s ease-out 0.2s 1 fadeIn forwards;
+}
+
+.fadeInDelay1 {
+  animation: 1s ease-out 1.2s 1 fadeIn forwards;
+}
+
+@keyframes slideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(2rem);
+  }
+  100% {
+    transform: translateY(0%);
+    opacity: 1;
+  }
+}
+
+.slideUp {
+  animation: slideUp 0.5s ease-out 0s 1 forwards;
+}
+
+.slideUpDelay1 {
+  animation: slideUp 0.5s ease-out 0.3s 1 forwards;
+}
+
+.slideUpDelay2 {
+  animation: slideUp 0.5s ease-out 0.5s 1 forwards;
+}
+
+.slideUpDelay3 {
+  animation: slideUp 0.5s ease-out 0.7s 1 forwards;
+}

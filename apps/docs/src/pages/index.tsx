@@ -180,27 +180,26 @@ export default function Home() {
             <div>
               <div>
                 <img
-                  className="hidden h-11 w-auto lg:block"
+                  className="slideUp hidden h-11 w-auto lg:block"
                   src="/img/logo.svg"
                   alt="logo"
                 />
               </div>
               <div className="mt-24 sm:mt-12">
                 <div className="mt-6 sm:max-w-xl">
-                  <h1 className="text-primary-900 text-5xl font-bold tracking-tight sm:text-5xl">
+                  <h1 className="slideUp text-primary-900 text-5xl font-bold tracking-tight sm:text-5xl">
                     Your Whole Medical Story.
                   </h1>
-                  <h1 className="text-primary-900 text-5xl font-bold tracking-tight sm:text-5xl">
+                  <h1 className="slideUp text-primary-900 text-5xl font-bold tracking-tight sm:text-5xl">
                     One Place.
                   </h1>
-                  <p className="mt-6 text-xl leading-relaxed text-gray-600">
+                  <p className="slideUpDelay1 mt-6 text-xl leading-relaxed text-gray-600 opacity-0">
                     With Mere Medical, you can finally manage all of your
-                    medical records from MyChart, Cerner, Allscripts, and
-                    OnPatient in one personal health record.
+                    medical records locally on your device.
                   </p>
                 </div>
                 <div className="mt-5 max-w-md sm:flex sm:justify-start md:mt-8">
-                  <div className="rounded-md shadow">
+                  <div className="slideUpDelay2 rounded-md opacity-0 shadow">
                     <a
                       href="https://demo.meremedical.co"
                       className="bg-primary-700 hover:bg-primary-600 flex w-full items-center justify-center rounded-md border border-transparent px-8 py-3 text-base font-medium text-white hover:text-white md:py-4 md:px-10 md:text-lg"
@@ -208,7 +207,7 @@ export default function Home() {
                       See Demo
                     </a>
                   </div>
-                  <div className="mt-3 rounded-md shadow sm:mt-0 sm:ml-3">
+                  <div className="slideUpDelay3 mt-3 rounded-md opacity-0 shadow sm:mt-0 sm:ml-3">
                     <a
                       href={`/docs`}
                       className="text-primary-700 hover:text-primary-600 flex w-full items-center justify-center rounded-md border border-transparent bg-white px-8 py-3 text-base font-medium hover:bg-gray-50 md:py-4 md:px-10 md:text-lg"
@@ -217,9 +216,9 @@ export default function Home() {
                     </a>
                   </div>
                 </div>
-                <div className="mt-24">
+                <div className="fadeInDelay1 mt-24 opacity-0">
                   <h2 className="text-sm font-normal leading-8 text-gray-700">
-                    Support for popular patient portals
+                    Sync data from popular patient portals
                   </h2>
                   <div className="mx-auto mt-10 grid max-w-lg grid-cols-4 items-center gap-x-8 gap-y-10 sm:grid-cols-6 sm:gap-x-10 lg:mx-0 lg:grid-cols-6">
                     <img
@@ -269,7 +268,7 @@ export default function Home() {
             {/* Right Hero */}
             <div className="lg:rounded-tr-0 lg:left-100 relative mt-24 flex h-80 w-auto overflow-hidden rounded-bl-[80px] rounded-tr-[80px] bg-[#F1F4F9] px-4 sm:h-[32rem] lg:absolute lg:inset-y-0 lg:left-1/2 lg:right-0 lg:mt-0 lg:block lg:h-4/5 lg:w-full lg:overflow-visible lg:px-0 lg:pt-6">
               <img
-                className="m-5 mx-auto self-center rounded-md sm:max-w-xl lg:absolute lg:-bottom-10 lg:mx-0 lg:mb-0 lg:mt-20 lg:ml-10 lg:h-auto lg:w-full lg:max-w-5xl lg:self-center lg:rounded-2xl lg:p-0"
+                className="fadeIn m-5 mx-auto self-center rounded-md opacity-0 sm:max-w-xl lg:absolute lg:-bottom-10 lg:mx-0 lg:mb-0 lg:mt-20 lg:ml-10 lg:h-auto lg:w-full lg:max-w-5xl lg:self-center lg:rounded-2xl lg:p-0"
                 src="/img/timeline-desktop.webp"
                 alt="web timeline screenshot"
               />
