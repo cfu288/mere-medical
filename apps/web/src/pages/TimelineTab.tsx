@@ -189,7 +189,7 @@ export function TimelineTab() {
       </Transition>
       <Transition
         as="div"
-        className={'relative flex'}
+        className={'relative flex h-full'}
         show={initialized}
         enter="transition-opacity ease-in-out duration-75"
         enterFrom="opacity-75"
@@ -198,19 +198,21 @@ export function TimelineTab() {
         leaveFrom="opacity-100"
         leaveTo="opacity-75"
       >
-        {hasRecords ? <JumpToPanel items={data} isLoading={false} /> : null}
         {hasNoRecords ? (
           <div className="mx-auto w-full max-w-4xl gap-x-4 px-4 pt-2 pb-4 sm:px-6 lg:px-8">
             <EmptyRecordsPlaceholder />
           </div>
         ) : null}
         {hasRecords ? (
-          <div className="relative mx-auto flex w-full max-w-4xl flex-col overflow-x-clip px-4 pb-12 sm:px-6 lg:px-8">
-            <SearchBar query={query} setQuery={setQuery} status={status} />
-            {listItems}
-            {hasNoRecords ? (
-              <p className="font-xl">{`No records found with query: ${query}`}</p>
-            ) : null}
+          <div className="mx-auto flex">
+            <JumpToPanel items={data} isLoading={false} />
+            <div className="relative mx-auto flex max-h-full w-full max-w-4xl flex-col overflow-scroll overflow-x-clip px-4 pb-12 sm:px-6 lg:px-8">
+              <SearchBar query={query} setQuery={setQuery} status={status} />
+              {listItems}
+              {hasNoRecords ? (
+                <p className="font-xl">{`No records found with query: ${query}`}</p>
+              ) : null}
+            </div>
           </div>
         ) : null}
       </Transition>

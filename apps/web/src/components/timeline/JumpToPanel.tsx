@@ -5,8 +5,8 @@ import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocumen
 import { Link } from 'react-router-dom';
 
 const parseYear = (key: string) => {
-    return format(parseISO(key), 'yyyy');
-  },
+  return format(parseISO(key), 'yyyy');
+},
   parseMonthDay = (key: string) => {
     return format(parseISO(key), 'MMM dd');
   },
@@ -27,7 +27,7 @@ export function JumpToPanel({
   }, [items]);
 
   return (
-    <div className="sticky top-0 hidden h-screen min-h-full w-0 flex-col overflow-y-scroll border-gray-200 bg-gray-50 text-slate-800 lg:flex lg:w-auto lg:border-r-2">
+    <div className="sticky top-0 hidden h-full min-h-full w-0 flex-col overflow-y-scroll border-gray-200 bg-gray-50 text-slate-800 lg:flex lg:w-auto lg:border-r-2">
       <p className="sticky top-0 mr-2 h-10 whitespace-nowrap bg-gray-50 p-2 font-bold">
         Jump To
       </p>
