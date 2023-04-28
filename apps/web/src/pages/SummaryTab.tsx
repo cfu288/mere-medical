@@ -16,6 +16,7 @@ import {
 import { RxDatabase, RxDocument } from 'rxdb';
 import { useEffect, useReducer } from 'react';
 import { MedicationsListCard } from '../components/summary/MedicationsListCard';
+import { SkeletonListCard } from '../components/summary/SkeletonListCard';
 import { ConditionsListCard } from '../components/summary/ConditionsListCard';
 import { ImmunizationListCard } from '../components/summary/ImmunizationListCard';
 import { CarePlanListCard } from '../components/summary/CarePlanListCard';
@@ -285,8 +286,10 @@ function SummaryTab() {
   return (
     <AppPage banner={<GenericBanner text="Summary" />}>
       {!initialized ? (
-        <div className="h-full w-full opacity-5">
-          {/* <LoadingSpinner /> */}
+        <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 pb-4 sm:px-6 lg:px-8">
+          <SkeletonListCard />
+          <SkeletonListCard />
+          <SkeletonListCard />
         </div>
       ) : (
         <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 pb-4 sm:px-6 lg:px-8">

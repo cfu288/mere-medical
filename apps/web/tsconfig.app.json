@@ -40,7 +40,8 @@
     "./src/components/timeline/TimelineCardCategoryTitle.tsx",
     "src/components/settings/PrivacyAndSecuritySettingsGroup.tsx",
     "src/components/settings/UserDataSettingsGroup.tsx",
-    "src/components/settings/UserCard.tsx"
+    "src/components/settings/UserCard.tsx",
+    "./src/components/summary/SkeletonListCard.tsx"
   ],
   "exclude": [
     "jest.config.ts",
