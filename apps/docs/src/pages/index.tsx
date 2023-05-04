@@ -209,10 +209,10 @@ export default function Home() {
                   </div>
                   <div className="slideUpDelay3 mt-3 rounded-md opacity-0 shadow sm:mt-0 sm:ml-3">
                     <a
-                      href={`/docs`}
+                      href="https://app.meremedical.co"
                       className="text-primary-700 hover:text-primary-600 flex w-full items-center justify-center rounded-md border border-transparent bg-white px-8 py-3 text-base font-medium hover:bg-gray-50 md:py-4 md:px-10 md:text-lg"
                     >
-                      Go to Docs
+                      Try the Beta
                     </a>
                   </div>
                 </div>
