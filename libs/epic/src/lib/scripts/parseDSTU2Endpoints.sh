@@ -11,4 +11,4 @@ jq \
         "url": "https://fhir.epic.com/interconnect-fhir-oauth",
     }
 ]' \
-< RawDSTU2Endpoints.json > DSTU2Endpoints.json
+< RawDSTU2Endpoints.json > parsedDSTU2Endpoints.json

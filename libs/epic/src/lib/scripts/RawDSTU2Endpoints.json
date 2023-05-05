@@ -1,8 +1,8 @@
 {
   "resourceType": "Bundle",
   "type": "collection",
-  "timestamp": "2022-12-11T12:46:15.1616785-06:00",
-  "total": 441,
+  "timestamp": "2023-05-04T19:12:08.9196774-05:00",
+  "total": 447,
   "entry": [
     {
       "resource": {
@@ -961,48 +961,6 @@
     {
       "resource": {
         "resourceType": "Endpoint",
-        "id": "ae9c0f4c-9813-e911-9126-001dd8b71f19",
-        "contained": [
-          {
-            "resourceType": "Organization",
-            "id": "u2l1aQMq6CoBq2jtpp0bJp0vL+RHLSt8PxY+NTjl30U=",
-            "name": "Carle Foundation Hospital & Physician Group"
-          }
-        ],
-        "status": "active",
-        "connectionType": {
-          "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
-          "code": "hl7-fhir-rest"
-        },
-        "name": "Carle Foundation Hospital & Physician Group",
-        "managingOrganization": {
-          "reference": "u2l1aQMq6CoBq2jtpp0bJp0vL+RHLSt8PxY+NTjl30U="
-        },
-        "period": {
-          "start": "2017-04-21T00:00:00-05:00"
-        },
-        "payloadType": [
-          {
-            "coding": [
-              {
-                "system": "http://hl7.org/fhir/us/davinci-pdex-plan-net/CodeSystem/EndpointPayloadTypeCS",
-                "code": "NA"
-              }
-            ]
-          }
-        ],
-        "payloadMimeType": [
-          "application/fhir+json",
-          "application/json+fhir",
-          "application/xml+fhir",
-          "application/fhir+xml"
-        ],
-        "address": "https://epicsoap.carle.com/FHIR/api/FHIR/DSTU2/"
-      }
-    },
-    {
-      "resource": {
-        "resourceType": "Endpoint",
         "id": "b19c0f4c-9813-e911-9126-001dd8b71f19",
         "contained": [
           {
@@ -1467,7 +1425,7 @@
           {
             "resourceType": "Organization",
             "id": "eIwSF77OkKIts+3CwtaR1e+gFclBPlkE5cKntWH4wMc=",
-            "name": "Ascension - Providence Healthcare Network"
+            "name": "Ascension Providence"
           }
         ],
         "status": "active",
@@ -1475,7 +1433,7 @@
           "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
           "code": "hl7-fhir-rest"
         },
-        "name": "Ascension - Providence Healthcare Network",
+        "name": "Ascension Providence",
         "managingOrganization": {
           "reference": "eIwSF77OkKIts+3CwtaR1e+gFclBPlkE5cKntWH4wMc="
         },
@@ -1876,7 +1834,7 @@
           "application/xml+fhir",
           "application/fhir+xml"
         ],
-        "address": "https://epicweb.challiance.org/Interconnect-FHIR/api/FHIR/DSTU2/"
+        "address": "https://epicmobile.challiance.org/Interconnect-oauth2/api/FHIR/DSTU2/"
       }
     },
     {
@@ -3713,48 +3671,6 @@
           "application/fhir+xml"
         ],
         "address": "https://epicproxy.et0578.epichosted.com/FHIRProxy/api/FHIR/DSTU2/"
-      }
-    },
-    {
-      "resource": {
-        "resourceType": "Endpoint",
-        "id": "a79d0f4c-9813-e911-9126-001dd8b71f19",
-        "contained": [
-          {
-            "resourceType": "Organization",
-            "id": "90CemR+oqaMzGpG/ycmmZo3XVOuMAWZ963RwXBfo4Xw=",
-            "name": "UT Health San Antonio"
-          }
-        ],
-        "status": "active",
-        "connectionType": {
-          "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
-          "code": "hl7-fhir-rest"
-        },
-        "name": "UT Health San Antonio",
-        "managingOrganization": {
-          "reference": "90CemR+oqaMzGpG/ycmmZo3XVOuMAWZ963RwXBfo4Xw="
-        },
-        "period": {
-          "start": "2018-09-14T00:00:00-05:00"
-        },
-        "payloadType": [
-          {
-            "coding": [
-              {
-                "system": "http://hl7.org/fhir/us/davinci-pdex-plan-net/CodeSystem/EndpointPayloadTypeCS",
-                "code": "NA"
-              }
-            ]
-          }
-        ],
-        "payloadMimeType": [
-          "application/fhir+json",
-          "application/json+fhir",
-          "application/xml+fhir",
-          "application/fhir+xml"
-        ],
-        "address": "https://api.utmsa.com/fhir/api/FHIR/DSTU2/"
       }
     },
     {
@@ -6489,7 +6405,7 @@
           {
             "resourceType": "Organization",
             "id": "gIfIZyc0276osFN6jXKZLg01koHqGVCObeG9WQhHNJ4=",
-            "name": "Presence Health"
+            "name": "Ascension Illinois"
           }
         ],
         "status": "active",
@@ -6497,7 +6413,7 @@
           "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
           "code": "hl7-fhir-rest"
         },
-        "name": "Presence Health",
+        "name": "Ascension Illinois",
         "managingOrganization": {
           "reference": "gIfIZyc0276osFN6jXKZLg01koHqGVCObeG9WQhHNJ4="
         },
@@ -7581,7 +7497,7 @@
           {
             "resourceType": "Organization",
             "id": "yjgbd55eSUg3XHBUJZqNUECP53E4AaF7LTAxkf55cFs=",
-            "name": "Ascension WI"
+            "name": "Ascension Wisconsin"
           }
         ],
         "status": "active",
@@ -7589,7 +7505,7 @@
           "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
           "code": "hl7-fhir-rest"
         },
-        "name": "Ascension WI",
+        "name": "Ascension Wisconsin",
         "managingOrganization": {
           "reference": "yjgbd55eSUg3XHBUJZqNUECP53E4AaF7LTAxkf55cFs="
         },
@@ -7738,7 +7654,7 @@
           "application/xml+fhir",
           "application/fhir+xml"
         ],
-        "address": "https://proxy.christushealth.org/FHIRproxy/api/FHIR/DSTU2/"
+        "address": "https://proxy.christushealth.org/FHIRPRD/api/FHIR/DSTU2/"
       }
     },
     {
@@ -9555,7 +9471,7 @@
           {
             "resourceType": "Organization",
             "id": "JLqT9d6NTBntNNPs2KgPE0LBvrk8Nn85yycBQ6507TA=",
-            "name": "Lahey Health System"
+            "name": "Beth Israel Lahey Health"
           }
         ],
         "status": "active",
@@ -9563,7 +9479,7 @@
           "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
           "code": "hl7-fhir-rest"
         },
-        "name": "Lahey Health System",
+        "name": "Beth Israel Lahey Health",
         "managingOrganization": {
           "reference": "JLqT9d6NTBntNNPs2KgPE0LBvrk8Nn85yycBQ6507TA="
         },
@@ -9807,7 +9723,7 @@
           {
             "resourceType": "Organization",
             "id": "NBNaVzDn9D/IoyHL6bra+qrDZiiQaqz1+GkC5hHdXaE=",
-            "name": "CHI Franciscan Health"
+            "name": "Virginia Mason Franciscan Health"
           }
         ],
         "status": "active",
@@ -9815,7 +9731,7 @@
           "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
           "code": "hl7-fhir-rest"
         },
-        "name": "CHI Franciscan Health",
+        "name": "Virginia Mason Franciscan Health",
         "managingOrganization": {
           "reference": "NBNaVzDn9D/IoyHL6bra+qrDZiiQaqz1+GkC5hHdXaE="
         },
@@ -10007,48 +9923,6 @@
           "application/fhir+xml"
         ],
         "address": "https://epic-rproxyprod.coh.org/Interconnect-FHIR-PRD/api/FHIR/DSTU2/"
-      }
-    },
-    {
-      "resource": {
-        "resourceType": "Endpoint",
-        "id": "0b9f0f4c-9813-e911-9126-001dd8b71f19",
-        "contained": [
-          {
-            "resourceType": "Organization",
-            "id": "IMJX3UDcxZjnPWQtEfrpPPEVMNSfxQJ+wxTjZC716iI=",
-            "name": "Southeastern Health"
-          }
-        ],
-        "status": "active",
-        "connectionType": {
-          "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
-          "code": "hl7-fhir-rest"
-        },
-        "name": "Southeastern Health",
-        "managingOrganization": {
-          "reference": "IMJX3UDcxZjnPWQtEfrpPPEVMNSfxQJ+wxTjZC716iI="
-        },
-        "period": {
-          "start": "2018-12-14T00:00:00-06:00"
-        },
-        "payloadType": [
-          {
-            "coding": [
-              {
-                "system": "http://hl7.org/fhir/us/davinci-pdex-plan-net/CodeSystem/EndpointPayloadTypeCS",
-                "code": "NA"
-              }
-            ]
-          }
-        ],
-        "payloadMimeType": [
-          "application/fhir+json",
-          "application/json+fhir",
-          "application/xml+fhir",
-          "application/fhir+xml"
-        ],
-        "address": "https://epicproxy.et0905.epichosted.com/FHIRproxy/SEH/api/FHIR/DSTU2/"
       }
     },
     {
@@ -13693,6 +13567,48 @@
     {
       "resource": {
         "resourceType": "Endpoint",
+        "id": "0b1983c6-097e-eb11-9144-001dd8b71f19",
+        "contained": [
+          {
+            "resourceType": "Organization",
+            "id": "UZloT9QthJ5/n/rmTynvVdM85eDPlKtrpEZUai8LOrI=",
+            "name": "CommUnityCare Health Centers"
+          }
+        ],
+        "status": "active",
+        "connectionType": {
+          "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
+          "code": "hl7-fhir-rest"
+        },
+        "name": "CommUnityCare Health Centers",
+        "managingOrganization": {
+          "reference": "UZloT9QthJ5/n/rmTynvVdM85eDPlKtrpEZUai8LOrI="
+        },
+        "period": {
+          "start": "2023-03-13T00:00:00-05:00"
+        },
+        "payloadType": [
+          {
+            "coding": [
+              {
+                "system": "http://hl7.org/fhir/us/davinci-pdex-plan-net/CodeSystem/EndpointPayloadTypeCS",
+                "code": "NA"
+              }
+            ]
+          }
+        ],
+        "payloadMimeType": [
+          "application/fhir+json",
+          "application/json+fhir",
+          "application/xml+fhir",
+          "application/fhir+xml"
+        ],
+        "address": "https://epicproxy.et1164.epichosted.com/FHIRproxy/api/FHIR/DSTU2/"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Endpoint",
         "id": "ee0f7af2-eb8b-eb11-9144-001dd8b71f19",
         "contained": [
           {
@@ -14803,7 +14719,7 @@
           "application/xml+fhir",
           "application/fhir+xml"
         ],
-        "address": "https://eprescribe.mercy.net/PRDFHIRSTL/rvh/api/FHIR/DSTU2/"
+        "address": "https://epic-fhir.mercy.net/prdfhirstl/RVH/api/FHIR/DSTU2/"
       }
     },
     {
@@ -15642,7 +15558,7 @@
           {
             "resourceType": "Organization",
             "id": "GDDdeJrXGwxlOxq3fG18i5B97V8ZfrLiUPAa5uQOZa0=",
-            "name": "Mercy Health (MO)"
+            "name": "Mercy Health (Arkansas, Louisiana, Mississippi and Texas)"
           }
         ],
         "status": "active",
@@ -15650,7 +15566,7 @@
           "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
           "code": "hl7-fhir-rest"
         },
-        "name": "Mercy Health (MO)",
+        "name": "Mercy Health (Arkansas, Louisiana, Mississippi and Texas)",
         "managingOrganization": {
           "reference": "GDDdeJrXGwxlOxq3fG18i5B97V8ZfrLiUPAa5uQOZa0="
         },
@@ -15757,49 +15673,7 @@
           "application/xml+fhir",
           "application/fhir+xml"
         ],
-        "address": "https://eprescribe.mercy.net/PRDFHIRSGF/CHI/api/FHIR/DSTU2/"
-      }
-    },
-    {
-      "resource": {
-        "resourceType": "Endpoint",
-        "id": "77bf2e45-e4ba-e911-9125-001dd8b71f1a",
-        "contained": [
-          {
-            "resourceType": "Organization",
-            "id": "GDDdeJrXGwxlOxq3fG18i5B97V8ZfrLiUPAa5uQOZa0=",
-            "name": "Our Lady of the Angels"
-          }
-        ],
-        "status": "active",
-        "connectionType": {
-          "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
-          "code": "hl7-fhir-rest"
-        },
-        "name": "Our Lady of the Angels",
-        "managingOrganization": {
-          "reference": "GDDdeJrXGwxlOxq3fG18i5B97V8ZfrLiUPAa5uQOZa0="
-        },
-        "period": {
-          "start": "2019-09-13T00:00:00-05:00"
-        },
-        "payloadType": [
-          {
-            "coding": [
-              {
-                "system": "http://hl7.org/fhir/us/davinci-pdex-plan-net/CodeSystem/EndpointPayloadTypeCS",
-                "code": "NA"
-              }
-            ]
-          }
-        ],
-        "payloadMimeType": [
-          "application/fhir+json",
-          "application/json+fhir",
-          "application/xml+fhir",
-          "application/fhir+xml"
-        ],
-        "address": "https://eprescribe.mercy.net/PRDFHIRAOK2/OLOA/api/FHIR/DSTU2/"
+        "address": "https://epic-fhir.mercy.net/PRDFHIRSGF/CHI/api/FHIR/DSTU2/"
       }
     },
     {
@@ -15841,49 +15715,7 @@
           "application/xml+fhir",
           "application/fhir+xml"
         ],
-        "address": "https://eprescribe.mercy.net/PRDFHIRAOK2/TAO/api/FHIR/DSTU2/"
-      }
-    },
-    {
-      "resource": {
-        "resourceType": "Endpoint",
-        "id": "978d0a75-e4ba-e911-9125-001dd8b71f1a",
-        "contained": [
-          {
-            "resourceType": "Organization",
-            "id": "GDDdeJrXGwxlOxq3fG18i5B97V8ZfrLiUPAa5uQOZa0=",
-            "name": "Truckee Tahoe Medical Group"
-          }
-        ],
-        "status": "active",
-        "connectionType": {
-          "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
-          "code": "hl7-fhir-rest"
-        },
-        "name": "Truckee Tahoe Medical Group",
-        "managingOrganization": {
-          "reference": "GDDdeJrXGwxlOxq3fG18i5B97V8ZfrLiUPAa5uQOZa0="
-        },
-        "period": {
-          "start": "2019-09-13T00:00:00-05:00"
-        },
-        "payloadType": [
-          {
-            "coding": [
-              {
-                "system": "http://hl7.org/fhir/us/davinci-pdex-plan-net/CodeSystem/EndpointPayloadTypeCS",
-                "code": "NA"
-              }
-            ]
-          }
-        ],
-        "payloadMimeType": [
-          "application/fhir+json",
-          "application/json+fhir",
-          "application/xml+fhir",
-          "application/fhir+xml"
-        ],
-        "address": "https://eprescribe.mercy.net/PRDFHIRAOK2/MTSM/api/FHIR/DSTU2/"
+        "address": "https://epic-fhir.mercy.net/PRDFHIRAOK2/TAO/api/FHIR/DSTU2/"
       }
     },
     {
@@ -16635,7 +16467,7 @@
           {
             "resourceType": "Organization",
             "id": "kjsYqAnJ5BuO/3H+bzponei7lA2Xiro+nfj4838gPY8=",
-            "name": "Brown & Toland Physicians"
+            "name": "Altais"
           }
         ],
         "status": "active",
@@ -16643,7 +16475,7 @@
           "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
           "code": "hl7-fhir-rest"
         },
-        "name": "Brown & Toland Physicians",
+        "name": "Altais",
         "managingOrganization": {
           "reference": "kjsYqAnJ5BuO/3H+bzponei7lA2Xiro+nfj4838gPY8="
         },
@@ -18244,6 +18076,48 @@
     {
       "resource": {
         "resourceType": "Endpoint",
+        "id": "c261d55c-d427-ed11-9156-001dd8b71f1a",
+        "contained": [
+          {
+            "resourceType": "Organization",
+            "id": "V7hpoVCCy7HI+9zkGjh+Om6g8Uh4JdyPI3GmBh+YqAs=",
+            "name": "McLeod Health"
+          }
+        ],
+        "status": "active",
+        "connectionType": {
+          "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
+          "code": "hl7-fhir-rest"
+        },
+        "name": "McLeod Health",
+        "managingOrganization": {
+          "reference": "V7hpoVCCy7HI+9zkGjh+Om6g8Uh4JdyPI3GmBh+YqAs="
+        },
+        "period": {
+          "start": "2023-02-06T00:00:00-06:00"
+        },
+        "payloadType": [
+          {
+            "coding": [
+              {
+                "system": "http://hl7.org/fhir/us/davinci-pdex-plan-net/CodeSystem/EndpointPayloadTypeCS",
+                "code": "NA"
+              }
+            ]
+          }
+        ],
+        "payloadMimeType": [
+          "application/fhir+json",
+          "application/json+fhir",
+          "application/xml+fhir",
+          "application/fhir+xml"
+        ],
+        "address": "https://epicproxy.et1267.epichosted.com/FHIRProxy/api/FHIR/DSTU2/"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Endpoint",
         "id": "398ba3fc-262e-ed11-9156-001dd8b71f1a",
         "contained": [
           {
@@ -18322,7 +18196,7 @@
           "application/xml+fhir",
           "application/fhir+xml"
         ],
-        "address": "https://rpsouth.catholichealth.net/fhir/api/FHIR/DSTU2/"
+        "address": "https://rpsouth.catholichealth.net/fhir/FHIRMCT/api/FHIR/DSTU2/"
       }
     },
     {
@@ -18364,7 +18238,7 @@
           "application/xml+fhir",
           "application/fhir+xml"
         ],
-        "address": "https://rpsouth.catholichealth.net/fhir/api/FHIR/DSTU2/"
+        "address": "https://rpsouth.catholichealth.net/fhir/FHIRKY/api/FHIR/DSTU2/"
       }
     },
     {
@@ -18407,6 +18281,381 @@
           "application/fhir+xml"
         ],
         "address": "https://api.valleyhealth.org/fhirproxy/api/FHIR/DSTU2/"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Endpoint",
+        "id": "248cf8c4-7775-ed11-9159-001dd8b71f1a",
+        "contained": [
+          {
+            "resourceType": "Organization",
+            "id": "BisFIYglac7IEkMQuyunTcq/Xi9jFBN72WBBAu7jmuU=",
+            "name": "EvergreenHealth"
+          }
+        ],
+        "status": "active",
+        "connectionType": {
+          "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
+          "code": "hl7-fhir-rest"
+        },
+        "name": "EvergreenHealth",
+        "managingOrganization": {
+          "reference": "BisFIYglac7IEkMQuyunTcq/Xi9jFBN72WBBAu7jmuU="
+        },
+        "period": {
+          "start": "2022-12-19T00:00:00-06:00"
+        },
+        "payloadType": [
+          {
+            "coding": [
+              {
+                "system": "http://hl7.org/fhir/us/davinci-pdex-plan-net/CodeSystem/EndpointPayloadTypeCS",
+                "code": "NA"
+              }
+            ]
+          }
+        ],
+        "payloadMimeType": [
+          "application/fhir+json",
+          "application/json+fhir",
+          "application/xml+fhir",
+          "application/fhir+xml"
+        ],
+        "address": "https://epicproxy.et1270.epichosted.com/apiproxyprd/api/FHIR/DSTU2/"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Endpoint",
+        "id": "fe4e0321-4977-ed11-9159-001dd8b71f1a",
+        "contained": [
+          {
+            "resourceType": "Organization",
+            "id": "dN6+JCKicdek8CAMNfuoS43rZXWRG1VYUBJKKKDmO/8=",
+            "name": "CHI St. Alexius Health"
+          }
+        ],
+        "status": "active",
+        "connectionType": {
+          "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
+          "code": "hl7-fhir-rest"
+        },
+        "name": "CHI St. Alexius Health",
+        "managingOrganization": {
+          "reference": "dN6+JCKicdek8CAMNfuoS43rZXWRG1VYUBJKKKDmO/8="
+        },
+        "period": {
+          "start": "2022-12-15T00:00:00-06:00"
+        },
+        "payloadType": [
+          {
+            "coding": [
+              {
+                "system": "http://hl7.org/fhir/us/davinci-pdex-plan-net/CodeSystem/EndpointPayloadTypeCS",
+                "code": "NA"
+              }
+            ]
+          }
+        ],
+        "payloadMimeType": [
+          "application/fhir+json",
+          "application/json+fhir",
+          "application/xml+fhir",
+          "application/fhir+xml"
+        ],
+        "address": "https://rp.chihealth.com/fhir/FHIRSTA/api/FHIR/DSTU2/"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Endpoint",
+        "id": "d54e7fa0-ea7f-ed11-9159-001dd8b71f1a",
+        "contained": [
+          {
+            "resourceType": "Organization",
+            "id": "r03NMP21oWhUMOfut/vhGaStB/eMzsDOO6Ng62uLFno=",
+            "name": "University Hospitals Cleveland"
+          }
+        ],
+        "status": "active",
+        "connectionType": {
+          "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
+          "code": "hl7-fhir-rest"
+        },
+        "name": "University Hospitals Cleveland",
+        "managingOrganization": {
+          "reference": "r03NMP21oWhUMOfut/vhGaStB/eMzsDOO6Ng62uLFno="
+        },
+        "period": {
+          "start": "2023-03-03T00:00:00-06:00"
+        },
+        "payloadType": [
+          {
+            "coding": [
+              {
+                "system": "http://hl7.org/fhir/us/davinci-pdex-plan-net/CodeSystem/EndpointPayloadTypeCS",
+                "code": "NA"
+              }
+            ]
+          }
+        ],
+        "payloadMimeType": [
+          "application/fhir+json",
+          "application/json+fhir",
+          "application/xml+fhir",
+          "application/fhir+xml"
+        ],
+        "address": "https://uhhsportal.uhhospitals.org/oauth2-prd/api/FHIR/DSTU2/"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Endpoint",
+        "id": "449bf3df-548d-ed11-9159-001dd8b71f1a",
+        "contained": [
+          {
+            "resourceType": "Organization",
+            "id": "Upe93j8g+8wnnwDs9roFGjrO7G88Gc3mPHsHLdvtR5E=",
+            "name": "CVS Health & Minute Clinic"
+          }
+        ],
+        "status": "active",
+        "connectionType": {
+          "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
+          "code": "hl7-fhir-rest"
+        },
+        "name": "CVS Health & Minute Clinic",
+        "managingOrganization": {
+          "reference": "Upe93j8g+8wnnwDs9roFGjrO7G88Gc3mPHsHLdvtR5E="
+        },
+        "payloadType": [
+          {
+            "coding": [
+              {
+                "system": "http://hl7.org/fhir/us/davinci-pdex-plan-net/CodeSystem/EndpointPayloadTypeCS",
+                "code": "NA"
+              }
+            ]
+          }
+        ],
+        "payloadMimeType": [
+          "application/fhir+json",
+          "application/json+fhir",
+          "application/xml+fhir",
+          "application/fhir+xml"
+        ],
+        "address": "https://retailepicfhir.cvshealth.com/FhirProxy/api/FHIR/DSTU2/"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Endpoint",
+        "id": "59b30892-83ad-ed11-915b-001dd8b71f1a",
+        "contained": [
+          {
+            "resourceType": "Organization",
+            "id": "u2l1aQMq6CoBq2jtpp0bJp0vL+RHLSt8PxY+NTjl30U=",
+            "name": "Carle Foundation Hospital & Physician Group"
+          }
+        ],
+        "status": "active",
+        "connectionType": {
+          "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
+          "code": "hl7-fhir-rest"
+        },
+        "name": "Carle Foundation Hospital & Physician Group",
+        "managingOrganization": {
+          "reference": "u2l1aQMq6CoBq2jtpp0bJp0vL+RHLSt8PxY+NTjl30U="
+        },
+        "period": {
+          "start": "2017-04-21T00:00:00-05:00"
+        },
+        "payloadType": [
+          {
+            "coding": [
+              {
+                "system": "http://hl7.org/fhir/us/davinci-pdex-plan-net/CodeSystem/EndpointPayloadTypeCS",
+                "code": "NA"
+              }
+            ]
+          }
+        ],
+        "payloadMimeType": [
+          "application/fhir+json",
+          "application/json+fhir",
+          "application/xml+fhir",
+          "application/fhir+xml"
+        ],
+        "address": "https://epicproxy.et0316.epichosted.com/FHIRProxy/api/FHIR/DSTU2/"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Endpoint",
+        "id": "b919c0ac-efae-ed11-915b-001dd8b71f1a",
+        "contained": [
+          {
+            "resourceType": "Organization",
+            "id": "90CemR+oqaMzGpG/ycmmZo3XVOuMAWZ963RwXBfo4Xw=",
+            "name": "UT Health San Antonio"
+          }
+        ],
+        "status": "active",
+        "connectionType": {
+          "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
+          "code": "hl7-fhir-rest"
+        },
+        "name": "UT Health San Antonio",
+        "managingOrganization": {
+          "reference": "90CemR+oqaMzGpG/ycmmZo3XVOuMAWZ963RwXBfo4Xw="
+        },
+        "period": {
+          "start": "2023-03-13T00:00:00-05:00"
+        },
+        "payloadType": [
+          {
+            "coding": [
+              {
+                "system": "http://hl7.org/fhir/us/davinci-pdex-plan-net/CodeSystem/EndpointPayloadTypeCS",
+                "code": "NA"
+              }
+            ]
+          }
+        ],
+        "payloadMimeType": [
+          "application/fhir+json",
+          "application/json+fhir",
+          "application/xml+fhir",
+          "application/fhir+xml"
+        ],
+        "address": "https://epicproxy.et0582.epichosted.com/FHIRProxy/api/FHIR/DSTU2/"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Endpoint",
+        "id": "7fef7536-7ab3-ed11-915b-001dd8b71f1a",
+        "contained": [
+          {
+            "resourceType": "Organization",
+            "id": "1XB59j1VDY/Wch66At7GMzY3abdqCExMMhxOaO7cOqA=",
+            "name": "Mosaic Life Care"
+          }
+        ],
+        "status": "active",
+        "connectionType": {
+          "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
+          "code": "hl7-fhir-rest"
+        },
+        "name": "Mosaic Life Care",
+        "managingOrganization": {
+          "reference": "1XB59j1VDY/Wch66At7GMzY3abdqCExMMhxOaO7cOqA="
+        },
+        "period": {
+          "start": "2023-02-27T00:00:00-06:00"
+        },
+        "payloadType": [
+          {
+            "coding": [
+              {
+                "system": "http://hl7.org/fhir/us/davinci-pdex-plan-net/CodeSystem/EndpointPayloadTypeCS",
+                "code": "NA"
+              }
+            ]
+          }
+        ],
+        "payloadMimeType": [
+          "application/fhir+json",
+          "application/json+fhir",
+          "application/xml+fhir",
+          "application/fhir+xml"
+        ],
+        "address": "https://epicproxy.et1274.epichosted.com/FHIRProxy/api/FHIR/DSTU2/"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Endpoint",
+        "id": "1af453d6-f8dd-ed11-915d-001dd8b71f1a",
+        "contained": [
+          {
+            "resourceType": "Organization",
+            "id": "pRrqTsFPmZpSr1O0tTH3YJkq2kBrYgyjCI0VEm9msgk=",
+            "name": "Children's of Alabama"
+          }
+        ],
+        "status": "active",
+        "connectionType": {
+          "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
+          "code": "hl7-fhir-rest"
+        },
+        "name": "Children's of Alabama",
+        "managingOrganization": {
+          "reference": "pRrqTsFPmZpSr1O0tTH3YJkq2kBrYgyjCI0VEm9msgk="
+        },
+        "period": {
+          "start": "2023-04-18T00:00:00-05:00"
+        },
+        "payloadType": [
+          {
+            "coding": [
+              {
+                "system": "http://hl7.org/fhir/us/davinci-pdex-plan-net/CodeSystem/EndpointPayloadTypeCS",
+                "code": "NA"
+              }
+            ]
+          }
+        ],
+        "payloadMimeType": [
+          "application/fhir+json",
+          "application/json+fhir",
+          "application/xml+fhir",
+          "application/fhir+xml"
+        ],
+        "address": "https://epicproxy.et1246.epichosted.com/FHIRProxy/api/FHIR/DSTU2/"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Endpoint",
+        "id": "aab924e6-fde4-ed11-915d-001dd8b71f1a",
+        "contained": [
+          {
+            "resourceType": "Organization",
+            "id": "4vRFnzop6JTOkQ9Lk/dCNoVqdZpaw1U3GTkkI9GpnNs=",
+            "name": "Summa Health"
+          }
+        ],
+        "status": "active",
+        "connectionType": {
+          "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
+          "code": "hl7-fhir-rest"
+        },
+        "name": "Summa Health",
+        "managingOrganization": {
+          "reference": "4vRFnzop6JTOkQ9Lk/dCNoVqdZpaw1U3GTkkI9GpnNs="
+        },
+        "period": {
+          "start": "2023-04-27T00:00:00-05:00"
+        },
+        "payloadType": [
+          {
+            "coding": [
+              {
+                "system": "http://hl7.org/fhir/us/davinci-pdex-plan-net/CodeSystem/EndpointPayloadTypeCS",
+                "code": "NA"
+              }
+            ]
+          }
+        ],
+        "payloadMimeType": [
+          "application/fhir+json",
+          "application/json+fhir",
+          "application/xml+fhir",
+          "application/fhir+xml"
+        ],
+        "address": "https://epicproxy.et1289.epichosted.com/FHIRProxy/api/FHIR/DSTU2/"
       }
     }
   ]

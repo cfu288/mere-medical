@@ -3,7 +3,6 @@ TypeError: error sending request for url (https://ebmobile14.ebnhc.org/FHIR/api/
 TypeError: error sending request for url (https://epicescribe1.ah.org/ARR-FHIR-PRD/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
 TypeError: error sending request for url (https://webproxyprd.med.utah.edu/FHIRMyChart/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
 TypeError: error sending request for url (https://sfd.fairview.org/FHIR/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
-SyntaxError: Unexpected token '<', "<html><bod"... is not valid JSON
 TypeError: error sending request for url (https://fhir.buffalomedicalgroup.com/fhir-arr/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
 TypeError: error sending request for url (https://m.essentiahealth.org/FHIR/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
 TypeError: error sending request for url (https://epicintprxyprd.swmed.edu/FHIR/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
@@ -11,8 +10,6 @@ TypeError: error sending request for url (https://fhir.guthrie.org/FHIR-PRD/api/
 TypeError: error sending request for url (https://epicarrprod.uhnj.org/FHIR-Proxy/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
 TypeError: error sending request for url (https://scripts.prevea.com/FHIR-ARR-PRD/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
 TypeError: error sending request for url (https://fhir.tmcaz.com/FHIRProxy/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
-TypeError: error sending request for url (https://mobileprod.arcmd.com/FHIR/api/FHIR/DSTU2/metadata): error trying to connect: invalid peer certificate contents: invalid peer certificate: UnknownIssuer
-TypeError: error sending request for url (https://epicweb.challiance.org/Interconnect-FHIR/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
 TypeError: error sending request for url (https://emrrp.ucdmc.ucdavis.edu/FHIR/MMC/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
 TypeError: error sending request for url (https://emrrp.ucdmc.ucdavis.edu/FHIR/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
 TypeError: error sending request for url (https://webproxyprd.monroeclinic.org/FHIR-PRD/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
@@ -29,7 +26,6 @@ TypeError: error sending request for url (https://epicproxy.mhsjvl.org/FHIRproxy
 TypeError: error sending request for url (https://boomer.cchmc.org/fhir/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
 TypeError: error sending request for url (https://fhir.myeverettclinic.com/fhir/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
 TypeError: error sending request for url (https://scproxy.gundersenhealth.org/FHIRARR/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
-TypeError: error sending request for url (https://nmepicproxy.nm.org/FHIR-PRD/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
 TypeError: error sending request for url (https://epicaccess.templehealth.org/FhirProxyPrd/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
 TypeError: error sending request for url (https://ssproxyprod.infirmaryhealth.org/epicFHIR/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
 TypeError: error sending request for url (https://mepic.hmhn.org/fhir/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
@@ -44,7 +40,6 @@ TypeError: error sending request for url (https://epicedge.upstate.edu/fhir/api/
 TypeError: error sending request for url (https://eprescribing.accesscommunityhealth.net/FHIR/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
 TypeError: error sending request for url (https://epx1.chsli.org/FHIR/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
 TypeError: error sending request for url (https://eprescribe-p.medisys.org/fhir-prd/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
-TypeError: error sending request for url (https://interconnect.lcmchealth.org/FHIR/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
 TypeError: error sending request for url (https://wavesurescripts.sansumclinic.org/FHIR/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
 TypeError: error sending request for url (https://prodrx919.martinhealth.org/FHIR-PRD/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
 TypeError: error sending request for url (https://epicmobile.presencehealth.org/fhirPRD/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
@@ -54,7 +49,6 @@ TypeError: error sending request for url (https://tpc-shield.tpcllp.com/FHIR/api
 TypeError: error sending request for url (https://w1soap.wakehealth.edu/fhirproxy/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
 TypeError: error sending request for url (https://eprescribe.wfhc.org/FHIRproxy/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
 TypeError: error sending request for url (https://epicproxy.bhsala.com/FHIRProxy/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
-SyntaxError: Unexpected token '<', "<html><bod"... is not valid JSON
 TypeError: error sending request for url (https://epicproxy.connecticutchildrens.org/FHIR/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
 TypeError: error sending request for url (https://epicmobile.johnshopkins.edu/FHIR_PRD/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
 TypeError: error sending request for url (https://epicsoap.readinghospital.org/FHIR-PRD/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
@@ -97,4 +91,5 @@ TypeError: error sending request for url (https://epcppxl1.rchsd.org/fhirprd/api
 TypeError: error sending request for url (https://fhirprd.edward.org/fhirprd/EEHOAUTH/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
 TypeError: error sending request for url (https://wecare.pinerest.org/fhirproxy/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
 TypeError: error sending request for url (https://soapprod.multicare.org/FHIRProxy/KH/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
+TypeError: error sending request for url (https://rp.chihealth.com/fhir/FHIRSTA/api/FHIR/DSTU2/metadata): error trying to connect: Connection reset by peer (os error 54)
 SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
