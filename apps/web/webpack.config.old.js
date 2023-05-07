@@ -1,4 +1,4 @@
-const nxReactBaseConfig = require('@nrwl/react/plugins/webpack');
+const nxReactBaseConfig = require('@nx/react/plugins/webpack');
 const { merge } = require('webpack-merge');
 const { InjectManifest } = require('workbox-webpack-plugin');
 const path = require('path');

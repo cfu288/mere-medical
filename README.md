@@ -5,7 +5,12 @@
   <h3 align="center">Mere Medical</h3>
 
   <p align="center">
-    A self-hosted web app to aggregate and sync all of your medical records from multiple patient portals in one place. Privacy focused and offline-first. Currently pre-release software.
+    A personal health record to aggregate and sync all of your medical records from multiple patient portals in one place. Currently supports thousands of hospitals and clinics and major electronic medical record systems. Self-hosted, privacy-focused, and offline-first. 
+  </p>
+  <p align="center">
+  <b>
+   Mere is currently pre-release software: updates may break backwards compatibility.
+   </b>
   </p>
   <p align="center">
     <br />
@@ -35,7 +40,7 @@
 ## What is Mere Medical
 
 <p align="center">
-  <img src="./images/timeline.png" width="400" />
+  <img src="./images/timeline-desktop.webp" width="400" />
 </p>
 
 Mere Medical is a self-hosted web app to aggregate and sync all of your medical records from all your doctor and hospital visits in one place. See everything in a timeline view or quickly summarize your records.

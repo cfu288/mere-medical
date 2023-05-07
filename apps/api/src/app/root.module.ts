@@ -6,6 +6,7 @@ import { LoginProxyModule } from './proxy/proxy.module';
 import { CernerModule } from './cerner/cerner.module';
 import { EpicModule } from './epic/epic.module';
 import { VeradigmModule } from './veradigm/veradigm.module';
+import { TenantModule } from './tenant/tenant.module';
 
 const imports: ModuleMetadata['imports'] = [
   StaticModule,
@@ -13,6 +14,7 @@ const imports: ModuleMetadata['imports'] = [
   CernerModule,
   EpicModule,
   VeradigmModule,
+  TenantModule,
 ];
 
 if (checkIfOnPatientConfigured()) {
