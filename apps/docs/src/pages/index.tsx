@@ -283,7 +283,7 @@ export default function Home() {
                 <figure>
                   <blockquote className="mt-6 text-lg font-semibold text-white sm:text-xl sm:leading-8">
                     <p>
-                      “My grandma ended up in hospital and I am using Mere to
+                      “My grandma ended up in the hospital and I am using Mere to
                       try to get her records in one place so we can figure out
                       best steps. It has been helpful 🙂
                     </p>
