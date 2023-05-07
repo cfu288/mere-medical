@@ -268,7 +268,7 @@ export default function Home() {
             {/* Right Hero */}
             <div className="lg:rounded-tr-0 lg:left-100 relative mt-24 flex h-80 w-auto overflow-hidden rounded-bl-[80px] rounded-tr-[80px] bg-[#F1F4F9] px-4 sm:h-[32rem] lg:absolute lg:inset-y-0 lg:left-1/2 lg:right-0 lg:mt-0 lg:block lg:h-4/5 lg:w-full lg:overflow-visible lg:px-0 lg:pt-6">
               <img
-                className="fadeIn m-5 mx-auto self-center rounded-md opacity-0 sm:max-w-xl lg:absolute lg:-bottom-10 lg:mx-0 lg:mb-0 lg:mt-20 lg:ml-10 lg:h-auto lg:w-full lg:max-w-5xl lg:self-center lg:rounded-2xl lg:p-0"
+                className="fadeIn m-5 mx-auto  self-center rounded-md opacity-0 sm:max-w-xl lg:absolute lg:-bottom-10 lg:mx-0 lg:mb-0 lg:mt-20 lg:ml-10 lg:h-5/6 lg:w-auto lg:max-w-5xl lg:self-center lg:rounded-2xl lg:p-0"
                 src="/img/timeline-desktop.webp"
                 alt="web timeline screenshot"
               />
@@ -283,14 +283,11 @@ export default function Home() {
                 <figure>
                   <blockquote className="mt-6 text-lg font-semibold text-white sm:text-xl sm:leading-8">
                     <p>
-                      “Just wanted to let you know that my grandma ended up in
-                      hospital (she is okay now) and I am using Mere to try to
-                      get her records in one place so we can figure out best
-                      steps and its been helpful 🙂
+                      “My grandma ended up in hospital and I am using Mere to
+                      try to get her records in one place so we can figure out
+                      best steps. It has been helpful 🙂
                     </p>
-                    <p>
-                      So I just wanted to thank you for what you have built”
-                    </p>
+                    <p>I just wanted to thank you for what you have built”</p>
                   </blockquote>
                   <figcaption className="mt-6 text-base text-white">
                     <div className="font-light">
