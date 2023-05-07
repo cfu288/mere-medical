@@ -8,9 +8,7 @@
     A personal health record to aggregate and sync all of your medical records from multiple patient portals in one place. Currently supports thousands of hospitals and clinics and major electronic medical record systems. Self-hosted, privacy-focused, and offline-first. 
   </p>
   <p align="center">
-  <b>
-   Mere is currently pre-release software: updates may break backwards compatibility.
-   </b>
+    <b>Mere is currently pre-release software: updates may break backwards compatibility.</b>
   </p>
   <p align="center">
     <br />

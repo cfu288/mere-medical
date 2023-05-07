@@ -174,7 +174,7 @@ export default function Home() {
       <NavigationBar />
       <main className="relative overflow-x-hidden overflow-y-hidden bg-white">
         {/* Hero section */}
-        <div className="flex min-h-screen flex-col items-center justify-center pt-8 sm:pt-12 lg:relative lg:py-48">
+        <div className="flex min-h-screen flex-col items-center justify-center py-8 sm:py-12 lg:relative">
           <div className="mx-auto max-w-md px-4 sm:max-w-3xl sm:grid-cols-1 sm:px-6 lg:grid lg:max-w-7xl lg:grid-cols-2 lg:gap-24 lg:px-8">
             {/* Left Hero */}
             <div>
@@ -276,8 +276,35 @@ export default function Home() {
           </div>
         </div>
 
+        <div className="bg-white py-12">
+          <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div className="bg-primary-900 relative overflow-hidden px-6 py-10 shadow-xl sm:rounded-3xl sm:px-10 sm:py-12 md:px-12 lg:px-20">
+              <div className="relative mx-auto lg:mx-0">
+                <figure>
+                  <blockquote className="mt-6 text-lg font-semibold text-white sm:text-xl sm:leading-8">
+                    <p>
+                      “Just wanted to let you know that my grandma ended up in
+                      hospital (she is okay now) and I am using Mere to try to
+                      get her records in one place so we can figure out best
+                      steps and its been helpful 🙂
+                    </p>
+                    <p>
+                      So I just wanted to thank you for what you have built”
+                    </p>
+                  </blockquote>
+                  <figcaption className="mt-6 text-base text-white">
+                    <div className="font-light">
+                      Actual feedback from a user
+                    </div>
+                  </figcaption>
+                </figure>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Problem section */}
-        <div className="relative mt-24">
+        <div className="relative py-12">
           <div className="mx-auto flex max-w-md flex-col-reverse items-center justify-center px-4 sm:max-w-3xl sm:px-6 lg:max-w-7xl lg:flex-row-reverse lg:items-start lg:gap-24 lg:px-8">
             {/* <div className="flex h-full grow items-center justify-center overflow-hidden lg:order-1 lg:w-full"> */}
             <img
@@ -318,7 +345,7 @@ export default function Home() {
         </div>
 
         {/* Solution section */}
-        <div className="mt-24 bg-[#006182] py-24">
+        <div className="bg-[#006182] py-24">
           <div className="mx-auto max-w-md px-4 sm:max-w-3xl sm:px-6 lg:max-w-7xl lg:px-8">
             <div className="lg:grid lg:grid-cols-2 lg:items-center lg:gap-24">
               <div>
