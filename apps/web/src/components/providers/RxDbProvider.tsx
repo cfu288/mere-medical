@@ -37,14 +37,14 @@ import {
 import { UserDocumentMigrations } from '../../models/user-document/UserDocument.migration';
 import { RxDBAttachmentsPlugin } from 'rxdb/plugins/attachments';
 import { UserPreferencesMigrations } from '../../models/user-preferences/UserPreferences.migration';
-import { getRxStorageWorker } from 'rxdb/plugins/worker';
-import { getRxStorageDexie, RxStorageDexieStatics } from 'rxdb/plugins/dexie';
+import { getRxStorageDexie } from 'rxdb/plugins/dexie';
 import { ClinicalDocumentMigrations } from '../../models/clinical-document/ClinicalDocument.migration';
 import { AppPage } from '../AppPage';
 import { TimelineBanner } from '../timeline/TimelineBanner';
 import Config from '../../environments/config.json';
 import { useNotificationDispatch } from './NotificationProvider';
 import { ConnectionDocumentMigrations } from '../../models/connection-document/ConnectionDocument.migration';
+import { getRxStorageMemory } from 'rxdb/plugins/memory';
 
 addRxPlugin(RxDBUpdatePlugin);
 addRxPlugin(RxDBMigrationPlugin);
@@ -143,11 +143,8 @@ const handleImport = (
 async function initRxDb() {
   const db = await createRxDatabase<DatabaseCollections>({
     name: 'mere_db',
-    // storage: getRxStorageWorker({
-    //   statics: RxStorageDexieStatics,
-    //   workerInput: '../../assets/dexie.worker.js',
-    // }),
-    storage: getRxStorageDexie(),
+    storage:
+      Config.IS_DEMO === 'enabled' ? getRxStorageMemory() : getRxStorageDexie(),
     multiInstance: true,
     ignoreDuplicate: true,
   });
