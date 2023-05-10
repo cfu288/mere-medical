@@ -102,6 +102,12 @@ function OnHandleUnsubscribeJobs({ children }: PropsWithChildren) {
           const successRes = res.filter((i) => i.status === 'fulfilled');
           const errors = res.filter((i) => i.status === 'rejected');
 
+          console.group('Sync Errors');
+          errors.forEach((x) =>
+            console.error((x as PromiseRejectedResult).reason)
+          );
+          console.groupEnd();
+
           if (errors.length === 0) {
             notifyDispatch({
               type: 'set_notification',
@@ -111,8 +117,8 @@ function OnHandleUnsubscribeJobs({ children }: PropsWithChildren) {
           } else {
             notifyDispatch({
               type: 'set_notification',
-              message: `Successfully synced ${successRes.length} records, unable to sync ${errors.length} records`,
-              variant: 'success',
+              message: `Some records were unable to be synced`,
+              variant: 'info',
             });
           }
         },

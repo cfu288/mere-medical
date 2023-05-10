@@ -32,7 +32,7 @@ function fetchUsers(
           ...defaultUser,
           ...item?.toMutableJSON(),
         } as UserDocument,
-        rawUser: (item as unknown) as RxDocument<UserDocument> | null,
+        rawUser: item as unknown as RxDocument<UserDocument> | null,
       });
     });
 }

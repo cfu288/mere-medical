@@ -8,4 +8,8 @@ export const ClinicalDocumentMigrations: MigrationStrategies = {
     oldDoc.metadata.loinc_coding = [];
     return oldDoc;
   },
+  2: function (oldDoc: Required<ClinicalDocument>) {
+    oldDoc.id = `${oldDoc.connection_record_id}|${oldDoc.user_id}|${oldDoc.metadata.id}`;
+    return oldDoc;
+  },
 };

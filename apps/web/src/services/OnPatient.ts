@@ -61,32 +61,16 @@ async function syncFHIRResource<T extends FhirResource>(
     connectionDocument,
     fhirResourceUrl
   );
-  const clinDocs = fhirResources
+  const cds = fhirResources
     .filter(
       (i) =>
         i.resource?.resourceType.toLowerCase() === fhirResourceUrl.toLowerCase()
     )
     .map(mapper);
-  const saveTaskList = clinDocs.map(async (doc) => {
-    const exists = await db.clinical_documents
-      .find({
-        selector: {
-          $and: [
-            { user_id: connectionDocument.user_id },
-            { 'metadata.id': `${doc.metadata?.id}` },
-            { connection_record_id: `${doc.connection_record_id}` },
-          ],
-        },
-      })
-      .exec();
-    if (exists.length === 0) {
-      await db.clinical_documents.upsert(doc as unknown as ClinicalDocument);
-      console.log(`Syncing document with id ${doc.id}`);
-    } else {
-      console.log(`Document with id ${doc.id} already exists`);
-    }
+  const cdsmap = cds.map(async (cd) => {
+    await db.clinical_documents.upsert(cd as unknown as ClinicalDocument);
   });
-  return await Promise.all(saveTaskList);
+  return await Promise.all(cdsmap);
 }
 
 export async function syncAllRecords(

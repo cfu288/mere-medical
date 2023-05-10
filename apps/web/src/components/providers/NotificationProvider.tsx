@@ -1,9 +1,10 @@
 import { Transition } from '@headlessui/react';
 import { CheckCircleIcon, XMarkIcon } from '@heroicons/react/20/solid';
+import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import * as React from 'react';
 import { useEffect } from 'react';
 
-type NotificationType = 'error' | 'success';
+type NotificationType = 'error' | 'success' | 'info';
 
 type Action =
   | { type: 'set_notification'; message: string; variant: NotificationType }
@@ -91,6 +92,12 @@ function NotificationRenderer(
                     {props.data.variant === 'success' && (
                       <CheckCircleIcon
                         className="h-6 w-6 text-green-400"
+                        aria-hidden="true"
+                      />
+                    )}
+                    {props.data.variant === 'info' && (
+                      <ExclamationTriangleIcon
+                        className="h-6 w-6 text-amber-400"
                         aria-hidden="true"
                       />
                     )}

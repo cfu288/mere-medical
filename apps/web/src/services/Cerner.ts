@@ -28,10 +28,10 @@ import {
 import { Routes } from '../Routes';
 import { DSTU2 } from '.';
 import Config from '../environments/config.json';
-import uuid4 from '../utils/UUIDUtils';
 import { JsonWebKeySet } from './JWTTools';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 import { UserDocument } from '../models/user-document/UserDocument.type';
+import uuid4 from '../utils/UUIDUtils';
 
 export enum CernerLocalStorageKeys {
   CERNER_BASE_URL = 'cernerBaseUrl',
@@ -163,23 +163,7 @@ async function syncFHIRResource<T extends FhirResource>(
     )
     .map(mapper);
   const cdsmap = cds.map(async (cd) => {
-    const exists = await db.clinical_documents
-      .find({
-        selector: {
-          $and: [
-            { user_id: connectionDocument.user_id },
-            { 'metadata.id': `${cd.metadata?.id}` },
-            { connection_record_id: `${cd.connection_record_id}` },
-          ],
-        },
-      })
-      .exec();
-    if (exists.length === 0) {
-      await db.clinical_documents.insert(cd as unknown as ClinicalDocument);
-      console.log(`Syncing document with id ${cd.id}`);
-    } else {
-      console.log(`Document with id ${cd.id} already exists`);
-    }
+    await db.clinical_documents.upsert(cd as unknown as ClinicalDocument);
   });
   return await Promise.all(cdsmap);
 }
@@ -392,7 +376,6 @@ async function syncDocumentReferences(
             if (raw && contentType) {
               // save as ClinicalDocument
               const cd: ClinicalDocument = {
-                id: uuid4(),
                 user_id: connectionDocument.user_id,
                 connection_record_id: connectionDocument.id,
                 data_record: {

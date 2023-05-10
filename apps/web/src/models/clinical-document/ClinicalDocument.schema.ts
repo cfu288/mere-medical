@@ -1,7 +1,12 @@
 export const clinicalDocumentSchemaLiteral = {
   title: 'Clinical Document Schema',
-  version: 1,
-  primaryKey: 'id',
+  version: 2,
+  primaryKey: {
+    key: 'id',
+    fields: ['connection_record_id', 'user_id', 'metadata.id'] as string[],
+    // separator which is used to concat the fields values.
+    separator: '|',
+  },
   type: 'object',
   properties: {
     id: {
