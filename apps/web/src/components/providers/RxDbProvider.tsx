@@ -35,7 +35,6 @@ import {
   UserPreferencesDocumentSchema,
 } from '../../models/user-preferences/UserPreferences.collection';
 import { UserDocumentMigrations } from '../../models/user-document/UserDocument.migration';
-import { RxDBAttachmentsPlugin } from 'rxdb/plugins/attachments';
 import { UserPreferencesMigrations } from '../../models/user-preferences/UserPreferences.migration';
 import { getRxStorageDexie } from 'rxdb/plugins/dexie';
 import { ClinicalDocumentMigrations } from '../../models/clinical-document/ClinicalDocument.migration';
@@ -46,10 +45,11 @@ import { useNotificationDispatch } from './NotificationProvider';
 import { ConnectionDocumentMigrations } from '../../models/connection-document/ConnectionDocument.migration';
 import { getRxStorageMemory } from 'rxdb/plugins/memory';
 
+if (process.env.NODE_ENV === 'development') {
+  addRxPlugin(RxDBDevModePlugin);
+}
 addRxPlugin(RxDBUpdatePlugin);
 addRxPlugin(RxDBMigrationPlugin);
-addRxPlugin(RxDBAttachmentsPlugin);
-addRxPlugin(RxDBDevModePlugin);
 addRxPlugin(RxDBJsonDumpPlugin);
 
 export type DatabaseCollections = {
@@ -95,46 +95,46 @@ const handleImport = (
       ) as RxDumpDatabaseAny<DatabaseCollections>;
       Promise.all(
         Object.values(db.collections).map((col) => col?.remove())
-      ).then(() => {
-        db.addCollections<DatabaseCollections>(databaseCollections).then(() => {
-          db.importJSON(data)
-            .then((i) => {
-              const res = i as unknown as {
-                error: Record<string, RxDocument>;
-                success: Record<string, RxDocument>;
-              }[];
-              let errors = {};
-              let success = {};
-              res.forEach((item) => {
-                errors = { ...errors, ...item.error };
-                success = { ...success, ...item.success };
-              });
+      ).then(async () => {
+        await db.addCollections<DatabaseCollections>(databaseCollections);
+        try {
+          const i = db.importJSON(data);
+          const res = i as unknown as {
+            error: Record<string, RxDocument>;
+            success: Record<string, RxDocument>;
+          }[];
+          let errors = {};
+          let success = {};
+          res.forEach((item) => {
+            errors = { ...errors, ...item.error };
+            success = { ...success, ...item.success };
+          });
 
-              if (Object.keys(errors).length > 0) {
-                console.group('There were some errors with import:');
-                console.error(errors);
-                console.groupEnd();
-                reject(
-                  Error(
-                    `${
-                      Object.keys(errors).length
-                    } documents were not able to be imported`
-                  )
-                );
-              } else {
-                resolve(
-                  `${
-                    Object.keys(success).length
-                  } documents were successfully imported`
-                );
-              }
-            })
-            .catch((e) => {
-              reject(
-                Error('There was an error importing your data' + e.message)
-              );
-            });
-        });
+          if (Object.keys(errors).length > 0) {
+            console.group('There were some errors with import:');
+            console.error(errors);
+            console.groupEnd();
+            reject(
+              Error(
+                `${
+                  Object.keys(errors).length
+                } documents were not able to be imported`
+              )
+            );
+          } else {
+            resolve(
+              `${
+                Object.keys(success).length
+              } documents were successfully imported`
+            );
+          }
+        } catch (e) {
+          reject(
+            Error(
+              'There was an error importing your data' + (e as Error).message
+            )
+          );
+        }
       });
     }
   });

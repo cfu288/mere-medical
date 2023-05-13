@@ -10,7 +10,8 @@ import { useNotificationDispatch } from '../providers/NotificationProvider';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
 import { getFileFromFileList } from '../../pages/SettingsTab';
-import { RxDatabase, RxDumpDatabaseAny, RxDocument } from 'rxdb';
+import { RxDatabase, RxDumpDatabaseAny, RxDocument, RxError } from 'rxdb';
+import { RxDBDevModePlugin } from 'rxdb/dist/types/plugins/dev-mode';
 
 export type ImportFields = {
   backup?: FileList;
@@ -43,7 +44,6 @@ export const handleImport = (
           const data = JSON.parse(
             res as string
           ) as RxDumpDatabaseAny<DatabaseCollections>;
-          // debugger;
           Promise.all([
             db.collections.clinical_documents.remove(),
             db.collections.connection_documents.remove(),
@@ -51,46 +51,48 @@ export const handleImport = (
             db.collections.user_preferences.remove(),
           ]).then(() => {
             db.addCollections<DatabaseCollections>(databaseCollections).then(
-              () => {
-                db.importJSON(data)
-                  .then((i) => {
-                    const res = i as unknown as {
-                      error: Record<string, RxDocument>;
-                      success: Record<string, RxDocument>;
-                    }[];
-                    let errors = {};
-                    let success = {};
-                    res.forEach((item) => {
-                      errors = { ...errors, ...item.error };
-                      success = { ...success, ...item.success };
-                    });
+              async () => {
+                try {
+                  const importData = await db.importJSON(data);
+                  const res = importData as unknown as {
+                    error: Record<string, RxDocument>;
+                    success: Record<string, RxDocument>;
+                  }[];
+                  let errors = {};
+                  let success = {};
+                  res.forEach((item) => {
+                    errors = { ...errors, ...item.error };
+                    success = { ...success, ...item.success };
+                  });
 
-                    if (Object.keys(errors).length > 0) {
-                      console.group('There were some errors with import:');
-                      console.error(errors);
-                      console.groupEnd();
-                      reject(
-                        Error(
-                          `${
-                            Object.keys(errors).length
-                          } documents were not able to be imported`
-                        )
-                      );
-                    } else {
-                      resolve(
-                        `${
-                          Object.keys(success).length
-                        } documents were successfully imported`
-                      );
-                    }
-                  })
-                  .catch((e) => {
+                  if (Object.keys(errors).length > 0) {
+                    console.group('There were some errors with import:');
+                    console.error(errors);
+                    console.groupEnd();
                     reject(
                       Error(
-                        'There was an error importing your data' + e.message
+                        `${
+                          Object.keys(errors).length
+                        } documents were not able to be imported`
                       )
                     );
-                  });
+                  } else {
+                    resolve(
+                      `${
+                        Object.keys(success).length
+                      } documents were successfully imported`
+                    );
+                  }
+                } catch (err) {
+                  console.error(err);
+                  reject(
+                    Error(
+                      `Unable to import backup: Database error ${
+                        (err as RxError).code
+                      }`
+                    )
+                  );
+                }
               }
             );
           });
