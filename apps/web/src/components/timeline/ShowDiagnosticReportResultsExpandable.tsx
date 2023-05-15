@@ -224,9 +224,15 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
                     : ''}
                   {getValueUnit(item)}{' '}
                   {getInterpretationText(item) ||
-                    (getValueString(item) &&
-                      `${getValueString(item)} ${getComments(item) || ''}`)}
+                    (getValueString(item) && `${getValueString(item)}`)}
                 </div>
+                {getComments(item) ? (
+                  <div
+                    className={`col-span-2 col-start-4 flex self-center text-xs text-gray-700`}
+                  >
+                    {getComments(item)}
+                  </div>
+                ) : null}
                 <div className="col-span-1 flex flex-col items-center justify-center">
                   {relatedLabs.length > 0 &&
                     getValueQuantity(item) !== undefined && (
