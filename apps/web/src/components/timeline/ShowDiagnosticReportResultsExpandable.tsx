@@ -190,7 +190,6 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
           ) as unknown as RxDocument<
             ClinicalDocument<BundleEntry<Observation>>
           >[];
-          // console.log(sorted.map((i) => i.toJSON().metadata?.date));
           setRelatedLabs(sorted);
         });
     }
@@ -224,8 +223,9 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
                     ? `  ${getValueQuantity(item)}`
                     : ''}
                   {getValueUnit(item)}{' '}
-                  {getInterpretationText(item) || getValueString(item)}
-                  {/* {getCommentString(item)} */}
+                  {getInterpretationText(item) ||
+                    (getValueString(item) &&
+                      `${getValueString(item)} ${getComments(item) || ''}`)}
                 </div>
                 <div className="col-span-1 flex flex-col items-center justify-center">
                   {relatedLabs.length > 0 &&
@@ -364,6 +364,10 @@ function getValueQuantity(item: ClinicalDocument<BundleEntry<Observation>>) {
 
 function getValueString(item: ClinicalDocument<BundleEntry<Observation>>) {
   return item.data_record.raw.resource?.valueString;
+}
+
+function getComments(item: ClinicalDocument<BundleEntry<Observation>>) {
+  return item.data_record.raw.resource?.comments;
 }
 
 function getInterpretationText(
