@@ -16,10 +16,12 @@ export function MedicationsListCard({
       {({ open }) => (
         <>
           <Disclosure.Button className="w-full font-bold">
-            <div className="flex w-full items-center justify-between py-6 text-xl font-extrabold">
+            <div className="flex w-full items-center justify-between py-6 text-xl font-extrabold ">
               Medications
               <ChevronDownIcon
-                className={` h-8 w-8 ${open ? 'rotate-180 transform' : ''}`}
+                className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 ${
+                  open ? 'rotate-180 transform ' : ''
+                }`}
               />
             </div>
           </Disclosure.Button>

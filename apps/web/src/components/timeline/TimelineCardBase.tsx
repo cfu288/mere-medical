@@ -12,7 +12,7 @@ export function TimelineCardBase({
   return (
     <div
       {...props}
-      className={`max-width-full relative flex items-center space-x-3 rounded-lg border border-gray-300 bg-white px-3 py-3 shadow-sm md:px-6 md:py-5 ${
+      className={`max-width-full relative flex items-center space-x-3 rounded-lg border border-gray-300 bg-white px-3 py-3 shadow-sm duration-75 active:scale-[98%] active:bg-slate-50 md:px-6 md:py-5 ${
         isFocusable
           ? `focus-within:ring-primary-500 focus:ring-primary-700 focus-within:ring-2 focus-within:ring-offset-2`
           : ''

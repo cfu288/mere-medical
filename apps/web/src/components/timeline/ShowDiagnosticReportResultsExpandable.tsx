@@ -12,6 +12,11 @@ import BillboardJS, { IChart } from '@billboard.js/react';
 import bb, { areaLineRange, ChartOptions } from 'billboard.js';
 import 'billboard.js/dist/billboard.css';
 import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
+import { TableCellsIcon, ChartBarIcon } from '@heroicons/react/24/outline';
+
+function classNames(...classes: string[]) {
+  return classes.filter(Boolean).join(' ');
+}
 
 export function ShowDiagnosticReportResultsExpandable({
   item,
@@ -43,14 +48,14 @@ export function ShowDiagnosticReportResultsExpandable({
           title={item.metadata?.display_name || ''}
           subtitle={
             <div className="flex flex-col">
-              <p className="text-sm font-light">
+              <div className="text-sm font-light">
                 {format(parseISO(item.metadata?.date || ''), 'LLLL do yyyy')}
-              </p>
-              <p className="text-sm font-light">
+              </div>
+              <div className="text-sm font-light">
                 {Array.isArray(item.data_record.raw.resource?.performer)
                   ? item.data_record.raw.resource?.performer?.[0].display
                   : item.data_record.raw.resource?.performer?.display}
-              </p>
+              </div>
             </div>
           }
           setClose={toggleOpen}
@@ -66,17 +71,17 @@ export function ShowDiagnosticReportResultsExpandable({
               <div className="col-span-2 text-sm font-semibold">Value</div>
             </div>
             {loading ? (
-              <p className="mx-4 grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-100 py-2">
+              <div className="mx-4 grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-100 py-2">
                 <div className="col-span-3 self-center text-xs font-semibold text-gray-600">
                   Loading data
                 </div>
                 <div className="col-span-3 self-center text-xs font-semibold text-gray-600">
                   <ButtonLoadingSpinner height="h-3" width="w-3" />
                 </div>
-              </p>
+              </div>
             ) : null}
             {docs.map((item) => (
-              <Row item={item} key={JSON.stringify(item).slice(0, 20)} />
+              <Row item={item} key={JSON.stringify(item)} />
             ))}
           </div>
         </div>
@@ -84,6 +89,13 @@ export function ShowDiagnosticReportResultsExpandable({
     </Modal>
   );
 }
+
+type ViewTypes = 'LIST' | 'GRAPH';
+
+const tabs: { name: string; href: ViewTypes; current: false }[] = [
+  { name: 'List', href: 'LIST', current: false },
+  { name: 'Graph', href: 'GRAPH', current: false },
+];
 
 function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
   const db = useRxDb(),
@@ -124,6 +136,7 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
     ],
     [displayName, relatedLabs]
   );
+  const [view, setView] = useState<'LIST' | 'GRAPH'>('GRAPH');
 
   const options: ChartOptions = {
     data: {
@@ -150,7 +163,7 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
         type: 'timeseries',
         tick: {
           count: 4,
-          rotate: 90,
+          rotate: 125,
           centered: true,
           fit: true,
           format: '%Y-%m',
@@ -196,16 +209,13 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
   }, [db.clinical_documents, loinc, user.id]);
 
   return (
-    <Fragment
-      key={`${
-        (item.data_record.raw?.resource as Observation)?.id || item.metadata?.id
-      }`}
-    >
+    <Fragment key={`${item.metadata?.id}`}>
       {!(item.data_record.raw?.resource as Observation)?.dataAbsentReason ? (
         <Disclosure>
           {({ open }) => (
             <>
               <div className="mx-4 grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-100 py-2">
+                {/* Lab Row Name */}
                 <div className="col-span-3 self-center text-xs font-semibold text-gray-600">
                   <p>{item.metadata?.display_name}</p>
                   <p className="font-light">
@@ -214,6 +224,7 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
                       : ''}
                   </p>
                 </div>
+                {/* Value string */}
                 <div
                   className={`col-span-2 flex self-center text-sm ${
                     isOutOfRangeResult(item) && 'text-red-700'
@@ -226,17 +237,11 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
                   {getInterpretationText(item) ||
                     (getValueString(item) && `${getValueString(item)}`)}
                 </div>
-                {getComments(item) ? (
-                  <div
-                    className={`col-span-2 col-start-4 flex self-center text-xs text-gray-700`}
-                  >
-                    {getComments(item)}
-                  </div>
-                ) : null}
-                <div className="col-span-1 flex flex-col items-center justify-center">
+                {/* Graphing button */}
+                <div className="col-span-1 flex flex-col items-end justify-end align-middle">
                   {relatedLabs.length > 0 &&
                     getValueQuantity(item) !== undefined && (
-                      <Disclosure.Button>
+                      <Disclosure.Button className="rounded p-1 duration-75 active:scale-90 active:bg-slate-50">
                         {open ? (
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -271,57 +276,92 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
                       </Disclosure.Button>
                     )}
                 </div>
+                {/* Comment string (if exists) */}
+                {getComments(item) ? (
+                  <div
+                    className={`col-span-2 col-start-4 flex self-center text-xs text-gray-700`}
+                  >
+                    {getComments(item)}
+                  </div>
+                ) : null}
               </div>
+              {/* Previous results and graph */}
               {relatedLabs.length > 0 && (
-                <>
-                  <Disclosure.Panel className="mx-4 grid grid-cols-6 gap-2 gap-y-2 py-2">
-                    {relatedLabs.map((rl) => (
-                      <Fragment key={`rl-${rl.id}`}>
-                        <div className="col-span-3 self-center pl-4 text-xs font-bold text-gray-600">
-                          <p className="">
-                            {format(
-                              parseISO(rl.metadata?.date || ''),
-                              'MM/dd/yyyy'
-                            )}
-                          </p>
-                          <p className="text-xs font-light text-gray-600">
-                            {getReferenceRangeString(rl)
-                              ? `Range: ${getReferenceRangeString(rl)}`
-                              : ''}
-                          </p>
+                <Disclosure.Panel className="relative border-b-4 border-solid border-gray-100">
+                  {/* Toggle select between graph view and list view */}
+
+                  <button
+                    className="text-primary-900 absolute top-0 right-0 m-2 mr-4 rounded bg-[#E2F5FA] p-1 duration-75 active:scale-90 active:bg-gray-100"
+                    onClick={() =>
+                      setView((v) => {
+                        return v === 'GRAPH' ? 'LIST' : 'GRAPH';
+                      })
+                    }
+                  >
+                    {view === 'GRAPH' ? (
+                      <TableCellsIcon className="h-6 w-6" aria-hidden="true" />
+                    ) : (
+                      <ChartBarIcon className="h-6 w-6" aria-hidden="true" />
+                    )}
+                  </button>
+                  {view === 'LIST' ? (
+                    <div className="m-4 grid grid-cols-6 gap-2 gap-y-2 py-2">
+                      {relatedLabs.map((rl) => (
+                        <Fragment key={`rl-${rl.id}`}>
+                          <div className="col-span-3 self-center pl-4 text-xs font-bold text-gray-600">
+                            <p className="">
+                              {format(
+                                parseISO(rl.metadata?.date || ''),
+                                'MM/dd/yyyy'
+                              )}
+                            </p>
+                            <p className="text-xs font-light text-gray-600">
+                              {getReferenceRangeString(rl)
+                                ? `Range: ${getReferenceRangeString(rl)}`
+                                : ''}
+                            </p>
+                          </div>
+                          <div
+                            className={`col-span-2 flex flex-col self-center text-sm ${
+                              isOutOfRangeResult(rl) && 'text-red-700'
+                            }`}
+                          >
+                            <p>
+                              {getValueQuantity(rl) !== undefined
+                                ? `  ${getValueQuantity(rl)}`
+                                : ''}
+                              {getValueUnit(rl)}{' '}
+                              {getInterpretationText(rl) || getValueString(rl)}
+                            </p>
+                          </div>
+                        </Fragment>
+                      ))}
+                    </div>
+                  ) : null}
+                  {view === 'GRAPH' ? (
+                    <div className="mx-4 mt-4">
+                      {getValueQuantity(item) !== undefined ? (
+                        <div className="flex justify-center px-2 align-middle">
+                          <div className="mr-4 w-full sm:w-5/6">
+                            <BillboardJS
+                              bb={bb}
+                              options={options}
+                              ref={chartComponent}
+                            />
+                          </div>
                         </div>
-                        <div
-                          className={`col-span-2 flex flex-col self-center text-sm ${
-                            isOutOfRangeResult(rl) && 'text-red-700'
-                          }`}
-                        >
-                          <p>
-                            {getValueQuantity(rl) !== undefined
-                              ? `  ${getValueQuantity(rl)}`
-                              : ''}
-                            {getValueUnit(rl)}{' '}
-                            {getInterpretationText(rl) || getValueString(rl)}
-                          </p>
-                        </div>
-                      </Fragment>
-                    ))}
-                  </Disclosure.Panel>
-                  {getValueQuantity(item) !== undefined && (
-                    <Disclosure.Panel className="max-w-80 mx-4 w-80 border-b-2 border-solid border-gray-100 pr-2 sm:w-full sm:max-w-max">
-                      <BillboardJS
-                        bb={bb}
-                        options={options}
-                        ref={chartComponent}
-                      />
-                    </Disclosure.Panel>
-                  )}
-                </>
+                      ) : (
+                        <p> This data cannot be graphed</p>
+                      )}
+                    </div>
+                  ) : null}
+                </Disclosure.Panel>
               )}
             </>
           )}
         </Disclosure>
       ) : (
-        <p>
+        <div>
           {
             <div className="mx-4 grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-100 py-2">
               <div className="col-span-3 self-center text-xs font-semibold text-gray-600">
@@ -336,7 +376,7 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
               <div className="col-span-1 flex flex-col items-center justify-center"></div>
             </div>
           }
-        </p>
+        </div>
       )}
     </Fragment>
   );
