@@ -14,15 +14,9 @@ export const EncounterCard = memo(function EncounterCard({
   item: ClinicalDocument<BundleEntry<Encounter>>;
 }) {
   const conn = useConnectionDoc(item.connection_record_id);
-  const [expanded, setExpanded] = useState(false);
 
   return (
-    <TimelineCardBase
-      tabIndex={0}
-      onClick={() => {
-        setExpanded((x) => !x);
-      }}
-    >
+    <TimelineCardBase>
       <div className="min-w-0 flex-1">
         <div className="items-top flex justify-between">
           <TimelineCardCategoryTitle title="Encounter" color="text-red-500" />

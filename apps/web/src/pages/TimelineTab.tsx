@@ -33,7 +33,13 @@ function fetchRecords(
   let selector: MangoQuerySelector<ClinicalDocument<unknown>> = {
     user_id: user_id,
     'data_record.resource_type': {
-      $nin: ['patient', 'observation', 'careplan', 'allergyintolerance'],
+      $nin: [
+        'patient',
+        'observation',
+        'careplan',
+        'allergyintolerance',
+        'documentreference_attachment',
+      ],
     },
     'metadata.date': { $nin: [null, undefined, ''] },
   };
@@ -42,6 +48,7 @@ function fetchRecords(
       'patient',
       'careplan',
       'allergyintolerance',
+      'documentreference_attachment',
     ];
     selector = {
       ...selector,

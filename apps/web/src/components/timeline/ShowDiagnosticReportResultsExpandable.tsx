@@ -90,13 +90,6 @@ export function ShowDiagnosticReportResultsExpandable({
   );
 }
 
-type ViewTypes = 'LIST' | 'GRAPH';
-
-const tabs: { name: string; href: ViewTypes; current: false }[] = [
-  { name: 'List', href: 'LIST', current: false },
-  { name: 'Graph', href: 'GRAPH', current: false },
-];
-
 function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
   const db = useRxDb(),
     user = useUser(),

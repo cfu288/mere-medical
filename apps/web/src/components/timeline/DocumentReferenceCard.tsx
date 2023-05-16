@@ -20,16 +20,19 @@ export const DocumentReferenceCard = memo(function DocumentReferenceCard({
   return (
     <>
       <TimelineCardBase
-        tabIndex={0}
+        isFocusable
         onClick={() => {
           setExpanded((x) => !x);
         }}
       >
         <div className="min-w-0 flex-1">
           <div className="items-top flex justify-between">
-            <TimelineCardCategoryTitle title="Documents" color="text-teal-600" />
-            <div className="relative py-2">
-              <div className="relative flex justify-center">
+            <TimelineCardCategoryTitle
+              title="Documents"
+              color="text-teal-600"
+            />
+            <div className="relative py-2 pr-1">
+              <div className="relative flex justify-center text-gray-400">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"

@@ -20,14 +20,17 @@ export const ObservationCard = memo(function ObservationCard({
   return (
     <>
       <TimelineCardBase
-        tabIndex={0}
+        isFocusable
         onClick={() => {
           setExpanded((x) => !x);
         }}
       >
         <div className="min-w-0 flex-1">
           <div className="items-top flex justify-between">
-            <TimelineCardCategoryTitle title="Observation" color="text-sky-600" />
+            <TimelineCardCategoryTitle
+              title="Observation"
+              color="text-sky-600"
+            />
             <div className="relative py-2">
               <div className="relative flex justify-center">
                 <svg

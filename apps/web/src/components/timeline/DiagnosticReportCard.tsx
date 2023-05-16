@@ -16,7 +16,6 @@ import { SkeletonLoadingText } from './SkeletonLoadingText';
 import { TimelineCardTitle } from './TimelineCardTitle';
 import { TimelineCardCategoryTitle } from './TimelineCardCategoryTitle';
 import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
-import { LoadingSpinner } from '../LoadingSpinner';
 import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
 
 /**
@@ -129,7 +128,7 @@ function DiagnosticReportCardUnmemo({
 
   return (
     <>
-      <TimelineCardBase onClick={() => setExpanded((x) => !x)} tabIndex={0}>
+      <TimelineCardBase isFocusable onClick={() => setExpanded((x) => !x)}>
         <div className={'min-w-0 flex-1'} ref={ref}>
           <div className="items-top flex justify-between">
             <TimelineCardCategoryTitle
