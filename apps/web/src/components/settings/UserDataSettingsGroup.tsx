@@ -10,7 +10,7 @@ import { useNotificationDispatch } from '../providers/NotificationProvider';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
 import { getFileFromFileList } from '../../pages/SettingsTab';
-import { RxDatabase, RxDumpDatabaseAny, RxDocument, RxError } from 'rxdb';
+import { RxDatabase } from 'rxdb';
 
 export type ImportFields = {
   backup?: FileList;

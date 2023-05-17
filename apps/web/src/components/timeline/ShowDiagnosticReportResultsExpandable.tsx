@@ -14,10 +14,6 @@ import 'billboard.js/dist/billboard.css';
 import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
 import { TableCellsIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 
-function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(' ');
-}
-
 export function ShowDiagnosticReportResultsExpandable({
   item,
   docs,

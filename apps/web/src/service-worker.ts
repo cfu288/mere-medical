@@ -19,7 +19,7 @@ setCacheNameDetails({
 
 // Download and cache all the files webpack created
 // https://developer.chrome.com/docs/workbox/precaching-with-workbox/#precaching-with-injectmanifest
-const precacheManifest = [].concat((self.__WB_MANIFEST as any) || []);
+const precacheManifest = [].concat((self.__WB_MANIFEST as []) || []);
 precacheAndRoute(precacheManifest);
 
 // Tells the Service Worker to skip the waiting state and become active.

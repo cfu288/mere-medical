@@ -2,7 +2,7 @@ import { format, parseISO } from 'date-fns';
 import { BundleEntry, Encounter } from 'fhir/r2';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { TimelineCardTitle } from './TimelineCardTitle';
-import { memo, useState } from 'react';
+import { memo } from 'react';
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
 import { CardBase } from '../connection/CardBase';
 import { SkeletonLoadingText } from './SkeletonLoadingText';

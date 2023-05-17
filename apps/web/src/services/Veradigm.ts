@@ -19,7 +19,6 @@ import {
 import { RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../components/providers/RxDbProvider';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
-import uuid4 from '../utils/UUIDUtils';
 
 export enum VeradigmLocalStorageKeys {
   VERADIGM_BASE_URL = 'veradigmBaseUrl',
