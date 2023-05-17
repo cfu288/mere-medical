@@ -34,8 +34,6 @@ export const handleImport = (
   fields: ImportFields,
   db: RxDatabase<DatabaseCollections>
 ): Promise<string> => {
-  alert('test');
-
   return new Promise((resolve, reject) => {
     const file = getFileFromFileList(fields.backup);
     const reader = new FileReader();
@@ -56,19 +54,18 @@ export const handleImport = (
               async () => {
                 try {
                   const importData = await db.importJSON(data);
-                  console.error(importData);
-                  const res = importData as unknown as {
-                    error: Record<string, RxDocument>;
-                    success: Record<string, RxDocument>;
-                  }[];
+                  const res = importData as unknown as Promise<
+                    {
+                      error: Record<string, RxDocument>;
+                      success: Record<string, RxDocument>;
+                    }[]
+                  >;
                   let errors = {};
                   let success = {};
-                  // if (res) {
-                  //   res.forEach((item) => {
-                  //     errors = { ...errors, ...item.error };
-                  //     success = { ...success, ...item.success };
-                  //   });
-                  // }
+                  (await res).forEach((item) => {
+                    errors = { ...errors, ...item.error };
+                    success = { ...success, ...item.success };
+                  });
 
                   if (Object.keys(errors).length > 0) {
                     console.group('There were some errors with import:');
