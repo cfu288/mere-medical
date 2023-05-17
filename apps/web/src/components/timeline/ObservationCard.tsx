@@ -4,10 +4,11 @@ import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocumen
 import { TimelineCardTitle } from './TimelineCardTitle';
 import { memo, useState } from 'react';
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
-import { TimelineCardBase } from './TimelineCardBase';
+import { CardBase } from '../connection/CardBase';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
 import { ShowDiagnosticReportResultsExpandable } from './ShowDiagnosticReportResultsExpandable';
 import { TimelineCardCategoryTitle } from './TimelineCardCategoryTitle';
+import { OpenableCardIcon } from './OpenableCardIcon';
 
 export const ObservationCard = memo(function ObservationCard({
   item,
@@ -19,7 +20,7 @@ export const ObservationCard = memo(function ObservationCard({
 
   return (
     <>
-      <TimelineCardBase
+      <CardBase
         isFocusable
         onClick={() => {
           setExpanded((x) => !x);
@@ -31,24 +32,7 @@ export const ObservationCard = memo(function ObservationCard({
               title="Observation"
               color="text-sky-600"
             />
-            <div className="relative py-2">
-              <div className="relative flex justify-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className="-mt-2 -mr-2 h-4 w-4"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"
-                  />
-                </svg>
-              </div>
-            </div>
+            <OpenableCardIcon />
           </div>
           <TimelineCardTitle>{item.metadata?.display_name}</TimelineCardTitle>
           <p className="truncate text-xs font-medium text-gray-500 md:text-sm">
@@ -64,7 +48,7 @@ export const ObservationCard = memo(function ObservationCard({
             <SkeletonLoadingText />
           )}
         </div>
-      </TimelineCardBase>
+      </CardBase>
       <ShowDiagnosticReportResultsExpandable
         docs={[item]}
         item={item}

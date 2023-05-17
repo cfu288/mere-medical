@@ -3,7 +3,7 @@ import { BundleEntry, MedicationStatement } from 'fhir/r2';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
-import { TimelineCardBase } from './TimelineCardBase';
+import { CardBase } from '../connection/CardBase';
 import { TimelineCardTitle } from './TimelineCardTitle';
 import { memo } from 'react';
 import { TimelineCardCategoryTitle } from './TimelineCardCategoryTitle';
@@ -16,7 +16,7 @@ export const MedicationCard = memo(function MedicationCard({
   const conn = useConnectionDoc(item.connection_record_id);
 
   return (
-    <TimelineCardBase>
+    <CardBase>
       <div className="min-w-0 flex-1">
         <TimelineCardCategoryTitle
           title="Medication"
@@ -35,6 +35,6 @@ export const MedicationCard = memo(function MedicationCard({
           <SkeletonLoadingText />
         )}
       </div>
-    </TimelineCardBase>
+    </CardBase>
   );
 });

@@ -1,6 +1,7 @@
 import {
   DatabaseCollections,
   databaseCollections,
+  handleJSONDataImport,
   useRxDb,
 } from '../providers/RxDbProvider';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -11,7 +12,6 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
 import { getFileFromFileList } from '../../pages/SettingsTab';
 import { RxDatabase, RxDumpDatabaseAny, RxDocument, RxError } from 'rxdb';
-import { RxDBDevModePlugin } from 'rxdb/dist/types/plugins/dev-mode';
 
 export type ImportFields = {
   backup?: FileList;
@@ -39,65 +39,15 @@ export const handleImport = (
     const reader = new FileReader();
     if (file) {
       reader.onload = function (event) {
-        const res = event.target?.result;
-        if (res) {
-          const data = JSON.parse(
-            res as string
-          ) as RxDumpDatabaseAny<DatabaseCollections>;
-          Promise.all([
-            db.collections.clinical_documents.remove(),
-            db.collections.connection_documents.remove(),
-            db.collections.user_documents.remove(),
-            db.collections.user_preferences.remove(),
-          ]).then(() => {
-            db.addCollections<DatabaseCollections>(databaseCollections).then(
-              async () => {
-                try {
-                  const importData = await db.importJSON(data);
-                  const res = importData as unknown as Promise<
-                    {
-                      error: Record<string, RxDocument>;
-                      success: Record<string, RxDocument>;
-                    }[]
-                  >;
-                  let errors = {};
-                  let success = {};
-                  (await res).forEach((item) => {
-                    errors = { ...errors, ...item.error };
-                    success = { ...success, ...item.success };
-                  });
-
-                  if (Object.keys(errors).length > 0) {
-                    console.group('There were some errors with import:');
-                    console.error(errors);
-                    console.groupEnd();
-                    reject(
-                      Error(
-                        `${
-                          Object.keys(errors).length
-                        } documents were not able to be imported`
-                      )
-                    );
-                  } else {
-                    resolve(
-                      `${
-                        Object.keys(success).length
-                      } documents were successfully imported`
-                    );
-                  }
-                } catch (err) {
-                  console.error(err);
-                  reject(
-                    Error(
-                      `Unable to import backup: Database error ${
-                        (err as RxError).code
-                      }`
-                    )
-                  );
-                }
-              }
-            );
-          });
+        const jsonData = event.target?.result as string;
+        if (jsonData) {
+          handleJSONDataImport(jsonData, db)
+            .then((result) => {
+              resolve(result);
+            })
+            .catch((error) => {
+              reject(error);
+            });
         } else {
           reject(Error('The file was empty or unable to be read'));
         }

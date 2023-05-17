@@ -4,7 +4,7 @@ interface WrapperProps extends React.HTMLAttributes<HTMLDivElement> {
   isFocusable?: boolean;
 }
 
-export function TimelineCardBase({
+export function CardBase({
   children,
   isFocusable = false,
   ...props

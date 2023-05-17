@@ -3,7 +3,7 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, Condition } from 'fhir/r2';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
-import { TimelineCardBase } from '../timeline/TimelineCardBase';
+import { CardBase } from '../connection/CardBase';
 
 export function ConditionsListCard({
   items,
@@ -26,7 +26,7 @@ export function ConditionsListCard({
             </div>
           </Disclosure.Button>
           <Disclosure.Panel>
-            <TimelineCardBase>
+            <CardBase>
               <div className="min-w-0 flex-1">
                 {items.map((item) => (
                   <div className="py-2" key={item.id}>
@@ -41,7 +41,7 @@ export function ConditionsListCard({
                   </div>
                 ))}
               </div>
-            </TimelineCardBase>
+            </CardBase>
           </Disclosure.Panel>
         </>
       )}

@@ -1,10 +1,10 @@
 import { memo } from 'react';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
-import { TimelineCardBase } from './TimelineCardBase';
+import { CardBase } from '../connection/CardBase';
 
 export function SkeletonTimelineCardUnmemoed() {
   return (
-    <TimelineCardBase>
+    <CardBase>
       <div className="w-full min-w-0 max-w-full flex-1">
         <div className="flex animate-pulse flex-row items-center pb-2">
           <div className="mt-1 h-4 w-12 rounded-md bg-gray-100 sm:h-4 "></div>
@@ -24,7 +24,7 @@ export function SkeletonTimelineCardUnmemoed() {
         </div>
         <SkeletonLoadingText />
       </div>
-    </TimelineCardBase>
+    </CardBase>
   );
 }
 

@@ -1,6 +1,6 @@
 import { Disclosure } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
-import { TimelineCardBase } from '../timeline/TimelineCardBase';
+import { CardBase } from '../connection/CardBase';
 
 export function SkeletonListCard() {
   return (
@@ -18,7 +18,7 @@ export function SkeletonListCard() {
             </div>
           </Disclosure.Button>
           <Disclosure.Panel>
-            <TimelineCardBase>
+            <CardBase>
               <div className="min-w-0 flex-1">
                 <div className="py-2">
                   <div className="mt-1 h-4 w-48 rounded-md bg-gray-200 sm:h-4"></div>
@@ -37,7 +37,7 @@ export function SkeletonListCard() {
                   <div className="mt-1 h-3 w-24 animate-pulse rounded-md bg-gray-100 md:mt-2 md:h-4"></div>
                 </div>
               </div>
-            </TimelineCardBase>
+            </CardBase>
           </Disclosure.Panel>
         </>
       )}

@@ -4,7 +4,7 @@ import { format, parseISO } from 'date-fns';
 import { AllergyIntolerance, BundleEntry } from 'fhir/r2';
 import { Fragment } from 'react';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
-import { TimelineCardBase } from '../timeline/TimelineCardBase';
+import { CardBase } from '../connection/CardBase';
 
 export function AllergyIntoleranceListCard({
   items,
@@ -27,7 +27,7 @@ export function AllergyIntoleranceListCard({
             </div>
           </Disclosure.Button>
           <Disclosure.Panel>
-            <TimelineCardBase>
+            <CardBase>
               <div className="min-w-0 flex-1 shrink">
                 {items.map((item) => (
                   <div className="py-2" key={item.id}>
@@ -58,7 +58,7 @@ export function AllergyIntoleranceListCard({
                   </div>
                 ))}
               </div>
-            </TimelineCardBase>
+            </CardBase>
           </Disclosure.Panel>
         </Fragment>
       )}

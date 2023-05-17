@@ -4,9 +4,10 @@ import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocumen
 import { TimelineCardTitle } from './TimelineCardTitle';
 import { memo, useState } from 'react';
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
-import { TimelineCardBase } from './TimelineCardBase';
+import { CardBase } from '../connection/CardBase';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
 import { TimelineCardCategoryTitle } from './TimelineCardCategoryTitle';
+import { TimelineCardSubtitile } from './TimelineCardSubtitile';
 
 export const EncounterCard = memo(function EncounterCard({
   item,
@@ -16,7 +17,7 @@ export const EncounterCard = memo(function EncounterCard({
   const conn = useConnectionDoc(item.connection_record_id);
 
   return (
-    <TimelineCardBase>
+    <CardBase>
       <div className="min-w-0 flex-1">
         <div className="items-top flex justify-between">
           <TimelineCardCategoryTitle title="Encounter" color="text-red-500" />
@@ -31,17 +32,17 @@ export const EncounterCard = memo(function EncounterCard({
             </>
           }
         </TimelineCardTitle>
-        <p className="truncate text-xs font-medium text-gray-500 md:text-sm">
+        <TimelineCardSubtitile variant="dark">
           {item.metadata?.date ? format(parseISO(item.metadata.date), 'p') : ''}
-        </p>
+        </TimelineCardSubtitile>
         {conn?.get('name') ? (
-          <p className="truncate text-xs font-medium text-gray-400 md:text-sm">
+          <TimelineCardSubtitile variant="light">
             {conn?.get('name')}
-          </p>
+          </TimelineCardSubtitile>
         ) : (
           <SkeletonLoadingText />
         )}
       </div>
-    </TimelineCardBase>
+    </CardBase>
   );
 });

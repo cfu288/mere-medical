@@ -26,7 +26,7 @@
     "src/utils/StyleUtils.tsx",
     "src/utils/SearchUtils.tsx",
     "src/components/settings/EditUserModalForm.tsx",
-    "./src/components/timeline/TimelineCardBase.tsx",
+    "src/components/connection/CardBase.tsx",
     "./src/components/connection/LoadingSpinner.tsx",
     "./src/components/connection/ButtonLoadingSpinner.tsx",
     "./src/components/timeline/SkeletonLoadingText.tsx",
@@ -41,7 +41,10 @@
     "src/components/settings/PrivacyAndSecuritySettingsGroup.tsx",
     "src/components/settings/UserDataSettingsGroup.tsx",
     "src/components/settings/UserCard.tsx",
-    "./src/components/summary/SkeletonListCard.tsx"
+    "./src/components/summary/SkeletonListCard.tsx",
+    "./src/components/timeline/OpenableCardIcon.tsx",
+    "./src/components/timeline/TimelineCardSubtitile.tsx",
+    "./src/components/providers/AppLoadingSkeleton.tsx"
   ],
   "exclude": [
     "jest.config.ts",

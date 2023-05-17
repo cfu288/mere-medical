@@ -3,7 +3,7 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { BundleEntry, CarePlan } from 'fhir/r2';
 import { Fragment } from 'react';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
-import { TimelineCardBase } from '../timeline/TimelineCardBase';
+import { CardBase } from '../connection/CardBase';
 
 export function CarePlanListCard({
   items,
@@ -30,7 +30,7 @@ export function CarePlanListCard({
             </div>
           </Disclosure.Button>
           <Disclosure.Panel>
-            <TimelineCardBase>
+            <CardBase>
               <div className="min-w-0 flex-1">
                 {items.map((item) => (
                   <Fragment key={item.metadata?.id}>
@@ -65,7 +65,7 @@ export function CarePlanListCard({
                   </Fragment>
                 ))}
               </div>
-            </TimelineCardBase>
+            </CardBase>
           </Disclosure.Panel>
         </>
       )}

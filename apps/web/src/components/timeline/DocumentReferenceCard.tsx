@@ -5,9 +5,10 @@ import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocumen
 import { ShowDocumentResultsExpandable } from './ShowDocumentReferenceResultsExpandable';
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
-import { TimelineCardBase } from './TimelineCardBase';
+import { CardBase } from '../connection/CardBase';
 import { TimelineCardTitle } from './TimelineCardTitle';
 import { TimelineCardCategoryTitle } from './TimelineCardCategoryTitle';
+import { OpenableCardIcon } from './OpenableCardIcon';
 
 export const DocumentReferenceCard = memo(function DocumentReferenceCard({
   item,
@@ -19,7 +20,7 @@ export const DocumentReferenceCard = memo(function DocumentReferenceCard({
 
   return (
     <>
-      <TimelineCardBase
+      <CardBase
         isFocusable
         onClick={() => {
           setExpanded((x) => !x);
@@ -31,24 +32,7 @@ export const DocumentReferenceCard = memo(function DocumentReferenceCard({
               title="Documents"
               color="text-teal-600"
             />
-            <div className="relative py-2 pr-1">
-              <div className="relative flex justify-center text-gray-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className="-mt-2 -mr-2 h-4 w-4"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"
-                  />
-                </svg>
-              </div>
-            </div>
+            <OpenableCardIcon />
           </div>
           <TimelineCardTitle>{item.metadata?.display_name}</TimelineCardTitle>
           <p className="truncate text-xs font-medium text-gray-500 md:text-sm">
@@ -64,7 +48,7 @@ export const DocumentReferenceCard = memo(function DocumentReferenceCard({
             <SkeletonLoadingText />
           )}
         </div>
-      </TimelineCardBase>
+      </CardBase>
       <ShowDocumentResultsExpandable
         item={item}
         expanded={expanded}

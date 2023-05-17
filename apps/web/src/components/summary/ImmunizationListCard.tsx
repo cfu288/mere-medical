@@ -3,7 +3,7 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, Immunization } from 'fhir/r2';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
-import { TimelineCardBase } from '../timeline/TimelineCardBase';
+import { CardBase } from '../connection/CardBase';
 
 function getVaccineCode(item: ClinicalDocument<BundleEntry<Immunization>>) {
   let code = item.data_record.raw.resource?.vaccineCode?.coding?.filter((i) =>
@@ -57,7 +57,7 @@ export function ImmunizationListCard({
             </div>
           </Disclosure.Button>
           <Disclosure.Panel className="">
-            <TimelineCardBase>
+            <CardBase>
               <div className="min-w-0 flex-1">
                 {[...sortItems.entries()].map(([key, item]) => (
                   <div className="py-2" key={item?.[0].id}>
@@ -79,7 +79,7 @@ export function ImmunizationListCard({
                   </div>
                 ))}
               </div>
-            </TimelineCardBase>
+            </CardBase>
           </Disclosure.Panel>
         </>
       )}

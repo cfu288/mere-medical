@@ -3,10 +3,11 @@ import { BundleEntry, Immunization } from 'fhir/r2';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
-import { TimelineCardBase } from './TimelineCardBase';
+import { CardBase } from '../connection/CardBase';
 import { TimelineCardTitle } from './TimelineCardTitle';
 import { memo } from 'react';
 import { TimelineCardCategoryTitle } from './TimelineCardCategoryTitle';
+import { TimelineCardSubtitile } from './TimelineCardSubtitile';
 
 export const ImmunizationCard = memo(function ImmunizationCard({
   item,
@@ -16,7 +17,7 @@ export const ImmunizationCard = memo(function ImmunizationCard({
   const conn = useConnectionDoc(item.connection_record_id);
 
   return (
-    <TimelineCardBase>
+    <CardBase>
       <div className="min-w-0 flex-1">
         <TimelineCardCategoryTitle
           title="Immunization"
@@ -28,13 +29,13 @@ export const ImmunizationCard = memo(function ImmunizationCard({
           {item.metadata?.date ? format(parseISO(item.metadata.date), 'p') : ''}
         </p>
         {conn?.get('name') ? (
-          <p className="truncate text-xs font-medium text-gray-400 md:text-sm">
+          <TimelineCardSubtitile variant="light">
             {conn?.get('name')}
-          </p>
+          </TimelineCardSubtitile>
         ) : (
           <SkeletonLoadingText />
         )}
       </div>
-    </TimelineCardBase>
+    </CardBase>
   );
 });
