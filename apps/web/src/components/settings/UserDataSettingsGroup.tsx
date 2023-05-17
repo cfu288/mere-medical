@@ -1,6 +1,5 @@
 import {
   DatabaseCollections,
-  databaseCollections,
   handleJSONDataImport,
   useRxDb,
 } from '../providers/RxDbProvider';
