@@ -99,13 +99,16 @@ const handleImport = (
         await db.addCollections<DatabaseCollections>(databaseCollections);
         try {
           const i = db.importJSON(data);
-          const res = i as unknown as {
-            error: Record<string, RxDocument>;
-            success: Record<string, RxDocument>;
-          }[];
+          const res = i as unknown as Promise<
+            {
+              error: Record<string, RxDocument>;
+              success: Record<string, RxDocument>;
+            }[]
+          >;
           let errors = {};
           let success = {};
-          res.forEach((item) => {
+
+          (await res).forEach((item) => {
             errors = { ...errors, ...item.error };
             success = { ...success, ...item.success };
           });
@@ -129,9 +132,10 @@ const handleImport = (
             );
           }
         } catch (e) {
+          console.error(e);
           reject(
             Error(
-              'There was an error importing your data' + (e as Error).message
+              'There was an error importing your data: ' + (e as Error).message
             )
           );
         }
