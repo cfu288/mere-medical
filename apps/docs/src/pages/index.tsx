@@ -194,8 +194,8 @@ export default function Home() {
                     One Place.
                   </h1>
                   <p className="slideUpDelay1 mt-6 text-xl leading-relaxed text-gray-600 opacity-0">
-                    With Mere Medical, you can finally manage all of your
-                    medical records locally on your device.
+                    Mere Medical helps you aggregate all of your medical records
+                    in one place with a strong focus on privacy and autonomy.
                   </p>
                 </div>
                 <div className="mt-5 max-w-md sm:flex sm:justify-start md:mt-8">
@@ -283,9 +283,9 @@ export default function Home() {
                 <figure>
                   <blockquote className="mt-6 text-lg font-semibold text-white sm:text-xl sm:leading-8">
                     <p>
-                      “My grandma ended up in the hospital and I am using Mere to
-                      try to get her records in one place so we can figure out
-                      best steps. It has been helpful 🙂
+                      “My grandma ended up in the hospital and I am using Mere
+                      to try to get her records in one place so we can figure
+                      out best steps. It has been helpful 🙂
                     </p>
                     <p>I just wanted to thank you for what you have built”</p>
                   </blockquote>
