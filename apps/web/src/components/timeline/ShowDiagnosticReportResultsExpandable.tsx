@@ -13,6 +13,7 @@ import bb, { areaLineRange, ChartOptions } from 'billboard.js';
 import 'billboard.js/dist/billboard.css';
 import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
 import { TableCellsIcon, ChartBarIcon } from '@heroicons/react/24/outline';
+import * as fhirpath from 'fhirpath';
 
 export function ShowDiagnosticReportResultsExpandable({
   item,
@@ -222,7 +223,7 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
                   {getValueQuantity(item) !== undefined
                     ? `  ${getValueQuantity(item)}`
                     : ''}
-                  {getValueUnit(item)}{' '}
+                  {getValueUnit(item)}
                   {getInterpretationText(item) ||
                     (getValueString(item) && `${getValueString(item)}`)}
                 </div>
@@ -374,41 +375,63 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
 function getReferenceRangeString(
   item: ClinicalDocument<BundleEntry<Observation>>
 ) {
-  return item.data_record.raw.resource?.referenceRange?.[0]?.text;
+  return fhirpath.evaluate(
+    item.data_record.raw.resource,
+    'referenceRange.text'
+  )?.[0];
 }
 
 function getReferenceRangeLow(
   item: ClinicalDocument<BundleEntry<Observation>>
 ) {
-  return item.data_record.raw.resource?.referenceRange?.[0]?.low;
+  return fhirpath.evaluate(
+    item.data_record.raw.resource,
+    'referenceRange.low'
+  )?.[0];
 }
 
 function getReferenceRangeHigh(
   item: ClinicalDocument<BundleEntry<Observation>>
 ) {
-  return item.data_record.raw.resource?.referenceRange?.[0]?.high;
+  return fhirpath.evaluate(
+    item.data_record.raw.resource,
+    'referenceRange.high'
+  )?.[0];
 }
 
-function getValueUnit(item: ClinicalDocument<BundleEntry<Observation>>) {
-  return item.data_record.raw.resource?.valueQuantity?.unit;
+function getValueUnit(
+  item: ClinicalDocument<BundleEntry<Observation>>
+): string | undefined {
+  return fhirpath.evaluate(
+    item.data_record.raw.resource,
+    'valueQuantity.unit'
+  )?.[0];
 }
 
-function getValueQuantity(item: ClinicalDocument<BundleEntry<Observation>>) {
-  return item.data_record.raw.resource?.valueQuantity?.value;
+function getValueQuantity(
+  item: ClinicalDocument<BundleEntry<Observation>>
+): number | undefined {
+  return fhirpath.evaluate(
+    item.data_record.raw.resource,
+    'valueQuantity.value'
+  )?.[0];
 }
 
 function getValueString(item: ClinicalDocument<BundleEntry<Observation>>) {
-  return item.data_record.raw.resource?.valueString;
+  return fhirpath.evaluate(item.data_record.raw.resource, 'valueString')?.[0];
 }
 
 function getComments(item: ClinicalDocument<BundleEntry<Observation>>) {
-  return item.data_record.raw.resource?.comments;
+  return fhirpath.evaluate(item.data_record.raw.resource, 'comments')?.[0];
 }
 
 function getInterpretationText(
   item: ClinicalDocument<BundleEntry<Observation>>
 ) {
-  return item.data_record.raw.resource?.interpretation?.text;
+  return fhirpath.evaluate(
+    item.data_record.raw.resource,
+    'interpretation.text'
+  )?.[0];
 }
 
 /**

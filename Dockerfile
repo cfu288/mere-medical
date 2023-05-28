@@ -2,7 +2,7 @@ FROM node:16.14.0 as build-api-stage
 
 WORKDIR /app
 COPY package*.json /app/
-RUN npm install 
+RUN npm ci 
 COPY . /app/
 RUN npx nx build api:build:production --prod
 
@@ -11,18 +11,25 @@ RUN npm prune --production
 RUN node-prune
 
 
-FROM node:16.14.0 as build-web-stage
+FROM node:16.14.0 as build-web-base
 
 WORKDIR /app
 COPY package*.json /app/
-RUN npm install
+RUN npm ci
 COPY ./ /app/
 COPY ./nginx.conf /nginx.conf
+
+
+FROM node:16.14.0 as build-web-stage
+
+COPY --from=build-web-base . .
+WORKDIR /app
+RUN npx nx test web --configuration=ci
 RUN npx nx build web:build:production
 
 
 # Package React App and API together
-FROM node:16.14.0-alpine
+FROM node:16-alpine3.15
 
 WORKDIR /app
 

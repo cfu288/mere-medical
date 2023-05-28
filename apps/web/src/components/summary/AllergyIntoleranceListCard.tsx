@@ -5,6 +5,34 @@ import { AllergyIntolerance, BundleEntry } from 'fhir/r2';
 import { Fragment } from 'react';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { CardBase } from '../connection/CardBase';
+import * as fhirpath from 'fhirpath';
+
+function getAllergyText(
+  item: ClinicalDocument<BundleEntry<AllergyIntolerance>>
+) {
+  return fhirpath.evaluate(
+    item.data_record.raw.resource,
+    'substance.text'
+  )?.[0];
+}
+
+function hasAllergyReactions(
+  item: ClinicalDocument<BundleEntry<AllergyIntolerance>>
+) {
+  return fhirpath.evaluate(
+    item.data_record.raw.resource,
+    'reaction.exists()'
+  )?.[0];
+}
+
+function getAllergyReactions(
+  item: ClinicalDocument<BundleEntry<AllergyIntolerance>>
+) {
+  return fhirpath.evaluate(
+    item.data_record.raw.resource,
+    'reaction.manifestation.text'
+  );
+}
 
 export function AllergyIntoleranceListCard({
   items,
@@ -32,21 +60,11 @@ export function AllergyIntoleranceListCard({
                 {items.map((item) => (
                   <div className="py-2" key={item.id}>
                     <p className="text-sm font-bold text-gray-900 md:text-base">
-                      {item.data_record.raw.resource?.substance.text}{' '}
-                      {item.data_record.raw.resource?.reaction &&
-                        item.data_record.raw.resource?.reaction?.length &&
-                        ' - '}
-                      {item.data_record.raw.resource?.reaction?.map((rxn) => (
-                        <Fragment key={rxn.id}>
-                          {rxn.manifestation.map((man, i) => (
-                            <Fragment key={man.id}>
-                              {`${man.text}${
-                                i < (rxn.manifestation?.length - 1 || 0)
-                                  ? ', '
-                                  : ''
-                              }`}
-                            </Fragment>
-                          ))}
+                      {getAllergyText(item)}{' '}
+                      {hasAllergyReactions(item) && ' - '}
+                      {getAllergyReactions(item).map((man, i, arr) => (
+                        <Fragment key={man}>
+                          {`${man}${i < (arr.length - 1 || 0) ? ', ' : ''}`}
                         </Fragment>
                       ))}
                     </p>

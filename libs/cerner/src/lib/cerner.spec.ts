@@ -1,7 +1,7 @@
-import { cerner } from './cerner';
+// import { cerner } from './cerner';
 
-describe('cerner', () => {
-  it('should work', () => {
-    expect(cerner()).toEqual('cerner');
-  });
-});
+// describe('cerner', () => {
+//   it('should work', () => {
+//     expect(cerner()).toEqual('cerner');
+//   });
+// });

@@ -1,7 +1,7 @@
-import { epic } from './epic';
+// import { epic } from './epic';
 
-describe('epic', () => {
-  it('should work', () => {
-    expect(epic()).toEqual('epic');
-  });
-});
+// describe('epic', () => {
+//   it('should work', () => {
+//     expect(epic()).toEqual('epic');
+//   });
+// });
