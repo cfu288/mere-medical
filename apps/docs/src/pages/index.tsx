@@ -35,10 +35,10 @@ const features = [
       'Mere is offline-first. Everything will be available right on your device for anytime-access – whether you’re connected to the web or not.',
   },
   {
-    name: 'Reminders',
-    img: '/img/reminders.svg',
+    name: 'Built on Standards',
+    img: '/img/standards.svg',
     description:
-      'Use your data to generate health recommendations, wellness metrics, and reminders when it’s time to see the doctor again – all from one intuitive dashboard.',
+      'Mere is build on industry standards like HL7 SMART on FHIR. This means that you can trust that your data is being handled in a secure and standardized way.',
   },
   {
     name: 'Anonymous & Secure',
