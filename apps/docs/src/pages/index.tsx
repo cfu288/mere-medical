@@ -194,9 +194,8 @@ export default function Home() {
                     One Place.
                   </h1>
                   <p className="slideUpDelay1 mt-6 text-xl leading-relaxed text-gray-600 opacity-0">
-                    Mere Medical is a personal health record with a strong focus
-                    on privacy and autonomy that helps you organize your records
-                    across healthcare institutions.
+                    Mere Medical is a personal health record that helps you organize your medical records
+                    across doctors. Free, privacy-focused, and open-source.
                   </p>
                 </div>
                 <div className="mt-5 max-w-md sm:flex sm:justify-start md:mt-8">
