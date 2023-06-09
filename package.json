@@ -1,7 +1,7 @@
 {
   "name": "mere-medical",
   "version": "0.0.0",
-  "license": "GPL-3.0-only",
+  "license": "AGPL-3.0-only",
   "scripts": {
     "start": "nx serve",
     "build": "nx build --stats-json",
