@@ -17,6 +17,7 @@ import * as fhirpath from 'fhirpath';
 import { useAllConnectionDocs } from '../hooks/useConnectionDoc';
 import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
 import Config from '../../environments/config.json';
+import { useNotificationDispatch } from '../providers/NotificationProvider';
 
 export interface Card {
   summary: string;
@@ -57,6 +58,7 @@ export function ShowDiagnosticReportResultsExpandable({
   const [cards, setCards] = useState<Card[]>([]);
   const [loadingCards, setLoadingCards] = useState<boolean>(false);
   const connectionDocs = useAllConnectionDocs();
+  const notifyDispatch = useNotificationDispatch();
   const mapConnectionsToFhirServices = useMemo(() => {
     return connectionDocs?.map((conn1: RxDocument<ConnectionDocument>) => {
       const conn = conn1.toJSON();
@@ -115,6 +117,11 @@ export function ShowDiagnosticReportResultsExpandable({
       )
         .then((res) => res.json())
         .then((res: Card[]) => {
+          notifyDispatch({
+            type: 'set_notification',
+            message: `Enabled third-party extensions are given access to a users FHIR data needed to provide the requested service. See how the Sancutary Health extension detects that a user has an A1C value and can provide the correct education material.`,
+            variant: 'success',
+          });
           setLoadingCards(false);
           setCards(res);
         })
@@ -122,7 +129,7 @@ export function ShowDiagnosticReportResultsExpandable({
           setLoadingCards(false);
         });
     }
-  }, [expanded]);
+  }, [expanded, notifyDispatch]);
 
   useEffect(() => {
     if (expanded) {

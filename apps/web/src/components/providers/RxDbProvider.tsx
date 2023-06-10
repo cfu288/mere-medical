@@ -172,7 +172,7 @@ export function RxDbProvider(props: RxDbProviderProps) {
           .then(() => {
             notifyDispatch({
               type: 'set_notification',
-              message: `Welcome to the Mere Medical demo! We have added some test data for you. Some features are disabled while in demo mode.`,
+              message: `Welcome to the XPC Hackathon demo! We have added some test data for you. Some features are disabled while in demo mode.`,
               variant: 'success',
             });
             setDb(db);
