@@ -8,7 +8,7 @@ export function useConnectionDoc(id: string) {
     [conn, setConn] = useState<RxDocument<ConnectionDocument>>(),
     getList = useCallback(() => {
       getConnectionCards(id, db).then((list) => {
-        setConn((list as unknown) as RxDocument<ConnectionDocument>);
+        setConn(list as unknown as RxDocument<ConnectionDocument>);
       });
     }, [db, id]);
 
@@ -30,5 +30,28 @@ async function getConnectionCards(
       },
     })
     .exec()
-    .then((list) => (list as unknown) as RxDocument<ConnectionDocument>);
+    .then((list) => list as unknown as RxDocument<ConnectionDocument>);
+}
+
+export function useAllConnectionDocs() {
+  const db = useRxDb(),
+    [conn, setConn] = useState<RxDocument<ConnectionDocument>[]>(),
+    getList = useCallback(() => {
+      getAllConnectionCards(db).then((list) => {
+        setConn(list as unknown as RxDocument<ConnectionDocument>[]);
+      });
+    }, [db]);
+
+  useEffect(() => {
+    getList();
+  }, [getList]);
+
+  return conn;
+}
+
+async function getAllConnectionCards(db: RxDatabase<DatabaseCollections>) {
+  return db.connection_documents
+    .find()
+    .exec()
+    .then((list) => list as unknown as RxDocument<ConnectionDocument>[]);
 }

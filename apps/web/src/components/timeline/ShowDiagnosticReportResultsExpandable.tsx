@@ -1,5 +1,5 @@
 import { Disclosure } from '@headlessui/react';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, set } from 'date-fns';
 import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { RxDocument } from 'rxdb';
@@ -14,6 +14,31 @@ import 'billboard.js/dist/billboard.css';
 import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
 import { TableCellsIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import * as fhirpath from 'fhirpath';
+import {
+  useAllConnectionDocs,
+  useConnectionDoc,
+} from '../hooks/useConnectionDoc';
+import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
+
+export interface Card {
+  summary: string;
+  detail: string;
+  indicator: string;
+  source: Source;
+  links: Link[];
+}
+
+export interface Source {
+  label: string;
+  url: string;
+  icon: string;
+}
+
+export interface Link {
+  label: string;
+  url: string;
+  type: string;
+}
 
 export function ShowDiagnosticReportResultsExpandable({
   item,
@@ -31,6 +56,74 @@ export function ShowDiagnosticReportResultsExpandable({
   loading?: boolean;
 }) {
   const toggleOpen = () => setExpanded((x) => !x);
+  const [cards, setCards] = useState<Card[]>([]);
+  const [loadingCards, setLoadingCards] = useState<boolean>(false);
+  const connectionDocs = useAllConnectionDocs();
+  const mapConnectionsToFhirServices = useMemo(() => {
+    return connectionDocs?.map((conn1: RxDocument<ConnectionDocument>) => {
+      const conn = conn1.toJSON();
+      return {
+        fhirServer: conn.location,
+        fhirAuthorization: {
+          accessToken: conn.access_token,
+          tokenType: 'bearer',
+          expiresIn: conn.expires_in,
+          scope: conn.scope,
+          subject: (conn as any)?.client_id || 'No Subject Availible',
+        },
+      };
+    });
+  }, [connectionDocs]);
+
+  useEffect(() => {
+    console.log(mapConnectionsToFhirServices);
+  }, [mapConnectionsToFhirServices]);
+
+  useEffect(() => {
+    if (expanded) {
+      setLoadingCards(true);
+      fetch(
+        'http://127.0.0.1:8000/cds-services/sanctuary-health-diabetes-education',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            accept: 'application/json',
+          },
+          body: JSON.stringify({
+            hookInstance: '12312313',
+            hook: 'diagnostic-report-open',
+            fhirServices: [
+              {
+                fhirServer: 'https://example.com/fhir',
+                fhirAuthorization: {
+                  accessToken: 'at12312',
+                  tokenType: 'bearer',
+                  expiresIn: 3600,
+                  scope: 'scope/123 scope2/123',
+                  subject: '12234-1234',
+                },
+              },
+            ],
+            contexts: {
+              'https://example.com/fhir': {
+                patientId: 'pid123',
+                diagnosticReportId: 'did234',
+              },
+            },
+          }),
+        }
+      )
+        .then((res) => res.json())
+        .then((res: Card[]) => {
+          setLoadingCards(false);
+          setCards(res);
+        })
+        .catch((e) => {
+          setLoadingCards(false);
+        });
+    }
+  }, [expanded]);
 
   useEffect(() => {
     if (expanded) {
@@ -58,6 +151,67 @@ export function ShowDiagnosticReportResultsExpandable({
           setClose={toggleOpen}
         />
         <div className="max-h-full scroll-py-3 p-3">
+          <div
+            className={`border-primary-700 mb-4 rounded-lg border-4 border-dotted`}
+          >
+            <div className="bg-primary-700 rounded-tr-lg rounded-tl-lg px-2 py-1 font-medium text-white">
+              XPC Hackathon Demo
+            </div>
+
+            <div className="p-2 px-4 text-gray-700">
+              <h1 className="pb-2 font-semibold underline">
+                Available Extensions
+              </h1>
+              {loadingCards ? (
+                <div className="flex flex-row">
+                  <div className="rounded-lg border border-solid border-gray-200 p-2 px-4 text-gray-700">
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="text-xs">Loading</div>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+              {cards.map((card) => (
+                <div
+                  className="flex flex-row rounded-lg border border-solid border-gray-200 p-2 px-4 text-gray-700"
+                  key={card.summary}
+                >
+                  {/* image rounded icon and source */}
+                  <div className="flex flex-col items-center justify-center align-middle">
+                    <img
+                      src={card.source.icon}
+                      alt={card.source.label}
+                      className="h-8 w-8"
+                    />
+                    <div className="w-full text-center text-xs">
+                      {card.source.label}
+                    </div>
+                  </div>
+                  <div className="flex flex-col p-2 px-4">
+                    <div className="flex flex-col text-gray-700">
+                      <div className="col-span-3 font-semibold">
+                        {card.summary}
+                      </div>
+                      <div className="font-italic col-span-3 text-sm">
+                        {card.detail}
+                      </div>
+                    </div>
+                    <div className="flex flex-row pt-2">
+                      {card.links.map((link) => (
+                        <a
+                          href={link.url}
+                          className=" bg-primary hover:bg-primary-600 active:bg-primary-700 rounded-lg p-4 py-2 text-center text-white duration-75 active:scale-[98%]"
+                          key={link.label}
+                        >
+                          {link.label}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
           <div
             className={`${
               expanded ? '' : 'hidden'
