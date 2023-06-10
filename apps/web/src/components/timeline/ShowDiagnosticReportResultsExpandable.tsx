@@ -157,7 +157,7 @@ export function ShowDiagnosticReportResultsExpandable({
         .then((res: Card[]) => {
           notifyDispatch({
             type: 'set_notification',
-            message: `Enabled third-party extensions are given access to a users FHIR data needed to provide the requested service. See how the Sancutary Health extension detects that a user has an A1C value and can provide the correct education material.`,
+            message: `Enabled third-party apps are given access to a users FHIR data needed to provide the requested service. See how the Sancutary Health app detects that a user has an A1C value and can provide the correct education material.`,
             variant: 'success',
           });
           setLoadingCards(false);
@@ -209,9 +209,7 @@ export function ShowDiagnosticReportResultsExpandable({
             </div>
 
             <div className="p-2 px-4 text-gray-700">
-              <h1 className="pb-2 font-semibold underline">
-                Available Extensions
-              </h1>
+              <h1 className="pb-2 font-semibold underline">Available Apps</h1>
               {loadingCards ? (
                 <div className="flex flex-row">
                   <div className="rounded-lg border border-solid border-gray-200 p-2 px-4 text-gray-700">
