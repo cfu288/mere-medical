@@ -10,6 +10,28 @@ steps:
       username: cfu288
       PASSWORD:
         from_secret: registry_password
+      repo: cfu288/mere-medical-xpc-demo
+
+trigger:
+  branch:
+    - feat/xpc-hackathon-extensions-demo
+  event:
+    exclude:
+      - pull_request
+
+---
+kind: pipeline
+name: build staging
+type: docker
+
+steps:
+  - name: app
+    image: thegeeklab/drone-docker-buildx
+    privileged: true
+    settings:
+      username: cfu288
+      PASSWORD:
+        from_secret: registry_password
       repo: cfu288/mere-medical
       tags: beta
 

@@ -14,11 +14,9 @@ import 'billboard.js/dist/billboard.css';
 import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
 import { TableCellsIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import * as fhirpath from 'fhirpath';
-import {
-  useAllConnectionDocs,
-  useConnectionDoc,
-} from '../hooks/useConnectionDoc';
+import { useAllConnectionDocs } from '../hooks/useConnectionDoc';
 import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
+import Config from '../../environments/config.json';
 
 export interface Card {
   summary: string;
@@ -83,7 +81,8 @@ export function ShowDiagnosticReportResultsExpandable({
     if (expanded) {
       setLoadingCards(true);
       fetch(
-        'http://127.0.0.1:8000/cds-services/sanctuary-health-diabetes-education',
+        Config.EXTENSION_BASE_URL +
+          '/cds-services/sanctuary-health-diabetes-education',
         {
           method: 'POST',
           headers: {
