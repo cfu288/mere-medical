@@ -11,6 +11,7 @@ steps:
       PASSWORD:
         from_secret: registry_password
       repo: cfu288/mere-medical-xpc-demo
+      tags: latest
 
 trigger:
   branch:
