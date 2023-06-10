@@ -173,7 +173,7 @@ export function ShowDiagnosticReportResultsExpandable({
     return () => {
       setCards([]);
     };
-  }, [expanded, notifyDispatch]);
+  }, [expanded, item.data_record.raw.resource?.id, notifyDispatch]);
 
   useEffect(() => {
     if (expanded) {
@@ -211,10 +211,20 @@ export function ShowDiagnosticReportResultsExpandable({
             <div className="p-2 px-4 text-gray-700">
               <h1 className="pb-2 font-semibold underline">Available Apps</h1>
               {loadingCards ? (
-                <div className="flex flex-row">
+                <div className="flex w-full flex-row">
                   <div className="rounded-lg border border-solid border-gray-200 p-2 px-4 text-gray-700">
                     <div className="flex flex-col items-center justify-center">
                       <div className="text-xs">Loading</div>
+                    </div>
+                  </div>
+                </div>
+              ) : cards.length === 0 ? (
+                <div className="flex w-full flex-row">
+                  <div className="rounded-lg border border-solid border-gray-200 p-2 px-4 text-gray-700">
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="text-xs">
+                        No apps are available for this data
+                      </div>
                     </div>
                   </div>
                 </div>
