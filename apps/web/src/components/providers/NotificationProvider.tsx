@@ -55,7 +55,7 @@ function NotificationRenderer(
   useEffect(() => {
     const timeout = setTimeout(() => {
       dispatch({ type: 'hide_notification' });
-    }, 8000);
+    }, 10000);
     return () => clearTimeout(timeout);
   }, [dispatch, props.data.showNotification]);
 

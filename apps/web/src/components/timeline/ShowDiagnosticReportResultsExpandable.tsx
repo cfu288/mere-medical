@@ -82,6 +82,43 @@ export function ShowDiagnosticReportResultsExpandable({
   useEffect(() => {
     if (expanded) {
       setLoadingCards(true);
+      fetch(Config.EXTENSION_BASE_URL + '/cds-services/diabetes-ai-advisor', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          accept: 'application/json',
+        },
+        body: JSON.stringify({
+          hookInstance: '12312313',
+          hook: 'diagnostic-report-open',
+          fhirServices: [
+            {
+              fhirServer: 'https://example.com/fhir',
+              fhirAuthorization: {
+                accessToken: 'at12312',
+                tokenType: 'bearer',
+                expiresIn: 3600,
+                scope: 'scope/123 scope2/123',
+                subject: '12234-1234',
+              },
+            },
+          ],
+          contexts: {
+            'https://example.com/fhir': {
+              patientId: 'pid123',
+              diagnosticReportId: item.data_record.raw.resource?.id || 'did234',
+            },
+          },
+        }),
+      })
+        .then((res) => res.json())
+        .then((res: Card[]) => {
+          setLoadingCards(false);
+          setCards((cards) => [...cards, ...res]);
+        })
+        .catch((e) => {
+          setLoadingCards(false);
+        });
       fetch(
         Config.EXTENSION_BASE_URL +
           '/cds-services/sanctuary-health-diabetes-education',
@@ -109,7 +146,8 @@ export function ShowDiagnosticReportResultsExpandable({
             contexts: {
               'https://example.com/fhir': {
                 patientId: 'pid123',
-                diagnosticReportId: 'did234',
+                diagnosticReportId:
+                  item.data_record.raw.resource?.id || 'did234',
               },
             },
           }),
@@ -123,12 +161,18 @@ export function ShowDiagnosticReportResultsExpandable({
             variant: 'success',
           });
           setLoadingCards(false);
-          setCards(res);
+          setCards((cards) => [...cards, ...res]);
         })
         .catch((e) => {
           setLoadingCards(false);
         });
+    } else {
+      setCards([]);
     }
+
+    return () => {
+      setCards([]);
+    };
   }, [expanded, notifyDispatch]);
 
   useEffect(() => {
@@ -179,11 +223,11 @@ export function ShowDiagnosticReportResultsExpandable({
               ) : null}
               {cards.map((card) => (
                 <div
-                  className="flex flex-row rounded-lg border border-solid border-gray-200 p-2 px-4 text-gray-700"
+                  className="mt-2 flex flex-row rounded-lg border border-solid border-gray-200 p-2 px-4 text-gray-700"
                   key={card.summary}
                 >
                   {/* image rounded icon and source */}
-                  <div className="flex flex-col items-center justify-center align-middle">
+                  <div className="flex w-12 flex-col items-center justify-center align-middle">
                     <img
                       src={card.source.icon}
                       alt={card.source.label}
@@ -198,21 +242,26 @@ export function ShowDiagnosticReportResultsExpandable({
                       <div className="col-span-3 font-semibold">
                         {card.summary}
                       </div>
-                      <div className="font-italic col-span-3 text-sm">
-                        {card.detail}
+                      <div
+                        className="font-italic col-span-3 text-xs"
+                        dangerouslySetInnerHTML={{ __html: card.detail }}
+                      >
+                        {/* {card.detail} */}
                       </div>
                     </div>
-                    <div className="flex flex-row pt-2">
-                      {card.links.map((link) => (
-                        <a
-                          href={link.url}
-                          className=" bg-primary hover:bg-primary-600 active:bg-primary-700 rounded-lg p-4 py-2 text-center text-white duration-75 active:scale-[98%]"
-                          key={link.label}
-                        >
-                          {link.label}
-                        </a>
-                      ))}
-                    </div>
+                    {card.links.length > 0 && (
+                      <div className="m-2 flex flex-col p-2">
+                        {card.links.map((link) => (
+                          <a
+                            href={link.url}
+                            className="bg-primary hover:bg-primary-600 active:bg-primary-700 mt-2 rounded-lg p-4 py-2 text-center text-white duration-75 active:scale-[98%]"
+                            key={link.label}
+                          >
+                            {link.label}
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
