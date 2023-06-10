@@ -155,11 +155,13 @@ export function ShowDiagnosticReportResultsExpandable({
       )
         .then((res) => res.json())
         .then((res: Card[]) => {
-          notifyDispatch({
-            type: 'set_notification',
-            message: `Enabled third-party apps are given access to a users FHIR data needed to provide the requested service. See how the Sancutary Health app detects that a user has an A1C value and can provide the correct education material.`,
-            variant: 'success',
-          });
+          if (res.length > 0) {
+            notifyDispatch({
+              type: 'set_notification',
+              message: `Enabled third-party apps are given access to a users FHIR data needed to provide the requested service. See how the Sancutary Health app detects that a user has an A1C value and can provide the correct education material.`,
+              variant: 'success',
+            });
+          }
           setLoadingCards(false);
           setCards((cards) => [...cards, ...res]);
         })
