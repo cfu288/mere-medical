@@ -158,7 +158,7 @@ export function ShowDiagnosticReportResultsExpandable({
           if (res.length > 0) {
             notifyDispatch({
               type: 'set_notification',
-              message: `Enabled third-party apps are given access to a users FHIR data needed to provide the requested service. See how the Sancutary Health app detects that a user has an A1C value and can provide the correct education material.`,
+              message: `Mere can suggest context specific apps to a user to subscribe to or enable. Enabled third-party apps are given access to a users FHIR data needed to provide the requested service.`,
               variant: 'success',
             });
           }
@@ -211,7 +211,7 @@ export function ShowDiagnosticReportResultsExpandable({
             </div>
 
             <div className="p-2 px-4 text-gray-700">
-              <h1 className="pb-2 font-semibold underline">Available Apps</h1>
+              {/* <h1 className="pb-2 font-semibold underline">Available Apps</h1> */}
               {loadingCards ? (
                 <div className="flex w-full flex-row">
                   <div className="rounded-lg border border-solid border-gray-200 p-2 px-4 text-gray-700">
@@ -224,8 +224,8 @@ export function ShowDiagnosticReportResultsExpandable({
                 <div className="flex w-full flex-row">
                   <div className="rounded-lg border border-solid border-gray-200 p-2 px-4 text-gray-700">
                     <div className="flex flex-col items-center justify-center">
-                      <div className="text-xs">
-                        No apps are available for this data
+                      <div className="pb-4">
+                        {`Mere AI Advisor does not support ${item.metadata?.display_name} yet`}
                       </div>
                     </div>
                   </div>
@@ -233,9 +233,18 @@ export function ShowDiagnosticReportResultsExpandable({
               ) : null}
               {cards.map((card) => (
                 <div
-                  className="mt-2 flex flex-row rounded-lg border border-solid border-gray-200 p-2 px-4 text-gray-700"
+                  className={`relative mt-2 flex flex-row rounded-lg  p-2 px-4 text-gray-700 ${
+                    card.source.url === 'https://meremedical.co'
+                      ? 'border-primary-700  border border-solid'
+                      : 'border border-solid border-gray-200 pt-4'
+                  }`}
                   key={card.summary}
                 >
+                  {card.source.url !== 'https://meremedical.co' && (
+                    <div className="bg-primary-600 absolute top-0 left-0 rounded-tl-lg rounded-br-lg bg-opacity-80 px-1 py-1 text-xs font-bold text-white">
+                      Mere AI Advisor Recommends
+                    </div>
+                  )}
                   {/* image rounded icon and source */}
                   <div className="flex w-12 flex-col items-center justify-center align-middle">
                     <img
@@ -243,7 +252,7 @@ export function ShowDiagnosticReportResultsExpandable({
                       alt={card.source.label}
                       className="h-8 w-8"
                     />
-                    <div className="w-full text-center text-xs">
+                    <div className="w-full pb-1 text-center text-xs">
                       {card.source.label}
                     </div>
                   </div>
@@ -260,11 +269,11 @@ export function ShowDiagnosticReportResultsExpandable({
                       </div>
                     </div>
                     {card.links.length > 0 && (
-                      <div className="m-2 flex flex-col p-2">
+                      <div className="flex flex-row gap-1">
                         {card.links.map((link) => (
                           <a
                             href={link.url}
-                            className="bg-primary hover:bg-primary-600 active:bg-primary-700 mt-2 rounded-lg p-4 py-2 text-center text-white duration-75 active:scale-[98%]"
+                            className="bg-primary hover:bg-primary-600 active:bg-primary-700 mt-2 rounded-lg px-4 py-1 text-center text-white duration-75 active:scale-[98%]"
                             key={link.label}
                           >
                             {link.label}

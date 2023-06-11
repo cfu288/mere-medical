@@ -9,7 +9,7 @@
         {
           "id": "0f38582a-1773-4e2b-80e3-90fda727cdbd",
           "user_id": "91a8d8cb-6480-4db4-a628-18a5e44536cd",
-          "source": "onpatient",
+          "source": "cerner",
           "location": "https://fhir.epic.com/interconnect-fhir-oauth",
           "name": "Blessings Clinic",
           "access_token": "*****",
@@ -40,7 +40,7 @@
         {
           "id": "9a00c884-153c-4cc9-aedd-1ef3dd8b6610",
           "user_id": "91a8d8cb-6480-4db4-a628-18a5e44536cd",
-          "source": "epic",
+          "source": "veradigm",
           "location": "https://fhir.epic.com/interconnect-fhir-oauth",
           "name": "Oak Valley Community Hospital",
           "access_token": "*****",
