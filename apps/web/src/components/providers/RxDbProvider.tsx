@@ -42,11 +42,10 @@ import { useNotificationDispatch } from './NotificationProvider';
 import { ConnectionDocumentMigrations } from '../../models/connection-document/ConnectionDocument.migration';
 import { getRxStorageMemory } from 'rxdb/plugins/memory';
 import { AppLoadingSkeleton } from './AppLoadingSkeleton';
-
-import { CryptedIndexedDBAdapter } from 'sylviejs/dist/storage-adapter/crypted-indexeddb-adapter';
-
 // @ts-ignore
 window.__loki_idb_debug = true;
+
+import { CryptedIndexedDBAdapter } from 'sylviejs/dist/storage-adapter/crypted-indexeddb-adapter';
 
 if (process.env.NODE_ENV === 'development') {
   addRxPlugin(RxDBDevModePlugin);
