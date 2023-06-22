@@ -35,12 +35,18 @@ import {
 import { UserDocumentMigrations } from '../../models/user-document/UserDocument.migration';
 import { UserPreferencesMigrations } from '../../models/user-preferences/UserPreferences.migration';
 import { getRxStorageDexie } from 'rxdb/plugins/dexie';
+import { getRxStorageLoki } from 'rxdb/plugins/lokijs';
 import { ClinicalDocumentMigrations } from '../../models/clinical-document/ClinicalDocument.migration';
 import Config from '../../environments/config.json';
 import { useNotificationDispatch } from './NotificationProvider';
 import { ConnectionDocumentMigrations } from '../../models/connection-document/ConnectionDocument.migration';
 import { getRxStorageMemory } from 'rxdb/plugins/memory';
 import { AppLoadingSkeleton } from './AppLoadingSkeleton';
+
+import { CryptedIndexedDBAdapter } from 'sylviejs/dist/storage-adapter/crypted-indexeddb-adapter';
+
+// @ts-ignore
+window.__loki_idb_debug = true;
 
 if (process.env.NODE_ENV === 'development') {
   addRxPlugin(RxDBDevModePlugin);
@@ -145,7 +151,13 @@ async function initRxDb() {
   const db = await createRxDatabase<DatabaseCollections>({
     name: 'mere_db',
     storage:
-      Config.IS_DEMO === 'enabled' ? getRxStorageMemory() : getRxStorageDexie(),
+      Config.IS_DEMO === 'enabled'
+        ? getRxStorageMemory()
+        : getRxStorageLoki({
+            adapter: new CryptedIndexedDBAdapter('CryptedAdapter', {
+              secret: '123123',
+            }),
+          }),
     multiInstance: true,
     ignoreDuplicate: true,
   });
