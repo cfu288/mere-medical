@@ -196,7 +196,10 @@ An example of how the new `fhirServices` property and the new `contexts` propert
       "hook": "patient-view",
       "title": "Static CDS Service Example",
       "description": "An example of a CDS Service that returns a static set of cards",
-      "id": "static-patient-greeter"
+      "id": "static-patient-greeter",
+      "prefetch": {
+        "patientsToGreet": "Patient/{{context.patientId}}"
+      }
     }
   ]
 }
@@ -241,11 +244,86 @@ An example of how the new `fhirServices` property and the new `contexts` propert
       "patientId": "1288994",
       "encounterId": "89285"
     }
+  },
+  "prefetch": {
+    "patientsToGreet": {
+      "resourceType": "Bundle",
+      "entry": [
+        {
+          "resourceType": "Patient",
+          "gender": "male",
+          "birthDate": "1925-12-23",
+          "id": "1288992",
+          "active": true
+        },
+        {
+          "resourceType": "Patient",
+          "gender": "male",
+          "birthDate": "1925-12-23",
+          "id": "1288993",
+          "active": true
+        }
+      ]
+    }
   }
 }
 ```
 
 Note that there are still some problems that need to be solved with this approach, like how a PHR will get access tokens to their sources that have a different scope provided to the PHR app itself (e.g. the PHR may have read access to all resource types but may only want to provide an access token to a hook with read access to AlleryIntolerance resources).
+
+#### Make the Discovery Endpoint Expose what Properties are Expected in the Context
+
+So admittedly, this next point is more of a _nice-to-have_ instead of a _need-to-have_, but something I thought I would propose anyways.
+
+The `context` field should be added to the CDS discovery endpoint and define the clinical client's expected properties. By doing this, we make the discovery of the required fields for a hook machine-parsable. This means that clinical clients can decide whether they can provide additional data into the context of the the hook automatically without an external developer needing to add explicit support for each additional context property. Each element in the `context` field of the discovery endpoint would be a key:value pair, where the key was the name of the context item, and the value was a [CodableConcept](https://build.fhir.org/datatypes.html#CodeableConcept) representing the data type to be populated by the clinical client. See below for an example.
+
+```json
+{
+  "services": [
+    {
+      "hook": "patient-view",
+      "title": "Static CDS Service Example",
+      "description": "An example of a CDS Service that returns a static set of cards",
+      "id": "static-patient-greeter",
+      "context": {
+        "userId": {
+          "coding": [
+            {
+              "system": "https://cds-hooks.org/hooks/patient-view/#context",
+              "code": "1",
+              "display": "The id of the current user. Must be in the format [ResourceType]/[id]"
+            }
+          ],
+          "text": "The id of the current user. Must be in the format [ResourceType]/[id]"
+        },
+        "patientId": {
+          "coding": [
+            {
+              "system": "https://cds-hooks.org/hooks/patient-view/#context",
+              "code": "2",
+              "display": "The FHIR Patient.id of the current patient in context"
+            }
+          ],
+          "text": "The FHIR Patient.id of the current patient in context"
+        },
+        "encounterId": {
+          "coding": [
+            {
+              "system": "https://cds-hooks.org/hooks/patient-view/#context",
+              "code": "3",
+              "display": "The FHIR Encounter.id of the current encounter in context"
+            }
+          ],
+          "text": "The FHIR Encounter.id of the current encounter in context"
+        }
+      },
+      "prefetch": {
+        "patientsToGreet": "Patient/{{contexts.patientId}}"
+      }
+    }
+  ]
+}
+```
 
 ## What This Proposal Does Not Touch On
 
