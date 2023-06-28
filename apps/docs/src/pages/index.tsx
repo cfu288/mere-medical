@@ -194,8 +194,9 @@ export default function Home() {
                     One Place.
                   </h1>
                   <p className="slideUpDelay1 mt-6 text-xl leading-relaxed text-gray-600 opacity-0">
-                    Mere Medical is a personal health record that helps you organize your medical records
-                    across doctors. Free, privacy-focused, and open-source.
+                    Mere Medical is a personal health record that helps you
+                    organize your medical records across doctors. Free,
+                    privacy-focused, and open-source.
                   </p>
                 </div>
                 <div className="mt-5 max-w-md sm:flex sm:justify-start md:mt-8">
@@ -203,6 +204,7 @@ export default function Home() {
                     <a
                       href="https://demo.meremedical.co"
                       className="bg-primary-700 hover:bg-primary-600 flex w-full items-center justify-center rounded-md border border-transparent px-8 py-3 text-base font-medium text-white hover:text-white md:py-4 md:px-10 md:text-lg"
+                      data-umami-event="see-demo"
                     >
                       See Demo
                     </a>
@@ -211,6 +213,7 @@ export default function Home() {
                     <a
                       href="https://app.meremedical.co"
                       className="text-primary-700 hover:text-primary-600 flex w-full items-center justify-center rounded-md border border-transparent bg-white px-8 py-3 text-base font-medium hover:bg-gray-50 md:py-4 md:px-10 md:text-lg"
+                      data-umami-event="try-the-beta"
                     >
                       Try the Beta
                     </a>
