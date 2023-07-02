@@ -57,17 +57,17 @@ export function ShowDiagnosticReportResultsExpandable({
           }
           setClose={toggleOpen}
         />
-        <div className="max-h-full scroll-py-3 p-3">
-          <div
-            className={`${
-              expanded ? '' : 'hidden'
-            } rounded-lg border border-solid border-gray-200`}
-          >
-            <div className="grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-200 p-2 px-4 text-gray-700">
-              <div className="col-span-3 text-sm font-semibold">Name</div>
-              <div className="col-span-2 text-sm font-semibold">Value</div>
-            </div>
-            {loading ? (
+        {loading ? (
+          <div className="max-h-full scroll-py-3 p-3">
+            <div
+              className={`${
+                expanded ? '' : 'hidden'
+              } rounded-lg border border-solid border-gray-200`}
+            >
+              <div className="grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-200 p-2 px-4 text-gray-700">
+                <div className="col-span-3 text-sm font-semibold">Name</div>
+                <div className="col-span-2 text-sm font-semibold">Value</div>
+              </div>
               <div className="mx-4 grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-100 py-2">
                 <div className="col-span-3 self-center text-xs font-semibold text-gray-600">
                   Loading data
@@ -76,12 +76,37 @@ export function ShowDiagnosticReportResultsExpandable({
                   <ButtonLoadingSpinner height="h-3" width="w-3" />
                 </div>
               </div>
-            ) : null}
-            {docs.map((item) => (
-              <Row item={item} key={JSON.stringify(item)} />
-            ))}
+            </div>
           </div>
-        </div>
+        ) : (
+          <>
+            {docs.length > 0 ? (
+              <div className="max-h-full scroll-py-3 p-3">
+                <div
+                  className={`${
+                    expanded ? '' : 'hidden'
+                  } rounded-lg border border-solid border-gray-200`}
+                >
+                  <div className="grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-200 p-2 px-4 text-gray-700">
+                    <div className="col-span-3 text-sm font-semibold">Name</div>
+                    <div className="col-span-2 text-sm font-semibold">
+                      Value
+                    </div>
+                  </div>
+                  {docs.map((item) => (
+                    <Row item={item} key={JSON.stringify(item)} />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="mx-4 flex flex-col border-b-2 border-solid border-gray-100 py-2">
+                <div className="self-center font-semibold text-gray-600">
+                  No data available for this report
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </Modal>
   );

@@ -44,7 +44,8 @@
     "./src/components/summary/SkeletonListCard.tsx",
     "./src/components/timeline/OpenableCardIcon.tsx",
     "./src/components/timeline/TimelineCardSubtitile.tsx",
-    "./src/components/providers/AppLoadingSkeleton.tsx"
+    "./src/components/providers/AppLoadingSkeleton.tsx",
+    "src/components/hooks/useConnectionCards.tsx"
   ],
   "exclude": [
     "jest.config.ts",
