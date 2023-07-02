@@ -147,7 +147,10 @@ function HandleInitalSync({ children }: PropsWithChildren) {
                 ) >= 1)
             ) {
               if (!syncJobEntries.has(item.get('id'))) {
-                handleFetchData(item);
+                setTimeout(
+                  () => handleFetchData(item),
+                  1000 + Math.ceil(Math.random() * 300)
+                );
               }
             }
           }
