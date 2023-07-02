@@ -162,10 +162,10 @@ async function syncFHIRResource<T extends FhirResource>(
         i.resource?.resourceType.toLowerCase() === fhirResourceUrl.toLowerCase()
     )
     .map(mapper);
-  const cdsmap = cds.map(async (cd) => {
-    await db.clinical_documents.upsert(cd as unknown as ClinicalDocument);
-  });
-  return await Promise.all(cdsmap);
+  const cdsmap = await db.clinical_documents.bulkUpsert(
+    cds as unknown as ClinicalDocument[]
+  );
+  return cdsmap;
 }
 
 /**
@@ -180,7 +180,7 @@ export async function syncAllRecords(
   baseUrl: string,
   connectionDocument: CernerConnectionDocument,
   db: RxDatabase<DatabaseCollections>
-): Promise<PromiseSettledResult<void[]>[]> {
+): Promise<PromiseSettledResult<void[]>[] | any> {
   const newCd = connectionDocument;
   newCd.last_refreshed = new Date().toISOString();
 

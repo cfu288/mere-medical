@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   ConnectionDocument,
   ConnectionSources,
@@ -14,7 +14,6 @@ import { useNotificationDispatch } from '../providers/NotificationProvider';
 import { useUserPreferences } from '../providers/UserPreferencesProvider';
 import { useUser } from '../providers/UserProvider';
 import { ButtonLoadingSpinner } from './ButtonLoadingSpinner';
-import Config from '../../environments/config.json';
 import {
   useSyncJobContext,
   useSyncJobDispatchContext,
@@ -98,25 +97,6 @@ export function ConnectionCard({
         });
       }
     }, [baseUrl, db, item, syncD, userPreferences]);
-
-  // useEffect(() => {
-  //   if (!isDemo) {
-  //     if (!hasRun.current) {
-  //       hasRun.current = true;
-  //       if (
-  //         !item.get('last_refreshed') ||
-  //         (item.get('last_refreshed') &&
-  //           Math.abs(
-  //             differenceInDays(parseISO(item.get('last_refreshed')), new Date())
-  //           ) >= 1)
-  //       ) {
-  //         if (!syncing) {
-  //           handleFetchData();
-  //         }
-  //       }
-  //     }
-  //   }
-  // }, [baseUrl, db, handleFetchData, isDemo, item, syncing]);
 
   return (
     <li
