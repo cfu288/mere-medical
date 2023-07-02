@@ -1,8 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
-import { ConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
+import { useCallback, useState } from 'react';
 import * as OnPatient from '../services/OnPatient';
-import { useRxDb } from '../components/providers/RxDbProvider';
-import { RxDocument } from 'rxdb';
 import { GenericBanner } from '../components/GenericBanner';
 import { ConnectionCard } from '../components/connection/ConnectionCard';
 import { EpicLocalStorageKeys, getLoginUrl } from '../services/Epic';
@@ -16,34 +13,13 @@ import { EpicSelectModal } from '../components/connection/EpicSelectModal';
 import { useUserPreferences } from '../components/providers/UserPreferencesProvider';
 import { Routes } from '../Routes';
 import { Link } from 'react-router-dom';
-import { useUser } from '../components/providers/UserProvider';
 import { CernerSelectModal } from '../components/connection/CernerSelectModal';
 import { VeradigmSelectModal } from '../components/connection/VeradigmSelectModal';
 import {
   VeradigmLocalStorageKeys,
   getLoginUrl as getVeradigmLoginUrl,
 } from '../services/Veradigm';
-
-function useConnectionCards() {
-  const db = useRxDb(),
-    user = useUser(),
-    [list, setList] = useState<RxDocument<ConnectionDocument>[]>();
-
-  useEffect(() => {
-    const sub = db.connection_documents
-      .find({
-        selector: {
-          user_id: user.id,
-        },
-      })
-      .$.subscribe((list) =>
-        setList(list as unknown as RxDocument<ConnectionDocument>[])
-      );
-    return () => sub.unsubscribe();
-  }, [db.connection_documents, user.id]);
-
-  return list;
-}
+import { useConnectionCards } from '../components/hooks/useConnectionCards';
 
 const ConnectionTab: React.FC = () => {
   const list = useConnectionCards(),
@@ -153,7 +129,6 @@ const ConnectionTab: React.FC = () => {
             />
           ))}
         </ul>
-
         <div className="mb-4 box-border	flex w-full justify-center align-middle">
           <button
             className="bg-primary hover:bg-primary-600 active:bg-primary-700 w-full rounded-lg p-4 text-white duration-75 active:scale-[98%]"

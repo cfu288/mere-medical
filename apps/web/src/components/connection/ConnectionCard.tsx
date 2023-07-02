@@ -48,7 +48,6 @@ export function ConnectionCard({
   baseUrl: string;
 }) {
   const db = useRxDb(),
-    isDemo = Config.IS_DEMO === 'enabled',
     user = useUser(),
     [deleting, setDeleting] = useState(false),
     userPreferences = useUserPreferences(),
@@ -98,27 +97,26 @@ export function ConnectionCard({
           db,
         });
       }
-    }, [baseUrl, db, item, syncD, userPreferences]),
-    hasRun = useRef(false);
+    }, [baseUrl, db, item, syncD, userPreferences]);
 
-  useEffect(() => {
-    if (!isDemo) {
-      if (!hasRun.current) {
-        hasRun.current = true;
-        if (
-          !item.get('last_refreshed') ||
-          (item.get('last_refreshed') &&
-            Math.abs(
-              differenceInDays(parseISO(item.get('last_refreshed')), new Date())
-            ) >= 1)
-        ) {
-          if (!syncing) {
-            handleFetchData();
-          }
-        }
-      }
-    }
-  }, [baseUrl, db, handleFetchData, isDemo, item, syncing]);
+  // useEffect(() => {
+  //   if (!isDemo) {
+  //     if (!hasRun.current) {
+  //       hasRun.current = true;
+  //       if (
+  //         !item.get('last_refreshed') ||
+  //         (item.get('last_refreshed') &&
+  //           Math.abs(
+  //             differenceInDays(parseISO(item.get('last_refreshed')), new Date())
+  //           ) >= 1)
+  //       ) {
+  //         if (!syncing) {
+  //           handleFetchData();
+  //         }
+  //       }
+  //     }
+  //   }
+  // }, [baseUrl, db, handleFetchData, isDemo, item, syncing]);
 
   return (
     <li

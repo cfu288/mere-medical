@@ -1,4 +1,10 @@
-import React, { useContext, useEffect } from 'react';
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react';
 import { PropsWithChildren } from 'react';
 import { RxDocument, RxDatabase } from 'rxdb';
 import {
@@ -8,13 +14,17 @@ import {
   ConnectionSources,
   VeradigmConnectionDocument,
 } from '../../models/connection-document/ConnectionDocument.type';
-import { DatabaseCollections } from './RxDbProvider';
+import { DatabaseCollections, useRxDb } from './RxDbProvider';
 import * as OnPatient from '../../services/OnPatient';
 import * as Epic from '../../services/Epic';
 import * as Cerner from '../../services/Cerner';
 import * as Veradigm from '../../services/Veradigm';
 import { from, Subject } from 'rxjs';
 import { useNotificationDispatch } from './NotificationProvider';
+import { differenceInDays, parseISO } from 'date-fns';
+import Config from '../../environments/config.json';
+import { useUserPreferences } from './UserPreferencesProvider';
+import { useConnectionCards } from '../hooks/useConnectionCards';
 
 type SyncJobProviderProps = PropsWithChildren<unknown>;
 
@@ -83,12 +93,76 @@ export function SyncJobProvider(props: SyncJobProviderProps) {
   return (
     <SyncJobContext.Provider value={state}>
       <SyncJobDispatchContext.Provider value={dispatch}>
-        <OnHandleUnsubscribeJobs>{props.children}</OnHandleUnsubscribeJobs>
+        <OnHandleUnsubscribeJobs>
+          <HandleInitalSync>{props.children}</HandleInitalSync>
+        </OnHandleUnsubscribeJobs>
       </SyncJobDispatchContext.Provider>
     </SyncJobContext.Provider>
   );
 }
 
+/**
+ * Wrapping component that initiates a connection sync job for each connection card
+ * if they have not been synced in the last day
+ */
+function HandleInitalSync({ children }: PropsWithChildren) {
+  const sync = useSyncJobContext(),
+    syncD = useSyncJobDispatchContext(),
+    userPreferences = useUserPreferences(),
+    list = useConnectionCards(),
+    db = useRxDb(),
+    isDemo = Config.IS_DEMO === 'enabled',
+    handleFetchData = useCallback(
+      (item: RxDocument<ConnectionDocument>) => {
+        if (syncD && userPreferences) {
+          syncD({
+            type: 'add_job',
+            id: item.toJSON().id,
+            connectionDocument: item,
+            baseUrl: item.get('location'),
+            useProxy: userPreferences.use_proxy,
+            db,
+          });
+        }
+      },
+      [db, syncD, userPreferences]
+    ),
+    hasRun = useRef(false),
+    syncJobEntries = useMemo(() => new Set(Object.keys(sync)), [sync]);
+
+  useEffect(() => {
+    if (!isDemo) {
+      if (list) {
+        if (!hasRun.current && syncD) {
+          hasRun.current = true;
+          for (const item of list) {
+            if (
+              !item.get('last_refreshed') ||
+              (item.get('last_refreshed') &&
+                Math.abs(
+                  differenceInDays(
+                    parseISO(item.get('last_refreshed')),
+                    new Date()
+                  )
+                ) >= 1)
+            ) {
+              if (!syncJobEntries.has(item.get('id'))) {
+                handleFetchData(item);
+              }
+            }
+          }
+        }
+      }
+    }
+  }, [handleFetchData, isDemo, list, syncD, syncJobEntries]);
+
+  return <>{children}</>;
+}
+
+/**
+ * A wrapping component that handles removing sync jobs from the sync job context
+ * once they are complete
+ */
 function OnHandleUnsubscribeJobs({ children }: PropsWithChildren) {
   const sync = useSyncJobContext(),
     syncD = useSyncJobDispatchContext(),
@@ -111,7 +185,7 @@ function OnHandleUnsubscribeJobs({ children }: PropsWithChildren) {
           if (errors.length === 0) {
             notifyDispatch({
               type: 'set_notification',
-              message: `Successfully synced ${successRes.length} records`,
+              message: `Successfully synced records`,
               variant: 'success',
             });
           } else {
@@ -261,6 +335,7 @@ async function refreshCernerConnectionTokenIfNeeded(
       throw new Error('Error refreshing token  - try logging in again');
     }
   }
+  return Promise.resolve();
 }
 
 /**
@@ -302,4 +377,5 @@ async function refreshEpicConnectionTokenIfNeeded(
       throw new Error('Error refreshing token  - try logging in again');
     }
   }
+  return Promise.resolve();
 }
