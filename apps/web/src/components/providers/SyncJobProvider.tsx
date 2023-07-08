@@ -134,7 +134,6 @@ function HandleInitalSync({ children }: PropsWithChildren) {
     if (!isDemo) {
       if (list) {
         if (!hasRun.current && syncD) {
-          hasRun.current = true;
           for (const item of list) {
             if (
               !item.get('last_refreshed') ||
@@ -147,6 +146,9 @@ function HandleInitalSync({ children }: PropsWithChildren) {
                 ) >= 1)
             ) {
               if (!syncJobEntries.has(item.get('id'))) {
+                // Start sync, make sure this only runs once
+                hasRun.current = true;
+                // Add a delay to allow other parts of the app to load before starting sync
                 setTimeout(
                   () => handleFetchData(item),
                   1000 + Math.ceil(Math.random() * 300)
