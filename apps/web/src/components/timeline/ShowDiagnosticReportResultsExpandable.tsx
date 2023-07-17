@@ -15,6 +15,33 @@ import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
 import { TableCellsIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import * as fhirpath from 'fhirpath';
 
+function GeneratePathLine(valueArr: number[]) {
+  // graph is 10 units long
+  // valueArr is 5 up to units long, can be less
+  // calculate unit spacing between points, rounded down
+  const unit = 10 / valueArr.length;
+  let path = '';
+  valueArr.forEach((v, i) => {
+    if (i === 0) {
+      path += `M ${i} ${v + 1}`;
+      return;
+    }
+    path += ` L ${i * unit} ${v + 1}`;
+  });
+  return path;
+}
+
+// takes an array of 5 values and returns a normalized path string
+function NormalizePathLine(valueArr: number[]) {
+  // Get min and max from valueArr
+  const min = Math.min(...valueArr);
+  const max = Math.max(...valueArr);
+  const normalized = valueArr.map((v) => {
+    return 20 - ((v - min) / (max - min)) * 20;
+  });
+  return GeneratePathLine(normalized);
+}
+
 export function ShowDiagnosticReportResultsExpandable({
   item,
   docs,
@@ -256,7 +283,7 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
                 <div className="col-span-1 flex flex-col items-end justify-end align-middle">
                   {relatedLabs.length > 0 &&
                     getValueQuantity(item) !== undefined && (
-                      <Disclosure.Button className="rounded p-1 duration-75 active:scale-90 active:bg-slate-50">
+                      <Disclosure.Button className="text-primary-900 rounded bg-[#E2F5FA] p-1 duration-75 active:scale-90  active:bg-slate-50">
                         {open ? (
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -273,20 +300,48 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
                             />
                           </svg>
                         ) : (
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth="1.5"
-                            stroke="currentColor"
-                            className="h-6 w-6"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"
-                            />
-                          </svg>
+                          <>
+                            {relatedLabs.length > 1 ? (
+                              <svg
+                                viewBox="0 0 10 22"
+                                className="h-6 w-6"
+                                preserveAspectRatio="none"
+                              >
+                                <path
+                                  d={NormalizePathLine(
+                                    relatedLabs
+                                      ? (
+                                          relatedLabs.map((rl) =>
+                                            rl ? getValueQuantity(rl) : 0
+                                          ) as number[]
+                                        ).reverse()
+                                      : []
+                                  )}
+                                  stroke-width="1.5"
+                                  stroke="black"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  fill="transparent"
+                                  vector-effect="non-scaling-stroke"
+                                />
+                              </svg>
+                            ) : (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth="1.5"
+                                stroke="currentColor"
+                                className="h-6 w-6"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"
+                                />
+                              </svg>
+                            )}
+                          </>
                         )}
                       </Disclosure.Button>
                     )}
