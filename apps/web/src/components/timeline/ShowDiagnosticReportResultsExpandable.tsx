@@ -15,11 +15,14 @@ import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
 import { TableCellsIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import * as fhirpath from 'fhirpath';
 
+/**
+ * Generate line for sparkline path
+ */
 function GeneratePathLine(valueArr: number[]) {
   // graph is 10 units long
   // valueArr is 5 up to units long, can be less
   // calculate unit spacing between points, rounded down
-  const unit = 10 / valueArr.length;
+  const unit = 12 / valueArr.length;
   let path = '';
   valueArr.forEach((v, i) => {
     if (i === 0) {
@@ -31,15 +34,50 @@ function GeneratePathLine(valueArr: number[]) {
   return path;
 }
 
-// takes an array of 5 values and returns a normalized path string
-function NormalizePathLine(valueArr: number[]) {
-  // Get min and max from valueArr
-  const min = Math.min(...valueArr);
-  const max = Math.max(...valueArr);
+/** Takes an array of 5 values and returns a normalized path string for sparkline
+ * Takes an optional rangeMin and rangeMax to normalize to, otherwise uses min and max of valueArr
+ * */
+function NormalizePathLine(
+  valueArr: number[],
+  rangeMin?: number,
+  rangeMax?: number
+) {
+  let min = Math.min(...valueArr);
+  let max = Math.max(...valueArr);
+
+  if (rangeMin !== undefined) {
+    if (rangeMin < min) {
+      min = rangeMin;
+    }
+  }
+  if (rangeMax !== undefined) {
+    if (rangeMax > max) {
+      max = rangeMax;
+    }
+  }
+
   const normalized = valueArr.map((v) => {
     return 20 - ((v - min) / (max - min)) * 20;
   });
-  return GeneratePathLine(normalized);
+
+  const res = {
+    line: GeneratePathLine(normalized),
+    minLine: rangeMin
+      ? GeneratePathLine(
+          Array(normalized.length).fill(
+            20 - ((rangeMin - min) / (max - min)) * 20
+          )
+        )
+      : '',
+    maxLine: rangeMax
+      ? GeneratePathLine(
+          Array(normalized.length).fill(
+            20 - ((rangeMax - min) / (max - min)) * 20
+          )
+        )
+      : '',
+  };
+  return res;
 }
 
 export function ShowDiagnosticReportResultsExpandable({
@@ -179,6 +217,10 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
     [displayName, relatedLabs]
   );
   const [view, setView] = useState<'LIST' | 'GRAPH'>('GRAPH');
+  const sparklineLabs = relatedLabs;
+  const sparklineValues = sparklineLabs.map((rl) =>
+    rl ? getValueQuantity(rl) : 0
+  ) as number[];
 
   const options: ChartOptions = {
     data: {
@@ -240,8 +282,8 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
           const sorted = res.sort((a, b) =>
             new Date(a.get('metadata.date') || '') <
             new Date(b.get('metadata.date') || '')
-              ? 1
-              : -1
+              ? -1
+              : 1
           ) as unknown as RxDocument<
             ClinicalDocument<BundleEntry<Observation>>
           >[];
@@ -308,22 +350,58 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
                                 preserveAspectRatio="none"
                               >
                                 <path
-                                  d={NormalizePathLine(
-                                    relatedLabs
-                                      ? (
-                                          relatedLabs.map((rl) =>
-                                            rl ? getValueQuantity(rl) : 0
-                                          ) as number[]
-                                        ).reverse()
-                                      : []
-                                  )}
+                                  d={
+                                    NormalizePathLine(
+                                      sparklineValues,
+                                      getReferenceRangeLow(sparklineLabs[0])
+                                        ?.value,
+                                      getReferenceRangeHigh(sparklineLabs[0])
+                                        ?.value
+                                    ).line
+                                  }
                                   stroke-width="1.5"
                                   stroke="black"
                                   stroke-linecap="round"
                                   stroke-linejoin="round"
                                   fill="transparent"
-                                  vector-effect="non-scaling-stroke"
+                                  vectorEffect="non-scaling-stroke"
                                 />
+                                {/* <path
+                                  d={
+                                    NormalizePathLine(
+                                      sparklineValues,
+                                      getReferenceRangeLow(sparklineLabs[0])
+                                        ?.value,
+                                      getReferenceRangeHigh(sparklineLabs[0])
+                                        ?.value
+                                    ).maxLine
+                                  }
+                                  strokeWidth="1"
+                                  stroke="gray"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  fill="transparent"
+                                  strokeOpacity={0.5}
+                                  vectorEffect="non-scaling-stroke"
+                                />
+                                <path
+                                  d={
+                                    NormalizePathLine(
+                                      sparklineValues,
+                                      getReferenceRangeLow(sparklineLabs[0])
+                                        ?.value,
+                                      getReferenceRangeHigh(sparklineLabs[0])
+                                        ?.value
+                                    ).minLine
+                                  }
+                                  strokeWidth="1"
+                                  stroke="gray"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  fill="transparent"
+                                  strokeOpacity={0.5}
+                                  vectorEffect="non-scaling-stroke"
+                                /> */}
                               </svg>
                             ) : (
                               <svg
