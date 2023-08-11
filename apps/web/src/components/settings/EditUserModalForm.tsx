@@ -131,26 +131,26 @@ export function EditUserForm({
     y: 25,
     width: 50,
     height: 50
-  }),
-    {
-      register,
-      handleSubmit,
-      watch,
-      reset,
-      formState: { errors },
-    } = useForm({
-      defaultValues: parseDefaultValues(defaultValues),
-      resolver: yupResolver(validSchema),
-    }),
-    pp = getFileFromFileList(watch('profilePhoto')),
-    submitUser: SubmitHandler<NewUserFormFields> = (data) => {
-      if (rawUser) {
-        // Apply crop to image here before saving
-        updateUserInDb(rawUser, data).then(() => {
-          toggleModal();
-        });
-      }
-    };
+  });
+  const {
+    register,
+    handleSubmit,
+    watch,
+    reset,
+    formState: { errors },
+  } = useForm({
+    defaultValues: parseDefaultValues(defaultValues),
+    resolver: yupResolver(validSchema),
+  });
+  const pp = getFileFromFileList(watch('profilePhoto'));
+  const submitUser: SubmitHandler<NewUserFormFields> = (data) => {
+    if (rawUser) {
+      // Apply crop to image here before saving
+      updateUserInDb(rawUser, data).then(() => {
+        toggleModal();
+      });
+    }
+  };
 
   useEffect(() => {
     reset(parseDefaultValues(defaultValues));
@@ -331,7 +331,7 @@ export function EditUserForm({
                       <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
                   ) : (
-                    <ReactCrop src={tryCreateUrl(pp)} crop={crop} onChange={newCrop => setCrop(newCrop)} />
+                    <ReactCrop src={tryCreateUrl(pp)} crop={crop} onChange={(newCrop) => setCrop(newCrop)} />
                   )}
                 </span>
                 <input
