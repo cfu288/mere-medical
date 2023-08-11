@@ -1,5 +1,5 @@
 import { Dialog } from '@headlessui/react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useRxUserDocument } from '../providers/UserProvider';
 import { SubmitHandler, useForm } from 'react-hook-form';
@@ -8,6 +8,8 @@ import * as yup from 'yup';
 import { format } from 'date-fns';
 import { RxDocument } from 'rxdb';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
+import ReactCrop from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 
 export type NewUserFormFields = {
   birthday?: string | Date;
@@ -141,6 +143,14 @@ export function EditUserForm({
         });
       }
     };
+
+  const [crop, setCrop] = useState({
+    unit: '%',
+    x: 25,
+    y: 25,
+    width: 50,
+    height: 50
+  });
 
   useEffect(() => {
     reset(parseDefaultValues(defaultValues));
@@ -321,11 +331,11 @@ export function EditUserForm({
                       <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
                   ) : (
-                    <img
-                      className="h-full w-full text-gray-300"
+                    <ReactCrop
                       src={tryCreateUrl(pp)}
-                      alt="profile"
-                    ></img>
+                      crop={crop}
+                      onChange={newCrop => setCrop(newCrop)}
+                    />
                   )}
                 </span>
                 <input
