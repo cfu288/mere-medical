@@ -1,5 +1,5 @@
 import { Dialog } from '@headlessui/react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useRxUserDocument } from '../providers/UserProvider';
 import { SubmitHandler, useForm } from 'react-hook-form';
@@ -8,6 +8,8 @@ import * as yup from 'yup';
 import { format } from 'date-fns';
 import { RxDocument } from 'rxdb';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
+import ReactCrop from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 
 export type NewUserFormFields = {
   birthday?: string | Date;
@@ -51,6 +53,12 @@ function getFileFromFileList(fileOrFileList: FileList | File | undefined) {
     pp = (fileOrFileList as unknown as FileList)?.item(0);
   } catch (e) {
     pp = fileOrFileList as unknown as File;
+  }
+  if (pp) {
+    getBase64(pp).then((base64) => {
+      setSrc(base64);
+      toggleModal();
+    });
   }
   return pp;
 }
@@ -141,6 +149,9 @@ export function EditUserForm({
         });
       }
     };
+
+  const [crop, setCrop] = useState({ aspect: 1, x: 0, y: 0, width: 100, height: 100 });
+  const [src, setSrc] = useState(null);
 
   useEffect(() => {
     reset(parseDefaultValues(defaultValues));
@@ -337,6 +348,11 @@ export function EditUserForm({
                   aria-invalid={errors.profilePhoto ? 'true' : 'false'}
                 />
               </div>
+              {src && (
+                <Dialog open={true} onClose={() => setSrc(null)}>
+                  <ReactCrop src={src} crop={crop} onChange={(newCrop) => setCrop(newCrop)} />
+                </Dialog>
+              )}
             </div>
           </div>
         </div>
