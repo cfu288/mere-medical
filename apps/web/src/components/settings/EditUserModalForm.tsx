@@ -1,5 +1,7 @@
 import { Dialog } from '@headlessui/react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import ReactCrop from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useRxUserDocument } from '../providers/UserProvider';
 import { SubmitHandler, useForm } from 'react-hook-form';
@@ -123,6 +125,13 @@ export function EditUserForm({
   toggleModal: () => void;
 }) {
   const rawUser = useRxUserDocument(),
+  const [crop, setCrop] = useState({
+    unit: '%',
+    x: 25,
+    y: 25,
+    width: 50,
+    height: 50
+  }),
     {
       register,
       handleSubmit,
@@ -136,6 +145,7 @@ export function EditUserForm({
     pp = getFileFromFileList(watch('profilePhoto')),
     submitUser: SubmitHandler<NewUserFormFields> = (data) => {
       if (rawUser) {
+        // Apply crop to image here before saving
         updateUserInDb(rawUser, data).then(() => {
           toggleModal();
         });
@@ -302,7 +312,7 @@ export function EditUserForm({
               )}
             </div>
           </div>
-          <div className="sm:grid sm:grid-cols-3 sm:items-center sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
+        <div className="sm:grid sm:grid-cols-3 sm:items-center sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
             <label
               htmlFor="photo"
               className="block text-sm font-medium text-gray-700"
@@ -321,11 +331,7 @@ export function EditUserForm({
                       <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
                   ) : (
-                    <img
-                      className="h-full w-full text-gray-300"
-                      src={tryCreateUrl(pp)}
-                      alt="profile"
-                    ></img>
+                    <ReactCrop src={tryCreateUrl(pp)} crop={crop} onChange={newCrop => setCrop(newCrop)} />
                   )}
                 </span>
                 <input
