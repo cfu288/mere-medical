@@ -1,6 +1,6 @@
 import { Dialog } from '@headlessui/react';
-import { useEffect, useState } from 'react';
-import ReactCrop from 'react-image-crop';
+import { useEffect, useRef, useState, useMemo } from 'react';
+import ReactCrop, { convertToPixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useRxUserDocument } from '../providers/UserProvider';
@@ -10,6 +10,10 @@ import * as yup from 'yup';
 import { format } from 'date-fns';
 import { RxDocument } from 'rxdb';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
+import { Modal } from '../Modal';
+import { ModalHeader } from '../ModalHeader';
+import { PixelCrop } from 'react-image-crop';
+import { DependencyList } from 'react';
 
 export type NewUserFormFields = {
   birthday?: string | Date;
@@ -17,7 +21,7 @@ export type NewUserFormFields = {
   firstName?: string;
   gender?: string;
   lastName?: string;
-  profilePhoto?: FileList | undefined;
+  profilePhoto?: FileList | string | undefined;
 };
 
 export const validSchema = yup.object({
@@ -47,8 +51,13 @@ export function parseDefaultValues(defaultValues?: NewUserFormFields) {
  * @param fileOrFileList
  * @returns the file
  */
-function getFileFromFileList(fileOrFileList: FileList | File | undefined) {
-  let pp: File | null;
+function getFileFromFileList(
+  fileOrFileList: FileList | File | string | undefined
+) {
+  let pp: File | string | null;
+  if (fileOrFileList === typeof 'string') {
+    return fileOrFileList;
+  }
   try {
     pp = (fileOrFileList as unknown as FileList)?.item(0);
   } catch (e) {
@@ -62,23 +71,32 @@ function getFileFromFileList(fileOrFileList: FileList | File | undefined) {
  * @param file File to convert to base64
  * @returns base64 result
  */
-function getBase64(file: File): Promise<string | ArrayBuffer | null> {
+function getBase64(file: File | string): Promise<string | ArrayBuffer | null> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = (error) => reject(error);
+    if (file === typeof 'string') {
+      resolve(file);
+    }
+    if (file === typeof 'File') {
+      const reader = new FileReader();
+      reader.readAsDataURL(file as unknown as File);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    }
   });
 }
 
 type ProfilePhotoMetadata = { data: string; content_type: string };
 
-function tryCreateUrl(pp: ProfilePhotoMetadata | Blob): string {
-  try {
-    return URL.createObjectURL(pp as unknown as Blob);
-  } catch {
-    return (pp as unknown as ProfilePhotoMetadata)?.data;
+function tryCreateUrlFromFile(
+  pp: ProfilePhotoMetadata | Blob | string
+): string {
+  if (typeof pp === 'string') {
+    return pp;
   }
+  if (pp instanceof Blob) {
+    return URL.createObjectURL(pp as unknown as Blob);
+  }
+  return (pp as unknown as ProfilePhotoMetadata)?.data;
 }
 
 /**
@@ -90,6 +108,7 @@ const updateUserInDb = (
   rawUserDocument: RxDocument<UserDocument>,
   data: NewUserFormFields
 ) => {
+  debugger;
   return rawUserDocument
     .update({
       $set: {
@@ -108,7 +127,7 @@ const updateUserInDb = (
         rawUserDocument.update({
           $set: {
             profile_picture: {
-              content_type: pp?.type,
+              content_type: (pp as File)?.type || 'image/png',
               data: await getBase64(pp),
             },
           },
@@ -117,6 +136,130 @@ const updateUserInDb = (
     });
 };
 
+function ProfileImageModal({
+  setTogglePhotoModal,
+  togglePhotoModal,
+  pp: ppIn,
+  setPP,
+}: {
+  setTogglePhotoModal: (x: boolean) => void;
+  togglePhotoModal: boolean;
+  pp: string | File | null;
+  setPP: (value: string) => void;
+}) {
+  const {
+    register,
+    formState: { errors },
+    watch,
+  } = useForm({
+    defaultValues: { profilePhoto: ppIn },
+  });
+  const [crop, setCrop] = useState<any>({
+    unit: 'px',
+    aspect: 1 / 1,
+    x: 25,
+    y: 25,
+    width: 50,
+    height: 50,
+  });
+  const previewCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
+  const imgRef = useRef<HTMLImageElement>(null);
+  const ppWatch = watch('profilePhoto');
+  const pp = useMemo(() => {
+    // @ts-ignore
+    return getFileFromFileList(ppWatch);
+  }, [ppWatch]);
+  const ppUrl = useMemo(() => {
+    // @ts-ignore
+    return tryCreateUrlFromFile(pp);
+  }, [pp]);
+
+  useDebounceEffect(
+    async () => {
+      if (
+        completedCrop?.width &&
+        completedCrop?.height &&
+        imgRef.current &&
+        previewCanvasRef.current
+      ) {
+        // We use canvasPreview as it's much faster than imgPreview.
+        canvasPreview(imgRef.current, previewCanvasRef.current, completedCrop);
+      }
+    },
+    100,
+    [completedCrop]
+  );
+
+  return (
+    <Modal open={togglePhotoModal} setOpen={() => setTogglePhotoModal(false)}>
+      <ModalHeader
+        title={'Select your profile photo'}
+        setClose={() => setTogglePhotoModal(false)}
+      />
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const dt = previewCanvasRef.current?.toDataURL('image/png');
+          if (dt) {
+            setPP(dt);
+            setTogglePhotoModal(false);
+          }
+        }}
+      >
+        <p className="text-red-500">{JSON.stringify(errors)}</p>
+        <ReactCrop
+          crop={crop}
+          onChange={(newCrop: any) => {
+            setCrop(newCrop);
+          }}
+          aspect={1}
+          onComplete={(crop) => {
+            setCompletedCrop(convertToPixelCrop(crop, crop.width, crop.height));
+          }}
+        >
+          {!pp ? (
+            <svg
+              className="h-64 w-64 text-gray-300"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          ) : (
+            <>
+              <img
+                ref={imgRef}
+                className="h-64 w-auto"
+                src={ppUrl}
+                alt="profile"
+              ></img>
+              <canvas
+                ref={previewCanvasRef}
+                hidden
+                style={{
+                  objectFit: 'contain',
+                  width: '300px',
+                  height: '300px',
+                }}
+              />
+            </>
+          )}
+        </ReactCrop>
+        <input
+          type="file"
+          id="profilePhoto"
+          className="file:focus:ring-primary-500 file:text-medium block w-full flex-1 py-2 text-sm text-gray-500 file:ml-5 file:mr-4 file:rounded-md file:border file:border-gray-300 file:bg-white  file:py-2 file:px-3 file:text-gray-700 hover:file:bg-gray-100 focus:outline-none file:focus:outline-none file:focus:ring-2 file:focus:ring-offset-2"
+          accept="image/png, image/jpeg"
+          {...register('profilePhoto')}
+          aria-invalid={errors.profilePhoto ? 'true' : 'false'}
+        />
+        <button type="submit">submit photo</button>
+      </form>
+    </Modal>
+  );
+}
+
 export function EditUserForm({
   defaultValues,
   toggleModal,
@@ -124,24 +267,19 @@ export function EditUserForm({
   defaultValues?: NewUserFormFields;
   toggleModal: () => void;
 }) {
-  const rawUser = useRxUserDocument(),
-  const [crop, setCrop] = useState({
-    unit: '%',
-    x: 25,
-    y: 25,
-    width: 50,
-    height: 50
-  });
+  const rawUser = useRxUserDocument();
   const {
     register,
     handleSubmit,
     watch,
     reset,
     formState: { errors },
+    setValue,
   } = useForm({
     defaultValues: parseDefaultValues(defaultValues),
     resolver: yupResolver(validSchema),
   });
+  const [togglePhotoModal, setTogglePhotoModal] = useState(false);
   const pp = getFileFromFileList(watch('profilePhoto'));
   const submitUser: SubmitHandler<NewUserFormFields> = (data) => {
     if (rawUser) {
@@ -152,9 +290,9 @@ export function EditUserForm({
     }
   };
 
-  useEffect(() => {
-    reset(parseDefaultValues(defaultValues));
-  }, [defaultValues, reset]);
+  // useEffect(() => {
+  //   reset(parseDefaultValues(defaultValues));
+  // }, [defaultValues, reset]);
 
   return (
     <form
@@ -312,7 +450,7 @@ export function EditUserForm({
               )}
             </div>
           </div>
-        <div className="sm:grid sm:grid-cols-3 sm:items-center sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
+          <div className="sm:grid sm:grid-cols-3 sm:items-center sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
             <label
               htmlFor="photo"
               className="block text-sm font-medium text-gray-700"
@@ -331,17 +469,31 @@ export function EditUserForm({
                       <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
                   ) : (
-                    <ReactCrop src={tryCreateUrl(pp)} crop={crop} onChange={(newCrop) => setCrop(newCrop)} />
+                    <img
+                      className="h-full w-full text-gray-300"
+                      src={tryCreateUrlFromFile(pp)}
+                      alt="profile"
+                    ></img>
                   )}
                 </span>
-                <input
-                  type="file"
-                  id="profilePhoto"
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setTogglePhotoModal((x) => !x);
+                  }}
                   className="file:focus:ring-primary-500 file:text-medium block w-full flex-1 py-2 text-sm text-gray-500 file:ml-5 file:mr-4 file:rounded-md file:border file:border-gray-300 file:bg-white  file:py-2 file:px-3 file:text-gray-700 hover:file:bg-gray-100 focus:outline-none file:focus:outline-none file:focus:ring-2 file:focus:ring-offset-2"
-                  accept="image/png, image/jpeg"
-                  {...register('profilePhoto')}
-                  aria-invalid={errors.profilePhoto ? 'true' : 'false'}
-                />
+                >
+                  Upload photo
+                </button>
+                <ProfileImageModal
+                  setPP={(i) => {
+                    alert(i);
+                    setValue('profilePhoto', i);
+                  }}
+                  pp={pp}
+                  togglePhotoModal={togglePhotoModal}
+                  setTogglePhotoModal={setTogglePhotoModal}
+                ></ProfileImageModal>
               </div>
             </div>
           </div>
@@ -364,4 +516,86 @@ export function EditUserForm({
       </div>
     </form>
   );
+}
+
+const TO_RADIANS = Math.PI / 180;
+
+export async function canvasPreview(
+  image: HTMLImageElement,
+  canvas: HTMLCanvasElement,
+  crop: PixelCrop,
+  scale = 1,
+  rotate = 0
+) {
+  const ctx = canvas.getContext('2d');
+
+  if (!ctx) {
+    throw new Error('No 2d context');
+  }
+
+  const scaleX = image.naturalWidth / image.width;
+  const scaleY = image.naturalHeight / image.height;
+  // devicePixelRatio slightly increases sharpness on retina devices
+  // at the expense of slightly slower render times and needing to
+  // size the image back down if you want to download/upload and be
+  // true to the images natural size.
+  const pixelRatio = window.devicePixelRatio;
+  // const pixelRatio = 1
+
+  canvas.width = Math.floor(crop.width * scaleX * pixelRatio);
+  canvas.height = Math.floor(crop.height * scaleY * pixelRatio);
+
+  ctx.scale(pixelRatio, pixelRatio);
+  ctx.imageSmoothingQuality = 'high';
+
+  const cropX = crop.x * scaleX;
+  const cropY = crop.y * scaleY;
+
+  const rotateRads = rotate * TO_RADIANS;
+  const centerX = image.naturalWidth / 2;
+  const centerY = image.naturalHeight / 2;
+
+  ctx.save();
+
+  // 5) Move the crop origin to the canvas origin (0,0)
+  ctx.translate(-cropX, -cropY);
+  // 4) Move the origin to the center of the original position
+  ctx.translate(centerX, centerY);
+  // 3) Rotate around the origin
+  ctx.rotate(rotateRads);
+  // 2) Scale the image
+  ctx.scale(scale, scale);
+  // 1) Move the center of the image to the origin (0,0)
+  ctx.translate(-centerX, -centerY);
+  ctx.drawImage(
+    image,
+    0,
+    0,
+    image.naturalWidth,
+    image.naturalHeight,
+    0,
+    0,
+    image.naturalWidth,
+    image.naturalHeight
+  );
+
+  ctx.restore();
+}
+
+export function useDebounceEffect(
+  fn: () => void,
+  waitTime: number,
+  deps?: DependencyList
+) {
+  useEffect(() => {
+    const t = setTimeout(() => {
+      // @ts-ignore
+      fn.apply(undefined, deps);
+    }, waitTime);
+
+    return () => {
+      clearTimeout(t);
+    };
+    // @ts-ignore
+  }, deps);
 }

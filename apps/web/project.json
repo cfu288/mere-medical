@@ -86,6 +86,13 @@
         "passWithNoTests": true
       }
     }
+    // "e2e": {
+    //   "executor": "@nx/playwright:playwright",
+    //   "outputs": ["dist/.playwright/apps/web"],
+    //   "options": {
+    //     "config": "apps/web/playwright.config.ts"
+    //   }
+    // }
   },
   "tags": []
 }

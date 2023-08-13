@@ -8,5 +8,5 @@ export default {
     // '^.+\\.[tj]sx?$': ['babel-jest', { presets: ['next/babel'] }],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../coverage/apps/web',
+  testPathIgnorePatterns: ['e2e'],
 };
