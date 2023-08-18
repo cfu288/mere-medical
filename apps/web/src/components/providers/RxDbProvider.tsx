@@ -155,7 +155,7 @@ async function initRxDb() {
         : getRxStorageLoki({
             adapter: new CryptedIndexedDBAdapter('CryptedAdapter', {
               secret: '123123',
-            }),
+            }) as LokiPersistenceAdapter,
           }),
     multiInstance: true,
     ignoreDuplicate: true,
