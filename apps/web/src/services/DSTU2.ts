@@ -30,15 +30,15 @@ function parseId<T = FhirResource>(bundleItem: BundleEntry<T>) {
     Array.isArray(bundleItem.fullUrl as string | string[]) &&
     bundleItem.fullUrl &&
     bundleItem.fullUrl?.length > 0;
-  // Hacky workaround for consistent ID's in OnPatient
+  // OnPatient, epic returns an array instead of a string, not to spec
   return isArrayId
-    ? bundleItem.fullUrl?.[0].replace('/api/fhir/', '')
+    ? bundleItem.fullUrl?.[0].replace('/api/fhir/', '') // for epic
     : bundleItem.fullUrl;
 }
 
 export function mapProcedureToClinicalDocument(
   bundleItem: BundleEntry<Procedure>,
-  connectionDocument: ConnectionDocument
+  connectionDocument: Pick<ConnectionDocument, 'user_id' | 'id'>
 ): ClinicalDocument<BundleEntry<Procedure>> {
   const cd: ClinicalDocument<BundleEntry<Procedure>> = {
     //id: uuid4(),
