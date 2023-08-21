@@ -34,7 +34,7 @@
     "@nx/webpack": "16.1.0",
     "@nx/workspace": "16.1.0",
     "@playwright/test": "^1.37.0",
-    "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.5.11",
     "@svgr/webpack": "^6.1.2",
     "@testing-library/react": "13.4.0",
     "@types/fhir": "^0.0.35",
