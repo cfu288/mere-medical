@@ -35,26 +35,10 @@ export class ErrorBoundary extends React.Component<
             Please try reloading the app. If the problem persists, please try
             clearing your browser cache.
           </p>
-          {/* <p className="text-xs text-gray-500">{error.message}</p> */}
           <button
             className="bg-primary-500 mt-4 rounded px-4 py-2 text-white"
             onClick={() => {
               window.location.reload();
-              // (async () => {
-              //   const plugin = await import('pouchdb-adapter-idb');
-              //   const { addPouchPlugin, getRxStoragePouch } = await import(
-              //     'rxdb/plugins/pouchdb'
-              //   );
-              //   addPouchPlugin(plugin);
-              //   createRxDatabase<DatabaseCollections>({
-              //     name: 'mere_db',
-              //     storage: getRxStoragePouch('idb'),
-              //     multiInstance: true,
-              //     ignoreDuplicate: true,
-              //   })
-              //     .then((db) => db.destroy())
-              //     .then(() => window.location.reload());
-              // })().then();
             }}
           >
             Reload

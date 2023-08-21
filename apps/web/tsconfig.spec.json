@@ -15,7 +15,8 @@
     "**/*.spec.js",
     "**/*.test.jsx",
     "**/*.spec.jsx",
-    "**/*.d.ts"
+    "**/*.d.ts",
+    "playwright/example.spec.tmp.ts"
   ],
   "files": [
     "../../node_modules/@nx/react/typings/cssmodule.d.ts",

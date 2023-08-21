@@ -66,6 +66,7 @@ export function EpicSelectModal({
             aria-hidden="true"
           />
           <Combobox.Input
+            title="epic-search-bar"
             className="focus:ring-primary-700 h-12 w-full divide-y-2 rounded-xl border-0 bg-gray-50 bg-transparent pl-11 pr-4 text-gray-800 placeholder-gray-400 hover:border-gray-200 focus:ring-2 sm:text-sm"
             placeholder="Search for your health system"
             onChange={(event) => setQuery(event.target.value)}

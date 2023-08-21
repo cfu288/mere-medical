@@ -137,7 +137,13 @@ services:
    npx nx run-many --target=serve --projects=api,web
    ```
 
-7. Build and serve in docker container:
+7. Run e2e tests
+
+```bash
+npx nx run web-e2e:e2e
+```
+
+8. Build and serve in docker container:
 
    ```bash
    docker build -t mere-medical .
