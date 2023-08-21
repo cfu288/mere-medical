@@ -36,7 +36,7 @@
     "compression": "^1.7.4",
     "core-js": "^3.6.5",
     "date-fns": "^2.29.1",
-    "fhirpath": "^3.5.0",
+    "fhirpath": "^3.6.0",
     "http-proxy": "^1.18.1",
     "pwacompat": "^2.0.17",
     "react": "^18.2.0",
