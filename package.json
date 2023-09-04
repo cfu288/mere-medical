@@ -88,7 +88,7 @@
   },
   "dependencies": {
     "@billboard.js/react": "^1.0.0",
-    "@headlessui/react": "^1.7.10",
+    "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.13",
     "@hookform/resolvers": "^2.9.10",
     "@mands/nx-playwright": "^0.6.2",
