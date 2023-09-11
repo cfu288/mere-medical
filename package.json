@@ -30,7 +30,7 @@
     "@nx/nest": "16.1.0",
     "@nx/node": "16.1.0",
     "@nx/react": "16.1.0",
-    "@nx/web": "16.1.0",
+    "@nx/web": "16.8.1",
     "@nx/webpack": "16.1.0",
     "@nx/workspace": "16.1.0",
     "@playwright/test": "^1.37.0",
