@@ -90,7 +90,7 @@
     "@billboard.js/react": "^1.0.0",
     "@headlessui/react": "^1.7.10",
     "@heroicons/react": "^2.0.13",
-    "@hookform/resolvers": "^2.9.10",
+    "@hookform/resolvers": "^3.3.1",
     "@mands/nx-playwright": "^0.6.2",
     "@nestjs/axios": "^1.0.0",
     "@nestjs/common": "9.4.0",
