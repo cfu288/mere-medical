@@ -95,7 +95,7 @@
     "@nestjs/axios": "^1.0.0",
     "@nestjs/common": "9.4.0",
     "@nestjs/core": "9.4.0",
-    "@nestjs/platform-express": "9.4.0",
+    "@nestjs/platform-express": "9.4.3",
     "@nestjs/serve-static": "^3.0.0",
     "@nrwl/webpack": "^16.1.0",
     "@react-hook/debounce": "^4.0.0",
