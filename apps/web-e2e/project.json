@@ -8,7 +8,7 @@
       "executor": "@mands/nx-playwright:playwright-executor",
       "options": {
         "e2eFolder": "apps/web-e2e",
-        "devServerTarget": "web:serve",
+        "devServerTarget": "web:serve-all",
         "packageRunner": "npx"
       },
       "configurations": {

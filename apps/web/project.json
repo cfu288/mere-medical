@@ -85,6 +85,21 @@
         "jestConfig": "apps/web/jest.config.ts",
         "passWithNoTests": true
       }
+    },
+    "serve-all": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "nx serve api:serve"
+          },
+          {
+            "command": "nx serve web:serve"
+          }
+        ],
+        "parallel": true,
+        "readyWhen": "No errors found."
+      }
     }
   },
   "tags": []
