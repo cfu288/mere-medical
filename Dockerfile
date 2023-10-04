@@ -25,6 +25,7 @@ FROM node:16.14.0 as build-web-stage
 COPY --from=build-web-base . .
 WORKDIR /app
 RUN npx nx test web --configuration=ci
+# RUN npx nx run web-e2e:e2e --configuration=ci
 RUN npx nx build web:build:production
 
 
