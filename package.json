@@ -55,7 +55,7 @@
     "css-loader": "^6.4.0",
     "cypress": "12.11.0",
     "docusaurus": "^1.14.7",
-    "electron": "^18.3.7",
+    "electron": "^26.3.0",
     "eslint": "~8.15.0",
     "eslint-config-prettier": "8.1.0",
     "eslint-plugin-cypress": "^2.10.3",
