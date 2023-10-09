@@ -92,7 +92,7 @@
     "@heroicons/react": "^2.0.13",
     "@hookform/resolvers": "^2.9.10",
     "@mands/nx-playwright": "^0.6.2",
-    "@nestjs/axios": "^1.0.0",
+    "@nestjs/axios": "^3.0.0",
     "@nestjs/common": "9.4.0",
     "@nestjs/core": "9.4.0",
     "@nestjs/platform-express": "9.4.0",
