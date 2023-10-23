@@ -11,7 +11,7 @@ If you don't want to deploy Mere Medical to your own local server or machine, yo
 
 Note that by default, DO App platform pre-selects their $12 droplet. You can downgrade to the $5 droplet by clicking `Edit Plan` during setup.
 
-To set up OnPatient integration, you'll need to provide the values for the environmental variables `ONPATIENT_CLIENT_ID` and `ONPATIENT_CLIENT_SECRET`.
+To set up Patient Portal integrations, you'll need to provide the values for the environmental variables `<Patient Portal Name>_CLIENT_ID`. See other specific patient portal registration instructions for more details.
 
 After deploying, you'll also need to set up a redirect uri back to your app in the OnPatient portal. Note that you'll need to deploy the app to digital ocean first in order to _get_ your redirect uri, which should look something like `https://mere-medical-<random_string>.ondigitalocean.app/api/v1/onpatient/callback`.
 
