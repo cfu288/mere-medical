@@ -13,6 +13,11 @@ If you want to run Mere on an external server and already have a reverse proxy w
 
 If you'd rather deploy to a cloud instance instead of your own computer, check out our [one click Digital Ocean deploy](./deploy-to-do.md).
 
+## What you'll need
+
+- [Docker](https://docs.docker.com/get-docker/)
+- [mkcert](https://github.com/FiloSottile/mkcert#installation) (if you want to run Mere Medical locally with SSL)
+
 ### Setting Up with Docker Compose & Local SSL with mkcert + NGINX
 
 You can grab the required files for the following steps [here](https://github.com/cfu288/mere-medical/tree/main/examples/mere-medical-docker-compose-nginx-ssl).
@@ -100,6 +105,8 @@ Create an `.env' file with the following format:
 ONPATIENT_CLIENT_ID=
 ONPATIENT_CLIENT_SECRET=
 EPIC_CLIENT_ID=
+CERNER_CLIENT_ID=
+VERADIGM_CLIENT_ID=
 ```
 
 `cd` into the directory of the `docker-compose.yaml` , and then run
@@ -109,11 +116,6 @@ EPIC_CLIENT_ID=
 to start Mere Medical.
 
 Then open [https://meremedical.local](https://meremedical.local) in a browser to see Mere Medical running!
-
-## What you'll need
-
-- [Docker](https://docs.docker.com/get-docker/)
-- [mkcert](https://github.com/FiloSottile/mkcert#installation) (if you want to run Mere Medical locally with SSL)
 
 ### Setting Up with Docker
 
@@ -185,4 +187,4 @@ to start Mere Medical as a background process.
 
 Then open [http://localhost:4200](http://localhost:4200) in a browser to see Mere Medical running!
 
-Note that this will not set up SSL for you, which is needed for some patient portal syncing/authentication flows. If you are running this on a server with reverse proxy already set up, it is recommended to have your reverse proxy handle SSL and forward requests to Mere Medical. If you are running this on your local machine and need local SSL set up, read the section below.
+Note that this will not set up SSL for you, which is needed for some patient portal syncing/authentication flows. If you are running this on a server with reverse proxy already set up, it is recommended to have your reverse proxy handle SSL and forward requests to Mere Medical. If you are running this on your local machine and need local SSL set up, [follow the instructions here](/docs/getting-started/docker#setting-up-with-docker-compose--local-ssl-with-mkcert--nginx).

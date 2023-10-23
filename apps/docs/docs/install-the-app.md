@@ -10,9 +10,13 @@ While Mere Medical does not have an official app in an app store, you can instal
 
 # iOS
 
-If you are using Mere Medical on your iOS device, it is important to install the PWA app and not use Mere in Safari, as Safari will delete all your data after 7 days.
+:::danger
 
-On your iOS device, open up safari to the [Mere App Web Page](https://demo.meremedical.co). From there, the steps to add the Mere app to the home screen are:
+If you are using Mere on your iOS device, it is **important to install the PWA** app. Do not use Mere in the Safari browser, as Safari will delete all your data after 7 days.
+
+:::
+
+On your iOS device, open up safari to the [Mere App Web Page](https://app.meremedical.co). From there, the steps to add the Mere app to the home screen are:
 
 1. Open the Share menu, available at the bottom or top of the browser.
 2. Click Add to Home Screen.
@@ -27,6 +31,6 @@ The prompt you might see on your Android device will differ depending on which d
 
 # Chrome
 
-Go to the [Mere App Web Page](https://demo.meremedical.co) and look at the URL bar in the top right. These browsers will show an install badge (icon) in the URL bar (see the image below), stating that the app is installable. See an example image below:
+Go to the [Mere App Web Page](https://app.meremedical.co) and look at the URL bar in the top right. These browsers will show an install badge (icon) in the URL bar (see the image below), stating that the app is installable. See an example image below:
 
 ![browser install](./browser.avif)
