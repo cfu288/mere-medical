@@ -42,10 +42,11 @@ import { useNotificationDispatch } from './NotificationProvider';
 import { ConnectionDocumentMigrations } from '../../models/connection-document/ConnectionDocument.migration';
 import { getRxStorageMemory } from 'rxdb/plugins/memory';
 import { AppLoadingSkeleton } from './AppLoadingSkeleton';
+import { CryptedIndexedDBAdapter } from 'sylviejs/storage-adapter/crypted-indexeddb-adapter';
+import logo from '../../img/white-logo.svg';
+
 // @ts-ignore
 window.__loki_idb_debug = true;
-
-import { CryptedIndexedDBAdapter } from 'sylviejs/dist/storage-adapter/crypted-indexeddb-adapter';
 
 if (process.env.NODE_ENV === 'development') {
   addRxPlugin(RxDBDevModePlugin);
@@ -145,18 +146,25 @@ export function handleJSONDataImport(
     }
   });
 }
-
-async function initRxDb() {
+async function initDemoRxDb() {
   const db = await createRxDatabase<DatabaseCollections>({
     name: 'mere_db',
-    storage:
-      Config.IS_DEMO === 'enabled'
-        ? getRxStorageMemory()
-        : getRxStorageLoki({
-            adapter: new CryptedIndexedDBAdapter('CryptedAdapter', {
-              secret: '123123',
-            }) as LokiPersistenceAdapter,
-          }),
+    storage: getRxStorageMemory(),
+    multiInstance: true,
+    ignoreDuplicate: true,
+  });
+  await db.addCollections<DatabaseCollections>(databaseCollections);
+
+  return db;
+}
+async function initRxDb(password: string) {
+  const db = await createRxDatabase<DatabaseCollections>({
+    name: 'mere_db',
+    storage: getRxStorageLoki({
+      adapter: new CryptedIndexedDBAdapter({
+        secret: password,
+      }) as LokiPersistenceAdapter,
+    }),
     multiInstance: true,
     ignoreDuplicate: true,
   });
@@ -175,10 +183,38 @@ async function loadDemoData(db: RxDatabase<DatabaseCollections>) {
 export function RxDbProvider(props: RxDbProviderProps) {
   const [db, setDb] = useState<RxDatabase<DatabaseCollections>>();
   const notifyDispatch = useNotificationDispatch();
+  const [password, setPassword] = useState<string>('');
+  const [initialized, setInitialized] = useState<
+    'IDLE' | 'PROGRESS' | 'COMPLETE' | 'ERROR'
+  >('IDLE');
+  const [error, setError] = useState<string>('');
+
+  const submitPassword = (password: string) => {
+    setInitialized('PROGRESS');
+    try {
+      initRxDb(password)
+        .then((db) => {
+          setDb(db);
+          setInitialized('COMPLETE');
+        })
+        .catch((err) => {
+          setInitialized('ERROR');
+          setError(
+            'There was an error decrypting your records with the provided password.'
+          );
+        });
+    } catch (e) {
+      setInitialized('ERROR');
+      setError(
+        'There was an error decrypting your records with the provided password.'
+      );
+      setPassword('');
+    }
+  };
 
   useEffect(() => {
-    initRxDb().then((db) => {
-      if (Config.IS_DEMO === 'enabled') {
+    if (Config.IS_DEMO === 'enabled') {
+      initDemoRxDb().then((db) => {
         loadDemoData(db)
           .then(() => {
             notifyDispatch({
@@ -196,17 +232,15 @@ export function RxDbProvider(props: RxDbProviderProps) {
             });
             setDb(db);
           });
-      } else {
-        setDb(db);
-      }
-    });
+      });
+    }
   }, [notifyDispatch]);
 
   return (
     <>
       {/* Transition added to avoid flash of white  */}
       <Transition
-        show={!db}
+        show={initialized !== 'COMPLETE'}
         appear={true}
         enter="transition-opacity duration-150"
         enterFrom="opacity-0"
@@ -215,7 +249,66 @@ export function RxDbProvider(props: RxDbProviderProps) {
         leaveFrom="opacity-100"
         leaveTo="opacity-[.99]"
       >
-        <AppLoadingSkeleton ready={!db} />
+        {initialized === 'COMPLETE' ? (
+          <AppLoadingSkeleton ready={initialized === 'COMPLETE'} />
+        ) : (
+          <div className="bg-primary-900 flex min-h-screen flex-1 flex-col justify-center px-6 py-12 lg:px-8">
+            <div className="sm:mx-auto sm:w-full sm:max-w-md">
+              <img className="mx-auto h-10 w-auto" src={logo} alt="Mere Logo" />
+              <h2 className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-white">
+                Enter your encryption password
+              </h2>
+            </div>
+
+            <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
+              <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
+                <form
+                  className="space-y-6"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    submitPassword(password);
+                  }}
+                >
+                  <div>
+                    <label
+                      htmlFor="password"
+                      className="block text-sm font-medium leading-6 text-gray-900"
+                    >
+                      Password
+                    </label>
+                    <div className="">
+                      <input
+                        id="password"
+                        name="password"
+                        type="password"
+                        autoComplete="current-password"
+                        required
+                        value={password}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                        }}
+                        className="focus:ring-primary-600 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <button
+                      type="submit"
+                      className="bg-primary-600 hover:bg-primary-500 focus-visible:outline-primary-600 flex w-full justify-center rounded-md px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                    >
+                      Unlock
+                    </button>
+                  </div>
+                  {/* error message */}
+                  {initialized === 'ERROR' && (
+                    <div className="text-center text-red-500">{error}</div>
+                  )}
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
       </Transition>
       {db && (
         <RxDbContext.Provider value={db}>{props.children}</RxDbContext.Provider>
