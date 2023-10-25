@@ -127,8 +127,8 @@ services:
 6. Serve each one on its own:
 
    ```bash
-   nx serve web
-   nx serve api
+   npx nx serve web
+   npx nx serve api
    ```
 
    or together as a full app:

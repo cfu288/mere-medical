@@ -157,20 +157,48 @@ async function initDemoRxDb() {
 
   return db;
 }
+
 async function initRxDb(password: string) {
+  const cryptedStorageAdapter = new CryptedIndexedDBAdapter({
+    secret: password,
+  }) as LokiPersistenceAdapter;
+
+  try {
+    // RxDB adds a .db extension to the database name, lets check it first
+    await (cryptedStorageAdapter as CryptedIndexedDBAdapter).loadDatabaseAsync(
+      'mere_db.db'
+    );
+  } catch (e) {
+    console.error(e);
+    throw Error(
+      'There was an error decrypting your records with the provided password.'
+    );
+  }
+
+  // Password has been validated - create the db
   const db = await createRxDatabase<DatabaseCollections>({
     name: 'mere_db',
     storage: getRxStorageLoki({
-      adapter: new CryptedIndexedDBAdapter({
-        secret: password,
-      }) as LokiPersistenceAdapter,
+      adapter: cryptedStorageAdapter as LokiPersistenceAdapter,
     }),
     multiInstance: true,
     ignoreDuplicate: true,
   });
+
   await db.addCollections<DatabaseCollections>(databaseCollections);
 
   return db;
+}
+
+async function getInternalLokiStorage(db: RxDatabase<DatabaseCollections>) {
+  const internalDb = await // @ts-ignore
+  db.clinical_documents.storageInstance.internals?.localState;
+  return internalDb.databaseState.database as Loki;
+}
+
+async function getStorageAdapter(db: RxDatabase<DatabaseCollections>) {
+  const internalDb = await getInternalLokiStorage(db);
+  return internalDb?.persistenceAdapter as LokiPersistenceAdapter;
 }
 
 async function loadDemoData(db: RxDatabase<DatabaseCollections>) {
@@ -190,23 +218,28 @@ export function RxDbProvider(props: RxDbProviderProps) {
   const [error, setError] = useState<string>('');
 
   const submitPassword = (password: string) => {
+    debugger;
+    console.log(password);
     setInitialized('PROGRESS');
     try {
       initRxDb(password)
         .then((db) => {
+          console.log(1);
           setDb(db);
           setInitialized('COMPLETE');
         })
         .catch((err) => {
+          console.log(2);
+          console.error(err);
           setInitialized('ERROR');
           setError(
-            'There was an error decrypting your records with the provided password.'
+            'Caught: There was an error decrypting your records with the provided password.'
           );
         });
     } catch (e) {
       setInitialized('ERROR');
       setError(
-        'There was an error decrypting your records with the provided password.'
+        'Uncaught Error: There was an error decrypting your records with the provided password.'
       );
       setPassword('');
     }
@@ -286,6 +319,7 @@ export function RxDbProvider(props: RxDbProviderProps) {
                         value={password}
                         onChange={(e) => {
                           setPassword(e.target.value);
+                          initialized === 'ERROR' && setInitialized('IDLE');
                         }}
                         className="focus:ring-primary-600 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6"
                       />
