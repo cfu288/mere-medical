@@ -146,6 +146,7 @@ export function handleJSONDataImport(
     }
   });
 }
+
 async function initDemoRxDb() {
   const db = await createRxDatabase<DatabaseCollections>({
     name: 'mere_db',
@@ -191,8 +192,9 @@ async function initRxDb(password: string) {
 }
 
 async function getInternalLokiStorage(db: RxDatabase<DatabaseCollections>) {
-  const internalDb = await // @ts-ignore
-  db.clinical_documents.storageInstance.internals?.localState;
+  const internalDb = (
+    (await db.clinical_documents.storageInstance.internals) as any
+  )?.localState;
   return internalDb.databaseState.database as Loki;
 }
 
@@ -218,7 +220,6 @@ export function RxDbProvider(props: RxDbProviderProps) {
   const [error, setError] = useState<string>('');
 
   const submitPassword = (password: string) => {
-    debugger;
     console.log(password);
     setInitialized('PROGRESS');
     try {
