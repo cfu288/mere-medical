@@ -44,6 +44,7 @@ import { getRxStorageMemory } from 'rxdb/plugins/memory';
 import { AppLoadingSkeleton } from './AppLoadingSkeleton';
 import { CryptedIndexedDBAdapter } from 'sylviejs/storage-adapter/crypted-indexeddb-adapter';
 import logo from '../../img/white-logo.svg';
+import { useLocalConfig } from './LocalConfigProvider';
 
 // @ts-ignore
 window.__loki_idb_debug = true;
@@ -159,7 +160,19 @@ async function initDemoRxDb() {
   return db;
 }
 
-async function initRxDb(password: string) {
+export async function initUnencrypedRxDb() {
+  const db = await createRxDatabase<DatabaseCollections>({
+    name: 'mere_db',
+    storage: getRxStorageDexie(),
+    multiInstance: true,
+    ignoreDuplicate: true,
+  });
+  await db.addCollections<DatabaseCollections>(databaseCollections);
+
+  return db;
+}
+
+export async function initEncryptedRxDb(password: string) {
   const cryptedStorageAdapter = new CryptedIndexedDBAdapter({
     secret: password,
   }) as LokiPersistenceAdapter;
@@ -171,9 +184,14 @@ async function initRxDb(password: string) {
     );
   } catch (e) {
     console.error(e);
-    throw Error(
-      'There was an error decrypting your records with the provided password.'
-    );
+    if (e instanceof DOMException) {
+      throw Error(
+        'There was an error decrypting your records with the provided password.'
+      );
+    } else if (e === null) {
+      // This is a new database, so we need to create it. No throw
+      console.log('Creating new database');
+    }
   }
 
   // Password has been validated - create the db
@@ -192,13 +210,12 @@ async function initRxDb(password: string) {
 }
 
 async function getInternalLokiStorage(db: RxDatabase<DatabaseCollections>) {
-  const internalDb = (
-    (await db.clinical_documents.storageInstance.internals) as any
-  )?.localState;
-  return internalDb.databaseState.database as Loki;
+  const internalDb = ((await db.internalStore.internals) as any)
+    ?.localState as Promise<any>;
+  return (await internalDb).databaseState.database as Loki;
 }
 
-async function getStorageAdapter(db: RxDatabase<DatabaseCollections>) {
+export async function getStorageAdapter(db: RxDatabase<DatabaseCollections>) {
   const internalDb = await getInternalLokiStorage(db);
   return internalDb?.persistenceAdapter as LokiPersistenceAdapter;
 }
@@ -218,29 +235,29 @@ export function RxDbProvider(props: RxDbProviderProps) {
     'IDLE' | 'PROGRESS' | 'COMPLETE' | 'ERROR'
   >('IDLE');
   const [error, setError] = useState<string>('');
+  const localConfig = useLocalConfig();
 
   const submitPassword = (password: string) => {
     console.log(password);
     setInitialized('PROGRESS');
     try {
-      initRxDb(password)
+      initEncryptedRxDb(password)
         .then((db) => {
-          console.log(1);
           setDb(db);
           setInitialized('COMPLETE');
         })
         .catch((err) => {
-          console.log(2);
           console.error(err);
           setInitialized('ERROR');
           setError(
-            'Caught: There was an error decrypting your records with the provided password.'
+            'There was an error decrypting your records with the provided password.'
           );
         });
     } catch (e) {
+      console.error(e);
       setInitialized('ERROR');
       setError(
-        'Uncaught Error: There was an error decrypting your records with the provided password.'
+        'There was an error decrypting your records with the provided password.'
       );
       setPassword('');
     }
@@ -248,6 +265,7 @@ export function RxDbProvider(props: RxDbProviderProps) {
 
   useEffect(() => {
     if (Config.IS_DEMO === 'enabled') {
+      setInitialized('PROGRESS');
       initDemoRxDb().then((db) => {
         loadDemoData(db)
           .then(() => {
@@ -257,6 +275,7 @@ export function RxDbProvider(props: RxDbProviderProps) {
               variant: 'success',
             });
             setDb(db);
+            setInitialized('COMPLETE');
           })
           .catch((error) => {
             notifyDispatch({
@@ -265,10 +284,25 @@ export function RxDbProvider(props: RxDbProviderProps) {
               variant: 'error',
             });
             setDb(db);
+            setInitialized('COMPLETE');
           });
       });
+    } else if (localConfig.use_encrypted_database === false) {
+      setInitialized('PROGRESS');
+      initUnencrypedRxDb()
+        .then((db) => {
+          setDb(db);
+          setInitialized('COMPLETE');
+        })
+        .catch((err) => {
+          console.error(err);
+          setInitialized('ERROR');
+          setError(
+            'There was an error initializing the database. Please try again.'
+          );
+        });
     }
-  }, [notifyDispatch]);
+  }, [localConfig.use_encrypted_database, notifyDispatch]);
 
   return (
     <>
@@ -283,66 +317,76 @@ export function RxDbProvider(props: RxDbProviderProps) {
         leaveFrom="opacity-100"
         leaveTo="opacity-[.99]"
       >
-        {initialized === 'COMPLETE' ? (
-          <AppLoadingSkeleton ready={initialized === 'COMPLETE'} />
-        ) : (
-          <div className="bg-primary-900 flex min-h-screen flex-1 flex-col justify-center px-6 py-12 lg:px-8">
-            <div className="sm:mx-auto sm:w-full sm:max-w-md">
-              <img className="mx-auto h-10 w-auto" src={logo} alt="Mere Logo" />
-              <h2 className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-white">
-                Enter your encryption password
-              </h2>
-            </div>
+        {localConfig.use_encrypted_database === true ? (
+          <>
+            {initialized === 'COMPLETE' ? (
+              <AppLoadingSkeleton ready={true} />
+            ) : (
+              <div className="bg-primary-900 flex min-h-screen flex-1 flex-col justify-center px-6 py-12 lg:px-8">
+                <div className="sm:mx-auto sm:w-full sm:max-w-md">
+                  <img
+                    className="mx-auto h-10 w-auto"
+                    src={logo}
+                    alt="Mere Logo"
+                  />
+                  <h2 className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-white">
+                    Enter your encryption password
+                  </h2>
+                </div>
 
-            <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
-              <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
-                <form
-                  className="space-y-6"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    submitPassword(password);
-                  }}
-                >
-                  <div>
-                    <label
-                      htmlFor="password"
-                      className="block text-sm font-medium leading-6 text-gray-900"
+                <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
+                  <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
+                    <form
+                      className="space-y-6"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        submitPassword(password);
+                      }}
                     >
-                      Password
-                    </label>
-                    <div className="">
-                      <input
-                        id="password"
-                        name="password"
-                        type="password"
-                        autoComplete="current-password"
-                        required
-                        value={password}
-                        onChange={(e) => {
-                          setPassword(e.target.value);
-                          initialized === 'ERROR' && setInitialized('IDLE');
-                        }}
-                        className="focus:ring-primary-600 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6"
-                      />
-                    </div>
-                  </div>
+                      <div>
+                        <label
+                          htmlFor="password"
+                          className="block text-sm font-medium leading-6 text-gray-900"
+                        >
+                          Password
+                        </label>
+                        <div className="">
+                          <input
+                            id="password"
+                            name="password"
+                            type="password"
+                            autoComplete="current-password"
+                            required
+                            value={password}
+                            onChange={(e) => {
+                              setPassword(e.target.value);
+                              initialized === 'ERROR' && setInitialized('IDLE');
+                            }}
+                            className="focus:ring-primary-600 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6"
+                          />
+                        </div>
+                      </div>
 
-                  <div>
-                    <button
-                      type="submit"
-                      className="bg-primary-600 hover:bg-primary-500 focus-visible:outline-primary-600 flex w-full justify-center rounded-md px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-                    >
-                      Unlock
-                    </button>
+                      <div>
+                        <button
+                          type="submit"
+                          className="bg-primary-600 hover:bg-primary-500 focus-visible:outline-primary-600 flex w-full justify-center rounded-md px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                        >
+                          Unlock
+                        </button>
+                      </div>
+                      {/* error message */}
+                      {initialized === 'ERROR' && (
+                        <div className="text-center text-red-500">{error}</div>
+                      )}
+                    </form>
                   </div>
-                  {/* error message */}
-                  {initialized === 'ERROR' && (
-                    <div className="text-center text-red-500">{error}</div>
-                  )}
-                </form>
+                </div>
               </div>
-            </div>
-          </div>
+            )}
+          </>
+        ) : (
+          <AppLoadingSkeleton ready={initialized === 'COMPLETE'} />
         )}
       </Transition>
       {db && (
