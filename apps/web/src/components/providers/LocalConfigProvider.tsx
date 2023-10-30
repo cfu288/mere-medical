@@ -1,6 +1,11 @@
-import { get } from 'http';
-import React, { useRef, useContext, useCallback } from 'react';
-import { PropsWithChildren, useEffect, useState } from 'react';
+import React, {
+  useRef,
+  useContext,
+  useCallback,
+  PropsWithChildren,
+  useEffect,
+  useState,
+} from 'react';
 
 // Local config stored in local storage, is loaded before the database is.
 // This is because the database can be encrypted, and we need to know if it is or not before we can load it.

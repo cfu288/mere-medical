@@ -1,7 +1,6 @@
-import { Switch } from '@headlessui/react';
+import { Switch, Transition } from '@headlessui/react';
 import uuid4 from '../../utils/UUIDUtils';
 import {
-  DatabaseCollections,
   getStorageAdapter,
   initEncryptedRxDb,
   initUnencrypedRxDb,
@@ -20,8 +19,8 @@ import {
 } from '../providers/LocalConfigProvider';
 import { Modal } from '../Modal';
 import { ModalHeader } from '../ModalHeader';
-import { RxDatabase } from 'rxdb';
 import { CryptedIndexedDBAdapter } from 'sylviejs/storage-adapter/crypted-indexeddb-adapter';
+import logoCol from '../../assets/logo.svg';
 
 export function PrivacyAndSecuritySettingsGroup() {
   const db = useRxDb(),
@@ -32,6 +31,8 @@ export function PrivacyAndSecuritySettingsGroup() {
     localConfig = useLocalConfig(),
     updateLocalConfig = useUpdateLocalConfig(),
     [toggleModal, setToggleModal] = useState(false);
+
+  const [loadingOverlayVisible, setLoadingOverlayVisible] = useState(false);
 
   const migrateFromEncryptedToUnencrypted = useCallback(async () => {
     // Migrate current RxDB encrypted database to unencrypted database, as seen in RxDBProvider.tsx
@@ -102,7 +103,9 @@ export function PrivacyAndSecuritySettingsGroup() {
                         // If we are enabling encrypted storage, we need to set a password
                         setToggleModal(true);
                       } else {
+                        setLoadingOverlayVisible(true);
                         await migrateFromEncryptedToUnencrypted();
+                        setLoadingOverlayVisible(false);
                       }
                     }}
                     className={classNames(
@@ -193,6 +196,47 @@ export function PrivacyAndSecuritySettingsGroup() {
           toggleModal={toggleModal}
           setToggleModal={setToggleModal}
         />
+        {/* Set transparent overlay that is on top of everything with text "Decrypting your data, please wait" */}
+        <Transition
+          show={loadingOverlayVisible}
+          appear={true}
+          enter="transition-opacity duration-150"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="transition-opacity ease-linear duration-75"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-[.99]"
+        >
+          <div
+            className="fixed inset-0 z-50 overflow-y-auto"
+            aria-labelledby="modal-title"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center">
+              {/* <!-- Background overlay, show/hide based on modal state. --> */}
+              <div
+                className="bg-primary-700 fixed inset-0 bg-opacity-75 transition-all duration-300"
+                aria-hidden="true"
+              ></div>
+              <div className="flex transform flex-col overflow-hidden rounded-lg bg-white pb-4 text-left align-middle shadow-xl">
+                <p className="p-4 text-lg font-bold">Decrypting your data</p>
+                <div className="relative h-24 w-24 self-center">
+                  <img
+                    className="absolute top-0 left-0 h-24 w-24 animate-ping opacity-25"
+                    src={logoCol}
+                    alt="Loading screen"
+                  ></img>
+                  <img
+                    className="absolute top-0 left-0 h-24 w-24 opacity-25"
+                    src={logoCol}
+                    alt="Loading screen"
+                  ></img>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Transition>
       </>
     );
   }
@@ -250,7 +294,7 @@ function DatabasePasswordModal({
     <Modal open={toggleModal} setOpen={() => setToggleModal(false)}>
       <ModalHeader
         title="Set database password"
-        subtitle="Set a password to encrypt your database."
+        subtitle="Set a password to encrypt your database with. Note that forgetting your password will prevent you from accessing your data permanently."
         setClose={() => setToggleModal(false)}
       />
       <form

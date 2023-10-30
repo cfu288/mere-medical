@@ -46,9 +46,6 @@ import { CryptedIndexedDBAdapter } from 'sylviejs/storage-adapter/crypted-indexe
 import logo from '../../img/white-logo.svg';
 import { useLocalConfig } from './LocalConfigProvider';
 
-// @ts-ignore
-window.__loki_idb_debug = true;
-
 if (process.env.NODE_ENV === 'development') {
   addRxPlugin(RxDBDevModePlugin);
 }
@@ -265,6 +262,7 @@ export function RxDbProvider(props: RxDbProviderProps) {
 
   useEffect(() => {
     if (Config.IS_DEMO === 'enabled') {
+      // If this is a demo instance, load the demo data
       setInitialized('PROGRESS');
       initDemoRxDb().then((db) => {
         loadDemoData(db)
@@ -288,6 +286,7 @@ export function RxDbProvider(props: RxDbProviderProps) {
           });
       });
     } else if (localConfig.use_encrypted_database === false) {
+      // If not demo and not encrypted, load unencrypted db
       setInitialized('PROGRESS');
       initUnencrypedRxDb()
         .then((db) => {
@@ -302,6 +301,7 @@ export function RxDbProvider(props: RxDbProviderProps) {
           );
         });
     }
+    // Encrypted db is not automatically loaded, handled in submitPassword
   }, [localConfig.use_encrypted_database, notifyDispatch]);
 
   return (
@@ -320,7 +320,7 @@ export function RxDbProvider(props: RxDbProviderProps) {
         {localConfig.use_encrypted_database === true ? (
           <>
             {initialized === 'COMPLETE' ? (
-              <AppLoadingSkeleton ready={true} />
+              <AppLoadingSkeleton ready />
             ) : (
               <div className="bg-primary-900 flex min-h-screen flex-1 flex-col justify-center px-6 py-12 lg:px-8">
                 <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -366,7 +366,6 @@ export function RxDbProvider(props: RxDbProviderProps) {
                           />
                         </div>
                       </div>
-
                       <div>
                         <button
                           type="submit"
