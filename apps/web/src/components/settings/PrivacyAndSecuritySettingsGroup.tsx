@@ -21,8 +21,6 @@ import {
 import { Modal } from '../Modal';
 import { ModalHeader } from '../ModalHeader';
 import { CryptedIndexedDBAdapter } from 'sylviejs/storage-adapter/crypted-indexeddb-adapter';
-import logoCol from '../../assets/logo.svg';
-import { set } from 'date-fns';
 import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
 
 export function PrivacyAndSecuritySettingsGroup() {
