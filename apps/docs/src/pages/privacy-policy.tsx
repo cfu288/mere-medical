@@ -131,40 +131,29 @@ privacy and security policies. <strong>"We"</strong> refers to the health techno
     <div class="tooltiptext">
       Identifiable data means: data, such as your name, phone number, email, address, health services, information on your physical or mental health conditions, or your social security number, that can be used on its own or with other information to identify you.     
     </div>
-  </div>:
-</h3>
-<ul><li>To provide the 
+  </div>
+to provide the 
 <span class="tooltip">
   primary service
   <div class="tooltiptext">
     Primary service means: Mere Medical stores health data from multiple sources directly on your device
   </div>
 </span>
-of the app or technology</li></ul>
-
+of the app or technology.
+</h3>
 <h2 id="sharehowweshareyourdataexternallywithothercompaniesorentities">Share: How we share your data externally with other companies or entities</h2>
 <h3>
-  We share your 
+  We DO NOT share your 
   <div class="tooltip">
-    identifiable data
+    identifiable data.
     <div class="tooltiptext">
       Identifiable data means: data, such as your name, phone number, email, address, health services, information on your physical or mental health conditions, or your social security number, that can be used on its own or with other information to identify you.     
     </div>
-  </div>:
-</h3>
-<ul><li>We DO NOT share your 
-<span class="tooltip">
-  identifiable data
-  <div class="tooltiptext">
-  Identifiable data means: data, such as your name, phone number, email, address, health services, information on your physical or mental health conditions, or your social security number, that can be used on its own or with other information to identify you.
   </div>
-</span>
-</li></ul>
+</h3>
 
-<h3 id="weshareyourdataafterremovingidentifiersnotethatremainingdatamaynotbeanonymous">We share your data AFTER removing identifiers (note that remaining data may not be anonymous):</h3>
-<ul>
-<li>We DO NOT share your data after removing identifiers
-</ul>
+<h3 id="weshareyourdataafterremovingidentifiersnotethatremainingdatamaynotbeanonymous">We DO NOT share your data AFTER removing identifiers (note that remaining data may not be anonymous).</h3>
+
 <h2 id="sellwhowesellyourdatato">Sell: Who we sell your data to</h2>
 <table>
   <tr>
@@ -238,7 +227,7 @@ of the app or technology</li></ul>
       </div>
     </div>    
     to encrypt your data in the device or app? </strong></td>
-    <td> No  </td>
+    <td> Yes, if a user enables encryption in the settings.  </td>
   </tr>
   <tr>
     <td><strong>Does the app or technology use 
@@ -256,7 +245,7 @@ of the app or technology</li></ul>
       </div>
     </div>    
     services provider?</strong></td>
-    <td>  N/A </td>
+    <td>  N/A, we do not store user data on our servers. </td>
   </tr>
   <tr>
     <td><strong>Does the app or technology use
@@ -267,7 +256,7 @@ of the app or technology</li></ul>
       </div>
     </div>    
     to encrypt your data while it is transmitted?</strong></td>
-    <td>   Yes, when you take certain steps (<a target='_blank' href='https://meremedical.co/docs/getting-started/docker#setting-up-with-docker-compose--local-ssl-with-mkcert--nginx'>click to learn how</a>)</td>
+    <td>   Yes - when you take certain steps while self-hosting (<a target='_blank' href='https://meremedical.co/docs/getting-started/docker#setting-up-with-docker-compose--local-ssl-with-mkcert--nginx'>click to learn how</a>)</td>
   </tr>
 </table>
 <p>
@@ -292,8 +281,8 @@ of the app or technology</li></ul>
 <table>
   <tr>
     <td><strong>Can you access, edit, share, or delete the data we have about you?</strong></td>
-    <td>Yes, you can ... <br> <li>access your data</li> <li>edit your data</li> <li>share your data</li> <li>delete your data</li> Step 1) Go to Settings
-Step 2) Click "Start data export" under "Export data" 
+    <td>Yes, you can ... <br> <li>access your data</li> <li>edit your data</li> <li>share your data</li> <li>delete your data</li> <br/><h3>Instructions for data export</h3> <ol><li>Go to Settings</li>
+    <li>Click "Start data export" under "Export data" </li></ol>
     </td>
   </tr>
 </table>
