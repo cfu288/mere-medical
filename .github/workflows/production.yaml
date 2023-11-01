@@ -18,8 +18,8 @@ jobs:
         uses: StephaneBour/actions-calver@master
         id: calver
         with:
-          date_format: '%Y-%m-%d'
-          release: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
+          date_format: '%Y.%m.%d'
+          release: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
