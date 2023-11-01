@@ -15,6 +15,7 @@ module.exports = function (webpackConfig, nxConfig) {
     resolve: {
       fallback: {
         assert: false,
+        fs: false,
       },
     },
   });
