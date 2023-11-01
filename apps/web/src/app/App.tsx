@@ -9,23 +9,26 @@ import { RxDbProvider } from '../components/providers/RxDbProvider';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { UserPreferencesProvider } from '../components/providers/UserPreferencesProvider';
 import { SyncJobProvider } from '../components/providers/SyncJobProvider';
+import { LocalConfigProvider } from '../components/providers/LocalConfigProvider';
 
 export default function App() {
   return (
     <ErrorBoundary>
-      <NotificationProvider>
-        <RxDbProvider>
-          <UserProvider>
-            <UserPreferencesProvider>
-              <Router>
-                <SyncJobProvider>
-                  <TabWrapper />
-                </SyncJobProvider>
-              </Router>
-            </UserPreferencesProvider>
-          </UserProvider>
-        </RxDbProvider>
-      </NotificationProvider>
+      <LocalConfigProvider>
+        <NotificationProvider>
+          <RxDbProvider>
+            <UserProvider>
+              <UserPreferencesProvider>
+                <Router>
+                  <SyncJobProvider>
+                    <TabWrapper />
+                  </SyncJobProvider>
+                </Router>
+              </UserPreferencesProvider>
+            </UserProvider>
+          </RxDbProvider>
+        </NotificationProvider>
+      </LocalConfigProvider>
     </ErrorBoundary>
   );
 }
