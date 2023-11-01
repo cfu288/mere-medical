@@ -13,12 +13,10 @@ import React, {
 // Things stored in local config are local to the device, and are not synced to other devices.
 
 interface LocalConfig {
-  should_show_walkthrough: boolean;
   use_encrypted_database: boolean;
 }
 
 const defaultConfig: LocalConfig = {
-  should_show_walkthrough: true,
   use_encrypted_database: false,
 };
 
