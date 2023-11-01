@@ -27,8 +27,8 @@
   <a href="https://discord.gg/FjtQ84qADe">
     <img src="https://img.shields.io/badge/Discord-7289DA?style=flat&logo=discord&logoColor=white" alt="Discord">
   </a>
-  <a href="https://drone.mari.casa/cfu288/mere-medical">
-    <img src="https://drone.mari.casa/api/badges/cfu288/mere-medical/status.svg" alt="Build Status">
+  <a href="https://github.com/cfu288/mere-medical/actions/workflows/staging.yaml">
+    <img src="https://github.com/cfu288/mere-medical/actions/workflows/staging.yaml/badge.svg" alt="Build Status">
   </a>
   <a>
     <img src="https://img.shields.io/github/license/cfu288/mere-medical.svg" alt="licence">
