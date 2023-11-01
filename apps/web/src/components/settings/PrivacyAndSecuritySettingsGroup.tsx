@@ -1,6 +1,7 @@
 import { Switch, Transition } from '@headlessui/react';
 import uuid4 from '../../utils/UUIDUtils';
 import {
+  getInternalLokiStorage,
   getStorageAdapter,
   initEncryptedRxDb,
   initUnencrypedRxDb,
@@ -21,6 +22,8 @@ import { Modal } from '../Modal';
 import { ModalHeader } from '../ModalHeader';
 import { CryptedIndexedDBAdapter } from 'sylviejs/storage-adapter/crypted-indexeddb-adapter';
 import logoCol from '../../assets/logo.svg';
+import { set } from 'date-fns';
+import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
 
 export function PrivacyAndSecuritySettingsGroup() {
   const db = useRxDb(),
@@ -29,45 +32,8 @@ export function PrivacyAndSecuritySettingsGroup() {
     rawUserPreferences = useRawUserPreferences(),
     ref = useRef<HTMLDivElement | null>(null),
     localConfig = useLocalConfig(),
-    updateLocalConfig = useUpdateLocalConfig(),
-    [toggleModal, setToggleModal] = useState(false);
-
-  const [loadingOverlayVisible, setLoadingOverlayVisible] = useState(false);
-
-  const migrateFromEncryptedToUnencrypted = useCallback(async () => {
-    // Migrate current RxDB encrypted database to unencrypted database, as seen in RxDBProvider.tsx
-    // Export current database
-    try {
-      const json = await db.exportJSON();
-
-      for (const collectionName in json.collections) {
-        if (json.collections[collectionName].docs.length === 0) {
-          delete json.collections[collectionName];
-        }
-      }
-
-      // Create new unencrypted database
-      const newDb = await initUnencrypedRxDb();
-      // Import data into new database
-      await newDb.importJSON(json);
-      // Update local config to use unencrypted database
-
-      // debugger;
-      await db.remove();
-      // We need to fully delete the underlying encrypted loki storage adapter, or we will have issues with re-encrypting the database later
-      const internalStorageAdapter = await getStorageAdapter(db);
-      await (
-        internalStorageAdapter as CryptedIndexedDBAdapter
-      ).deleteDatabaseAsync('mere_db.db');
-      updateLocalConfig({
-        use_encrypted_database: false,
-      });
-
-      setTimeout(() => window.location.reload(), 0);
-    } catch (e) {
-      console.error(e);
-    }
-  }, [db, updateLocalConfig]);
+    [showPasswordPrompModal, setShowPasswordPromptModal] = useState(false),
+    [showDecryptConfirmModal, setShowDecryptConfirmModal] = useState(false);
 
   if (userPreferences !== undefined && rawUserPreferences !== undefined) {
     return (
@@ -101,11 +67,9 @@ export function PrivacyAndSecuritySettingsGroup() {
                     onChange={async () => {
                       if (localConfig.use_encrypted_database === false) {
                         // If we are enabling encrypted storage, we need to set a password
-                        setToggleModal(true);
+                        setShowPasswordPromptModal(true);
                       } else {
-                        setLoadingOverlayVisible(true);
-                        await migrateFromEncryptedToUnencrypted();
-                        setLoadingOverlayVisible(false);
+                        setShowDecryptConfirmModal(true);
                       }
                     }}
                     className={classNames(
@@ -193,55 +157,118 @@ export function PrivacyAndSecuritySettingsGroup() {
           </div>
         </div>
         <DatabasePasswordModal
-          toggleModal={toggleModal}
-          setToggleModal={setToggleModal}
+          toggleModal={showPasswordPrompModal}
+          setToggleModal={setShowPasswordPromptModal}
         />
-        {/* Set transparent overlay that is on top of everything with text "Decrypting your data, please wait" */}
-        <Transition
-          show={loadingOverlayVisible}
-          appear={true}
-          enter="transition-opacity duration-150"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="transition-opacity ease-linear duration-75"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-[.99]"
-        >
-          <div
-            className="fixed inset-0 z-50 overflow-y-auto"
-            aria-labelledby="modal-title"
-            role="dialog"
-            aria-modal="true"
-          >
-            <div className="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center">
-              {/* <!-- Background overlay, show/hide based on modal state. --> */}
-              <div
-                className="bg-primary-700 fixed inset-0 bg-opacity-75 transition-all duration-300"
-                aria-hidden="true"
-              ></div>
-              <div className="flex transform flex-col overflow-hidden rounded-lg bg-white pb-4 text-left align-middle shadow-xl">
-                <p className="p-4 text-lg font-bold">Decrypting your data</p>
-                <div className="relative h-24 w-24 self-center">
-                  <img
-                    className="absolute top-0 left-0 h-24 w-24 animate-ping opacity-25"
-                    src={logoCol}
-                    alt="Loading screen"
-                  ></img>
-                  <img
-                    className="absolute top-0 left-0 h-24 w-24 opacity-25"
-                    src={logoCol}
-                    alt="Loading screen"
-                  ></img>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Transition>
+        <PasswordPromptModal
+          toggleModal={showDecryptConfirmModal}
+          setToggleModal={setShowDecryptConfirmModal}
+        />
       </>
     );
   }
 
   return null;
+}
+
+/**
+ * Modal that asks for confirmation if a user wants to decrypt their database and remove the password. This is shown when the user untoggles encrypted storage.
+ */
+function PasswordPromptModal({
+  toggleModal,
+  setToggleModal,
+}: {
+  toggleModal: boolean;
+  setToggleModal: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
+  const updateLocalConfig = useUpdateLocalConfig();
+  const db = useRxDb();
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const migrateFromEncryptedToUnencrypted = useCallback(async () => {
+    // Migrate current RxDB encrypted database to unencrypted database, as seen in RxDBProvider.tsx
+    // Export current database
+    try {
+      const internalStorageAdapter = (await getStorageAdapter(
+        db
+      )) as CryptedIndexedDBAdapter;
+      const internalDb = await getInternalLokiStorage(db);
+
+      // Force final write of Loki memory to idb
+      await new Promise<void>((resolve, reject) =>
+        internalDb.saveDatabase((res) => {
+          if (res?.success === true) {
+            resolve();
+          } else if (res) {
+            reject(res);
+          } else {
+            resolve();
+          }
+        })
+      );
+
+      const json = await db.exportJSON();
+
+      for (const collectionName in json.collections) {
+        if (json.collections[collectionName].docs.length === 0) {
+          delete json.collections[collectionName];
+        }
+      }
+
+      // Create new unencrypted database
+      const newDb = await initUnencrypedRxDb();
+      // Import data into new database
+      await newDb.importJSON(json);
+      // Update local config to use unencrypted database
+
+      // debugger;
+      await db.remove();
+      // We need to fully delete the underlying encrypted loki storage adapter, or we will have issues with re-encrypting the database later
+      await (
+        internalStorageAdapter as CryptedIndexedDBAdapter
+      ).deleteDatabaseAsync('mere_db.db');
+      updateLocalConfig({
+        use_encrypted_database: false,
+      });
+
+      setTimeout(() => window.location.reload(), 0);
+    } catch (e) {
+      console.error(e);
+    }
+  }, [db, updateLocalConfig]);
+
+  return (
+    <Modal open={toggleModal} setOpen={() => setToggleModal(false)}>
+      <ModalHeader
+        title="Remove database password"
+        subtitle="Are you sure you want to remove your database password? This will decrypt your database and remove the password."
+        setClose={isProcessing ? undefined : () => setToggleModal(false)}
+      />
+      <div className="flex flex-shrink-0 justify-end px-4 py-4">
+        <button
+          type="button"
+          disabled={isProcessing}
+          className="focus:ring-primary-500 rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-gray-300"
+          onClick={() => setToggleModal(false)}
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          className=" bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 ml-4 inline-flex justify-center rounded-md border border-transparent py-2 px-4 align-middle text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-gray-300 disabled:text-gray-700"
+          disabled={isProcessing}
+          onClick={async () => {
+            setIsProcessing(true);
+            await migrateFromEncryptedToUnencrypted();
+            setIsProcessing(false);
+          }}
+        >
+          <p className={`${isProcessing ? 'mr-2' : ''}`}>Remove Password</p>
+          {isProcessing && <ButtonLoadingSpinner />}
+        </button>
+      </div>
+    </Modal>
+  );
 }
 
 /**
@@ -272,18 +299,30 @@ function DatabasePasswordModal({
       }
 
       // // Create new encrypted database
-      const newDb = await initEncryptedRxDb(password);
+      const newEnryptedDb = await initEncryptedRxDb(password);
 
       // // Import data into new database
-      await newDb.importJSON(json);
-      // Update local config to use encrypted database
+      await newEnryptedDb.importJSON(json);
 
-      await db.remove();
+      const internalDb = await getInternalLokiStorage(newEnryptedDb);
+      // Force final write of Loki memory to idb after import
+      await new Promise<void>((resolve, reject) =>
+        internalDb.saveDatabase((res) => {
+          if (res?.success === true) {
+            resolve();
+          } else if (res) {
+            reject(res);
+          } else {
+            resolve();
+          }
+        })
+      );
+
+      // Update local config to use encrypted database
       updateLocalConfig({
         use_encrypted_database: true,
       });
 
-      // Close modal
       setToggleModal(false);
       setTimeout(() => window.location.reload(), 0);
     },

@@ -173,7 +173,6 @@ export async function initEncryptedRxDb(password: string) {
   const cryptedStorageAdapter = new CryptedIndexedDBAdapter({
     secret: password,
   }) as LokiPersistenceAdapter;
-
   try {
     // RxDB adds a .db extension to the database name, lets check it first
     await (cryptedStorageAdapter as CryptedIndexedDBAdapter).loadDatabaseAsync(
@@ -206,7 +205,9 @@ export async function initEncryptedRxDb(password: string) {
   return db;
 }
 
-async function getInternalLokiStorage(db: RxDatabase<DatabaseCollections>) {
+export async function getInternalLokiStorage(
+  db: RxDatabase<DatabaseCollections>
+) {
   const internalDb = ((await db.internalStore.internals) as any)
     ?.localState as Promise<any>;
   return (await internalDb).databaseState.database as Loki;
