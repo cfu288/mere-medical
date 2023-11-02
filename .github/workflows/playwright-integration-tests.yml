@@ -1,11 +1,10 @@
 name: Playwright Integration Tests
 on:
   workflow_dispatch:
-
-  # push:
-  #   branches: [main]
-  # pull_request:
-  #   branches: [main]
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
   test:
@@ -20,5 +19,13 @@ jobs:
         run: npm ci
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
+      - name: Install mkcert
+        run: sudo apt install mkcert
+      - name: Generate certs
+        run: mkdir -p .dev/certs/ && mkcert -key-file .dev/certs/localhost-key.pem -cert-file .dev/certs/localhost.pem localhost
+      - name: Install local certs
+        run: mkcert -install
+      - name: Setup api env vars
+        run: cp apps/api/.example.env .env
       - name: Run Playwright tests
         run: npx nx run web-e2e:e2e

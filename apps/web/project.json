@@ -56,14 +56,18 @@
       "options": {
         "buildTarget": "web:build",
         "hmr": true,
-        "proxyConfig": "apps/web/proxy.conf.json",
-        "ssl": true,
-        "sslKey": "./.dev/certs/localhost-key.pem",
-        "sslCert": "./.dev/certs/localhost.pem"
+        "proxyConfig": "apps/web/proxy.conf.json"
       },
       "configurations": {
         "development": {
-          "buildTarget": "web:build:development"
+          "buildTarget": "web:build:development",
+          "ssl": true,
+          "sslKey": "./.dev/certs/localhost-key.pem",
+          "sslCert": "./.dev/certs/localhost.pem"
+        },
+        "development:nossl": {
+          "buildTarget": "web:build:development",
+          "ssl": false
         },
         "production": {
           "buildTarget": "web:build:production",
@@ -91,10 +95,10 @@
       "options": {
         "commands": [
           {
-            "command": "nx serve api:serve"
+            "command": "nx run api:serve"
           },
           {
-            "command": "nx serve web:serve"
+            "command": "nx run web:serve"
           }
         ],
         "parallel": true,

@@ -1,4 +1,4 @@
-import { Switch, Transition } from '@headlessui/react';
+import { Switch } from '@headlessui/react';
 import uuid4 from '../../utils/UUIDUtils';
 import {
   getInternalLokiStorage,
