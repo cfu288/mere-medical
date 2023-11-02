@@ -324,7 +324,7 @@ export function RxDbProvider(props: RxDbProviderProps) {
             {initialized === 'COMPLETE' ? (
               <AppLoadingSkeleton ready />
             ) : (
-              <div className="bg-primary-900 mobile-full-height flex flex-1 flex-col justify-center px-6 py-12 lg:px-8">
+              <div className="bg-primary-900 mobile-full-height flex flex-1 flex-col justify-center">
                 <div className="sm:mx-auto sm:w-full sm:max-w-md">
                   <img
                     className="mx-auto h-10 w-auto"
@@ -335,8 +335,8 @@ export function RxDbProvider(props: RxDbProviderProps) {
                     Enter your encryption password
                   </h2>
                 </div>
-                <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
-                  <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
+                <div className="mx-4 mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
+                  <div className="rounded-lg bg-white px-6 py-12 shadow sm:mx-4 ">
                     <form
                       className="space-y-6"
                       onSubmit={(e) => {
