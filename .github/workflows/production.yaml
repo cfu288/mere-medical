@@ -33,6 +33,12 @@ jobs:
           push: true
           tags: cfu288/mere-medical:latest,cfu288/mere-medical:${{ env.RELEASE_CALVER_VERSION }}
 
+      - name: Create a GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ env.RELEASE_CALVER_VERSION }}
+          name: Release ${{ env.RELEASE_CALVER_VERSION }}
+
   docs:
     runs-on: ubuntu-latest
     steps:
