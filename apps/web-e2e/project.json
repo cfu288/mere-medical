@@ -17,6 +17,19 @@
         }
       }
     },
+
+    "e2e:nodevserver": {
+      "executor": "@mands/nx-playwright:playwright-executor",
+      "options": {
+        "e2eFolder": "apps/web-e2e",
+        "packageRunner": "npx"
+      },
+      "configurations": {
+        "production": {
+          "devServerTarget": "web:serve:production"
+        }
+      }
+    },
     "ts-check": {
       "executor": "nx:run-commands",
       "options": {
