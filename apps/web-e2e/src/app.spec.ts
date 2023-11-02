@@ -1,5 +1,9 @@
 import { expect, test } from '@playwright/test';
 
+test.use({
+  ignoreHTTPSErrors: true,
+});
+
 test('Timeline tab loads', async ({ page }) => {
   await page.goto('https://localhost:4200/timeline');
 
