@@ -238,8 +238,8 @@ function PasswordPromptModal({
   return (
     <Modal open={toggleModal} setOpen={() => setToggleModal(false)}>
       <ModalHeader
-        title="Remove database password"
-        subtitle="Are you sure you want to remove your database password? This will decrypt your database and remove the password."
+        title="Remove password and decrypt data"
+        subtitle="Are you sure you want to remove your password? This will decrypt your medical records and you will no longer be prompted to provide a password before seeing your medical records."
         setClose={isProcessing ? undefined : () => setToggleModal(false)}
       />
       <div className="flex flex-shrink-0 justify-end px-4 py-4">
@@ -330,8 +330,8 @@ function DatabasePasswordModal({
   return (
     <Modal open={toggleModal} setOpen={() => setToggleModal(false)}>
       <ModalHeader
-        title="Set database password"
-        subtitle="Set a password to encrypt your database with. Note that forgetting your password will prevent you from accessing your data permanently."
+        title="Set encryption password"
+        subtitle="Set a password to encrypt your medical records with. Note that forgetting your password will prevent you from accessing your data permanently."
         setClose={() => setToggleModal(false)}
       />
       <form
