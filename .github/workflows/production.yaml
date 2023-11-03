@@ -38,6 +38,8 @@ jobs:
         with:
           tag: ${{ env.RELEASE_CALVER_VERSION }}
           name: Release ${{ env.RELEASE_CALVER_VERSION }}
+          makeLatest: true
+          allowUpdates: true
 
   docs:
     runs-on: ubuntu-latest
