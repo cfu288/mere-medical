@@ -44,7 +44,7 @@ const features = [
     name: 'Anonymous & Secure',
     img: '/img/secure.svg',
     description:
-      'With Mere, you are always in control of your data. Stay offline, sync online – the choice is yours.',
+      'With Mere, you are always in control of your data. Encrypt your medical records right on your device with zero-knowledge encryption.',
   },
   {
     name: 'Free for Everyone',
@@ -474,7 +474,7 @@ export function Footer() {
           ))}
         </nav>
         <p className="mt-8 text-center text-base text-gray-400">
-          &copy; 2022 Mere Medical. All rights reserved.
+          &copy; 2023 Mere Medical. All rights reserved.
         </p>
       </div>
     </footer>
