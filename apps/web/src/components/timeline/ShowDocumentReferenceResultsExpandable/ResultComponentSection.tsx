@@ -85,12 +85,8 @@ export function ResultComponentSection({
             <p className="mt-2 mb-4 text-sm font-semibold italic text-gray-900">
               {uniqueDates.size > 0 &&
                 `Results taken at ${[...uniqueDates]
-                  .filter((d) => !!d)
-                  .map((d) => {
-                    // also handle dates that are shorter like "20230314"
-                    d = d!;
-                    return parseDateString(d);
-                  })
+                  .filter((d): d is string => Boolean(d))
+                  .map(parseDateString)
                   .join(' ,')}`}
             </p>
           </Disclosure.Panel>

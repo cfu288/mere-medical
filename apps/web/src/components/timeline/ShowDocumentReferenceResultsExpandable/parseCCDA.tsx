@@ -65,29 +65,11 @@ export function parseCCDAResultsSection(
   sections: HTMLCollectionOf<HTMLElement>,
   id: string[] | string
 ) {
-  const matchingSections = [...(sections as unknown as HTMLElement[])]?.filter(
-    (s) =>
-      Array.isArray(id)
-        ? id.includes(
-            s?.getElementsByTagName('templateId')?.[0]?.getAttribute('root') ||
-              ''
-          )
-        : s?.getElementsByTagName('templateId')?.[0]?.getAttribute('root') ===
-          id
-  );
+  const matchingSections = getMatchingSections(sections, id);
 
   if (!matchingSections) {
     return null;
   }
-
-  console.log(
-    [...matchingSections.map((x) => x.getElementsByTagName('entry'))]?.map(
-      (x) =>
-        [...x]
-          .map((y) => y.getElementsByTagName('code'))
-          ?.map((z) => [...z]?.[0]?.textContent)
-    )
-  );
 
   const matchingSectionsDisplayNames = [
     ...matchingSections.map((x) => x.getElementsByTagName('entry')),
@@ -104,8 +86,6 @@ export function parseCCDAResultsSection(
       x.getElementsByTagName('component')
     )
   );
-
-  console.log(sectionComponents);
 
   if (!sectionComponents || sectionComponents.length === 0) {
     return null;
@@ -220,20 +200,24 @@ export function parseCCDAResultsSection(
   );
 }
 
+function getMatchingSections(
+  sections: HTMLCollectionOf<HTMLElement>,
+  id: string[] | string
+) {
+  return [...(sections as unknown as HTMLElement[])]?.filter((s) =>
+    Array.isArray(id)
+      ? id.includes(
+          s?.getElementsByTagName('templateId')?.[0]?.getAttribute('root') || ''
+        )
+      : s?.getElementsByTagName('templateId')?.[0]?.getAttribute('root') === id
+  );
+}
+
 export function parseCCDAVitalsSection(
   sections: HTMLCollectionOf<HTMLElement>,
   id: string[] | string
 ) {
-  const matchingSections = [...(sections as unknown as HTMLElement[])]?.filter(
-    (s) =>
-      Array.isArray(id)
-        ? id.includes(
-            s?.getElementsByTagName('templateId')?.[0]?.getAttribute('root') ||
-              ''
-          )
-        : s?.getElementsByTagName('templateId')?.[0]?.getAttribute('root') ===
-          id
-  );
+  const matchingSections = getMatchingSections(sections, id);
   if (!matchingSections) {
     return null;
   }
@@ -246,7 +230,7 @@ export function parseCCDAVitalsSection(
     return null;
   }
 
-  const kp: Record<
+  const extractedVital: Record<
     string,
     {
       title: string;
@@ -266,7 +250,7 @@ export function parseCCDAVitalsSection(
       ?.getElementsByTagName('code')[0]
       .getAttribute('displayName');
     if (codeSystem === LOINC_CODE_SYSTEM && codeId) {
-      kp[codeId] = {
+      extractedVital[codeId] = {
         title:
           codeDisplayName ||
           component?.getElementsByTagName('originalText')?.[0]?.innerHTML,
@@ -287,7 +271,9 @@ export function parseCCDAVitalsSection(
     }
   }
 
-  const uniqueDates = new Set([...Object.values(kp).map((v) => v.datetime)]);
+  const uniqueDates = new Set([
+    ...Object.values(extractedVital).map((v) => v.datetime),
+  ]);
 
   return (
     <>
@@ -309,7 +295,7 @@ export function parseCCDAVitalsSection(
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
-          {Object.values(kp).map((v) => (
+          {Object.values(extractedVital).map((v) => (
             <tr>
               <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
                 {v.title}
@@ -325,11 +311,8 @@ export function parseCCDAVitalsSection(
       <p className="mt-2 mb-4 text-sm font-semibold italic text-gray-900">
         Vitals taken at{' '}
         {[...uniqueDates]
-          .filter((d) => !!d)
-          .map((d) => {
-            d = d!;
-            return parseDateString(d);
-          })
+          .filter((d): d is string => Boolean(d))
+          .map(parseDateString)
           .join(' ,')}
       </p>
     </>
@@ -340,15 +323,7 @@ export function parseCCDASection(
   sections: HTMLCollectionOf<HTMLElement>,
   id: string[] | string
 ) {
-  const matchingSections = [...(sections as unknown as HTMLElement[])]?.filter(
-    (s) =>
-      Array.isArray(id)
-        ? id.includes(
-            s.getElementsByTagName('templateId')?.[0]?.getAttribute('root') ||
-              ''
-          )
-        : s.getElementsByTagName('templateId')?.[0]?.getAttribute('root') === id
-  );
+  const matchingSections = getMatchingSections(sections, id);
 
   return [...(matchingSections as unknown as HTMLElement[])]
     ?.map((x) => x.innerHTML)
