@@ -1,12 +1,12 @@
 import { Disclosure } from '@headlessui/react';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
 
-export function DisplayCCDAVitalSignsSection({
+export function DisplayCCDARawSection({
   title,
   content,
 }: {
   title: string;
-  content: JSX.Element;
+  content: string;
 }) {
   return (
     <Disclosure>
@@ -23,7 +23,12 @@ export function DisplayCCDAVitalSignsSection({
             </div>
           </Disclosure.Button>
           <Disclosure.Panel className="m-4 text-sm text-gray-700">
-            {content}
+            <p
+              className="p-2"
+              dangerouslySetInnerHTML={{
+                __html: content || '',
+              }}
+            ></p>
           </Disclosure.Panel>
         </>
       )}

@@ -1,7 +1,7 @@
 import { Disclosure } from '@headlessui/react';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
 
-export function DisplayCCDAVitalSignsSection({
+export function DisplayCCDAElementSection({
   title,
   content,
 }: {
