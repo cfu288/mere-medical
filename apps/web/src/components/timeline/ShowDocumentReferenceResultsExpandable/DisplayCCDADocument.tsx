@@ -115,10 +115,20 @@ export function DisplayCCDADocument({
         />
       )}
       {ccda?.RESULTS_SECTION && (
-        <DisplayCCDAElementSection
-          title="Results"
-          content={(ccda.RESULTS_SECTION as JSX.Element) || ''}
-        />
+        <ErrorBoundary
+          fallbackUI={
+            <div>
+              There was an error trying to load vital signs. Please submit a{' '}
+              <a href="mailto:cfu288@meremedical.co">bug report</a> so we can
+              get this fixed!
+            </div>
+          }
+        >
+          <DisplayCCDAElementSection
+            title="Results"
+            content={(ccda.RESULTS_SECTION as JSX.Element) || ''}
+          />
+        </ErrorBoundary>
       )}
       {ccda?.FINDINGS_SECTION && (
         <DisplayCCDARawSection

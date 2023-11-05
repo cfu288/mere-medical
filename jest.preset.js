@@ -12,4 +12,5 @@ module.exports = {
    * More info: https://jestjs.io/docs/upgrading-to-jest29#snapshot-format
    */
   snapshotFormat: { escapeString: true, printBasicPrototype: true },
+  transformIgnorePatterns: ['/node_modules/(?!sylviejs)'],
 };
