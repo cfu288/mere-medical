@@ -45,7 +45,15 @@
     "./src/components/timeline/OpenableCardIcon.tsx",
     "./src/components/timeline/TimelineCardSubtitile.tsx",
     "./src/components/providers/AppLoadingSkeleton.tsx",
-    "src/components/hooks/useConnectionCards.tsx"
+    "src/components/hooks/useConnectionCards.tsx",
+    "./src/components/timeline/ShowDocumentReferenceResultsExpandable/CCDAStructureDefinitionKeys2_1.tsx",
+    "./src/components/timeline/ShowDocumentReferenceResultsExpandable/ResultComponentSection.tsx",
+    "./src/components/timeline/ShowDocumentReferenceResultsExpandable/DisplayCCDADocument.tsx",
+    "./src/components/timeline/ShowDocumentReferenceResultsExpandable/DisplayCCDASection.tsx",
+    "./src/components/timeline/ShowDocumentReferenceResultsExpandable/DisplayCCDAVitalSignsSection.tsx",
+    "./src/components/timeline/ShowDocumentReferenceResultsExpandable/ShowDocumentResultsExpandable.tsx",
+    "./src/components/timeline/ShowDocumentReferenceResultsExpandable/parseCCDA.tsx",
+    "./src/components/timeline/ShowDocumentReferenceResultsExpandable/DisplayCCDAVitalSignsSection.1.tsx"
   ],
   "exclude": [
     "jest.config.ts",

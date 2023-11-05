@@ -1,0 +1,101 @@
+import { Disclosure } from '@headlessui/react';
+import { ChevronRightIcon } from '@heroicons/react/20/solid';
+import { parseDateString } from './parseCCDA';
+
+export function ResultComponentSection({
+  matchingSectionsDisplayName,
+  kp,
+  uniqueDates,
+}: {
+  matchingSectionsDisplayName: string;
+  kp: Record<
+    string,
+    {
+      title: string;
+      value: string | null;
+      unit: string | null;
+      datetime: string | null;
+      datetimeLow: string | null;
+      datetimeHigh: string | null;
+      referenceRangeLow: string | null;
+      referenceRangeHigh: string | null;
+      referenceRangeText: string | null;
+      isOutOfRange?: boolean | '' | null;
+    }
+  >;
+  uniqueDates: Set<string | null>;
+}) {
+  return (
+    <Disclosure>
+      {({ open }) => (
+        <>
+          <Disclosure.Button className="mb-1 w-full rounded-md bg-gray-50 p-1 font-bold">
+            <div className="flex w-full items-center justify-between">
+              {matchingSectionsDisplayName}
+              <ChevronRightIcon
+                className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 ${
+                  open ? 'rotate-90 transform' : ''
+                }`}
+              />
+            </div>
+          </Disclosure.Button>
+          <Disclosure.Panel className="m-1 text-sm text-gray-700">
+            <table className="min-w-full divide-y divide-gray-300">
+              <thead>
+                <tr>
+                  <th
+                    scope="col"
+                    className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0"
+                  >
+                    Title
+                  </th>
+                  <th
+                    scope="col"
+                    className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0"
+                  >
+                    Value
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {Object.values(kp).map((v) => (
+                  <tr>
+                    <td className="whitespace-nowrap py-1 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
+                      {v.title}
+                      <p className="col-span-3 self-center text-xs font-light text-gray-600">
+                        {v.referenceRangeLow && v.referenceRangeHigh
+                          ? `Range: ${v.referenceRangeLow}${v.unit} - ${v.referenceRangeHigh}${v.unit}`
+                          : v.referenceRangeText
+                          ? `Range: ${v.referenceRangeText}`
+                          : ''}
+                      </p>
+                    </td>
+                    <td
+                      className={`whitespace-nowrap px-3 py-1 text-sm text-gray-900 ${
+                        v.isOutOfRange ? 'text-red-700' : ''
+                      }`}
+                    >
+                      {v.value}
+                      {v.unit}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="mt-2 mb-4 text-sm font-semibold italic text-gray-900">
+              {uniqueDates.size > 0 &&
+                `Results taken at ${[...uniqueDates]
+                  .filter((d) => !!d)
+                  .map((d) => {
+                    // also handle dates that are shorter like "20230314"
+                    d = d!;
+                    return parseDateString(d);
+                  })
+                  .join(' ,')}`}
+            </p>
+          </Disclosure.Panel>
+        </>
+      )}
+    </Disclosure>
+  );
+}
