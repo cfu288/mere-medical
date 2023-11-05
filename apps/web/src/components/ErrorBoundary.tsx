@@ -2,9 +2,10 @@ import React, { PropsWithChildren } from 'react';
 
 export interface ErrorBoundaryState {
   hasError: boolean;
+  fallbackUI?: React.ReactNode;
 }
 
-type ErrorBoundaryProps = PropsWithChildren<unknown>;
+type ErrorBoundaryProps = PropsWithChildren<{ fallbackUI?: React.ReactNode }>;
 
 export class ErrorBoundary extends React.Component<
   ErrorBoundaryProps,
@@ -27,6 +28,9 @@ export class ErrorBoundary extends React.Component<
 
   override render() {
     if (this.state.hasError) {
+      if (this.state.fallbackUI) {
+        return this.state.fallbackUI;
+      }
       // You can render any custom fallback UI
       return (
         <div className="flex h-screen flex-col items-center justify-center">
