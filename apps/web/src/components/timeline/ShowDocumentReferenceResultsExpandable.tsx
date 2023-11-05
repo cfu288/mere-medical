@@ -292,6 +292,413 @@ const CCDAStructureDefinition2_1 = {
 
 type CCDAStructureDefinitionKeys2_1 = keyof typeof CCDAStructureDefinition2_1;
 
+const LOINC_CODE_SYSTEM = '2.16.840.1.113883.6.1';
+
+function parseDateString(d: string) {
+  const year = d.substring(0, 4);
+  const month = d.substring(4, 6);
+  const day = d.length > 6 ? d.substring(6, 8) : '00';
+  // hours need conditional check for length
+  const hour = d.length > 8 ? d.substring(8, 10) : '00';
+  // minutes need conditional check for length
+  const minute = d.length > 10 ? d.substring(10, 12) : '00';
+  // seconds need conditional check for length
+  const second = d.length > 12 ? d.substring(12, 14) : '00';
+  const offset = d.substring(14);
+  const date = new Date(
+    Date.UTC(
+      parseInt(year),
+      parseInt(month) - 1,
+      parseInt(day),
+      parseInt(hour),
+      parseInt(minute),
+      parseInt(second)
+    )
+  );
+  // conditionally subtract offset from date to handle dates missing +0000
+  if (offset) {
+    const offsetHours = parseInt(offset.substring(0, 3));
+    const offsetMinutes = parseInt(offset.substring(3));
+    date.setHours(date.getHours() - offsetHours);
+    date.setMinutes(date.getMinutes() - offsetMinutes);
+  }
+
+  return date.toLocaleString();
+}
+
+function parseCCDAResultsSection(
+  sections: HTMLCollectionOf<HTMLElement>,
+  id: string[] | string
+) {
+  const matchingSections = [...(sections as unknown as HTMLElement[])]?.filter(
+    (s) =>
+      Array.isArray(id)
+        ? id.includes(
+            s?.getElementsByTagName('templateId')?.[0]?.getAttribute('root') ||
+              ''
+          )
+        : s?.getElementsByTagName('templateId')?.[0]?.getAttribute('root') ===
+          id
+  );
+
+  if (!matchingSections) {
+    return null;
+  }
+
+  console.log(
+    [...matchingSections.map((x) => x.getElementsByTagName('entry'))]?.map(
+      (x) =>
+        [...x]
+          .map((y) => y.getElementsByTagName('code'))
+          ?.map((z) => [...z]?.[0]?.textContent)
+    )
+  );
+
+  const matchingSectionsDisplayNames = [
+    ...matchingSections.map((x) => x.getElementsByTagName('entry')),
+  ]?.map((x) =>
+    [...x]
+      .map((y) => y.getElementsByTagName('code'))
+      ?.map((z) => [...z]?.[0]?.textContent)
+  )?.[0];
+
+  const sectionComponents = [
+    ...(matchingSections as unknown as HTMLElement[]),
+  ]?.map((e) =>
+    [...e.getElementsByTagName('entry')].map((x) =>
+      x.getElementsByTagName('component')
+    )
+  );
+
+  console.log(sectionComponents);
+
+  if (!sectionComponents || sectionComponents.length === 0) {
+    return null;
+  }
+
+  const listComponents = [];
+
+  for (const components of sectionComponents) {
+    for (const [index, components1] of [...components].entries()) {
+      const kp: Record<
+        string,
+        {
+          title: string;
+          value: string | null;
+          unit: string | null;
+          datetime: string | null;
+          datetimeLow: string | null;
+          datetimeHigh: string | null;
+          referenceRangeLow: string | null;
+          referenceRangeHigh: string | null;
+          referenceRangeText: string | null;
+          isOutOfRange?: boolean | '' | null;
+        }
+      > = {};
+      for (const component of components1) {
+        const codeId = component
+          ?.getElementsByTagName('code')[0]
+          .getAttribute('code');
+        const codeSystem = component
+          ?.getElementsByTagName('code')[0]
+          .getAttribute('codeSystem');
+        const codeDisplayName =
+          component
+            ?.getElementsByTagName('code')[0]
+            .getAttribute('displayName') ||
+          component?.getElementsByTagName('originalText')?.[0]?.textContent ||
+          '';
+        if (codeSystem === LOINC_CODE_SYSTEM && codeId) {
+          kp[codeId] = {
+            title: codeDisplayName,
+            value:
+              component
+                ?.getElementsByTagName('value')?.[0]
+                ?.getAttribute('value') ||
+              component
+                ?.getElementsByTagName('value')?.[0]
+                ?.getAttribute('displayName') ||
+              component?.getElementsByTagName('value')?.[0]?.textContent,
+            unit: component
+              ?.getElementsByTagName('value')?.[0]
+              ?.getAttribute('unit'),
+            datetime: component
+              ?.getElementsByTagName('effectiveTime')?.[0]
+              ?.getAttribute('value'),
+            datetimeLow: component
+              ?.getElementsByTagName('effectiveTime')?.[0]
+              ?.getElementsByTagName('low')?.[0]
+              ?.getAttribute('value'),
+            datetimeHigh: component
+              ?.getElementsByTagName('effectiveTime')?.[0]
+              ?.getElementsByTagName('high')?.[0]
+              ?.getAttribute('value'),
+            referenceRangeText: component
+              ?.getElementsByTagName('referenceRange')?.[0]
+              ?.getElementsByTagName('text')?.[0]?.textContent,
+            referenceRangeLow: component
+              ?.getElementsByTagName('referenceRange')?.[0]
+              ?.getElementsByTagName('low')?.[0]
+              ?.getAttribute('value'),
+            referenceRangeHigh: component
+              ?.getElementsByTagName('referenceRange')?.[0]
+              ?.getElementsByTagName('high')?.[0]
+              ?.getAttribute('value'),
+          };
+          kp[codeId] = {
+            ...kp[codeId],
+            isOutOfRange:
+              kp[codeId].value &&
+              kp[codeId].referenceRangeLow &&
+              kp[codeId].referenceRangeHigh &&
+              (parseFloat(kp[codeId].value || '') <
+                parseFloat(kp[codeId].referenceRangeLow || '') ||
+                parseFloat(kp[codeId].value || '') >
+                  parseFloat(kp[codeId].referenceRangeHigh || '')),
+          };
+        }
+      }
+      const uniqueDates = new Set([
+        ...Object.values(kp).map((v) => v.datetime),
+        ...Object.values(kp).map((v) => v.datetimeLow),
+        ...Object.values(kp).map((v) => v.datetimeHigh),
+      ]);
+
+      listComponents.push({
+        title: matchingSectionsDisplayNames[index],
+        kp,
+        uniqueDates,
+      });
+    }
+  }
+
+  return (
+    <>
+      {listComponents.map((c) => (
+        <ResultComponentSection
+          matchingSectionsDisplayName={c.title as string}
+          kp={c.kp}
+          uniqueDates={c.uniqueDates}
+        />
+      ))}
+    </>
+  );
+}
+
+function ResultComponentSection({
+  matchingSectionsDisplayName,
+  kp,
+  uniqueDates,
+}: {
+  matchingSectionsDisplayName: string;
+  kp: Record<
+    string,
+    {
+      title: string;
+      value: string | null;
+      unit: string | null;
+      datetime: string | null;
+      datetimeLow: string | null;
+      datetimeHigh: string | null;
+      referenceRangeLow: string | null;
+      referenceRangeHigh: string | null;
+      referenceRangeText: string | null;
+      isOutOfRange?: boolean | '' | null;
+    }
+  >;
+  uniqueDates: Set<string | null>;
+}) {
+  return (
+    <Disclosure>
+      {({ open }) => (
+        <>
+          <Disclosure.Button className="mb-1 w-full rounded-md bg-gray-50 p-1 font-bold">
+            <div className="flex w-full items-center justify-between">
+              {matchingSectionsDisplayName}
+              <ChevronRightIcon
+                className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 ${
+                  open ? 'rotate-90 transform' : ''
+                }`}
+              />
+            </div>
+          </Disclosure.Button>
+          <Disclosure.Panel className="m-1 text-sm text-gray-700">
+            <table className="min-w-full divide-y divide-gray-300">
+              <thead>
+                <tr>
+                  <th
+                    scope="col"
+                    className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0"
+                  >
+                    Title
+                  </th>
+                  <th
+                    scope="col"
+                    className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0"
+                  >
+                    Value
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {Object.values(kp).map((v) => (
+                  <tr>
+                    <td className="whitespace-nowrap py-1 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
+                      {v.title}
+                      <p className="col-span-3 self-center text-xs font-light text-gray-600">
+                        {v.referenceRangeLow && v.referenceRangeHigh
+                          ? `Range: ${v.referenceRangeLow}${v.unit} - ${v.referenceRangeHigh}${v.unit}`
+                          : v.referenceRangeText
+                          ? `Range: ${v.referenceRangeText}`
+                          : ''}
+                      </p>
+                    </td>
+                    <td
+                      className={`whitespace-nowrap px-3 py-1 text-sm text-gray-900 ${
+                        v.isOutOfRange ? 'text-red-700' : ''
+                      }`}
+                    >
+                      {v.value}
+                      {v.unit}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="mt-2 mb-4 text-sm font-semibold italic text-gray-900">
+              {uniqueDates.size > 0 &&
+                `Results taken at ${[...uniqueDates]
+                  .filter((d) => !!d)
+                  .map((d) => {
+                    // also handle dates that are shorter like "20230314"
+                    d = d!;
+                    return parseDateString(d);
+                  })
+                  .join(' ,')}`}
+            </p>
+          </Disclosure.Panel>
+        </>
+      )}
+    </Disclosure>
+  );
+}
+
+function parseCCDAVitalsSection(
+  sections: HTMLCollectionOf<HTMLElement>,
+  id: string[] | string
+) {
+  const matchingSections = [...(sections as unknown as HTMLElement[])]?.filter(
+    (s) =>
+      Array.isArray(id)
+        ? id.includes(
+            s?.getElementsByTagName('templateId')?.[0]?.getAttribute('root') ||
+              ''
+          )
+        : s?.getElementsByTagName('templateId')?.[0]?.getAttribute('root') ===
+          id
+  );
+  if (!matchingSections) {
+    return null;
+  }
+
+  const components = [...(matchingSections as unknown as HTMLElement[])]?.map(
+    (e) => e?.getElementsByTagName('component')
+  )?.[0];
+
+  if (!components) {
+    return null;
+  }
+
+  const kp: Record<
+    string,
+    {
+      title: string;
+      value: string | null;
+      unit: string | null;
+      datetime: string | null;
+    }
+  > = {};
+  for (const component of components) {
+    const codeId = component
+      ?.getElementsByTagName('code')[0]
+      .getAttribute('code');
+    const codeSystem = component
+      ?.getElementsByTagName('code')[0]
+      .getAttribute('codeSystem');
+    const codeDisplayName = component
+      ?.getElementsByTagName('code')[0]
+      .getAttribute('displayName');
+    if (codeSystem === LOINC_CODE_SYSTEM && codeId) {
+      kp[codeId] = {
+        title:
+          codeDisplayName ||
+          component?.getElementsByTagName('originalText')?.[0]?.innerHTML,
+        value:
+          component
+            ?.getElementsByTagName('value')?.[0]
+            ?.getAttribute('value') ||
+          component
+            ?.getElementsByTagName('value')?.[0]
+            ?.getAttribute('displayName'),
+        unit: component
+          ?.getElementsByTagName('value')?.[0]
+          ?.getAttribute('unit'),
+        datetime: component
+          ?.getElementsByTagName('effectiveTime')?.[0]
+          ?.getAttribute('value'),
+      };
+    }
+  }
+
+  const uniqueDates = new Set([...Object.values(kp).map((v) => v.datetime)]);
+
+  return (
+    <>
+      <table className="min-w-full divide-y divide-gray-300">
+        <thead>
+          <tr>
+            <th
+              scope="col"
+              className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0"
+            >
+              Title
+            </th>
+            <th
+              scope="col"
+              className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0"
+            >
+              Value
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-200">
+          {Object.values(kp).map((v) => (
+            <tr>
+              <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
+                {v.title}
+              </td>
+              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                {v.value}
+                {v.unit}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="mt-2 mb-4 text-sm font-semibold italic text-gray-900">
+        Vitals taken at{' '}
+        {[...uniqueDates]
+          .filter((d) => !!d)
+          .map((d) => {
+            d = d!;
+            return parseDateString(d);
+          })
+          .join(' ,')}
+      </p>
+    </>
+  );
+}
+
 function parseCCDASection(
   sections: HTMLCollectionOf<HTMLElement>,
   id: string[] | string
@@ -305,13 +712,7 @@ function parseCCDASection(
           )
         : s.getElementsByTagName('templateId')?.[0]?.getAttribute('root') === id
   );
-  // if ([...(matchingSections as unknown as HTMLElement[])].length > 0) {
-  //   console.log(
-  //     [...(matchingSections as unknown as HTMLElement[])].map((i) =>
-  //       [...i.children].map((j) => j.innerHTML)
-  //     )
-  //   );
-  // }
+
   return [...(matchingSections as unknown as HTMLElement[])]
     ?.map((x) => x.innerHTML)
     .flat()
@@ -320,15 +721,23 @@ function parseCCDASection(
 
 function parseCCDA(
   raw: string
-): Partial<Record<CCDAStructureDefinitionKeys2_1, string>> {
+): Partial<Record<CCDAStructureDefinitionKeys2_1, string | JSX.Element>> {
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(raw, 'text/xml');
   const sections = xmlDoc.getElementsByTagName('section');
-  const parsedDoc: Partial<Record<CCDAStructureDefinitionKeys2_1, string>> = {};
+  const parsedDoc: Partial<
+    Record<CCDAStructureDefinitionKeys2_1, string | JSX.Element>
+  > = {};
 
   for (const [key, val] of Object.entries(CCDAStructureDefinition2_1)) {
     const k = key as CCDAStructureDefinitionKeys2_1;
-    parsedDoc[k] = parseCCDASection(sections, val);
+    if (k === 'VITAL_SIGNS_SECTION') {
+      parsedDoc[k] = parseCCDAVitalsSection(sections, val) as JSX.Element;
+    } else if (k === 'RESULTS_SECTION') {
+      parsedDoc[k] = parseCCDAResultsSection(sections, val) as JSX.Element;
+    } else {
+      parsedDoc[k] = parseCCDASection(sections, val);
+    }
   }
 
   return parsedDoc;
@@ -356,7 +765,8 @@ export function ShowDocumentResultsExpandable({
 }) {
   const cd = useConnectionDoc(item.connection_record_id),
     [ccda, setCCDA] = useState<
-      Partial<Record<CCDAStructureDefinitionKeys2_1, string>> | undefined
+      | Partial<Record<CCDAStructureDefinitionKeys2_1, string | JSX.Element>>
+      | undefined
     >(undefined),
     attachmentUrl = item.data_record.raw.resource?.content?.[0].attachment.url,
     attachment = useClinicalDoc(attachmentUrl),
@@ -371,6 +781,8 @@ export function ShowDocumentResultsExpandable({
         const parsedDoc = parseCCDA(attachment.get('data_record.raw'));
         setHasLoadedDocument(true);
         setCCDA(parsedDoc);
+      } else {
+        setHasLoadedDocument(true);
       }
     }
   }, [expanded, cd, attachment]);
@@ -407,263 +819,276 @@ export function ShowDocumentResultsExpandable({
 function DisplayCCDADocument({
   ccda,
 }: {
-  ccda: Partial<Record<CCDAStructureDefinitionKeys2_1, string>> | undefined;
+  ccda:
+    | Partial<Record<CCDAStructureDefinitionKeys2_1, string | JSX.Element>>
+    | undefined;
 }) {
   return (
     <>
       {ccda?.REASON_FOR_REFERRAL_SECTION && (
         <DisplayCCDASection
           title="Reason for Referral"
-          content={ccda.REASON_FOR_REFERRAL_SECTION || ''}
+          content={(ccda.REASON_FOR_REFERRAL_SECTION as string) || ''}
         />
       )}
       {ccda?.ADMISSION_DIAGNOSIS_SECTION && (
         <DisplayCCDASection
           title="Admission Diagnosis"
-          content={ccda.ADMISSION_DIAGNOSIS_SECTION || ''}
+          content={(ccda.ADMISSION_DIAGNOSIS_SECTION as string) || ''}
         />
       )}
       {ccda?.ADMISSION_MEDICATIONS_SECTION && (
         <DisplayCCDASection
           title="Admission Medication"
-          content={ccda.ADMISSION_MEDICATIONS_SECTION || ''}
+          content={(ccda.ADMISSION_MEDICATIONS_SECTION as string) || ''}
         />
       )}
       {ccda?.CHIEF_COMPLAINT_AND_REASON_FOR_VISIT_SECTION && (
         <DisplayCCDASection
           title="Chief Complaint and Reason for Visit"
-          content={ccda.CHIEF_COMPLAINT_AND_REASON_FOR_VISIT_SECTION || ''}
+          content={
+            (ccda.CHIEF_COMPLAINT_AND_REASON_FOR_VISIT_SECTION as string) || ''
+          }
         />
       )}
       {ccda?.CHIEF_COMPLAINT_SECTION && (
         <DisplayCCDASection
           title="Chief Complaint"
-          content={ccda.CHIEF_COMPLAINT_SECTION || ''}
+          content={(ccda.CHIEF_COMPLAINT_SECTION as string) || ''}
         />
       )}
       {ccda?.VITAL_SIGNS_SECTION && (
-        <DisplayCCDASection
+        <DisplayCCDAVitalSignsSection
           title="Vital Signs"
-          content={ccda.VITAL_SIGNS_SECTION || ''}
+          content={(ccda.VITAL_SIGNS_SECTION as JSX.Element) || ''}
         />
       )}
       {ccda?.HISTORY_OF_PRESENT_ILLNESS_SECTION && (
         <DisplayCCDASection
           title="History of Present Illness"
-          content={ccda.HISTORY_OF_PRESENT_ILLNESS_SECTION || ''}
+          content={(ccda.HISTORY_OF_PRESENT_ILLNESS_SECTION as string) || ''}
         />
       )}
       {ccda?.MEDICATIONS_SECTION && (
         <DisplayCCDASection
           title="Medications"
-          content={ccda.MEDICATIONS_SECTION || ''}
+          content={(ccda.MEDICATIONS_SECTION as string) || ''}
         />
       )}
       {ccda?.IMMUNIZATIONS_SECTION && (
         <DisplayCCDASection
           title="Immunizations"
-          content={ccda.IMMUNIZATIONS_SECTION || ''}
+          content={(ccda.IMMUNIZATIONS_SECTION as string) || ''}
         />
       )}
       {ccda?.ALLERGIES_AND_INTOLERANCES_SECTION && (
         <DisplayCCDASection
           title="Allergies and Intolerances"
-          content={ccda.ALLERGIES_AND_INTOLERANCES_SECTION || ''}
+          content={(ccda.ALLERGIES_AND_INTOLERANCES_SECTION as string) || ''}
         />
       )}
       {ccda?.FAMILY_HISTORY_SECTION && (
         <DisplayCCDASection
           title="Family History"
-          content={ccda.FAMILY_HISTORY_SECTION || ''}
+          content={(ccda.FAMILY_HISTORY_SECTION as string) || ''}
         />
       )}
       {ccda?.SOCIAL_HISTORY_SECTION && (
         <DisplayCCDASection
           title="Social History"
-          content={ccda.SOCIAL_HISTORY_SECTION || ''}
+          content={(ccda.SOCIAL_HISTORY_SECTION as string) || ''}
         />
       )}
       {ccda?.HEALTH_CONCERNS_SECTION && (
         <DisplayCCDASection
           title="Health Concerns"
-          content={ccda.HEALTH_CONCERNS_SECTION || ''}
+          content={(ccda.HEALTH_CONCERNS_SECTION as string) || ''}
         />
       )}
       {ccda?.REVIEW_OF_SYSTEMS_SECTION && (
         <DisplayCCDASection
           title="Review of Symptoms"
-          content={ccda.REVIEW_OF_SYSTEMS_SECTION || ''}
+          content={(ccda.REVIEW_OF_SYSTEMS_SECTION as string) || ''}
         />
       )}
       {ccda?.PROCEDURES_SECTION && (
         <DisplayCCDASection
           title="Procedures"
-          content={ccda.PROCEDURES_SECTION || ''}
+          content={(ccda.PROCEDURES_SECTION as string) || ''}
         />
       )}
       {ccda?.RESULTS_SECTION && (
-        <DisplayCCDASection
+        <DisplayCCDAVitalSignsSection
           title="Results"
-          content={ccda.RESULTS_SECTION || ''}
+          content={(ccda.RESULTS_SECTION as JSX.Element) || ''}
         />
       )}
       {ccda?.FINDINGS_SECTION && (
         <DisplayCCDASection
           title="Findings"
-          content={ccda.FINDINGS_SECTION || ''}
+          content={(ccda.FINDINGS_SECTION as string) || ''}
         />
       )}
       {ccda?.DICOM_OBJECT_CATALOG_SECTION_DCM_121181 && (
         <DisplayCCDASection
           title="Imaging Results"
-          content={ccda.DICOM_OBJECT_CATALOG_SECTION_DCM_121181 || ''}
+          content={
+            (ccda.DICOM_OBJECT_CATALOG_SECTION_DCM_121181 as string) || ''
+          }
         />
       )}
       {ccda?.PREOPERATIVE_DIAGNOSIS_SECTION && (
         <DisplayCCDASection
           title="Pre Operative Diagnosis"
-          content={ccda.PREOPERATIVE_DIAGNOSIS_SECTION || ''}
+          content={(ccda.PREOPERATIVE_DIAGNOSIS_SECTION as string) || ''}
         />
       )}
       {ccda?.PROCEDURE_DESCRIPTION_SECTION && (
         <DisplayCCDASection
           title="Procedure Description"
-          content={ccda.PROCEDURE_DESCRIPTION_SECTION || ''}
+          content={(ccda.PROCEDURE_DESCRIPTION_SECTION as string) || ''}
         />
       )}
       {ccda?.PROCEDURE_DISPOSITION_SECTION && (
         <DisplayCCDASection
           title="Procedure Disposition"
-          content={ccda.PROCEDURE_DISPOSITION_SECTION || ''}
+          content={(ccda.PROCEDURE_DISPOSITION_SECTION as string) || ''}
         />
       )}
       {ccda?.PROCEDURE_NOTE && (
         <DisplayCCDASection
           title="Procedure Note"
-          content={ccda.PROCEDURE_NOTE || ''}
+          content={(ccda.PROCEDURE_NOTE as string) || ''}
         />
       )}
       {ccda?.SURGERY_DESCRIPTION_SECTION && (
         <DisplayCCDASection
           title="Surgery Description"
-          content={ccda.SURGERY_DESCRIPTION_SECTION || ''}
+          content={(ccda.SURGERY_DESCRIPTION_SECTION as string) || ''}
         />
       )}
       {ccda?.POSTOPERATIVE_DIAGNOSIS_SECTION && (
         <DisplayCCDASection
           title="Post Operative Diagnosis"
-          content={ccda.POSTOPERATIVE_DIAGNOSIS_SECTION || ''}
+          content={(ccda.POSTOPERATIVE_DIAGNOSIS_SECTION as string) || ''}
         />
       )}
       {ccda?.POSTPROCEDURE_DIAGNOSIS_SECTION && (
         <DisplayCCDASection
           title="Post Procedure Diagnosis"
-          content={ccda.POSTPROCEDURE_DIAGNOSIS_SECTION || ''}
+          content={(ccda.POSTPROCEDURE_DIAGNOSIS_SECTION as string) || ''}
         />
       )}
       {ccda?.PROGRESS_NOTE && (
         <DisplayCCDASection
           title="Progress Note"
-          content={ccda.PROGRESS_NOTE || ''}
+          content={(ccda.PROGRESS_NOTE as string) || ''}
         />
       )}
       {ccda?.ASSESSMENT_SECTION && (
         <DisplayCCDASection
           title="Assessment"
-          content={ccda.ASSESSMENT_SECTION || ''}
+          content={(ccda.ASSESSMENT_SECTION as string) || ''}
         />
       )}
       {ccda?.ASSESSMENT_AND_PLAN_SECTION && (
         <DisplayCCDASection
           title="Assessment and Plan"
-          content={ccda.ASSESSMENT_AND_PLAN_SECTION || ''}
+          content={(ccda.ASSESSMENT_AND_PLAN_SECTION as string) || ''}
         />
       )}
       {ccda?.PROBLEM_SECTION && (
         <DisplayCCDASection
           title="Problems"
-          content={ccda.PROBLEM_SECTION || ''}
+          content={(ccda.PROBLEM_SECTION as string) || ''}
         />
       )}
       {ccda?.NUTRITION_SECTION && (
         <DisplayCCDASection
           title="Nutrition"
-          content={ccda.NUTRITION_SECTION || ''}
+          content={(ccda.NUTRITION_SECTION as string) || ''}
         />
       )}
       {ccda?.PLAN_OF_TREATMENT_SECTION && (
         <DisplayCCDASection
           title="Plan of Treatment"
-          content={ccda.PLAN_OF_TREATMENT_SECTION || ''}
+          content={(ccda.PLAN_OF_TREATMENT_SECTION as string) || ''}
         />
       )}
       {ccda?.GOALS_SECTION && (
-        <DisplayCCDASection title="Goals" content={ccda.GOALS_SECTION || ''} />
+        <DisplayCCDASection
+          title="Goals"
+          content={(ccda.GOALS_SECTION as string) || ''}
+        />
       )}
       {ccda?.MEDICAL_EQUIPMENT_SECTION && (
         <DisplayCCDASection
           title="Medical Equipment"
-          content={ccda.MEDICAL_EQUIPMENT_SECTION || ''}
+          content={(ccda.MEDICAL_EQUIPMENT_SECTION as string) || ''}
         />
       )}
       {ccda?.ADVANCE_DIRECTIVES_SECTION && (
         <DisplayCCDASection
           title="Advance Directives"
-          content={ccda.ADVANCE_DIRECTIVES_SECTION || ''}
+          content={(ccda.ADVANCE_DIRECTIVES_SECTION as string) || ''}
         />
       )}
       {ccda?.INSTRUCTIONS_SECTION && (
         <DisplayCCDASection
           title="Instructions"
-          content={ccda.INSTRUCTIONS_SECTION || ''}
+          content={(ccda.INSTRUCTIONS_SECTION as string) || ''}
         />
       )}
       {ccda?.HOSPITAL_DISCHARGE_INSTRUCTIONS_SECTION && (
         <DisplayCCDASection
           title="Hospital Discharge Instructions"
-          content={ccda.HOSPITAL_DISCHARGE_INSTRUCTIONS_SECTION || ''}
+          content={
+            (ccda.HOSPITAL_DISCHARGE_INSTRUCTIONS_SECTION as string) || ''
+          }
         />
       )}
       {ccda?.HOSPITAL_DISCHARGE_INSTRUCTIONS_SECTION && (
         <DisplayCCDASection
           title="Hospital Discharge Instructions"
-          content={ccda.HOSPITAL_DISCHARGE_INSTRUCTIONS_SECTION || ''}
+          content={
+            (ccda.HOSPITAL_DISCHARGE_INSTRUCTIONS_SECTION as string) || ''
+          }
         />
       )}
       {ccda?.DISCHARGE_MEDICATIONS_SECTION && (
         <DisplayCCDASection
           title="Discharge Medications"
-          content={ccda.DISCHARGE_MEDICATIONS_SECTION || ''}
+          content={(ccda.DISCHARGE_MEDICATIONS_SECTION as string) || ''}
         />
       )}
       {ccda?.DISCHARGE_SUMMARY && (
         <DisplayCCDASection
           title="Discharge Summary"
-          content={ccda.DISCHARGE_SUMMARY || ''}
+          content={(ccda.DISCHARGE_SUMMARY as string) || ''}
         />
       )}
       {ccda?.CARE_TEAMS_SECTION && (
         <DisplayCCDASection
           title="Care Team"
-          content={ccda.CARE_TEAMS_SECTION || ''}
+          content={(ccda.CARE_TEAMS_SECTION as string) || ''}
         />
       )}
       {ccda?.PAYERS_SECTION && (
         <DisplayCCDASection
           title="Payers"
-          content={ccda.PAYERS_SECTION || ''}
+          content={(ccda.PAYERS_SECTION as string) || ''}
         />
       )}
       {ccda?.ENCOUNTER_DIAGNOSIS && (
         <DisplayCCDASection
           title="Encounter Diagnoses"
-          content={ccda.ENCOUNTER_DIAGNOSIS || ''}
+          content={(ccda.ENCOUNTER_DIAGNOSIS as string) || ''}
         />
       )}
       {ccda?.ENCOUNTERS_SECTION && (
         <DisplayCCDASection
           title="Encounters"
-          content={ccda.ENCOUNTERS_SECTION || ''}
+          content={(ccda.ENCOUNTERS_SECTION as string) || ''}
         />
       )}
     </>
@@ -698,6 +1123,36 @@ function DisplayCCDASection({
                 __html: content || '',
               }}
             ></p>
+          </Disclosure.Panel>
+        </>
+      )}
+    </Disclosure>
+  );
+}
+
+function DisplayCCDAVitalSignsSection({
+  title,
+  content,
+}: {
+  title: string;
+  content: JSX.Element;
+}) {
+  return (
+    <Disclosure>
+      {({ open }) => (
+        <>
+          <Disclosure.Button className="mb-2 w-full rounded-md bg-gray-100 p-2 font-bold">
+            <div className="flex w-full items-center justify-between">
+              {title}
+              <ChevronRightIcon
+                className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 ${
+                  open ? 'rotate-90 transform' : ''
+                }`}
+              />
+            </div>
+          </Disclosure.Button>
+          <Disclosure.Panel className="m-4 text-sm text-gray-700">
+            {content}
           </Disclosure.Panel>
         </>
       )}
