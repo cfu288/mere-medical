@@ -61,6 +61,19 @@ export function parseDateString(d: string) {
   return date.toLocaleString();
 }
 
+function getMatchingSections(
+  sections: HTMLCollectionOf<HTMLElement>,
+  id: string[] | string
+) {
+  return [...(sections as unknown as HTMLElement[])]?.filter((s) =>
+    Array.isArray(id)
+      ? id.includes(
+          s?.getElementsByTagName('templateId')?.[0]?.getAttribute('root') || ''
+        )
+      : s?.getElementsByTagName('templateId')?.[0]?.getAttribute('root') === id
+  );
+}
+
 export function parseCCDAResultsSection(
   sections: HTMLCollectionOf<HTMLElement>,
   id: string[] | string
@@ -199,20 +212,6 @@ export function parseCCDAResultsSection(
     </>
   );
 }
-
-function getMatchingSections(
-  sections: HTMLCollectionOf<HTMLElement>,
-  id: string[] | string
-) {
-  return [...(sections as unknown as HTMLElement[])]?.filter((s) =>
-    Array.isArray(id)
-      ? id.includes(
-          s?.getElementsByTagName('templateId')?.[0]?.getAttribute('root') || ''
-        )
-      : s?.getElementsByTagName('templateId')?.[0]?.getAttribute('root') === id
-  );
-}
-
 export function parseCCDAVitalsSection(
   sections: HTMLCollectionOf<HTMLElement>,
   id: string[] | string
@@ -277,12 +276,12 @@ export function parseCCDAVitalsSection(
 
   return (
     <>
-      <table className="min-w-full divide-y divide-gray-300">
+      <table className="min-w-full table-auto divide-y divide-gray-300 sm:table-auto">
         <thead>
           <tr>
             <th
               scope="col"
-              className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0"
+              className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:w-auto sm:pl-0"
             >
               Title
             </th>
@@ -297,10 +296,10 @@ export function parseCCDAVitalsSection(
         <tbody className="divide-y divide-gray-200">
           {Object.values(extractedVital).map((v) => (
             <tr>
-              <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
+              <td className="break-word py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
                 {v.title}
               </td>
-              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+              <td className="break-word px-3 py-4 text-sm text-gray-900">
                 {v.value}
                 {v.unit}
               </td>
