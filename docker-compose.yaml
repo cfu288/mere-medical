@@ -11,14 +11,6 @@ services:
       timeout: 5s # Timeout for each health checking.
       retries: 12 # How many times retries.
       start_period: 5s # Estimated time to boot.
-    stop_grace_period: 30s
-    deploy:
-      replicas: 2
-      update_config:
-        delay: 30s
-        parallelism: 1
-        order: start-first
-        failure_action: rollback
     environment:
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
       - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
@@ -31,14 +23,6 @@ services:
     image: cfu288/mere-medical-docs:latest
     ports:
       - '4202:80'
-    stop_grace_period: 30s
-    deploy:
-      replicas: 2
-      update_config:
-        delay: 30s
-        parallelism: 1
-        order: start-first
-        failure_action: rollback
   demo:
     image: cfu288/mere-medical:latest
     ports:
@@ -49,14 +33,6 @@ services:
       timeout: 5s # Timeout for each health checking.
       retries: 12 # How many times retries.
       start_period: 5s # Estimated time to boot.
-    stop_grace_period: 30s
-    deploy:
-      replicas: 2
-      update_config:
-        delay: 30s
-        parallelism: 1
-        order: start-first
-        failure_action: rollback
     environment:
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
       - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
