@@ -30,7 +30,7 @@ export function ResultComponentSection({
       {({ open }) => (
         <>
           <Disclosure.Button className="mb-1 w-full rounded-md bg-gray-50 p-1 font-bold">
-            <div className="flex w-full items-center justify-between">
+            <div className="flex w-full items-center justify-between text-left">
               {matchingSectionsDisplayName}
               <ChevronRightIcon
                 className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 ${
@@ -60,7 +60,7 @@ export function ResultComponentSection({
               <tbody className="divide-y divide-gray-200">
                 {Object.values(kp).map((v) => (
                   <tr>
-                    <td className="whitespace-nowrap py-1 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
+                    <td className="break-word py-1 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
                       {v.title}
                       <p className="col-span-3 self-center text-xs font-light text-gray-600">
                         {v.referenceRangeLow && v.referenceRangeHigh
@@ -71,7 +71,7 @@ export function ResultComponentSection({
                       </p>
                     </td>
                     <td
-                      className={`whitespace-nowrap px-3 py-1 text-sm text-gray-900 ${
+                      className={`break-word px-3 py-1 text-sm text-gray-900 ${
                         v.isOutOfRange ? 'text-red-700' : ''
                       }`}
                     >
