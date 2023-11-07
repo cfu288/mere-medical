@@ -41,6 +41,16 @@ jobs:
           makeLatest: true
           allowUpdates: true
 
+      # Image is built, now we need to trigger the deploy of the live site
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - run: npm install @octokit/action
+      - run: node .github/actions/trigger-stage-deploy.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_DEPLOY_GITHUB_TOKEN }}
+          WORKFLOW_ID: ${{ vars.PROD_WORKFLOW_ID }}
+
   docs:
     runs-on: ubuntu-latest
     steps:
