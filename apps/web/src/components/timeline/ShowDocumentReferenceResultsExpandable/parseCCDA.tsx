@@ -4,6 +4,7 @@ import {
 } from './CCDAStructureDefinitionKeys2_1';
 import { ResultComponentSection } from './ResultComponentSection';
 import { LOINC_CODE_SYSTEM } from './ShowDocumentReferenceResultsExpandable';
+import parse from 'date-fns/parse';
 
 export function parseCCDA(
   raw: string
@@ -30,34 +31,36 @@ export function parseCCDA(
 }
 
 export function parseDateString(d: string) {
-  const year = d.substring(0, 4);
-  const month = d.substring(4, 6);
-  const day = d.length > 6 ? d.substring(6, 8) : '00';
-  // hours need conditional check for length
-  const hour = d.length > 8 ? d.substring(8, 10) : '00';
-  // minutes need conditional check for length
-  const minute = d.length > 10 ? d.substring(10, 12) : '00';
-  // seconds need conditional check for length
-  const second = d.length > 12 ? d.substring(12, 14) : '00';
-  const offset = d.substring(14);
-  const date = new Date(
-    Date.UTC(
-      parseInt(year),
-      parseInt(month) - 1,
-      parseInt(day),
-      parseInt(hour),
-      parseInt(minute),
-      parseInt(second)
-    )
-  );
-  // conditionally subtract offset from date to handle dates missing +0000
-  if (offset) {
-    const offsetHours = parseInt(offset.substring(0, 3));
-    const offsetMinutes = parseInt(offset.substring(3));
-    date.setHours(date.getHours() - offsetHours);
-    date.setMinutes(date.getMinutes() - offsetMinutes);
+  let format = '';
+  switch (d.length) {
+    case 8:
+      format = 'yyyyMMdd';
+      break;
+    case 13:
+      format = 'yyyyMMddxx';
+      break;
+    case 10:
+      format = 'yyyyMMddHH';
+      break;
+    case 15:
+      format = 'yyyyMMddHHxx';
+      break;
+    case 12:
+      format = 'yyyyMMddHHmm';
+      break;
+    case 17:
+      format = 'yyyyMMddHHmmxx';
+      break;
+    case 14:
+      format = 'yyyyMMddHHmmss';
+      break;
+    case 19:
+      format = 'yyyyMMddHHmmssxx';
+      break;
+    default:
+      throw new Error('Invalid date format');
   }
-
+  const date = parse(d, format, new Date());
   return date.toLocaleString();
 }
 

@@ -1,5 +1,10 @@
 import { parseDateString } from './parseCCDA';
-
+import crypto from 'crypto';
+Object.defineProperty(global.self, 'crypto', {
+  value: {
+    subtle: crypto.webcrypto.subtle,
+  },
+});
 /**
  * effectiveTime use in C-CDA Entries
 
@@ -44,10 +49,37 @@ UTC - 0700
 
 
  */
+
 describe('parseDateString', () => {
-  it('should parse C-CDA effectiveTime formats', () => {
-    // const date = parseDateString('20140104123506-0500');
-    // expect(date).toBeDefined();
-    // expect(date).toEqual('2014-01-04T12:35:06-05:00');
+  it('should parse timestamp yyyyMMdd', () => {
+    const date = parseDateString('20121113');
+    const expectedLocalDate = new Date(2012, 10, 13).toLocaleString();
+    expect(date).toBe(expectedLocalDate);
+  });
+  it('should parse timestamp yyyyMMddHH', () => {
+    const date = parseDateString('2012111301');
+    const expectedLocalDate = new Date(2012, 10, 13, 1).toLocaleString();
+    expect(date).toBe(expectedLocalDate);
+  });
+  it('should parse timestamp yyyyMMddHHmm', () => {
+    const date = parseDateString('201211130101');
+    const expectedLocalDate = new Date(2012, 10, 13, 1, 1).toLocaleString();
+    expect(date).toBe(expectedLocalDate);
+  });
+  it('should parse timestamp yyyyMMddHHmmss', () => {
+    const date = parseDateString('20121113010101');
+    const expectedLocalDate = new Date(2012, 10, 13, 1, 1, 1).toLocaleString();
+    expect(date).toBe(expectedLocalDate);
+  });
+  it('should parse timestamp yyyyMMddHHmmssxx', () => {
+    const date = parseDateString('20121113010102-0000');
+    const expectedLocalDate = new Date(2012, 10, 12, 20, 1, 2).toLocaleString();
+    expect(date).toBe(expectedLocalDate);
+  });
+  it('should parse timestamp 20230314161700+0000 ', () => {
+    // 20230314161700+0000 should translate to 03/14/2023 1217 EDT
+    const date = parseDateString('20230314161700+0000');
+    const expectedLocalDate = new Date(2023, 2, 14, 12, 17, 0).toLocaleString();
+    expect(date).toBe(expectedLocalDate);
   });
 });
