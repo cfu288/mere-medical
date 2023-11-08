@@ -52,8 +52,10 @@
     "src/components/timeline/ShowDocumentReferenceResultsExpandable/DisplayCCDARawSection.tsx",
     "src/components/timeline/ShowDocumentReferenceResultsExpandable/DisplayCCDAElementSection.tsx",
     "./src/components/timeline/ShowDocumentReferenceResultsExpandable/ShowDocumentResultsExpandable.tsx",
-    "./src/components/timeline/ShowDocumentReferenceResultsExpandable/parseCCDA.tsx",
-    "./src/components/timeline/ShowDocumentReferenceResultsExpandable/DisplayCCDAVitalSignsSection.1.tsx"
+    "src/components/timeline/ShowDocumentReferenceResultsExpandable/parseCCDA/parseCCDA.tsx",
+    "./src/components/timeline/ShowDocumentReferenceResultsExpandable/DisplayCCDAVitalSignsSection.1.tsx",
+    "./src/components/timeline/ShowDocumentReferenceResultsExpandable/parseCCDA/parseCCDAResultsSection.tsx",
+    "./src/components/timeline/ShowDocumentReferenceResultsExpandable/parseCCDA/parseCCDAVitalsSection.tsx"
   ],
   "exclude": [
     "jest.config.ts",

@@ -61,10 +61,22 @@ export function DisplayCCDADocument({
         </ErrorBoundary>
       )}
       {ccda?.HISTORY_OF_PRESENT_ILLNESS_SECTION && (
-        <DisplayCCDARawSection
-          title="History of Present Illness"
-          content={(ccda.HISTORY_OF_PRESENT_ILLNESS_SECTION as string) || ''}
-        />
+        <ErrorBoundary
+          fallbackUI={
+            <div>
+              There was an error trying to load vital signs. Please submit a{' '}
+              <a href="mailto:cfu288@meremedical.co">bug report</a> so we can
+              get this fixed!
+            </div>
+          }
+        >
+          <DisplayCCDAElementSection
+            title="History of Present Illness"
+            content={
+              (ccda.HISTORY_OF_PRESENT_ILLNESS_SECTION as JSX.Element) || ''
+            }
+          />
+        </ErrorBoundary>
       )}
       {ccda?.MEDICATIONS_SECTION && (
         <DisplayCCDARawSection

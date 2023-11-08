@@ -1,6 +1,6 @@
 import { Disclosure } from '@headlessui/react';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
-import { parseDateString } from './parseCCDA';
+import { parseDateString } from './parseCCDA/parseCCDA';
 
 export function ResultComponentSection({
   matchingSectionsDisplayName,

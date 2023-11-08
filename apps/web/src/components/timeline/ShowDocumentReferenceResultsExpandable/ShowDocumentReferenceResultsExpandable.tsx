@@ -7,7 +7,7 @@ import { useClinicalDoc } from '../../hooks/useClinicalDoc';
 import { useConnectionDoc } from '../../hooks/useConnectionDoc';
 import { CCDAStructureDefinitionKeys2_1 } from './CCDAStructureDefinitionKeys2_1';
 import { DisplayCCDADocument } from './DisplayCCDADocument';
-import { parseCCDA } from './parseCCDA';
+import { parseCCDA } from './parseCCDA/parseCCDA';
 
 export const LOINC_CODE_SYSTEM = '2.16.840.1.113883.6.1';
 
