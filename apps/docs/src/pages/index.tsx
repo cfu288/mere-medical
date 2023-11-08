@@ -149,8 +149,6 @@ export function NavigationBar({ absolute = true }: { absolute?: boolean }) {
 }
 
 export default function Home() {
-  const { siteConfig } = useDocusaurusContext();
-
   return (
     <>
       <Head>
@@ -202,7 +200,7 @@ export default function Home() {
                 <div className="mt-5 max-w-md sm:flex sm:justify-start md:mt-8">
                   <div className="slideUpDelay2 rounded-md opacity-0 shadow">
                     <a
-                      href="https://demo.meremedical.co"
+                      href="https://demo.meremedical.co/timeline"
                       className="bg-primary-700 hover:bg-primary-600 flex w-full items-center justify-center rounded-md border border-transparent px-8 py-3 text-base font-medium text-white hover:text-white md:py-4 md:px-10 md:text-lg"
                       data-umami-event="see-demo"
                     >
@@ -211,7 +209,7 @@ export default function Home() {
                   </div>
                   <div className="slideUpDelay3 mt-3 rounded-md opacity-0 shadow sm:mt-0 sm:ml-3">
                     <a
-                      href="https://app.meremedical.co"
+                      href="https://app.meremedical.co/timeline"
                       className="text-primary-700 hover:text-primary-600 flex w-full items-center justify-center rounded-md border border-transparent bg-white px-8 py-3 text-base font-medium hover:bg-gray-50 md:py-4 md:px-10 md:text-lg"
                       data-umami-event="try-the-beta"
                     >
