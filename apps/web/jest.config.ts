@@ -9,4 +9,5 @@ export default {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   testPathIgnorePatterns: ['e2e'],
+  globalSetup: '<rootDir>/jest-global-setup.js',
 };
