@@ -449,21 +449,23 @@ export async function fetchAccessTokenWithCode(
 ): Promise<EpicAuthResponse> {
   const defaultUrl = `${epicUrl}/oauth2/token`;
   const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${epicId}&target=/oauth2/token`;
+  const headers = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+  };
+  const body = new URLSearchParams({
+    grant_type: 'authorization_code',
+    client_id: `${
+      epicId === 'sandbox'
+        ? Config.EPIC_SANDBOX_CLIENT_ID
+        : Config.EPIC_CLIENT_ID
+    }`,
+    redirect_uri: `${Config.PUBLIC_URL}${Routes.EpicCallback}`,
+    code: code,
+  });
   const res = await fetch(useProxy ? proxyUrl : defaultUrl, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      grant_type: 'authorization_code',
-      client_id: `${
-        epicId === 'sandbox'
-          ? Config.EPIC_SANDBOX_CLIENT_ID
-          : Config.EPIC_CLIENT_ID
-      }`,
-      redirect_uri: `${Config.PUBLIC_URL}${Routes.EpicCallback}`,
-      code: code,
-    }),
+    headers,
+    body,
   });
   if (!res.ok) {
     console.error(await res.text());

@@ -197,7 +197,6 @@ const handleLogin = async ({
   let dynamicRegResponse: EpicDynamicRegistrationResponse;
 
   // Attempt initial code swap
-
   const initalAuthResponse = await fetchAccessTokenWithCode(
     code,
     epicUrl,

@@ -180,7 +180,6 @@ export function ConnectionCard({
               className="-ml-px flex w-0 flex-1 divide-x divide-gray-800 disabled:bg-slate-50"
               onClick={() => {
                 setTenantUrlBySource(item);
-                console.log(getLoginUrlBySource(item));
                 window.location = getLoginUrlBySource(item);
               }}
             >
