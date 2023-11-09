@@ -539,6 +539,7 @@ export async function saveConnectionToDb({
                 access_token: res.access_token,
                 expires_in: nowInSeconds + res.expires_in,
                 scope: res.scope,
+                last_sync_was_error: false,
               },
             })
             .then(() => {

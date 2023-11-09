@@ -431,7 +431,7 @@ async function fetchAttachmentData(
   }
 }
 
-interface VeradigmAuthResponse {
+export interface VeradigmAuthResponse {
   access_token: string;
   expires_in: number;
   token_type: string;

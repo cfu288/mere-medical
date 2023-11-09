@@ -18,6 +18,11 @@ import {
   useSyncJobContext,
   useSyncJobDispatchContext,
 } from '../providers/SyncJobProvider';
+import { AbnormalResultIcon } from '../timeline/AbnormalResultIcon';
+import {
+  getLoginUrlBySource,
+  setTenantUrlBySource,
+} from '../../pages/ConnectionTab';
 
 function getImage(logo: ConnectionSources) {
   switch (logo) {
@@ -124,19 +129,18 @@ export function ConnectionCard({
           <p className="mt-1 truncate text-sm font-medium text-gray-500">
             Connected
             {item.get('last_refreshed') &&
-              (Math.abs(
-                differenceInDays(
-                  parseISO(item.get('last_refreshed')),
-                  new Date()
-                )
-              ) >= 1
-                ? ` - synced on ${format(
-                    parseISO(item.get('last_refreshed')),
-                    'MMM dd'
-                  )}`
-                : ` - synced at 
-          ${format(parseISO(item.get('last_refreshed')), 'p')}`)}
+              formatConnectedTimestampText(item.get('last_refreshed'))}
           </p>
+          {item.get('last_sync_was_error') && (
+            <div className="mt-1 flex flex-row items-center truncate align-middle text-sm font-medium text-red-500">
+              <AbnormalResultIcon />
+              <p className="pl-1">
+                {formatErrorLastAttemptTimestampText(
+                  item.get('last_sync_attempt')
+                )}{' '}
+              </p>
+            </div>
+          )}
         </div>
       </div>
       <div>
@@ -150,16 +154,16 @@ export function ConnectionCard({
           >
             <div className="relative -mr-px inline-flex w-0 flex-1 items-center justify-center rounded-bl-lg border border-transparent py-4 text-sm font-medium text-gray-700 hover:text-gray-500">
               Disconnect Source
-              <span className="ml-3">
-                {deleting ? <ButtonLoadingSpinner /> : null}
-              </span>
+              {deleting ? (
+                <span className="ml-3">
+                  <ButtonLoadingSpinner />
+                </span>
+              ) : null}
             </div>
           </button>
           <button
             disabled={syncing}
-            className={`-ml-px flex w-0 flex-1 divide-x divide-gray-800 ${
-              syncing ? 'disabled:bg-slate-50' : ''
-            }`}
+            className="-ml-px flex w-0 flex-1 divide-x divide-gray-800 disabled:bg-slate-50"
             onClick={handleFetchData}
           >
             <div className="relative inline-flex w-0 flex-1 items-center justify-center rounded-br-lg border border-transparent py-4 text-sm font-medium text-gray-700 hover:text-gray-500">
@@ -169,8 +173,45 @@ export function ConnectionCard({
               </span>
             </div>
           </button>
+          {item.get('last_sync_was_error') ? (
+            // redirect to href
+            <button
+              disabled={syncing}
+              className="-ml-px flex w-0 flex-1 divide-x divide-gray-800 disabled:bg-slate-50"
+              onClick={() => {
+                setTenantUrlBySource(item);
+                console.log(getLoginUrlBySource(item));
+                window.location = getLoginUrlBySource(item);
+              }}
+            >
+              <div className="relative inline-flex w-0 flex-1 items-center justify-center rounded-br-lg border border-transparent py-4 text-sm font-bold text-red-500 hover:text-gray-500">
+                Fix
+              </div>
+            </button>
+          ) : null}
         </div>
       </div>
     </li>
   );
+}
+
+function formatConnectedTimestampText(isoDate: string) {
+  return Math.abs(differenceInDays(parseISO(isoDate), new Date())) >= 1
+    ? ` - synced on ${formatTimestampToDay(isoDate)}`
+    : ` - synced at 
+          ${formatTimestampToTime(isoDate)}`;
+}
+
+function formatErrorLastAttemptTimestampText(isoDate: string) {
+  return Math.abs(differenceInDays(parseISO(isoDate), new Date())) >= 1
+    ? ` Last sync attempt on ${formatTimestampToDay(isoDate)} failed`
+    : ` Last sync attempt at ${formatTimestampToTime(isoDate)} failed`;
+}
+
+function formatTimestampToDay(isoDate: string) {
+  return format(parseISO(isoDate), 'MMM dd');
+}
+
+function formatTimestampToTime(isoDate: string) {
+  return format(parseISO(isoDate), 'p');
 }

@@ -21,7 +21,7 @@ import * as Cerner from '../../services/Cerner';
 import * as Veradigm from '../../services/Veradigm';
 import { from, Subject } from 'rxjs';
 import { useNotificationDispatch } from './NotificationProvider';
-import { differenceInDays, parseISO } from 'date-fns';
+import { differenceInDays, differenceInHours, parseISO } from 'date-fns';
 import Config from '../../environments/config.json';
 import { useUserPreferences } from './UserPreferencesProvider';
 import { useConnectionCards } from '../hooks/useConnectionCards';
@@ -133,25 +133,56 @@ function HandleInitalSync({ children }: PropsWithChildren) {
   useEffect(() => {
     if (!isDemo) {
       if (list) {
-        if (!hasRun.current && syncD) {
-          for (const item of list) {
-            if (
-              !item.get('last_refreshed') ||
-              (item.get('last_refreshed') &&
-                Math.abs(
-                  differenceInDays(
-                    parseISO(item.get('last_refreshed')),
-                    new Date()
-                  )
-                ) >= 1)
-            ) {
-              if (!syncJobEntries.has(item.get('id'))) {
-                // Start sync, make sure this only runs once
-                hasRun.current = true;
-                // Add a delay to allow other parts of the app to load before starting sync
-                setTimeout(
-                  () => handleFetchData(item),
-                  1000 + Math.ceil(Math.random() * 300)
+        if (syncD) {
+          if (!hasRun.current) {
+            hasRun.current = true;
+            for (const item of list) {
+              if (
+                // Check if it has been > 1 day since last sync
+                !item.get('last_refreshed') ||
+                (item.get('last_refreshed') &&
+                  Math.abs(
+                    differenceInDays(
+                      parseISO(item.get('last_refreshed')),
+                      new Date()
+                    )
+                  ) >= 1)
+              ) {
+                // Was the last sync an error
+                if (item.get('last_sync_was_error')) {
+                  // If error, check if a sync has been attempted in the past hour, skip if so
+                  if (
+                    !item.get('last_sync_attempt') ||
+                    (item.get('last_sync_attempt') &&
+                      Math.abs(
+                        differenceInHours(
+                          parseISO(item.get('last_sync_attempt')),
+                          new Date()
+                        )
+                      ) <= 1)
+                  ) {
+                    console.log(
+                      `Skipping sync for ${item.get(
+                        'name'
+                      )}, last sync attempt was less than an hour ago`
+                    );
+                  } else {
+                    if (!syncJobEntries.has(item.get('id'))) {
+                      // Start sync, make sure this only runs once
+                      hasRun.current = true;
+                      // Add a delay to allow other parts of the app to load before starting sync
+                      setTimeout(
+                        () => handleFetchData(item),
+                        1000 + Math.ceil(Math.random() * 300)
+                      );
+                    }
+                  }
+                }
+              } else {
+                console.log(
+                  `Skipping sync for ${item.get(
+                    'name'
+                  )}, last sync was less than a day ago`
                 );
               }
             }
@@ -193,11 +224,21 @@ function OnHandleUnsubscribeJobs({ children }: PropsWithChildren) {
               message: `Successfully synced records`,
               variant: 'success',
             });
-          } else {
+          } else if (
+            // check if partial records were synced successfully
+            successRes.length > 0 &&
+            errors.length > 0
+          ) {
             notifyDispatch({
               type: 'set_notification',
               message: `Some records were unable to be synced`,
               variant: 'info',
+            });
+          } else {
+            notifyDispatch({
+              type: 'set_notification',
+              message: `No records were able to be synced`,
+              variant: 'error',
             });
           }
         },
@@ -242,10 +283,12 @@ async function fetchMedicalRecords(
 ) {
   switch (connectionDocument.get('source') as ConnectionSources) {
     case 'onpatient': {
-      return await OnPatient.syncAllRecords(
+      const syncJob = await OnPatient.syncAllRecords(
         connectionDocument.toMutableJSON(),
         db
       );
+      await updateConnectionDocumentTimestamps(syncJob, connectionDocument, db);
+      return syncJob;
     }
     case 'epic': {
       try {
@@ -254,21 +297,31 @@ async function fetchMedicalRecords(
           db,
           useProxy
         );
-        return await Epic.syncAllRecords(
+        const syncJob = await Epic.syncAllRecords(
           baseUrl,
           connectionDocument.toMutableJSON() as unknown as EpicConnectionDocument,
           db,
           useProxy
         );
+        await updateConnectionDocumentTimestamps(
+          syncJob,
+          connectionDocument,
+          db
+        );
+        return syncJob;
       } catch (e) {
         console.error(e);
-        const name = connectionDocument.get('name');
+        const name = await updateConnectionDocumentErrorTimestamps(
+          connectionDocument,
+          db
+        );
         throw new Error(
           `Error refreshing ${name} access - try logging in again`
         );
       }
     }
     case 'cerner': {
+      //TODO: handle timestamps
       try {
         await refreshCernerConnectionTokenIfNeeded(connectionDocument, db);
         return await Cerner.syncAllRecords(
@@ -285,6 +338,7 @@ async function fetchMedicalRecords(
       }
     }
     case 'veradigm': {
+      //TODO: handle timestamps
       try {
         return await Veradigm.syncAllRecords(
           baseUrl,
@@ -304,6 +358,38 @@ async function fetchMedicalRecords(
         `Cannot sync unknown source: ${connectionDocument.get('source')}`
       );
     }
+  }
+}
+
+async function updateConnectionDocumentErrorTimestamps(
+  connectionDocument: RxDocument<ConnectionDocument>,
+  db: RxDatabase<DatabaseCollections>
+) {
+  const name = connectionDocument.get('name');
+  const newCd = connectionDocument.toMutableJSON();
+  newCd.last_sync_attempt = new Date().toISOString();
+  newCd.last_sync_was_error = true;
+  await db.connection_documents.upsert(newCd).then(() => {});
+  return name;
+}
+
+async function updateConnectionDocumentTimestamps(
+  syncJob: PromiseSettledResult<void[]>[],
+  connectionDocument: RxDocument<ConnectionDocument>,
+  db: RxDatabase<DatabaseCollections>
+) {
+  const anySuccess = syncJob.some((i) => i.status === 'fulfilled');
+  if (anySuccess) {
+    const newCd = connectionDocument.toMutableJSON();
+    newCd.last_refreshed = new Date().toISOString();
+    newCd.last_sync_attempt = new Date().toISOString();
+    newCd.last_sync_was_error = false;
+    await db.connection_documents.upsert(newCd).then(() => {});
+  } else {
+    const newCd = connectionDocument.toMutableJSON();
+    newCd.last_sync_attempt = new Date().toISOString();
+    newCd.last_sync_was_error = true;
+    await db.connection_documents.upsert(newCd).then(() => {});
   }
 }
 

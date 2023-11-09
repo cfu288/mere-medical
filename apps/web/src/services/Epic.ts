@@ -34,6 +34,7 @@ import { getPublicKey, IDBKeyConfig } from './WebCrypto';
 import { JsonWebKeySet } from '../services/JWTTools';
 import { UserDocument } from '../models/user-document/UserDocument.type';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
+import { getConnectionCardByUrl } from './getConnectionCardByUrl';
 
 export function getDSTU2Url(baseUrl: string) {
   return `${baseUrl}/api/FHIR/DSTU2`;
@@ -148,9 +149,10 @@ export async function syncAllRecords(
   connectionDocument: EpicConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   useProxy = false
-): Promise<PromiseSettledResult<void[]>[] | any> {
+): Promise<PromiseSettledResult<void[]>[]> {
   const newCd = connectionDocument;
-  newCd.last_refreshed = new Date().toISOString();
+  //TODO: rm this
+  // newCd.last_refreshed = new Date().toISOString();
 
   const procMapper = (proc: BundleEntry<Procedure>) =>
     DSTU2.mapProcedureToClinicalDocument(proc, connectionDocument);
@@ -283,9 +285,7 @@ export async function syncAllRecords(
     ),
   ]);
 
-  await db.connection_documents.upsert(newCd).then(() => []);
-
-  return syncJob;
+  return syncJob as unknown as Promise<PromiseSettledResult<void[]>[]>;
 }
 
 async function syncDocumentReferences(
@@ -582,18 +582,6 @@ export async function fetchAccessTokenUsingJWT(
   return { ...result, client_id: clientId };
 }
 
-export async function getConnectionCardByUrl(
-  url: string,
-  db: RxDatabase<DatabaseCollections>
-) {
-  return db.connection_documents
-    .findOne({
-      selector: { location: url },
-    })
-    .exec()
-    .then((list) => list as unknown as RxDocument<EpicConnectionDocument>);
-}
-
 export async function saveConnectionToDb({
   res,
   epicUrl,
@@ -609,7 +597,7 @@ export async function saveConnectionToDb({
   epicId: string;
   user: UserDocument;
 }) {
-  const doc = await getConnectionCardByUrl(epicUrl, db);
+  const doc = await getConnectionCardByUrl<EpicConnectionDocument>(epicUrl, db);
   return new Promise((resolve, reject) => {
     if (res?.access_token && res?.expires_in && res?.patient) {
       if (doc) {
@@ -627,11 +615,11 @@ export async function saveConnectionToDb({
                 scope: res.scope,
                 patient: res.patient,
                 tenant_id: epicId,
+                last_sync_was_error: false,
               },
             })
             .then(() => {
               console.log('Updated connection card');
-              console.log(doc.toJSON());
               resolve(true);
             })
             .catch((e) => {

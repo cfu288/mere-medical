@@ -1,6 +1,6 @@
 export const connectionSchemaLiteral = {
   title: 'Connection Document Schema',
-  version: 2,
+  version: 3,
   primaryKey: 'id',
   type: 'object',
   properties: {
@@ -41,11 +41,22 @@ export const connectionSchemaLiteral = {
       type: 'string',
     },
     location: {
+      description: 'URL of the FHIR server',
       type: 'string',
     },
     last_refreshed: {
+      description: 'ISO 8601 date string of last successful sync',
       type: 'string',
       maxLength: 128,
+    },
+    last_sync_attempt: {
+      description: 'ISO 8601 date string of last sync attempt',
+      type: 'string',
+      maxLength: 128,
+    },
+    last_sync_was_error: {
+      description: 'Boolean indicating if last sync was an error',
+      type: 'boolean',
     },
     client_id: {
       type: 'string',

@@ -79,7 +79,6 @@ export class ProxyService {
       target: getBaseURL(target),
       headers: {
         ...(token && { authorization: 'Bearer ' + token }),
-        // 'Content-Type': 'application/json',
         accept: 'application/json',
       },
     };

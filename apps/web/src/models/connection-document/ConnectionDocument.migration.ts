@@ -11,4 +11,10 @@ export const ConnectionDocumentMigrations: MigrationStrategies = {
     oldDoc.token_uri = '';
     return oldDoc;
   },
+  3: function (oldDoc) {
+    // handle new fields last_sync_was_error, last_sync_attempt
+    oldDoc.last_sync_was_error = false;
+    oldDoc.last_sync_attempt = oldDoc.last_refreshed;
+    return oldDoc;
+  },
 };

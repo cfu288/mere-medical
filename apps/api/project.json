@@ -28,7 +28,7 @@
       "executor": "@nx/node:node",
       "options": {
         "buildTarget": "api:build",
-        "runtimeArgs": ["--tls-min-v1.0"]
+        "runtimeArgs": ["--openssl-config=openssl.cnf"]
       },
       "configurations": {
         "production": {
