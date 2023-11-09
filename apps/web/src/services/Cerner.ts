@@ -180,10 +180,7 @@ export async function syncAllRecords(
   baseUrl: string,
   connectionDocument: CernerConnectionDocument,
   db: RxDatabase<DatabaseCollections>
-): Promise<PromiseSettledResult<void[]>[] | any> {
-  const newCd = connectionDocument;
-  newCd.last_refreshed = new Date().toISOString();
-
+): Promise<PromiseSettledResult<void[]>[]> {
   const procMapper = (proc: BundleEntry<Procedure>) =>
     DSTU2.mapProcedureToClinicalDocument(proc, connectionDocument);
   const patientMapper = (pt: BundleEntry<Patient>) =>
@@ -305,9 +302,7 @@ export async function syncAllRecords(
     ),
   ]);
 
-  await db.connection_documents.upsert(newCd).then(() => []);
-
-  return syncJob;
+  return syncJob as unknown as Promise<PromiseSettledResult<void[]>[]>;
 }
 
 async function syncDocumentReferences(

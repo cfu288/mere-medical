@@ -150,10 +150,6 @@ export async function syncAllRecords(
   db: RxDatabase<DatabaseCollections>,
   useProxy = false
 ): Promise<PromiseSettledResult<void[]>[]> {
-  const newCd = connectionDocument;
-  //TODO: rm this
-  // newCd.last_refreshed = new Date().toISOString();
-
   const procMapper = (proc: BundleEntry<Procedure>) =>
     DSTU2.mapProcedureToClinicalDocument(proc, connectionDocument);
   const patientMapper = (pt: BundleEntry<Patient>) =>

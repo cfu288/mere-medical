@@ -283,12 +283,26 @@ async function fetchMedicalRecords(
 ) {
   switch (connectionDocument.get('source') as ConnectionSources) {
     case 'onpatient': {
-      const syncJob = await OnPatient.syncAllRecords(
-        connectionDocument.toMutableJSON(),
-        db
-      );
-      await updateConnectionDocumentTimestamps(syncJob, connectionDocument, db);
-      return syncJob;
+      try {
+        const syncJob = await OnPatient.syncAllRecords(
+          connectionDocument.toMutableJSON(),
+          db
+        );
+        await updateConnectionDocumentTimestamps(
+          syncJob,
+          connectionDocument,
+          db
+        );
+        return syncJob;
+      } catch (e) {
+        console.error(e);
+        await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
+        throw new Error(
+          `Error refreshing ${connectionDocument.get(
+            'name'
+          )} access - try logging in again`
+        );
+      }
     }
     case 'epic': {
       try {
@@ -311,45 +325,58 @@ async function fetchMedicalRecords(
         return syncJob;
       } catch (e) {
         console.error(e);
-        const name = await updateConnectionDocumentErrorTimestamps(
-          connectionDocument,
-          db
-        );
+        await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
         throw new Error(
-          `Error refreshing ${name} access - try logging in again`
+          `Error refreshing ${connectionDocument.get(
+            'name'
+          )} access - try logging in again`
         );
       }
     }
     case 'cerner': {
-      //TODO: handle timestamps
       try {
         await refreshCernerConnectionTokenIfNeeded(connectionDocument, db);
-        return await Cerner.syncAllRecords(
+        const syncJob = await Cerner.syncAllRecords(
           baseUrl,
           connectionDocument.toMutableJSON() as unknown as CernerConnectionDocument,
           db
         );
+        await updateConnectionDocumentTimestamps(
+          syncJob,
+          connectionDocument,
+          db
+        );
+        return syncJob;
       } catch (e) {
         console.error(e);
-        const name = connectionDocument.get('name');
+        await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
         throw new Error(
-          `Error refreshing ${name} access - try logging in again`
+          `Error refreshing ${connectionDocument.get(
+            'name'
+          )} access - try logging in again`
         );
       }
     }
     case 'veradigm': {
-      //TODO: handle timestamps
       try {
-        return await Veradigm.syncAllRecords(
+        const syncJob = await Veradigm.syncAllRecords(
           baseUrl,
           connectionDocument.toMutableJSON() as unknown as VeradigmConnectionDocument,
           db
         );
+        await updateConnectionDocumentTimestamps(
+          syncJob,
+          connectionDocument,
+          db
+        );
+        return syncJob;
       } catch (e) {
         console.error(e);
-        const name = connectionDocument.get('name');
+        await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
         throw new Error(
-          `Error refreshing ${name} access - try logging in again`
+          `Error refreshing ${connectionDocument.get(
+            'name'
+          )} access - try logging in again`
         );
       }
     }
@@ -365,12 +392,10 @@ async function updateConnectionDocumentErrorTimestamps(
   connectionDocument: RxDocument<ConnectionDocument>,
   db: RxDatabase<DatabaseCollections>
 ) {
-  const name = connectionDocument.get('name');
   const newCd = connectionDocument.toMutableJSON();
   newCd.last_sync_attempt = new Date().toISOString();
   newCd.last_sync_was_error = true;
   await db.connection_documents.upsert(newCd).then(() => {});
-  return name;
 }
 
 async function updateConnectionDocumentTimestamps(
