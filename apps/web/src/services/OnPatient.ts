@@ -24,13 +24,13 @@ import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.t
 export const OnPatientBaseUrl = 'https://onpatient.com';
 export const OnPatientDSTU2Url = `${OnPatientBaseUrl}/api/fhir`;
 
-export function getLoginUrl() {
+export function getLoginUrl(): string & Location {
   return `${OnPatientBaseUrl}/o/authorize/?${new URLSearchParams({
     client_id: Config.ONPATIENT_CLIENT_ID,
     redirect_uri: `${Config.PUBLIC_URL}/api/v1/onpatient/callback`,
     scope: 'patient/*.read',
     response_type: 'code',
-  })}`;
+  })}` as string & Location;
 }
 
 async function getFHIRResource<T extends FhirResource>(
@@ -76,10 +76,7 @@ async function syncFHIRResource<T extends FhirResource>(
 export async function syncAllRecords(
   connectionDocument: ConnectionDocument,
   db: RxDatabase<DatabaseCollections>
-): Promise<PromiseSettledResult<void[]>[] | any> {
-  const newCd = connectionDocument;
-  newCd.last_refreshed = new Date().toISOString();
-
+): Promise<PromiseSettledResult<void[]>[]> {
   const immMapper = (dr: BundleEntry<Immunization>) =>
     DSTU2.mapImmunizationToClinicalDocument(dr, connectionDocument);
   const procMapper = (proc: BundleEntry<Procedure>) =>
@@ -135,7 +132,5 @@ export async function syncAllRecords(
     syncFHIRResource<Patient>(connectionDocument, db, 'Patient', patientMapper),
   ]);
 
-  await db.connection_documents.upsert(newCd).then(() => []);
-
-  return syncJob;
+  return syncJob as unknown as Promise<PromiseSettledResult<void[]>[]>;
 }

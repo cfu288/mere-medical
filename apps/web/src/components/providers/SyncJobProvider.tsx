@@ -21,7 +21,7 @@ import * as Cerner from '../../services/Cerner';
 import * as Veradigm from '../../services/Veradigm';
 import { from, Subject } from 'rxjs';
 import { useNotificationDispatch } from './NotificationProvider';
-import { differenceInDays, parseISO } from 'date-fns';
+import { differenceInDays, differenceInHours, parseISO } from 'date-fns';
 import Config from '../../environments/config.json';
 import { useUserPreferences } from './UserPreferencesProvider';
 import { useConnectionCards } from '../hooks/useConnectionCards';
@@ -84,6 +84,10 @@ const syncJobReducer: (
   }
 };
 
+/**
+ * A provider that handles sync jobs that manages syncing medical records for connections
+ * Also provides a dispatch function to add/remove sync jobs
+ */
 export function SyncJobProvider(props: SyncJobProviderProps) {
   const [state, dispatch] = React.useReducer(
     syncJobReducer,
@@ -133,9 +137,12 @@ function HandleInitalSync({ children }: PropsWithChildren) {
   useEffect(() => {
     if (!isDemo) {
       if (list) {
-        if (!hasRun.current && syncD) {
+        if (!hasRun.current) {
           for (const item of list) {
+            hasRun.current = true;
+
             if (
+              // Check if it has been > 1 day since last sync
               !item.get('last_refreshed') ||
               (item.get('last_refreshed') &&
                 Math.abs(
@@ -145,21 +152,66 @@ function HandleInitalSync({ children }: PropsWithChildren) {
                   )
                 ) >= 1)
             ) {
-              if (!syncJobEntries.has(item.get('id'))) {
-                // Start sync, make sure this only runs once
-                hasRun.current = true;
-                // Add a delay to allow other parts of the app to load before starting sync
-                setTimeout(
-                  () => handleFetchData(item),
-                  1000 + Math.ceil(Math.random() * 300)
+              // Less than 1 day, consider syncing
+              // Was the last sync an error
+              if (item.get('last_sync_was_error')) {
+                // If error, check if a sync has been attempted in the past hour, skip if so
+                if (
+                  !item.get('last_sync_attempt') ||
+                  (item.get('last_sync_attempt') &&
+                    Math.abs(
+                      differenceInHours(
+                        parseISO(item.get('last_sync_attempt')),
+                        new Date()
+                      )
+                    ) <= 1)
+                ) {
+                  console.log(
+                    `Skipping sync for ${item.get(
+                      'name'
+                    )}, last sync attempt was less than an hour ago`
+                  );
+                } else {
+                  console.log(
+                    `Now syncing ${item.get(
+                      'name'
+                    )}, last sync was an error and was more than an hour ago`
+                  );
+                  if (!syncJobEntries.has(item.get('id'))) {
+                    // Start sync, make sure this only runs once
+                    // Add a delay to allow other parts of the app to load before starting sync
+                    setTimeout(
+                      () => handleFetchData(item),
+                      1000 + Math.ceil(Math.random() * 300)
+                    );
+                  }
+                }
+              } else {
+                console.log(
+                  `Now syncing ${item.get(
+                    'name'
+                  )}, last sync was over a day ago`
                 );
+                if (!syncJobEntries.has(item.get('id'))) {
+                  // Add a delay to allow other parts of the app to load before starting sync
+                  setTimeout(
+                    () => handleFetchData(item),
+                    1000 + Math.ceil(Math.random() * 300)
+                  );
+                }
               }
+            } else {
+              console.log(
+                `Skipping sync for ${item.get(
+                  'name'
+                )}, last successful sync was less than a day ago`
+              );
             }
           }
         }
       }
     }
-  }, [handleFetchData, isDemo, list, syncD, syncJobEntries]);
+  }, [handleFetchData, isDemo, list, syncJobEntries]);
 
   return <>{children}</>;
 }
@@ -193,11 +245,21 @@ function OnHandleUnsubscribeJobs({ children }: PropsWithChildren) {
               message: `Successfully synced records`,
               variant: 'success',
             });
-          } else {
+          } else if (
+            // check if partial records were synced successfully
+            successRes.length > 0 &&
+            errors.length > 0
+          ) {
             notifyDispatch({
               type: 'set_notification',
               message: `Some records were unable to be synced`,
               variant: 'info',
+            });
+          } else {
+            notifyDispatch({
+              type: 'set_notification',
+              message: `No records were able to be synced`,
+              variant: 'error',
             });
           }
         },
@@ -224,6 +286,10 @@ function OnHandleUnsubscribeJobs({ children }: PropsWithChildren) {
   return <>{children}</>;
 }
 
+/**
+ * A hook that returns the sync job context. Allows you to read the current sync jobs currenly executing
+ * @returns a record of the sync job id as keys and a subject/promise of the current running job as the value
+ */
 export function useSyncJobContext() {
   const context = useContext(SyncJobContext);
   return context;
@@ -242,10 +308,26 @@ async function fetchMedicalRecords(
 ) {
   switch (connectionDocument.get('source') as ConnectionSources) {
     case 'onpatient': {
-      return await OnPatient.syncAllRecords(
-        connectionDocument.toMutableJSON(),
-        db
-      );
+      try {
+        const syncJob = await OnPatient.syncAllRecords(
+          connectionDocument.toMutableJSON(),
+          db
+        );
+        await updateConnectionDocumentTimestamps(
+          syncJob,
+          connectionDocument,
+          db
+        );
+        return syncJob;
+      } catch (e) {
+        console.error(e);
+        await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
+        throw new Error(
+          `Error refreshing ${connectionDocument.get(
+            'name'
+          )} access - try logging in again`
+        );
+      }
     }
     case 'epic': {
       try {
@@ -254,48 +336,72 @@ async function fetchMedicalRecords(
           db,
           useProxy
         );
-        return await Epic.syncAllRecords(
+        const syncJob = await Epic.syncAllRecords(
           baseUrl,
           connectionDocument.toMutableJSON() as unknown as EpicConnectionDocument,
           db,
           useProxy
         );
+        await updateConnectionDocumentTimestamps(
+          syncJob,
+          connectionDocument,
+          db
+        );
+        return syncJob;
       } catch (e) {
         console.error(e);
-        const name = connectionDocument.get('name');
+        await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
         throw new Error(
-          `Error refreshing ${name} access - try logging in again`
+          `Error refreshing ${connectionDocument.get(
+            'name'
+          )} access - try logging in again`
         );
       }
     }
     case 'cerner': {
       try {
         await refreshCernerConnectionTokenIfNeeded(connectionDocument, db);
-        return await Cerner.syncAllRecords(
+        const syncJob = await Cerner.syncAllRecords(
           baseUrl,
           connectionDocument.toMutableJSON() as unknown as CernerConnectionDocument,
           db
         );
+        await updateConnectionDocumentTimestamps(
+          syncJob,
+          connectionDocument,
+          db
+        );
+        return syncJob;
       } catch (e) {
         console.error(e);
-        const name = connectionDocument.get('name');
+        await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
         throw new Error(
-          `Error refreshing ${name} access - try logging in again`
+          `Error refreshing ${connectionDocument.get(
+            'name'
+          )} access - try logging in again`
         );
       }
     }
     case 'veradigm': {
       try {
-        return await Veradigm.syncAllRecords(
+        const syncJob = await Veradigm.syncAllRecords(
           baseUrl,
           connectionDocument.toMutableJSON() as unknown as VeradigmConnectionDocument,
           db
         );
+        await updateConnectionDocumentTimestamps(
+          syncJob,
+          connectionDocument,
+          db
+        );
+        return syncJob;
       } catch (e) {
         console.error(e);
-        const name = connectionDocument.get('name');
+        await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
         throw new Error(
-          `Error refreshing ${name} access - try logging in again`
+          `Error refreshing ${connectionDocument.get(
+            'name'
+          )} access - try logging in again`
         );
       }
     }
@@ -304,6 +410,36 @@ async function fetchMedicalRecords(
         `Cannot sync unknown source: ${connectionDocument.get('source')}`
       );
     }
+  }
+}
+
+async function updateConnectionDocumentErrorTimestamps(
+  connectionDocument: RxDocument<ConnectionDocument>,
+  db: RxDatabase<DatabaseCollections>
+) {
+  const newCd = connectionDocument.toMutableJSON();
+  newCd.last_sync_attempt = new Date().toISOString();
+  newCd.last_sync_was_error = true;
+  await db.connection_documents.upsert(newCd).then(() => {});
+}
+
+async function updateConnectionDocumentTimestamps(
+  syncJob: PromiseSettledResult<void[]>[],
+  connectionDocument: RxDocument<ConnectionDocument>,
+  db: RxDatabase<DatabaseCollections>
+) {
+  const anySuccess = syncJob.some((i) => i.status === 'fulfilled');
+  if (anySuccess) {
+    const newCd = connectionDocument.toMutableJSON();
+    newCd.last_refreshed = new Date().toISOString();
+    newCd.last_sync_attempt = new Date().toISOString();
+    newCd.last_sync_was_error = false;
+    await db.connection_documents.upsert(newCd).then(() => {});
+  } else {
+    const newCd = connectionDocument.toMutableJSON();
+    newCd.last_sync_attempt = new Date().toISOString();
+    newCd.last_sync_was_error = true;
+    await db.connection_documents.upsert(newCd).then(() => {});
   }
 }
 

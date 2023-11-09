@@ -2,7 +2,10 @@ import { useCallback, useState } from 'react';
 import * as OnPatient from '../services/OnPatient';
 import { GenericBanner } from '../components/GenericBanner';
 import { ConnectionCard } from '../components/connection/ConnectionCard';
-import { EpicLocalStorageKeys, getLoginUrl } from '../services/Epic';
+import {
+  EpicLocalStorageKeys,
+  getLoginUrl as getEpicLoginUrl,
+} from '../services/Epic';
 import {
   CernerLocalStorageKeys,
   getLoginUrl as getCernerLoginUrl,
@@ -20,6 +23,107 @@ import {
   getLoginUrl as getVeradigmLoginUrl,
 } from '../services/Veradigm';
 import { useConnectionCards } from '../components/hooks/useConnectionCards';
+import { ConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
+import { RxDocument } from 'rxdb';
+import React from 'react';
+
+export function getLoginUrlBySource(
+  item: RxDocument<ConnectionDocument>
+): string & Location {
+  switch (item.get('source')) {
+    case 'epic': {
+      return getEpicLoginUrl(
+        item.get('location'),
+        item.get('tenant_id') === 'sandbox' ||
+          item.get('tenant_id') === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354'
+      );
+    }
+    case 'cerner': {
+      return getCernerLoginUrl(item.get('location'), item.get('auth_url'));
+    }
+    case 'veradigm': {
+      return getVeradigmLoginUrl(item.get('location'), item.get('auth_uri'));
+    }
+    case 'onpatient': {
+      return OnPatient.getLoginUrl();
+    }
+    default: {
+      return '' as string & Location;
+    }
+  }
+}
+
+export function setTenantUrlBySource(
+  item: RxDocument<ConnectionDocument>
+): void {
+  switch (item.get('source')) {
+    case 'epic': {
+      setTenantEpicUrl(item.get('location'), item.get('name'), item.get('id'));
+      break;
+    }
+    case 'cerner': {
+      setTenantCernerUrl(
+        item.get('location'),
+        item.get('auth_url'),
+        item.get('token_url'),
+        item.get('name'),
+        item.get('id')
+      );
+      break;
+    }
+    case 'veradigm': {
+      setTenantVeradigmUrl(
+        item.get('location'),
+        item.get('auth_uri'),
+        item.get('token_uri'),
+        item.get('name'),
+        item.get('id')
+      );
+      break;
+    }
+    default: {
+      break;
+    }
+  }
+}
+
+function setTenantEpicUrl(
+  s: string & Location,
+  name: string,
+  id: string
+): void {
+  localStorage.setItem(EpicLocalStorageKeys.EPIC_URL, s);
+  localStorage.setItem(EpicLocalStorageKeys.EPIC_NAME, name);
+  localStorage.setItem(EpicLocalStorageKeys.EPIC_ID, id);
+}
+
+function setTenantCernerUrl(
+  base: string & Location,
+  auth: string & Location,
+  token: string & Location,
+  name: string,
+  id: string
+): void {
+  localStorage.setItem(CernerLocalStorageKeys.CERNER_BASE_URL, base);
+  localStorage.setItem(CernerLocalStorageKeys.CERNER_AUTH_URL, auth);
+  localStorage.setItem(CernerLocalStorageKeys.CERNER_TOKEN_URL, token);
+  localStorage.setItem(CernerLocalStorageKeys.CERNER_NAME, name);
+  localStorage.setItem(CernerLocalStorageKeys.CERNER_ID, id);
+}
+
+function setTenantVeradigmUrl(
+  base: string & Location,
+  auth: string & Location,
+  token: string & Location,
+  name: string,
+  id: string
+): void {
+  localStorage.setItem(VeradigmLocalStorageKeys.VERADIGM_BASE_URL, base);
+  localStorage.setItem(VeradigmLocalStorageKeys.VERADIGM_AUTH_URL, auth);
+  localStorage.setItem(VeradigmLocalStorageKeys.VERADIGM_TOKEN_URL, token);
+  localStorage.setItem(VeradigmLocalStorageKeys.VERADIGM_NAME, name);
+  localStorage.setItem(VeradigmLocalStorageKeys.VERADIGM_ID, id);
+}
 
 const ConnectionTab: React.FC = () => {
   const list = useConnectionCards(),
@@ -28,56 +132,13 @@ const ConnectionTab: React.FC = () => {
     [veradigmOpen, setVeradigmOpen] = useState(false),
     userPreferences = useUserPreferences(),
     onpatientLoginUrl = OnPatient.getLoginUrl(),
-    setTenantEpicUrl = useCallback(
-      (s: string & Location, name: string, id: string) => {
-        localStorage.setItem(EpicLocalStorageKeys.EPIC_URL, s);
-        localStorage.setItem(EpicLocalStorageKeys.EPIC_NAME, name);
-        localStorage.setItem(EpicLocalStorageKeys.EPIC_ID, id);
-      },
-      []
-    ),
-    setTenantCernerUrl = useCallback(
-      (
-        base: string & Location,
-        auth: string & Location,
-        token: string & Location,
-        name: string,
-        id: string
-      ) => {
-        localStorage.setItem(CernerLocalStorageKeys.CERNER_BASE_URL, base);
-        localStorage.setItem(CernerLocalStorageKeys.CERNER_AUTH_URL, auth);
-        localStorage.setItem(CernerLocalStorageKeys.CERNER_TOKEN_URL, token);
-        localStorage.setItem(CernerLocalStorageKeys.CERNER_NAME, name);
-        localStorage.setItem(CernerLocalStorageKeys.CERNER_ID, id);
-      },
-      []
-    ),
-    setTenantVeradigmUrl = useCallback(
-      (
-        base: string & Location,
-        auth: string & Location,
-        token: string & Location,
-        name: string,
-        id: string
-      ) => {
-        localStorage.setItem(VeradigmLocalStorageKeys.VERADIGM_BASE_URL, base);
-        localStorage.setItem(VeradigmLocalStorageKeys.VERADIGM_AUTH_URL, auth);
-        localStorage.setItem(
-          VeradigmLocalStorageKeys.VERADIGM_TOKEN_URL,
-          token
-        );
-        localStorage.setItem(VeradigmLocalStorageKeys.VERADIGM_NAME, name);
-        localStorage.setItem(VeradigmLocalStorageKeys.VERADIGM_ID, id);
-      },
-      []
-    ),
     handleToggleEpicPanel = useCallback(
       (loc: string & Location, name: string, id: string) => {
         setTenantEpicUrl(loc, name, id);
         setEpicOpen((x) => !x);
-        window.location = getLoginUrl(loc, id === 'sandbox');
+        window.location = getEpicLoginUrl(loc, id === 'sandbox');
       },
-      [setTenantEpicUrl]
+      []
     ),
     handleToggleCernerPanel = useCallback(
       (
@@ -91,7 +152,7 @@ const ConnectionTab: React.FC = () => {
         setCernerOpen((x) => !x);
         window.location = getCernerLoginUrl(base, auth);
       },
-      [setTenantCernerUrl]
+      []
     ),
     handleToggleVeradigmPanel = useCallback(
       (
@@ -105,7 +166,7 @@ const ConnectionTab: React.FC = () => {
         setVeradigmOpen((x) => !x);
         window.location = getVeradigmLoginUrl(base, auth);
       },
-      [setTenantVeradigmUrl]
+      []
     );
 
   return (

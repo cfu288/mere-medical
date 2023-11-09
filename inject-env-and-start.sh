@@ -8,4 +8,5 @@ done
 
 echo "Starting Mere Medical"
 
-cd api && node --tls-min-v1.0 main.js
+# Some Epic providers require Unsafe TLS 1.0
+cd api && node --openssl-config=openssl.cnf main.js

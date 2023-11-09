@@ -12,6 +12,8 @@ export interface ConnectionDocument extends BaseDocument {
   name: string;
   location: string;
   last_refreshed: string;
+  last_sync_attempt: string;
+  last_sync_was_error: boolean;
 }
 
 export interface EpicConnectionDocument extends ConnectionDocument {
@@ -31,7 +33,7 @@ export interface CernerConnectionDocument extends ConnectionDocument {
 
 export type CreateCernerConnectionDocument = Omit<
   CernerConnectionDocument,
-  'last_refreshed'
+  'last_refreshed' | 'last_sync_attempt' | 'last_sync_was_error'
 >;
 
 export interface VeradigmConnectionDocument extends ConnectionDocument {
@@ -42,15 +44,19 @@ export interface VeradigmConnectionDocument extends ConnectionDocument {
 
 export type CreateVeradigmConnectionDocument = Omit<
   VeradigmConnectionDocument,
-  'last_refreshed' | 'refresh_token' | 'scope'
+  | 'last_refreshed'
+  | 'refresh_token'
+  | 'scope'
+  | 'last_sync_attempt'
+  | 'last_sync_was_error'
 >;
 
 export type CreateEpicConnectionDocument = Omit<
   EpicConnectionDocument,
-  'last_refreshed'
+  'last_refreshed' | 'last_sync_attempt' | 'last_sync_was_error'
 >;
 
 export type CreateOnPatientConnectionDocument = Omit<
   ConnectionDocument,
-  'last_refreshed'
+  'last_refreshed' | 'last_sync_attempt' | 'last_sync_was_error'
 >;

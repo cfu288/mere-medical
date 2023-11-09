@@ -34,6 +34,7 @@ import { getPublicKey, IDBKeyConfig } from './WebCrypto';
 import { JsonWebKeySet } from '../services/JWTTools';
 import { UserDocument } from '../models/user-document/UserDocument.type';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
+import { getConnectionCardByUrl } from './getConnectionCardByUrl';
 
 export function getDSTU2Url(baseUrl: string) {
   return `${baseUrl}/api/FHIR/DSTU2`;
@@ -148,10 +149,7 @@ export async function syncAllRecords(
   connectionDocument: EpicConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   useProxy = false
-): Promise<PromiseSettledResult<void[]>[] | any> {
-  const newCd = connectionDocument;
-  newCd.last_refreshed = new Date().toISOString();
-
+): Promise<PromiseSettledResult<void[]>[]> {
   const procMapper = (proc: BundleEntry<Procedure>) =>
     DSTU2.mapProcedureToClinicalDocument(proc, connectionDocument);
   const patientMapper = (pt: BundleEntry<Patient>) =>
@@ -283,9 +281,7 @@ export async function syncAllRecords(
     ),
   ]);
 
-  await db.connection_documents.upsert(newCd).then(() => []);
-
-  return syncJob;
+  return syncJob as unknown as Promise<PromiseSettledResult<void[]>[]>;
 }
 
 async function syncDocumentReferences(
@@ -407,7 +403,9 @@ async function fetchAttachmentData(
     const defaultUrl = url;
     const proxyUrlExtension = url.replace(baseUrl, '');
     const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${
-      epicId === 'sandbox' ? Config.EPIC_SANDBOX_CLIENT_ID : epicId
+      epicId === 'sandbox' || epicId === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354'
+        ? Config.EPIC_SANDBOX_CLIENT_ID
+        : epicId
     }&target=${`${encodeURIComponent(proxyUrlExtension)}`}`;
     const res = await fetch(useProxy ? proxyUrl : defaultUrl, {
       headers: {
@@ -449,21 +447,23 @@ export async function fetchAccessTokenWithCode(
 ): Promise<EpicAuthResponse> {
   const defaultUrl = `${epicUrl}/oauth2/token`;
   const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${epicId}&target=/oauth2/token`;
+  const headers = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+  };
+  const body = new URLSearchParams({
+    grant_type: 'authorization_code',
+    client_id: `${
+      epicId === 'sandbox' || epicId === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354'
+        ? Config.EPIC_SANDBOX_CLIENT_ID
+        : Config.EPIC_CLIENT_ID
+    }`,
+    redirect_uri: `${Config.PUBLIC_URL}${Routes.EpicCallback}`,
+    code: code,
+  });
   const res = await fetch(useProxy ? proxyUrl : defaultUrl, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      grant_type: 'authorization_code',
-      client_id: `${
-        epicId === 'sandbox'
-          ? Config.EPIC_SANDBOX_CLIENT_ID
-          : Config.EPIC_CLIENT_ID
-      }`,
-      redirect_uri: `${Config.PUBLIC_URL}${Routes.EpicCallback}`,
-      code: code,
-    }),
+    headers,
+    body,
   });
   if (!res.ok) {
     console.error(await res.text());
@@ -492,7 +492,7 @@ export async function registerDynamicClient({
   const validJWKS = jsonWebKeySet as JsonWebKeyWKid;
   const request: EpicDynamicRegistrationRequest = {
     software_id:
-      epicId === 'sandbox'
+      epicId === 'sandbox' || epicId === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354'
         ? Config.EPIC_SANDBOX_CLIENT_ID
         : Config.EPIC_CLIENT_ID,
     jwks: {
@@ -582,18 +582,6 @@ export async function fetchAccessTokenUsingJWT(
   return { ...result, client_id: clientId };
 }
 
-export async function getConnectionCardByUrl(
-  url: string,
-  db: RxDatabase<DatabaseCollections>
-) {
-  return db.connection_documents
-    .findOne({
-      selector: { location: url },
-    })
-    .exec()
-    .then((list) => list as unknown as RxDocument<EpicConnectionDocument>);
-}
-
 export async function saveConnectionToDb({
   res,
   epicUrl,
@@ -609,7 +597,7 @@ export async function saveConnectionToDb({
   epicId: string;
   user: UserDocument;
 }) {
-  const doc = await getConnectionCardByUrl(epicUrl, db);
+  const doc = await getConnectionCardByUrl<EpicConnectionDocument>(epicUrl, db);
   return new Promise((resolve, reject) => {
     if (res?.access_token && res?.expires_in && res?.patient) {
       if (doc) {
@@ -627,11 +615,11 @@ export async function saveConnectionToDb({
                 scope: res.scope,
                 patient: res.patient,
                 tenant_id: epicId,
+                last_sync_was_error: false,
               },
             })
             .then(() => {
               console.log('Updated connection card');
-              console.log(doc.toJSON());
               resolve(true);
             })
             .catch((e) => {

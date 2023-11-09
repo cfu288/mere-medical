@@ -55,7 +55,9 @@
     "src/components/timeline/ShowDocumentReferenceResultsExpandable/parseCCDA/parseCCDA.tsx",
     "./src/components/timeline/ShowDocumentReferenceResultsExpandable/DisplayCCDAVitalSignsSection.1.tsx",
     "./src/components/timeline/ShowDocumentReferenceResultsExpandable/parseCCDA/parseCCDAResultsSection.tsx",
-    "./src/components/timeline/ShowDocumentReferenceResultsExpandable/parseCCDA/parseCCDAVitalsSection.tsx"
+    "./src/components/timeline/ShowDocumentReferenceResultsExpandable/parseCCDA/parseCCDAVitalsSection.tsx",
+    "./src/components/timeline/AbnormalResultIcon.tsx",
+    "./src/services/getConnectionCardByUrl.ts"
   ],
   "exclude": [
     "jest.config.ts",

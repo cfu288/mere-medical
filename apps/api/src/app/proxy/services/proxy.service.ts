@@ -16,7 +16,7 @@ export class ProxyService {
 
   async proxyRequest(req: Request, res: Response, @Param() params?) {
     const target = req.query.target as string;
-    const serviceId = req.query.serviceId as string;
+    let serviceId = req.query.serviceId as string;
     let token = null;
 
     // eslint-disable-next-line no-prototype-builtins
@@ -42,8 +42,14 @@ export class ProxyService {
           ? this.options.services.map((service) => [service.id, service])
           : []
       );
-      if (services.has(serviceId)) {
+      // Temp workaround for sandbox
+      const isSandbox = serviceId === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354';
+      if (isSandbox) {
+        serviceId = 'sandbox';
+      }
+      if (services.has(serviceId) || isSandbox) {
         const service = services.get(serviceId);
+        this.logger.log(`Proxying ${req.method} ${req.url} to ${serviceId}`);
         const baseUrl = service.url;
         return this.doProxy(
           req,
@@ -79,7 +85,6 @@ export class ProxyService {
       target: getBaseURL(target),
       headers: {
         ...(token && { authorization: 'Bearer ' + token }),
-        // 'Content-Type': 'application/json',
         accept: 'application/json',
       },
     };
