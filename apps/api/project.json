@@ -28,7 +28,7 @@
       "executor": "@nx/node:node",
       "options": {
         "buildTarget": "api:build",
-        "runtimeArgs": ["--openssl-config=openssl.cnf"]
+        "runtimeArgs": ["--openssl-config=apps/api/openssl.cnf"]
       },
       "configurations": {
         "production": {
