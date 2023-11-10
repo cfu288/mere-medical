@@ -24,6 +24,7 @@ import {
   setTenantUrlBySource,
 } from '../../pages/ConnectionTab';
 import React from 'react';
+import { get } from 'http';
 
 function getImage(logo: ConnectionSources) {
   switch (logo) {
@@ -103,6 +104,7 @@ export function ConnectionCard({
         });
       }
     }, [baseUrl, db, item, syncD, userPreferences]);
+  console.log(item.toJSON());
 
   return (
     <li

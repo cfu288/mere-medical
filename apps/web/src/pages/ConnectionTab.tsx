@@ -39,7 +39,9 @@ export function getLoginUrlBySource(
       );
     }
     case 'cerner': {
-      return getCernerLoginUrl(item.get('location'), item.get('auth_url'));
+      debugger;
+      console.log(item.toJSON());
+      return getCernerLoginUrl(item.get('location'), item.get('auth_uri'));
     }
     case 'veradigm': {
       return getVeradigmLoginUrl(item.get('location'), item.get('auth_uri'));
@@ -58,14 +60,18 @@ export function setTenantUrlBySource(
 ): void {
   switch (item.get('source')) {
     case 'epic': {
-      setTenantEpicUrl(item.get('location'), item.get('name'), item.get('id'));
+      setTenantEpicUrl(
+        item.get('location'),
+        item.get('name'),
+        item.get('tenant_id')
+      );
       break;
     }
     case 'cerner': {
       setTenantCernerUrl(
         item.get('location'),
-        item.get('auth_url'),
-        item.get('token_url'),
+        item.get('auth_uri'),
+        item.get('auth_uri'),
         item.get('name'),
         item.get('id')
       );
