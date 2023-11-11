@@ -145,7 +145,6 @@ function HandleInitalSync({ children }: PropsWithChildren) {
         if (!hasRun.current) {
           for (const item of list) {
             hasRun.current = true;
-
             if (
               // Check if it has been > 1 day since last sync
               !item.get('last_refreshed') ||
@@ -169,7 +168,7 @@ function HandleInitalSync({ children }: PropsWithChildren) {
                         parseISO(item.get('last_sync_attempt')),
                         new Date()
                       )
-                    ) >= 1)
+                    ) <= 1)
                 ) {
                   console.log(
                     `Skipping sync for ${item.get(

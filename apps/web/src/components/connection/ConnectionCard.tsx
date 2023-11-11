@@ -177,7 +177,7 @@ export function ConnectionCard({
               </span>
             </div>
           </button>
-          {true || item.get('last_sync_was_error') ? (
+          {item.get('last_sync_was_error') ? (
             // redirect to href
             <button
               disabled={syncing}
