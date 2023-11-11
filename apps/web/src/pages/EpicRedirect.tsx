@@ -215,6 +215,7 @@ const handleLogin = async ({
       useProxy: enableProxy,
     });
   } catch (e) {
+    // Failed, save current access token without dynamic registration
     if (e instanceof DynamicRegistrationError) {
       const res = e.data;
       await saveConnectionToDb({

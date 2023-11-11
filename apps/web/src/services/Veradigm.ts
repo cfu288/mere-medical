@@ -111,12 +111,14 @@ async function getFHIRResource<T extends FhirResource>(
       Authorization: `Bearer ${connectionDocument.access_token}`,
       Accept: 'application/json+fhir',
     },
-  })
-    .then((res) => res.json())
-    .then((res: Bundle) => res);
-
-  if (res.entry) {
-    return res.entry as BundleEntry<T>[];
+  });
+  if (!res.ok) {
+    console.error(await res.text());
+    throw new Error('Error getting FHIR resource');
+  }
+  const bundle = await res.json();
+  if (bundle.entry) {
+    return bundle.entry as BundleEntry<T>[];
   }
   return [];
 }

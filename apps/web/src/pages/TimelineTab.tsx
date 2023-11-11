@@ -122,7 +122,6 @@ function useRecordQuery(
       fetchRecords(db, user.id, query)
         .then((groupedRecords) => {
           setList(groupedRecords);
-          console.debug(groupedRecords);
           setQueryStatus(QueryStatus.SUCCESS);
           setInitialized(true);
         })

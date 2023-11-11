@@ -104,6 +104,7 @@ export function ConnectionCard({
         });
       }
     }, [baseUrl, db, item, syncD, userPreferences]);
+  console.log(item.toJSON());
 
   return (
     <li
@@ -128,7 +129,6 @@ export function ConnectionCard({
                 : item.get('name')}
             </h3>
           </div>
-
           {item.get('last_sync_was_error') ? (
             <div className="mt-1 flex flex-row items-center truncate align-middle text-sm font-medium text-red-500">
               <AbnormalResultIcon />
@@ -177,7 +177,7 @@ export function ConnectionCard({
               </span>
             </div>
           </button>
-          {item.get('last_sync_was_error') ? (
+          {true || item.get('last_sync_was_error') ? (
             // redirect to href
             <button
               disabled={syncing}
@@ -206,9 +206,14 @@ function formatConnectedTimestampText(isoDate: string) {
 }
 
 function formatErrorLastAttemptTimestampText(isoDate: string) {
+  if (!isoDate) {
+    return `Unable to sync`;
+  }
   return Math.abs(differenceInDays(parseISO(isoDate), new Date())) >= 1
-    ? ` Last refresh was on ${formatTimestampToDay(isoDate)}`
-    : ` Last refresh was at ${formatTimestampToTime(isoDate)}`;
+    ? ` Unable to sync since ${formatTimestampToDay(
+        isoDate
+      )} at ${formatTimestampToTime(isoDate)}`
+    : ` Unable to sync since ${formatTimestampToTime(isoDate)}`;
 }
 
 function formatTimestampToDay(isoDate: string) {

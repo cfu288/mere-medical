@@ -21,7 +21,12 @@ import * as Cerner from '../../services/Cerner';
 import * as Veradigm from '../../services/Veradigm';
 import { from, Subject } from 'rxjs';
 import { useNotificationDispatch } from './NotificationProvider';
-import { differenceInDays, differenceInHours, parseISO } from 'date-fns';
+import {
+  differenceInDays,
+  differenceInHours,
+  differenceInMinutes,
+  parseISO,
+} from 'date-fns';
 import Config from '../../environments/config.json';
 import { useUserPreferences } from './UserPreferencesProvider';
 import { useConnectionCards } from '../hooks/useConnectionCards';
@@ -152,7 +157,7 @@ function HandleInitalSync({ children }: PropsWithChildren) {
                   )
                 ) >= 1)
             ) {
-              // Less than 1 day, consider syncing
+              // Greater than 1 day, consider syncing
               // Was the last sync an error
               if (item.get('last_sync_was_error')) {
                 // If error, check if a sync has been attempted in the past hour, skip if so
@@ -164,7 +169,7 @@ function HandleInitalSync({ children }: PropsWithChildren) {
                         parseISO(item.get('last_sync_attempt')),
                         new Date()
                       )
-                    ) <= 1)
+                    ) >= 1)
                 ) {
                   console.log(
                     `Skipping sync for ${item.get(

@@ -149,58 +149,108 @@ const VeradigmRedirect: React.FC = () => {
         veradigmUrl &&
         veradigmName
       ) {
-        fetchAccessTokenWithCode(code, removeEndSlash(veradigmTokenUrl))
-          .then((res) => {
-            if (
-              res.access_token &&
-              res.expires_in &&
-              res.token_type &&
-              user.id
-            ) {
-              const nowInSeconds = Math.floor(Date.now() / 1000);
-              const dbentry: Omit<CreateVeradigmConnectionDocument, 'patient'> =
-                {
-                  id: uuid4(),
-                  user_id: user.id,
-                  source: 'veradigm',
-                  location: veradigmUrl,
-                  name: veradigmName,
-                  access_token: res.access_token,
-                  expires_in: nowInSeconds + res.expires_in,
-                  id_token: res.id_token,
-                  auth_uri: veradigmAuthUrl,
-                  token_uri: veradigmTokenUrl,
-                };
-              db.connection_documents
-                .insert(dbentry)
-                .then(() => {
-                  navigate(Routes.AddConnection);
-                })
-                .catch((e: unknown) => {
-                  notifyDispatch({
-                    type: 'set_notification',
-                    message: `Error adding connection: ${(e as Error).message}`,
-                    variant: 'error',
-                  });
-                  navigate(Routes.AddConnection);
+        getConnectionCardByUrl<VeradigmConnectionDocument>(
+          veradigmUrl,
+          db
+        ).then((doc) => {
+          fetchAccessTokenWithCode(code, removeEndSlash(veradigmTokenUrl))
+            .then((res) => {
+              if (
+                res.access_token &&
+                res.expires_in &&
+                res.token_type &&
+                user.id
+              ) {
+                if (doc) {
+                  // If we already have a connection card for this URL, update it
+                  try {
+                    const nowInSeconds = Math.floor(Date.now() / 1000);
+                    doc
+                      .update({
+                        $set: {
+                          access_token: res.access_token,
+                          expires_in: nowInSeconds + res.expires_in,
+                          id_token: res.id_token,
+                          last_sync_was_error: false,
+                        },
+                      })
+                      .then(() => {
+                        navigate(Routes.AddConnection);
+                      })
+                      .catch((e) => {
+                        console.error(e);
+                        notifyDispatch({
+                          type: 'set_notification',
+                          message: `Error adding connection: ${
+                            (e as Error).message
+                          }`,
+                          variant: 'error',
+                        });
+                        navigate(Routes.AddConnection);
+                      });
+                  } catch (e) {
+                    console.error(e);
+                    notifyDispatch({
+                      type: 'set_notification',
+                      message: `Error adding connection: ${
+                        (e as Error).message
+                      }`,
+                      variant: 'error',
+                    });
+                    navigate(Routes.AddConnection);
+                  }
+                } else {
+                  // Otherwise, create a new connection card
+                  const nowInSeconds = Math.floor(Date.now() / 1000);
+                  const dbentry: Omit<
+                    CreateVeradigmConnectionDocument,
+                    'patient'
+                  > = {
+                    id: uuid4(),
+                    user_id: user.id,
+                    source: 'veradigm',
+                    location: veradigmUrl,
+                    name: veradigmName,
+                    access_token: res.access_token,
+                    expires_in: nowInSeconds + res.expires_in,
+                    id_token: res.id_token,
+                    auth_uri: veradigmAuthUrl,
+                    token_uri: veradigmTokenUrl,
+                  };
+                  db.connection_documents
+                    .insert(dbentry)
+                    .then(() => {
+                      navigate(Routes.AddConnection);
+                    })
+                    .catch((e: unknown) => {
+                      notifyDispatch({
+                        type: 'set_notification',
+                        message: `Error adding connection: ${
+                          (e as Error).message
+                        }`,
+                        variant: 'error',
+                      });
+                      navigate(Routes.AddConnection);
+                    });
+                }
+              } else {
+                notifyDispatch({
+                  type: 'set_notification',
+                  message: `Error completing authentication: no access token provided`,
+                  variant: 'error',
                 });
-            } else {
+              }
+            })
+            .catch((e) => {
+              setError(`${(e as Error).message}`);
               notifyDispatch({
                 type: 'set_notification',
-                message: `Error completing authentication: no access token provided`,
+                message: `Error adding connection: ${(e as Error).message}`,
                 variant: 'error',
               });
-            }
-          })
-          .catch((e) => {
-            setError(`${(e as Error).message}`);
-            notifyDispatch({
-              type: 'set_notification',
-              message: `Error adding connection: ${(e as Error).message}`,
-              variant: 'error',
+              navigate(Routes.AddConnection);
             });
-            navigate(Routes.AddConnection);
-          });
+        });
       } else {
         if (
           !(
@@ -217,6 +267,7 @@ const VeradigmRedirect: React.FC = () => {
             setError('There was a problem trying to sign in');
           }
         }
+
         // Otherwise, we're just pulling data
       }
     }

@@ -11,11 +11,28 @@ export function parseCCDAVitalsSection(
     return null;
   }
 
-  const components = [...matchingSections].map((e) =>
-    e?.getElementsByTagName('component')
+  const matchingSectionsDisplayNames = [
+    ...matchingSections.map((x) => x.getElementsByTagName('entry')),
+  ]?.map((x) =>
+    [...x]
+      .map((y) => y.getElementsByTagName('code'))
+      ?.map(
+        (z) =>
+          [...z]?.[0]?.getAttribute('displayName') || [...z]?.[0]?.textContent
+      )
   )?.[0];
 
-  if (!components) {
+  console.log(matchingSectionsDisplayNames);
+
+  const sectionComponents = [
+    ...(matchingSections as unknown as HTMLElement[]),
+  ]?.map((e) =>
+    [...e.getElementsByTagName('entry')].map((x) =>
+      x.getElementsByTagName('component')
+    )
+  )?.[0];
+
+  if (!sectionComponents) {
     return null;
   }
 
@@ -26,40 +43,45 @@ export function parseCCDAVitalsSection(
       value: string | null;
       unit: string | null;
       datetime: string | null;
+      statusCode: string | null;
     }
   > = {};
-  for (const component of components) {
-    const codeId = component
-      ?.getElementsByTagName('code')[0]
-      .getAttribute('code');
-    const codeSystem = component
-      ?.getElementsByTagName('code')[0]
-      .getAttribute('codeSystem');
-    const codeDisplayName = component
-      ?.getElementsByTagName('code')[0]
-      .getAttribute('displayName');
-    if (codeSystem === LOINC_CODE_SYSTEM && codeId) {
-      extractedVital[codeId] = {
-        title:
-          codeDisplayName ||
-          component?.getElementsByTagName('originalText')?.[0]?.innerHTML,
-        value:
-          component
+  for (const components of sectionComponents) {
+    for (const [index, component] of [...components].entries()) {
+      const codeId = component
+        ?.getElementsByTagName('code')[0]
+        .getAttribute('code');
+      const codeSystem = component
+        ?.getElementsByTagName('code')[0]
+        .getAttribute('codeSystem');
+      const codeDisplayName = component
+        ?.getElementsByTagName('code')[0]
+        .getAttribute('displayName');
+      if (codeSystem === LOINC_CODE_SYSTEM && codeId) {
+        extractedVital[codeId] = {
+          title:
+            codeDisplayName ||
+            component?.getElementsByTagName('originalText')?.[0]?.innerHTML,
+          value:
+            component
+              ?.getElementsByTagName('value')?.[0]
+              ?.getAttribute('value') ||
+            component
+              ?.getElementsByTagName('value')?.[0]
+              ?.getAttribute('displayName'),
+          unit: component
             ?.getElementsByTagName('value')?.[0]
-            ?.getAttribute('value') ||
-          component
-            ?.getElementsByTagName('value')?.[0]
-            ?.getAttribute('displayName'),
-        unit: component
-          ?.getElementsByTagName('value')?.[0]
-          ?.getAttribute('unit'),
-        datetime: component
-          ?.getElementsByTagName('effectiveTime')?.[0]
-          ?.getAttribute('value'),
-      };
+            ?.getAttribute('unit'),
+          datetime: component
+            ?.getElementsByTagName('effectiveTime')?.[0]
+            ?.getAttribute('value'),
+          statusCode: component
+            ?.getElementsByTagName('statusCode')?.[0]
+            ?.getAttribute('code'),
+        };
+      }
     }
   }
-
   const uniqueDates = new Set([
     ...Object.values(extractedVital).map((v) => v.datetime),
   ]);

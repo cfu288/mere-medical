@@ -604,7 +604,6 @@ export async function saveConnectionToDb({
         // If we already have a connection card for this URL, update it
         try {
           const nowInSeconds = Math.floor(Date.now() / 1000);
-          debugger;
           doc
             .update({
               $set: {

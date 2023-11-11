@@ -1,13 +1,17 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import uuid4 from '../utils/UUIDUtils';
-import { CreateOnPatientConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
+import {
+  ConnectionDocument,
+  CreateOnPatientConnectionDocument,
+} from '../models/connection-document/ConnectionDocument.type';
 import { useRxDb } from '../components/providers/RxDbProvider';
 import { Routes } from '../Routes';
 import { useNotificationDispatch } from '../components/providers/NotificationProvider';
 import { AppPage } from '../components/AppPage';
 import { GenericBanner } from '../components/GenericBanner';
 import { useUser } from '../components/providers/UserProvider';
+import { getConnectionCardByUrl } from '../services/getConnectionCardByUrl';
 
 export interface OnPatientAuthResponse {
   access_token: string;
@@ -34,33 +38,75 @@ const OnPatientRedirect: React.FC = () => {
         expiresIn = searchRequest.get('expiresIn');
 
       if (accessToken && refreshToken && expiresIn && user.id) {
-        const nowInSeconds = Math.floor(Date.now() / 1000);
-        const dbentry: Omit<
-          CreateOnPatientConnectionDocument,
-          'patient' | 'scope'
-        > = {
-          id: uuid4(),
-          user_id: user.id,
-          source: 'onpatient',
-          location: 'https://onpatient.com',
-          name: 'OnPatient',
-          access_token: accessToken,
-          refresh_token: refreshToken,
-          expires_in: nowInSeconds + parseInt(expiresIn),
-        };
-        db.connection_documents
-          .insert(dbentry)
-          .then(() => {
-            navigate(Routes.AddConnection);
-          })
-          .catch((e: unknown) => {
-            notifyDispatch({
-              type: 'set_notification',
-              message: `Error adding connection: ${(e as Error).message}`,
-              variant: 'error',
-            });
-            navigate(Routes.AddConnection);
-          });
+        getConnectionCardByUrl<ConnectionDocument>(
+          'https://onpatient.com',
+          db
+        ).then((doc) => {
+          if (doc) {
+            try {
+              const nowInSeconds = Math.floor(Date.now() / 1000);
+              doc
+                .update({
+                  $set: {
+                    access_token: accessToken,
+                    refresh_token: refreshToken,
+                    expires_in: nowInSeconds + parseInt(expiresIn),
+                    last_sync_was_error: false,
+                  },
+                })
+                .then(() => {
+                  navigate(Routes.AddConnection);
+                })
+                .catch((e: unknown) => {
+                  console.error(e);
+                  notifyDispatch({
+                    type: 'set_notification',
+                    message: `Error updating connection: ${
+                      (e as Error).message
+                    }`,
+                    variant: 'error',
+                  });
+                  navigate(Routes.AddConnection);
+                });
+            } catch (e) {
+              console.error(e);
+              notifyDispatch({
+                type: 'set_notification',
+                message: `Error updating connection: ${(e as Error).message}`,
+                variant: 'error',
+              });
+              navigate(Routes.AddConnection);
+            }
+          } else {
+            const nowInSeconds = Math.floor(Date.now() / 1000);
+            const dbentry: Omit<
+              CreateOnPatientConnectionDocument,
+              'patient' | 'scope'
+            > = {
+              id: uuid4(),
+              user_id: user.id,
+              source: 'onpatient',
+              location: 'https://onpatient.com',
+              name: 'OnPatient',
+              access_token: accessToken,
+              refresh_token: refreshToken,
+              expires_in: nowInSeconds + parseInt(expiresIn),
+            };
+            db.connection_documents
+              .insert(dbentry)
+              .then(() => {
+                navigate(Routes.AddConnection);
+              })
+              .catch((e: unknown) => {
+                notifyDispatch({
+                  type: 'set_notification',
+                  message: `Error adding connection: ${(e as Error).message}`,
+                  variant: 'error',
+                });
+                navigate(Routes.AddConnection);
+              });
+          }
+        });
       } else {
         notifyDispatch({
           type: 'set_notification',
