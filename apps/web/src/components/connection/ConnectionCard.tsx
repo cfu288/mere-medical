@@ -104,7 +104,6 @@ export function ConnectionCard({
         });
       }
     }, [baseUrl, db, item, syncD, userPreferences]);
-  console.log(item.toJSON());
 
   return (
     <li

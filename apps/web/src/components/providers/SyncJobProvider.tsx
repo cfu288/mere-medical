@@ -118,9 +118,11 @@ function HandleInitalSync({ children }: PropsWithChildren) {
   const sync = useSyncJobContext(),
     syncD = useSyncJobDispatchContext(),
     userPreferences = useUserPreferences(),
-    list = useConnectionCards(),
+    conList = useConnectionCards(),
     db = useRxDb(),
     isDemo = Config.IS_DEMO === 'enabled',
+    hasRun = useRef(false),
+    syncJobEntries = useMemo(() => new Set(Object.keys(sync)), [sync]),
     handleFetchData = useCallback(
       (item: RxDocument<ConnectionDocument>) => {
         if (syncD && userPreferences) {
@@ -136,88 +138,95 @@ function HandleInitalSync({ children }: PropsWithChildren) {
       },
       [db, syncD, userPreferences]
     ),
-    hasRun = useRef(false),
-    syncJobEntries = useMemo(() => new Set(Object.keys(sync)), [sync]);
+    startSyncAllConnections = useCallback(
+      (hasRun: boolean) => {
+        if (hasRun) {
+          return;
+        }
+        hasRun = true;
+        if (conList) {
+          for (const item of conList) {
+            startSyncConnection(item, syncJobEntries, handleFetchData);
+          }
+        }
+      },
+      [conList, handleFetchData, syncJobEntries]
+    );
 
   useEffect(() => {
     if (!isDemo) {
-      if (list) {
-        if (!hasRun.current) {
-          for (const item of list) {
-            hasRun.current = true;
-            if (
-              // Check if it has been > 1 day since last sync
-              !item.get('last_refreshed') ||
-              (item.get('last_refreshed') &&
-                Math.abs(
-                  differenceInDays(
-                    parseISO(item.get('last_refreshed')),
-                    new Date()
-                  )
-                ) >= 1)
-            ) {
-              // Greater than 1 day, consider syncing
-              // Was the last sync an error
-              if (item.get('last_sync_was_error')) {
-                // If error, check if a sync has been attempted in the past hour, skip if so
-                if (
-                  !item.get('last_sync_attempt') ||
-                  (item.get('last_sync_attempt') &&
-                    Math.abs(
-                      differenceInHours(
-                        parseISO(item.get('last_sync_attempt')),
-                        new Date()
-                      )
-                    ) <= 1)
-                ) {
-                  console.log(
-                    `Skipping sync for ${item.get(
-                      'name'
-                    )}, last sync attempt was less than an hour ago`
-                  );
-                } else {
-                  console.log(
-                    `Now syncing ${item.get(
-                      'name'
-                    )}, last sync was an error and was more than an hour ago`
-                  );
-                  if (!syncJobEntries.has(item.get('id'))) {
-                    // Start sync, make sure this only runs once
-                    // Add a delay to allow other parts of the app to load before starting sync
-                    setTimeout(
-                      () => handleFetchData(item),
-                      1000 + Math.ceil(Math.random() * 300)
-                    );
-                  }
-                }
-              } else {
-                console.log(
-                  `Now syncing ${item.get(
-                    'name'
-                  )}, last sync was over a day ago`
-                );
-                if (!syncJobEntries.has(item.get('id'))) {
-                  // Add a delay to allow other parts of the app to load before starting sync
-                  setTimeout(
-                    () => handleFetchData(item),
-                    1000 + Math.ceil(Math.random() * 300)
-                  );
-                }
-              }
-            } else {
-              console.log(
-                `Skipping sync for ${item.get(
-                  'name'
-                )}, last successful sync was less than a day ago`
-              );
-            }
-          }
-        }
-      }
+      startSyncAllConnections(hasRun.current);
     }
-  }, [handleFetchData, isDemo, list, syncJobEntries]);
+  }, [isDemo, startSyncAllConnections]);
 
   return <>{children}</>;
+}
+
+function startSyncConnection(
+  item: RxDocument<ConnectionDocument>,
+  syncJobEntries: Set<string>,
+  handleFetchData: (item: RxDocument<ConnectionDocument>) => void
+) {
+  if (
+    !item.get('last_refreshed') ||
+    (item.get('last_refreshed') &&
+      Math.abs(
+        differenceInDays(parseISO(item.get('last_refreshed')), new Date())
+      ) >= 1)
+  ) {
+    // Greater than 1 day, consider syncing
+    // Was the last sync an error
+    if (item.get('last_sync_was_error')) {
+      // If error, check if a sync has been attempted in the past hour, skip if so
+      if (
+        !item.get('last_sync_attempt') ||
+        (item.get('last_sync_attempt') &&
+          Math.abs(
+            differenceInHours(
+              parseISO(item.get('last_sync_attempt')),
+              new Date()
+            )
+          ) <= 1)
+      ) {
+        console.log(
+          `Skipping sync for ${item.get(
+            'name'
+          )}, last sync attempt was less than an hour ago`
+        );
+      } else {
+        console.log(
+          `Now syncing ${item.get(
+            'name'
+          )}, last sync was an error and was more than an hour ago`
+        );
+        if (!syncJobEntries.has(item.get('id'))) {
+          // Start sync, make sure this only runs once
+          // Add a delay to allow other parts of the app to load before starting sync
+          setTimeout(
+            () => handleFetchData(item),
+            1000 + Math.ceil(Math.random() * 300)
+          );
+        }
+      }
+    } else {
+      console.log(
+        `Now syncing ${item.get('name')}, last sync was over a day ago`
+      );
+      if (!syncJobEntries.has(item.get('id'))) {
+        // Add a delay to allow other parts of the app to load before starting sync
+        setTimeout(
+          () => handleFetchData(item),
+          1000 + Math.ceil(Math.random() * 300)
+        );
+      }
+    }
+  } else {
+    console.log(
+      `Skipping sync for ${item.get(
+        'name'
+      )}, last successful sync was less than a day ago`
+    );
+  }
 }
 
 /**
