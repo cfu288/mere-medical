@@ -57,7 +57,12 @@
     "./src/components/timeline/ShowDocumentReferenceResultsExpandable/parseCCDA/parseCCDAResultsSection.tsx",
     "./src/components/timeline/ShowDocumentReferenceResultsExpandable/parseCCDA/parseCCDAVitalsSection.tsx",
     "./src/components/timeline/AbnormalResultIcon.tsx",
-    "./src/services/getConnectionCardByUrl.ts"
+    "./src/services/getConnectionCardByUrl.ts",
+    "src/components/tutorial/TutorialOverlay.tsx",
+    "src/components/tutorial/TutorialWelcomeScreen.tsx",
+    "src/components/tutorial/TutorialAddConnectionScreen.tsx",
+    "src/components/tutorial/TutorialItemWrapper.tsx",
+    "./src/components/tutorial/TutorialContentScreen.tsx"
   ],
   "exclude": [
     "jest.config.ts",

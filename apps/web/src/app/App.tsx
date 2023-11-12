@@ -10,11 +10,13 @@ import { ErrorBoundary } from '../components/ErrorBoundary';
 import { UserPreferencesProvider } from '../components/providers/UserPreferencesProvider';
 import { SyncJobProvider } from '../components/providers/SyncJobProvider';
 import { LocalConfigProvider } from '../components/providers/LocalConfigProvider';
+import { TutorialOverlay } from '../components/tutorial/TutorialOverlay';
 
 export default function App() {
   return (
     <ErrorBoundary>
       <LocalConfigProvider>
+        <TutorialOverlay />
         <NotificationProvider>
           <RxDbProvider>
             <UserProvider>
