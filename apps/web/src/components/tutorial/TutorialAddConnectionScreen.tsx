@@ -9,7 +9,7 @@ export function TutorialAddConnectionScreen({
 }) {
   return (
     <TutorialContentScreen dispatch={dispatch}>
-      <h1 className="text-center text-xl font-semibold">
+      <h1 className="mb-2 text-center text-xl font-semibold">
         Let's connect to one of your healthcare providers
       </h1>
       <p className="text-center">

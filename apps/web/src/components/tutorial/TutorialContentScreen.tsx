@@ -9,7 +9,7 @@ export function TutorialContentScreen({
 }>) {
   return (
     <div className="flex h-full flex-col items-center justify-center text-white">
-      <div className="mx-auto mb-24 max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto mb-12 max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl flex-col items-center justify-center">
           {children}
         </div>

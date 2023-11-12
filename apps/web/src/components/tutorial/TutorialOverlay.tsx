@@ -1,6 +1,7 @@
 import {
   TutorialLocalStorageKeys,
   useLocalConfig,
+  useUpdateLocalConfig,
 } from '../providers/LocalConfigProvider';
 import React, { useEffect, useMemo } from 'react';
 import { AnimatePresence } from 'framer-motion';
@@ -47,11 +48,6 @@ export const tutorialReducer: React.Reducer<TutorialState, TutorialAction> = (
       };
     }
     case 'complete_tutorial': {
-      // update localstorage to mark all keys in  steps as true in localstorage so we don't show the tutorial again
-      state.steps.forEach((key) => {
-        localStorage.setItem(key, 'true');
-      });
-
       return { ...state, isComplete: true };
     }
     default: {
@@ -102,7 +98,9 @@ export function TutorialOverlay() {
   const tutorialSteps = useMemo(
     () =>
       Object.entries(localConfig)
-        .filter(([key, value]) => key.startsWith('tutorial_') && value === true)
+        .filter(([key, value]) => {
+          return key.startsWith('tutorial_') && value !== false;
+        })
         .map(([key, _]) => key)
         .sort((a, b) => {
           return a.localeCompare(b);
@@ -115,10 +113,25 @@ export function TutorialOverlay() {
     direction: 1,
     isComplete: false,
   } as TutorialState);
+  const updateLocalConfig = useUpdateLocalConfig();
 
   useEffect(() => {
-    dispatch({ type: 'initalize_steps', steps: tutorialSteps });
-  }, [tutorialSteps]);
+    if (state.isComplete && state.steps.length > 0) {
+      // update keys in local storage to false
+      const newTutorialState: Record<string, boolean> = {};
+      for (const key of state.steps) {
+        newTutorialState[key] = false;
+      }
+      updateLocalConfig(newTutorialState);
+      dispatch({ type: 'initalize_steps', steps: [] });
+    }
+  }, [state.isComplete, state.steps, updateLocalConfig]);
+
+  useEffect(() => {
+    if (!state.isComplete) {
+      dispatch({ type: 'initalize_steps', steps: tutorialSteps });
+    }
+  }, [state.isComplete, tutorialSteps]);
 
   if (!tutorialSteps.length) {
     return null;
