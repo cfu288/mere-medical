@@ -15,9 +15,23 @@ export function TutorialInstallPWAScreen({
       );
     },
     isChrome = () => {
+      let isChromeVendor = false;
+      if ((navigator as Navigator & { userAgentData: any })?.userAgentData) {
+        const vendors = (window.navigator as Navigator & { userAgentData: any })
+          .userAgentData.brands;
+        if (
+          vendors?.filter((e: any) => e.brand === 'Google Chrome').length > 0
+        ) {
+          isChromeVendor = true;
+          console.log('Chrome');
+        } else {
+          console.log('Chromium');
+        }
+      }
       return (
         /Chrome/.test(navigator.userAgent) &&
-        /Google Inc/.test(navigator.vendor)
+        /Google Inc/.test(navigator.vendor) &&
+        isChromeVendor
       );
     },
     isFirefox = () => {
@@ -223,6 +237,42 @@ export function TutorialInstallPWAScreen({
           <div className="mb-4">
             <p className="text-center">
               Unfortunately, Firefox does not support installing PWAs.
+            </p>
+            <p className="text-center">
+              You can{' '}
+              <a href="https://addons.mozilla.org/en-US/firefox/addon/pwas-for-firefox/">
+                install an extension
+              </a>
+              to add support for installing PWAs like Mere.
+            </p>
+          </div>
+        </>
+      )}
+      {isUnknownBrowser() && (
+        // unkown browser, show generic instructions telling user to look up how to install a PWA if their browser supports it
+        <>
+          <h1 className="mb-2 text-center text-xl font-semibold">
+            {isMobileDevice()
+              ? 'Install the App'
+              : 'Install the Mere App on your Computer'}
+          </h1>
+          <div className="mb-4">
+            <p className="text-center">
+              Unfortunately, your browser may not support installing Mere as a
+              Progressive Web Application (PWA).
+            </p>
+            <p className="text-center">
+              To see how to install PWAs in the most commonly supported
+              browsers, you can{' '}
+              <a
+                className="text-blue-400 hover:text-blue-500"
+                href="https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Installing"
+                target="_blank"
+                rel="noreferrer"
+              >
+                check out this website
+              </a>
+              .
             </p>
           </div>
         </>
