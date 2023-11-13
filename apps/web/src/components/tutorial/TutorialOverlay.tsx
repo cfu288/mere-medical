@@ -4,7 +4,7 @@ import {
   useUpdateLocalConfig,
 } from '../providers/LocalConfigProvider';
 import React, { useEffect, useMemo } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { TutorialItemWrapper } from './TutorialItemWrapper';
 import { TutorialAddConnectionScreen } from './TutorialAddConnectionScreen';
 import { TutorialWelcomeScreen } from './TutorialWelcomeScreen';
@@ -55,27 +55,6 @@ export const tutorialReducer: React.Reducer<TutorialState, TutorialAction> = (
       throw new Error(`Unhandled action type: ${action}`);
     }
   }
-};
-
-export const variants = {
-  enter: (direction: number) => {
-    return {
-      x: direction > 0 ? 1000 : -1000,
-      opacity: 0,
-    };
-  },
-  center: {
-    zIndex: 1,
-    x: 0,
-    opacity: 1,
-  },
-  exit: (direction: number) => {
-    return {
-      zIndex: 0,
-      x: direction < 0 ? 1000 : -1000,
-      opacity: 0,
-    };
-  },
 };
 
 /**
@@ -158,7 +137,7 @@ export function TutorialOverlay() {
   }
 
   return (
-    <div className="bg-primary-700 mobile-full-height absolute z-50 w-full overflow-hidden">
+    <div className="bg-primary-700 mobile-full-height absolute z-50 flex w-full flex-grow flex-col overflow-hidden">
       <AnimatePresence initial={false} custom={state.direction}>
         <TutorialItemWrapper
           key={TutorialLocalStorageKeys.WELCOME_SCREEN}
@@ -184,7 +163,32 @@ export function TutorialOverlay() {
         >
           <TutorialAddConnectionScreen dispatch={dispatch} />
         </TutorialItemWrapper>
+        <TutorialPageCounter
+          currentPage={state.currentStep + 1}
+          totalPages={state.steps.length}
+        />
       </AnimatePresence>
+    </div>
+  );
+}
+
+function TutorialPageCounter({
+  currentPage,
+  totalPages,
+}: {
+  currentPage: number;
+  totalPages: number;
+}) {
+  return (
+    <div className="flex items-center justify-center pb-2">
+      {Array.from({ length: totalPages }).map((_, i) => (
+        <div
+          key={i}
+          className={`mx-1 h-2 w-2 rounded-full ${
+            i === currentPage - 1 ? 'bg-white' : 'bg-gray-500'
+          }`}
+        ></div>
+      ))}
     </div>
   );
 }

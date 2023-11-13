@@ -5,10 +5,30 @@ import {
   ValueOf,
   TutorialState,
   TutorialAction,
-  variants,
   swipePower,
   swipeConfidenceThreshold,
 } from './TutorialOverlay';
+
+const variants = {
+  enter: (direction: number) => {
+    return {
+      x: direction > 0 ? 1000 : -1000,
+      opacity: 0,
+    };
+  },
+  center: {
+    zIndex: 1,
+    x: 0,
+    opacity: 1,
+  },
+  exit: (direction: number) => {
+    return {
+      zIndex: 0,
+      x: direction < 0 ? 1000 : -1000,
+      opacity: 0,
+    };
+  },
+};
 
 export const TutorialItemWrapper = ({
   localStorageKey,
@@ -24,7 +44,7 @@ export const TutorialItemWrapper = ({
     return (
       <motion.div
         key={localStorageKey}
-        className="h-full"
+        className="flex flex-1 flex-col"
         custom={state.direction}
         variants={variants}
         initial="enter"
@@ -46,11 +66,8 @@ export const TutorialItemWrapper = ({
           }
         }}
       >
-        <div className="bg-primary-700 inset-0 flex h-full flex-col items-center justify-center overflow-y-auto">
-          <div className="flex-1">{children}</div>
-          <p className="text-white">
-            {state.currentStep + 1} of {state.steps.length}
-          </p>
+        <div className="bg-primary-700 inset-0 flex flex-1 flex-col items-center justify-center overflow-y-auto">
+          {children}
         </div>
       </motion.div>
     );
