@@ -214,13 +214,16 @@ function startSyncConnection(
       );
       if (!syncJobEntries.has(item.get('id'))) {
         // Add a delay to allow other parts of the app to load before starting sync
-        setTimeout(
-          () =>
+        setTimeout(() => {
+          try {
+            // if requestIdleCallback is available, use it
             window.requestIdleCallback(() => handleFetchData(item), {
               timeout: 1000 * 10,
-            }),
-          1000 + Math.ceil(Math.random() * 300)
-        );
+            });
+          } catch (e) {
+            handleFetchData(item);
+          }
+        }, 1000 + Math.ceil(Math.random() * 300));
       }
     }
   } else {
