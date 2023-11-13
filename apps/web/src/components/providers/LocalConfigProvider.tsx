@@ -14,18 +14,21 @@ import React, {
 
 export const TutorialLocalStorageKeys = {
   WELCOME_SCREEN: 'tutorial_1699756120_welcome-screen',
-  ADD_A_CONNECTION: 'tutorial_1699756121_add-a-connection',
+  INSTALL_PWA: 'tutorial_1699756130_install-pwa',
+  ADD_A_CONNECTION: 'tutorial_1699756140_add-a-connection',
 } as const;
 
 interface LocalConfig {
   use_encrypted_database: boolean;
   [TutorialLocalStorageKeys.WELCOME_SCREEN]: boolean;
+  [TutorialLocalStorageKeys.INSTALL_PWA]: boolean;
   [TutorialLocalStorageKeys.ADD_A_CONNECTION]: boolean;
 }
 
 const defaultConfig: LocalConfig = {
   use_encrypted_database: false,
   [TutorialLocalStorageKeys.WELCOME_SCREEN]: true,
+  [TutorialLocalStorageKeys.INSTALL_PWA]: true,
   [TutorialLocalStorageKeys.ADD_A_CONNECTION]: true,
 };
 

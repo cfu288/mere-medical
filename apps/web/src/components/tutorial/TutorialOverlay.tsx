@@ -8,6 +8,7 @@ import { AnimatePresence } from 'framer-motion';
 import { TutorialItemWrapper } from './TutorialItemWrapper';
 import { TutorialAddConnectionScreen } from './TutorialAddConnectionScreen';
 import { TutorialWelcomeScreen } from './TutorialWelcomeScreen';
+import { TutorialInstallPWAScreen } from './TutorialInstallPWAScreen';
 
 export type TutorialState = {
   currentStep: number;
@@ -91,20 +92,36 @@ export const swipePower = (offset: number, velocity: number) => {
 export type ValueOf<T> = T[keyof T];
 
 /**
+ * Return all keys in local storage that start with 'tutorial_' in order by unix timestamp
+ * @param config
+ * @returns
+ */
+function getTutorialKeysFromLocalStorage<T>(config: Partial<T>): string[] {
+  return Object.entries(config)
+    .filter(([key, value]) => {
+      return key.startsWith('tutorial_') && value !== false;
+    })
+    .map(([key, _]) => key)
+    .sort((a, b) => {
+      return a.localeCompare(b);
+    });
+}
+
+const isInstalledPWA = () => {
+  return window.matchMedia('(display-mode: standalone)').matches;
+};
+
+/**
  * Display a tutorial overlay carousel to the user on app start if localstrage keys are set
  */
 export function TutorialOverlay() {
-  const localConfig = useLocalConfig();
+  const localConfig = useLocalConfig(),
+    updateLocalConfig = useUpdateLocalConfig();
   const tutorialSteps = useMemo(
     () =>
-      Object.entries(localConfig)
-        .filter(([key, value]) => {
-          return key.startsWith('tutorial_') && value !== false;
-        })
-        .map(([key, _]) => key)
-        .sort((a, b) => {
-          return a.localeCompare(b);
-        }),
+      getTutorialKeysFromLocalStorage(localConfig).filter((key) =>
+        key !== TutorialLocalStorageKeys.INSTALL_PWA ? true : !isInstalledPWA()
+      ),
     [localConfig]
   );
   const [state, dispatch] = React.useReducer(tutorialReducer, {
@@ -113,7 +130,6 @@ export function TutorialOverlay() {
     direction: 1,
     isComplete: false,
   } as TutorialState);
-  const updateLocalConfig = useUpdateLocalConfig();
 
   useEffect(() => {
     if (state.isComplete && state.steps.length > 0) {
@@ -145,6 +161,7 @@ export function TutorialOverlay() {
     <div className="bg-primary-700 mobile-full-height absolute z-50 w-full overflow-hidden">
       <AnimatePresence initial={false} custom={state.direction}>
         <TutorialItemWrapper
+          key={TutorialLocalStorageKeys.WELCOME_SCREEN}
           localStorageKey={TutorialLocalStorageKeys.WELCOME_SCREEN}
           state={state}
           dispatch={dispatch}
@@ -152,6 +169,15 @@ export function TutorialOverlay() {
           <TutorialWelcomeScreen dispatch={dispatch} />
         </TutorialItemWrapper>
         <TutorialItemWrapper
+          key={TutorialLocalStorageKeys.INSTALL_PWA}
+          localStorageKey={TutorialLocalStorageKeys.INSTALL_PWA}
+          state={state}
+          dispatch={dispatch}
+        >
+          <TutorialInstallPWAScreen dispatch={dispatch} />
+        </TutorialItemWrapper>
+        <TutorialItemWrapper
+          key={TutorialLocalStorageKeys.ADD_A_CONNECTION}
           localStorageKey={TutorialLocalStorageKeys.ADD_A_CONNECTION}
           state={state}
           dispatch={dispatch}

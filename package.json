@@ -22,14 +22,14 @@
     "@nestjs/schematics": "9.1.0",
     "@nestjs/testing": "9.4.0",
     "@nrwl/deno": "^16.0.0",
-    "@nx/cypress": "17.0.3",
+    "@nx/cypress": "16.1.0",
     "@nx/eslint-plugin": "16.1.0",
     "@nx/jest": "16.1.0",
     "@nx/js": "16.1.0",
     "@nx/linter": "16.1.0",
     "@nx/nest": "16.1.0",
     "@nx/node": "16.1.0",
-    "@nx/react": "17.0.3",
+    "@nx/react": "16.1.0",
     "@nx/web": "16.1.0",
     "@nx/webpack": "16.1.0",
     "@nx/workspace": "16.1.0",
@@ -97,7 +97,7 @@
     "@nestjs/core": "9.4.0",
     "@nestjs/platform-express": "9.4.0",
     "@nestjs/serve-static": "^3.0.0",
-    "@nrwl/webpack": "^16.1.0",
+    "@nrwl/webpack": "16.1.0",
     "@react-hook/debounce": "^4.0.0",
     "@react-hook/throttle": "^2.2.0",
     "@tailwindcss/forms": "^0.5.2",
@@ -142,3 +142,4 @@
     "yup": "^0.32.11"
   }
 }
+
