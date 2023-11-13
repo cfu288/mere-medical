@@ -20,6 +20,12 @@
   }
 }
 
+@supports not ((height: 100svh) and (height: 100cqh)) {
+  .mobile-full-height {
+    @apply min-h-screen;
+  }
+}
+
 .pb-safe {
   padding-bottom: calc(env(safe-area-inset-bottom, 1.5rem) - 0.75rem);
 }
