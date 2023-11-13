@@ -1,15 +1,17 @@
 import React from 'react';
-import { TutorialAction } from './TutorialOverlay';
+import { TutorialAction, TutorialState } from './TutorialOverlay';
 import { TutorialContentScreen } from './TutorialContentScreen';
 import logo from '../../img/white-logo.svg';
 
 export function TutorialWelcomeScreen({
   dispatch,
+  state,
 }: {
   dispatch: React.Dispatch<TutorialAction>;
+  state: TutorialState;
 }) {
   return (
-    <TutorialContentScreen dispatch={dispatch}>
+    <TutorialContentScreen dispatch={dispatch} hideBackButton={true}>
       <h1 className="mb-2 text-center text-xl font-semibold">
         Welcome to Mere!
       </h1>

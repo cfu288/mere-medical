@@ -11,12 +11,13 @@ import { UserPreferencesProvider } from '../components/providers/UserPreferences
 import { SyncJobProvider } from '../components/providers/SyncJobProvider';
 import { LocalConfigProvider } from '../components/providers/LocalConfigProvider';
 import { TutorialOverlay } from '../components/tutorial/TutorialOverlay';
+import Config from '../environments/config.json';
 
 export default function App() {
   return (
     <ErrorBoundary>
       <LocalConfigProvider>
-        <TutorialOverlay />
+        {Config.IS_DEMO !== 'enabled' && <TutorialOverlay />}
         <NotificationProvider>
           <RxDbProvider>
             <UserProvider>

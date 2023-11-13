@@ -135,7 +135,7 @@ export function TutorialOverlay() {
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="bg-primary-700 mobile-full-height absolute z-50 flex w-full flex-grow flex-col overflow-hidden"
+          className="bg-primary-700 mobile-full-height absolute z-50 flex w-full flex-grow flex-col overflow-hidden opacity-25"
         >
           <AnimatePresence initial={false} custom={state.direction}>
             <TutorialItemWrapper
@@ -144,7 +144,7 @@ export function TutorialOverlay() {
               state={state}
               dispatch={dispatch}
             >
-              <TutorialWelcomeScreen dispatch={dispatch} />
+              <TutorialWelcomeScreen dispatch={dispatch} state={state} />
             </TutorialItemWrapper>
             <TutorialItemWrapper
               key={TutorialLocalStorageKeys.INSTALL_PWA}
@@ -162,6 +162,14 @@ export function TutorialOverlay() {
             >
               <TutorialAddConnectionScreen dispatch={dispatch} />
             </TutorialItemWrapper>
+            <button
+              className="hover:bg-primary-600 mx-auto max-w-sm rounded py-4 px-4 text-white"
+              onClick={() => {
+                dispatch({ type: 'complete_tutorial' });
+              }}
+            >
+              Skip Tutorial
+            </button>
             <TutorialPageCounter
               currentPage={state.currentStep + 1}
               totalPages={state.steps.length}
