@@ -215,12 +215,12 @@ function startSyncConnection(
       if (!syncJobEntries.has(item.get('id'))) {
         // Add a delay to allow other parts of the app to load before starting sync
         setTimeout(() => {
-          try {
+          if (window.requestIdleCallback) {
             // if requestIdleCallback is available, use it
             window.requestIdleCallback(() => handleFetchData(item), {
-              timeout: 1000 * 10,
+              timeout: 1000 * 60,
             });
-          } catch (e) {
+          } else {
             handleFetchData(item);
           }
         }, 1000 + Math.ceil(Math.random() * 300));
