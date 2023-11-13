@@ -23,9 +23,6 @@ export function TutorialInstallPWAScreen({
           vendors?.filter((e: any) => e.brand === 'Google Chrome').length > 0
         ) {
           isChromeVendor = true;
-          console.log('Chrome');
-        } else {
-          console.log('Chromium');
         }
       }
       return (

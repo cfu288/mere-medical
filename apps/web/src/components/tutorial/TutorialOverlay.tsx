@@ -128,47 +128,48 @@ export function TutorialOverlay() {
     }
   }, [state.isComplete, tutorialSteps]);
 
-  if (!tutorialSteps.length) {
-    return null;
-  }
-
-  if (state.isComplete) {
-    return null;
-  }
-
   return (
-    <div className="bg-primary-700 mobile-full-height absolute z-50 flex w-full flex-grow flex-col overflow-hidden">
-      <AnimatePresence initial={false} custom={state.direction}>
-        <TutorialItemWrapper
-          key={TutorialLocalStorageKeys.WELCOME_SCREEN}
-          localStorageKey={TutorialLocalStorageKeys.WELCOME_SCREEN}
-          state={state}
-          dispatch={dispatch}
+    <AnimatePresence initial={true}>
+      {!tutorialSteps.length || state.isComplete ? null : (
+        <motion.div
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="bg-primary-700 mobile-full-height absolute z-50 flex w-full flex-grow flex-col overflow-hidden"
         >
-          <TutorialWelcomeScreen dispatch={dispatch} />
-        </TutorialItemWrapper>
-        <TutorialItemWrapper
-          key={TutorialLocalStorageKeys.INSTALL_PWA}
-          localStorageKey={TutorialLocalStorageKeys.INSTALL_PWA}
-          state={state}
-          dispatch={dispatch}
-        >
-          <TutorialInstallPWAScreen dispatch={dispatch} />
-        </TutorialItemWrapper>
-        <TutorialItemWrapper
-          key={TutorialLocalStorageKeys.ADD_A_CONNECTION}
-          localStorageKey={TutorialLocalStorageKeys.ADD_A_CONNECTION}
-          state={state}
-          dispatch={dispatch}
-        >
-          <TutorialAddConnectionScreen dispatch={dispatch} />
-        </TutorialItemWrapper>
-        <TutorialPageCounter
-          currentPage={state.currentStep + 1}
-          totalPages={state.steps.length}
-        />
-      </AnimatePresence>
-    </div>
+          <AnimatePresence initial={false} custom={state.direction}>
+            <TutorialItemWrapper
+              key={TutorialLocalStorageKeys.WELCOME_SCREEN}
+              localStorageKey={TutorialLocalStorageKeys.WELCOME_SCREEN}
+              state={state}
+              dispatch={dispatch}
+            >
+              <TutorialWelcomeScreen dispatch={dispatch} />
+            </TutorialItemWrapper>
+            <TutorialItemWrapper
+              key={TutorialLocalStorageKeys.INSTALL_PWA}
+              localStorageKey={TutorialLocalStorageKeys.INSTALL_PWA}
+              state={state}
+              dispatch={dispatch}
+            >
+              <TutorialInstallPWAScreen dispatch={dispatch} />
+            </TutorialItemWrapper>
+            <TutorialItemWrapper
+              key={TutorialLocalStorageKeys.ADD_A_CONNECTION}
+              localStorageKey={TutorialLocalStorageKeys.ADD_A_CONNECTION}
+              state={state}
+              dispatch={dispatch}
+            >
+              <TutorialAddConnectionScreen dispatch={dispatch} />
+            </TutorialItemWrapper>
+            <TutorialPageCounter
+              currentPage={state.currentStep + 1}
+              totalPages={state.steps.length}
+            />
+          </AnimatePresence>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -180,7 +181,11 @@ function TutorialPageCounter({
   totalPages: number;
 }) {
   return (
-    <div className="flex items-center justify-center pb-2">
+    <div
+      className={`flex items-center justify-center  ${
+        isInstalledPWA() ? 'pb-6' : 'pb-2'
+      }`}
+    >
       {Array.from({ length: totalPages }).map((_, i) => (
         <div
           key={i}
