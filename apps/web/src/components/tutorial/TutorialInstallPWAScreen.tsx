@@ -184,10 +184,29 @@ export function TutorialInstallPWAScreen({
               </h1>
               <ol className="list-decimal">
                 <li className="ml-6">
-                  When promped by Chrome to install Mere,
-                </li>
+                  When promped by Chrome, click the 'Add Mere to your Home
+                  screen' dialog to install the app on your phone.
+                </li>{' '}
                 <li className="ml-6">
-                  click the 'install' button to install the app on your phone.
+                  If you do not get a prompt by Chrome, you can manually install
+                  it by clicking the three dots{' '}
+                  <span className="inline-flex px-1">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="1.5"
+                      stroke="currentColor"
+                      className="h-full w-4"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z"
+                      />
+                    </svg>
+                  </span>{' '}
+                  in the top right corner of Chrome and selecting 'Install app'.
                 </li>
               </ol>
             </div>
