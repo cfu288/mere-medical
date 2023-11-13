@@ -238,11 +238,14 @@ export function TutorialInstallPWAScreen({
             <p className="text-center">
               Unfortunately, Firefox does not support installing PWAs.
             </p>
-            <p className="text-center">
+            <p className="text-center ">
               You can{' '}
-              <a href="https://addons.mozilla.org/en-US/firefox/addon/pwas-for-firefox/">
+              <a
+                className="text-blue-100 underline hover:text-blue-50"
+                href="https://addons.mozilla.org/en-US/firefox/addon/pwas-for-firefox/"
+              >
                 install an extension
-              </a>
+              </a>{' '}
               to add support for installing PWAs like Mere.
             </p>
           </div>
