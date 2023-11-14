@@ -22,7 +22,7 @@
 
 @supports not ((height: 100svh) and (height: 100cqh)) {
   .mobile-full-height {
-    @apply min-h-screen;
+    @apply h-screen max-h-screen min-h-screen;
   }
 }
 
