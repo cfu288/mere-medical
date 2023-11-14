@@ -6,7 +6,7 @@ export function AbnormalResultIcon() {
       viewBox="0 0 24 24"
       strokeWidth="1.5"
       stroke="currentColor"
-      className="inline h-4 w-4 text-red-500 sm:ml-2 sm:h-4 sm:w-4"
+      className="inline h-4 w-4 text-red-500 sm:h-4 sm:w-4"
     >
       <path
         strokeLinecap="round"
