@@ -47,7 +47,6 @@ export class ProxyService {
       if (isSandbox) {
         serviceId = 'sandbox';
       }
-      console.log(services.keys());
       if (services.has(serviceId) || isSandbox) {
         const service = services.get(serviceId);
         this.logger.log(`Proxying ${req.method} ${req.url} to ${serviceId}`);
