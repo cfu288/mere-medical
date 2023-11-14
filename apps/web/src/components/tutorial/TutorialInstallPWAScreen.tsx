@@ -111,7 +111,7 @@ export function TutorialInstallPWAScreen({
                 Installation Instructions
               </h1>
               <ol className="list-decimal">
-                <li className="ml-6">
+                <li className="ml-6 mb-2">
                   In the bottom middle bar of Safari, click the share{' '}
                   <span className="inline-flex px-1">
                     <svg
@@ -131,11 +131,11 @@ export function TutorialInstallPWAScreen({
                   </span>{' '}
                   button.
                 </li>
-                <li className="ml-6">
+                <li className="ml-6 mb-2">
                   In the share menu, you should see the option to 'Add to Home
                   Screen'.
                 </li>
-                <li className="ml-6">
+                <li className="ml-6 mb-2">
                   Click the 'Add' button to install Mere on your computer.
                 </li>
               </ol>

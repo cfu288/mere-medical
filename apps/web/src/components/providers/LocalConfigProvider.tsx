@@ -16,6 +16,7 @@ export const TutorialLocalStorageKeys = {
   WELCOME_SCREEN: 'tutorial_1699756120_welcome-screen',
   INSTALL_PWA: 'tutorial_1699756130_install-pwa',
   ADD_A_CONNECTION: 'tutorial_1699756140_add-a-connection',
+  COMPLETE: 'tutorial_complete',
 } as const;
 
 interface LocalConfig {

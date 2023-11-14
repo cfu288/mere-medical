@@ -9,6 +9,7 @@ import { TutorialItemWrapper } from './TutorialItemWrapper';
 import { TutorialAddConnectionScreen } from './TutorialAddConnectionScreen';
 import { TutorialWelcomeScreen } from './TutorialWelcomeScreen';
 import { TutorialInstallPWAScreen } from './TutorialInstallPWAScreen';
+import { TutorialCompleteScreen } from './TutorialCompleteScreen';
 
 export type TutorialState = {
   currentStep: number;
@@ -124,7 +125,10 @@ export function TutorialOverlay() {
 
   useEffect(() => {
     if (!state.isComplete) {
-      dispatch({ type: 'initalize_steps', steps: tutorialSteps });
+      dispatch({
+        type: 'initalize_steps',
+        steps: [...tutorialSteps, TutorialLocalStorageKeys.COMPLETE],
+      });
     }
   }, [state.isComplete, tutorialSteps]);
 
@@ -161,6 +165,14 @@ export function TutorialOverlay() {
               dispatch={dispatch}
             >
               <TutorialAddConnectionScreen dispatch={dispatch} />
+            </TutorialItemWrapper>
+            <TutorialItemWrapper
+              key={TutorialLocalStorageKeys.COMPLETE}
+              localStorageKey={TutorialLocalStorageKeys.COMPLETE}
+              state={state}
+              dispatch={dispatch}
+            >
+              <TutorialCompleteScreen dispatch={dispatch} />
             </TutorialItemWrapper>
             <button
               className="hover:bg-primary-600 mx-auto max-w-sm rounded py-4 px-4 text-white"

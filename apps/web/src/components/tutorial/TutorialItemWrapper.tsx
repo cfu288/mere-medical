@@ -36,7 +36,7 @@ export const TutorialItemWrapper = ({
   state,
   dispatch,
 }: PropsWithChildren<{
-  localStorageKey: ValueOf<typeof TutorialLocalStorageKeys>;
+  localStorageKey?: ValueOf<typeof TutorialLocalStorageKeys>;
   state: TutorialState;
   dispatch: React.Dispatch<TutorialAction>;
 }>) => {
