@@ -231,11 +231,11 @@ export function TutorialInstallPWAScreen({
               ? 'Install the App'
               : 'Install the Mere App on your Computer'}
           </h1>
-          <div className="mb-4">
-            <p className="text-center">
+          <div className="mx-auto mb-4 self-center justify-self-center rounded-lg p-2 align-middle sm:max-w-lg">
+            <p className="mb-2">
               Unfortunately, Firefox does not support installing PWAs.
             </p>
-            <p className="text-center ">
+            <p className="mb-2">
               You can{' '}
               <a
                 className="text-blue-100 underline hover:text-blue-50"
@@ -256,12 +256,12 @@ export function TutorialInstallPWAScreen({
               ? 'Install the App'
               : 'Install the Mere App on your Computer'}
           </h1>
-          <div className="mb-4">
-            <p className="text-center">
+          <div className="mx-auto mb-4 self-center justify-self-center rounded-lg p-2 align-middle sm:max-w-lg">
+            <p className="mb-2">
               Unfortunately, your browser may not support installing Mere as a
               Progressive Web Application (PWA).
             </p>
-            <p className="text-center">
+            <p className="mb-2">
               To see how to install PWAs in the most commonly supported
               browsers, you can{' '}
               <a
