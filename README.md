@@ -3,13 +3,12 @@
 <div align="center">
   <img src="./images/logo.png" width="100" height="100" />
   <h3 align="center">Mere Medical</h3>
-
   <p align="center">
     A personal health record to aggregate and sync all of your medical records from multiple patient portals in one place. Currently supports thousands of hospitals and clinics and major electronic medical record systems. Self-hosted, privacy-focused, and offline-first. 
   </p>
-  <p align="center">
-    <b>Mere is currently pre-release software: updates may break backwards compatibility.</b>
-  </p>
+</div>
+
+<div align="center">
   <p align="center">
     <br />
     <a href="https://meremedical.co/"><strong>See Docs</strong></a>
@@ -35,11 +34,17 @@
   </a>
 </p>
 
+> [!WARNING]  
+> Mere is currently pre-release software: updates may break backwards compatibility.
+
+> [!NOTE]  
+> This project is supported by a single developer who is also a full-time medical student and soon to be medical resident. If you would like to support this project, please consider [sponsoring](https://github.com/sponsors/cfu288) or help by tackling one of the [issues](https://github.com/cfu288/mere-medical/issues). I will make a good effort to respond to issues and PRs in a timely fashion, but please be patient.
+
 ## What is Mere Medical
 
-<p align="center">
-  <img src="./images/timeline-desktop.webp" width="400" />
-</p>
+<div align="center" >
+    <img src="./images/multiscreen.webp" width="400" />
+</div>
 
 Mere Medical is a self-hosted web app to aggregate and sync all of your medical records from all your doctor and hospital visits in one place. See everything in a timeline view or quickly summarize your records.
 
