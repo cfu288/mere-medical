@@ -17,6 +17,7 @@ import { RxDBDevModePlugin } from 'rxdb/plugins/dev-mode';
 import { RxDBMigrationPlugin } from 'rxdb/plugins/migration';
 import { RxDBJsonDumpPlugin } from 'rxdb/plugins/json-dump';
 import { RxDBUpdatePlugin } from 'rxdb/plugins/update';
+import { RxDBQueryBuilderPlugin } from 'rxdb/plugins/query-builder';
 import {
   ClinicalDocumentCollection,
   ClinicalDocumentSchema,
@@ -53,6 +54,7 @@ if (process.env.NODE_ENV === 'development') {
 addRxPlugin(RxDBUpdatePlugin);
 addRxPlugin(RxDBMigrationPlugin);
 addRxPlugin(RxDBJsonDumpPlugin);
+addRxPlugin(RxDBQueryBuilderPlugin);
 
 export type DatabaseCollections = {
   clinical_documents: ClinicalDocumentCollection;

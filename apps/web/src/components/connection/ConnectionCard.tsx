@@ -24,7 +24,6 @@ import {
   setTenantUrlBySource,
 } from '../../pages/ConnectionTab';
 import React from 'react';
-import { get } from 'http';
 
 function getImage(logo: ConnectionSources) {
   switch (logo) {

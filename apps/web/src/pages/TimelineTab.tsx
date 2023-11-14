@@ -1,6 +1,6 @@
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, FhirResource } from 'fhir/r2';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   DatabaseCollections,
   useRxDb,
@@ -19,16 +19,19 @@ import { TimelineSkeleton } from './TimelineSkeleton';
 import { useScrollToHash } from '../components/hooks/useScrollToHash';
 import { SearchBar } from './SearchBar';
 import { Transition } from '@headlessui/react';
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import { ButtonLoadingSpinner } from '../components/connection/ButtonLoadingSpinner';
 
 /**
  * This should really be a background process that runs after every data sync instead of every view
  * @param db
  * @returns
  */
-function fetchRecords(
+async function fetchRecords(
   db: RxDatabase<DatabaseCollections>,
   user_id: string,
-  query?: string
+  query?: string,
+  page?: number
 ) {
   let selector: MangoQuerySelector<ClinicalDocument<unknown>> = {
     user_id: user_id,
@@ -55,11 +58,13 @@ function fetchRecords(
       'metadata.display_name': { $regex: `.*${query}.*`, $options: 'si' },
     };
   }
-  return db.clinical_documents
+  const gr = db.clinical_documents
     .find({
       selector,
       sort: [{ 'metadata.date': 'desc' }],
     })
+    .skip(page ? page * PAGE_SIZE : 0)
+    .limit(PAGE_SIZE)
     .exec()
     .then((list) => {
       const lst = list as unknown as RxDocument<
@@ -96,52 +101,95 @@ function fetchRecords(
 
       return groupedRecords;
     });
+
+  return gr;
 }
 
 export enum QueryStatus {
   IDLE,
   LOADING,
+  LOADING_MORE,
   SUCCESS,
   ERROR,
+  COMPLETE,
 }
+
+const PAGE_SIZE = 500;
 
 function useRecordQuery(
   query: string
 ): [
   Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]> | undefined,
   QueryStatus,
-  boolean
+  boolean,
+  () => void
 ] {
   const db = useRxDb(),
     user = useUser(),
+    hasRun = useRef(false),
     [queryStatus, setQueryStatus] = useState(QueryStatus.IDLE),
     [initialized, setInitialized] = useState(false),
     [list, setList] =
       useState<Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>>(),
-    debounceExecQuery = useDebounceCallback((query) => {
-      fetchRecords(db, user.id, query)
-        .then((groupedRecords) => {
-          setList(groupedRecords);
+    [currentPage, setCurrentPage] = useState(0),
+    debounceExecQuery = useCallback(
+      async (query: string) => {
+        try {
+          const groupedRecords = await fetchRecords(
+            db,
+            user.id,
+            query,
+            currentPage
+          );
+          setList({ ...list, ...groupedRecords });
           setQueryStatus(QueryStatus.SUCCESS);
           setInitialized(true);
-        })
-        .catch(() => {
+        } catch (e) {
           setQueryStatus(QueryStatus.ERROR);
-        });
-    }, 150);
+        }
+      },
+      [currentPage, db, list, user.id]
+    ),
+    loadNextPage = useCallback(async () => {
+      setQueryStatus(QueryStatus.LOADING_MORE);
+      try {
+        const groupedRecords = await fetchRecords(
+          db,
+          user.id,
+          query,
+          currentPage + 1
+        );
+
+        setList({ ...list, ...groupedRecords });
+        if (
+          Object.values(groupedRecords).reduce((a, b) => a + b.length, 0) <
+          PAGE_SIZE
+        ) {
+          setQueryStatus(QueryStatus.COMPLETE);
+        } else {
+          setQueryStatus(QueryStatus.SUCCESS);
+        }
+        setCurrentPage(currentPage + 1);
+      } catch (e) {
+        setQueryStatus(QueryStatus.ERROR);
+      }
+    }, [currentPage, db, list, query, user.id]);
 
   useEffect(() => {
-    setQueryStatus(QueryStatus.LOADING);
-    debounceExecQuery(query);
+    if (!hasRun.current) {
+      hasRun.current = true;
+      setQueryStatus(QueryStatus.LOADING);
+      debounceExecQuery(query);
+    }
   }, [debounceExecQuery, query]);
 
-  return [list, queryStatus, initialized];
+  return [list, queryStatus, initialized, loadNextPage];
 }
 
 export function TimelineTab() {
   const user = useUser(),
     [query, setQuery] = useState(''),
-    [data, status, initialized] = useRecordQuery(query),
+    [data, status, initialized, loadNextPage] = useRecordQuery(query),
     hasNoRecords = query === '' && (!data || Object.entries(data).length === 0),
     hasRecords =
       (data !== undefined && Object.entries(data).length > 0) ||
@@ -151,8 +199,9 @@ export function TimelineTab() {
 
   const listItems = useMemo(
     () =>
-      data
-        ? Object.entries(data).map(([dateKey, itemList], index, elements) => (
+      data ? (
+        <>
+          {Object.entries(data).map(([dateKey, itemList], index, elements) => (
             <TimelineYearHeaderWrapper
               key={dateKey}
               dateKey={dateKey}
@@ -161,9 +210,26 @@ export function TimelineTab() {
             >
               <TimelineItem dateKey={dateKey} itemList={itemList} />
             </TimelineYearHeaderWrapper>
-          ))
-        : [],
-    [data]
+          ))}
+          {status !== QueryStatus.COMPLETE && (
+            <button
+              disabled={status === QueryStatus.LOADING_MORE}
+              className="border-top mt-2 w-full rounded py-2 px-4 font-bold hover:bg-blue-700 hover:text-white disabled:bg-white disabled:text-gray-600"
+              onClick={loadNextPage}
+            >
+              Load more records
+              <span className="ml-2 inline-flex justify-center align-middle">
+                {status === QueryStatus.LOADING_MORE ? (
+                  <ButtonLoadingSpinner />
+                ) : null}
+              </span>
+            </button>
+          )}
+        </>
+      ) : (
+        []
+      ),
+    [data, loadNextPage, status]
   );
 
   return (
