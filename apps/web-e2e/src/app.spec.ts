@@ -34,7 +34,10 @@ test('Settings tab loads', async ({ page }) => {
 
 test('Epic add new connection flow works', async ({ page }) => {
   // Go to connections page
+
   await page.goto('https://localhost:4200/connections');
+
+  await page.click('text=Skip Tutorial');
 
   // Start add connection flow by clicking on button with text "Log in to Epic MyChart"
   await page.click('text=Log in to Epic MyChart');

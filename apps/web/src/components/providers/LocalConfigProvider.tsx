@@ -12,18 +12,31 @@ import React, {
 // Can be also used to store other local config, like if the user has seen the walkthrough or not.
 // Things stored in local config are local to the device, and are not synced to other devices.
 
+export const TutorialLocalStorageKeys = {
+  WELCOME_SCREEN: 'tutorial_1699756120_welcome-screen',
+  INSTALL_PWA: 'tutorial_1699756130_install-pwa',
+  ADD_A_CONNECTION: 'tutorial_1699756140_add-a-connection',
+  COMPLETE: 'tutorial_complete',
+} as const;
+
 interface LocalConfig {
   use_encrypted_database: boolean;
+  [TutorialLocalStorageKeys.WELCOME_SCREEN]: boolean;
+  [TutorialLocalStorageKeys.INSTALL_PWA]: boolean;
+  [TutorialLocalStorageKeys.ADD_A_CONNECTION]: boolean;
 }
 
 const defaultConfig: LocalConfig = {
   use_encrypted_database: false,
+  [TutorialLocalStorageKeys.WELCOME_SCREEN]: true,
+  [TutorialLocalStorageKeys.INSTALL_PWA]: true,
+  [TutorialLocalStorageKeys.ADD_A_CONNECTION]: true,
 };
 
-function getConfig(): LocalConfig {
+function getConfig(): Partial<LocalConfig> {
   const config = localStorage.getItem('config');
   if (config) {
-    return JSON.parse(config);
+    return { ...defaultConfig, ...JSON.parse(config) };
   } else {
     localStorage.setItem('config', JSON.stringify(defaultConfig));
     return defaultConfig;
@@ -32,13 +45,16 @@ function getConfig(): LocalConfig {
 
 type LocalConfigProviderProps = PropsWithChildren<unknown>;
 
-const LocalConfigContext = React.createContext<LocalConfig>(defaultConfig);
+const LocalConfigContext =
+  React.createContext<Partial<LocalConfig>>(defaultConfig);
 const UpdateLocalConfigContext = React.createContext<
   (config: Partial<LocalConfig>) => void
 >(() => {});
 
 export function LocalConfigProvider(props: LocalConfigProviderProps) {
-  const [config, setConfig] = useState<LocalConfig | undefined>(undefined),
+  const [config, setConfig] = useState<Partial<LocalConfig> | undefined>(
+      undefined
+    ),
     hasRun = useRef(false);
 
   /**
