@@ -214,7 +214,7 @@ export function TimelineTab() {
           {status !== QueryStatus.COMPLETE && (
             <button
               disabled={status === QueryStatus.LOADING_MORE}
-              className="border-top mt-2 w-full rounded py-2 px-4 font-bold hover:bg-blue-700 hover:text-white disabled:bg-white disabled:text-gray-600"
+              className="border-1 hover:bg-primary-700 mt-6 w-full rounded border border-gray-300 py-2 px-4 font-bold hover:text-white disabled:bg-white disabled:text-gray-600"
               onClick={loadNextPage}
             >
               Load more records
@@ -279,7 +279,7 @@ export function TimelineTab() {
           <div className="flex w-full overflow-hidden">
             <JumpToPanel items={data} isLoading={false} />
             <div className="px-auto flex h-full max-h-full w-full justify-center overflow-y-scroll">
-              <div className="h-max w-full max-w-4xl flex-col px-4 pb-12 sm:px-6 lg:px-8">
+              <div className="h-max w-full max-w-4xl flex-col px-4 pb-6 sm:px-6 lg:px-8">
                 <SearchBar query={query} setQuery={setQuery} status={status} />
                 {listItems}
                 {hasNoRecords ? (

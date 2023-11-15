@@ -4,7 +4,7 @@ export function AppPage(props: PropsWithChildren<{ banner: React.ReactNode }>) {
   return (
     <div className="flex h-full flex-col">
       {props.banner}
-      <div className="mb-10 flex-1 flex-grow overflow-x-hidden sm:mb-0">
+      <div className="flex-1 flex-grow overflow-x-hidden pb-20 sm:pb-0">
         {props.children}
       </div>
     </div>
