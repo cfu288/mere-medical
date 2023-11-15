@@ -33,6 +33,7 @@ async function fetchRecords(
   query?: string,
   page?: number
 ) {
+  const parsedQuery = query?.trim() === '' ? undefined : query;
   let selector: MangoQuerySelector<ClinicalDocument<unknown>> = {
     user_id: user_id,
     'data_record.resource_type': {
@@ -46,7 +47,7 @@ async function fetchRecords(
     },
     'metadata.date': { $nin: [null, undefined, ''] },
   };
-  if (query) {
+  if (parsedQuery) {
     selector['data_record.resource_type']['$nin'] = [
       'patient',
       'careplan',
@@ -55,7 +56,7 @@ async function fetchRecords(
     ];
     selector = {
       ...selector,
-      'metadata.display_name': { $regex: `.*${query}.*`, $options: 'si' },
+      'metadata.display_name': { $regex: `.*${parsedQuery}.*`, $options: 'si' },
     };
   }
   const gr = db.clinical_documents
@@ -114,7 +115,7 @@ export enum QueryStatus {
   COMPLETE,
 }
 
-const PAGE_SIZE = 500;
+const PAGE_SIZE = 250;
 
 function useRecordQuery(
   query: string
@@ -132,56 +133,57 @@ function useRecordQuery(
     [list, setList] =
       useState<Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>>(),
     [currentPage, setCurrentPage] = useState(0),
-    debounceExecQuery = useCallback(
-      async (query: string) => {
+    execQuery = useCallback(
+      /**
+       *
+       * @param merge Merge results with existing results. If false, results overwrite existing results
+       * @param loadMore Indicate whether this is an inital load or a load more query. Affects visual loading state
+       */
+      async (merge = true, loadMore = false) => {
+        loadMore && setQueryStatus(QueryStatus.LOADING_MORE);
         try {
           const groupedRecords = await fetchRecords(
             db,
             user.id,
             query,
-            currentPage
+            loadMore ? currentPage + 1 : currentPage
           );
-          setList({ ...list, ...groupedRecords });
-          setQueryStatus(QueryStatus.SUCCESS);
+          loadMore && setCurrentPage(currentPage + 1);
+          if (merge) {
+            setList({ ...list, ...groupedRecords });
+          } else {
+            setList(groupedRecords);
+          }
+          if (
+            Object.values(groupedRecords).reduce((a, b) => a + b.length, 0) <
+            PAGE_SIZE
+          ) {
+            setQueryStatus(QueryStatus.COMPLETE);
+          } else {
+            setQueryStatus(QueryStatus.SUCCESS);
+          }
           setInitialized(true);
         } catch (e) {
           setQueryStatus(QueryStatus.ERROR);
         }
       },
-      [currentPage, db, list, user.id]
+      [currentPage, db, list, query, user.id]
     ),
-    loadNextPage = useCallback(async () => {
-      setQueryStatus(QueryStatus.LOADING_MORE);
-      try {
-        const groupedRecords = await fetchRecords(
-          db,
-          user.id,
-          query,
-          currentPage + 1
-        );
-
-        setList({ ...list, ...groupedRecords });
-        if (
-          Object.values(groupedRecords).reduce((a, b) => a + b.length, 0) <
-          PAGE_SIZE
-        ) {
-          setQueryStatus(QueryStatus.COMPLETE);
-        } else {
-          setQueryStatus(QueryStatus.SUCCESS);
-        }
-        setCurrentPage(currentPage + 1);
-      } catch (e) {
-        setQueryStatus(QueryStatus.ERROR);
-      }
-    }, [currentPage, db, list, query, user.id]);
+    debounceExecQuery = useDebounceCallback(() => execQuery(false, false), 150),
+    loadNextPage = () => execQuery(true, true);
 
   useEffect(() => {
     if (!hasRun.current) {
       hasRun.current = true;
       setQueryStatus(QueryStatus.LOADING);
-      debounceExecQuery(query);
+      execQuery();
     }
-  }, [debounceExecQuery, query]);
+  }, [execQuery, query]);
+
+  useEffect(() => {
+    setQueryStatus(QueryStatus.LOADING);
+    debounceExecQuery();
+  }, [query, debounceExecQuery]);
 
   return [list, queryStatus, initialized, loadNextPage];
 }
