@@ -185,7 +185,7 @@ const ConnectionTab: React.FC = () => {
           data.
         </div>
       </div>
-      <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pb-20 sm:px-6 sm:pb-6 lg:px-8">
         <ul className="grid grid-cols-1 py-8">
           {list?.map((item) => (
             <ConnectionCard

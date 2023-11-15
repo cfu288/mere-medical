@@ -279,7 +279,7 @@ export function TimelineTab() {
           <div className="flex w-full overflow-hidden">
             <JumpToPanel items={data} isLoading={false} />
             <div className="px-auto flex h-full max-h-full w-full justify-center overflow-y-scroll">
-              <div className="h-max w-full max-w-4xl flex-col px-4 pb-6 sm:px-6 lg:px-8">
+              <div className="h-max w-full max-w-4xl flex-col px-4 pb-20 sm:px-6 sm:pb-6 lg:px-8">
                 <SearchBar query={query} setQuery={setQuery} status={status} />
                 {listItems}
                 {hasNoRecords ? (

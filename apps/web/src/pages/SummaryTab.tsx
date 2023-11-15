@@ -286,13 +286,13 @@ function SummaryTab() {
   return (
     <AppPage banner={<GenericBanner text="Summary" />}>
       {!initialized ? (
-        <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 pb-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 pb-20 sm:px-6 sm:pb-6 lg:px-8">
           <SkeletonListCard />
           <SkeletonListCard />
           <SkeletonListCard />
         </div>
       ) : (
-        <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 pb-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 pb-20 sm:px-6 sm:pb-6 lg:px-8">
           {meds.length === 0 &&
             cond.length === 0 &&
             imm.length === 0 &&
