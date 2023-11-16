@@ -131,55 +131,59 @@ export const DiagnosticReportCard = memo(function DiagnosticReportCard({
 
   return (
     <AnimatePresence initial={false}>
-      {}
-      <CardBase
-        id={item.metadata!.id!}
-        isFocusable
-        onClick={() => setExpanded((x) => !x)}
-      >
-        <div className={'min-w-0 flex-1'} ref={ref}>
-          <div className="items-top flex justify-between">
-            <TimelineCardCategoryTitle
-              id={`card-category-title-${item.metadata!.id!}`}
-              title={
-                <>
-                  <p className="mr-1">Labs</p>
-                  {status === 'loading' && (
-                    <div className="ml-2">
-                      <ButtonLoadingSpinner height="h-3" width="w-3" />
-                    </div>
-                  )}
-                  {isAbnormalResult && <AbnormalResultIcon />}
-                </>
-              }
-              color="text-blue-600"
-            />
-            <motion.div layoutId={`card-close-${item.metadata!.id!}`}>
-              <OpenableCardIcon />
-            </motion.div>
-          </div>
-          <TimelineCardTitle id={item.metadata?.id}>
-            {item.metadata?.display_name
-              ?.replace(/- final result/gi, '')
-              .replace(/- final/gi, '')}
-          </TimelineCardTitle>
-          <motion.div layoutId={`card-subtitle-${item.metadata!.id!}`}>
-            <TimelineCardSubtitile variant="dark">
-              {item.metadata?.date
-                ? format(parseISO(item.metadata.date), 'p')
-                : ''}
-            </TimelineCardSubtitile>
-            {conn?.get('name') ? (
-              <TimelineCardSubtitile variant="light">
-                {conn?.get('name')}
+      {!expanded && (
+        <CardBase
+          key={`card-base-${item.metadata!.id!}-closed`}
+          id={item.metadata!.id!}
+          isFocusable
+          onClick={() => setExpanded((x) => !x)}
+        >
+          <div className={'min-w-0 flex-1'} ref={ref}>
+            <div className="items-top flex justify-between">
+              <TimelineCardCategoryTitle
+                id={`card-category-title-${item.metadata!.id!}`}
+                title={
+                  <>
+                    <p className="mr-1">Labs</p>
+                    {status === 'loading' && (
+                      <div className="ml-2">
+                        <ButtonLoadingSpinner height="h-3" width="w-3" />
+                      </div>
+                    )}
+                    {isAbnormalResult && <AbnormalResultIcon />}
+                  </>
+                }
+                color="text-blue-600"
+              />
+              <motion.div layoutId={`card-close-${item.metadata!.id!}`}>
+                <OpenableCardIcon />
+              </motion.div>
+            </div>
+            <TimelineCardTitle id={item.metadata?.id}>
+              {item.metadata?.display_name
+                ?.replace(/- final result/gi, '')
+                .replace(/- final/gi, '')}
+            </TimelineCardTitle>
+            <motion.div layoutId={`card-subtitle-${item.metadata!.id!}`}>
+              <TimelineCardSubtitile variant="dark">
+                {item.metadata?.date
+                  ? format(parseISO(item.metadata.date), 'p')
+                  : ''}
               </TimelineCardSubtitile>
-            ) : (
-              <SkeletonLoadingText />
-            )}
-          </motion.div>
-        </div>
-      </CardBase>
+              {conn?.get('name') ? (
+                <TimelineCardSubtitile variant="light">
+                  {conn?.get('name')}
+                </TimelineCardSubtitile>
+              ) : (
+                <SkeletonLoadingText />
+              )}
+            </motion.div>
+            <motion.div layoutId={`card-content-${item.metadata!.id!}`} />
+          </div>
+        </CardBase>
+      )}
       <ShowDiagnosticReportResultsExpandable
+        key={`card-base-${item.metadata!.id!}-expanded`}
         id={item.metadata!.id!}
         docs={docs}
         item={item}
