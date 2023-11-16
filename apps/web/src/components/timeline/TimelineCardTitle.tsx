@@ -1,9 +1,16 @@
+import { motion } from 'framer-motion';
 import { PropsWithChildren } from 'react';
 
-export function TimelineCardTitle({ children }: PropsWithChildren) {
+export function TimelineCardTitle({
+  id,
+  children,
+}: PropsWithChildren<{ id?: string }>) {
   return (
-    <div className="break-all pb-1 text-sm font-bold text-gray-900 sm:pb-2 md:break-normal md:text-base">
+    <motion.p
+      layoutId={`card-title-${id}`}
+      className="break-all pb-1 text-sm font-bold text-gray-900 sm:pb-2 md:break-normal md:text-base"
+    >
       {children}
-    </div>
+    </motion.p>
   );
 }

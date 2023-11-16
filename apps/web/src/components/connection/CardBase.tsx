@@ -1,16 +1,21 @@
+import { motion } from 'framer-motion';
 import { PropsWithChildren } from 'react';
 
 interface WrapperProps extends React.HTMLAttributes<HTMLDivElement> {
   isFocusable?: boolean;
+  id?: string;
 }
 
 export function CardBase({
+  id,
   children,
   isFocusable = false,
   ...props
 }: PropsWithChildren<WrapperProps>) {
   return (
-    <div
+    // @ts-ignore
+    <motion.div
+      layoutId={`card-base-${id}`}
       {...props}
       className={`max-width-full relative flex items-center space-x-3 rounded-lg border border-gray-300 bg-white px-3 py-3 shadow-sm md:px-6 md:py-5 ${
         isFocusable
@@ -20,6 +25,6 @@ export function CardBase({
       tabIndex={isFocusable ? 0 : -1}
     >
       {children}
-    </div>
+    </motion.div>
   );
 }

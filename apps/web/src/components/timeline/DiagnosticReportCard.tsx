@@ -20,6 +20,7 @@ import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
 import { OpenableCardIcon } from './OpenableCardIcon';
 import { TimelineCardSubtitile } from './TimelineCardSubtitile';
 import { AbnormalResultIcon } from './AbnormalResultIcon';
+import { AnimatePresence, LayoutGroup, motion } from 'framer-motion';
 
 /**
  * Fetches a set of Observations linked to a DiagnosticReport and indicates if there is an abnormal value in the set
@@ -111,7 +112,7 @@ function useRelatedDocuments({
   return [docs, isAbnormalResult, status];
 }
 
-function DiagnosticReportCardUnmemo({
+export const DiagnosticReportCard = memo(function DiagnosticReportCard({
   item,
 }: {
   item: ClinicalDocument<BundleEntry<DiagnosticReport>>;
@@ -129,11 +130,17 @@ function DiagnosticReportCardUnmemo({
     });
 
   return (
-    <>
-      <CardBase isFocusable onClick={() => setExpanded((x) => !x)}>
+    <AnimatePresence initial={false}>
+      {}
+      <CardBase
+        id={item.metadata!.id!}
+        isFocusable
+        onClick={() => setExpanded((x) => !x)}
+      >
         <div className={'min-w-0 flex-1'} ref={ref}>
           <div className="items-top flex justify-between">
             <TimelineCardCategoryTitle
+              id={`card-category-title-${item.metadata!.id!}`}
               title={
                 <>
                   <p className="mr-1">Labs</p>
@@ -147,36 +154,39 @@ function DiagnosticReportCardUnmemo({
               }
               color="text-blue-600"
             />
-            <OpenableCardIcon />
+            <motion.div layoutId={`card-close-${item.metadata!.id!}`}>
+              <OpenableCardIcon />
+            </motion.div>
           </div>
-          <TimelineCardTitle>
+          <TimelineCardTitle id={item.metadata?.id}>
             {item.metadata?.display_name
               ?.replace(/- final result/gi, '')
               .replace(/- final/gi, '')}
           </TimelineCardTitle>
-          <TimelineCardSubtitile variant="dark">
-            {item.metadata?.date
-              ? format(parseISO(item.metadata.date), 'p')
-              : ''}
-          </TimelineCardSubtitile>
-          {conn?.get('name') ? (
-            <TimelineCardSubtitile variant="light">
-              {conn?.get('name')}
+          <motion.div layoutId={`card-subtitle-${item.metadata!.id!}`}>
+            <TimelineCardSubtitile variant="dark">
+              {item.metadata?.date
+                ? format(parseISO(item.metadata.date), 'p')
+                : ''}
             </TimelineCardSubtitile>
-          ) : (
-            <SkeletonLoadingText />
-          )}
+            {conn?.get('name') ? (
+              <TimelineCardSubtitile variant="light">
+                {conn?.get('name')}
+              </TimelineCardSubtitile>
+            ) : (
+              <SkeletonLoadingText />
+            )}
+          </motion.div>
         </div>
       </CardBase>
       <ShowDiagnosticReportResultsExpandable
+        id={item.metadata!.id!}
         docs={docs}
         item={item}
         expanded={expanded}
         setExpanded={setExpanded}
         loading={status === 'loading'}
       />
-    </>
+    </AnimatePresence>
   );
-}
-
-export const DiagnosticReportCard = memo(DiagnosticReportCardUnmemo);
+});

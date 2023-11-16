@@ -1,16 +1,18 @@
+import { motion } from 'framer-motion';
 import { PropsWithChildren } from 'react';
 
 export function TimelineCardSubtitile({
   children,
   variant,
-}: PropsWithChildren<{ variant: 'light' | 'dark' }>) {
+  id,
+}: PropsWithChildren<{ variant: 'light' | 'dark'; id?: string }>) {
   return (
-    <p
+    <motion.p
       className={`truncate text-xs font-medium md:text-sm ${
         variant === 'light' ? 'text-gray-400 ' : 'text-gray-500'
       }`}
     >
       {children}
-    </p>
+    </motion.p>
   );
 }

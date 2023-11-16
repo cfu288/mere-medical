@@ -1,21 +1,26 @@
 import { Dialog } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/20/solid';
+import { motion } from 'framer-motion';
 import { ReactNode } from 'react';
 
 export function ModalHeader({
   title,
   subtitle,
   setClose,
+  id,
 }: {
   title: string;
   subtitle?: string | ReactNode;
   setClose?: (x: boolean) => void;
+  id?: string;
 }) {
   return (
     <Dialog.Title>
       <div className="flex w-full flex-col p-4 pb-2">
         <div className="flex justify-between">
-          <p className="text-xl font-bold">{title}</p>
+          <motion.p layoutId={`card-title-${id}`} className="text-xl font-bold">
+            {title}
+          </motion.p>
           {setClose ? (
             <button
               type="button"
