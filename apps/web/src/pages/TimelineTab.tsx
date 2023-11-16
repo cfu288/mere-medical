@@ -19,7 +19,6 @@ import { TimelineSkeleton } from './TimelineSkeleton';
 import { useScrollToHash } from '../components/hooks/useScrollToHash';
 import { SearchBar } from './SearchBar';
 import { Transition } from '@headlessui/react';
-import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ButtonLoadingSpinner } from '../components/connection/ButtonLoadingSpinner';
 
 /**

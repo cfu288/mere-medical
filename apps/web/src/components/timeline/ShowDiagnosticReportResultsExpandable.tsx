@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-no-useless-fragment */
 import { Disclosure } from '@headlessui/react';
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
@@ -18,7 +19,8 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import * as fhirpath from 'fhirpath';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
+import exp from 'constants';
 
 /**
  * Generate line for sparkline path
@@ -102,140 +104,146 @@ export function ShowDiagnosticReportResultsExpandable({
   loading?: boolean;
   id?: string;
 }) {
-  const toggleOpen = () => setExpanded((x) => !x);
-
   useEffect(() => {
-    if (expanded) {
-      console.log(item);
-    }
-  }, [expanded, item]);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (expanded) {
+          setExpanded(false);
+        }
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [expanded, setExpanded]);
 
   return (
-    <AnimatePresence initial={false}>
-      {expanded ? (
-        <motion.div className="relative z-30">
-          {/* Background opacity */}
+    <>
+      <motion.div className="relative z-30">
+        {/* Background opacity */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-gray-500 bg-opacity-50 transition-opacity"
+        />
+        {/* Modal */}
+        <motion.div
+          layout
+          className="fixed inset-0 z-10 flex flex-col overflow-y-auto pt-12 sm:p-12"
+        >
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-gray-500 bg-opacity-50 transition-opacity"
-          />
-          {/* Modal */}
-          <motion.div className="fixed inset-0 z-10 flex flex-col overflow-y-auto pt-12 sm:p-12">
-            <motion.div
-              layoutId={`card-base-${id}`}
-              className="mx-auto w-screen rounded-xl border border-gray-100 bg-white shadow-2xl sm:w-auto sm:min-w-[50%] sm:max-w-3xl"
-            >
-              <motion.div className="flex flex-col">
-                <motion.div className="flex w-full flex-col p-4 pb-2">
-                  <motion.div
-                    layoutId={`card-category-title-${id}`}
-                    className="flex w-12 scale-y-0 transform flex-row items-center pb-1 align-middle text-sm font-bold opacity-0 sm:pb-2 md:text-base"
-                  >
-                    <p className="mr-1 w-12"></p>
-                  </motion.div>
-                  <motion.div className="flex justify-between">
-                    <motion.p
-                      layoutId={`card-title-${id}`}
-                      className="w-full text-xl font-bold"
-                    >
-                      {item.metadata?.display_name
-                        ?.replace(/- final result/gi, '')
-                        .replace(/- final/gi, '')}
-                    </motion.p>
-                    <motion.button
-                      type="button"
-                      layoutId={`card-close-${id}`}
-                      className="ml-4 rounded bg-white text-gray-500 duration-75 hover:text-gray-700 focus:text-gray-700 focus:outline-none focus:ring-0 active:scale-90 active:bg-slate-50"
-                      onClick={() => setExpanded(false)}
-                    >
-                      <motion.span className="sr-only">Close</motion.span>
-                      <XMarkIcon className="h-8 w-8" aria-hidden="true" />
-                    </motion.button>
-                  </motion.div>
-                  <div className="flex flex-col">
-                    <motion.div
-                      layoutId={`card-subtitle-${id}`}
-                      className="text-sm font-light"
-                    >
-                      {format(
-                        parseISO(item.metadata?.date || ''),
-                        'LLLL do yyyy'
-                      )}
-                      <p className="text-sm font-light">
-                        {Array.isArray(item.data_record.raw.resource?.performer)
-                          ? item.data_record.raw.resource?.performer?.[0]
-                              .display
-                          : item.data_record.raw.resource?.performer?.display}
-                      </p>
-                    </motion.div>
-                  </div>
+            layoutId={`card-base-${id}`}
+            className="mx-auto w-screen rounded-xl border bg-white shadow-2xl sm:w-auto sm:min-w-[50%] sm:max-w-3xl"
+          >
+            <motion.div className="flex flex-col ">
+              <motion.div className="flex w-full flex-col p-4 pb-2">
+                <motion.div
+                  layoutId={`card-category-title-${id}`}
+                  className="flex w-12 scale-y-0 transform flex-row items-center pb-1 align-middle text-sm font-bold opacity-0 sm:pb-2 md:text-base"
+                >
+                  <p className="mr-1 w-12"></p>
                 </motion.div>
-                <motion.div layoutId={`card-content-${id}`}>
-                  {loading ? (
-                    <div className="max-h-full scroll-py-3 p-3">
-                      <div
-                        className={`${
-                          expanded ? '' : 'hidden'
-                        } rounded-lg border border-solid border-gray-200`}
-                      >
-                        <div className="grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-200 p-2 px-4 text-gray-700">
-                          <div className="col-span-3 text-sm font-semibold">
-                            Name
-                          </div>
-                          <div className="col-span-2 text-sm font-semibold">
-                            Value
-                          </div>
+                <motion.div className="flex justify-between">
+                  <motion.p
+                    layoutId={`card-title-${id}`}
+                    className="w-full text-xl font-bold"
+                  >
+                    {item.metadata?.display_name
+                      ?.replace(/- final result/gi, '')
+                      .replace(/- final/gi, '')}
+                  </motion.p>
+                  <motion.button
+                    type="button"
+                    layoutId={`card-close-${id}`}
+                    className="ml-4 rounded bg-white text-gray-500 duration-75 hover:text-gray-700 focus:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-90 active:bg-slate-50"
+                    onClick={() => setExpanded(false)}
+                  >
+                    <motion.span className="sr-only">Close</motion.span>
+                    <XMarkIcon className="h-8 w-8" aria-hidden="true" />
+                  </motion.button>
+                </motion.div>
+                <div className="flex flex-col">
+                  <motion.div
+                    layoutId={`card-subtitle-${id}`}
+                    className="text-sm font-light"
+                  >
+                    {format(
+                      parseISO(item.metadata?.date || ''),
+                      'LLLL do yyyy'
+                    )}
+                    <p className="text-sm font-light">
+                      {Array.isArray(item.data_record.raw.resource?.performer)
+                        ? item.data_record.raw.resource?.performer?.[0].display
+                        : item.data_record.raw.resource?.performer?.display}
+                    </p>
+                  </motion.div>
+                </div>
+              </motion.div>
+              <motion.div layoutId={`card-content-${id}`}>
+                {loading ? (
+                  <div className="max-h-full scroll-py-3 p-3">
+                    <div
+                      className={`${
+                        expanded ? '' : 'hidden'
+                      } rounded-lg border border-solid border-gray-200`}
+                    >
+                      <div className="grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-200 p-2 px-4 text-gray-700">
+                        <div className="col-span-3 text-sm font-semibold">
+                          Name
                         </div>
-                        <div className="mx-4 grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-100 py-2">
-                          <div className="col-span-3 self-center text-xs font-semibold text-gray-600">
-                            Loading data
-                          </div>
-                          <div className="col-span-3 self-center text-xs font-semibold text-gray-600">
-                            <ButtonLoadingSpinner height="h-3" width="w-3" />
-                          </div>
+                        <div className="col-span-2 text-sm font-semibold">
+                          Value
+                        </div>
+                      </div>
+                      <div className="mx-4 grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-100 py-2">
+                        <div className="col-span-3 self-center text-xs font-semibold text-gray-600">
+                          Loading data
+                        </div>
+                        <div className="col-span-3 self-center text-xs font-semibold text-gray-600">
+                          <ButtonLoadingSpinner height="h-3" width="w-3" />
                         </div>
                       </div>
                     </div>
-                  ) : (
-                    <>
-                      {docs.length > 0 ? (
-                        <div className="max-h-full scroll-py-3 p-3">
-                          <div
-                            className={`${
-                              expanded ? '' : 'hidden'
-                            } rounded-lg border border-solid border-gray-200`}
-                          >
-                            <div className="grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-200 p-2 px-4 text-gray-700">
-                              <div className="col-span-3 text-sm font-semibold">
-                                Name
-                              </div>
-                              <div className="col-span-2 text-sm font-semibold">
-                                Value
-                              </div>
+                  </div>
+                ) : (
+                  <>
+                    {docs.length > 0 ? (
+                      <div className="max-h-full scroll-py-3 p-3">
+                        <div
+                          className={`${
+                            expanded ? '' : 'hidden'
+                          } rounded-lg border border-solid border-gray-200`}
+                        >
+                          <div className="grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-200 p-2 px-4 text-gray-700">
+                            <div className="col-span-3 text-sm font-semibold">
+                              Name
                             </div>
-                            {docs.map((item) => (
-                              <Row item={item} key={JSON.stringify(item)} />
-                            ))}
+                            <div className="col-span-2 text-sm font-semibold">
+                              Value
+                            </div>
                           </div>
+                          {docs.map((item) => (
+                            <Row item={item} key={JSON.stringify(item)} />
+                          ))}
                         </div>
-                      ) : (
-                        <div className="mx-4 flex flex-col border-b-2 border-solid border-gray-100 py-2">
-                          <div className="self-center font-semibold text-gray-600">
-                            No data available for this report
-                          </div>
+                      </div>
+                    ) : (
+                      <div className="mx-4 flex flex-col border-b-2 border-solid border-gray-100 py-2">
+                        <div className="self-center font-semibold text-gray-600">
+                          No data available for this report
                         </div>
-                      )}
-                    </>
-                  )}
-                </motion.div>
+                      </div>
+                    )}
+                  </>
+                )}
               </motion.div>
             </motion.div>
           </motion.div>
         </motion.div>
-      ) : null}
-    </AnimatePresence>
+      </motion.div>
+    </>
   );
 }
 
@@ -387,7 +395,7 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
                 <div className="col-span-1 flex flex-col items-end justify-end align-middle">
                   {relatedLabs.length > 0 &&
                     getValueQuantity(item) !== undefined && (
-                      <Disclosure.Button className="text-primary-900 rounded bg-[#E2F5FA] p-1 duration-75 active:scale-90  active:bg-slate-50">
+                      <Disclosure.Button className="text-primary-900 rounded bg-[#E2F5FA] p-1 duration-75 active:scale-90 active:bg-slate-50">
                         {open ? (
                           <svg
                             xmlns="http://www.w3.org/2000/svg"

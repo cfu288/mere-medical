@@ -11,7 +11,7 @@ import {
   Observation,
   Procedure,
 } from 'fhir/r2';
-import React from 'react';
+import React, { Fragment } from 'react';
 import { ConditionCard } from './ConditionCard';
 import { DiagnosticReportCard } from './DiagnosticReportCard';
 import { DocumentReferenceCard } from './DocumentReferenceCard';
@@ -21,6 +21,7 @@ import { ObservationCard } from './ObservationCard';
 import { ProcedureCard } from './ProcedureCard';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { EncounterCard } from './EncounterCard';
+import { motion } from 'framer-motion';
 
 export function TimelineItem({
   dateKey,
@@ -43,9 +44,9 @@ export function TimelineItem({
         </span>
       </div>
       {/* Clinical card rendering */}
-      <div className="flex w-4/5 flex-col gap-y-2 md:w-3/4">
+      <motion.div layout className="flex w-4/5 flex-col gap-y-2 md:w-3/4">
         {itemList.map((item) => (
-          <div key={item.id}>
+          <Fragment key={item.id}>
             {item.data_record.resource_type === 'immunization' && (
               <ImmunizationCard
                 key={item.id}
@@ -96,9 +97,9 @@ export function TimelineItem({
                 item={item as ClinicalDocument<BundleEntry<Encounter>>}
               />
             )}
-          </div>
+          </Fragment>
         ))}
-      </div>
+      </motion.div>
     </div>
   );
 }

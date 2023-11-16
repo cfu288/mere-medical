@@ -1,6 +1,18 @@
 import { format, parseISO } from 'date-fns';
-import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  BundleEntry,
+  DiagnosticReport,
+  DocumentReference,
+  Observation,
+} from 'fhir/r2';
+import {
+  PropsWithChildren,
+  memo,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import {
   isOutOfRangeResult,
@@ -128,69 +140,147 @@ export const DiagnosticReportCard = memo(function DiagnosticReportCard({
       item,
       conn,
     });
+  const currId = item.metadata?.id || item.id;
 
   return (
     <AnimatePresence initial={false}>
-      {!expanded && (
-        <CardBase
-          key={`card-base-${item.metadata!.id!}-closed`}
-          id={item.metadata!.id!}
-          isFocusable
-          onClick={() => setExpanded((x) => !x)}
-        >
-          <div className={'min-w-0 flex-1'} ref={ref}>
-            <div className="items-top flex justify-between">
-              <TimelineCardCategoryTitle
-                id={`card-category-title-${item.metadata!.id!}`}
-                title={
-                  <>
-                    <p className="mr-1">Labs</p>
-                    {status === 'loading' && (
-                      <div className="ml-2">
-                        <ButtonLoadingSpinner height="h-3" width="w-3" />
-                      </div>
-                    )}
-                    {isAbnormalResult && <AbnormalResultIcon />}
-                  </>
-                }
-                color="text-blue-600"
-              />
-              <motion.div layoutId={`card-close-${item.metadata!.id!}`}>
-                <OpenableCardIcon />
-              </motion.div>
-            </div>
-            <TimelineCardTitle id={item.metadata?.id}>
-              {item.metadata?.display_name
-                ?.replace(/- final result/gi, '')
-                .replace(/- final/gi, '')}
-            </TimelineCardTitle>
-            <motion.div layoutId={`card-subtitle-${item.metadata!.id!}`}>
-              <TimelineCardSubtitile variant="dark">
-                {item.metadata?.date
-                  ? format(parseISO(item.metadata.date), 'p')
-                  : ''}
-              </TimelineCardSubtitile>
-              {conn?.get('name') ? (
-                <TimelineCardSubtitile variant="light">
-                  {conn?.get('name')}
-                </TimelineCardSubtitile>
-              ) : (
-                <SkeletonLoadingText />
-              )}
-            </motion.div>
-            <motion.div layoutId={`card-content-${item.metadata!.id!}`} />
-          </div>
-        </CardBase>
+      <motion.div className="min-h-[95px] sm:min-h-[140px]" layout>
+        {!expanded && (
+          <ExpandableCard
+            id={currId}
+            setExpanded={setExpanded}
+            intersectionObserverRef={ref}
+            item={item}
+            conn={conn}
+            categoryTitle={
+              <span className="relative inline-flex w-24">
+                <p>Labs</p>
+                {status === 'loading' && (
+                  <div className="ml-2 self-center">
+                    <ButtonLoadingSpinner height="h-3" width="w-3" />
+                  </div>
+                )}
+                <div className="ml-2 -mt-[1px] self-center sm:-mt-[2px]">
+                  {isAbnormalResult && <AbnormalResultIcon />}
+                </div>
+              </span>
+            }
+            categoryTitleColor="text-blue-600"
+          />
+        )}
+      </motion.div>
+      {expanded && (
+        <ShowDiagnosticReportResultsExpandable
+          key={`card-base-${currId}-expanded`}
+          id={currId}
+          docs={docs}
+          item={item}
+          expanded={expanded}
+          setExpanded={setExpanded}
+          loading={status === 'loading'}
+        />
       )}
-      <ShowDiagnosticReportResultsExpandable
-        key={`card-base-${item.metadata!.id!}-expanded`}
-        id={item.metadata!.id!}
-        docs={docs}
-        item={item}
-        expanded={expanded}
-        setExpanded={setExpanded}
-        loading={status === 'loading'}
-      />
     </AnimatePresence>
   );
 });
+
+export function ExpandableCard({
+  id,
+  setExpanded,
+  intersectionObserverRef,
+  item,
+  conn,
+  categoryTitle,
+  categoryTitleColor,
+}: {
+  id: string | undefined;
+  setExpanded: React.Dispatch<React.SetStateAction<boolean>>;
+  intersectionObserverRef?: React.RefObject<HTMLDivElement>;
+  item: ClinicalDocument<
+    BundleEntry<DiagnosticReport | Observation | DocumentReference>
+  >;
+  conn: RxDocument<ConnectionDocument> | undefined;
+  categoryTitle: React.ReactNode;
+  categoryTitleColor: string;
+}) {
+  useEffect(() => {
+    // if ref focused and enter clicked, expand
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        setExpanded(true);
+      }
+    };
+    if (intersectionObserverRef?.current) {
+      intersectionObserverRef?.current.addEventListener(
+        'keydown',
+        handleKeyDown
+      );
+    }
+    return () => {
+      if (intersectionObserverRef?.current) {
+        intersectionObserverRef?.current.removeEventListener(
+          'keydown',
+          handleKeyDown
+        );
+      }
+    };
+  }, [intersectionObserverRef, setExpanded]);
+
+  // ID's required for layoutId:
+  // card-base-${id}
+  // card-category-title-${id}
+  // card-close-${id}
+  // card-title-${id}
+  // card-subtitle-${id}
+  // card-content-${id}
+  return (
+    <CardBase
+      forwardRef={intersectionObserverRef}
+      key={`card-base-${id}-closed`}
+      id={id}
+      isFocusable
+      onClick={() => setExpanded((x) => !x)}
+    >
+      <div className={'min-w-0 flex-1'} ref={intersectionObserverRef}>
+        <div className="items-top flex justify-between">
+          <motion.div layoutId={`card-category-title-${id}`}>
+            <TimelineCardCategoryTitle
+              title={categoryTitle}
+              color={categoryTitleColor}
+            />
+          </motion.div>
+          <motion.div layoutId={`card-close-${id}`}>
+            <OpenableCardIcon />
+          </motion.div>
+        </div>
+        <TimelineCardTitle id={item.metadata?.id}>
+          {item.metadata?.display_name
+            ?.replace(/- final result/gi, '')
+            .replace(/- final/gi, '')}
+        </TimelineCardTitle>
+        <TimelineCardSubtitileSection id={`card-subtitle-${id}`}>
+          <TimelineCardSubtitile variant="dark">
+            {item.metadata?.date
+              ? format(parseISO(item.metadata.date), 'p')
+              : ''}
+          </TimelineCardSubtitile>
+          {conn?.get('name') ? (
+            <TimelineCardSubtitile variant="light">
+              {conn?.get('name')}
+            </TimelineCardSubtitile>
+          ) : (
+            <SkeletonLoadingText />
+          )}
+        </TimelineCardSubtitileSection>
+        <motion.div layoutId={`card-content-${id}`} />
+      </div>
+    </CardBase>
+  );
+}
+
+function TimelineCardSubtitileSection({
+  children,
+  id,
+}: PropsWithChildren<{ id: string }>) {
+  return <motion.div layoutId={`card-subtitle-${id}`}>{children}</motion.div>;
+}

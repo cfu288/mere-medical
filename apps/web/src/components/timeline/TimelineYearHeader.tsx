@@ -1,4 +1,5 @@
 import { format, parseISO } from 'date-fns';
+import { motion } from 'framer-motion';
 import React from 'react';
 
 export function TimelineYearHeader({ year }: { year: string }) {

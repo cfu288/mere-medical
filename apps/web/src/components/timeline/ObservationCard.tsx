@@ -1,14 +1,10 @@
-import { format, parseISO } from 'date-fns';
 import { BundleEntry, Observation } from 'fhir/r2';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
-import { TimelineCardTitle } from './TimelineCardTitle';
 import { memo, useState } from 'react';
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
-import { CardBase } from '../connection/CardBase';
-import { SkeletonLoadingText } from './SkeletonLoadingText';
 import { ShowDiagnosticReportResultsExpandable } from './ShowDiagnosticReportResultsExpandable';
-import { TimelineCardCategoryTitle } from './TimelineCardCategoryTitle';
-import { OpenableCardIcon } from './OpenableCardIcon';
+import { ExpandableCard } from './DiagnosticReportCard';
+import { AnimatePresence, motion } from 'framer-motion';
 
 export const ObservationCard = memo(function ObservationCard({
   item,
@@ -17,44 +13,33 @@ export const ObservationCard = memo(function ObservationCard({
 }) {
   const conn = useConnectionDoc(item.connection_record_id);
   const [expanded, setExpanded] = useState(false);
+  const currId = item.metadata?.id || item.id;
 
   return (
-    <>
-      <CardBase
-        isFocusable
-        onClick={() => {
-          setExpanded((x) => !x);
-        }}
-      >
-        <div className="min-w-0 flex-1">
-          <div className="items-top flex justify-between">
-            <TimelineCardCategoryTitle
-              title="Observation"
-              color="text-sky-600"
-            />
-            <OpenableCardIcon />
-          </div>
-          <TimelineCardTitle>{item.metadata?.display_name}</TimelineCardTitle>
-          <p className="truncate text-xs font-medium text-gray-500 md:text-sm">
-            {item.metadata?.date
-              ? format(parseISO(item.metadata.date), 'p')
-              : ''}
-          </p>
-          {conn?.get('name') ? (
-            <p className="truncate text-xs font-medium text-gray-400 md:text-sm">
-              {conn?.get('name')}
-            </p>
-          ) : (
-            <SkeletonLoadingText />
-          )}
-        </div>
-      </CardBase>
-      <ShowDiagnosticReportResultsExpandable
-        docs={[item]}
-        item={item}
-        expanded={expanded}
-        setExpanded={setExpanded}
-      />
-    </>
+    <AnimatePresence initial={false}>
+      <motion.div className="min-h-[95px] sm:min-h-[140px]" layout>
+        {!expanded && (
+          <ExpandableCard
+            id={currId}
+            setExpanded={setExpanded}
+            intersectionObserverRef={undefined}
+            item={item}
+            conn={conn}
+            categoryTitle={<>Observation</>}
+            categoryTitleColor="text-sky-600"
+          />
+        )}
+      </motion.div>
+      {expanded && (
+        <ShowDiagnosticReportResultsExpandable
+          key={`card-base-${currId}-expanded`}
+          id={currId}
+          docs={[item]}
+          item={item}
+          expanded={expanded}
+          setExpanded={setExpanded}
+        />
+      )}
+    </AnimatePresence>
   );
 });
