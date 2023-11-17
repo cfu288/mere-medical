@@ -1,10 +1,11 @@
 import { BundleEntry, Observation } from 'fhir/r2';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
-import { memo, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
 import { ShowDiagnosticReportResultsExpandable } from './ShowDiagnosticReportResultsExpandable';
-import { ExpandableCard } from './DiagnosticReportCard';
+import { ExpandableCard } from './ExpandableCard';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useDisableContentScroll } from '../../pages/TimelineTab';
 
 export const ObservationCard = memo(function ObservationCard({
   item,
@@ -14,6 +15,11 @@ export const ObservationCard = memo(function ObservationCard({
   const conn = useConnectionDoc(item.connection_record_id);
   const [expanded, setExpanded] = useState(false);
   const currId = item.metadata?.id || item.id;
+  const disableContentScroll = useDisableContentScroll();
+
+  useEffect(() => {
+    disableContentScroll(expanded ? true : false);
+  }, [disableContentScroll, expanded]);
 
   return (
     <AnimatePresence initial={false}>

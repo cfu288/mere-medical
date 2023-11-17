@@ -2,7 +2,14 @@
 import { Disclosure } from '@headlessui/react';
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Fragment,
+  PropsWithChildren,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { RxDocument } from 'rxdb';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { Modal } from '../Modal';
@@ -21,6 +28,7 @@ import {
 import * as fhirpath from 'fhirpath';
 import { motion } from 'framer-motion';
 import exp from 'constants';
+import { Props } from '@headlessui/react/dist/types';
 
 /**
  * Generate line for sparkline path
@@ -119,127 +127,174 @@ export function ShowDiagnosticReportResultsExpandable({
   }, [expanded, setExpanded]);
 
   return (
+    <MotionModal id={id!}>
+      <motion.div className="flex w-full flex-col p-4 pb-2">
+        <MotionModalCategoryTitle id={id!}>
+          <p className="mr-1 w-12"></p>
+        </MotionModalCategoryTitle>
+        <motion.div className="flex justify-between">
+          <MotionModalTitle id={id!}>
+            {item.metadata?.display_name
+              ?.replace(/- final result/gi, '')
+              .replace(/- final/gi, '')}
+          </MotionModalTitle>
+          <MotionModalCloseButton id={id!} setExpanded={setExpanded} />
+        </motion.div>
+        <div className="flex flex-col">
+          <MotionModalSubtitle id={id!}>
+            {format(parseISO(item.metadata?.date || ''), 'LLLL do yyyy')}
+            <p className="text-sm font-light">
+              {Array.isArray(item.data_record.raw.resource?.performer)
+                ? item.data_record.raw.resource?.performer?.[0].display
+                : item.data_record.raw.resource?.performer?.display}
+            </p>
+          </MotionModalSubtitle>
+        </div>
+      </motion.div>
+      <MotionModalContent id={id!}>
+        {loading ? (
+          <div className="max-h-full scroll-py-3 p-3">
+            <div
+              className={`${
+                expanded ? '' : 'hidden'
+              } rounded-lg border border-solid border-gray-200`}
+            >
+              <div className="grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-200 p-2 px-4 text-gray-700">
+                <div className="col-span-3 text-sm font-semibold">Name</div>
+                <div className="col-span-2 text-sm font-semibold">Value</div>
+              </div>
+              <div className="mx-4 grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-100 py-2">
+                <div className="col-span-3 self-center text-xs font-semibold text-gray-600">
+                  Loading data
+                </div>
+                <div className="col-span-3 self-center text-xs font-semibold text-gray-600">
+                  <ButtonLoadingSpinner height="h-3" width="w-3" />
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            {docs.length > 0 ? (
+              <div className="max-h-full scroll-py-3 p-3">
+                <div
+                  className={`${
+                    expanded ? '' : 'hidden'
+                  } rounded-lg border border-solid border-gray-200`}
+                >
+                  <div className="grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-200 p-2 px-4 text-gray-700">
+                    <div className="col-span-3 text-sm font-semibold">Name</div>
+                    <div className="col-span-2 text-sm font-semibold">
+                      Value
+                    </div>
+                  </div>
+                  {docs.map((item) => (
+                    <Row item={item} key={JSON.stringify(item)} />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="mx-4 flex flex-col border-b-2 border-solid border-gray-100 py-2">
+                <div className="self-center font-semibold text-gray-600">
+                  No data available for this report
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </MotionModalContent>
+    </MotionModal>
+  );
+}
+
+function MotionModalContent({
+  id,
+  children,
+}: PropsWithChildren<{ id: string }>) {
+  return (
+    <motion.div layoutId={`card-content-${id}`} className="flex flex-col">
+      {children}
+    </motion.div>
+  );
+}
+
+function MotionModalSubtitle({
+  id,
+  children,
+}: PropsWithChildren<{ id: string }>) {
+  return (
+    <motion.div layoutId={`card-subtitle-${id}`} className="text-sm font-light">
+      {children}
+    </motion.div>
+  );
+}
+
+function MotionModalCategoryTitle({
+  id,
+  children,
+}: PropsWithChildren<{ id: string }>) {
+  // Scales to 0 on y axis to hide
+  return (
+    <motion.div
+      layoutId={`card-category-title-${id}`}
+      className="flex w-12 scale-y-0 transform flex-row items-center pb-1 align-middle text-sm font-bold opacity-0 sm:pb-2 md:text-base"
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function MotionModalCloseButton({
+  id,
+  setExpanded,
+}: PropsWithChildren<{ id: string; setExpanded: (_: boolean) => void }>) {
+  return (
+    <motion.button
+      type="button"
+      layoutId={`card-close-${id}`}
+      className="ml-4 rounded bg-white text-gray-500 duration-75 hover:text-gray-700 focus:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-90 active:bg-slate-50"
+      onClick={() => setExpanded(false)}
+    >
+      <motion.span className="sr-only">Close</motion.span>
+      <XMarkIcon className="h-8 w-8" aria-hidden="true" />
+    </motion.button>
+  );
+}
+
+function MotionModalTitle({ id, children }: PropsWithChildren<{ id: string }>) {
+  return (
+    <motion.p
+      layoutId={`card-title-${id}`}
+      className="w-full text-xl font-bold"
+    >
+      {children}
+    </motion.p>
+  );
+}
+
+function MotionModal({ children, id }: PropsWithChildren<{ id: string }>) {
+  return (
     <>
-      <motion.div className="relative z-30">
+      <motion.div className="relative z-50">
         {/* Background opacity */}
         <motion.div
+          layout
+          layoutId={`card-background-${id}`}
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          animate={{ opacity: 0.5 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-gray-500 bg-opacity-50 transition-opacity"
+          className="fixed inset-0 bg-gray-500"
         />
         {/* Modal */}
         <motion.div
           layout
-          className="fixed inset-0 z-10 flex flex-col overflow-y-auto pt-12 sm:p-12"
+          className="fixed inset-0 z-50 flex flex-col overflow-y-auto pt-12 sm:p-12"
         >
           <motion.div
             layoutId={`card-base-${id}`}
             className="mx-auto w-screen rounded-xl border bg-white shadow-2xl sm:w-auto sm:min-w-[50%] sm:max-w-3xl"
           >
-            <motion.div className="flex flex-col ">
-              <motion.div className="flex w-full flex-col p-4 pb-2">
-                <motion.div
-                  layoutId={`card-category-title-${id}`}
-                  className="flex w-12 scale-y-0 transform flex-row items-center pb-1 align-middle text-sm font-bold opacity-0 sm:pb-2 md:text-base"
-                >
-                  <p className="mr-1 w-12"></p>
-                </motion.div>
-                <motion.div className="flex justify-between">
-                  <motion.p
-                    layoutId={`card-title-${id}`}
-                    className="w-full text-xl font-bold"
-                  >
-                    {item.metadata?.display_name
-                      ?.replace(/- final result/gi, '')
-                      .replace(/- final/gi, '')}
-                  </motion.p>
-                  <motion.button
-                    type="button"
-                    layoutId={`card-close-${id}`}
-                    className="ml-4 rounded bg-white text-gray-500 duration-75 hover:text-gray-700 focus:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-90 active:bg-slate-50"
-                    onClick={() => setExpanded(false)}
-                  >
-                    <motion.span className="sr-only">Close</motion.span>
-                    <XMarkIcon className="h-8 w-8" aria-hidden="true" />
-                  </motion.button>
-                </motion.div>
-                <div className="flex flex-col">
-                  <motion.div
-                    layoutId={`card-subtitle-${id}`}
-                    className="text-sm font-light"
-                  >
-                    {format(
-                      parseISO(item.metadata?.date || ''),
-                      'LLLL do yyyy'
-                    )}
-                    <p className="text-sm font-light">
-                      {Array.isArray(item.data_record.raw.resource?.performer)
-                        ? item.data_record.raw.resource?.performer?.[0].display
-                        : item.data_record.raw.resource?.performer?.display}
-                    </p>
-                  </motion.div>
-                </div>
-              </motion.div>
-              <motion.div layoutId={`card-content-${id}`}>
-                {loading ? (
-                  <div className="max-h-full scroll-py-3 p-3">
-                    <div
-                      className={`${
-                        expanded ? '' : 'hidden'
-                      } rounded-lg border border-solid border-gray-200`}
-                    >
-                      <div className="grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-200 p-2 px-4 text-gray-700">
-                        <div className="col-span-3 text-sm font-semibold">
-                          Name
-                        </div>
-                        <div className="col-span-2 text-sm font-semibold">
-                          Value
-                        </div>
-                      </div>
-                      <div className="mx-4 grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-100 py-2">
-                        <div className="col-span-3 self-center text-xs font-semibold text-gray-600">
-                          Loading data
-                        </div>
-                        <div className="col-span-3 self-center text-xs font-semibold text-gray-600">
-                          <ButtonLoadingSpinner height="h-3" width="w-3" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    {docs.length > 0 ? (
-                      <div className="max-h-full scroll-py-3 p-3">
-                        <div
-                          className={`${
-                            expanded ? '' : 'hidden'
-                          } rounded-lg border border-solid border-gray-200`}
-                        >
-                          <div className="grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-200 p-2 px-4 text-gray-700">
-                            <div className="col-span-3 text-sm font-semibold">
-                              Name
-                            </div>
-                            <div className="col-span-2 text-sm font-semibold">
-                              Value
-                            </div>
-                          </div>
-                          {docs.map((item) => (
-                            <Row item={item} key={JSON.stringify(item)} />
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="mx-4 flex flex-col border-b-2 border-solid border-gray-100 py-2">
-                        <div className="self-center font-semibold text-gray-600">
-                          No data available for this report
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
-              </motion.div>
-            </motion.div>
+            <motion.div className="flex flex-col">{children}</motion.div>
           </motion.div>
         </motion.div>
       </motion.div>

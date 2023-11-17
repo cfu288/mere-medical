@@ -1,6 +1,6 @@
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, DocumentReference } from 'fhir/r2';
-import { memo, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { ShowDocumentResultsExpandable } from './ShowDocumentReferenceResultsExpandable/ShowDocumentReferenceResultsExpandable';
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
@@ -10,7 +10,8 @@ import { TimelineCardTitle } from './TimelineCardTitle';
 import { TimelineCardCategoryTitle } from './TimelineCardCategoryTitle';
 import { OpenableCardIcon } from './OpenableCardIcon';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ExpandableCard } from './DiagnosticReportCard';
+import { ExpandableCard } from './ExpandableCard';
+import { useDisableContentScroll } from '../../pages/TimelineTab';
 
 export const DocumentReferenceCard = memo(function DocumentReferenceCard({
   item,
@@ -20,7 +21,11 @@ export const DocumentReferenceCard = memo(function DocumentReferenceCard({
   const conn = useConnectionDoc(item.connection_record_id);
   const [expanded, setExpanded] = useState(false);
   const currId = item.metadata?.id || item.id;
+  const disableContentScroll = useDisableContentScroll();
 
+  useEffect(() => {
+    disableContentScroll(expanded ? true : false);
+  }, [disableContentScroll, expanded]);
   return (
     <AnimatePresence initial={false}>
       <motion.div className="min-h-[95px] sm:min-h-[140px]" layout>

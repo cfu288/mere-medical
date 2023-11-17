@@ -20,7 +20,7 @@ import { useScrollToHash } from '../components/hooks/useScrollToHash';
 import { SearchBar } from './SearchBar';
 import { Transition } from '@headlessui/react';
 import { ButtonLoadingSpinner } from '../components/connection/ButtonLoadingSpinner';
-
+import React from 'react';
 /**
  * This should really be a background process that runs after every data sync instead of every view
  * @param db
@@ -187,7 +187,7 @@ function useRecordQuery(
   return [list, queryStatus, initialized, loadNextPage];
 }
 
-export function TimelineTab() {
+export const TimelineTab = React.memo(function TimelineTab() {
   const user = useUser(),
     [query, setQuery] = useState(''),
     [data, status, initialized, loadNextPage] = useRecordQuery(query),
@@ -232,65 +232,95 @@ export function TimelineTab() {
       ),
     [data, loadNextPage, status]
   );
+  const [disableContentScroll, setDisableContentScroll] = useState(false);
 
   return (
-    <AppPage
-      banner={
-        <TimelineBanner
-          image={
-            user?.profile_picture?.data ? user.profile_picture.data : undefined
-          }
-          text={
-            user?.first_name ? `Welcome back ${user.first_name}!` : 'Hello!'
-          }
-        />
-      }
-    >
-      <Transition
-        show={
-          !initialized &&
-          (status === QueryStatus.IDLE || status === QueryStatus.LOADING)
+    <DisableContentScrollProvider value={setDisableContentScroll}>
+      <AppPage
+        banner={
+          <TimelineBanner
+            image={
+              user?.profile_picture?.data
+                ? user.profile_picture.data
+                : undefined
+            }
+            text={
+              user?.first_name ? `Welcome back ${user.first_name}!` : 'Hello!'
+            }
+          />
         }
-        enter="transition-opacity ease-in-out duration-75"
-        enterFrom="opacity-75"
-        enterTo="opacity-100"
-        leave="transition-opacity ease-in-out duration-75"
-        leaveFrom="opacity-100"
-        leaveTo="opacity-75"
+        disableOverflow={disableContentScroll}
       >
-        <TimelineSkeleton />
-      </Transition>
-      <Transition
-        as="div"
-        className={'relative flex h-full'}
-        show={initialized}
-        enter="transition-opacity ease-in-out duration-75"
-        enterFrom="opacity-75"
-        enterTo="opacity-100"
-        leave="transition-opacity ease-in-out duration-75"
-        leaveFrom="opacity-100"
-        leaveTo="opacity-75"
-      >
-        {hasNoRecords ? (
-          <div className="mx-auto w-full max-w-4xl gap-x-4 px-4 pt-2 pb-4 sm:px-6 lg:px-8">
-            <EmptyRecordsPlaceholder />
-          </div>
-        ) : null}
-        {hasRecords ? (
-          <div className="flex w-full overflow-hidden">
-            <JumpToPanel items={data} isLoading={false} />
-            <div className="px-auto flex h-full max-h-full w-full justify-center overflow-y-scroll">
-              <div className="h-max w-full max-w-4xl flex-col px-4 pb-20 sm:px-6 sm:pb-6 lg:px-8">
-                <SearchBar query={query} setQuery={setQuery} status={status} />
-                {listItems}
-                {hasNoRecords ? (
-                  <p className="font-xl">{`No records found with query: ${query}`}</p>
-                ) : null}
+        <Transition
+          show={
+            !initialized &&
+            (status === QueryStatus.IDLE || status === QueryStatus.LOADING)
+          }
+          enter="transition-opacity ease-in-out duration-75"
+          enterFrom="opacity-75"
+          enterTo="opacity-100"
+          leave="transition-opacity ease-in-out duration-75"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-75"
+        >
+          <TimelineSkeleton />
+        </Transition>
+        <Transition
+          as="div"
+          className={'relative flex h-full'}
+          show={initialized}
+          enter="transition-opacity ease-in-out duration-75"
+          enterFrom="opacity-75"
+          enterTo="opacity-100"
+          leave="transition-opacity ease-in-out duration-75"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-75"
+        >
+          {hasNoRecords ? (
+            <div className="mx-auto w-full max-w-4xl gap-x-4 px-4 pt-2 pb-4 sm:px-6 lg:px-8">
+              <EmptyRecordsPlaceholder />
+            </div>
+          ) : null}
+          {hasRecords ? (
+            <div className="flex w-full">
+              <JumpToPanel items={data} isLoading={false} />
+              <div className="px-auto flex h-full max-h-full w-full justify-center overflow-y-scroll">
+                <div className="h-max w-full max-w-4xl flex-col px-4 pb-20 sm:px-6 sm:pb-6 lg:px-8">
+                  <SearchBar
+                    query={query}
+                    setQuery={setQuery}
+                    status={status}
+                  />
+                  {listItems}
+                  {hasNoRecords ? (
+                    <p className="font-xl">{`No records found with query: ${query}`}</p>
+                  ) : null}
+                </div>
               </div>
             </div>
-          </div>
-        ) : null}
-      </Transition>
-    </AppPage>
+          ) : null}
+        </Transition>
+      </AppPage>
+    </DisableContentScrollProvider>
   );
+});
+
+const DisableContentScrollContext = React.createContext<
+  (value: boolean) => void
+>(() => {
+  alert("Error: Can't set disableContentScrollContext");
+});
+
+export const DisableContentScrollProvider =
+  DisableContentScrollContext.Provider;
+
+// Hack for Safari iOS to disable scroll on content when modal is open
+export function useDisableContentScroll() {
+  const context = React.useContext(DisableContentScrollContext);
+  if (context === undefined) {
+    throw new Error(
+      'useDisableContentScroll must be used within a DisableContentScrollProvider'
+    );
+  }
+  return context;
 }
