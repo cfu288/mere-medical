@@ -2,7 +2,7 @@ import React, { PropsWithChildren } from 'react';
 
 export function AppPage({
   banner,
-  disableOverflow = true,
+  disableOverflow = false,
   children,
 }: PropsWithChildren<{ banner: React.ReactNode; disableOverflow?: boolean }>) {
   return (
