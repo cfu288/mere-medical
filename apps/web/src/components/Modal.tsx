@@ -23,10 +23,7 @@ export function Modal({
         {/* Background opacity */}
         <div className="fixed inset-0 bg-gray-500 bg-opacity-50 transition-opacity" />
         {/* Modal */}
-        <motion.div
-          layoutId={`card-base-${id}`}
-          className="fixed inset-0 z-10 flex flex-col overflow-y-auto pt-12 sm:p-12"
-        >
+        <div className="fixed inset-0 z-10 flex flex-col overflow-y-auto pt-12 sm:p-12">
           <Dialog.Panel
             className={`mx-auto w-screen transform rounded-xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 transition-all sm:w-auto sm:min-w-[50%] sm:max-w-3xl ${
               overflowHidden ? 'overflow-hidden' : ''
@@ -34,7 +31,7 @@ export function Modal({
           >
             {children}
           </Dialog.Panel>
-        </motion.div>
+        </div>
       </Dialog>
     );
   }

@@ -18,9 +18,7 @@ export function ModalHeader({
     <Dialog.Title>
       <div className="flex w-full flex-col p-4 pb-2">
         <div className="flex justify-between">
-          <motion.p layoutId={`card-title-${id}`} className="text-xl font-bold">
-            {title}
-          </motion.p>
+          <p className="text-xl font-bold">{title}</p>
           {setClose ? (
             <button
               type="button"

@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { ReactNode } from 'react';
 
 export function TimelineCardCategoryTitle({
@@ -10,10 +11,11 @@ export function TimelineCardCategoryTitle({
   id?: string;
 }) {
   return (
-    <div
+    <motion.div
+      layoutId={id ? `card-category-title-${id}` : undefined}
       className={`flex flex-row items-center pb-1 align-middle text-sm font-bold sm:pb-2 md:text-base ${color}`}
     >
       {title}
-    </div>
+    </motion.div>
   );
 }

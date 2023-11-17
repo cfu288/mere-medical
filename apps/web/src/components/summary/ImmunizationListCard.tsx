@@ -3,7 +3,7 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, Immunization } from 'fhir/r2';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
-import { CardBase } from '../connection/CardBase';
+import { CardBase } from '../CardBase';
 
 function getVaccineCode(item: ClinicalDocument<BundleEntry<Immunization>>) {
   let code = item.data_record.raw.resource?.vaccineCode?.coding?.filter((i) =>

@@ -5,9 +5,9 @@ import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocumen
 import { ShowDocumentResultsExpandable } from './ShowDocumentReferenceResultsExpandable/ShowDocumentReferenceResultsExpandable';
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
-import { CardBase } from '../connection/CardBase';
-import { TimelineCardTitle } from './TimelineCardTitle';
-import { TimelineCardCategoryTitle } from './TimelineCardCategoryTitle';
+import { CardBase } from '../CardBase';
+import { TimelineCardTitle } from './TimelineCard/TimelineCardTitle';
+import { TimelineCardCategoryTitle } from './TimelineCard/TimelineCardCategoryTitle';
 import { OpenableCardIcon } from './OpenableCardIcon';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ExpandableCard } from './ExpandableCard';

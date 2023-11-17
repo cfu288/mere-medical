@@ -22,7 +22,7 @@ export function CardBase({
     // @ts-ignore
     <motion.div
       layout
-      layoutId={`card-base-${id}`}
+      layoutId={id ? `card-base-${id}` : undefined}
       ref={forRef}
       {...newProps}
       className={`max-width-full flex items-center space-x-3 rounded-lg border border-gray-300 bg-white px-3 py-3 shadow-sm md:px-6 md:py-5 ${

@@ -1,12 +1,5 @@
 import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
-import {
-  PropsWithChildren,
-  memo,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import {
   isOutOfRangeResult,
@@ -178,10 +171,3 @@ export const DiagnosticReportCard = memo(function DiagnosticReportCard({
     </AnimatePresence>
   );
 });
-
-export function TimelineCardSubtitileSection({
-  children,
-  id,
-}: PropsWithChildren<{ id: string }>) {
-  return <motion.div layoutId={`card-subtitle-${id}`}>{children}</motion.div>;
-}

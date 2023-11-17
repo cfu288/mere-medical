@@ -3,8 +3,8 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, MedicationStatement } from 'fhir/r2';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
-import { CardBase } from '../connection/CardBase';
-import { TimelineCardSubtitile } from '../timeline/TimelineCardSubtitile';
+import { CardBase } from '../CardBase';
+import { TimelineCardSubtitile } from '../timeline/TimelineCard/TimelineCardSubtitile';
 
 export function MedicationsListCard({
   items,

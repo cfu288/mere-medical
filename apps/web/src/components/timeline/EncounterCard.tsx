@@ -1,13 +1,13 @@
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, Encounter } from 'fhir/r2';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
-import { TimelineCardTitle } from './TimelineCardTitle';
+import { TimelineCardTitle } from './TimelineCard/TimelineCardTitle';
 import { memo } from 'react';
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
-import { CardBase } from '../connection/CardBase';
+import { CardBase } from '../CardBase';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
-import { TimelineCardCategoryTitle } from './TimelineCardCategoryTitle';
-import { TimelineCardSubtitile } from './TimelineCardSubtitile';
+import { TimelineCardCategoryTitle } from './TimelineCard/TimelineCardCategoryTitle';
+import { TimelineCardSubtitile } from './TimelineCard/TimelineCardSubtitile';
 
 export const EncounterCard = memo(function EncounterCard({
   item,

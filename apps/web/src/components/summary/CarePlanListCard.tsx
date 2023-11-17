@@ -3,7 +3,7 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { BundleEntry, CarePlan } from 'fhir/r2';
 import { Fragment } from 'react';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
-import { CardBase } from '../connection/CardBase';
+import { CardBase } from '../CardBase';
 
 export function CarePlanListCard({
   items,

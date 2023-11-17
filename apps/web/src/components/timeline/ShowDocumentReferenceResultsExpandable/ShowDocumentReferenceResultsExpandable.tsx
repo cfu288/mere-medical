@@ -89,7 +89,7 @@ export function ShowDocumentResultsExpandable({
                 </motion.p>
                 <motion.button
                   type="button"
-                  layoutId={`card-close-${id}`}
+                  layoutId={`card-toggle-button-${id}`}
                   className="ml-4 rounded bg-white text-gray-500 duration-75 hover:text-gray-700 focus:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-90 active:bg-slate-50"
                   onClick={() => setExpanded(false)}
                 >

@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
-import { CardBase } from '../connection/CardBase';
+import { CardBase } from '../CardBase';
 
 export function SkeletonTimelineCardUnmemoed() {
   return (

@@ -1,6 +1,6 @@
 import { Disclosure } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
-import { CardBase } from '../connection/CardBase';
+import { CardBase } from '../CardBase';
 
 export function SkeletonListCard() {
   return (

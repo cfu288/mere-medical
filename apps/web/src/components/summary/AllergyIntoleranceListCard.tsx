@@ -4,7 +4,7 @@ import { format, parseISO } from 'date-fns';
 import { AllergyIntolerance, BundleEntry } from 'fhir/r2';
 import { Fragment } from 'react';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
-import { CardBase } from '../connection/CardBase';
+import { CardBase } from '../CardBase';
 import * as fhirpath from 'fhirpath';
 
 function getAllergyText(

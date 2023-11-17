@@ -7,16 +7,17 @@ import {
 } from 'fhir/r2';
 import { useEffect } from 'react';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
-import { CardBase } from '../connection/CardBase';
+import { CardBase } from '../CardBase';
 import { RxDocument } from 'rxdb';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
-import { TimelineCardTitle } from './TimelineCardTitle';
-import { TimelineCardCategoryTitle } from './TimelineCardCategoryTitle';
+import { TimelineCardTitle } from './TimelineCard/TimelineCardTitle';
+import { TimelineCardCategoryTitle } from './TimelineCard/TimelineCardCategoryTitle';
 import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
 import { OpenableCardIcon } from './OpenableCardIcon';
-import { TimelineCardSubtitile } from './TimelineCardSubtitile';
-import { motion } from 'framer-motion';
-import { TimelineCardSubtitileSection } from './DiagnosticReportCard';
+import { TimelineCardSubtitile } from './TimelineCard/TimelineCardSubtitile';
+import { TimelineCardSubtitileSection } from './TimelineCard/TimelineCardSubtitileSection';
+import { TimelineCardContentSection } from './TimelineCard/TimelineCardContentSection';
+import { TimelineCardOpenButton } from './TimelineCard/TimelineCardOpenButton';
 
 export function ExpandableCard({
   id,
@@ -27,7 +28,7 @@ export function ExpandableCard({
   categoryTitle,
   categoryTitleColor,
 }: {
-  id: string | undefined;
+  id?: string;
   setExpanded: React.Dispatch<React.SetStateAction<boolean>>;
   intersectionObserverRef?: React.RefObject<HTMLDivElement>;
   item: ClinicalDocument<
@@ -63,7 +64,7 @@ export function ExpandableCard({
   // ID's required for layoutId:
   // card-base-${id}
   // card-category-title-${id}
-  // card-close-${id}
+  // card-toggle-button-${id}
   // card-title-${id}
   // card-subtitle-${id}
   // card-content-${id}
@@ -77,22 +78,20 @@ export function ExpandableCard({
     >
       <div className={'min-w-0 flex-1'} ref={intersectionObserverRef}>
         <div className="items-top flex justify-between">
-          <motion.div layoutId={`card-category-title-${id}`}>
-            <TimelineCardCategoryTitle
-              title={categoryTitle}
-              color={categoryTitleColor}
-            />
-          </motion.div>
-          <motion.div layoutId={`card-close-${id}`}>
+          <TimelineCardCategoryTitle
+            title={categoryTitle}
+            color={categoryTitleColor}
+          />
+          <TimelineCardOpenButton id={id}>
             <OpenableCardIcon />
-          </motion.div>
+          </TimelineCardOpenButton>
         </div>
-        <TimelineCardTitle id={item.metadata?.id}>
+        <TimelineCardTitle id={id}>
           {item.metadata?.display_name
             ?.replace(/- final result/gi, '')
             .replace(/- final/gi, '')}
         </TimelineCardTitle>
-        <TimelineCardSubtitileSection id={`card-subtitle-${id}`}>
+        <TimelineCardSubtitileSection id={id}>
           <TimelineCardSubtitile variant="dark">
             {item.metadata?.date
               ? format(parseISO(item.metadata.date), 'p')
@@ -106,7 +105,7 @@ export function ExpandableCard({
             <SkeletonLoadingText />
           )}
         </TimelineCardSubtitileSection>
-        <motion.div layoutId={`card-content-${id}`} />
+        <TimelineCardContentSection id={id} />
       </div>
     </CardBase>
   );

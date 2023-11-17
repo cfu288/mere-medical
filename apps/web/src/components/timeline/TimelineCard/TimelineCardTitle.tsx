@@ -7,7 +7,7 @@ export function TimelineCardTitle({
 }: PropsWithChildren<{ id?: string }>) {
   return (
     <motion.p
-      layoutId={`card-title-${id}`}
+      layoutId={id ? `card-title-${id}` : undefined}
       className="break-all pb-1 text-sm font-bold text-gray-900 sm:pb-2 md:break-normal md:text-base"
     >
       {children}

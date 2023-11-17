@@ -3,10 +3,10 @@ import { BundleEntry, MedicationStatement } from 'fhir/r2';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
-import { CardBase } from '../connection/CardBase';
-import { TimelineCardTitle } from './TimelineCardTitle';
+import { CardBase } from '../CardBase';
+import { TimelineCardTitle } from './TimelineCard/TimelineCardTitle';
 import { memo } from 'react';
-import { TimelineCardCategoryTitle } from './TimelineCardCategoryTitle';
+import { TimelineCardCategoryTitle } from './TimelineCard/TimelineCardCategoryTitle';
 
 export const MedicationCard = memo(function MedicationCard({
   item,
