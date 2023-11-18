@@ -232,10 +232,9 @@ export const TimelineTab = React.memo(function TimelineTab() {
       ),
     [data, loadNextPage, status]
   );
-  const [disableContentScroll, setDisableContentScroll] = useState(false);
 
   return (
-    <DisableContentScrollProvider value={setDisableContentScroll}>
+    <>
       <AppPage
         banner={
           <TimelineBanner
@@ -249,7 +248,6 @@ export const TimelineTab = React.memo(function TimelineTab() {
             }
           />
         }
-        disableOverflow={disableContentScroll}
       >
         <Transition
           show={
@@ -301,26 +299,6 @@ export const TimelineTab = React.memo(function TimelineTab() {
           ) : null}
         </Transition>
       </AppPage>
-    </DisableContentScrollProvider>
+    </>
   );
 });
-
-const DisableContentScrollContext = React.createContext<
-  (value: boolean) => void
->(() => {
-  alert("Error: Can't set disableContentScrollContext");
-});
-
-export const DisableContentScrollProvider =
-  DisableContentScrollContext.Provider;
-
-// Hack for Safari iOS to disable scroll on content when modal is open
-export function useDisableContentScroll() {
-  const context = React.useContext(DisableContentScrollContext);
-  if (context === undefined) {
-    throw new Error(
-      'useDisableContentScroll must be used within a DisableContentScrollProvider'
-    );
-  }
-  return context;
-}

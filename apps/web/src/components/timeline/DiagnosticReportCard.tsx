@@ -13,8 +13,7 @@ import { useUser } from '../providers/UserProvider';
 import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
 import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
 import { AbnormalResultIcon } from './AbnormalResultIcon';
-import { AnimatePresence, LayoutGroup, motion } from 'framer-motion';
-import { useDisableContentScroll } from '../../pages/TimelineTab';
+import { AnimatePresence, motion } from 'framer-motion';
 import { ExpandableCard } from './ExpandableCard';
 
 /**
@@ -124,11 +123,6 @@ export const DiagnosticReportCard = memo(function DiagnosticReportCard({
       conn,
     });
   const currId = item.metadata?.id || item.id;
-  const disableContentScroll = useDisableContentScroll();
-
-  useEffect(() => {
-    disableContentScroll(expanded ? true : false);
-  }, [disableContentScroll, expanded]);
 
   return (
     <AnimatePresence initial={false}>
