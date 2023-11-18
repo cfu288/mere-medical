@@ -27,28 +27,6 @@ export const DocumentReferenceCard = memo(function DocumentReferenceCard({
             categoryTitle={<>Documents</>}
             categoryTitleColor="text-teal-600"
           />
-          // <div className="min-w-0 flex-1">
-          //   <div className="items-top flex justify-between">
-          //     <TimelineCardCategoryTitle
-          //       title="Documents"
-          //       color="text-teal-600"
-          //     />
-          //     <OpenableCardIcon />
-          //   </div>
-          //   <TimelineCardTitle>{item.metadata?.display_name}</TimelineCardTitle>
-          //   <p className="truncate text-xs font-medium text-gray-500 md:text-sm">
-          //     {item.metadata?.date
-          //       ? format(parseISO(item.metadata.date), 'p')
-          //       : ''}
-          //   </p>
-          //   {conn?.get('name') ? (
-          //     <p className="truncate text-xs font-medium text-gray-400 md:text-sm">
-          //       {conn?.get('name')}
-          //     </p>
-          //   ) : (
-          //     <SkeletonLoadingText />
-          //   )}
-          // </div>
         )}
       </motion.div>
       {expanded && (

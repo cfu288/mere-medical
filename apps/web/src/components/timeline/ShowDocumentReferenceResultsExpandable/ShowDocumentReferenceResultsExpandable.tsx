@@ -11,6 +11,11 @@ import { parseCCDA } from './parseCCDA/parseCCDA';
 import { motion } from 'framer-motion';
 import { XMarkIcon } from '@heroicons/react/20/solid';
 import { format, parseISO } from 'date-fns';
+import { MotionModal } from '../MotionModal/MotionModal';
+import { MotionModalCategoryTitle } from '../MotionModal/MotionModalCategoryTitle';
+import { MotionModalCloseButton } from '../MotionModal/MotionModalCloseButton';
+import { MotionModalSubtitle } from '../MotionModal/MotionModalSubtitle';
+import { MotionModalTitle } from '../MotionModal/MotionModalTitle';
 
 export const LOINC_CODE_SYSTEM = '2.16.840.1.113883.6.1';
 
@@ -59,75 +64,42 @@ export function ShowDocumentResultsExpandable({
   }, [expanded, cd, attachment]);
 
   return (
-    <motion.div className="relative z-30">
-      {/* Background opacity */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-gray-500 bg-opacity-50 transition-opacity"
-      />
-      {/* Modal */}
-      <motion.div
-        layout
-        className="fixed inset-0 z-10 flex flex-col overflow-y-auto pt-12 sm:p-12"
-      >
-        <motion.div
-          layoutId={`card-base-${id}`}
-          className="mx-auto w-screen rounded-xl border bg-white shadow-2xl sm:w-auto sm:min-w-[50%] sm:max-w-3xl"
-        >
-          <motion.div className="flex flex-col ">
-            <motion.div className="flex w-full flex-col p-4 pb-2">
-              <motion.div className="flex justify-between">
-                <motion.p
-                  layoutId={`card-title-${id}`}
-                  className="w-full text-xl font-bold"
-                >
-                  {item.metadata?.display_name
-                    ?.replace(/- final result/gi, '')
-                    .replace(/- final/gi, '')}
-                </motion.p>
-                <motion.button
-                  type="button"
-                  layoutId={`card-toggle-button-${id}`}
-                  className="ml-4 rounded bg-white text-gray-500 duration-75 hover:text-gray-700 focus:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-90 active:bg-slate-50"
-                  onClick={() => setExpanded(false)}
-                >
-                  <motion.span className="sr-only">Close</motion.span>
-                  <XMarkIcon className="h-8 w-8" aria-hidden="true" />
-                </motion.button>
-              </motion.div>
-              <motion.div
-                layoutId={`card-subtitle-${id}`}
-                className="text-sm font-light"
-              >
-                {format(parseISO(item.metadata?.date || ''), 'LLLL do yyyy')}
-              </motion.div>
-              <motion.div
-                layoutId={`card-content-${id}`}
-                className="max-h-full scroll-py-3 p-3"
-              >
-                <div
-                  className={`${
-                    expanded ? '' : 'hidden'
-                  } rounded-lg border border-solid border-gray-200`}
-                >
-                  <p className="text-md whitespace-wrap overflow-x-scroll p-4 text-gray-900">
-                    {!hasLoadedDocument && 'Loading...'}
-                    <DisplayCCDADocument ccda={ccda} />
-                    {hasLoadedDocument && !ccda && (
-                      <p>
-                        Sorry, looks like we were unable to get the linked
-                        document
-                      </p>
-                    )}
-                  </p>
-                </div>
-              </motion.div>
-            </motion.div>
-          </motion.div>
+    <MotionModal id={id}>
+      <motion.div className="flex w-full flex-col p-4 pb-2">
+        <MotionModalCategoryTitle id={id}>
+          <p className="mr-1 w-12"></p>
+        </MotionModalCategoryTitle>
+        <motion.div className="flex justify-between">
+          <MotionModalTitle id={id}>
+            {item.metadata?.display_name
+              ?.replace(/- final result/gi, '')
+              .replace(/- final/gi, '')}
+          </MotionModalTitle>
+          <MotionModalCloseButton id={id} setExpanded={setExpanded} />
         </motion.div>
+        <div className="flex flex-col">
+          <MotionModalSubtitle id={id}>
+            {format(parseISO(item.metadata?.date || ''), 'LLLL do yyyy')}
+          </MotionModalSubtitle>
+          <motion.div className="max-h-full scroll-py-3 p-3">
+            <div
+              className={`${
+                expanded ? '' : 'hidden'
+              } rounded-lg border border-solid border-gray-200`}
+            >
+              <p className="text-md whitespace-wrap overflow-x-scroll p-4 text-gray-900">
+                {!hasLoadedDocument && 'Loading...'}
+                <DisplayCCDADocument ccda={ccda} />
+                {hasLoadedDocument && !ccda && (
+                  <p>
+                    Sorry, looks like we were unable to get the linked document
+                  </p>
+                )}
+              </p>
+            </div>
+          </motion.div>
+        </div>
       </motion.div>
-    </motion.div>
+    </MotionModal>
   );
 }

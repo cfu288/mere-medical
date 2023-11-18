@@ -124,7 +124,7 @@ export function parseCCDAVitalsSection(
         {[...uniqueDates]
           .filter((d): d is string => Boolean(d))
           .map(parseDateString)
-          .join(' ,')}
+          .join('; ')}
       </p>
     </>
   );
