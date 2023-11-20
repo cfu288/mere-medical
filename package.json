@@ -116,7 +116,7 @@
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.42.1",
     "react-image-crop": "^10.1.5",
-    "react-router": "^6.8.0",
+    "react-router": "^6.19.0",
     "react-router-dom": "^6.8.0",
     "react-virtualized-auto-sizer": "^1.0.7",
     "react-window": "^1.8.8",
