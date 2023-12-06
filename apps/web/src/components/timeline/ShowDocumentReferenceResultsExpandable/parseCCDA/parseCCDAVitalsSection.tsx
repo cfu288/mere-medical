@@ -22,8 +22,6 @@ export function parseCCDAVitalsSection(
       )
   )?.[0];
 
-  console.log(matchingSectionsDisplayNames);
-
   const sectionComponents = [
     ...(matchingSections as unknown as HTMLElement[]),
   ]?.map((e) =>
