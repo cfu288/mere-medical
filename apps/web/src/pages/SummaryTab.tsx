@@ -28,13 +28,8 @@ import { AppPage } from '../components/AppPage';
 import { useUser } from '../components/providers/UserProvider';
 import { Disclosure } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
-import { parseISO } from 'date-fns';
-import { format } from 'url';
 import { CardBase } from '../components/connection/CardBase';
 import { TimelineCardSubtitile } from '../components/timeline/TimelineCardSubtitile';
-import { is } from 'date-fns/locale';
-import { useRelatedDocuments } from '../components/timeline/DiagnosticReportCard';
-import { useConnectionDoc } from '../components/hooks/useConnectionDoc';
 import { PinnedListCard } from './PinnedListCard';
 
 function fetchMedications(

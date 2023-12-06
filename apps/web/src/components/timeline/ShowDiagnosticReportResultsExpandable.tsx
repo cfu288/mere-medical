@@ -322,7 +322,17 @@ export function ResultRow({
           ) as unknown as RxDocument<
             ClinicalDocument<BundleEntry<Observation>>
           >[];
-          setRelatedLabs(sorted);
+          // sorted list may have duplicate dates, remove them so only latest of each date is shown
+          const seen = new Set();
+          const unique = sorted.filter((item) => {
+            const date = item.get('metadata.date');
+            if (!seen.has(date)) {
+              seen.add(date);
+              return true;
+            }
+            return false;
+          });
+          setRelatedLabs(unique);
         });
     }
   }, [db.clinical_documents, loinc, user.id]);
