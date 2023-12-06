@@ -1,7 +1,14 @@
 import { Disclosure } from '@headlessui/react';
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { RxDocument } from 'rxdb';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { Modal } from '../Modal';
@@ -14,6 +21,7 @@ import 'billboard.js/dist/billboard.css';
 import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
 import { TableCellsIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import * as fhirpath from 'fhirpath';
+import { useClinicalDoc } from '../hooks/useClinicalDoc';
 
 /**
  * Generate line for sparkline path
@@ -97,12 +105,6 @@ export function ShowDiagnosticReportResultsExpandable({
 }) {
   const toggleOpen = () => setExpanded((x) => !x);
 
-  useEffect(() => {
-    if (expanded) {
-      console.log(item);
-    }
-  }, [expanded, item]);
-
   return (
     <Modal open={expanded} setOpen={setExpanded}>
       <div className="flex flex-col">
@@ -159,7 +161,7 @@ export function ShowDiagnosticReportResultsExpandable({
                     </div>
                   </div>
                   {docs.map((item) => (
-                    <Row item={item} key={JSON.stringify(item)} />
+                    <ResultRow item={item} key={JSON.stringify(item)} />
                   ))}
                 </div>
               </div>
@@ -177,7 +179,11 @@ export function ShowDiagnosticReportResultsExpandable({
   );
 }
 
-function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
+export function ResultRow({
+  item,
+}: {
+  item: ClinicalDocument<BundleEntry<Observation>>;
+}) {
   const db = useRxDb(),
     user = useUser(),
     loinc = item.metadata?.loinc_coding,
@@ -264,6 +270,29 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
     legend: { hide: true },
   };
 
+  const doc = useClinicalDoc(item?.metadata?.id) as RxDocument<
+    ClinicalDocument<Observation | DiagnosticReport>
+  >;
+
+  const [isPinned, setIsPinned] = useState<boolean>(
+    item.metadata?.is_pinned || false
+  );
+
+  const handleTogglePin = useCallback(() => {
+    const is_pinned = doc?.metadata?.is_pinned;
+    if (doc) {
+      doc
+        .update({
+          $set: {
+            'metadata.is_pinned': !is_pinned,
+          },
+        })
+        .then(() => {
+          setIsPinned(!is_pinned);
+        });
+    }
+  }, [doc]);
+
   useEffect(() => {
     chartComponent.current?.instance.resize();
   }, [data]);
@@ -287,7 +316,17 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
           ) as unknown as RxDocument<
             ClinicalDocument<BundleEntry<Observation>>
           >[];
-          setRelatedLabs(sorted);
+          // sorted list may have duplicate dates, remove them so only latest of each date is shown
+          const seen = new Set();
+          const unique = sorted.filter((item) => {
+            const date = item.get('metadata.date');
+            if (!seen.has(date)) {
+              seen.add(date);
+              return true;
+            }
+            return false;
+          });
+          setRelatedLabs(unique);
         });
     }
   }, [db.clinical_documents, loinc, user.id]);
@@ -322,7 +361,7 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
                     (getValueString(item) && `${getValueString(item)}`)}
                 </div>
                 {/* Graphing button */}
-                <div className="col-span-1 flex flex-col items-end justify-end align-middle">
+                <div className="flex-rows col-span-1 flex items-end justify-end align-middle">
                   {relatedLabs.length > 0 &&
                     getValueQuantity(item) !== undefined && (
                       <Disclosure.Button className="text-primary-900 rounded bg-[#E2F5FA] p-1 duration-75 active:scale-90  active:bg-slate-50">
@@ -359,49 +398,13 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
                                         ?.value
                                     ).line
                                   }
-                                  stroke-width="1.5"
+                                  strokeWidth="1.5"
                                   stroke="black"
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  fill="transparent"
-                                  vectorEffect="non-scaling-stroke"
-                                />
-                                {/* <path
-                                  d={
-                                    NormalizePathLine(
-                                      sparklineValues,
-                                      getReferenceRangeLow(sparklineLabs[0])
-                                        ?.value,
-                                      getReferenceRangeHigh(sparklineLabs[0])
-                                        ?.value
-                                    ).maxLine
-                                  }
-                                  strokeWidth="1"
-                                  stroke="gray"
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
                                   fill="transparent"
-                                  strokeOpacity={0.5}
                                   vectorEffect="non-scaling-stroke"
                                 />
-                                <path
-                                  d={
-                                    NormalizePathLine(
-                                      sparklineValues,
-                                      getReferenceRangeLow(sparklineLabs[0])
-                                        ?.value,
-                                      getReferenceRangeHigh(sparklineLabs[0])
-                                        ?.value
-                                    ).minLine
-                                  }
-                                  strokeWidth="1"
-                                  stroke="gray"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  fill="transparent"
-                                  strokeOpacity={0.5}
-                                  vectorEffect="non-scaling-stroke"
-                                /> */}
                               </svg>
                             ) : (
                               <svg
@@ -423,6 +426,38 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
                         )}
                       </Disclosure.Button>
                     )}
+                  {/* Pin icon button */}
+
+                  <button
+                    className="text-primary-900 rounded  p-1 duration-75 active:scale-90 active:bg-slate-50"
+                    onClick={handleTogglePin}
+                  >
+                    {!isPinned ? (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth="1.5"
+                        stroke="currentColor"
+                        className="h-6 w-6"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z"
+                        />
+                      </svg>
+                    ) : (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="h-6 w-6"
+                      >
+                        <path d="M3.53 2.47a.75.75 0 00-1.06 1.06l18 18a.75.75 0 101.06-1.06l-18-18zM20.25 5.507v11.561L5.853 2.671c.15-.043.306-.075.467-.094a49.255 49.255 0 0111.36 0c1.497.174 2.57 1.46 2.57 2.93zM3.75 21V6.932l14.063 14.063L12 18.088l-7.165 3.583A.75.75 0 013.75 21z" />
+                      </svg>
+                    )}
+                  </button>
                 </div>
                 {/* Comment string (if exists) */}
                 {getComments(item) ? (

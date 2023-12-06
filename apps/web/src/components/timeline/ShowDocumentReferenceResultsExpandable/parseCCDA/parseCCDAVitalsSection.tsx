@@ -22,8 +22,6 @@ export function parseCCDAVitalsSection(
       )
   )?.[0];
 
-  console.log(matchingSectionsDisplayNames);
-
   const sectionComponents = [
     ...(matchingSections as unknown as HTMLElement[]),
   ]?.map((e) =>
@@ -107,7 +105,7 @@ export function parseCCDAVitalsSection(
         </thead>
         <tbody className="divide-y divide-gray-200">
           {Object.values(extractedVital).map((v) => (
-            <tr>
+            <tr key={v.value}>
               <td className="break-word py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
                 {v.title}
               </td>

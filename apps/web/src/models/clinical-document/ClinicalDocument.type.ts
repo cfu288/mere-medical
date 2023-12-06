@@ -27,6 +27,7 @@ export interface ClinicalDocument<T = unknown> {
     date?: string;
     display_name?: string;
     loinc_coding?: string[];
+    is_pinned?: boolean;
   };
 }
 

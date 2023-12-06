@@ -15,27 +15,29 @@ export function CarePlanListCard({
     items.filter((i) => i.data_record.raw.resource?.goal).length === 0
   )
     return null;
+
   return (
-    <Disclosure defaultOpen={true}>
-      {({ open }) => (
-        <>
-          <Disclosure.Button className="w-full font-bold">
-            <div className="flex w-full items-center justify-between py-6 text-xl font-extrabold">
-              Care Plan
-              <ChevronDownIcon
-                className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 ${
-                  open ? 'rotate-180 transform' : ''
-                }`}
-              />
-            </div>
-          </Disclosure.Button>
-          <Disclosure.Panel>
-            <CardBase>
-              <div className="min-w-0 flex-1">
-                {items.map((item) => (
-                  <Fragment key={item.metadata?.id}>
-                    {item.data_record.raw.resource?.goal &&
-                      item.data_record.raw.resource?.goal?.length !== 0 && (
+    <div className="col-span-6 sm:col-span-3 ">
+      <Disclosure defaultOpen={true}>
+        {({ open }) => (
+          <>
+            <Disclosure.Button className="w-full font-bold">
+              <div className="flex w-full items-center justify-between py-6 text-xl font-extrabold">
+                Care Plan
+                <ChevronDownIcon
+                  className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 ${
+                    open ? 'rotate-180 transform' : ''
+                  }`}
+                />
+              </div>
+            </Disclosure.Button>
+            <Disclosure.Panel>
+              <CardBase>
+                <div className="min-w-0 flex-1">
+                  {items.map((item) => (
+                    <Fragment key={item.metadata?.id}>
+                      {item.data_record.raw.resource?.goal &&
+                      item.data_record.raw.resource?.goal?.length !== 0 ? (
                         <div className="py-2">
                           {item.data_record.raw.resource?.addresses?.map(
                             (item) => (
@@ -61,14 +63,15 @@ export function CarePlanListCard({
                             )}
                           </ul>
                         </div>
-                      )}
-                  </Fragment>
-                ))}
-              </div>
-            </CardBase>
-          </Disclosure.Panel>
-        </>
-      )}
-    </Disclosure>
+                      ) : null}
+                    </Fragment>
+                  ))}
+                </div>
+              </CardBase>
+            </Disclosure.Panel>
+          </>
+        )}
+      </Disclosure>
+    </div>
   );
 }

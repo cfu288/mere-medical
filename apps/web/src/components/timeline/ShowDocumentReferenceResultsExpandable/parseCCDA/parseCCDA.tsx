@@ -12,7 +12,6 @@ export function parseCCDA(
 ): Partial<Record<CCDAStructureDefinitionKeys2_1, string | JSX.Element>> {
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(raw, 'text/xml');
-  console.debug(raw);
   const sections = xmlDoc.getElementsByTagName('section');
   const parsedDoc: Partial<
     Record<CCDAStructureDefinitionKeys2_1, string | JSX.Element>

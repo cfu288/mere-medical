@@ -1,6 +1,6 @@
 export const clinicalDocumentSchemaLiteral = {
   title: 'Clinical Document Schema',
-  version: 2,
+  version: 3,
   primaryKey: {
     key: 'id',
     fields: ['connection_record_id', 'user_id', 'metadata.id'] as string[],
@@ -66,6 +66,11 @@ export const clinicalDocumentSchemaLiteral = {
           items: {
             type: 'string',
           },
+        },
+        is_pinned: {
+          type: 'boolean',
+          description:
+            'Whether the document is pinned or not by a user for the summary view',
         },
       },
     },

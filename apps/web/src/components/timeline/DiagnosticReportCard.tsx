@@ -26,14 +26,12 @@ import { AbnormalResultIcon } from './AbnormalResultIcon';
  * @param ClinicalDocument<BundleEntry<DiagnosticReport>>, Whether or not the card is visible to the user, and whether or not the card is expanded
  * @returns a Tuple containing related observations and whether or not there is an abnormal value in the set
  */
-function useRelatedDocuments({
-  expanded,
-  isVisible,
+export function useRelatedDocuments({
+  shouldLoadRelatedDocuments,
   item,
   conn,
 }: {
-  expanded: boolean;
-  isVisible: boolean;
+  shouldLoadRelatedDocuments: boolean;
   item: ClinicalDocument<BundleEntry<DiagnosticReport>>;
   conn?: ConnectionDocument;
 }): [
@@ -65,7 +63,7 @@ function useRelatedDocuments({
   const [isAbnormalResult, setIsAbnormalResult] = useState(false);
 
   useEffect(() => {
-    if ((isVisible && docs.length === 0) || (expanded && docs.length === 0)) {
+    if (shouldLoadRelatedDocuments && docs.length === 0) {
       setStatus('loading');
       db.clinical_documents
         .find({
@@ -101,8 +99,7 @@ function useRelatedDocuments({
   }, [
     db.clinical_documents,
     docs.length,
-    expanded,
-    isVisible,
+    shouldLoadRelatedDocuments,
     item.metadata?.display_name,
     listToQuery,
     user.id,
@@ -122,8 +119,7 @@ function DiagnosticReportCardUnmemo({
     entry = useIntersectionObserver(ref, {}),
     isVisible = !!entry?.isIntersecting,
     [docs, isAbnormalResult, status] = useRelatedDocuments({
-      expanded,
-      isVisible,
+      shouldLoadRelatedDocuments: expanded || isVisible,
       item,
       conn,
     });

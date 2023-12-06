@@ -12,4 +12,8 @@ export const ClinicalDocumentMigrations: MigrationStrategies = {
     oldDoc.id = `${oldDoc.connection_record_id}|${oldDoc.user_id}|${oldDoc.metadata.id}`;
     return oldDoc;
   },
+  3: function (oldDoc: Required<ClinicalDocument>) {
+    oldDoc.metadata.is_pinned = false;
+    return oldDoc;
+  },
 };
