@@ -59,7 +59,7 @@ export function ResultComponentSection({
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {Object.values(kp).map((v) => (
-                  <tr>
+                  <tr key={v.value}>
                     <td className="break-word py-1 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
                       {v.title}
                       <p className="col-span-3 self-center text-xs font-light text-gray-600">

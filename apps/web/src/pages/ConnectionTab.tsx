@@ -39,7 +39,6 @@ export function getLoginUrlBySource(
       );
     }
     case 'cerner': {
-      console.log(item.toJSON());
       return getCernerLoginUrl(item.get('location'), item.get('auth_uri'));
     }
     case 'veradigm': {

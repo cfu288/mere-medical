@@ -105,12 +105,6 @@ export function ShowDiagnosticReportResultsExpandable({
 }) {
   const toggleOpen = () => setExpanded((x) => !x);
 
-  useEffect(() => {
-    if (expanded) {
-      console.log(item);
-    }
-  }, [expanded, item]);
-
   return (
     <Modal open={expanded} setOpen={setExpanded}>
       <div className="flex flex-col">
