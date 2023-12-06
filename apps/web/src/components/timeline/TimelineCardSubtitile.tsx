@@ -3,12 +3,13 @@ import { PropsWithChildren } from 'react';
 export function TimelineCardSubtitile({
   children,
   variant,
-}: PropsWithChildren<{ variant: 'light' | 'dark' }>) {
+  truncate = true,
+}: PropsWithChildren<{ variant: 'light' | 'dark'; truncate?: boolean }>) {
   return (
     <p
-      className={`truncate text-xs font-medium md:text-sm ${
+      className={`text-xs font-medium md:text-sm ${
         variant === 'light' ? 'text-gray-400 ' : 'text-gray-500'
-      }`}
+      } ${truncate ? 'truncate' : ''}`}
     >
       {children}
     </p>

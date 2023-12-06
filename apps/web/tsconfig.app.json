@@ -62,7 +62,8 @@
     "src/components/tutorial/TutorialWelcomeScreen.tsx",
     "src/components/tutorial/TutorialAddConnectionScreen.tsx",
     "src/components/tutorial/TutorialItemWrapper.tsx",
-    "./src/components/tutorial/TutorialContentScreen.tsx"
+    "./src/components/tutorial/TutorialContentScreen.tsx",
+    "./src/pages/PinnedListCard.tsx"
   ],
   "exclude": [
     "jest.config.ts",

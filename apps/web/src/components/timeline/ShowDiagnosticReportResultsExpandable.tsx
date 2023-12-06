@@ -1,7 +1,14 @@
 import { Disclosure } from '@headlessui/react';
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { RxDocument } from 'rxdb';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { Modal } from '../Modal';
@@ -14,6 +21,7 @@ import 'billboard.js/dist/billboard.css';
 import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
 import { TableCellsIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import * as fhirpath from 'fhirpath';
+import { useClinicalDoc } from '../hooks/useClinicalDoc';
 
 /**
  * Generate line for sparkline path
@@ -159,7 +167,7 @@ export function ShowDiagnosticReportResultsExpandable({
                     </div>
                   </div>
                   {docs.map((item) => (
-                    <Row item={item} key={JSON.stringify(item)} />
+                    <ResultRow item={item} key={JSON.stringify(item)} />
                   ))}
                 </div>
               </div>
@@ -177,7 +185,11 @@ export function ShowDiagnosticReportResultsExpandable({
   );
 }
 
-function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
+export function ResultRow({
+  item,
+}: {
+  item: ClinicalDocument<BundleEntry<Observation>>;
+}) {
   const db = useRxDb(),
     user = useUser(),
     loinc = item.metadata?.loinc_coding,
@@ -264,6 +276,24 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
     legend: { hide: true },
   };
 
+  const doc = useClinicalDoc(item?.metadata?.id) as RxDocument<
+    ClinicalDocument<Observation | DiagnosticReport>
+  >;
+
+  const handleTogglePin = useCallback(() => {
+    if (doc) {
+      doc
+        .update({
+          $set: {
+            'metadata.is_pinned': !doc?.metadata?.is_pinned,
+          },
+        })
+        .then(() => {
+          alert('Pinned');
+        });
+    }
+  }, [doc]);
+
   useEffect(() => {
     chartComponent.current?.instance.resize();
   }, [data]);
@@ -322,7 +352,7 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
                     (getValueString(item) && `${getValueString(item)}`)}
                 </div>
                 {/* Graphing button */}
-                <div className="col-span-1 flex flex-col items-end justify-end align-middle">
+                <div className="flex-rows col-span-1 flex items-end justify-end align-middle">
                   {relatedLabs.length > 0 &&
                     getValueQuantity(item) !== undefined && (
                       <Disclosure.Button className="text-primary-900 rounded bg-[#E2F5FA] p-1 duration-75 active:scale-90  active:bg-slate-50">
@@ -366,42 +396,6 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
                                   fill="transparent"
                                   vectorEffect="non-scaling-stroke"
                                 />
-                                {/* <path
-                                  d={
-                                    NormalizePathLine(
-                                      sparklineValues,
-                                      getReferenceRangeLow(sparklineLabs[0])
-                                        ?.value,
-                                      getReferenceRangeHigh(sparklineLabs[0])
-                                        ?.value
-                                    ).maxLine
-                                  }
-                                  strokeWidth="1"
-                                  stroke="gray"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  fill="transparent"
-                                  strokeOpacity={0.5}
-                                  vectorEffect="non-scaling-stroke"
-                                />
-                                <path
-                                  d={
-                                    NormalizePathLine(
-                                      sparklineValues,
-                                      getReferenceRangeLow(sparklineLabs[0])
-                                        ?.value,
-                                      getReferenceRangeHigh(sparklineLabs[0])
-                                        ?.value
-                                    ).minLine
-                                  }
-                                  strokeWidth="1"
-                                  stroke="gray"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  fill="transparent"
-                                  strokeOpacity={0.5}
-                                  vectorEffect="non-scaling-stroke"
-                                /> */}
                               </svg>
                             ) : (
                               <svg
@@ -423,6 +417,44 @@ function Row({ item }: { item: ClinicalDocument<BundleEntry<Observation>> }) {
                         )}
                       </Disclosure.Button>
                     )}
+                  {/* Pin icon button */}
+
+                  <button
+                    className="text-primary-900 rounded  p-1 duration-75 active:scale-90 active:bg-slate-50"
+                    onClick={handleTogglePin}
+                  >
+                    {true ? (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                        className="h-6 w-6"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z"
+                        />
+                      </svg>
+                    ) : (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                        className="h-6 w-6"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M3 3l1.664 1.664M21 21l-1.5-1.5m-5.485-1.242L12 17.25 4.5 21V8.742m.164-4.078a2.15 2.15 0 011.743-1.342 48.507 48.507 0 0111.186 0c1.1.128 1.907 1.077 1.907 2.185V19.5M4.664 4.664L19.5 19.5"
+                        />
+                      </svg>
+                    )}
+                  </button>
                 </div>
                 {/* Comment string (if exists) */}
                 {getComments(item) ? (

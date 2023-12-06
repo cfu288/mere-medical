@@ -43,46 +43,51 @@ export function ImmunizationListCard({
   >(items, getVaccineCode);
 
   return (
-    <Disclosure defaultOpen={true}>
-      {({ open }) => (
-        <>
-          <Disclosure.Button className="w-full font-bold">
-            <div className="flex w-full items-center justify-between py-6 text-xl font-extrabold">
-              Immunizations
-              <ChevronDownIcon
-                className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 ${
-                  open ? 'rotate-180 transform' : ''
-                }`}
-              />
-            </div>
-          </Disclosure.Button>
-          <Disclosure.Panel className="">
-            <CardBase>
-              <div className="min-w-0 flex-1">
-                {[...sortItems.entries()].map(([key, item]) => (
-                  <div className="py-2" key={item?.[0].id}>
-                    <p className="text-sm font-bold text-gray-900 md:text-base">
-                      {item?.[0].metadata?.display_name}
-                    </p>
-                    <ul className="truncate pl-2 text-sm font-medium text-gray-500">
-                      {item.map((x) => (
-                        <li key={x.id}>
-                          {`• ${
-                            x.metadata?.date
-                              ? format(parseISO(x.metadata.date), 'MM/dd/yyyy')
-                              : ''
-                          }
-                    `}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
+    <div className="col-span-6 sm:col-span-3 ">
+      <Disclosure defaultOpen={true}>
+        {({ open }) => (
+          <>
+            <Disclosure.Button className="w-full font-bold">
+              <div className="flex w-full items-center justify-between py-6 text-xl font-extrabold">
+                Immunizations
+                <ChevronDownIcon
+                  className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 ${
+                    open ? 'rotate-180 transform' : ''
+                  }`}
+                />
               </div>
-            </CardBase>
-          </Disclosure.Panel>
-        </>
-      )}
-    </Disclosure>
+            </Disclosure.Button>
+            <Disclosure.Panel className="">
+              <CardBase>
+                <div className="min-w-0 flex-1">
+                  {[...sortItems.entries()].map(([key, item]) => (
+                    <div className="py-2" key={item?.[0].id}>
+                      <p className="text-sm font-bold text-gray-900 md:text-base">
+                        {item?.[0].metadata?.display_name}
+                      </p>
+                      <ul className="truncate pl-2 text-sm font-medium text-gray-500">
+                        {item.map((x) => (
+                          <li key={x.id}>
+                            {`• ${
+                              x.metadata?.date
+                                ? format(
+                                    parseISO(x.metadata.date),
+                                    'MM/dd/yyyy'
+                                  )
+                                : ''
+                            }
+                    `}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              </CardBase>
+            </Disclosure.Panel>
+          </>
+        )}
+      </Disclosure>
+    </div>
   );
 }
