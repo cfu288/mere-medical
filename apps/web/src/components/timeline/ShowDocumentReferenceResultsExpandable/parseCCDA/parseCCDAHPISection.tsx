@@ -8,7 +8,6 @@ export function parseCCDAHPISection(
   id: string[] | string
 ) {
   const matchingSections = getMatchingSections(sections, id);
-
   if (!matchingSections) {
     return null;
   }
@@ -52,34 +51,23 @@ export function parseCCDAHPISection(
         matchingSections?.[0]?.getElementsByTagName('title')?.[0]?.innerHTML ||
         codeDisplayName ||
         '',
-      text: matchingSections?.[0].getElementsByTagName('text')?.[0].innerHTML,
+      text: matchingSections?.[0]?.getElementsByTagName('text')?.[0]?.innerHTML,
       datetime: entry
         ?.getElementsByTagName('effectiveTime')?.[0]
         ?.getAttribute('value'),
-      author:
-        entry
-          .getElementsByTagName('assignedAuthor')?.[0]
-          .getElementsByTagName('assignedPerson')?.[0]
-          .getElementsByTagName('name')?.[0]
-          .getElementsByTagName('given')?.[0].innerHTML +
-        ' ' +
-        entry
-          .getElementsByTagName('assignedAuthor')?.[0]
-          .getElementsByTagName('assignedPerson')?.[0]
-          .getElementsByTagName('name')?.[0]
-          .getElementsByTagName('family')?.[0].innerHTML,
+      author: parseAuthorFromEntry(entry),
       address: {
         streetAddressLine: entry
-          .getElementsByTagName('addr')?.[0]
+          ?.getElementsByTagName('addr')?.[0]
           ?.getElementsByTagName('streetAddressLine')?.[0]?.innerHTML,
         city: entry
-          .getElementsByTagName('addr')?.[0]
+          ?.getElementsByTagName('addr')?.[0]
           ?.getElementsByTagName('city')?.[0]?.innerHTML,
         state: entry
-          .getElementsByTagName('addr')?.[0]
+          ?.getElementsByTagName('addr')?.[0]
           ?.getElementsByTagName('state')?.[0]?.innerHTML,
         postalCode: entry
-          .getElementsByTagName('addr')?.[0]
+          ?.getElementsByTagName('addr')?.[0]
           ?.getElementsByTagName('postalCode')?.[0]?.innerHTML,
       },
     };
@@ -126,6 +114,24 @@ export function parseCCDAHPISection(
         )}
       </Disclosure>
     );
+  }
+  return null;
+}
+function parseAuthorFromEntry(entry: Element): string | null {
+  const firstName = entry
+    ?.getElementsByTagName('assignedAuthor')?.[0]
+    ?.getElementsByTagName('assignedPerson')?.[0]
+    ?.getElementsByTagName('name')?.[0]
+    ?.getElementsByTagName('given')?.[0].innerHTML;
+
+  const lastName = entry
+    ?.getElementsByTagName('assignedAuthor')?.[0]
+    ?.getElementsByTagName('assignedPerson')?.[0]
+    ?.getElementsByTagName('name')?.[0]
+    ?.getElementsByTagName('family')?.[0].innerHTML;
+
+  if (firstName && lastName) {
+    return `${firstName} ${lastName}`;
   }
   return null;
 }
