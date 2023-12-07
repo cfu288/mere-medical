@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Head from '@docusaurus/Head';
 import { Dialog } from '@headlessui/react';
@@ -148,6 +148,37 @@ export function NavigationBar({ absolute = true }: { absolute?: boolean }) {
   );
 }
 
+const Feedback_Messages = [
+  <figure>
+    <blockquote className="mt-6 text-lg font-semibold text-white sm:text-xl sm:leading-8">
+      <p>
+        “My grandma ended up in the hospital and I am using Mere to try to get
+        her records in one place so we can figure out best steps. It has been
+        helpful 🙂
+      </p>
+      <p>I just wanted to thank you for what you have built”</p>
+    </blockquote>
+    <figcaption className="mt-6 text-base text-white">
+      <div className="font-light">Actual feedback from a user</div>
+    </figcaption>
+  </figure>,
+  <figure>
+    <blockquote className="mt-6 text-lg font-semibold text-white sm:text-xl sm:leading-8">
+      <p>
+        “Going back and forth between portals once I changed hospitals was an
+        absolute pain.
+      </p>
+      <p>
+        Mere not only alleviates that with whole view of my medical history, but
+        has a much cleaner user experience.”
+      </p>
+    </blockquote>
+    <figcaption className="mt-6 text-base text-white">
+      <div className="font-light">Actual feedback from a user</div>
+    </figcaption>
+  </figure>,
+];
+
 export default function Home() {
   return (
     <>
@@ -277,29 +308,8 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="bg-white py-12">
-          <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-            <div className="bg-primary-900 relative overflow-hidden px-6 py-10 shadow-xl sm:rounded-3xl sm:px-10 sm:py-12 md:px-12 lg:px-20">
-              <div className="relative mx-auto lg:mx-0">
-                <figure>
-                  <blockquote className="mt-6 text-lg font-semibold text-white sm:text-xl sm:leading-8">
-                    <p>
-                      “My grandma ended up in the hospital and I am using Mere
-                      to try to get her records in one place so we can figure
-                      out best steps. It has been helpful 🙂
-                    </p>
-                    <p>I just wanted to thank you for what you have built”</p>
-                  </blockquote>
-                  <figcaption className="mt-6 text-base text-white">
-                    <div className="font-light">
-                      Actual feedback from a user
-                    </div>
-                  </figcaption>
-                </figure>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Testimonials */}
+        <TestimonialSection />
 
         {/* Problem section */}
         <div className="relative py-12">
@@ -441,6 +451,104 @@ export default function Home() {
         <div className="relative pb-12 sm:pt-12"></div>
       </main>
       <Footer />
+    </>
+  );
+}
+
+function TestimonialSection() {
+  const [feedbackMessage, setMessage] = useState(Feedback_Messages[0]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMessage(
+        Feedback_Messages[Math.floor(Math.random() * Feedback_Messages.length)]
+      );
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <>
+      <div className="bg-white py-12">
+        <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+          <div className="bg-primary-900 relative overflow-hidden px-6 py-10 shadow-xl sm:rounded-3xl sm:px-10 sm:py-12 md:px-12 lg:px-20">
+            <div className="relative mx-auto lg:mx-0">{feedbackMessage}</div>
+            {/* add right and left arrows to scroll through testimonials */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="mx-2 flex w-full items-center justify-between">
+                <button
+                  className="h-10 w-10 rounded-full border-0 bg-transparent text-gray-100 hover:bg-gray-700 hover:text-gray-300"
+                  onClick={() => {
+                    const index = Feedback_Messages.indexOf(feedbackMessage);
+                    if (index === 0) {
+                      setMessage(
+                        Feedback_Messages[Feedback_Messages.length - 1]
+                      );
+                    } else {
+                      setMessage(Feedback_Messages[index - 1]);
+                    }
+                  }}
+                >
+                  <svg
+                    className="h-6 w-6"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M15 19l-7-7 7-7"
+                    />
+                  </svg>
+                </button>
+                <button
+                  className="h-10 w-10 rounded-full border-0 bg-transparent text-gray-100 hover:bg-gray-700 hover:text-gray-300"
+                  onClick={() => {
+                    const index = Feedback_Messages.indexOf(feedbackMessage);
+                    if (index === Feedback_Messages.length - 1) {
+                      setMessage(Feedback_Messages[0]);
+                    } else {
+                      setMessage(Feedback_Messages[index + 1]);
+                    }
+                  }}
+                >
+                  <svg
+                    className="h-6 w-6"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            {/* Use dots icons to show order and current testimonial */}
+            <div className="flex items-center justify-center">
+              {Feedback_Messages.map((_, i) => (
+                <div
+                  key={i}
+                  className={`h-2 w-2 rounded-full ${
+                    feedbackMessage === Feedback_Messages[i]
+                      ? 'bg-gray-200'
+                      : 'bg-gray-500'
+                  } mx-1`}
+                  onClick={() => setMessage(Feedback_Messages[i])}
+                ></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </>
   );
 }
