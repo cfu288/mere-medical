@@ -1,0 +1,174 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="CDA.xsl"?>
+<!--
+
+	Title: US_Realm_Header_Template
+	Original Filename: US_Realm_Header_Template.xml
+	Version: 1.0
+	Revision History:
+	01/31/2011 bam created
+    07/29/2011 RWM modified
+
+-->
+<ClinicalDocument xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="urn:hl7-org:v3 http://xreg2.nist.gov:8080/hitspValidation/schema/cdar2c32/infrastructure/cda/C32_CDA.xsd"
+    xmlns="urn:hl7-org:v3"
+    xmlns:mif="urn:hl7-org:v3/mif">
+    <!--
+
+********************************************************
+
+  CDA Header
+
+********************************************************
+
+	-->
+    <realmCode code="US" />
+    <typeId root="2.16.840.1.113883.1.3" extension="POCD_HD000040" />
+    <!-- US General Header Template -->
+    <templateId root="2.16.840.1.113883.10.20.22.1.1" />
+    <!-- *** Note:  The next templateId, code and title will differ depending on what type of
+    document is being sent. *** -->
+    <!-- conforms to the document specific requirements  -->
+    <templateId root="2.16.840.1.113883.10.20.22.1.2" />
+    <id extension="999021" root="2.16.840.1.113883.19" />
+    <code codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" code="34133-9"
+        displayName="Summarization of Episode Note" />
+    <title>Good Health Health Summary</title>
+    <effectiveTime value="20050329171504+0500" />
+    <confidentialityCode code="N" codeSystem="2.16.840.1.113883.5.25" />
+    <languageCode code="en-US" />
+    <setId extension="111199021" root="2.16.840.1.113883.19" />
+    <versionNumber value="1" />
+    <!-- ********************************************************
+
+     CDA Body
+
+     ******************************************************** -->
+    <component>
+        <structuredBody>
+            <!-- *********************** -->
+            <!--
+
+********************************************************
+
+RESULTS
+
+********************************************************
+
+-->
+
+            <section>
+                <!-- Results Section with Coded Entries Required-->
+                <templateId root="2.16.840.1.113883.10.20.22.2.3.1" />
+                <templateId root="2.16.840.1.113883.10.20.22.2.3.1" extension="2015-08-01" />
+                <code code="30954-2" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC"
+                    displayName="Relevant diagnostic tests and/or laboratory data" />
+                <title>Results</title>
+                <text>
+                    <table border="1">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>Value / Unit</th>
+                                <th>Interpretation</th>
+                                <th>Reference Range</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th colspan="4">SARS coronavirus 2 RNA panel</th>
+                            </tr>
+                            <tr ID="LabResult3">
+                                <td>SARS coronavirus 2 RNA</td>
+                                <td>Detected</td>
+                                <td>Abnormal</td>
+                                <td>Reference (Normal) for this test is not detected</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </text>
+                <entry>
+                    <organizer classCode="BATTERY" moodCode="EVN">
+                        <templateId root="2.16.840.1.113883.10.20.22.4.1" />
+                        <templateId root="2.16.840.1.113883.10.20.22.4.1" extension="2015-08-01" />
+                        <id root="b5684bf0-eb6f-46dd-9f2e-b6cbcc4155fd" />
+                        <!-- There are LOINC panel codes for a COVID as well as a CPT code-->
+                        <!-- Panel codes include: 94306-8, 94503-0, 94504-8, 94531-1 -->
+                        <!-- Please note that these are pre-release LOINC codes and codes may change
+                        over time -->
+                        <code code="94531-1"
+                            displayName="SARS-CoV-2 (COVID-19) RNA panel - Respiratory specimen by NAA with probe detection"
+                            codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" />
+                        <!-- Alternatively CPT codes may be used in the panel as what was ordered -->
+                        <!-- <code code="87635" displayName="Infectious agent detection by nucleic
+                        acid (DNA or
+            RNA); severe acute respiratory syndrome coronavirus 2 (SARS-CoV-2) (Coronavirus disease
+            [COVID-19]), amplified probe technique" codeSystem="2.16.840.1.113883.6.12"
+            codeSystemName="CPT"/> -->
+                        <statusCode code="completed" />
+                        <effectiveTime>
+                            <low value="202003221426-0500" />
+                            <high value="202003221426-0500" />
+                        </effectiveTime>
+                        <component>
+                            <observation classCode="OBS" moodCode="EVN">
+                                <templateId root="2.16.840.1.113883.10.20.22.4.2" />
+                                <templateId root="2.16.840.1.113883.10.20.22.4.2"
+                                    extension="2015-08-01" />
+                                <id root="5a6be91a-32d5-4d24-a8bd-07d10a33414d" />
+                                <!-- This is a LOINC code uses respiratory sample which would
+                                include nasal
+                    pharynx swab. Other codes that could be used in different circumstances include -->
+                                <!-- All potential codes for different sample sites or methods
+                                include: 94306-8,
+                    94307-6, 94308-4, 94309-2, 94310-0, 94311-8, 94312-6, 94313-4, 94314-2, 94315-9,
+                    94316-7,
+                         94499-1, 94500-6, 94501-4, 94502-2, 94503-0, 94504-8, 94505-5, 94506-3, 94507-1, 94508-9, 94509-7,
+                    94510-5, 94511-3, 94531-1, 94532-9, 94533-7, 94534-5, 94547-7 -->
+                                <!-- You can check LOINC code detail by using their open API, such
+                                as
+                    https://loinc.org/94500-6/ -->
+                                <!-- Please note that these are pre-release LOINC codes and codes
+                                may change
+                    over time -->
+                                <code code="94500-6"
+                                    displayName="SARS-CoV-2 (COVID-19) RNA [Presence] in Respiratory specimen by NAA with probe detection"
+                                    codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" />
+                                <text>
+                                    <reference value="#LabResult3" />
+                                </text>
+                                <statusCode code="completed" />
+                                <effectiveTime value="202003221426-0500" />
+                                <!-- Since this is a pre-release code there is not an established
+                                answer list
+                    and this may vary -->
+                                <value xsi:type="CD" code="260373001" codeSystemName="SNOMED-CT"
+                                    displayName="Detected" codeSystem="2.16.840.1.113883.6.96" />
+                                <interpretationCode code="A" codeSystem="2.16.840.1.113883.5.83"
+                                    displayName="Abnormal" />
+                                <referenceRange>
+                                    <observationRange>
+                                        <text>Reference (Normal) for this test is not detected</text>
+                                        <value xsi:type="CD" code="260415000"
+                                            codeSystemName="SNOMED-CT"
+                                            displayName="Not Detected"
+                                            codeSystem="2.16.840.1.113883.6.96" />
+                                        <!-- This interpretation code denotes that this reference
+                                        range is for
+                            normal results. This is not the interpretation a specific patient
+                            value-->
+                                        <interpretationCode code="N"
+                                            codeSystem="2.16.840.1.113883.5.83"
+                                            displayName="Normal" />
+                                    </observationRange>
+                                </referenceRange>
+                            </observation>
+                        </component>
+                    </organizer>
+                </entry>
+            </section>
+
+        </structuredBody>
+    </component>
+</ClinicalDocument>

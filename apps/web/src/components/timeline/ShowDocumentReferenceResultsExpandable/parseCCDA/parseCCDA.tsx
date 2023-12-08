@@ -3,7 +3,10 @@ import {
   CCDAStructureDefinitionKeys2_1,
 } from '../CCDAStructureDefinitionKeys2_1';
 import parse from 'date-fns/parse';
-import { parseCCDAResultsSection } from './parseCCDAResultsSection';
+import {
+  DisplayCCDAResultsSection,
+  parseCCDAResultsSection,
+} from './parseCCDAResultsSection';
 import { parseCCDAVitalsSection } from './parseCCDAVitalsSection';
 import { parseCCDAHPISection } from './parseCCDAHPISection';
 
@@ -24,7 +27,12 @@ export function parseCCDA(
         parsedDoc[k] = parseCCDAVitalsSection(sections, val) as JSX.Element;
         break;
       case 'RESULTS_SECTION':
-        parsedDoc[k] = parseCCDAResultsSection(sections, val) as JSX.Element;
+        const listComponents = parseCCDAResultsSection(sections, val);
+        if (listComponents) {
+          parsedDoc[k] = (
+            <DisplayCCDAResultsSection listComponents={listComponents} />
+          );
+        }
         break;
       case 'HISTORY_OF_PRESENT_ILLNESS_SECTION':
         parsedDoc[k] = parseCCDAHPISection(sections, val) as JSX.Element;

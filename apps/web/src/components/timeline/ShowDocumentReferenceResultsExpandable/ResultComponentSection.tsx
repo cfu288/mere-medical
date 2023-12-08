@@ -1,28 +1,15 @@
 import { Disclosure } from '@headlessui/react';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
 import { parseDateString } from './parseCCDA/parseCCDA';
+import { CCDAResultItem } from './parseCCDA/parseCCDAResultsSection';
 
 export function ResultComponentSection({
   matchingSectionsDisplayName,
-  kp,
+  data,
   uniqueDates,
 }: {
   matchingSectionsDisplayName: string;
-  kp: Record<
-    string,
-    {
-      title: string;
-      value: string | null;
-      unit: string | null;
-      datetime: string | null;
-      datetimeLow: string | null;
-      datetimeHigh: string | null;
-      referenceRangeLow: string | null;
-      referenceRangeHigh: string | null;
-      referenceRangeText: string | null;
-      isOutOfRange?: boolean | '' | null;
-    }
-  >;
+  data: Record<string, CCDAResultItem>;
   uniqueDates: Set<string | null>;
 }) {
   return (
@@ -58,13 +45,15 @@ export function ResultComponentSection({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {Object.values(kp).map((v) => (
+                {Object.values(data).map((v) => (
                   <tr key={v.value + v.title}>
                     <td className="break-word py-1 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
                       {v.title}
                       <p className="col-span-3 self-center text-xs font-light text-gray-600">
                         {v.referenceRangeLow && v.referenceRangeHigh
-                          ? `Range: ${v.referenceRangeLow}${v.unit} - ${v.referenceRangeHigh}${v.unit}`
+                          ? `Range: ${v.referenceRangeLow}${v.unit || ''} - ${
+                              v.referenceRangeHigh
+                            }${v.unit || ''}`
                           : v.referenceRangeText
                           ? `Range: ${v.referenceRangeText}`
                           : ''}

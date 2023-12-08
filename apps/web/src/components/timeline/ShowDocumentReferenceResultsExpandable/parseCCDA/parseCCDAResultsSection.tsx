@@ -17,7 +17,13 @@ export function parseCCDAResultsSection(
   ]?.map((x) =>
     [...x]
       .map((y) => y.getElementsByTagName('code'))
-      ?.map((z) => [...z]?.[0]?.textContent)
+      ?.map((z) => {
+        const firstEl = [...z]?.[0];
+        if (firstEl.getAttribute('displayName')) {
+          return firstEl.getAttribute('displayName');
+        }
+        return firstEl.textContent?.trim();
+      })
   )?.[0];
 
   const sectionComponents = [
@@ -36,21 +42,7 @@ export function parseCCDAResultsSection(
 
   for (const components of sectionComponents) {
     for (const [index, components1] of [...components].entries()) {
-      const kp: Record<
-        string,
-        {
-          title: string;
-          value: string | null;
-          unit: string | null;
-          datetime: string | null;
-          datetimeLow: string | null;
-          datetimeHigh: string | null;
-          referenceRangeLow: string | null;
-          referenceRangeHigh: string | null;
-          referenceRangeText: string | null;
-          isOutOfRange?: boolean | '' | null;
-        }
-      > = {};
+      const data: Record<string, CCDAResultItem> = {};
       for (const component of components1) {
         const codeId = component
           ?.getElementsByTagName('code')[0]
@@ -62,10 +54,12 @@ export function parseCCDAResultsSection(
           component
             ?.getElementsByTagName('code')[0]
             .getAttribute('displayName') ||
-          component?.getElementsByTagName('originalText')?.[0]?.textContent ||
+          component
+            ?.getElementsByTagName('originalText')?.[0]
+            ?.textContent?.trim() ||
           '';
         if (codeSystem === LOINC_CODE_SYSTEM && codeId) {
-          kp[codeId] = {
+          data[codeId] = {
             title: codeDisplayName,
             value:
               component
@@ -74,7 +68,10 @@ export function parseCCDAResultsSection(
               component
                 ?.getElementsByTagName('value')?.[0]
                 ?.getAttribute('displayName') ||
-              component?.getElementsByTagName('value')?.[0]?.textContent,
+              component
+                ?.getElementsByTagName('value')?.[0]
+                ?.textContent?.trim() ||
+              '',
             unit: component
               ?.getElementsByTagName('value')?.[0]
               ?.getAttribute('unit'),
@@ -89,9 +86,17 @@ export function parseCCDAResultsSection(
               ?.getElementsByTagName('effectiveTime')?.[0]
               ?.getElementsByTagName('high')?.[0]
               ?.getAttribute('value'),
-            referenceRangeText: component
-              ?.getElementsByTagName('referenceRange')?.[0]
-              ?.getElementsByTagName('text')?.[0]?.textContent,
+            referenceRangeText:
+              component
+                ?.getElementsByTagName('referenceRange')?.[0]
+                ?.getElementsByTagName('text')?.[0]
+                ?.textContent?.trim() || '',
+            referenceRangeTextItems: [
+              ...(component?.getElementsByTagName('referenceRange') || []),
+            ].map(
+              (x) =>
+                x?.getElementsByTagName('text')?.[0]?.textContent?.trim() || ''
+            ),
             referenceRangeLow: component
               ?.getElementsByTagName('referenceRange')?.[0]
               ?.getElementsByTagName('low')?.[0]
@@ -101,39 +106,70 @@ export function parseCCDAResultsSection(
               ?.getElementsByTagName('high')?.[0]
               ?.getAttribute('value'),
           };
-          kp[codeId] = {
-            ...kp[codeId],
+          data[codeId] = {
+            ...data[codeId],
             isOutOfRange:
-              kp[codeId].value &&
-              kp[codeId].referenceRangeLow &&
-              kp[codeId].referenceRangeHigh &&
-              (parseFloat(kp[codeId].value || '') <
-                parseFloat(kp[codeId].referenceRangeLow || '') ||
-                parseFloat(kp[codeId].value || '') >
-                  parseFloat(kp[codeId].referenceRangeHigh || '')),
+              data[codeId].value &&
+              data[codeId].referenceRangeLow &&
+              data[codeId].referenceRangeHigh &&
+              (parseFloat(data[codeId].value || '') <
+                parseFloat(data[codeId].referenceRangeLow || '') ||
+                parseFloat(data[codeId].value || '') >
+                  parseFloat(data[codeId].referenceRangeHigh || '')),
           };
         }
       }
       const uniqueDates = new Set([
-        ...Object.values(kp).map((v) => v.datetime),
-        ...Object.values(kp).map((v) => v.datetimeLow),
-        ...Object.values(kp).map((v) => v.datetimeHigh),
+        ...Object.values(data)
+          .map((v) => v.datetime)
+          .filter((v) => v !== undefined),
+        ...Object.values(data)
+          .map((v) => v.datetimeLow)
+          .filter((v) => v !== undefined),
+        ...Object.values(data)
+          .map((v) => v.datetimeHigh)
+          .filter((v) => v !== undefined),
       ]);
 
       listComponents.push({
-        title: matchingSectionsDisplayNames[index],
-        kp,
+        title: matchingSectionsDisplayNames[index] || '',
+        data,
         uniqueDates,
       });
     }
   }
 
+  return listComponents;
+}
+export interface CCDAResultItem {
+  title: string;
+  value: string | null;
+  unit: string | null;
+  datetime: string | null;
+  datetimeLow: string | null;
+  datetimeHigh: string | null;
+  referenceRangeLow: string | null;
+  referenceRangeHigh: string | null;
+  referenceRangeText: string | null;
+  referenceRangeTextItems: string[];
+  isOutOfRange?: boolean | '' | null | undefined;
+}
+
+export function DisplayCCDAResultsSection({
+  listComponents,
+}: {
+  listComponents: {
+    title: string | null;
+    data: Record<string, CCDAResultItem>;
+    uniqueDates: Set<string | null>;
+  }[];
+}) {
   return (
     <>
       {listComponents.map((c) => (
         <ResultComponentSection
           matchingSectionsDisplayName={c.title as string}
-          kp={c.kp}
+          data={c.data}
           uniqueDates={c.uniqueDates}
         />
       ))}

@@ -5,6 +5,9 @@ Object.defineProperty(global.self, 'crypto', {
     subtle: crypto.webcrypto.subtle,
   },
 });
+import fs from 'fs';
+import path from 'path';
+import { parseCCDAResultsSection } from './parseCCDAResultsSection';
 /**
  * effectiveTime use in C-CDA Entries
 
@@ -81,5 +84,142 @@ describe('parseDateString', () => {
     const date = parseDateString('20230314161700+0000');
     const expectedLocalDate = new Date(2023, 2, 14, 12, 17, 0).toLocaleString();
     expect(date).toBe(expectedLocalDate);
+  });
+});
+
+describe('parseCCDAResultsSection', () => {
+  it('parses covid result positive section', () => {
+    const parser = new DOMParser();
+    const xmlFileRaw = fs
+      .readFileSync(
+        path.join(__dirname, './exampleCCDA/example_result_covid_positive.xml')
+      )
+      .toString();
+    const xmlDoc = parser.parseFromString(xmlFileRaw, 'text/xml');
+    const sections = xmlDoc.getElementsByTagName('section');
+
+    const results = parseCCDAResultsSection(sections, [
+      '2.16.840.1.113883.10.20.22.2.3',
+      '2.16.840.1.113883.10.20.22.2.3.1',
+    ]);
+
+    expect(results).not.toBeNull();
+    expect(results).toHaveLength(1);
+
+    expect(results?.[0]?.title).toBe(
+      'SARS-CoV-2 (COVID-19) RNA panel - Respiratory specimen by NAA with probe detection'
+    );
+
+    expect(results?.[0]?.uniqueDates.size).toBe(1);
+    expect(results?.[0]?.uniqueDates.has('202003221426-0500')).toBe(true);
+
+    expect(results?.[0]?.data['94500-6'].title).toBe(
+      'SARS-CoV-2 (COVID-19) RNA [Presence] in Respiratory specimen by NAA with probe detection'
+    );
+    expect(results?.[0]?.data['94500-6'].value).toBe('Detected');
+    expect(results?.[0]?.data['94500-6'].unit).toBe(null);
+    expect(results?.[0]?.data['94500-6'].datetime).toBe('202003221426-0500');
+    expect(results?.[0]?.data['94500-6'].referenceRangeText).toBe(
+      'Reference (Normal) for this test is not detected'
+    );
+  });
+  it('parses panel with coded values of negative-positive', () => {
+    const parser = new DOMParser();
+    const xmlFileRaw = fs
+      .readFileSync(
+        path.join(
+          __dirname,
+          './exampleCCDA/example_result_panel_with_coded_values_of_negative_positive.xml'
+        )
+      )
+      .toString();
+    const xmlDoc = parser.parseFromString(xmlFileRaw, 'text/xml');
+    const sections = xmlDoc.getElementsByTagName('section');
+
+    const results = parseCCDAResultsSection(sections, [
+      '2.16.840.1.113883.10.20.22.2.3',
+      '2.16.840.1.113883.10.20.22.2.3.1',
+    ]);
+
+    expect(results).not.toBeNull();
+    expect(results).toHaveLength(1);
+
+    expect(results?.[0]?.title).toBe(
+      'Chlamydia trachomatis and Neisseria gonorrhoeae rRNA panel - Urine by NAA with probe detection'
+    );
+
+    expect(results?.[0]?.uniqueDates.size).toBe(1);
+    expect(results?.[0]?.uniqueDates.has('201310221426-0500')).toBe(true);
+
+    expect(results?.[0]?.data['42931-6'].title).toBe(
+      'Chlamydia trachomatis rRNA [Presence] in Urine by NAA with probe detection'
+    );
+    expect(results?.[0]?.data['42931-6'].value).toBe('Negative');
+    expect(results?.[0]?.data['42931-6'].unit).toBe(null);
+    expect(results?.[0]?.data['42931-6'].datetime).toBe('201310221426-0500');
+    expect(results?.[0]?.data['42931-6'].referenceRangeText).toBe(
+      'A negative value is a normal result'
+    );
+
+    expect(results?.[0]?.data['60256-5'].title).toBe(
+      'Neisseria gonorrhoeae rRNA [Presence] in Urine by NAA with probe detection'
+    );
+    expect(results?.[0]?.data['60256-5'].value).toBe('Positive');
+    expect(results?.[0]?.data['60256-5'].unit).toBe(null);
+    expect(results?.[0]?.data['60256-5'].datetime).toBe('201310221426-0500');
+    expect(results?.[0]?.data['60256-5'].referenceRangeText).toBe(
+      'A negative value is a normal result'
+    );
+  });
+
+  it('parses panel with with multiple reference ranges', () => {
+    const parser = new DOMParser();
+    const xmlFileRaw = fs
+      .readFileSync(
+        path.join(
+          __dirname,
+          './exampleCCDA/example_result_with_multiple_reference_ranges.xml'
+        )
+      )
+      .toString();
+    const xmlDoc = parser.parseFromString(xmlFileRaw, 'text/xml');
+    const sections = xmlDoc.getElementsByTagName('section');
+
+    const results = parseCCDAResultsSection(sections, [
+      '2.16.840.1.113883.10.20.22.2.3',
+      '2.16.840.1.113883.10.20.22.2.3.1',
+    ]);
+
+    expect(results).not.toBeNull();
+    expect(results).toHaveLength(1);
+
+    expect(results?.[0]?.title).toBe(
+      'Nuclear Ab [Titer] in Serum by Immunofluorescence'
+    );
+
+    expect(results?.[0]?.uniqueDates.size).toBe(1);
+    expect(results?.[0]?.uniqueDates.has('201703191230-0800')).toBe(true);
+
+    expect(results?.[0]?.data['5048-4'].title).toBe(
+      'Nuclear Ab [Titer] in Serum by Immunofluorescence'
+    );
+    expect(results?.[0]?.data['5048-4'].value).toBe(
+      'Borderline, equal to 1:80'
+    );
+    expect(results?.[0]?.data['5048-4'].unit).toBe(null);
+    expect(results?.[0]?.data['5048-4'].datetime).toBe('201703191230-0800');
+    expect(results?.[0]?.data['5048-4'].referenceRangeText).toBe(
+      'Negative, less than 1:80'
+    );
+    expect(results?.[0]?.data['5048-4'].referenceRangeTextItems.length).toBe(3);
+    expect(results?.[0]?.data['5048-4'].referenceRangeTextItems).toContain(
+      'Borderline, equal to 1:80'
+    );
+    expect(results?.[0]?.data['5048-4'].referenceRangeTextItems).toContain(
+      'Negative, less than 1:80'
+    );
+    expect(results?.[0]?.data['5048-4'].referenceRangeTextItems).toContain(
+      'Positive, greater than 1:80'
+    );
   });
 });

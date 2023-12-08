@@ -1,0 +1,168 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="CDA.xsl"?>
+<!--
+
+	Title: US_Realm_Header_Template
+	Original Filename: US_Realm_Header_Template.xml
+	Version: 1.0
+	Revision History:
+	01/31/2011 bam created
+    07/29/2011 RWM modified
+
+-->
+<ClinicalDocument xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="urn:hl7-org:v3 http://xreg2.nist.gov:8080/hitspValidation/schema/cdar2c32/infrastructure/cda/C32_CDA.xsd"
+    xmlns="urn:hl7-org:v3"
+    xmlns:mif="urn:hl7-org:v3/mif">
+    <!--
+
+********************************************************
+
+  CDA Header
+
+********************************************************
+
+	-->
+    <realmCode code="US" />
+    <typeId root="2.16.840.1.113883.1.3" extension="POCD_HD000040" />
+    <!-- US General Header Template -->
+    <templateId root="2.16.840.1.113883.10.20.22.1.1" />
+    <!-- *** Note:  The next templateId, code and title will differ depending on what type of
+    document is being sent. *** -->
+    <!-- conforms to the document specific requirements  -->
+    <templateId root="2.16.840.1.113883.10.20.22.1.2" />
+    <id extension="999021" root="2.16.840.1.113883.19" />
+    <code codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" code="34133-9"
+        displayName="Summarization of Episode Note" />
+    <title>Good Health Health Summary</title>
+    <effectiveTime value="20050329171504+0500" />
+    <confidentialityCode code="N" codeSystem="2.16.840.1.113883.5.25" />
+    <languageCode code="en-US" />
+    <setId extension="111199021" root="2.16.840.1.113883.19" />
+    <versionNumber value="1" />
+    <!-- ********************************************************
+
+     CDA Body
+
+     ******************************************************** -->
+    <component>
+        <section>
+            <!-- conforms to Results section with entries optional -->
+            <templateId root="2.16.840.1.113883.10.20.22.2.3" extension="2015-08-01" />
+            <!-- Results section with entries required -->
+            <templateId root="2.16.840.1.113883.10.20.22.2.3.1" extension="2015-08-01" />
+            <code code="30954-2" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC"
+                displayName="Relevant diagnostic tests/laboratory data Narrative" />
+            <title>RESULTS</title>
+            <text>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Test Name</th>
+                            <th>Results</th>
+                            <th>Reference Range</th>
+                            <th>Interpretation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ID="result1">
+                            <td>Antinuclear Antibodies, IFA</td>
+                            <td>Borderline, equal to 1:80</td>
+                            <td>Negative: &lt;1:80 Borderline: 1:80 Positive: &gt;1:80</td>
+                            <td>Abnormal</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </text>
+            <entry typeCode="DRIV">
+                <organizer classCode="BATTERY" moodCode="EVN">
+                    <!-- ** Result organizer (V3) ** -->
+                    <templateId root="2.16.840.1.113883.10.20.22.4.1" extension="2015-08-01" />
+                    <templateId root="2.16.840.1.113883.10.20.22.4.1" />
+                    <id root="7d5a02b0-67a4-11db-bd13-0800200c9a66" />
+                    <code code="5048-4"
+                        displayName="Nuclear Ab [Titer] in Serum by Immunofluorescence"
+                        codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" />
+                    <statusCode code="completed" />
+                    <effectiveTime>
+                        <low value="201703191230-0800" />
+                        <high value="201703191230-0800" />
+                    </effectiveTime>
+                    <component>
+                        <observation classCode="OBS" moodCode="EVN">
+                            <!-- ** Result observation (V3) ** -->
+                            <templateId root="2.16.840.1.113883.10.20.22.4.2" extension="2015-08-01" />
+                            <templateId root="2.16.840.1.113883.10.20.22.4.2" />
+                            <id root="107c2dc0-67a5-11db-bd13-0800200c9a66" />
+                            <code code="5048-4"
+                                displayName="Nuclear Ab [Titer] in Serum by Immunofluorescence"
+                                codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" />
+                            <text>
+                                <reference value="#result1" />
+                            </text>
+                            <statusCode code="completed" />
+                            <effectiveTime value="201703191230-0800" />
+                            <value xsi:type="ST">
+                                Borderline, equal to 1:80
+                            </value>
+                            <!-- Borderline is considered abnormal -->
+                            <interpretationCode code="A" displayName="Abnormal"
+                                codeSystem="2.16.840.1.113883.5.83" />
+                            <author typeCode="AUT">
+                                <templateId root="2.16.840.1.113883.10.20.22.4.119" />
+                                <time value="201703191230-0800" />
+                                <assignedAuthor>
+                                    <id extension="333444444" root="2.16.840.1.113883.4.6" />
+                                    <code code="246Q00000X"
+                                        displayName="&quot;Technologists, Technicians &amp; Other Technical Service Providers&quot;; &quot;Specialist/Technologist, Pathology&quot;"
+                                        codeSystem="2.16.840.1.113883.6.101"
+                                        codeSystemName="Healthcare Provider Taxonomy (HIPAA)" />
+                                </assignedAuthor>
+                            </author>
+                            <!-- Example showing multiple referenceRanges-->
+                            <referenceRange>
+                                <observationRange>
+                                    <!--  Negative being less than 1:80) as indicated in the text tag
+                                    ** -->
+                                    <text>Negative, less than 1:80</text>
+                                    <value xsi:type="ST">
+                                        less than 1:80
+                                    </value>
+                                    <!-- Note that the interprentationCode is Normal -->
+                                    <interpretationCode code="N" displayName="Normal"
+                                        codeSystem="2.16.840.1.113883.5.83" />
+                                </observationRange>
+                            </referenceRange>
+                            <referenceRange>
+                                <observationRange>
+                                    <!-- Represents a Borderline being exactly 1:80 ** as indicated
+                                    in the text tag -->
+                                    <text>Borderline, equal to 1:80</text>
+                                    <value xsi:type="ST">
+                                        equal to 1:80
+                                    </value>
+                                    <!-- Note that Borderline is considered Abnormal -->
+                                    <interpretationCode code="A" displayName="Abnormal"
+                                        codeSystem="2.16.840.1.113883.5.83" />
+                                </observationRange>
+                            </referenceRange>
+                            <referenceRange>
+                                <observationRange>
+                                    <!-- Represents a Positive being greater than 1:80)as indicated
+                                    in the text tag ** -->
+                                    <text>Positive, greater than 1:80</text>
+                                    <value xsi:type="ST">
+                                        greater than 1:80
+                                    </value>
+                                    <!-- Note that the interprentationCode is Abnormal -->
+                                    <interpretationCode code="A" displayName="Abnormal"
+                                        codeSystem="2.16.840.1.113883.5.83" />
+                                </observationRange>
+                            </referenceRange>
+                        </observation>
+                    </component>
+                </organizer>
+            </entry>
+        </section>
+    </component>
+</ClinicalDocument>
