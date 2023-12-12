@@ -11,17 +11,6 @@ export function parseCCDAVitalsSection(
     return null;
   }
 
-  const matchingSectionsDisplayNames = [
-    ...matchingSections.map((x) => x.getElementsByTagName('entry')),
-  ]?.map((x) =>
-    [...x]
-      .map((y) => y.getElementsByTagName('code'))
-      ?.map(
-        (z) =>
-          [...z]?.[0]?.getAttribute('displayName') || [...z]?.[0]?.textContent
-      )
-  )?.[0];
-
   const sectionComponents = [
     ...(matchingSections as unknown as HTMLElement[]),
   ]?.map((e) =>
@@ -55,6 +44,7 @@ export function parseCCDAVitalsSection(
       const codeDisplayName = component
         ?.getElementsByTagName('code')[0]
         .getAttribute('displayName');
+
       if (codeSystem === LOINC_CODE_SYSTEM && codeId) {
         extractedVital[codeId] = {
           title:
@@ -122,7 +112,7 @@ export function parseCCDAVitalsSection(
         {[...uniqueDates]
           .filter((d): d is string => Boolean(d))
           .map(parseDateString)
-          .join(' ,')}
+          .join('; ')}
       </p>
     </>
   );

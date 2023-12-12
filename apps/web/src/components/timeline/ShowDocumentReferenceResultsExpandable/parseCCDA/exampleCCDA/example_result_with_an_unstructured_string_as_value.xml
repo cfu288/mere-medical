@@ -1,0 +1,137 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="CDA.xsl"?>
+<!--
+
+	Title: US_Realm_Header_Template
+	Original Filename: US_Realm_Header_Template.xml
+	Version: 1.0
+	Revision History:
+	01/31/2011 bam created
+    07/29/2011 RWM modified
+
+-->
+<ClinicalDocument xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="urn:hl7-org:v3 http://xreg2.nist.gov:8080/hitspValidation/schema/cdar2c32/infrastructure/cda/C32_CDA.xsd"
+    xmlns="urn:hl7-org:v3"
+    xmlns:mif="urn:hl7-org:v3/mif">
+    <!--
+
+********************************************************
+
+
+  CDA Header
+
+********************************************************
+
+	-->
+    <realmCode code="US" />
+    <typeId root="2.16.840.1.113883.1.3" extension="POCD_HD000040" />
+    <!-- US General Header Template -->
+    <templateId root="2.16.840.1.113883.10.20.22.1.1" />
+    <!-- *** Note:  The next templateId, code and title will differ depending on what type of
+    document is being sent. *** -->
+    <!-- conforms to the document specific requirements  -->
+    <templateId root="2.16.840.1.113883.10.20.22.1.2" />
+    <id extension="999021" root="2.16.840.1.113883.19" />
+    <code codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" code="34133-9"
+        displayName="Summarization of Episode Note" />
+    <title>Good Health Health Summary</title>
+    <effectiveTime value="20050329171504+0500" />
+    <confidentialityCode code="N" codeSystem="2.16.840.1.113883.5.25" />
+    <languageCode code="en-US" />
+    <setId extension="111199021" root="2.16.840.1.113883.19" />
+    <versionNumber value="1" />
+    <!-- ********************************************************
+
+     CDA Body
+
+     ******************************************************** -->
+    <component>
+        <structuredBody>
+            <!-- *********************** -->
+            <!--
+
+********************************************************
+
+RESULTS
+
+********************************************************
+
+-->
+
+            <section>
+                <templateId root="2.16.840.1.113883.10.20.22.2.3.1" />
+                <templateId root="2.16.840.1.113883.10.20.22.2.3.1" extension="2015-08-01" />
+                <!-- Results Section with Coded Entries Required-->
+                <code code="30954-2" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC"
+                    displayName="Relevant diagnostic tests and/or laboratory data" />
+                <title>Results</title>
+                <text>
+                    <table border="1">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>Value / Unit</th>
+                                <th>Interpretation</th>
+                                <th>Reference Range</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th colspan="4">Lab Results For HL7 Example Task Force</th>
+                            </tr>
+                            <tr>
+                                <th colspan="4">Urine Color at 10-23-2013 9:10a</th>
+                            </tr>
+                            <tr ID="Result1">
+                                <td>Urine Color</td>
+                                <td>Amber</td>
+                                <td>Normal</td>
+                                <td>None provided</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </text>
+                <entry>
+                    <!-- A complete urinanalysis would return multiple components, but only the
+                    urine color example is shown below to demonstrate a string result-->
+                    <organizer classCode="BATTERY" moodCode="EVN">
+                        <templateId root="2.16.840.1.113883.10.20.22.4.1" />
+                        <templateId root="2.16.840.1.113883.10.20.22.4.1" extension="2015-08-01" />
+                        <id root="f1aa44dd-6f39-4f5c-b267-897c3824b563" />
+                        <code code="24356-8" displayName="Urinalysis complete pnl Ur"
+                            codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" />
+                        <statusCode code="completed" />
+                        <effectiveTime>
+                            <low value="201310230910-0500" />
+                            <high value="201310230910-0500" />
+                        </effectiveTime>
+                        <component>
+                            <observation classCode="OBS" moodCode="EVN">
+                                <templateId root="2.16.840.1.113883.10.20.22.4.2" />
+                                <templateId root="2.16.840.1.113883.10.20.22.4.2"
+                                    extension="2015-08-01" />
+                                <id root="f1aa44dd-6f39-4f5c-b267-897c3824b563" />
+                                <code code="5778-6" displayName="Color of Urine"
+                                    codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" />
+                                <text>
+                                    <reference value="#Result1" />
+                                </text>
+                                <statusCode code="completed" />
+                                <effectiveTime value="20131023090823-0500" />
+                                <!-- Representing a result returned as unstructured string-->
+                                <!-- There may be a code for this and other colors, but this would
+                                be practice when the code is not provided or unkonwn-->
+                                <value xsi:type="ST">Amber</value>
+                                <interpretationCode code="N" codeSystem="2.16.840.1.113883.5.83"
+                                    displayName="Normal" />
+                            </observation>
+                        </component>
+                        <!-- A complete urinanalysis would return multiple components, but only the
+                        urine color example is shown above-->
+                    </organizer>
+                </entry>
+            </section>
+        </structuredBody>
+    </component>
+</ClinicalDocument>

@@ -76,7 +76,7 @@ export function ResultComponentSection({
                 `Results taken at ${[...uniqueDates]
                   .filter((d): d is string => Boolean(d))
                   .map(parseDateString)
-                  .join(' ,')}`}
+                  .join('; ')}`}
             </p>
           </Disclosure.Panel>
         </>

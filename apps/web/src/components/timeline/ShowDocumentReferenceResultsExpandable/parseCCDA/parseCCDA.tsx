@@ -1,3 +1,4 @@
+/* eslint-disable no-case-declarations */
 import {
   CCDAStructureDefinition2_1,
   CCDAStructureDefinitionKeys2_1,
@@ -9,6 +10,10 @@ import {
 } from './parseCCDAResultsSection';
 import { parseCCDAVitalsSection } from './parseCCDAVitalsSection';
 import { parseCCDAHPISection } from './parseCCDAHPISection';
+import {
+  DisplayCCDASocialHistorySection,
+  parseCCDASocialHistorySection,
+} from './parseCCDASocialHistorySection';
 
 export function parseCCDA(
   raw: string
@@ -36,6 +41,18 @@ export function parseCCDA(
         break;
       case 'HISTORY_OF_PRESENT_ILLNESS_SECTION':
         parsedDoc[k] = parseCCDAHPISection(sections, val) as JSX.Element;
+        break;
+      case 'SOCIAL_HISTORY_SECTION':
+        const a = parseCCDASocialHistorySection(sections, val);
+        console.log(a);
+        if (a) {
+          parsedDoc[k] = (
+            <DisplayCCDASocialHistorySection
+              data={a.data}
+              uniqueDates={a.uniqueDates}
+            />
+          );
+        }
         break;
       default:
         parsedDoc[k] = parseCCDASection(sections, val);

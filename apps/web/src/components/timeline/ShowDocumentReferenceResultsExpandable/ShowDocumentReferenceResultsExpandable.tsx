@@ -10,6 +10,7 @@ import { DisplayCCDADocument } from './DisplayCCDADocument';
 import { parseCCDA } from './parseCCDA/parseCCDA';
 
 export const LOINC_CODE_SYSTEM = '2.16.840.1.113883.6.1';
+export const SNOMED_CT_CODE_SYSTEM = '2.16.840.1.113883.6.96';
 
 function checkIfXmlIsCCDA(xml: string): boolean {
   try {

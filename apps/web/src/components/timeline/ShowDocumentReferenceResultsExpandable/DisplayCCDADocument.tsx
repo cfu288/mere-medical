@@ -103,9 +103,9 @@ export function DisplayCCDADocument({
         />
       )}
       {ccda?.SOCIAL_HISTORY_SECTION && (
-        <DisplayCCDARawSection
+        <DisplayCCDAElementSection
           title="Social History"
-          content={(ccda.SOCIAL_HISTORY_SECTION as string) || ''}
+          content={(ccda.SOCIAL_HISTORY_SECTION as JSX.Element) || ''}
         />
       )}
       {ccda?.HEALTH_CONCERNS_SECTION && (

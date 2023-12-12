@@ -1,0 +1,172 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="CDA.xsl"?>
+<!--
+
+	Title: US_Realm_Header_Template
+	Original Filename: US_Realm_Header_Template.xml
+	Version: 1.0
+	Revision History:
+	01/31/2011 bam created
+    07/29/2011 RWM modified
+
+-->
+<ClinicalDocument xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="urn:hl7-org:v3 http://xreg2.nist.gov:8080/hitspValidation/schema/cdar2c32/infrastructure/cda/C32_CDA.xsd"
+    xmlns="urn:hl7-org:v3"
+    xmlns:mif="urn:hl7-org:v3/mif">
+    <!--
+
+********************************************************
+
+
+  CDA Header
+
+********************************************************
+
+	-->
+    <realmCode code="US" />
+    <typeId root="2.16.840.1.113883.1.3" extension="POCD_HD000040" />
+    <!-- US General Header Template -->
+    <templateId root="2.16.840.1.113883.10.20.22.1.1" />
+    <!-- *** Note:  The next templateId, code and title will differ depending on what type of
+    document is being sent. *** -->
+    <!-- conforms to the document specific requirements  -->
+    <templateId root="2.16.840.1.113883.10.20.22.1.2" />
+    <id extension="999021" root="2.16.840.1.113883.19" />
+    <code codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" code="34133-9"
+        displayName="Summarization of Episode Note" />
+    <title>Good Health Health Summary</title>
+    <effectiveTime value="20050329171504+0500" />
+    <confidentialityCode code="N" codeSystem="2.16.840.1.113883.5.25" />
+    <languageCode code="en-US" />
+    <setId extension="111199021" root="2.16.840.1.113883.19" />
+    <versionNumber value="1" />
+    <!-- ********************************************************
+
+     CDA Body
+
+     ******************************************************** -->
+    <component>
+        <structuredBody>
+            <!-- *********************** -->
+            <!--
+
+********************************************************
+
+RESULTS
+
+********************************************************
+
+-->
+
+            <section>
+                <templateId root="2.16.840.1.113883.10.20.22.2.3.1" />
+                <templateId root="2.16.840.1.113883.10.20.22.2.3.1" extension="2015-08-01" />
+                <!-- Results Section with Coded Entries Required-->
+                <code code="30954-2" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC"
+                    displayName="Relevant diagnostic tests and/or laboratory data" />
+                <title>Results</title>
+                <text>
+                    <table border="1">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>Value / Unit</th>
+                                <th>Interpretation</th>
+                                <th>Reference Range</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th colspan="4">Chest X-RAY 2 views</th>
+                            </tr>
+                            <tr>
+                                <th colspan="4">Performed on 02-25-2015 9:10a</th>
+                            </tr>
+                            <tr ID="Result1">
+                                <td>Chest X-Ray 2 Views</td>
+                                <td ID="Result1OriginalText">
+                                    The lungs are clear. The heart is enlarged with evidence of
+                                    cardiomegaly.
+                                    Pulmonary vasculature is normal. The aorta is mildly ectatic and
+                                    tortuous.
+                                    IMPRESSION: Cardiomegaly. No other acute abnormality.
+                                </td>
+                                <td />
+                                <td />
+                            </tr>
+                            <tr>
+                                <th colspan="4">Electronically signed: Hermione Seaven, MD
+                                    02-25-2015 10:32a</th>
+                            </tr>
+                        </tbody>
+                    </table>
+                </text>
+                <entry>
+                    <organizer classCode="CLUSTER" moodCode="EVN">
+                        <!-- Selected CLUSTER since not a set of tests -->
+                        <templateId root="2.16.840.1.113883.10.20.22.4.1" />
+                        <templateId root="2.16.840.1.113883.10.20.22.4.1" extension="2015-08-01" />
+                        <!-- Results Organizer -->
+                        <id root="e1aa44dd-6f39-4f5c-b267-897c3821b563" />
+                        <code code="71020" displayName="Chest X-Ray 2 Views"
+                            codeSystem="2.16.840.1.113883.6.12" codeSystemName="CPT" />
+                        <statusCode code="completed" />
+                        <!-- an organizer/effectiveTime value="20150225091059-0500" could be used
+                        but is not required -->
+                        <component>
+                            <observation classCode="OBS" moodCode="EVN">
+                                <templateId root="2.16.840.1.113883.10.20.22.4.2" />
+                                <templateId root="2.16.840.1.113883.10.20.22.4.2"
+                                    extension="2015-08-01" />
+                                <!-- Results Observation -->
+                                <id root="e1aa44dd-6f39-2f5c-b267-897c3824b563" />
+                                <code code="36643-5" displayName="XR Chest 2 Views"
+                                    codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC">
+                                    <!-- a translation code may be helpful and used by some EHRs to
+                                    denote that this is a textual response of result impression -->
+                                </code>
+                                <text>
+                                    <reference value="#Result1" />
+                                </text>
+                                <statusCode code="completed" />
+                                <!-- This is the timestamp of biologically relevance (i.e. when
+                                chest x-ray was performed), aligning with HL7 v3 modeling. -->
+                                <effectiveTime value="20150225091059-0500" />
+                                <value xsi:type="ED">
+                                    <reference value="#Result1OriginalText" />
+                                </value>
+                                <author>
+                                    <!-- This is the timestamp of when the author (i.e. the
+                                    radiologist) interepreted the chest x-ray-->
+                                    <time value="20150225103206-0500" />
+                                    <assignedAuthor>
+                                        <id extension="66666" root="2.16.840.1.113883.4.6" />
+                                        <code code="111NR0200X" codeSystem="2.16.840.1.113883.6.101"
+                                            codeSystemName="NUCC"
+                                            displayName="Chiropractic Providers; Chiropractor, Radiology" />
+                                        <addr>
+                                            <streetAddressLine>6666 StreetName St.</streetAddressLine>
+                                            <city>Silver Spring</city>
+                                            <state>MD</state>
+                                            <postalCode>20901</postalCode>
+                                            <country>US</country>
+                                        </addr>
+                                        <telecom value="tel:+1(301)666-6666" use="WP" />
+                                        <assignedPerson>
+                                            <name>
+                                                <given>Hermione</given>
+                                                <family>Seaven</family>
+                                                <suffix>MD</suffix>
+                                            </name>
+                                        </assignedPerson>
+                                    </assignedAuthor>
+                                </author>
+                            </observation>
+                        </component>
+                    </organizer>
+                </entry>
+            </section>
+        </structuredBody>
+    </component>
+</ClinicalDocument>

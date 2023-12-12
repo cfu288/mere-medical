@@ -63,7 +63,8 @@
     "src/components/tutorial/TutorialAddConnectionScreen.tsx",
     "src/components/tutorial/TutorialItemWrapper.tsx",
     "./src/components/tutorial/TutorialContentScreen.tsx",
-    "./src/pages/PinnedListCard.tsx"
+    "./src/pages/PinnedListCard.tsx",
+    "./src/components/timeline/ShowDocumentReferenceResultsExpandable/parseCCDA/parseCCDASocialHistorySection.1.tsx"
   ],
   "exclude": [
     "jest.config.ts",

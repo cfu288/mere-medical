@@ -1,0 +1,587 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="CDA.xsl"?>
+<!--
+
+	Title: US_Realm_Header_Template
+	Original Filename: US_Realm_Header_Template.xml
+	Version: 1.0
+	Revision History:
+	01/31/2011 bam created
+    07/29/2011 RWM modified
+
+-->
+<ClinicalDocument xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="urn:hl7-org:v3 http://xreg2.nist.gov:8080/hitspValidation/schema/cdar2c32/infrastructure/cda/C32_CDA.xsd"
+    xmlns="urn:hl7-org:v3"
+    xmlns:mif="urn:hl7-org:v3/mif">
+    <!--
+
+********************************************************
+
+  CDA Header
+
+********************************************************
+
+	-->
+    <realmCode code="US" />
+    <typeId root="2.16.840.1.113883.1.3" extension="POCD_HD000040" />
+    <!-- US General Header Template -->
+    <templateId root="2.16.840.1.113883.10.20.22.1.1" />
+    <!-- *** Note:  The next templateId, code and title will differ depending on what type of
+    document is being sent. *** -->
+    <!-- conforms to the document specific requirements  -->
+    <templateId root="2.16.840.1.113883.10.20.22.1.2" />
+    <id extension="999021" root="2.16.840.1.113883.19" />
+    <code codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" code="34133-9"
+        displayName="Summarization of Episode Note" />
+    <title>Good Health Health Summary</title>
+    <effectiveTime value="20050329171504+0500" />
+    <confidentialityCode code="N" codeSystem="2.16.840.1.113883.5.25" />
+    <languageCode code="en-US" />
+    <setId extension="111199021" root="2.16.840.1.113883.19" />
+    <versionNumber value="1" />
+    <!-- ********************************************************
+
+     CDA Body
+
+     ******************************************************** -->
+    <component>
+        <structuredBody>
+            <!-- *********************** -->
+            <!--
+
+********************************************************
+
+SOCIAL HISTORY
+
+********************************************************
+
+-->
+            <section>
+
+                <templateId xmlns="urn:hl7-org:v3" root="2.16.840.1.113883.10.20.22.2.17" />
+                <templateId xmlns="urn:hl7-org:v3" root="2.16.840.1.113883.10.20.22.2.17"
+                    extension="2015-08-01" />
+                <code xmlns="urn:hl7-org:v3" code="29762-2" codeSystem="2.16.840.1.113883.6.1"
+                    codeSystemName="LOINC" displayName="Social history Narrative" />
+                <title xmlns="urn:hl7-org:v3">Social History</title>
+                <text xmlns="urn:hl7-org:v3">
+                    <table ID="soanont17">
+                        <colgroup>
+                            <col width="25%" span="2" />
+                            <col width="13%" />
+                            <col width="12%" />
+                            <col width="25%" />
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>Tobacco Use</th>
+                                <th>Types</th>
+                                <th>Packs/Day</th>
+                                <th>Years Used</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Smoking Tobacco: Never</td>
+                                <td />
+                                <td ID="soanont17packsperday" />
+                                <td />
+                                <td />
+                            </tr>
+                            <tr styleCode="xRowAlt">
+                                <td>Passive Smoke Exposure: Never</td>
+                                <td />
+                                <td />
+                                <td />
+                                <td />
+                            </tr>
+                            <tr ID="soanont17smokeless" styleCode="xRowNormal">
+                                <td>Smokeless Tobacco: Never</td>
+                                <td />
+                                <td />
+                                <td />
+                                <td />
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table>
+                        <colgroup>
+                            <col width="25%" />
+                            <col width="75%" />
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>Alcohol Use</th>
+                                <th>Standard Drinks/Week</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td ID="alcoholStatus">Yes</td>
+                                <td>0 (1 standard drink = 0.6 oz pure alcohol)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table ID="sdohassess2">
+                        <colgroup>
+                            <col width="50%" />
+                            <col width="25%" span="2" />
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>PHQ-2</th>
+                                <th>Answer</th>
+                                <th>Date Recorded</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ID="sdohassess2pair1">
+                                <td ID="sdohassess2pair1ques">Total Score</td>
+                                <td ID="sdohassess2pair1ans">0</td>
+                                <td>03/14/2023</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table>
+                        <colgroup>
+                            <col width="50%" />
+                            <col width="25%" span="2" />
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>Sex and Gender Information</th>
+                                <th>Value</th>
+                                <th>Date Recorded</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ID="BirthSex20">
+                                <td>Sex Assigned at Birth</td>
+                                <td ID="BirthSex20Value">Not on file</td>
+                                <td />
+                            </tr>
+                            <tr ID="GenderIdentity18">
+                                <td>Gender Identity</td>
+                                <td ID="GenderIdentity18Value">Not on file</td>
+                                <td />
+                            </tr>
+                            <tr ID="SexualOrientation19">
+                                <td>Sexual Orientation</td>
+                                <td ID="SexualOrientation19Value">Not on file</td>
+                                <td />
+                            </tr>
+                        </tbody>
+                    </table>
+                    <footnote ID="subTitle16" styleCode="xSectionSubTitle">documented as of this
+                        encounter</footnote>
+                </text>
+                <entry xmlns="urn:hl7-org:v3">
+                    <observation classCode="OBS" moodCode="EVN">
+                        <templateId root="2.16.840.1.113883.10.20.22.4.78" />
+                        <templateId root="2.16.840.1.113883.10.20.22.4.78" extension="2014-06-09" />
+                        <id root="1.2.840.114350.1.13.225.2.7.1.1040.1"
+                            extension="Z7255907^^72166-2" />
+                        <code code="72166-2" codeSystem="2.16.840.1.113883.6.1"
+                            codeSystemName="LOINC"
+                            displayName="Tobacco smoking status NHIS" />
+                        <text>
+                            <reference value="#soanont17" />
+                        </text>
+                        <statusCode code="completed" />
+                        <effectiveTime value="20220830" />
+                        <value xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="CD"
+                            code="266919005"
+                            codeSystem="2.16.840.1.113883.6.96" codeSystemName="SNOMED CT"
+                            displayName="Never smoked tobacco" />
+                        <author>
+                            <templateId root="2.16.840.1.113883.10.20.22.4.119" />
+                            <templateId root="2.16.840.1.113883.10.20.22.5.6" extension="2019-10-01" />
+                            <time value="20220830" />
+                            <assignedAuthor>
+                                <id root="1.2.840.114350.1.13.225.2.7.1.1133" extension="101014668" />
+                                <id root="1.2.840.114350.1.13.225.2.7.2.836982" extension="R200143" />
+                                <id root="2.16.840.1.113883.4.6" nullFlavor="UNK" />
+                            </assignedAuthor>
+                        </author>
+                        <author>
+                            <templateId root="2.16.840.1.113883.10.20.22.4.119" />
+                            <templateId root="2.16.840.1.113883.10.20.22.5.6" extension="2019-10-01" />
+                            <time value="20230316" />
+                            <assignedAuthor>
+                                <id root="1.2.840.114350.1.13.225.2.7.1.1133" extension="186250450" />
+                                <id root="2.16.840.1.113883.4.6" extension="1013364769" />
+                            </assignedAuthor>
+                        </author>
+                    </observation>
+                </entry>
+                <entry xmlns="urn:hl7-org:v3">
+                    <observation classCode="OBS" moodCode="EVN" negationInd="true">
+                        <templateId root="2.16.840.1.113883.10.20.22.4.85" />
+                        <templateId root="2.16.840.1.113883.10.20.22.4.85" extension="2014-06-09" />
+                        <id root="1.2.840.114350.1.13.225.2.7.1.1040.2"
+                            extension="Z7255907^^43381005" />
+                        <code code="11367-0" codeSystem="2.16.840.1.113883.6.1"
+                            codeSystemName="LOINC"
+                            displayName="History of tobacco use" />
+                        <text>
+                            <reference value="#soanont17" />
+                        </text>
+                        <statusCode code="completed" />
+                        <effectiveTime>
+                            <low nullFlavor="NINF" />
+                            <high nullFlavor="NA" />
+                        </effectiveTime>
+                        <value xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="CD"
+                            code="43381005"
+                            codeSystem="2.16.840.1.113883.6.96" codeSystemName="SNOMED CT"
+                            displayName="Passive smoker" />
+                        <author>
+                            <templateId root="2.16.840.1.113883.10.20.22.4.119" />
+                            <templateId root="2.16.840.1.113883.10.20.22.5.6" extension="2019-10-01" />
+                            <time value="20220830" />
+                            <assignedAuthor>
+                                <id root="1.2.840.114350.1.13.225.2.7.1.1133" extension="101014668" />
+                                <id root="1.2.840.114350.1.13.225.2.7.2.836982" extension="R200143" />
+                                <id root="2.16.840.1.113883.4.6" nullFlavor="UNK" />
+                            </assignedAuthor>
+                        </author>
+                    </observation>
+                </entry>
+                <entry xmlns="urn:hl7-org:v3">
+                    <observation classCode="OBS" moodCode="EVN">
+                        <templateId root="2.16.840.1.113883.10.20.22.4.38" />
+                        <templateId root="2.16.840.1.113883.10.20.22.4.38" extension="2015-08-01" />
+                        <id root="1.2.840.114350.1.13.225.2.7.1.1040.8"
+                            extension="Z7255907^^713914004" />
+                        <code code="229819007" codeSystem="2.16.840.1.113883.6.96"
+                            codeSystemName="SNOMED-CT"
+                            displayName="Tobacco use and exposure">
+                            <translation code="88031-0" codeSystem="2.16.840.1.113883.6.1"
+                                codeSystemName="LOINC"
+                                displayName="Smokeless tobacco status" />
+                        </code>
+                        <text>
+                            <reference value="#soanont17smokeless" />
+                        </text>
+                        <statusCode code="completed" />
+                        <effectiveTime value="20220830" />
+                        <value xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="CD"
+                            code="451381000124107" codeSystem="2.16.840.1.113883.6.96"
+                            codeSystemName="SNOMED CT"
+                            displayName="Smokeless tobacco non-user" />
+                        <author>
+                            <templateId root="2.16.840.1.113883.10.20.22.4.119" />
+                            <templateId root="2.16.840.1.113883.10.20.22.5.6" extension="2019-10-01" />
+                            <time value="20220830" />
+                            <assignedAuthor>
+                                <id root="1.2.840.114350.1.13.225.2.7.1.1133" extension="101014668" />
+                                <id root="1.2.840.114350.1.13.225.2.7.2.836982" extension="R200143" />
+                                <id root="2.16.840.1.113883.4.6" nullFlavor="UNK" />
+                            </assignedAuthor>
+                        </author>
+                        <author>
+                            <templateId root="2.16.840.1.113883.10.20.22.4.119" />
+                            <templateId root="2.16.840.1.113883.10.20.22.5.6" extension="2019-10-01" />
+                            <time value="20230316" />
+                            <assignedAuthor>
+                                <id root="1.2.840.114350.1.13.225.2.7.1.1133" extension="186250450" />
+                                <id root="2.16.840.1.113883.4.6" extension="1013364769" />
+                            </assignedAuthor>
+                        </author>
+                    </observation>
+                </entry>
+                <entry xmlns="urn:hl7-org:v3">
+                    <observation classCode="OBS" moodCode="EVN">
+                        <templateId root="2.16.840.1.113883.10.20.22.4.38" />
+                        <templateId root="2.16.840.1.113883.10.20.22.4.38" extension="2015-08-01" />
+                        <id root="1.2.840.114350.1.13.225.2.7.1.1040.12"
+                            extension="Z7255907^54982^160573003" />
+                        <code code="160573003" codeSystem="2.16.840.1.113883.6.96"
+                            codeSystemName="SNOMED CT"
+                            displayName="Alcohol intake">
+                            <translation code="11331-6" codeSystem="2.16.840.1.113883.6.1"
+                                codeSystemName="LOINC"
+                                displayName="History of Alcohol Use" />
+                        </code>
+                        <statusCode code="completed" />
+                        <effectiveTime value="20230316" />
+                        <value xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="CD"
+                            code="219006"
+                            codeSystem="2.16.840.1.113883.6.96" codeSystemName="SNOMED CT"
+                            displayName="Current drinker of alcohol (finding)">
+                            <originalText>
+                                <reference value="#alcoholStatus" />
+                            </originalText>
+                        </value>
+                    </observation>
+                </entry>
+                <entry xmlns="urn:hl7-org:v3">
+                    <observation classCode="OBS" moodCode="EVN">
+                        <templateId root="2.16.840.1.113883.10.20.22.4.38" />
+                        <templateId root="2.16.840.1.113883.10.20.22.4.38" extension="2015-08-01" />
+                        <templateId root="2.16.840.1.113883.10.20.22.4.38" extension="2022-06-01" />
+                        <id root="1.2.840.114350.1.13.225.2.7.1.1040.21"
+                            extension="5751643123-97003-Z7255907" />
+                        <code code="8689-2" codeSystem="2.16.840.1.113883.6.1"
+                            codeSystemName="LOINC"
+                            displayName="History of Social function" />
+                        <statusCode code="completed" />
+                        <effectiveTime value="20230316" />
+                        <entryRelationship typeCode="SPRT">
+                            <observation classCode="OBS" moodCode="EVN">
+                                <templateId root="2.16.840.1.113883.10.20.22.4.69" />
+                                <templateId root="2.16.840.1.113883.10.20.22.4.69"
+                                    extension="2022-06-01" />
+                                <id root="1.2.840.114350.1.13.225.2.7.1.83687972"
+                                    extension="5751643123-97003-Z7255907" />
+                                <code code="88028-6" codeSystem="2.16.840.1.113883.6.1"
+                                    codeSystemName="LOINC"
+                                    displayName="Tobacco use panel">
+                                    <originalText>Patient History</originalText>
+                                </code>
+                                <text>
+                                    <reference nullFlavor="UNK" />
+                                </text>
+                                <statusCode code="completed" />
+                                <effectiveTime value="20230316" />
+                                <value xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                                    nullFlavor="UNK"
+                                    xsi:type="CD" />
+                                <interpretationCode nullFlavor="OTH">
+                                    <originalText>Low Risk </originalText>
+                                    <translation code="X-SDOH-RISK-1"
+                                        codeSystem="1.2.840.114350.1.72.1.8.1"
+                                        codeSystemName="Epic.Sdoh" displayName="Low Risk " />
+                                </interpretationCode>
+                                <entryRelationship typeCode="COMP">
+                                    <observation classCode="OBS" moodCode="EVN">
+                                        <templateId root="2.16.840.1.113883.10.20.22.4.86" />
+                                        <templateId root="2.16.840.1.113883.10.20.22.4.86"
+                                            extension="2022-06-01" />
+                                        <id root="1.2.840.114350.1.13.225.2.7.1.83687972"
+                                            extension="cer97028-5751643123-97003-Z7255907" />
+                                        <code code="72166-2" codeSystem="2.16.840.1.113883.6.1"
+                                            codeSystemName="LOINC"
+                                            displayName="Tobacco smoking status NHIS">
+                                            <originalText>Smoking Tobacco Use</originalText>
+                                        </code>
+                                        <statusCode code="completed" />
+                                        <value xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                                            xsi:type="CD"
+                                            code="LA18978-9" codeSystem="2.16.840.1.113883.6.1"
+                                            codeSystemName="LOINC" displayName="Never smoker">
+                                            <originalText>Never</originalText>
+                                            <translation code="266919005"
+                                                codeSystem="2.16.840.1.113883.6.96"
+                                                codeSystemName="SNOMED CT"
+                                                displayName="Never smoked tobacco (finding)" />
+                                        </value>
+                                    </observation>
+                                </entryRelationship>
+                                <entryRelationship typeCode="COMP">
+                                    <observation classCode="OBS" moodCode="EVN">
+                                        <templateId root="2.16.840.1.113883.10.20.22.4.86" />
+                                        <templateId root="2.16.840.1.113883.10.20.22.4.86"
+                                            extension="2022-06-01" />
+                                        <id root="1.2.840.114350.1.13.225.2.7.1.83687972"
+                                            extension="cer97078-5751643123-97003-Z7255907" />
+                                        <code code="88031-0" codeSystem="2.16.840.1.113883.6.1"
+                                            codeSystemName="LOINC"
+                                            displayName="Smokeless tobacco status">
+                                            <originalText>Smokeless Tobacco Use</originalText>
+                                        </code>
+                                        <statusCode code="completed" />
+                                        <value xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                                            xsi:type="CD"
+                                            code="LA4519-0" codeSystem="2.16.840.1.113883.6.1"
+                                            codeSystemName="LOINC" displayName="Never used">
+                                            <originalText>Never</originalText>
+                                            <translation code="228512004"
+                                                codeSystem="2.16.840.1.113883.6.96"
+                                                codeSystemName="SNOMED CT"
+                                                displayName="Never chewed tobacco (finding)" />
+                                        </value>
+                                    </observation>
+                                </entryRelationship>
+                                <entryRelationship typeCode="COMP">
+                                    <observation classCode="OBS" moodCode="EVN">
+                                        <templateId root="2.16.840.1.113883.10.20.22.4.86" />
+                                        <templateId root="2.16.840.1.113883.10.20.22.4.86"
+                                            extension="2022-06-01" />
+                                        <id root="1.2.840.114350.1.13.225.2.7.1.83687972"
+                                            extension="cer97148-5751643123-97003-Z7255907" />
+                                        <code nullFlavor="UNK">
+                                            <originalText>Passive Exposure</originalText>
+                                        </code>
+                                        <statusCode code="completed" />
+                                        <value xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                                            nullFlavor="OTH" xsi:type="CD">
+                                            <originalText>Never</originalText>
+                                        </value>
+                                    </observation>
+                                </entryRelationship>
+                            </observation>
+                        </entryRelationship>
+                    </observation>
+                </entry>
+                <entry xmlns="urn:hl7-org:v3">
+                    <observation classCode="OBS" moodCode="EVN">
+                        <templateId root="2.16.840.1.113883.10.20.22.4.38" />
+                        <templateId root="2.16.840.1.113883.10.20.22.4.38" extension="2015-08-01" />
+                        <templateId root="2.16.840.1.113883.10.20.22.4.38" extension="2022-06-01" />
+                        <id root="1.2.840.114350.1.13.225.2.7.1.1040.21"
+                            extension="5751643123-97005-Z7255907" />
+                        <code code="8689-2" codeSystem="2.16.840.1.113883.6.1"
+                            codeSystemName="LOINC"
+                            displayName="History of Social function" />
+                        <statusCode code="completed" />
+                        <effectiveTime value="20230314" />
+                        <entryRelationship typeCode="SPRT">
+                            <observation classCode="OBS" moodCode="EVN">
+                                <templateId root="2.16.840.1.113883.10.20.22.4.69" />
+                                <templateId root="2.16.840.1.113883.10.20.22.4.69"
+                                    extension="2022-06-01" />
+                                <id root="1.2.840.114350.1.13.225.2.7.1.83687972"
+                                    extension="5751643123-97005-Z7255907" />
+                                <code code="55757-9" codeSystem="2.16.840.1.113883.6.1"
+                                    codeSystemName="LOINC"
+                                    displayName="Patient Health Questionnaire 2 item (PHQ-2) [Reported]">
+                                    <originalText>PHQ-2</originalText>
+                                </code>
+                                <text>
+                                    <reference value="#sdohassess2" />
+                                </text>
+                                <statusCode code="completed" />
+                                <effectiveTime value="20230314" />
+                                <value xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                                    nullFlavor="UNK"
+                                    xsi:type="CD" />
+                                <interpretationCode nullFlavor="OTH">
+                                    <originalText>Not at risk</originalText>
+                                    <translation code="X-SDOH-RISK-1"
+                                        codeSystem="1.2.840.114350.1.72.1.8.1"
+                                        codeSystemName="Epic.Sdoh" displayName="Low Risk " />
+                                </interpretationCode>
+                                <entryRelationship typeCode="COMP">
+                                    <observation classCode="OBS" moodCode="EVN">
+                                        <templateId root="2.16.840.1.113883.10.20.22.4.86" />
+                                        <templateId root="2.16.840.1.113883.10.20.22.4.86"
+                                            extension="2022-06-01" />
+                                        <id root="1.2.840.114350.1.13.225.2.7.1.83687972"
+                                            extension="cer97051-5751643123-97005-Z7255907" />
+                                        <code code="73831-0" codeSystem="2.16.840.1.113883.6.1"
+                                            codeSystemName="LOINC"
+                                            displayName="Adolescent depression screening assessment">
+                                            <originalText>
+                                                <reference value="#sdohassess2pair1ques" />
+                                            </originalText>
+                                            <translation code="73832-8"
+                                                codeSystem="2.16.840.1.113883.6.1"
+                                                codeSystemName="LOINC"
+                                                displayName="Adult Depression Screening Assessment" />
+                                        </code>
+                                        <text>
+                                            <reference value="#sdohassess2pair1" />
+                                        </text>
+                                        <statusCode code="completed" />
+                                        <value xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                                            nullFlavor="OTH" xsi:type="CD">
+                                            <originalText>
+                                                <reference value="#sdohassess2pair1ans" />
+                                            </originalText>
+                                            <translation code="428171000124102"
+                                                codeSystem="2.16.840.1.113883.6.96"
+                                                codeSystemName="SNOMED CT"
+                                                displayName="Depression screening negative (finding)" />
+                                        </value>
+                                        <author>
+                                            <templateId root="2.16.840.1.113883.10.20.22.4.119" />
+                                            <templateId root="2.16.840.1.113883.10.20.22.5.6"
+                                                extension="2019-10-01" />
+                                            <time value="20230314122116-0400" />
+                                            <assignedAuthor>
+                                                <id root="1.2.840.114350.1.13.225.2.7.1.1133"
+                                                    extension="101014668" />
+                                                <id root="1.2.840.114350.1.13.225.2.7.2.836982"
+                                                    extension="R200143" />
+                                                <id root="2.16.840.1.113883.4.6" nullFlavor="UNK" />
+                                            </assignedAuthor>
+                                        </author>
+                                    </observation>
+                                </entryRelationship>
+                            </observation>
+                        </entryRelationship>
+                    </observation>
+                </entry>
+                <entry xmlns="urn:hl7-org:v3">
+                    <observation classCode="OBS" moodCode="EVN">
+                        <templateId root="2.16.840.1.113883.10.20.22.4.200" extension="2016-06-01" />
+                        <id root="1.2.840.114350.1.13.225.2.7.1.1040.20" extension="Z7255907" />
+                        <code code="76689-9" codeSystem="2.16.840.1.113883.6.1"
+                            codeSystemName="LOINC"
+                            displayName="Sex Assigned At Birth" />
+                        <text>
+                            <reference value="#BirthSex20" />
+                        </text>
+                        <statusCode code="completed" />
+                        <effectiveTime value="20000101" />
+                        <value xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                            nullFlavor="UNK" xsi:type="CD"
+                            codeSystem="2.16.840.1.113883.5.1">
+                            <originalText>
+                                <reference value="#BirthSex20Value" />
+                            </originalText>
+                        </value>
+                    </observation>
+                </entry>
+                <entry xmlns="urn:hl7-org:v3">
+                    <observation classCode="OBS" moodCode="EVN">
+                        <templateId root="2.16.840.1.113883.10.20.34.3.45" extension="2022-06-01" />
+                        <templateId root="2.16.840.1.113883.10.20.22.4.38" />
+                        <templateId root="2.16.840.1.113883.10.20.22.4.38" extension="2015-08-01" />
+                        <id nullFlavor="UNK" />
+                        <code code="76691-5" codeSystem="2.16.840.1.113883.6.1"
+                            codeSystemName="LOINC"
+                            displayName="Gender identity" />
+                        <text>
+                            <reference value="#GenderIdentity18" />
+                        </text>
+                        <statusCode code="completed" />
+                        <effectiveTime nullFlavor="UNK" />
+                        <value xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                            nullFlavor="UNK" xsi:type="CD">
+                            <originalText>
+                                <reference value="#GenderIdentity18Value" />
+                            </originalText>
+                        </value>
+                    </observation>
+                </entry>
+                <entry xmlns="urn:hl7-org:v3">
+                    <observation classCode="OBS" moodCode="EVN">
+                        <templateId root="2.16.840.1.113883.10.20.22.4.501" extension="2022-06-01" />
+                        <templateId root="2.16.840.1.113883.10.20.22.4.38" />
+                        <templateId root="2.16.840.1.113883.10.20.22.4.38" extension="2015-08-01" />
+                        <id nullFlavor="UNK" />
+                        <code code="76690-7" codeSystem="2.16.840.1.113883.6.1"
+                            codeSystemName="LOINC"
+                            displayName="Sexual orientation" />
+                        <text>
+                            <reference value="#SexualOrientation19" />
+                        </text>
+                        <statusCode code="completed" />
+                        <effectiveTime nullFlavor="UNK" />
+                        <value xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                            nullFlavor="UNK" xsi:type="CD">
+                            <originalText>
+                                <reference value="#SexualOrientation19Value" />
+                            </originalText>
+                        </value>
+                    </observation>
+                </entry>
+            </section>
+
+        </structuredBody>
+    </component>
+</ClinicalDocument>
