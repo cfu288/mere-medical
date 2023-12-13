@@ -23,8 +23,8 @@ export function parseCCDASocialHistorySection(
 
   const extractedSocialHistory: Record<string, CCDASocialHistoryItem> =
     extractSocialHistoryWithEntityRelationships(
-      sectionEntries,
-      matchingSections
+      sectionEntries?.[0],
+      matchingSections?.[0]
     );
 
   const uniqueDates = new Set([
@@ -38,82 +38,74 @@ export function parseCCDASocialHistorySection(
 }
 
 function extractSocialHistoryWithEntityRelationships(
-  sectionEntries: Element[][],
-  matchingSections: HTMLElement[]
+  sectionEntries: Element[],
+  matchingSections: HTMLElement
 ) {
   const extractedSocialHistory: Record<string, CCDASocialHistoryItem> = {};
-
-  for (const components of sectionEntries) {
-    for (const [_, component] of [...components].entries()) {
-      const { codeId, codeDisplayName } =
-        getCodeIdSystemAndDisplayName(component);
-      const uCodeId = (codeId || codeDisplayName || '')?.trim();
-      if (uCodeId !== '') {
-        if (!extractedSocialHistory[uCodeId]) {
-          extractedSocialHistory[uCodeId] =
-            extractCCDASocialHistoryItemFromEntry({
-              codeDisplayName,
-              entry: component,
-              section: matchingSections?.[0],
-            });
-        }
-        const entryRelationshipsAtSameLevel =
-          getEntryRelationshipsOfSameDepth(component);
-        for (const entryRelationship of [...entryRelationshipsAtSameLevel]) {
-          const { codeId: subCodeId, codeDisplayName: subCodeDisplayName } =
-            getCodeIdSystemAndDisplayName(entryRelationship);
-          const uSubCodeId = (subCodeId || subCodeDisplayName || '')?.trim();
-          if (uCodeId && uSubCodeId) {
-            if (!extractedSocialHistory[uCodeId]) {
-              extractedSocialHistory[uCodeId] =
-                extractCCDASocialHistoryItemFromEntry({
-                  codeDisplayName,
-                  entry: component,
-                  section: matchingSections?.[0],
-                });
-            }
-            if (
-              extractedSocialHistory[uCodeId]?.entityRelationships === undefined
-            ) {
-              extractedSocialHistory[uCodeId].entityRelationships = {};
-            }
-            extractedSocialHistory[uCodeId].entityRelationships![uSubCodeId] =
+  for (const component of sectionEntries) {
+    const { codeId, codeDisplayName } =
+      getCodeIdSystemAndDisplayName(component);
+    const uCodeId = (codeId || codeDisplayName || '')?.trim();
+    if (uCodeId !== '') {
+      if (!extractedSocialHistory[uCodeId]) {
+        extractedSocialHistory[uCodeId] = extractCCDASocialHistoryItemFromEntry(
+          {
+            codeDisplayName,
+            entry: component,
+            section: matchingSections,
+          }
+        );
+      }
+      const entryRelationshipsAtSameLevel =
+        getEntryRelationshipsOfSameDepth(component);
+      for (const entryRelationship of [...entryRelationshipsAtSameLevel]) {
+        const { codeId: subCodeId, codeDisplayName: subCodeDisplayName } =
+          getCodeIdSystemAndDisplayName(entryRelationship);
+        const uSubCodeId = (subCodeId || subCodeDisplayName || '')?.trim();
+        if (uCodeId && uSubCodeId) {
+          if (!extractedSocialHistory[uCodeId]) {
+            extractedSocialHistory[uCodeId] =
               extractCCDASocialHistoryItemFromEntry({
-                entry: entryRelationship,
-                section: matchingSections?.[0],
+                codeDisplayName,
+                entry: component,
+                section: matchingSections,
               });
-            const subEntryRelationshipsAtSameLevel =
-              getEntryRelationshipsOfSameDepth(entryRelationship);
-            for (const subEntryRelationship of [
-              ...subEntryRelationshipsAtSameLevel,
-            ]) {
-              const {
-                codeId: subSubCodeId,
-                codeDisplayName: subSubDisplayName,
-              } = getCodeIdSystemAndDisplayName(subEntryRelationship);
-              const uSubSubId = (
-                subSubCodeId ||
-                subSubDisplayName ||
-                ''
-              )?.trim();
-              if (uCodeId && uSubCodeId && uSubSubId) {
-                if (
-                  extractedSocialHistory?.[uCodeId]?.entityRelationships?.[
-                    uSubCodeId
-                  ]?.entityRelationships === undefined
-                ) {
-                  extractedSocialHistory[uCodeId].entityRelationships![
-                    uSubCodeId
-                  ].entityRelationships = {};
-                }
+          }
+          if (
+            extractedSocialHistory[uCodeId]?.entityRelationships === undefined
+          ) {
+            extractedSocialHistory[uCodeId].entityRelationships = {};
+          }
+          extractedSocialHistory[uCodeId].entityRelationships![uSubCodeId] =
+            extractCCDASocialHistoryItemFromEntry({
+              entry: entryRelationship,
+              section: matchingSections,
+            });
+          const subEntryRelationshipsAtSameLevel =
+            getEntryRelationshipsOfSameDepth(entryRelationship);
+          for (const subEntryRelationship of [
+            ...subEntryRelationshipsAtSameLevel,
+          ]) {
+            const { codeId: subSubCodeId, codeDisplayName: subSubDisplayName } =
+              getCodeIdSystemAndDisplayName(subEntryRelationship);
+            const uSubSubId = (subSubCodeId || subSubDisplayName || '')?.trim();
+            if (uCodeId && uSubCodeId && uSubSubId) {
+              if (
+                extractedSocialHistory?.[uCodeId]?.entityRelationships?.[
+                  uSubCodeId
+                ]?.entityRelationships === undefined
+              ) {
                 extractedSocialHistory[uCodeId].entityRelationships![
                   uSubCodeId
-                ].entityRelationships![uSubSubId] =
-                  extractCCDASocialHistoryItemFromEntry({
-                    entry: subEntryRelationship,
-                    section: matchingSections?.[0],
-                  });
+                ].entityRelationships = {};
               }
+              extractedSocialHistory[uCodeId].entityRelationships![
+                uSubCodeId
+              ].entityRelationships![uSubSubId] =
+                extractCCDASocialHistoryItemFromEntry({
+                  entry: subEntryRelationship,
+                  section: matchingSections,
+                });
             }
           }
         }
