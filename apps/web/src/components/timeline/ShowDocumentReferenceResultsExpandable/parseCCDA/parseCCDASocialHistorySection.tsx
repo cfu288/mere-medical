@@ -23,10 +23,11 @@ export function parseCCDASocialHistorySection(
 
   const extractedSocialHistory: Record<string, CCDASocialHistoryItem> = {};
   for (const components of sectionEntries) {
-    for (const [index, component] of [...components].entries()) {
+    for (const [_, component] of [...components].entries()) {
       extractSocialHistoryWithEntityRelationships(component);
     }
   }
+
   const uniqueDates = new Set([
     ...Object.values(extractedSocialHistory).map((v) => v.datetime),
   ]);
@@ -35,35 +36,6 @@ export function parseCCDASocialHistorySection(
     data: extractedSocialHistory,
     uniqueDates,
   };
-
-  function getCodeIdSystemAndDisplayName(component: Element) {
-    let codeId = component
-      ?.getElementsByTagName('code')[0]
-      .getAttribute('code');
-    let codeSystem = component
-      ?.getElementsByTagName('code')[0]
-      .getAttribute('codeSystem');
-    let codeDisplayName: string | null =
-      component?.getElementsByTagName('code')[0].getAttribute('displayName') ||
-      component
-        ?.getElementsByTagName('code')[0]
-        ?.getElementsByTagName('originalText')?.[0]
-        ?.innerHTML?.trim();
-    if (codeSystem === SNOMED_CT_CODE_SYSTEM) {
-      const translations = component
-        ?.getElementsByTagName('code')[0]
-        ?.getElementsByTagName('translation');
-      const loincTranslation = [...translations].find(
-        (t) => t?.getAttribute('codeSystem') === LOINC_CODE_SYSTEM
-      );
-      if (loincTranslation) {
-        codeId = loincTranslation?.getAttribute('code');
-        codeDisplayName = loincTranslation?.getAttribute('displayName');
-        codeSystem = loincTranslation?.getAttribute('codeSystem');
-      }
-    }
-    return { codeId, codeSystem, codeDisplayName };
-  }
 
   function extractSocialHistoryWithEntityRelationships(component: Element) {
     const { codeId, codeDisplayName } =
@@ -135,6 +107,33 @@ export function parseCCDASocialHistorySection(
       }
     }
   }
+}
+
+function getCodeIdSystemAndDisplayName(component: Element) {
+  let codeId = component?.getElementsByTagName('code')[0].getAttribute('code');
+  let codeSystem = component
+    ?.getElementsByTagName('code')[0]
+    .getAttribute('codeSystem');
+  let codeDisplayName: string | null =
+    component?.getElementsByTagName('code')[0].getAttribute('displayName') ||
+    component
+      ?.getElementsByTagName('code')[0]
+      ?.getElementsByTagName('originalText')?.[0]
+      ?.innerHTML?.trim();
+  if (codeSystem === SNOMED_CT_CODE_SYSTEM) {
+    const translations = component
+      ?.getElementsByTagName('code')[0]
+      ?.getElementsByTagName('translation');
+    const loincTranslation = [...translations].find(
+      (t) => t?.getAttribute('codeSystem') === LOINC_CODE_SYSTEM
+    );
+    if (loincTranslation) {
+      codeId = loincTranslation?.getAttribute('code');
+      codeDisplayName = loincTranslation?.getAttribute('displayName');
+      codeSystem = loincTranslation?.getAttribute('codeSystem');
+    }
+  }
+  return { codeId, codeSystem, codeDisplayName };
 }
 
 function getEntryRelationshipsOfSameDepth(entry: Element) {

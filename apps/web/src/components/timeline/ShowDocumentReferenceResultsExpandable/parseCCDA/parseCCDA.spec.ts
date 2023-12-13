@@ -387,28 +387,28 @@ describe('parseCCDASocialHistorySection', () => {
 
     expect(results).not.toBeNull();
 
-    // expect(results?.data['72166-2'].title).toBe('Tobacco smoking status NHIS');
-    // expect(results?.data['72166-2'].statusCode).toBe('completed');
-    // expect(results?.data['72166-2'].datetime).toBe('20220830');
-    // expect(results?.data['72166-2'].value).toBe('Never smoked tobacco');
+    expect(results?.data['72166-2'].title).toBe('Tobacco smoking status NHIS');
+    expect(results?.data['72166-2'].statusCode).toBe('completed');
+    expect(results?.data['72166-2'].datetime).toBe('20220830');
+    expect(results?.data['72166-2'].value).toBe('Never smoked tobacco');
 
-    // expect(results?.data['11367-0'].title).toBe('History of tobacco use');
-    // expect(results?.data['11367-0'].statusCode).toBe('completed');
-    // expect(results?.data['11367-0'].datetimeLow).toBe('');
-    // expect(results?.data['11367-0'].datetimeHigh).toBe('');
-    // expect(results?.data['11367-0'].value).toBe('Passive smoker');
+    expect(results?.data['11367-0'].title).toBe('History of tobacco use');
+    expect(results?.data['11367-0'].statusCode).toBe('completed');
+    expect(results?.data['11367-0'].datetimeLow).toBe('');
+    expect(results?.data['11367-0'].datetimeHigh).toBe('');
+    expect(results?.data['11367-0'].value).toBe('Passive smoker');
 
-    // expect(results?.data['88031-0'].title).toBe('Smokeless tobacco status');
-    // expect(results?.data['88031-0'].statusCode).toBe('completed');
-    // expect(results?.data['88031-0'].datetime).toBe('20220830');
-    // expect(results?.data['88031-0'].value).toBe('Smokeless tobacco non-user');
+    expect(results?.data['88031-0'].title).toBe('Smokeless tobacco status');
+    expect(results?.data['88031-0'].statusCode).toBe('completed');
+    expect(results?.data['88031-0'].datetime).toBe('20220830');
+    expect(results?.data['88031-0'].value).toBe('Smokeless tobacco non-user');
 
-    // expect(results?.data['11331-6'].title).toBe('History of Alcohol Use');
-    // expect(results?.data['11331-6'].statusCode).toBe('completed');
-    // expect(results?.data['11331-6'].datetime).toBe('20230316');
-    // expect(results?.data['11331-6'].value).toBe(
-    //   'Current drinker of alcohol (finding)'
-    // );
+    expect(results?.data['11331-6'].title).toBe('History of Alcohol Use');
+    expect(results?.data['11331-6'].statusCode).toBe('completed');
+    expect(results?.data['11331-6'].datetime).toBe('20230316');
+    expect(results?.data['11331-6'].value).toBe(
+      'Current drinker of alcohol (finding)'
+    );
 
     expect(results?.data['8689-2'].title).toBe('History of Social function');
     expect(results?.data['8689-2'].statusCode).toBe('completed');
