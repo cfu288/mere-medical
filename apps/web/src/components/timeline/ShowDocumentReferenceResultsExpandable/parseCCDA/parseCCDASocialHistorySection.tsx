@@ -42,6 +42,35 @@ function extractSocialHistoryWithEntityRelationships(
   matchingSections: HTMLElement
 ) {
   const extractedSocialHistory: Record<string, CCDASocialHistoryItem> = {};
+
+  function extractNested(
+    entryRelationship: Element,
+    currentEntity: Record<string, CCDASocialHistoryItem> | undefined
+  ) {
+    const { codeId: subCodeId, codeDisplayName: subCodeDisplayName } =
+      getCodeIdSystemAndDisplayName(entryRelationship);
+    const uSubCodeId = (subCodeId || subCodeDisplayName || '')?.trim();
+    if (uSubCodeId) {
+      if (currentEntity && !currentEntity[uSubCodeId]) {
+        currentEntity[uSubCodeId] = extractCCDASocialHistoryItemFromEntry({
+          entry: entryRelationship,
+          section: matchingSections,
+        });
+        if (!currentEntity[uSubCodeId].entityRelationships) {
+          currentEntity[uSubCodeId].entityRelationships = {};
+        }
+      }
+      for (const subEntryRelationship of [
+        ...getEntryRelationshipsOfSameDepth(entryRelationship),
+      ]) {
+        extractNested(
+          subEntryRelationship,
+          currentEntity?.[uSubCodeId].entityRelationships
+        );
+      }
+    }
+  }
+
   for (const component of sectionEntries) {
     const { codeId, codeDisplayName } =
       getCodeIdSystemAndDisplayName(component);
@@ -56,59 +85,16 @@ function extractSocialHistoryWithEntityRelationships(
           }
         );
       }
-      const entryRelationshipsAtSameLevel =
-        getEntryRelationshipsOfSameDepth(component);
-      for (const entryRelationship of [...entryRelationshipsAtSameLevel]) {
-        const { codeId: subCodeId, codeDisplayName: subCodeDisplayName } =
-          getCodeIdSystemAndDisplayName(entryRelationship);
-        const uSubCodeId = (subCodeId || subCodeDisplayName || '')?.trim();
-        if (uCodeId && uSubCodeId) {
-          if (!extractedSocialHistory[uCodeId]) {
-            extractedSocialHistory[uCodeId] =
-              extractCCDASocialHistoryItemFromEntry({
-                codeDisplayName,
-                entry: component,
-                section: matchingSections,
-              });
-          }
-          if (
-            extractedSocialHistory[uCodeId]?.entityRelationships === undefined
-          ) {
-            extractedSocialHistory[uCodeId].entityRelationships = {};
-          }
-          extractedSocialHistory[uCodeId].entityRelationships![uSubCodeId] =
-            extractCCDASocialHistoryItemFromEntry({
-              entry: entryRelationship,
-              section: matchingSections,
-            });
-          const subEntryRelationshipsAtSameLevel =
-            getEntryRelationshipsOfSameDepth(entryRelationship);
-          for (const subEntryRelationship of [
-            ...subEntryRelationshipsAtSameLevel,
-          ]) {
-            const { codeId: subSubCodeId, codeDisplayName: subSubDisplayName } =
-              getCodeIdSystemAndDisplayName(subEntryRelationship);
-            const uSubSubId = (subSubCodeId || subSubDisplayName || '')?.trim();
-            if (uCodeId && uSubCodeId && uSubSubId) {
-              if (
-                extractedSocialHistory?.[uCodeId]?.entityRelationships?.[
-                  uSubCodeId
-                ]?.entityRelationships === undefined
-              ) {
-                extractedSocialHistory[uCodeId].entityRelationships![
-                  uSubCodeId
-                ].entityRelationships = {};
-              }
-              extractedSocialHistory[uCodeId].entityRelationships![
-                uSubCodeId
-              ].entityRelationships![uSubSubId] =
-                extractCCDASocialHistoryItemFromEntry({
-                  entry: subEntryRelationship,
-                  section: matchingSections,
-                });
-            }
-          }
+      for (const entryRelationship of [
+        ...getEntryRelationshipsOfSameDepth(component),
+      ]) {
+        if (!extractedSocialHistory[uCodeId].entityRelationships) {
+          extractedSocialHistory[uCodeId].entityRelationships = {};
         }
+        extractNested(
+          entryRelationship,
+          extractedSocialHistory[uCodeId].entityRelationships
+        );
       }
     }
   }
@@ -174,19 +160,13 @@ function getValue(entry: Element, section: Element) {
   if (childIsObservation) {
     children = [...entry.getElementsByTagName('observation')[0].children];
   }
-  const hasEntryRelationship = children.some(
-    (child) => child.tagName === 'entryRelationship'
-  );
-  const hasValueOrInterpretationCode = children.some(
+  const hasValueOrInterpretationCodeAsChild = children.some(
     (child) =>
       child.tagName === 'value' || child.tagName === 'interpretationCode'
   );
-  let valueIfEntryrelationshipCheck = '';
-  if (
-    (hasValueOrInterpretationCode && !hasEntryRelationship) ||
-    (hasValueOrInterpretationCode && hasEntryRelationship)
-  ) {
-    valueIfEntryrelationshipCheck = (
+  let valueIfEntryRelationshipCheck = '';
+  if (hasValueOrInterpretationCodeAsChild) {
+    valueIfEntryRelationshipCheck = (
       entry?.getElementsByTagName('value')?.[0]?.getAttribute('value') ||
       entry?.getElementsByTagName('value')?.[0]?.getAttribute('displayName') ||
       entry?.getElementsByTagName('value')?.[0]?.textContent?.trim() ||
@@ -206,7 +186,7 @@ function getValue(entry: Element, section: Element) {
     ).trim();
   }
 
-  return valueIfEntryrelationshipCheck;
+  return valueIfEntryRelationshipCheck;
 }
 
 function extractCCDASocialHistoryItemFromEntry({
