@@ -205,9 +205,9 @@ export function DisplayCCDADocument({
         />
       )}
       {ccda?.ASSESSMENT_SECTION && (
-        <DisplayCCDARawSection
+        <DisplayCCDAElementSection
           title="Assessment"
-          content={(ccda.ASSESSMENT_SECTION as string) || ''}
+          content={(ccda.ASSESSMENT_SECTION as JSX.Element) || ''}
         />
       )}
       {ccda?.ASSESSMENT_AND_PLAN_SECTION && (

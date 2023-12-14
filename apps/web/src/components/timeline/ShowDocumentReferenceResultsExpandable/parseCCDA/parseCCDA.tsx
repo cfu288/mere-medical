@@ -14,6 +14,10 @@ import {
   DisplayCCDASocialHistorySection,
   parseCCDASocialHistorySection,
 } from './parseCCDASocialHistorySection';
+import {
+  DisplayCCDAAssesmentSection,
+  parseCCDAAssesmentSection,
+} from './parseCCDAAssesmentSection';
 
 export function parseCCDA(
   raw: string
@@ -43,15 +47,20 @@ export function parseCCDA(
         parsedDoc[k] = parseCCDAHPISection(sections, val) as JSX.Element;
         break;
       case 'SOCIAL_HISTORY_SECTION':
-        const a = parseCCDASocialHistorySection(sections, val);
-        console.log(a);
-        if (a) {
+        const socialData = parseCCDASocialHistorySection(sections, val);
+        if (socialData) {
           parsedDoc[k] = (
             <DisplayCCDASocialHistorySection
-              data={a.data}
-              uniqueDates={a.uniqueDates}
+              data={socialData.data}
+              uniqueDates={socialData.uniqueDates}
             />
           );
+        }
+        break;
+      case 'ASSESSMENT_SECTION':
+        const assData = parseCCDAAssesmentSection(sections, val);
+        if (assData) {
+          parsedDoc[k] = <DisplayCCDAAssesmentSection data={assData} />;
         }
         break;
       default:
