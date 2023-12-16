@@ -147,6 +147,16 @@ const config = {
       };
     },
   ],
+
+  scripts: [
+    {
+      src: '//gc.zgo.at/count.js',
+      'data-goatcounter': 'https://meremedical.goatcounter.com/count',
+      async: true,
+    },
+  ],
 };
 
 module.exports = config;
+
+//<script data-goatcounter="https://meremedical.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
