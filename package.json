@@ -140,6 +140,6 @@
     "workbox-routing": "^6.5.4",
     "workbox-strategies": "^6.5.4",
     "workbox-streams": "^6.5.4",
-    "yup": "^0.32.11"
+    "yup": "^1.3.3"
   }
 }
