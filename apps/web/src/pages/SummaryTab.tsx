@@ -346,7 +346,7 @@ function SummaryTab() {
           careplan.length === 0 &&
           allergy.length === 0 &&
           is_pinned.length === 0 ? (
-            <div className="col-span-6 sm:col-span-3 ">
+            <div className="col-span-6">
               <EmptyRecordsPlaceholder />
             </div>
           ) : (

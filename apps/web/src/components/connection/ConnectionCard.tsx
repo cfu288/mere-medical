@@ -180,9 +180,9 @@ export function ConnectionCard({
             <button
               disabled={syncing}
               className="-ml-px flex flex-initial divide-x divide-gray-800 px-4 disabled:bg-slate-50"
-              onClick={() => {
+              onClick={async () => {
                 setTenantUrlBySource(item);
-                window.location = getLoginUrlBySource(item);
+                window.location = await getLoginUrlBySource(item);
               }}
             >
               <div className="relative inline-flex h-full flex-initial items-center justify-center rounded-br-lg border border-transparent py-4 text-sm font-bold text-red-500 hover:text-gray-500">

@@ -7,4 +7,5 @@ export enum Routes {
   EpicCallback = '/epic/callback',
   CernerCallback = '/cerner/callback',
   VeradigmCallback = '/veradigm/callback',
+  VACallback = '/va/callback',
 }

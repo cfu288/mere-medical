@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import * as OnPatient from '../services/OnPatient';
 import { GenericBanner } from '../components/GenericBanner';
 import { ConnectionCard } from '../components/connection/ConnectionCard';
@@ -10,7 +10,7 @@ import {
   CernerLocalStorageKeys,
   getLoginUrl as getCernerLoginUrl,
 } from '../services/Cerner';
-
+import { getLoginUrl as getVaLoginUrl } from '../services/VA';
 import { AppPage } from '../components/AppPage';
 import { EpicSelectModal } from '../components/connection/EpicSelectModal';
 import { useUserPreferences } from '../components/providers/UserPreferencesProvider';
@@ -27,25 +27,34 @@ import { ConnectionDocument } from '../models/connection-document/ConnectionDocu
 import { RxDocument } from 'rxdb';
 import React from 'react';
 
-export function getLoginUrlBySource(
+export async function getLoginUrlBySource(
   item: RxDocument<ConnectionDocument>
-): string & Location {
+): Promise<string & Location> {
   switch (item.get('source')) {
     case 'epic': {
-      return getEpicLoginUrl(
-        item.get('location'),
-        item.get('tenant_id') === 'sandbox' ||
-          item.get('tenant_id') === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354'
+      return Promise.resolve(
+        getEpicLoginUrl(
+          item.get('location'),
+          item.get('tenant_id') === 'sandbox' ||
+            item.get('tenant_id') === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354'
+        )
       );
     }
     case 'cerner': {
-      return getCernerLoginUrl(item.get('location'), item.get('auth_uri'));
+      return Promise.resolve(
+        getCernerLoginUrl(item.get('location'), item.get('auth_uri'))
+      );
     }
     case 'veradigm': {
-      return getVeradigmLoginUrl(item.get('location'), item.get('auth_uri'));
+      return Promise.resolve(
+        getVeradigmLoginUrl(item.get('location'), item.get('auth_uri'))
+      );
     }
     case 'onpatient': {
-      return OnPatient.getLoginUrl();
+      return Promise.resolve(OnPatient.getLoginUrl());
+    }
+    case 'va': {
+      return getVaLoginUrl();
     }
     default: {
       return '' as string & Location;
@@ -134,6 +143,7 @@ const ConnectionTab: React.FC = () => {
     [epicOpen, setEpicOpen] = useState(false),
     [cernerOpen, setCernerOpen] = useState(false),
     [veradigmOpen, setVeradigmOpen] = useState(false),
+    [vaUrl, setVaUrl] = useState<string & Location>('' as string & Location),
     userPreferences = useUserPreferences(),
     onpatientLoginUrl = OnPatient.getLoginUrl(),
     handleToggleEpicPanel = useCallback(
@@ -173,6 +183,13 @@ const ConnectionTab: React.FC = () => {
       []
     );
 
+  useEffect(() => {
+    // get VA url
+    getVaLoginUrl().then((url) => {
+      setVaUrl(url);
+    });
+  }, []);
+
   return (
     <AppPage banner={<GenericBanner text="Add Connections" />}>
       <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 sm:px-6 lg:px-8">
@@ -194,6 +211,13 @@ const ConnectionTab: React.FC = () => {
             />
           ))}
         </ul>
+        <div className="mb-4 box-border	flex w-full justify-center align-middle">
+          <a href={vaUrl} className="w-full">
+            <button className="bg-primary hover:bg-primary-600 active:bg-primary-700 w-full rounded-lg p-4 text-white duration-75 active:scale-[98%]">
+              <p className="font-bold">Log in to the VA</p>
+            </button>
+          </a>
+        </div>
         <div className="mb-4 box-border	flex w-full justify-center align-middle">
           <button
             className="bg-primary hover:bg-primary-600 active:bg-primary-700 w-full rounded-lg p-4 text-white duration-75 active:scale-[98%]"

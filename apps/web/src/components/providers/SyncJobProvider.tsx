@@ -13,23 +13,21 @@ import {
   CernerConnectionDocument,
   ConnectionSources,
   VeradigmConnectionDocument,
+  VAConnectionDocument,
 } from '../../models/connection-document/ConnectionDocument.type';
 import { DatabaseCollections, useRxDb } from './RxDbProvider';
 import * as OnPatient from '../../services/OnPatient';
 import * as Epic from '../../services/Epic';
 import * as Cerner from '../../services/Cerner';
 import * as Veradigm from '../../services/Veradigm';
+import * as VA from '../../services/VA';
 import { from, Subject } from 'rxjs';
 import { useNotificationDispatch } from './NotificationProvider';
-import {
-  differenceInDays,
-  differenceInHours,
-  differenceInMinutes,
-  parseISO,
-} from 'date-fns';
+import { differenceInDays, differenceInHours, parseISO } from 'date-fns';
 import Config from '../../environments/config.json';
 import { useUserPreferences } from './UserPreferencesProvider';
 import { useConnectionCards } from '../hooks/useConnectionCards';
+import { refreshVAConnectionTokenIfNeeded } from '../../services/VA';
 
 type SyncJobProviderProps = PropsWithChildren<unknown>;
 
@@ -139,14 +137,14 @@ function HandleInitalSync({ children }: PropsWithChildren) {
       [db, syncD, userPreferences]
     ),
     startSyncAllConnections = useCallback(
-      (hasRun: boolean) => {
-        if (hasRun) {
+      (hasRun: React.MutableRefObject<boolean>) => {
+        if (hasRun.current) {
           return;
         }
-        hasRun = true;
         if (conList) {
           for (const item of conList) {
             startSyncConnection(item, syncJobEntries, handleFetchData);
+            hasRun.current = true;
           }
         }
       },
@@ -155,7 +153,7 @@ function HandleInitalSync({ children }: PropsWithChildren) {
 
   useEffect(() => {
     if (!isDemo) {
-      startSyncAllConnections(hasRun.current);
+      startSyncAllConnections(hasRun);
     }
   }, [isDemo, startSyncAllConnections]);
 
@@ -401,6 +399,30 @@ async function fetchMedicalRecords(
         );
       }
     }
+    case 'va': {
+      try {
+        await refreshVAConnectionTokenIfNeeded(connectionDocument, db);
+        const syncJob = await VA.syncAllRecords(
+          baseUrl,
+          connectionDocument.toMutableJSON() as unknown as VAConnectionDocument,
+          db
+        );
+        await updateConnectionDocumentTimestamps(
+          syncJob,
+          connectionDocument,
+          db
+        );
+        return syncJob;
+      } catch (e) {
+        console.error(e);
+        await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
+        throw new Error(
+          `Error refreshing ${connectionDocument.get(
+            'name'
+          )} access - try logging in again`
+        );
+      }
+    }
     case 'veradigm': {
       try {
         const syncJob = await Veradigm.syncAllRecords(
@@ -424,6 +446,7 @@ async function fetchMedicalRecords(
         );
       }
     }
+
     default: {
       throw Error(
         `Cannot sync unknown source: ${connectionDocument.get('source')}`
