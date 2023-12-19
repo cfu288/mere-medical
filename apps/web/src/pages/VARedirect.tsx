@@ -2,13 +2,13 @@ import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import uuid4 from '../utils/UUIDUtils';
 import { CreateVAConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
-import { useRxDb } from '../components/providers/RxDbProvider';
 import { Routes } from '../Routes';
-import { useNotificationDispatch } from '../components/providers/NotificationProvider';
+import { fetchAccessTokenWithCode, getOAuth2State } from '../services/VA';
 import { AppPage } from '../components/AppPage';
 import { GenericBanner } from '../components/GenericBanner';
+import { useNotificationDispatch } from '../components/providers/NotificationProvider';
+import { useRxDb } from '../components/providers/RxDbProvider';
 import { useUser } from '../components/providers/UserProvider';
-import { fetchAccessTokenWithCode, getOAuth2State } from '../services/VA';
 
 const VARedirect: React.FC = () => {
   const navigate = useNavigate(),

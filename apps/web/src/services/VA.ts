@@ -15,20 +15,18 @@ import {
   Procedure,
 } from 'fhir/r2';
 import { RxDocument, RxDatabase } from 'rxdb';
-import { DatabaseCollections } from '../components/providers/RxDbProvider';
 import {
-  CernerConnectionDocument,
   ConnectionDocument,
-  CreateCernerConnectionDocument,
+  CreateVAConnectionDocument,
   VAConnectionDocument,
 } from '../models/connection-document/ConnectionDocument.type';
 import { Routes } from '../Routes';
 import { DSTU2 } from '.';
 import Config from '../environments/config.json';
-import { JsonWebKeySet } from './JWTTools';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 import { UserDocument } from '../models/user-document/UserDocument.type';
 import uuid4 from '../utils/UUIDUtils';
+import { DatabaseCollections } from '../components/providers/RxDbProvider';
 
 export enum VALocalStorageKeys {
   VA_BASE_URL = 'vaBaseUrl',
@@ -94,13 +92,13 @@ export function getOAuth2State() {
 
 async function getFHIRResource<T extends FhirResource>(
   baseUrl: string,
-  connectionDocument: CernerConnectionDocument,
+  connectionDocument: VAConnectionDocument,
   fhirResourceUrl: string,
   params?: Record<string, string>
 ): Promise<BundleEntry<T>[]> {
-  const defaultUrl = `${baseUrl}${fhirResourceUrl}?${new URLSearchParams(
-    params
-  )}`;
+  const defaultUrl = `${baseUrl}${fhirResourceUrl}${
+    !params ? '' : `?${new URLSearchParams(params)}`
+  }`;
 
   const res = await fetch(defaultUrl, {
     headers: {
@@ -129,7 +127,7 @@ async function getFHIRResource<T extends FhirResource>(
  */
 async function syncFHIRResource<T extends FhirResource>(
   baseUrl: string,
-  connectionDocument: CernerConnectionDocument,
+  connectionDocument: VAConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
   mapper: (proc: BundleEntry<T>) => ClinicalDocument<BundleEntry<T>>,
@@ -164,7 +162,7 @@ async function syncFHIRResource<T extends FhirResource>(
  */
 export async function syncAllRecords(
   baseUrl: string,
-  connectionDocument: CernerConnectionDocument,
+  connectionDocument: VAConnectionDocument,
   db: RxDatabase<DatabaseCollections>
 ): Promise<PromiseSettledResult<void[]>[]> {
   const procMapper = (proc: BundleEntry<Procedure>) =>
@@ -184,9 +182,6 @@ export async function syncAllRecords(
   const allergyIntoleranceMapper = (a: BundleEntry<AllergyIntolerance>) =>
     DSTU2.mapAllergyIntoleranceToClinicalDocument(a, connectionDocument);
 
-  const encounterMapper = (a: BundleEntry<Encounter>) =>
-    DSTU2.mapEncounterToClinicalDocument(a, connectionDocument);
-
   const patientId = (connectionDocument as VAConnectionDocument).patient;
 
   const syncJob = await Promise.allSettled([
@@ -204,11 +199,8 @@ export async function syncAllRecords(
       baseUrl,
       connectionDocument,
       db,
-      'Patient',
-      patientMapper,
-      {
-        id: patientId,
-      }
+      `Patient/${patientId}`,
+      patientMapper
     ),
     syncFHIRResource<Observation>(
       baseUrl,
@@ -264,16 +256,6 @@ export async function syncAllRecords(
     syncDocumentReferences(baseUrl, connectionDocument, db, {
       patient: patientId,
     }),
-    syncFHIRResource<Encounter>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'Encounter',
-      encounterMapper,
-      {
-        patient: patientId,
-      }
-    ),
     syncFHIRResource<AllergyIntolerance>(
       baseUrl,
       connectionDocument,
@@ -291,7 +273,7 @@ export async function syncAllRecords(
 
 async function syncDocumentReferences(
   baseUrl: string,
-  connectionDocument: CernerConnectionDocument,
+  connectionDocument: VAConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   params: Record<string, string>
 ) {
@@ -321,7 +303,7 @@ async function syncDocumentReferences(
 
   // format all the document references
   const docRefItems = docs.map(
-    (doc) =>
+    (doc: { toMutableJSON: () => unknown }) =>
       doc.toMutableJSON() as unknown as ClinicalDocument<
         BundleEntry<DocumentReference>
       >
@@ -395,7 +377,7 @@ async function syncDocumentReferences(
  */
 async function fetchAttachmentData(
   url: string,
-  cd: CernerConnectionDocument
+  cd: VAConnectionDocument
 ): Promise<{ contentType: string | null; raw: string | Blob | undefined }> {
   try {
     const res = await fetch(url, {
@@ -427,11 +409,11 @@ async function fetchAttachmentData(
 }
 
 /**
- * Using the code from the Cerner callback, fetch the access token
- * @param code code from the Cerner callback, usually a query param
- * @param CernerUrl url of the Cerner server we are connecting to
- * @param CernerName user friendly name of the Cerner server we are connecting to
- * @returns Promise of the auth response from the Cerner server
+ * Using the code from the VA callback, fetch the access token
+ * @param code code from the VA callback, usually a query param
+ * @param VAUrl url of the VA server we are connecting to
+ * @param VAName user friendly name of the VA server we are connecting to
+ * @returns Promise of the auth response from the VA server
  */
 export async function fetchAccessTokenWithCode(
   code: string,
@@ -503,10 +485,7 @@ export async function saveConnectionToDb({
   db: RxDatabase<DatabaseCollections>;
   user: UserDocument;
 }) {
-  const doc = await getConnectionCardByUrl<CernerConnectionDocument>(
-    vaBaseUrl,
-    db
-  );
+  const doc = await getConnectionCardByUrl<VAConnectionDocument>(vaBaseUrl, db);
   return new Promise((resolve, reject) => {
     if (res?.access_token && res?.expires_in && res?.id_token) {
       if (doc) {
@@ -538,7 +517,7 @@ export async function saveConnectionToDb({
       } else {
         const nowInSeconds = Math.floor(Date.now() / 1000);
         // Otherwise, create a new connection card
-        const dbentry: Omit<CreateCernerConnectionDocument, 'refresh_token'> = {
+        const dbentry: Omit<CreateVAConnectionDocument, 'refresh_token'> = {
           id: uuid4(),
           user_id: user.id,
           source: 'va',
@@ -548,6 +527,7 @@ export async function saveConnectionToDb({
           expires_in: nowInSeconds + res.expires_in,
           scope: res.scope,
           id_token: res.id_token,
+          patient: res.patient,
           auth_uri:
             'https://authorization.va.com/tenants/ec2458f2-1e24-41c8-b71b-0e701af7583d/protocols/oauth2/profiles/smart-v1/personas/patient/authorize',
           token_uri:
@@ -579,9 +559,9 @@ export async function refreshVAConnectionTokenIfNeeded(
   connectionDocument: RxDocument<ConnectionDocument>,
   db: RxDatabase<DatabaseCollections>
 ) {
-  const nowInSeconds = Math.floor(Date.now() / 1000);
-  if (connectionDocument.get('expires_in') <= nowInSeconds) {
-    try {
+  try {
+    const nowInSeconds = Math.floor(Date.now() / 1000);
+    if (connectionDocument.get('expires_in') <= nowInSeconds) {
       const baseUrl = connectionDocument.get('location'),
         refreshToken = connectionDocument.get('refresh_token'),
         tokenUri = connectionDocument.get('token_uri'),
@@ -598,10 +578,10 @@ export async function refreshVAConnectionTokenIfNeeded(
         db,
         user,
       });
-    } catch (e) {
-      console.error(e);
-      throw new Error('Error refreshing token  - try logging in again');
     }
+  } catch (e) {
+    console.error(e);
+    throw new Error('Error refreshing token  - try logging in again');
   }
 }
 
