@@ -81,7 +81,9 @@ export function mapMedicationStatementToClinicalDocument(
         bundleItem.resource?.dateAsserted ||
         bundleItem.resource?.effectivePeriod?.start ||
         new Date(0).toISOString(),
-      display_name: bundleItem.resource?.medicationCodeableConcept?.text,
+      display_name:
+        bundleItem.resource?.medicationCodeableConcept?.text ||
+        bundleItem.resource?.note,
     },
   };
   return cd;

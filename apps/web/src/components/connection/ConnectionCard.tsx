@@ -8,6 +8,7 @@ import onpatientLogo from '../../img/onpatient_logo.jpeg';
 import epicLogo from '../../img/MyChartByEpic.png';
 import cernerLogo from '../../img/cerner-logo.png';
 import allscriptsConnectLogo from '../../img/allscripts-logo.png';
+import vaLogo from '../../img/va-logo.png';
 import { differenceInDays, format, parseISO } from 'date-fns';
 import { RxDocument } from 'rxdb';
 import { useNotificationDispatch } from '../providers/NotificationProvider';
@@ -38,6 +39,9 @@ function getImage(logo: ConnectionSources) {
     }
     case 'veradigm': {
       return allscriptsConnectLogo;
+    }
+    case 'va': {
+      return vaLogo;
     }
     default: {
       return undefined;

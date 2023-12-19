@@ -89,12 +89,53 @@ export function getOAuth2State() {
   sessionStorage.setItem('oauth2-state', hex);
   return hex;
 }
+/**
+ * Sometimes bundles may only return a subset of the total results
+ * ex: {
+ * "resourceType": "Bundle",
+ * "type": "searchset",
+ * "total": 7034,
+ * "entry": [
+ * ... only has subset of total results ...
+ * ],
+ * }
+ * We want to iterate through all the pages using the ?page=<number>
+ * query param until we've gotten all the results
+ * This should iterate through pages 1 to N and call getFHIRResource for each page
+ * */
+async function getAllFHIRResourcesWithPaging<T extends FhirResource>(
+  baseUrl: string,
+  connectionDocument: VAConnectionDocument,
+  fhirResourceUrl: string,
+  params?: Record<string, string>
+): Promise<BundleEntry<T>[]> {
+  let page = 0;
+  let totalEntriesCount = 0;
+
+  const allEntries: BundleEntry<T>[] = [];
+  do {
+    page++;
+    const entries = await getFHIRResource<T>(
+      baseUrl,
+      connectionDocument,
+      fhirResourceUrl,
+      {
+        ...params,
+        page: `${page}`,
+        _count: 1000,
+      }
+    );
+    totalEntriesCount = entries.length;
+    allEntries.push(...entries);
+  } while (totalEntriesCount > 0);
+  return allEntries;
+}
 
 async function getFHIRResource<T extends FhirResource>(
   baseUrl: string,
   connectionDocument: VAConnectionDocument,
   fhirResourceUrl: string,
-  params?: Record<string, string>
+  params?: Record<string, any>
 ): Promise<BundleEntry<T>[]> {
   const defaultUrl = `${baseUrl}${fhirResourceUrl}${
     !params ? '' : `?${new URLSearchParams(params)}`
@@ -133,7 +174,7 @@ async function syncFHIRResource<T extends FhirResource>(
   mapper: (proc: BundleEntry<T>) => ClinicalDocument<BundleEntry<T>>,
   params?: Record<string, string>
 ) {
-  const resc = await getFHIRResource<T>(
+  const resc = await getAllFHIRResourcesWithPaging<T>(
     baseUrl,
     connectionDocument,
     fhirResourceUrl,
@@ -210,7 +251,6 @@ export async function syncAllRecords(
       obsMapper,
       {
         patient: patientId,
-        category: 'laboratory',
       }
     ),
     syncFHIRResource<DiagnosticReport>(
