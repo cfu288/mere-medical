@@ -6,7 +6,6 @@ import {
   Condition,
   DiagnosticReport,
   DocumentReference,
-  Encounter,
   FhirResource,
   Immunization,
   MedicationStatement,
@@ -557,21 +556,20 @@ export async function saveConnectionToDb({
       } else {
         const nowInSeconds = Math.floor(Date.now() / 1000);
         // Otherwise, create a new connection card
-        const dbentry: Omit<CreateVAConnectionDocument, 'refresh_token'> = {
+        const dbentry: CreateVAConnectionDocument = {
           id: uuid4(),
           user_id: user.id,
           source: 'va',
           location: 'https://sandbox-api.va.gov/services/fhir/v0/dstu2/',
-          name: 'VA',
+          name: "VA's Sandbox API",
           access_token: res.access_token,
-          expires_in: nowInSeconds + res.expires_in,
+          patient: res.patient,
           scope: res.scope,
           id_token: res.id_token,
-          patient: res.patient,
-          auth_uri:
-            'https://authorization.va.com/tenants/ec2458f2-1e24-41c8-b71b-0e701af7583d/protocols/oauth2/profiles/smart-v1/personas/patient/authorize',
-          token_uri:
-            'https://authorization.va.com/tenants/ec2458f2-1e24-41c8-b71b-0e701af7583d/protocols/oauth2/profiles/smart-v1/token',
+          refresh_token: res.refresh_token,
+          expires_in: nowInSeconds + res.expires_in,
+          auth_uri: 'https://sandbox-api.va.gov/oauth2/health/v1/authorize',
+          token_uri: 'https://sandbox-api.va.gov/oauth2/health/v1/token',
         };
         try {
           db.connection_documents.insert(dbentry).then(() => {
@@ -619,6 +617,7 @@ export async function refreshVAConnectionTokenIfNeeded(
         user,
       });
     }
+    return Promise.resolve();
   } catch (e) {
     console.error(e);
     throw new Error('Error refreshing token  - try logging in again');

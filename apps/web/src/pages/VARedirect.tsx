@@ -3,7 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import uuid4 from '../utils/UUIDUtils';
 import { CreateVAConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
 import { Routes } from '../Routes';
-import { fetchAccessTokenWithCode, getOAuth2State } from '../services/VA';
+import {
+  fetchAccessTokenWithCode,
+  getOAuth2State,
+  saveConnectionToDb,
+} from '../services/VA';
 import { AppPage } from '../components/AppPage';
 import { GenericBanner } from '../components/GenericBanner';
 import { useNotificationDispatch } from '../components/providers/NotificationProvider';
@@ -34,7 +38,6 @@ const VARedirect: React.FC = () => {
               res.expires_in &&
               user.id
             ) {
-              const nowInSeconds = Math.floor(Date.now() / 1000);
               const state = res.state;
               //verfiy state using getOAuth2State() from VA.ts
               const storedState = getOAuth2State();
@@ -48,28 +51,16 @@ const VARedirect: React.FC = () => {
                 navigate(Routes.AddConnection);
               }
 
-              const dbentry: CreateVAConnectionDocument = {
-                id: uuid4(),
-                user_id: user.id,
-                source: 'va',
-                location: 'https://sandbox-api.va.gov/services/fhir/v0/dstu2/',
-                name: "VA's Sandbox API",
-                access_token: res.access_token,
-                patient: res.patient,
-                scope: res.scope,
-                id_token: res.id_token,
-                refresh_token: res.refresh_token,
-                expires_in: nowInSeconds + res.expires_in,
-                auth_uri:
-                  'https://sandbox-api.va.gov/oauth2/health/v1/authorize',
-                token_uri: 'https://sandbox-api.va.gov/oauth2/health/v1/token',
-              };
-              db.connection_documents
-                .insert(dbentry)
-                .then(() => {
+              saveConnectionToDb({
+                res,
+                vaBaseUrl: 'https://sandbox-api.va.gov/services/fhir/v0/dstu2/',
+                db,
+                user,
+              })
+                .then((res) => {
                   navigate(Routes.AddConnection);
                 })
-                .catch((e: unknown) => {
+                .catch((e) => {
                   notifyDispatch({
                     type: 'set_notification',
                     message: `Error adding connection: ${(e as Error).message}`,
@@ -95,7 +86,7 @@ const VARedirect: React.FC = () => {
           });
       }
     }
-  }, [db.connection_documents, navigate, notifyDispatch, user.id]);
+  }, [db, db.connection_documents, navigate, notifyDispatch, user, user.id]);
 
   return (
     <AppPage banner={<GenericBanner text="Authenticated! Redirecting" />}>
