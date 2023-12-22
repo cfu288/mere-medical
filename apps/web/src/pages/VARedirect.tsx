@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import uuid4 from '../utils/UUIDUtils';
-import { CreateVAConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
 import { Routes } from '../Routes';
 import {
+  VA_BASE_URL,
+  VA_TOKEN_URL,
   fetchAccessTokenWithCode,
   getOAuth2State,
   saveConnectionToDb,
@@ -28,9 +28,7 @@ const VARedirect: React.FC = () => {
         code = searchRequest.get('code');
 
       if (code) {
-        const tokenEndpoint =
-          'https://sandbox-api.va.gov/oauth2/health/v1/token';
-        fetchAccessTokenWithCode(code, tokenEndpoint)
+        fetchAccessTokenWithCode(code, VA_TOKEN_URL)
           .then((res) => {
             if (
               res.access_token &&
@@ -39,7 +37,6 @@ const VARedirect: React.FC = () => {
               user.id
             ) {
               const state = res.state;
-              //verfiy state using getOAuth2State() from VA.ts
               const storedState = getOAuth2State();
 
               if (state !== storedState) {
@@ -53,11 +50,11 @@ const VARedirect: React.FC = () => {
 
               saveConnectionToDb({
                 res,
-                vaBaseUrl: 'https://sandbox-api.va.gov/services/fhir/v0/dstu2/',
+                vaBaseUrl: VA_BASE_URL,
                 db,
                 user,
               })
-                .then((res) => {
+                .then(() => {
                   navigate(Routes.AddConnection);
                 })
                 .catch((e) => {

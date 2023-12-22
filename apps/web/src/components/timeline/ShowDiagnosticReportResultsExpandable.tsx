@@ -227,6 +227,7 @@ export function ResultRow({
   const sparklineValues = sparklineLabs.map((rl) =>
     rl ? getValueQuantity(rl) : 0
   ) as number[];
+  const [labLimit, setLabLimit] = useState<number>(1000);
 
   const options: ChartOptions = {
     data: {
@@ -305,6 +306,8 @@ export function ResultRow({
             user_id: user.id,
             'metadata.loinc_coding': { $in: loinc },
           },
+          limit: labLimit,
+          sort: [{ 'metadata.date': 'desc' }],
         })
         .exec()
         .then((res) => {
@@ -329,7 +332,7 @@ export function ResultRow({
           setRelatedLabs(unique);
         });
     }
-  }, [db.clinical_documents, loinc, user.id]);
+  }, [db.clinical_documents, labLimit, loinc, user.id]);
 
   return (
     <Fragment key={`${item.metadata?.id}`}>
@@ -354,7 +357,9 @@ export function ResultRow({
                   }`}
                 >
                   {getValueQuantity(item) !== undefined
-                    ? `  ${getValueQuantity(item)}`
+                    ? `  ${new Intl.NumberFormat('en-US', {
+                        maximumSignificantDigits: 5,
+                      }).format(getValueQuantity(item)!)}`
                     : ''}
                   {getValueUnit(item)}
                   {getInterpretationText(item) ||
@@ -472,7 +477,6 @@ export function ResultRow({
               {relatedLabs.length > 0 && (
                 <Disclosure.Panel className="relative border-b-4 border-solid border-gray-100">
                   {/* Toggle select between graph view and list view */}
-
                   <button
                     className="text-primary-900 absolute top-0 right-0 m-2 mr-4 rounded bg-[#E2F5FA] p-1 duration-75 active:scale-90 active:bg-gray-100"
                     onClick={() =>
@@ -510,8 +514,10 @@ export function ResultRow({
                             }`}
                           >
                             <p>
-                              {getValueQuantity(rl) !== undefined
-                                ? `  ${getValueQuantity(rl)}`
+                              {getValueQuantity(item) !== undefined
+                                ? `  ${new Intl.NumberFormat('en-US', {
+                                    maximumSignificantDigits: 5,
+                                  }).format(getValueQuantity(item)!)}`
                                 : ''}
                               {getValueUnit(rl)}{' '}
                               {getInterpretationText(rl) || getValueString(rl)}
@@ -538,6 +544,17 @@ export function ResultRow({
                       )}
                     </div>
                   ) : null}
+                  {/* Load more button */}
+                  {/* {
+                    <div className="flex justify-center">
+                      <button
+                        className="text-primary-900 rounded bg-[#E2F5FA] p-1 duration-75 active:scale-90 active:bg-gray-100"
+                        onClick={() => setLabLimit((l) => l + 20)}
+                      >
+                        Load more
+                      </button>
+                    </div>
+                  } */}
                 </Disclosure.Panel>
               )}
             </>

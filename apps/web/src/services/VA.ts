@@ -35,8 +35,17 @@ export enum VALocalStorageKeys {
   VA_ID = 'vaId',
 }
 
+export const VA_BASE_URL = 'https://sandbox-api.va.gov/services/fhir/v0';
+export const VA_AUTH_URL =
+  'https://sandbox-api.va.gov/oauth2/health/v1/authorization';
+export const VA_TOKEN_URL = 'https://sandbox-api.va.gov/oauth2/health/v1/token';
+
+export function getDSTU2Url(baseUrl = VA_BASE_URL) {
+  return `${baseUrl}/dstu2/`;
+}
+
 export async function getLoginUrl(
-  authorizeUrl = 'https://sandbox-api.va.gov/oauth2/health/v1/authorization'
+  authorizeUrl = VA_AUTH_URL
 ): Promise<string & Location> {
   const params = {
     client_id: `${Config.VA_CLIENT_ID}`,
@@ -88,6 +97,7 @@ export function getOAuth2State() {
   sessionStorage.setItem('oauth2-state', hex);
   return hex;
 }
+
 /**
  * Sometimes bundles may only return a subset of the total results
  * ex: {
@@ -292,9 +302,9 @@ export async function syncAllRecords(
         patient: patientId,
       }
     ),
-    syncDocumentReferences(baseUrl, connectionDocument, db, {
-      patient: patientId,
-    }),
+    // syncDocumentReferences(baseUrl, connectionDocument, db, {
+    //   patient: patientId,
+    // }),
     syncFHIRResource<AllergyIntolerance>(
       baseUrl,
       connectionDocument,
@@ -560,7 +570,7 @@ export async function saveConnectionToDb({
           id: uuid4(),
           user_id: user.id,
           source: 'va',
-          location: 'https://sandbox-api.va.gov/services/fhir/v0/dstu2/',
+          location: getDSTU2Url(),
           name: "VA's Sandbox API",
           access_token: res.access_token,
           patient: res.patient,
@@ -568,8 +578,8 @@ export async function saveConnectionToDb({
           id_token: res.id_token,
           refresh_token: res.refresh_token,
           expires_in: nowInSeconds + res.expires_in,
-          auth_uri: 'https://sandbox-api.va.gov/oauth2/health/v1/authorize',
-          token_uri: 'https://sandbox-api.va.gov/oauth2/health/v1/token',
+          auth_uri: VA_AUTH_URL,
+          token_uri: VA_TOKEN_URL,
         };
         try {
           db.connection_documents.insert(dbentry).then(() => {
