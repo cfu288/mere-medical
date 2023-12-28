@@ -219,7 +219,6 @@ function PasswordPromptModal({
       await newDb.importJSON(json);
       // Update local config to use unencrypted database
 
-      // debugger;
       await db.remove();
       // We need to fully delete the underlying encrypted loki storage adapter, or we will have issues with re-encrypting the database later
       await (

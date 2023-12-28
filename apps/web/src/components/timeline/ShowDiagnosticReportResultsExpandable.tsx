@@ -23,6 +23,8 @@ import { TableCellsIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import * as fhirpath from 'fhirpath';
 import { useClinicalDoc } from '../hooks/useClinicalDoc';
 import { useSummaryPagePreferences } from '../hooks/useSummaryPagePreferences';
+import React from 'react';
+import uuid4 from '../../utils/UUIDUtils';
 
 /**
  * Generate line for sparkline path
@@ -281,13 +283,17 @@ export function ResultRow({
 
   const [isPinned, setIsPinned] = useState<boolean>(pinnedSet.has(item.id!));
 
+  useEffect(() => {
+    setIsPinned(pinnedSet.has(item.id!));
+  }, [pinnedSet, item.id]);
+
   const handleTogglePin = useCallback(() => {
     // if pinned_labs contains id, remove it, otherwise add it
     const updatedList = pinnedSet.has(item.id!)
       ? [...pinnedSet].filter((id) => id !== item.id)
       : [...pinnedSet, item.id];
     if (summaryPagePreferencesDoc) {
-      doc
+      summaryPagePreferencesDoc
         .update({
           $set: {
             pinned_labs: updatedList,
@@ -296,8 +302,25 @@ export function ResultRow({
         .then(() => {
           setIsPinned(!isPinned);
         });
+    } else {
+      db.summary_page_preferences
+        .insert({
+          id: uuid4(),
+          user_id: user.id,
+          pinned_labs: updatedList as string[],
+        })
+        .then(() => {
+          setIsPinned(!isPinned);
+        });
     }
-  }, [pinnedSet, item.id, summaryPagePreferencesDoc, doc, isPinned]);
+  }, [
+    pinnedSet,
+    item.id,
+    summaryPagePreferencesDoc,
+    isPinned,
+    db.summary_page_preferences,
+    user.id,
+  ]);
 
   useEffect(() => {
     chartComponent.current?.instance.resize();

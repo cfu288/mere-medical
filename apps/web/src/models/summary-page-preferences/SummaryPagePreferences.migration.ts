@@ -1,3 +1,3 @@
 import { MigrationStrategies } from 'rxdb';
 
-export const SummaryPagePreferences: MigrationStrategies = {};
+export const SummaryPagePreferencesMigrations: MigrationStrategies = {};

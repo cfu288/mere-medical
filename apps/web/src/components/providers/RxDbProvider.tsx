@@ -51,6 +51,7 @@ import {
   SummaryPagePreferencesCollection,
   SummaryPagePreferencesSchema,
 } from '../../models/summary-page-preferences/SummaryPagePreferences.collection';
+import { SummaryPagePreferencesMigrations } from '../../models/summary-page-preferences/SummaryPagePreferences.migration';
 
 if (process.env.NODE_ENV === 'development') {
   addRxPlugin(RxDBDevModePlugin);
@@ -93,6 +94,7 @@ export const databaseCollections = {
   },
   summary_page_preferences: {
     schema: SummaryPagePreferencesSchema,
+    migrationStrategies: SummaryPagePreferencesMigrations,
   },
 };
 

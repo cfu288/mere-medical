@@ -31,6 +31,7 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { CardBase } from '../components/connection/CardBase';
 import { TimelineCardSubtitile } from '../components/timeline/TimelineCardSubtitile';
 import { PinnedListCard } from './PinnedListCard';
+import React from 'react';
 
 function fetchMedications(
   db: RxDatabase<DatabaseCollections>,
@@ -152,8 +153,8 @@ async function fetchPinned(
 
   const pinnedIdsList = pinnedIds.pinned_labs || [];
 
-  return db.clinical_documents.findByIds(pinnedIdsList).then((list) => {
-    const lst = list as unknown as RxDocument<
+  return db.clinical_documents.findByIds(pinnedIdsList).then((map) => {
+    const lst = [...map.values()] as RxDocument<
       ClinicalDocument<BundleEntry<FhirResource>>
     >[];
 

@@ -8,8 +8,8 @@ export const UserDocumentMigrations: MigrationStrategies = {
     return oldDoc;
   },
   2: function (oldDoc) {
-    // We delete the attachments object
-    delete oldDoc._attachments;
+    // We delete existing attachments
+    oldDoc._attachments = {};
     return oldDoc;
   },
 };
