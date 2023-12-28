@@ -1,4 +1,5 @@
 import { MigrationStrategies } from 'rxdb';
+import { ConnectionDocument } from './ConnectionDocument.type';
 
 export const ConnectionDocumentMigrations: MigrationStrategies = {
   // 1 means, this transforms data from version 0 to version 1
@@ -15,6 +16,13 @@ export const ConnectionDocumentMigrations: MigrationStrategies = {
     // handle new fields last_sync_was_error, last_sync_attempt
     oldDoc.last_sync_was_error = false;
     oldDoc.last_sync_attempt = oldDoc.last_refreshed;
+    return oldDoc;
+  },
+  4: function (oldDoc: Required<ConnectionDocument>) {
+    oldDoc.expires_at = (
+      oldDoc as ConnectionDocument & { expires_in: number }
+    ).expires_in;
+    delete (oldDoc as ConnectionDocument & { expires_in?: number }).expires_in;
     return oldDoc;
   },
 };

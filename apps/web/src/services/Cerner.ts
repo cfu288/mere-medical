@@ -532,7 +532,7 @@ export async function saveConnectionToDb({
             .update({
               $set: {
                 access_token: res.access_token,
-                expires_in: nowInSeconds + res.expires_in,
+                expires_at: nowInSeconds + res.expires_in,
                 scope: res.scope,
                 last_sync_was_error: false,
               },
@@ -560,7 +560,7 @@ export async function saveConnectionToDb({
           location: cernerBaseUrl,
           name: 'Cerner',
           access_token: res.access_token,
-          expires_in: nowInSeconds + res.expires_in,
+          expires_at: nowInSeconds + res.expires_in,
           scope: res.scope,
           id_token: res.id_token,
           auth_uri:

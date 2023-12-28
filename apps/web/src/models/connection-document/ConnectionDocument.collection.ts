@@ -1,18 +1,8 @@
-import { RxCollection } from 'rxdb';
-import {
-  toTypedRxJsonSchema,
-  ExtractDocumentTypeFromTypedRxJsonSchema,
-  RxJsonSchema,
-} from 'rxdb';
+import { RxCollection, RxJsonSchema } from 'rxdb';
 import { connectionSchemaLiteral } from './ConnectionDocument.schema';
+import { ConnectionDocument } from './ConnectionDocument.type';
 
-const connectionSchemaTyped = toTypedRxJsonSchema(connectionSchemaLiteral);
-
-type ConnectionDocumentType = ExtractDocumentTypeFromTypedRxJsonSchema<
-  typeof connectionSchemaTyped
->;
-
-export const ConnectionDocumentSchema: RxJsonSchema<ConnectionDocumentType> =
+export const ConnectionDocumentSchema: RxJsonSchema<ConnectionDocument> =
   connectionSchemaLiteral;
 
-export type ConnectionDocumentCollection = RxCollection<ConnectionDocumentType>;
+export type ConnectionDocumentCollection = RxCollection<ConnectionDocument>;

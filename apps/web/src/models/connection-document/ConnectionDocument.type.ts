@@ -1,19 +1,20 @@
 import { BaseDocument } from '../BaseDocument';
+import { TDateISO } from '../clinical-document/Date';
 
 export type ConnectionSources = 'epic' | 'onpatient' | 'cerner' | 'veradigm';
 
 export interface ConnectionDocument extends BaseDocument {
   user_id: string;
   access_token: string;
-  expires_in: number;
-  refresh_token: string;
-  scope: string;
+  expires_at: number;
+  refresh_token?: string;
+  scope?: string;
   source: ConnectionSources;
   name: string;
-  location: string;
-  last_refreshed: string;
-  last_sync_attempt: string;
-  last_sync_was_error: boolean;
+  location: string | Location;
+  last_refreshed?: string | TDateISO;
+  last_sync_attempt?: string | TDateISO;
+  last_sync_was_error?: boolean;
 }
 
 export interface EpicConnectionDocument extends ConnectionDocument {
@@ -27,8 +28,8 @@ export interface EpicConnectionDocument extends ConnectionDocument {
 
 export interface CernerConnectionDocument extends ConnectionDocument {
   id_token: string; // An OAuth ID token
-  auth_uri: string; // the OAuth authorization url
-  token_uri: string; // the OAuth token url
+  auth_uri: string | Location; // the OAuth authorization url
+  token_uri: string | Location; // the OAuth token url
 }
 
 export type CreateCernerConnectionDocument = Omit<
@@ -38,8 +39,8 @@ export type CreateCernerConnectionDocument = Omit<
 
 export interface VeradigmConnectionDocument extends ConnectionDocument {
   id_token: string; // An OAuth ID token
-  auth_uri: string; // the OAuth authorization url
-  token_uri: string; // the OAuth token url
+  auth_uri: string | Location; // the OAuth authorization url
+  token_uri: string | Location; // the OAuth token url
 }
 
 export type CreateVeradigmConnectionDocument = Omit<

@@ -591,7 +591,7 @@ export async function saveConnectionToDb({
   user,
 }: {
   res: EpicAuthResponseWithClientId | EpicAuthResponse;
-  epicUrl: string;
+  epicUrl: string | Location;
   epicName: string;
   db: RxDatabase<DatabaseCollections>;
   epicId: string;
@@ -611,7 +611,7 @@ export async function saveConnectionToDb({
                   (res as EpicAuthResponseWithClientId)?.client_id ||
                   doc.client_id,
                 access_token: res.access_token,
-                expires_in: nowInSeconds + res.expires_in,
+                expires_at: nowInSeconds + res.expires_in,
                 scope: res.scope,
                 patient: res.patient,
                 tenant_id: epicId,
@@ -640,7 +640,7 @@ export async function saveConnectionToDb({
           location: epicUrl,
           name: epicName,
           access_token: res.access_token,
-          expires_in: nowInSeconds + res.expires_in,
+          expires_at: nowInSeconds + res.expires_in,
           scope: res.scope,
           patient: res.patient,
           client_id: (res as EpicAuthResponseWithClientId)?.client_id,

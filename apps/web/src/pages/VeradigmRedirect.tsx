@@ -62,7 +62,7 @@ export async function saveConnectionToDb({
             .update({
               $set: {
                 access_token: res.access_token,
-                expires_in: nowInSeconds + res.expires_in,
+                expires_at: nowInSeconds + res.expires_in,
                 id_token: res.id_token,
                 last_sync_was_error: false,
               },
@@ -90,7 +90,7 @@ export async function saveConnectionToDb({
             source: 'veradigm',
             location: veradigmBaseUrl,
             access_token: res.access_token,
-            expires_in: nowInSeconds + res.expires_in,
+            expires_at: nowInSeconds + res.expires_in,
             id_token: res.id_token,
             name,
             auth_uri,
@@ -169,7 +169,7 @@ const VeradigmRedirect: React.FC = () => {
                       .update({
                         $set: {
                           access_token: res.access_token,
-                          expires_in: nowInSeconds + res.expires_in,
+                          expires_at: nowInSeconds + res.expires_in,
                           id_token: res.id_token,
                           last_sync_was_error: false,
                         },
@@ -212,7 +212,7 @@ const VeradigmRedirect: React.FC = () => {
                     location: veradigmUrl,
                     name: veradigmName,
                     access_token: res.access_token,
-                    expires_in: nowInSeconds + res.expires_in,
+                    expires_at: nowInSeconds + res.expires_in,
                     id_token: res.id_token,
                     auth_uri: veradigmAuthUrl,
                     token_uri: veradigmTokenUrl,
