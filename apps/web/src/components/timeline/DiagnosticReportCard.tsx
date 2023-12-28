@@ -2,10 +2,7 @@ import { format, parseISO } from 'date-fns';
 import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
-import {
-  isOutOfRangeResult,
-  ShowDiagnosticReportResultsExpandable,
-} from './ShowDiagnosticReportResultsExpandable';
+import { ShowDiagnosticReportResultsExpandable } from './ShowDiagnosticReportResultsExpandable';
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
 import { CardBase } from '../connection/CardBase';
 import useIntersectionObserver from '../hooks/useIntersectionObserver';
@@ -20,6 +17,7 @@ import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
 import { OpenableCardIcon } from './OpenableCardIcon';
 import { TimelineCardSubtitile } from './TimelineCardSubtitile';
 import { AbnormalResultIcon } from './AbnormalResultIcon';
+import { isOutOfRangeResult } from './fhirpathParsers';
 
 /**
  * Fetches a set of Observations linked to a DiagnosticReport and indicates if there is an abnormal value in the set

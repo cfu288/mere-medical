@@ -3,7 +3,7 @@ import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
 import { Disclosure } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { CardBase } from '../components/connection/CardBase';
-import { ResultRow } from '../components/timeline/ShowDiagnosticReportResultsExpandable';
+import { ObservationResultRow } from '../components/timeline/ObservationResultRow';
 
 export function PinnedListCard({
   items,
@@ -38,10 +38,11 @@ export function PinnedListCard({
                           Value
                         </div>
                       </div>
-                      {items.map((item) => (
-                        <ResultRow
+                      {items.map((item, i, arr) => (
+                        <ObservationResultRow
                           item={item as any}
                           key={JSON.stringify(item)}
+                          hideBottomDivider={i === arr.length - 1}
                         />
                       ))}
                     </>
