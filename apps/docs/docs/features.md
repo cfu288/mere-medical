@@ -1,6 +1,6 @@
 ---
 sidebar_position: 2
-slug: /demo-of-mere-medical
+slug: /features
 description: What can Mere Medical do?
 ---
 
@@ -29,7 +29,6 @@ Clicking on the summary tab will give you an overview about your health.
 ## Search for Specific Health Records
 
 You can use the search bar to find specific records.
-Clicking on cards with lab results will show you the results of that card as well as any previous lab values for that lab. When possible, Mere will graph your results so you can see how the value has changed over time.
 <video controls width="100%">
 
   <source src="/vid/see-labs.webm" type="video/webm"/>
@@ -37,9 +36,19 @@ Clicking on cards with lab results will show you the results of that card as wel
 <br/>
 <br/>
 
+## Graph your Lab Results over Time
+
+Clicking on cards with lab results will show you the results of that card as well as any previous lab values for that lab. When possible, Mere will graph your results so you can see how the value has changed over time.
+
+<video controls width="100%">
+  <source src="/vid/see-labs.webm" type="video/webm"/>
+</video>
+<br/>
+<br/>
+
 ## Connect to Major Health Providers
 
-You can already log in with major health providers like Epic MyChart.
+You can already log in with several major health providers like Epic MyChart, Cerner, Allscripts, and DrChrono/Onpatient. More coming soon!
 <video controls width="100%">
 
   <source src="/vid/add-connection.webm" type="video/webm"/>
@@ -55,7 +64,7 @@ Mere supports connecting to multiple sources all at once
 <br/>
 <br/>
 
-## Edit your Data and Export your Medical Records
+## Export your Medical Records
 
 Your data is yours - you can back up and export your data to JSON at any point.
 <video controls width="100%">
@@ -64,3 +73,13 @@ Your data is yours - you can back up and export your data to JSON at any point.
 </video>
 <br/>
 <br/>
+
+## Store your Data Locally, Skip the Cloud
+
+Your data is stored locally on device and can be accessed with no internet connection. Try it out! After syncing your medical records for the first time, try turning off your internet connection and refreshing the app. You'll still be able to see and search through all your data.
+
+Mere focuses on making sure you own your data. You can back up, export, and delete your data at any time - its only stored on your device.
+
+## Encrypt your Data
+
+Mere optionally allows you to password protect your data. Mere uses your password to encrypt your data at rest. This means that even if someone were to get access to your device, they wouldn't be able to see your data without your password.
