@@ -7,14 +7,14 @@ export interface ConnectionDocument extends BaseDocument {
   user_id: string;
   access_token: string;
   expires_at: number;
-  refresh_token: string;
-  scope: string;
+  refresh_token?: string;
+  scope?: string;
   source: ConnectionSources;
   name: string;
   location: string | Location;
-  last_refreshed: string | TDateISO;
-  last_sync_attempt: string | TDateISO;
-  last_sync_was_error: boolean;
+  last_refreshed?: string | TDateISO;
+  last_sync_attempt?: string | TDateISO;
+  last_sync_was_error?: boolean;
 }
 
 export interface EpicConnectionDocument extends ConnectionDocument {

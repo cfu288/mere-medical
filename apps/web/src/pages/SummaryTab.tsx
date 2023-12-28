@@ -175,7 +175,7 @@ type SummaryState = {
   imm: ClinicalDocument<BundleEntry<Immunization>>[];
   careplan: ClinicalDocument<BundleEntry<CarePlan>>[];
   allergy: ClinicalDocument<BundleEntry<AllergyIntolerance>>[];
-  is_pinned: ClinicalDocument<BundleEntry<DiagnosticReport | Observation>>[];
+  pinned: ClinicalDocument<BundleEntry<DiagnosticReport | Observation>>[];
   initialized: boolean;
 };
 
@@ -239,7 +239,7 @@ function useSummaryData(): [
     imm: ClinicalDocument<BundleEntry<Immunization>>[];
     careplan: ClinicalDocument<BundleEntry<CarePlan>>[];
     allergy: ClinicalDocument<BundleEntry<AllergyIntolerance>>[];
-    is_pinned: ClinicalDocument<BundleEntry<DiagnosticReport | Observation>>[];
+    pinned: ClinicalDocument<BundleEntry<DiagnosticReport | Observation>>[];
     initialized: boolean;
   },
   React.Dispatch<SummaryActions>
@@ -253,7 +253,7 @@ function useSummaryData(): [
     imm: [],
     careplan: [],
     allergy: [],
-    is_pinned: [],
+    pinned: [],
     initialized: false,
   });
 
@@ -306,7 +306,7 @@ function useSummaryData(): [
           )
         ),
       ])
-        .then(([meds, cond, imm, careplan, allergy, is_pinned]) => {
+        .then(([meds, cond, imm, careplan, allergy, pinned]) => {
           reducer({
             type: ActionTypes.COMPLETED,
             data: {
@@ -315,7 +315,7 @@ function useSummaryData(): [
               imm,
               careplan,
               allergy,
-              is_pinned,
+              pinned,
             },
           });
         })
@@ -329,7 +329,7 @@ function useSummaryData(): [
 }
 
 function SummaryTab() {
-  const [{ meds, cond, imm, careplan, allergy, is_pinned, initialized }] =
+  const [{ meds, cond, imm, careplan, allergy, pinned, initialized }] =
     useSummaryData();
 
   return (
@@ -352,13 +352,13 @@ function SummaryTab() {
           imm.length === 0 &&
           careplan.length === 0 &&
           allergy.length === 0 &&
-          is_pinned.length === 0 ? (
+          pinned.length === 0 ? (
             <div className="col-span-6 sm:col-span-3 ">
               <EmptyRecordsPlaceholder />
             </div>
           ) : (
             <>
-              {is_pinned.length === 0 ? (
+              {pinned.length === 0 ? (
                 <div className="col-span-6 sm:col-span-3 ">
                   <Disclosure defaultOpen={true}>
                     {({ open }) => (
@@ -413,7 +413,7 @@ function SummaryTab() {
                   </Disclosure>
                 </div>
               ) : (
-                <PinnedListCard items={is_pinned} />
+                <PinnedListCard items={pinned} />
               )}
               <MedicationsListCard items={meds} />
               <ConditionsListCard items={cond} />

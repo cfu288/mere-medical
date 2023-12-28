@@ -3,7 +3,7 @@ import { DatabaseCollections } from '../components/providers/RxDbProvider';
 import { ConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
 
 export async function getConnectionCardByUrl<T extends ConnectionDocument>(
-  url: string,
+  url: string | Location,
   db: RxDatabase<DatabaseCollections>
 ): Promise<RxDocument<T>> {
   return db.connection_documents

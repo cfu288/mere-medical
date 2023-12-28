@@ -591,7 +591,7 @@ export async function saveConnectionToDb({
   user,
 }: {
   res: EpicAuthResponseWithClientId | EpicAuthResponse;
-  epicUrl: string;
+  epicUrl: string | Location;
   epicName: string;
   db: RxDatabase<DatabaseCollections>;
   epicId: string;
