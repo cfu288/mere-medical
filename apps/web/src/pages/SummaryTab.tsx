@@ -133,23 +133,32 @@ function fetchAllergy(db: RxDatabase<DatabaseCollections>, user_id: string) {
       return lst;
     });
 }
-function fetchPinned(db: RxDatabase<DatabaseCollections>, user_id: string) {
-  return db.clinical_documents
-    .find({
+
+async function fetchPinned(
+  db: RxDatabase<DatabaseCollections>,
+  user_id: string
+) {
+  const pinnedIds = await db.summary_page_preferences
+    .findOne({
       selector: {
         user_id: user_id,
-        'metadata.is_pinned': true,
       },
-      sort: [{ 'metadata.date': 'desc' }],
     })
-    .exec()
-    .then((list) => {
-      const lst = list as unknown as RxDocument<
-        ClinicalDocument<BundleEntry<FhirResource>>
-      >[];
+    .exec();
 
-      return lst;
-    });
+  if (pinnedIds === null) {
+    return [];
+  }
+
+  const pinnedIdsList = pinnedIds.pinned_labs || [];
+
+  return db.clinical_documents.findByIds(pinnedIdsList).then((list) => {
+    const lst = list as unknown as RxDocument<
+      ClinicalDocument<BundleEntry<FhirResource>>
+    >[];
+
+    return lst;
+  });
 }
 
 enum ActionTypes {
@@ -182,9 +191,7 @@ type SummaryActions =
         imm: ClinicalDocument<BundleEntry<Immunization>>[];
         careplan: ClinicalDocument<BundleEntry<CarePlan>>[];
         allergy: ClinicalDocument<BundleEntry<AllergyIntolerance>>[];
-        is_pinned: ClinicalDocument<
-          BundleEntry<DiagnosticReport | Observation>
-        >[];
+        pinned: ClinicalDocument<BundleEntry<DiagnosticReport | Observation>>[];
       };
     };
 
@@ -215,7 +222,7 @@ function summaryReducer(state: SummaryState, action: SummaryActions) {
         cond: action.data.cond,
         careplan: action.data.careplan,
         allergy: action.data.allergy,
-        is_pinned: action.data.is_pinned,
+        pinned: action.data.pinned,
         status: ActionTypes.COMPLETED,
         initialized: true,
       };

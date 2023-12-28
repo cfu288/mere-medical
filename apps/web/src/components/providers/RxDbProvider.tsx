@@ -47,6 +47,10 @@ import { AppLoadingSkeleton } from './AppLoadingSkeleton';
 import { CryptedIndexedDBAdapter } from 'sylviejs/storage-adapter/crypted-indexeddb-adapter';
 import logo from '../../img/white-logo.svg';
 import { useLocalConfig } from './LocalConfigProvider';
+import {
+  SummaryPagePreferencesCollection,
+  SummaryPagePreferencesSchema,
+} from '../../models/summary-page-preferences/SummaryPagePreferences.collection';
 
 if (process.env.NODE_ENV === 'development') {
   addRxPlugin(RxDBDevModePlugin);
@@ -61,6 +65,7 @@ export type DatabaseCollections = {
   connection_documents: ConnectionDocumentCollection;
   user_documents: UserDocumentCollection;
   user_preferences: UserPreferencesDocumentCollection;
+  summary_page_preferences: SummaryPagePreferencesCollection;
 };
 
 const RxDbContext = React.createContext<
@@ -85,6 +90,9 @@ export const databaseCollections = {
   user_preferences: {
     schema: UserPreferencesDocumentSchema,
     migrationStrategies: UserPreferencesMigrations,
+  },
+  summary_page_preferences: {
+    schema: SummaryPagePreferencesSchema,
   },
 };
 

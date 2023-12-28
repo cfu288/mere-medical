@@ -14,7 +14,7 @@ export function useClinicalDoc(id?: string) {
     getList = useCallback(() => {
       if (id) {
         getClinicalDocWithMetaId(id, db).then((list) => {
-          setConn((list as unknown) as RxDocument<ClinicalDocument>);
+          setConn(list as unknown as RxDocument<ClinicalDocument>);
         });
       }
     }, [db, id]);
@@ -46,5 +46,5 @@ async function getClinicalDocWithMetaId(
       },
     })
     .exec()
-    .then((list) => (list as unknown) as RxDocument<ClinicalDocument>);
+    .then((list) => list as unknown as RxDocument<ClinicalDocument>);
 }

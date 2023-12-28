@@ -7,4 +7,9 @@ export const UserDocumentMigrations: MigrationStrategies = {
     oldDoc._attachments = {};
     return oldDoc;
   },
+  2: function (oldDoc) {
+    // We delete the attachments object
+    delete oldDoc._attachments;
+    return oldDoc;
+  },
 };

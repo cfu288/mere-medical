@@ -6,4 +6,8 @@ export const UserPreferencesMigrations: MigrationStrategies = {
     // We set default for use_proxy to true, but don't change existing preferences
     return oldDoc;
   },
+  2: function (oldDoc) {
+    // No changes
+    return oldDoc;
+  },
 };

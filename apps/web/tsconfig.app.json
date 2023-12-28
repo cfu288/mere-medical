@@ -64,7 +64,9 @@
     "src/components/tutorial/TutorialItemWrapper.tsx",
     "./src/components/tutorial/TutorialContentScreen.tsx",
     "./src/pages/PinnedListCard.tsx",
-    "./src/components/timeline/ShowDocumentReferenceResultsExpandable/parseCCDA/parseCCDASocialHistorySection.1.tsx"
+    "./src/components/timeline/ShowDocumentReferenceResultsExpandable/parseCCDA/parseCCDASocialHistorySection.1.tsx",
+    "src/models/clinical-document/Date.ts",
+    "./src/components/hooks/useSummaryPagePreferences.tsx"
   ],
   "exclude": [
     "jest.config.ts",

@@ -58,7 +58,7 @@ const CernerRedirect: React.FC = () => {
                 scope: res.scope,
                 id_token: res.id_token,
                 refresh_token: res.refresh_token,
-                expires_in: nowInSeconds + res.expires_in,
+                expires_at: nowInSeconds + res.expires_in,
                 auth_uri: cernerAuthUrl,
                 token_uri: cernerTokenUrl,
               };

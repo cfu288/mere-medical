@@ -13,7 +13,13 @@ export const ClinicalDocumentMigrations: MigrationStrategies = {
     return oldDoc;
   },
   3: function (oldDoc: Required<ClinicalDocument>) {
-    oldDoc.metadata.is_pinned = false;
+    (oldDoc.metadata as ClinicalDocument & { is_pinned: boolean }).is_pinned =
+      false;
+    return oldDoc;
+  },
+  4: function (oldDoc: Required<ClinicalDocument>) {
+    delete (oldDoc.metadata as ClinicalDocument & { is_pinned?: boolean })
+      .is_pinned;
     return oldDoc;
   },
 };

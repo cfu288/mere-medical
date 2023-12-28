@@ -50,7 +50,7 @@ const OnPatientRedirect: React.FC = () => {
                   $set: {
                     access_token: accessToken,
                     refresh_token: refreshToken,
-                    expires_in: nowInSeconds + parseInt(expiresIn),
+                    expires_at: nowInSeconds + parseInt(expiresIn),
                     last_sync_was_error: false,
                   },
                 })
@@ -90,7 +90,7 @@ const OnPatientRedirect: React.FC = () => {
               name: 'OnPatient',
               access_token: accessToken,
               refresh_token: refreshToken,
-              expires_in: nowInSeconds + parseInt(expiresIn),
+              expires_at: nowInSeconds + parseInt(expiresIn),
             };
             db.connection_documents
               .insert(dbentry)
