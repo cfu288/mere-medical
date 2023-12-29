@@ -34,6 +34,7 @@ export function getLoginUrlBySource(
     case 'epic': {
       return getEpicLoginUrl(
         item.get('location'),
+        item.get('auth_uri'),
         item.get('tenant_id') === 'sandbox' ||
           item.get('tenant_id') === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354'
       );
@@ -60,6 +61,8 @@ export function setTenantUrlBySource(
     case 'epic': {
       setTenantEpicUrl(
         item.get('location'),
+        item.get('auth_uri'),
+        item.get('token_uri'),
         item.get('name'),
         item.get('tenant_id')
       );
@@ -69,7 +72,7 @@ export function setTenantUrlBySource(
       setTenantCernerUrl(
         item.get('location'),
         item.get('auth_uri'),
-        item.get('auth_uri'),
+        item.get('token_uri'),
         item.get('name'),
         item.get('id')
       );
@@ -93,10 +96,14 @@ export function setTenantUrlBySource(
 
 function setTenantEpicUrl(
   s: string & Location,
+  a: string & Location,
+  t: string & Location,
   name: string,
   id: string
 ): void {
-  localStorage.setItem(EpicLocalStorageKeys.EPIC_URL, s);
+  localStorage.setItem(EpicLocalStorageKeys.EPIC_BASE_URL, s);
+  localStorage.setItem(EpicLocalStorageKeys.EPIC_AUTH_URL, a);
+  localStorage.setItem(EpicLocalStorageKeys.EPIC_TOKEN_URL, t);
   localStorage.setItem(EpicLocalStorageKeys.EPIC_NAME, name);
   localStorage.setItem(EpicLocalStorageKeys.EPIC_ID, id);
 }
@@ -137,10 +144,16 @@ const ConnectionTab: React.FC = () => {
     userPreferences = useUserPreferences(),
     onpatientLoginUrl = OnPatient.getLoginUrl(),
     handleToggleEpicPanel = useCallback(
-      (loc: string & Location, name: string, id: string) => {
-        setTenantEpicUrl(loc, name, id);
+      (
+        base: string & Location,
+        auth: string & Location,
+        token: string & Location,
+        name: string,
+        id: string
+      ) => {
+        setTenantEpicUrl(base, auth, token, name, id);
         setEpicOpen((x) => !x);
-        window.location = getEpicLoginUrl(loc, id === 'sandbox');
+        window.location = getEpicLoginUrl(base, auth, id === 'sandbox');
       },
       []
     ),

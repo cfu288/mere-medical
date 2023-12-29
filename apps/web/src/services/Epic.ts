@@ -37,11 +37,18 @@ import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.t
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
 
 export function getDSTU2Url(baseUrl: string) {
-  return `${baseUrl}/api/FHIR/DSTU2`;
+  return isDSTU2Url(baseUrl)
+    ? new URL(baseUrl).toString()
+    : new URL('/api/FHIR/DSTU2', baseUrl).toString();
+}
+
+export function isDSTU2Url(url: string) {
+  return url.includes('/api/FHIR/DSTU2');
 }
 
 export function getLoginUrl(
   baseUrl: string,
+  authorizeUrl: string,
   isSandbox = false
 ): string & Location {
   const params = {
@@ -54,15 +61,18 @@ export function getLoginUrl(
     response_type: 'code',
   };
 
-  return `${baseUrl}/oauth2/authorize?${new URLSearchParams(
-    params
-  )}` as string & Location;
+  // return `${baseUrl}/oauth2/authorize?${new URLSearchParams(
+  //   params
+  // )}` as string & Location;
+  return `${authorizeUrl}?${new URLSearchParams(params)}` as string & Location;
 }
 
 export enum EpicLocalStorageKeys {
-  EPIC_URL = 'epicUrl',
+  EPIC_BASE_URL = 'epicUrl',
   EPIC_NAME = 'epicName',
   EPIC_ID = 'epicId',
+  EPIC_AUTH_URL = 'epicAuthUrl',
+  EPIC_TOKEN_URL = 'epicTokenUrl',
 }
 
 async function getFHIRResource<T extends FhirResource>(
@@ -434,18 +444,18 @@ async function fetchAttachmentData(
 /**
  * Using the code from the Epic callback, fetch the access token
  * @param code code from the Epic callback, usually a query param
- * @param epicUrl url of the Epic server we are connecting to
+ * @param epicTokenUrl url of the Epic server we are connecting to
  * @param epicName user friendly name of the Epic server we are connecting to
  * @returns Promise of the auth response from the Epic server
  */
 export async function fetchAccessTokenWithCode(
   code: string,
-  epicUrl: string,
+  epicTokenUrl: string,
   epicName: string,
   epicId?: string,
   useProxy = false
 ): Promise<EpicAuthResponse> {
-  const defaultUrl = `${epicUrl}/oauth2/token`;
+  const defaultUrl = epicTokenUrl;
   const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${epicId}&target=/oauth2/token`;
   const headers = {
     'Content-Type': 'application/x-www-form-urlencoded',
@@ -474,18 +484,19 @@ export async function fetchAccessTokenWithCode(
 
 export async function registerDynamicClient({
   res,
-  epicUrl,
+  epicBaseUrl,
   epicName,
   epicId,
   useProxy = false,
 }: {
   res: EpicAuthResponse;
-  epicUrl: string;
+  epicBaseUrl: string;
   epicName: string;
   epicId?: string;
   useProxy?: boolean;
 }): Promise<EpicDynamicRegistrationResponse> {
-  const defaultUrl = `${epicUrl}/oauth2/register`;
+  const baseUrlWithoutDSTU2 = epicBaseUrl.replace('/api/FHIR/DSTU2', '');
+  const defaultUrl = `${baseUrlWithoutDSTU2}/oauth2/register`;
   const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${epicId}&target=/oauth2/register`;
 
   const jsonWebKeySet = await getPublicKey();
@@ -548,18 +559,18 @@ export class DynamicRegistrationError extends Error {
 
 export async function fetchAccessTokenUsingJWT(
   clientId: string,
-  epicUrl: string,
+  epicTokenUrl: string,
   epicId?: string,
   useProxy = false
 ): Promise<EpicAuthResponseWithClientId> {
-  const defaultUrl = `${epicUrl}/oauth2/token`;
+  const defaultUrl = epicTokenUrl;
   const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${epicId}&target=/oauth2/token`;
 
   // We've registered, now we can get another access token with our signed JWT
   const jwtBody = {
     sub: clientId,
     iss: clientId,
-    aud: `${epicUrl}/oauth2/token`,
+    aud: epicTokenUrl,
     jti: uuid4(),
   };
   const signedJwt = await signJwt(jwtBody);
@@ -584,32 +595,45 @@ export async function fetchAccessTokenUsingJWT(
 
 export async function saveConnectionToDb({
   res,
-  epicUrl,
+  epicBaseUrl: epicUrl,
+  epicTokenUrl,
+  epicAuthUrl,
   epicName,
   db,
   epicId,
   user,
 }: {
   res: EpicAuthResponseWithClientId | EpicAuthResponse;
-  epicUrl: string | Location;
+  epicBaseUrl: string | Location;
+  epicTokenUrl: string | Location;
+  epicAuthUrl: string | Location;
   epicName: string;
   db: RxDatabase<DatabaseCollections>;
   epicId: string;
   user: UserDocument;
 }) {
   const doc = await getConnectionCardByUrl<EpicConnectionDocument>(epicUrl, db);
+  // handle when epicUrl used to only have the base, but now has 'api/FHIR/DSTU2' appended
+  const docLegacy = await getConnectionCardByUrl<EpicConnectionDocument>(
+    new URL('api/FHIR/DSTU2', epicUrl as string).toString(),
+    db
+  );
   return new Promise((resolve, reject) => {
     if (res?.access_token && res?.expires_in && res?.patient) {
-      if (doc) {
+      const currentDoc = doc || docLegacy;
+      if (currentDoc) {
         // If we already have a connection card for this URL, update it
         try {
           const nowInSeconds = Math.floor(Date.now() / 1000);
-          doc
+          currentDoc
             .update({
               $set: {
                 client_id:
                   (res as EpicAuthResponseWithClientId)?.client_id ||
-                  doc.client_id,
+                  currentDoc.client_id,
+                location: epicUrl,
+                auth_uri: epicAuthUrl,
+                token_uri: epicTokenUrl,
                 access_token: res.access_token,
                 expires_at: nowInSeconds + res.expires_in,
                 scope: res.scope,
@@ -638,6 +662,8 @@ export async function saveConnectionToDb({
           user_id: user.id,
           source: 'epic',
           location: epicUrl,
+          auth_uri: epicAuthUrl,
+          token_uri: epicTokenUrl,
           name: epicName,
           access_token: res.access_token,
           expires_at: nowInSeconds + res.expires_in,
@@ -677,6 +703,8 @@ export async function refreshEpicConnectionTokenIfNeeded(
   if (connectionDocument.get('expires_in') <= nowInSeconds) {
     try {
       const epicUrl = connectionDocument.get('location'),
+        epicTokenUrl = connectionDocument.get('token_uri'),
+        epicAuthUrl = connectionDocument.get('auth_uri'),
         epicName = connectionDocument.get('name'),
         clientId = connectionDocument.get('client_id'),
         epicId = connectionDocument.get('tenant_id'),
@@ -684,15 +712,17 @@ export async function refreshEpicConnectionTokenIfNeeded(
 
       const access_token_data = await fetchAccessTokenUsingJWT(
         clientId,
-        epicUrl,
+        epicTokenUrl,
         epicId,
         useProxy
       );
 
       return await saveConnectionToDb({
         res: access_token_data,
-        epicUrl,
+        epicBaseUrl: epicUrl,
         epicName,
+        epicTokenUrl,
+        epicAuthUrl,
         db,
         epicId,
         user,

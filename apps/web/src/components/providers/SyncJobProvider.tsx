@@ -511,22 +511,26 @@ async function refreshEpicConnectionTokenIfNeeded(
   const nowInSeconds = Math.floor(Date.now() / 1000);
   if (connectionDocument.get('expires_in') <= nowInSeconds) {
     try {
-      const epicUrl = connectionDocument.get('location'),
+      const epicBaseUrl = connectionDocument.get('location'),
         epicName = connectionDocument.get('name'),
+        epicAuthUrl = connectionDocument.get('auth_uri'),
+        epicTokenUrl = connectionDocument.get('token_uri'),
         clientId = connectionDocument.get('client_id'),
         epicId = connectionDocument.get('tenant_id'),
         user = connectionDocument.get('user_id');
 
       const access_token_data = await Epic.fetchAccessTokenUsingJWT(
         clientId,
-        epicUrl,
+        epicTokenUrl,
         epicId,
         useProxy
       );
 
       return await Epic.saveConnectionToDb({
         res: access_token_data,
-        epicUrl,
+        epicBaseUrl,
+        epicTokenUrl,
+        epicAuthUrl,
         epicName,
         db,
         epicId,
