@@ -32,7 +32,7 @@ export function EpicSelectModal({
   useEffect(() => {
     const abortController = new AbortController();
 
-    fetch(`/api/v1/epic/tenants?` + new URLSearchParams({ query }), {
+    fetch(`/api/v1/epic/dstu2/tenants?` + new URLSearchParams({ query }), {
       signal: abortController.signal,
     })
       .then((x) => x.json())
@@ -63,7 +63,6 @@ export function EpicSelectModal({
       />
       <Combobox
         onChange={(s: SelectOption) => {
-          debugger;
           onClick(s.baseUrl, s.authUrl, s.tokenUrl, s.name, s.id);
           setOpen(false);
         }}

@@ -175,29 +175,29 @@ function startSyncConnection(
       ) >= 1)
   ) {
     // Greater than 1 day, consider syncing
-    // Was the last sync an error
+    // Was the last sync an error?
     if (item.get('last_sync_was_error')) {
-      // If error, check if a sync has been attempted in the past hour, skip if so
+      // If error, check if a sync has been attempted in the past week, skip if so
       if (
         !item.get('last_sync_attempt') ||
         (item.get('last_sync_attempt') &&
           Math.abs(
-            differenceInHours(
+            differenceInDays(
               parseISO(item.get('last_sync_attempt')),
               new Date()
             )
-          ) <= 1)
+          ) <= 7)
       ) {
         console.log(
           `Skipping sync for ${item.get(
             'name'
-          )}, last sync attempt was less than an hour ago`
+          )}, last sync attempt was an error and was less than a week ago`
         );
       } else {
         console.log(
           `Now syncing ${item.get(
             'name'
-          )}, last sync was an error and was more than an hour ago`
+          )}, last sync was an error and was more than a week ago`
         );
         if (!syncJobEntries.has(item.get('id'))) {
           // Start sync, make sure this only runs once

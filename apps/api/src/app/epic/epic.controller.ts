@@ -6,8 +6,19 @@ import { EpicService } from './epic.service';
 export class EpicController {
   constructor(private readonly epicService: EpicService) {}
 
+  @Get('dstu2/tenants')
+  async getDSTU2Tenants(@Res() response: Response, @Query('query') query) {
+    try {
+      const data = await this.epicService.queryTenants(query);
+      response.json(data);
+    } catch (e) {
+      Logger.log(e);
+      response.status(500).send({ message: 'There was an error' });
+    }
+  }
+
   @Get('tenants')
-  async getData(@Res() response: Response, @Query('query') query) {
+  async getTenants(@Res() response: Response, @Query('query') query) {
     try {
       const data = await this.epicService.queryTenants(query);
       response.json(data);
