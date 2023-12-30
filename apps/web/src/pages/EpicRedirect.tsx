@@ -47,15 +47,30 @@ function useEpicDynamicRegistrationLogin() {
     if (!hasRun.current) {
       const searchRequest = new URLSearchParams(window.location.search),
         code = searchRequest.get('code'),
-        epicUrl = localStorage.getItem(EpicLocalStorageKeys.EPIC_URL),
+        epicBaseUrl = localStorage.getItem(EpicLocalStorageKeys.EPIC_BASE_URL),
+        epicTokenUrl = localStorage.getItem(
+          EpicLocalStorageKeys.EPIC_TOKEN_URL
+        ),
+        epicAuthUrl = localStorage.getItem(EpicLocalStorageKeys.EPIC_AUTH_URL),
         epicName = localStorage.getItem(EpicLocalStorageKeys.EPIC_NAME),
         epicId = localStorage.getItem(EpicLocalStorageKeys.EPIC_ID);
 
-      if (code && epicUrl && epicName && epicId && userPreferences && user) {
+      if (
+        code &&
+        epicBaseUrl &&
+        epicName &&
+        epicTokenUrl &&
+        epicAuthUrl &&
+        epicId &&
+        userPreferences &&
+        user
+      ) {
         hasRun.current = true;
         handleLogin({
           code,
-          epicUrl,
+          epicBaseUrl,
+          epicTokenUrl,
+          epicAuthUrl,
           epicId,
           epicName,
           db,
@@ -82,7 +97,7 @@ function useEpicDynamicRegistrationLogin() {
             }
           });
       } else {
-        if (!(code && epicUrl && epicName && epicId)) {
+        if (!(code && epicBaseUrl && epicName && epicId)) {
           setError('There was a problem trying to sign in');
         }
         // Otherwise, we're just pulling data
@@ -177,7 +192,9 @@ const redirectToConnectionsTab = (navigate: NavigateFunction) => {
  */
 const handleLogin = async ({
   code,
-  epicUrl,
+  epicBaseUrl,
+  epicTokenUrl,
+  epicAuthUrl,
   epicId,
   epicName,
   db,
@@ -186,7 +203,9 @@ const handleLogin = async ({
   enableProxy = false,
 }: {
   code: string;
-  epicUrl: string;
+  epicBaseUrl: string;
+  epicTokenUrl: string;
+  epicAuthUrl: string;
   epicName: string;
   epicId: string;
   db: RxDatabase<DatabaseCollections>;
@@ -199,7 +218,7 @@ const handleLogin = async ({
   // Attempt initial code swap
   const initalAuthResponse = await fetchAccessTokenWithCode(
     code,
-    epicUrl,
+    epicTokenUrl,
     epicName,
     epicId,
     enableProxy
@@ -209,7 +228,7 @@ const handleLogin = async ({
   try {
     dynamicRegResponse = await registerDynamicClient({
       res: initalAuthResponse,
-      epicUrl,
+      epicBaseUrl,
       epicName,
       epicId,
       useProxy: enableProxy,
@@ -220,7 +239,9 @@ const handleLogin = async ({
       const res = e.data;
       await saveConnectionToDb({
         res,
-        epicUrl,
+        epicBaseUrl,
+        epicTokenUrl,
+        epicAuthUrl,
         epicName,
         db,
         epicId,
@@ -241,14 +262,16 @@ const handleLogin = async ({
   // Using DR to fetch new token
   const jwtAuthResponse = await fetchAccessTokenUsingJWT(
     dynamicRegResponse.client_id,
-    epicUrl,
+    epicTokenUrl,
     epicId,
     enableProxy
   );
 
   await saveConnectionToDb({
     res: jwtAuthResponse,
-    epicUrl,
+    epicBaseUrl,
+    epicTokenUrl,
+    epicAuthUrl,
     epicName,
     db,
     epicId,

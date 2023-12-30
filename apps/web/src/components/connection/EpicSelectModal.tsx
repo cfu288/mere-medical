@@ -8,6 +8,7 @@ import { ModalHeader } from '../ModalHeader';
 import { DSTU2Endpoint } from '@mere/epic';
 import { EpicSelectModelResultItem } from './EpicSelectModelResultItem';
 import { useNotificationDispatch } from '../providers/NotificationProvider';
+import { SelectOption } from '../../pages/ConnectionTab';
 
 export function EpicSelectModal({
   open,
@@ -16,7 +17,13 @@ export function EpicSelectModal({
 }: {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  onClick: (s: string & Location, name: string, id: string) => void;
+  onClick: (
+    s: string & Location,
+    auth: string & Location,
+    token: string & Location,
+    name: string,
+    id: string
+  ) => void;
 }) {
   const [query, setQuery] = useDebounce('', 150);
   const [items, setItems] = useState<DSTU2Endpoint[]>([]),
@@ -25,7 +32,7 @@ export function EpicSelectModal({
   useEffect(() => {
     const abortController = new AbortController();
 
-    fetch(`/api/v1/epic/tenants?` + new URLSearchParams({ query }), {
+    fetch(`/api/v1/epic/dstu2/tenants?` + new URLSearchParams({ query }), {
       signal: abortController.signal,
     })
       .then((x) => x.json())
@@ -55,8 +62,8 @@ export function EpicSelectModal({
         setClose={() => setOpen((x) => !x)}
       />
       <Combobox
-        onChange={(s: { url: string & Location; name: string; id: string }) => {
-          onClick(s.url, s.name, s.id);
+        onChange={(s: SelectOption) => {
+          onClick(s.baseUrl, s.authUrl, s.tokenUrl, s.name, s.id);
           setOpen(false);
         }}
       >
@@ -83,7 +90,9 @@ export function EpicSelectModal({
                 key={item.id}
                 id={item.id}
                 name={item.name}
-                url={item.url}
+                baseUrl={item.url}
+                tokenUrl={item.token}
+                authUrl={item.authorize}
               />
             ))}
           </Combobox.Options>

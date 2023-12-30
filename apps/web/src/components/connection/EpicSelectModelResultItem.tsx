@@ -4,17 +4,21 @@ import { classNames } from '../../utils/StyleUtils';
 export function EpicSelectModelResultItem({
   id,
   name,
-  url,
+  baseUrl,
+  tokenUrl,
+  authUrl,
 }: {
   id: string;
   name: string;
-  url: string;
+  baseUrl: string;
+  tokenUrl: string;
+  authUrl: string;
 }) {
   return (
     <Combobox.Option
       tabIndex={0}
       key={id}
-      value={{ id, name, url }}
+      value={{ id, name, baseUrl, tokenUrl, authUrl }}
       className={({ active }) =>
         classNames(
           active ? 'bg-gray-100' : '',

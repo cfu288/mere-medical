@@ -21,12 +21,7 @@ import * as Cerner from '../../services/Cerner';
 import * as Veradigm from '../../services/Veradigm';
 import { from, Subject } from 'rxjs';
 import { useNotificationDispatch } from './NotificationProvider';
-import {
-  differenceInDays,
-  differenceInHours,
-  differenceInMinutes,
-  parseISO,
-} from 'date-fns';
+import { differenceInDays, parseISO } from 'date-fns';
 import Config from '../../environments/config.json';
 import { useUserPreferences } from './UserPreferencesProvider';
 import { useConnectionCards } from '../hooks/useConnectionCards';
@@ -145,9 +140,11 @@ function HandleInitalSync({ children }: PropsWithChildren) {
         }
         hasRun = true;
         if (conList) {
+          console.group('Syncing Connections:');
           for (const item of conList) {
             startSyncConnection(item, syncJobEntries, handleFetchData);
           }
+          console.groupEnd();
         }
       },
       [conList, handleFetchData, syncJobEntries]
@@ -175,29 +172,29 @@ function startSyncConnection(
       ) >= 1)
   ) {
     // Greater than 1 day, consider syncing
-    // Was the last sync an error
+    // Was the last sync an error?
     if (item.get('last_sync_was_error')) {
-      // If error, check if a sync has been attempted in the past hour, skip if so
+      // If error, check if a sync has been attempted in the past week, skip if so
       if (
         !item.get('last_sync_attempt') ||
         (item.get('last_sync_attempt') &&
           Math.abs(
-            differenceInHours(
+            differenceInDays(
               parseISO(item.get('last_sync_attempt')),
               new Date()
             )
-          ) <= 1)
+          ) <= 7)
       ) {
         console.log(
           `Skipping sync for ${item.get(
             'name'
-          )}, last sync attempt was less than an hour ago`
+          )}, last sync attempt was an error and was less than a week ago`
         );
       } else {
         console.log(
           `Now syncing ${item.get(
             'name'
-          )}, last sync was an error and was more than an hour ago`
+          )}, last sync was an error and was more than a week ago`
         );
         if (!syncJobEntries.has(item.get('id'))) {
           // Start sync, make sure this only runs once
@@ -252,7 +249,7 @@ function OnHandleUnsubscribeJobs({ children }: PropsWithChildren) {
           const successRes = res.filter((i) => i.status === 'fulfilled');
           const errors = res.filter((i) => i.status === 'rejected');
 
-          console.group('Sync Errors');
+          console.group('Sync Errors:');
           errors.forEach((x) =>
             console.error((x as PromiseRejectedResult).reason)
           );
@@ -314,6 +311,10 @@ export function useSyncJobContext() {
   return context;
 }
 
+/**
+ * A hook that returns the sync job dispatch function.
+ * @returns a dispatch function that allows you to add/remove sync jobs
+ */
 export function useSyncJobDispatchContext() {
   const context = useContext(SyncJobDispatchContext);
   return context;
@@ -432,6 +433,12 @@ async function fetchMedicalRecords(
   }
 }
 
+/**
+ * This function updates the connection document with the timestamps of the last sync attempt
+ * and marks the last sync as an error. It is called when a sync operation fails.
+ * @param connectionDocument The connection document to update
+ * @param db The RxDB database instance where the connection document is stored
+ */
 async function updateConnectionDocumentErrorTimestamps(
   connectionDocument: RxDocument<ConnectionDocument>,
   db: RxDatabase<DatabaseCollections>
@@ -442,6 +449,14 @@ async function updateConnectionDocumentErrorTimestamps(
   await db.connection_documents.upsert(newCd).then(() => {});
 }
 
+/**
+ * This function updates the timestamps in the connection document
+ * If there was a successful sync, it updates the last_refreshed and last_sync_attempt
+ * If there was an error, it updates the last_sync_attempt and sets last_sync_was_error to true
+ * @param syncJob the sync job to check if there were any successful syncs
+ * @param connectionDocument the connection document to update
+ * @param db the RxDB database to update the connection document in
+ */
 async function updateConnectionDocumentTimestamps(
   syncJob: PromiseSettledResult<void[]>[],
   connectionDocument: RxDocument<ConnectionDocument>,
@@ -455,10 +470,7 @@ async function updateConnectionDocumentTimestamps(
     newCd.last_sync_was_error = false;
     await db.connection_documents.upsert(newCd).then(() => {});
   } else {
-    const newCd = connectionDocument.toMutableJSON();
-    newCd.last_sync_attempt = new Date().toISOString();
-    newCd.last_sync_was_error = true;
-    await db.connection_documents.upsert(newCd).then(() => {});
+    await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
   }
 }
 
@@ -472,7 +484,16 @@ async function refreshCernerConnectionTokenIfNeeded(
   db: RxDatabase<DatabaseCollections>
 ) {
   const nowInSeconds = Math.floor(Date.now() / 1000);
-  if (connectionDocument.get('expires_in') <= nowInSeconds) {
+  if (connectionDocument.get('source') !== 'cerner') {
+    return Promise.reject(
+      new Error(
+        `Cannot refresh connection token for source: ${connectionDocument.get(
+          'source'
+        )}, expected 'cerner'`
+      )
+    );
+  }
+  if (connectionDocument.get('expires_at') <= nowInSeconds) {
     try {
       const baseUrl = connectionDocument.get('location'),
         refreshToken = connectionDocument.get('refresh_token'),
@@ -509,24 +530,37 @@ async function refreshEpicConnectionTokenIfNeeded(
   useProxy = false
 ) {
   const nowInSeconds = Math.floor(Date.now() / 1000);
-  if (connectionDocument.get('expires_in') <= nowInSeconds) {
+  if (connectionDocument.get('source') !== 'epic') {
+    return Promise.reject(
+      new Error(
+        `Cannot refresh connection token for source: ${connectionDocument.get(
+          'source'
+        )}, expected 'epic'`
+      )
+    );
+  }
+  if (connectionDocument.get('expires_at') <= nowInSeconds) {
     try {
-      const epicUrl = connectionDocument.get('location'),
+      const epicBaseUrl = connectionDocument.get('location'),
         epicName = connectionDocument.get('name'),
+        epicAuthUrl = connectionDocument.get('auth_uri'),
+        epicTokenUrl = connectionDocument.get('token_uri'),
         clientId = connectionDocument.get('client_id'),
         epicId = connectionDocument.get('tenant_id'),
         user = connectionDocument.get('user_id');
 
       const access_token_data = await Epic.fetchAccessTokenUsingJWT(
         clientId,
-        epicUrl,
+        epicTokenUrl,
         epicId,
         useProxy
       );
 
       return await Epic.saveConnectionToDb({
         res: access_token_data,
-        epicUrl,
+        epicBaseUrl,
+        epicTokenUrl,
+        epicAuthUrl,
         epicName,
         db,
         epicId,
