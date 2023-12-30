@@ -13,12 +13,13 @@ async function bootstrap() {
   console.log(process.env.NODE_ENV);
   Logger.log(
     `Running in ${
-      process.env.NODE_ENV === 'production' ? 'production' : 'development'
+      process.env.NODE_ENV !== 'development' ? 'production' : 'development'
     } mode`
   );
 
   let httpsOptions = null;
   if (ssl) {
+    Logger.log(`Enabling development SSL.`);
     const keyPath = '../../../.dev/certs/localhost-key.pem' || '';
     const certPath = '../../../.dev/certs/localhost.pem' || '';
     httpsOptions = {
@@ -28,6 +29,8 @@ async function bootstrap() {
       //TODO: apply this only to proxy routes
       bodyParser: false,
     };
+  } else {
+    Logger.log(`Development SSL certs skipped in production.`);
   }
 
   const app = await NestFactory.create(RootModule, { httpsOptions });

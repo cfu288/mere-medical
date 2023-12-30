@@ -29,7 +29,11 @@ export class ProxyService {
 
     if (target && !serviceId) {
       const error = `Cannot make a proxy call without a serviceId`;
-      this.logger.warn(error);
+      this.logger.warn({
+        error: new Error(`Cannot make a proxy call without a serviceId`),
+        message: error,
+        timestamp: new Date().toISOString(),
+      });
       return res.status(500).send({
         error,
       });
@@ -80,7 +84,11 @@ export class ProxyService {
         );
       } else {
         const error = `Could not find serviceId '${serviceId}'`;
-        this.logger.warn(error);
+        this.logger.warn({
+          message: error,
+          error: new Error(`Could not find serviceId '${serviceId}'`),
+          timestamp: new Date().toISOString(),
+        });
         return res.status(404).send({
           error,
         });
@@ -88,7 +96,11 @@ export class ProxyService {
     }
 
     res.status(404).send({ error: "Could not find 'target' or 'serviceId'" });
-    this.logger.error("Could not find 'target' or 'serviceId'");
+    this.logger.error({
+      message: "Could not find 'target' or 'serviceId'",
+      timestamp: new Date().toISOString(),
+      error: new Error("Could not find 'target' or 'serviceId'"),
+    });
   }
 
   private async doProxy(
@@ -119,9 +131,11 @@ export class ProxyService {
     this.proxy.web(req, res, requestOptions, (err) => {
       if (err.code === 'ECONNRESET') return;
 
-      this.logger.error(
-        `Error ${err.code} while proxying ${req.method} ${req.url}: ${err.message}`
-      );
+      this.logger.error({
+        error: err,
+        message: `Error ${err.code} while proxying ${req.method} ${req.url}: ${err.message}`,
+        timestamp: new Date().toISOString(),
+      });
 
       res.writeHead(500, {
         'Content-Type': 'text/plain',

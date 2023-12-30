@@ -32,9 +32,18 @@ export function getLoginUrlBySource(
 ): string & Location {
   switch (item.get('source')) {
     case 'epic': {
+      let baseUrl = item.get('location');
+
+      // to stay backwards compatible with old epic connections
+      // append /oauth2/authorize to the end of the auth url, if it doesn't already exist
+      let authUrl = item.get('auth_uri');
+      if (authUrl === undefined) {
+        authUrl = baseUrl + '/oauth2/authorize';
+      }
+
       return getEpicLoginUrl(
-        item.get('location'),
-        item.get('auth_uri'),
+        baseUrl,
+        authUrl,
         item.get('tenant_id') === 'sandbox' ||
           item.get('tenant_id') === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354'
       );
@@ -59,10 +68,32 @@ export function setTenantUrlBySource(
 ): void {
   switch (item.get('source')) {
     case 'epic': {
+      // to stay backwards compatible with old epic connections
+      // append /api/FHIR/DSTU2/ to the end of the base url, if it doesn't already exist
+      let baseUrl = item.get('location');
+      if (
+        !baseUrl.endsWith('/api/FHIR/DSTU2/') ||
+        !baseUrl.endsWith('/api/FHIR/DSTU2')
+      ) {
+        baseUrl = baseUrl + '/api/FHIR/DSTU2/';
+      }
+
+      // to stay backwards compatible with old epic connections
+      // append /oauth2/authorize to the end of the auth url, if it doesn't already exist
+      let authUrl = item.get('auth_uri');
+      if (authUrl === undefined) {
+        authUrl = baseUrl + '/oauth2/authorize';
+      }
+
+      let tokenUrl = item.get('token_uri');
+      if (tokenUrl === undefined) {
+        tokenUrl = baseUrl + '/oauth2/token';
+      }
+
       setTenantEpicUrl(
-        item.get('location'),
-        item.get('auth_uri'),
-        item.get('token_uri'),
+        baseUrl,
+        authUrl,
+        tokenUrl,
         item.get('name'),
         item.get('tenant_id')
       );

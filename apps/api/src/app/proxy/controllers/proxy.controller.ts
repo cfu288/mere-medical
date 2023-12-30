@@ -22,13 +22,23 @@ export class ProxyController {
     @Param() params
   ) {
     try {
+      Logger.log({
+        message: `Proxy request was made with params: ${JSON.stringify(
+          params
+        )}`,
+        route: request.url,
+        timestamp: new Date().toISOString(),
+      });
       this.proxyService.proxyRequest(request, response, params);
     } catch (err) {
       const msg = 'An error occurred while making the proxy call';
-
       response.status(500).send({ error: msg });
-
-      this.logger.error(msg, err);
+      Logger.error({
+        message: msg,
+        error: err,
+        route: request.url,
+        timestamp: new Date().toISOString(),
+      });
     }
   }
 }
