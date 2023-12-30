@@ -722,7 +722,7 @@ export async function refreshEpicConnectionTokenIfNeeded(
   useProxy = false
 ) {
   const nowInSeconds = Math.floor(Date.now() / 1000);
-  if (connectionDocument.get('expires_in') <= nowInSeconds) {
+  if (connectionDocument.get('expires_at') <= nowInSeconds) {
     try {
       const epicUrl = connectionDocument.get('location'),
         epicTokenUrl = connectionDocument.get('token_uri'),

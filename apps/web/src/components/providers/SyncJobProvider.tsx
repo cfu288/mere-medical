@@ -467,7 +467,7 @@ async function refreshCernerConnectionTokenIfNeeded(
   db: RxDatabase<DatabaseCollections>
 ) {
   const nowInSeconds = Math.floor(Date.now() / 1000);
-  if (connectionDocument.get('expires_in') <= nowInSeconds) {
+  if (connectionDocument.get('expires_at') <= nowInSeconds) {
     try {
       const baseUrl = connectionDocument.get('location'),
         refreshToken = connectionDocument.get('refresh_token'),
