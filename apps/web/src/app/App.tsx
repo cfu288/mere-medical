@@ -12,8 +12,11 @@ import { SyncJobProvider } from '../components/providers/SyncJobProvider';
 import { LocalConfigProvider } from '../components/providers/LocalConfigProvider';
 import { TutorialOverlay } from '../components/tutorial/TutorialOverlay';
 import Config from '../environments/config.json';
+import { useConsoleLogEasterEgg } from '../components/hooks/useConsoleLogEasterEgg';
 
 export default function App() {
+  useConsoleLogEasterEgg();
+
   return (
     <ErrorBoundary>
       <LocalConfigProvider>

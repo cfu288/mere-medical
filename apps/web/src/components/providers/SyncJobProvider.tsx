@@ -140,9 +140,11 @@ function HandleInitalSync({ children }: PropsWithChildren) {
         }
         hasRun = true;
         if (conList) {
+          console.group('Syncing Connections:');
           for (const item of conList) {
             startSyncConnection(item, syncJobEntries, handleFetchData);
           }
+          console.groupEnd();
         }
       },
       [conList, handleFetchData, syncJobEntries]
@@ -247,7 +249,7 @@ function OnHandleUnsubscribeJobs({ children }: PropsWithChildren) {
           const successRes = res.filter((i) => i.status === 'fulfilled');
           const errors = res.filter((i) => i.status === 'rejected');
 
-          console.group('Sync Errors');
+          console.group('Sync Errors:');
           errors.forEach((x) =>
             console.error((x as PromiseRejectedResult).reason)
           );
@@ -309,6 +311,10 @@ export function useSyncJobContext() {
   return context;
 }
 
+/**
+ * A hook that returns the sync job dispatch function.
+ * @returns a dispatch function that allows you to add/remove sync jobs
+ */
 export function useSyncJobDispatchContext() {
   const context = useContext(SyncJobDispatchContext);
   return context;
@@ -427,6 +433,12 @@ async function fetchMedicalRecords(
   }
 }
 
+/**
+ * This function updates the connection document with the timestamps of the last sync attempt
+ * and marks the last sync as an error. It is called when a sync operation fails.
+ * @param connectionDocument The connection document to update
+ * @param db The RxDB database instance where the connection document is stored
+ */
 async function updateConnectionDocumentErrorTimestamps(
   connectionDocument: RxDocument<ConnectionDocument>,
   db: RxDatabase<DatabaseCollections>
@@ -437,6 +449,14 @@ async function updateConnectionDocumentErrorTimestamps(
   await db.connection_documents.upsert(newCd).then(() => {});
 }
 
+/**
+ * This function updates the timestamps in the connection document
+ * If there was a successful sync, it updates the last_refreshed and last_sync_attempt
+ * If there was an error, it updates the last_sync_attempt and sets last_sync_was_error to true
+ * @param syncJob the sync job to check if there were any successful syncs
+ * @param connectionDocument the connection document to update
+ * @param db the RxDB database to update the connection document in
+ */
 async function updateConnectionDocumentTimestamps(
   syncJob: PromiseSettledResult<void[]>[],
   connectionDocument: RxDocument<ConnectionDocument>,
@@ -450,10 +470,7 @@ async function updateConnectionDocumentTimestamps(
     newCd.last_sync_was_error = false;
     await db.connection_documents.upsert(newCd).then(() => {});
   } else {
-    const newCd = connectionDocument.toMutableJSON();
-    newCd.last_sync_attempt = new Date().toISOString();
-    newCd.last_sync_was_error = true;
-    await db.connection_documents.upsert(newCd).then(() => {});
+    await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
   }
 }
 
@@ -467,6 +484,15 @@ async function refreshCernerConnectionTokenIfNeeded(
   db: RxDatabase<DatabaseCollections>
 ) {
   const nowInSeconds = Math.floor(Date.now() / 1000);
+  if (connectionDocument.get('source') !== 'cerner') {
+    return Promise.reject(
+      new Error(
+        `Cannot refresh connection token for source: ${connectionDocument.get(
+          'source'
+        )}, expected 'cerner'`
+      )
+    );
+  }
   if (connectionDocument.get('expires_at') <= nowInSeconds) {
     try {
       const baseUrl = connectionDocument.get('location'),
@@ -504,6 +530,15 @@ async function refreshEpicConnectionTokenIfNeeded(
   useProxy = false
 ) {
   const nowInSeconds = Math.floor(Date.now() / 1000);
+  if (connectionDocument.get('source') !== 'epic') {
+    return Promise.reject(
+      new Error(
+        `Cannot refresh connection token for source: ${connectionDocument.get(
+          'source'
+        )}, expected 'epic'`
+      )
+    );
+  }
   if (connectionDocument.get('expires_at') <= nowInSeconds) {
     try {
       const epicBaseUrl = connectionDocument.get('location'),

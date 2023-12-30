@@ -128,7 +128,7 @@ export function handleJSONDataImport(
           });
 
           if (Object.keys(errors).length > 0) {
-            console.group('There were some errors with import:');
+            console.group('Errors with import:');
             console.error(errors);
             console.groupEnd();
             reject(
