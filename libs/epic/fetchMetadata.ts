@@ -10,7 +10,7 @@ import chalk from 'chalk';
     console.log('Starting DSTU2 Endpoint Metadata Fetcher for EPIC');
     console.log(`Using URL: ${process.env.DSTU2_ENDPOINTS_URL}`);
 
-    const data = await fetch(process.env.DSTU2_ENDPOINTS_URL, {
+    const data = await fetch(process.env.DSTU2_ENDPOINTS_URL as string, {
       headers: {
         Accept: 'application/json+fhir',
       },
@@ -48,11 +48,18 @@ import chalk from 'chalk';
       ).json();
 
       const sec_ext = res?.rest?.[0].security.extension?.[0].extension,
-        token = sec_ext.filter((x) => x.url === 'token')?.[0]?.valueUri,
-        authorize = sec_ext.filter((x) => x.url === 'authorize')?.[0]?.valueUri,
-        introspect = sec_ext.filter((x) => x.url === 'introspect')?.[0]
-          ?.valueUri,
-        manage = sec_ext.filter((x) => x.url === 'manage')?.[0]?.valueUri;
+        token = sec_ext.filter(
+          (x: { url: string & Location }) => x.url === 'token'
+        )?.[0]?.valueUri,
+        authorize = sec_ext.filter(
+          (x: { url: string & Location }) => x.url === 'authorize'
+        )?.[0]?.valueUri,
+        introspect = sec_ext.filter(
+          (x: { url: string & Location }) => x.url === 'introspect'
+        )?.[0]?.valueUri,
+        manage = sec_ext.filter(
+          (x: { url: string & Location }) => x.url === 'manage'
+        )?.[0]?.valueUri;
 
       console.log('- ' + meta_url);
       return {
