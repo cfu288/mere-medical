@@ -21,12 +21,7 @@ import * as Cerner from '../../services/Cerner';
 import * as Veradigm from '../../services/Veradigm';
 import { from, Subject } from 'rxjs';
 import { useNotificationDispatch } from './NotificationProvider';
-import {
-  differenceInDays,
-  differenceInHours,
-  differenceInMinutes,
-  parseISO,
-} from 'date-fns';
+import { differenceInDays, parseISO } from 'date-fns';
 import Config from '../../environments/config.json';
 import { useUserPreferences } from './UserPreferencesProvider';
 import { useConnectionCards } from '../hooks/useConnectionCards';
@@ -509,7 +504,7 @@ async function refreshEpicConnectionTokenIfNeeded(
   useProxy = false
 ) {
   const nowInSeconds = Math.floor(Date.now() / 1000);
-  if (connectionDocument.get('expires_in') <= nowInSeconds) {
+  if (connectionDocument.get('expires_at') <= nowInSeconds) {
     try {
       const epicBaseUrl = connectionDocument.get('location'),
         epicName = connectionDocument.get('name'),
