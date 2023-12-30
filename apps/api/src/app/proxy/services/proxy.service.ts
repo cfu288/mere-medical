@@ -16,7 +16,8 @@ export class ProxyService {
 
   async proxyRequest(req: Request, res: Response, @Param() params?) {
     const target = req.query.target as string;
-    let serviceId = req.query.serviceId as string;
+    const target_type = req.query.target_type as string;
+    let serviceId = (req.query.serviceId as string).trim();
     let token = null;
 
     // eslint-disable-next-line no-prototype-builtins
@@ -43,23 +44,41 @@ export class ProxyService {
           : []
       );
       // Temp workaround for sandbox
-      const isSandbox = serviceId === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354';
+      const isSandbox =
+        serviceId === 'sandbox' ||
+        serviceId === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354';
       if (isSandbox) {
         serviceId = 'sandbox';
       }
+
       if (services.has(serviceId) || isSandbox) {
         const service = services.get(serviceId);
         this.logger.log(`Proxying ${req.method} ${req.url} to ${serviceId}`);
         const baseUrl = service.url;
+        const authUrl = service.authorize;
+        const tokenUrl = service.token;
+        let urlToProxy = baseUrl;
+
+        if (target_type === 'authorize') {
+          urlToProxy = authUrl;
+        } else if (target_type === 'token') {
+          urlToProxy = tokenUrl;
+        } else if (target_type === 'register') {
+          urlToProxy =
+            (baseUrl.replace('/api/FHIR/DSTU2/', '') || '').replace(
+              'api/FHIR/DSTU2',
+              ''
+            ) + '/oauth2/register';
+        }
         return this.doProxy(
           req,
           res,
-          target ? concatPath(baseUrl, prefix, target) : baseUrl,
+          target ? concatPath(urlToProxy, prefix, target) : urlToProxy,
           service.forwardToken === false ? null : token,
           { ...service.config, headers }
         );
       } else {
-        const error = `Could not find serviceId ${serviceId}`;
+        const error = `Could not find serviceId '${serviceId}'`;
         this.logger.warn(error);
         return res.status(404).send({
           error,

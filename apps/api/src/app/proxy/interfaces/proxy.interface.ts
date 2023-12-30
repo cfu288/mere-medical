@@ -4,6 +4,9 @@ import * as server from 'http-proxy';
 export interface Service {
   id: string;
   url: string;
+  name: string;
+  token: string;
+  authorize: string;
   config?: server.ServerOptions;
   forwardToken?: boolean;
 }

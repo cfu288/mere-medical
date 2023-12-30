@@ -36,10 +36,20 @@ import { UserDocument } from '../models/user-document/UserDocument.type';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
 
+const URLJoin = (...args: string[]) =>
+  args
+    .join('/')
+    .replace(/[\/]+/g, '/')
+    .replace(/^(.+):\//, '$1://')
+    .replace(/^file:/, 'file:/')
+    .replace(/\/(\?|&|#[^!])/g, '$1')
+    .replace(/\?/g, '&')
+    .replace('&', '?');
+
 export function getDSTU2Url(baseUrl: string) {
   return isDSTU2Url(baseUrl)
     ? new URL(baseUrl).toString()
-    : new URL('/api/FHIR/DSTU2', baseUrl).toString();
+    : new URL('/api/FHIR/DSTU2/', baseUrl).toString();
 }
 
 export function isDSTU2Url(url: string) {
@@ -83,14 +93,21 @@ async function getFHIRResource<T extends FhirResource>(
   useProxy = false
 ): Promise<BundleEntry<T>[]> {
   const epicId = connectionDocument.tenant_id;
-  const defaultUrl = `${getDSTU2Url(
-      baseUrl
-    )}/${fhirResourceUrl}?${new URLSearchParams(params)}`,
-    proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${
+  const defaultUrl = `${URLJoin(
+    getDSTU2Url(baseUrl),
+    fhirResourceUrl,
+    `?${new URLSearchParams(params)}`
+  )}`;
+  const proxyUrl = URLJoin(
+    Config.PUBLIC_URL,
+    '/api/proxy',
+    `?serviceId=${
       epicId === Config.EPIC_SANDBOX_CLIENT_ID ? 'sandbox' : epicId
-    }&target=${`${encodeURIComponent(
-      `/api/FHIR/DSTU2/${fhirResourceUrl}?${new URLSearchParams(params)}`
-    )}`}`;
+    }`,
+    `&target=${encodeURIComponent(
+      `${fhirResourceUrl}?${new URLSearchParams(params)}`
+    )}&target_type=base`
+  );
 
   const res = await fetch(useProxy ? proxyUrl : defaultUrl, {
     headers: {
@@ -416,7 +433,7 @@ async function fetchAttachmentData(
       epicId === 'sandbox' || epicId === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354'
         ? Config.EPIC_SANDBOX_CLIENT_ID
         : epicId
-    }&target=${`${encodeURIComponent(proxyUrlExtension)}`}`;
+    }&target=${`${encodeURIComponent(proxyUrlExtension)}&target_type=base`}`;
     const res = await fetch(useProxy ? proxyUrl : defaultUrl, {
       headers: {
         Authorization: `Bearer ${connectionDocument.access_token}`,
@@ -456,7 +473,8 @@ export async function fetchAccessTokenWithCode(
   useProxy = false
 ): Promise<EpicAuthResponse> {
   const defaultUrl = epicTokenUrl;
-  const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${epicId}&target=/oauth2/token`;
+  const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${`
+  ${epicId}`}&target_type=token`;
   const headers = {
     'Content-Type': 'application/x-www-form-urlencoded',
   };
@@ -497,7 +515,7 @@ export async function registerDynamicClient({
 }): Promise<EpicDynamicRegistrationResponse> {
   const baseUrlWithoutDSTU2 = epicBaseUrl.replace('/api/FHIR/DSTU2', '');
   const defaultUrl = `${baseUrlWithoutDSTU2}/oauth2/register`;
-  const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${epicId}&target=/oauth2/register`;
+  const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${epicId}&target_type=register`;
 
   const jsonWebKeySet = await getPublicKey();
   const validJWKS = jsonWebKeySet as JsonWebKeyWKid;
@@ -564,7 +582,7 @@ export async function fetchAccessTokenUsingJWT(
   useProxy = false
 ): Promise<EpicAuthResponseWithClientId> {
   const defaultUrl = epicTokenUrl;
-  const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${epicId}&target=/oauth2/token`;
+  const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${epicId}&target_type=token`;
 
   // We've registered, now we can get another access token with our signed JWT
   const jwtBody = {
