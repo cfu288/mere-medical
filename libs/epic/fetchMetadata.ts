@@ -95,9 +95,9 @@ import chalk from 'chalk';
 
         results.push(...successRes);
         console.log(
-          `BATCH ${chalk.bgBlue(iter)}: Processed ${successRes.length} of ${
-            batch.length
-          } in batch. ` +
+          `BATCH ${chalk.bgBlue(`${iter}`)}: Processed ${
+            successRes.length
+          } of ${batch.length} in batch. ` +
             chalk.red(`${errorsRes.length} error(s) when processing.`)
         );
         errors.push(...errorsRes);
