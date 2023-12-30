@@ -70,6 +70,7 @@ export class ProxyService {
               ''
             ) + '/oauth2/register';
         }
+
         return this.doProxy(
           req,
           res,
