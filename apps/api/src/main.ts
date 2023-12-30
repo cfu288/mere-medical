@@ -1,10 +1,19 @@
-import { Logger } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
-
+import * as compression from 'compression';
 import * as fs from 'fs';
 import * as path from 'path';
+
+import { Logger } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import * as Sentry from '@sentry/node';
+
 import { RootModule } from './app/root.module';
-import * as compression from 'compression';
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+});
 
 async function bootstrap() {
   const globalPrefix = 'api';
