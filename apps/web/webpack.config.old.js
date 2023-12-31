@@ -4,6 +4,7 @@ const { InjectManifest } = require('workbox-webpack-plugin');
 const path = require('path');
 const BundleAnalyzerPlugin =
   require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const { sentryWebpackPlugin } = require('@sentry/webpack-plugin');
 
 module.exports = function (webpackConfig, nxConfig) {
   // Fix that Nx uses a different attribute when serving the app
@@ -18,18 +19,14 @@ module.exports = function (webpackConfig, nxConfig) {
         fs: false,
       },
     },
+    devtool: 'source-map', // Source map generation must be turned on
   });
-
-  if (config.mode === 'production') {
-    mergeWebpackConfigs.push({
-      plugins: [new BundleAnalyzerPlugin()],
-    });
-  }
 
   // For production we add the service worker
   if (config.mode === 'production') {
     mergeWebpackConfigs.push({
       plugins: [
+        new BundleAnalyzerPlugin(),
         new InjectManifest({
           swSrc: path.resolve(
             nxConfig.root,
@@ -44,6 +41,12 @@ module.exports = function (webpackConfig, nxConfig) {
           // this is the output of the plugin,
           // relative to webpack's output directory
           swDest: 'service-worker.js',
+        }),
+        sentryWebpackPlugin({
+          authToken: process.env.SENTRY_AUTH_TOKEN,
+          org: 'sentry',
+          project: 'mere-api',
+          url: 'https://sentry.meremedical.co/',
         }),
       ],
     });

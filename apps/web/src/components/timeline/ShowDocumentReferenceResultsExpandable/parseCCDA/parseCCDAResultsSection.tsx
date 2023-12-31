@@ -46,14 +46,14 @@ export function parseCCDAResultsSection(
       for (const component of components1) {
         const codeId = component
           ?.getElementsByTagName('code')[0]
-          .getAttribute('code');
+          ?.getAttribute('code');
         const codeSystem = component
           ?.getElementsByTagName('code')[0]
-          .getAttribute('codeSystem');
+          ?.getAttribute('codeSystem');
         const codeDisplayName =
           component
             ?.getElementsByTagName('code')[0]
-            .getAttribute('displayName') ||
+            ?.getAttribute('displayName') ||
           component
             ?.getElementsByTagName('originalText')?.[0]
             ?.textContent?.trim() ||
@@ -77,7 +77,7 @@ export function parseCCDAResultsSection(
                   `[*|ID='${component
                     ?.getElementsByTagName('value')?.[0]
                     ?.getElementsByTagName('reference')?.[0]
-                    .getAttribute('value')
+                    ?.getAttribute('value')
                     ?.replace('#', '')}']`
                 )
                 ?.textContent?.trim() ||
