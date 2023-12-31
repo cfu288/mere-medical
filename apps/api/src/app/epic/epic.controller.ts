@@ -20,19 +20,10 @@ export class EpicController {
     @Query('query') query
   ) {
     try {
-      Logger.log({
-        message: `Query for DSTU2 tenants: ${query}`,
-        route: request.url,
-        timestamp: new Date().toISOString(),
-      });
       const data = await this.epicService.queryTenants(query);
       response.json(data);
     } catch (e) {
-      Logger.error({
-        error: e,
-        route: request.url,
-        timestamp: new Date().toISOString(),
-      });
+      Logger.error(e);
       response.status(500).send({ message: 'There was an error' });
     }
   }
@@ -43,7 +34,7 @@ export class EpicController {
       const data = await this.epicService.queryTenants(query);
       response.json(data);
     } catch (e) {
-      Logger.log(e);
+      Logger.error(e);
       response.status(500).send({ message: 'There was an error' });
     }
   }

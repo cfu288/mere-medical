@@ -12,7 +12,7 @@ export class TenantController {
       const data = await this.tenantService.queryTenants(query);
       response.json(data);
     } catch (e) {
-      Logger.log(e);
+      Logger.error(e);
       response.status(500).send({ message: 'There was an error' });
     }
   }
@@ -23,7 +23,7 @@ export class TenantController {
       const data = await this.tenantService.queryTenants(query);
       response.json(data);
     } catch (e) {
-      Logger.log(e);
+      Logger.error(e);
       response.status(500).send({ message: 'There was an error' });
     }
   }

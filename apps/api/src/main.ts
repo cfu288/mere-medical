@@ -2,11 +2,12 @@ import * as compression from 'compression';
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { Logger as PinoLogger } from 'nestjs-pino';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import * as Sentry from '@sentry/node';
 
-import { RootModule } from './app/root.module';
+import { AppModule } from './app/app.module';
 
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
@@ -19,7 +20,6 @@ async function bootstrap() {
   const globalPrefix = 'api';
   // only enable ssl in dev, prod has a reverse proxy
   const ssl = process.env.NODE_ENV === 'development';
-  console.log(process.env.NODE_ENV);
   Logger.log(
     `Running in ${
       process.env.NODE_ENV !== 'development' ? 'production' : 'development'
@@ -34,7 +34,6 @@ async function bootstrap() {
     httpsOptions = {
       key: fs.readFileSync(path.join(__dirname, keyPath)),
       cert: fs.readFileSync(path.join(__dirname, certPath)),
-      logger: ['error', 'warn', 'debug', 'verbose', 'log'],
       //TODO: apply this only to proxy routes
       bodyParser: false,
     };
@@ -42,7 +41,11 @@ async function bootstrap() {
     Logger.log(`Development SSL certs skipped in production.`);
   }
 
-  const app = await NestFactory.create(RootModule, { httpsOptions });
+  const app = await NestFactory.create(AppModule, {
+    httpsOptions,
+    bufferLogs: true,
+    logger: ['error', 'warn', 'log'],
+  });
   app.setGlobalPrefix(globalPrefix);
   app.use(compression());
   const port = process.env.PORT || 80;
@@ -52,6 +55,8 @@ async function bootstrap() {
       ssl ? 's' : ''
     }://localhost:${port}/${globalPrefix}`
   );
+
+  app.useLogger(app.get(PinoLogger));
 }
 
 bootstrap();

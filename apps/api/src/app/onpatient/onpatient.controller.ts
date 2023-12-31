@@ -14,7 +14,7 @@ export class OnPatientController {
         `${process.env.PUBLIC_URL}/onpatient/callback?accessToken=${data.access_token}&refreshToken=${data.refresh_token}&expiresIn=${data.expires_in}`
       );
     } catch (e) {
-      Logger.log(e);
+      Logger.error(e);
       response.status(500).send({ message: 'There was an error' });
     }
   }
