@@ -24,7 +24,7 @@
     "@nrwl/deno": "^16.0.0",
     "@nx/cypress": "16.1.0",
     "@nx/eslint-plugin": "16.1.0",
-    "@nx/jest": "16.1.0",
+    "@nx/jest": "17.2.8",
     "@nx/js": "16.1.0",
     "@nx/linter": "16.1.0",
     "@nx/nest": "16.1.0",
