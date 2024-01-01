@@ -33,34 +33,59 @@ export function parseCCDA(
     const k = key as CCDAStructureDefinitionKeys2_1;
     switch (k) {
       case 'VITAL_SIGNS_SECTION':
-        parsedDoc[k] = parseCCDAVitalsSection(sections, val) as JSX.Element;
+        try {
+          parsedDoc[k] = parseCCDAVitalsSection(sections, val) as JSX.Element;
+        } catch (e) {
+          console.error(e);
+          parsedDoc[k] = parseCCDASection(sections, val);
+        }
         break;
       case 'RESULTS_SECTION':
-        const listComponents = parseCCDAResultsSection(sections, val);
-        if (listComponents) {
-          parsedDoc[k] = (
-            <DisplayCCDAResultsSection listComponents={listComponents} />
-          );
+        try {
+          const listComponents = parseCCDAResultsSection(sections, val);
+          if (listComponents) {
+            parsedDoc[k] = (
+              <DisplayCCDAResultsSection listComponents={listComponents} />
+            );
+          }
+        } catch (e) {
+          console.error(e);
+          parsedDoc[k] = parseCCDASection(sections, val);
         }
         break;
       case 'HISTORY_OF_PRESENT_ILLNESS_SECTION':
-        parsedDoc[k] = parseCCDAHPISection(sections, val) as JSX.Element;
+        try {
+          parsedDoc[k] = parseCCDAHPISection(sections, val) as JSX.Element;
+        } catch (e) {
+          console.error(e);
+          parsedDoc[k] = parseCCDASection(sections, val);
+        }
         break;
       case 'SOCIAL_HISTORY_SECTION':
-        const socialData = parseCCDASocialHistorySection(sections, val);
-        if (socialData) {
-          parsedDoc[k] = (
-            <DisplayCCDASocialHistorySection
-              data={socialData.data}
-              uniqueDates={socialData.uniqueDates}
-            />
-          );
+        try {
+          const socialData = parseCCDASocialHistorySection(sections, val);
+          if (socialData) {
+            parsedDoc[k] = (
+              <DisplayCCDASocialHistorySection
+                data={socialData.data}
+                uniqueDates={socialData.uniqueDates}
+              />
+            );
+          }
+        } catch (e) {
+          console.error(e);
+          parsedDoc[k] = parseCCDASection(sections, val);
         }
         break;
       case 'ASSESSMENT_SECTION':
-        const assData = parseCCDAAssesmentSection(sections, val);
-        if (assData) {
-          parsedDoc[k] = <DisplayCCDAAssesmentSection data={assData} />;
+        try {
+          const assData = parseCCDAAssesmentSection(sections, val);
+          if (assData) {
+            parsedDoc[k] = <DisplayCCDAAssesmentSection data={assData} />;
+          }
+        } catch (e) {
+          console.error(e);
+          parsedDoc[k] = parseCCDASection(sections, val);
         }
         break;
       default:
