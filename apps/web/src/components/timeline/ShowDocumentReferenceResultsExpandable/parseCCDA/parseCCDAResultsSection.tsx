@@ -1,3 +1,4 @@
+import uuid4 from 'apps/web/src/utils/UUIDUtils';
 import { ResultComponentSection } from '../ResultComponentSection';
 import { LOINC_CODE_SYSTEM } from '../ShowDocumentReferenceResultsExpandable';
 import { getMatchingSections } from './parseCCDA';
@@ -58,83 +59,88 @@ export function parseCCDAResultsSection(
             ?.getElementsByTagName('originalText')?.[0]
             ?.textContent?.trim() ||
           '';
-        if (codeSystem === LOINC_CODE_SYSTEM && codeId) {
-          data[codeId] = {
-            title: codeDisplayName,
-            value:
-              component
-                ?.getElementsByTagName('value')?.[0]
-                ?.getAttribute('value') ||
-              component
-                ?.getElementsByTagName('value')?.[0]
-                ?.getAttribute('displayName') ||
-              component
-                ?.getElementsByTagName('value')?.[0]
-                ?.textContent?.trim() ||
-              matchingSections?.[0]
-                ?.getElementsByTagName('text')?.[0]
-                ?.querySelector(
-                  `[*|ID='${component
-                    ?.getElementsByTagName('value')?.[0]
-                    ?.getElementsByTagName('reference')?.[0]
-                    ?.getAttribute('value')
-                    ?.replace('#', '')}']`
-                )
-                ?.textContent?.trim() ||
-              '',
-            unit:
-              component
-                ?.getElementsByTagName('value')?.[0]
-                ?.getAttribute('unit') || '',
-            datetime:
-              component
-                ?.getElementsByTagName('effectiveTime')?.[0]
-                ?.getAttribute('value') || '',
-            datetimeLow:
-              component
-                ?.getElementsByTagName('effectiveTime')?.[0]
-                ?.getElementsByTagName('low')?.[0]
-                ?.getAttribute('value') || '',
-            datetimeHigh:
-              component
-                ?.getElementsByTagName('effectiveTime')?.[0]
-                ?.getElementsByTagName('high')?.[0]
-                ?.getAttribute('value') || '',
-            referenceRangeText:
-              component
-                ?.getElementsByTagName('referenceRange')?.[0]
-                ?.getElementsByTagName('text')?.[0]
-                ?.textContent?.trim() || '',
-            referenceRangeTextItems: [
-              ...(component?.getElementsByTagName('referenceRange') || []),
-            ].map(
-              (x) =>
-                x?.getElementsByTagName('text')?.[0]?.textContent?.trim() || ''
-            ),
-            referenceRangeLow:
-              component
-                ?.getElementsByTagName('referenceRange')?.[0]
-                ?.getElementsByTagName('low')?.[0]
-                ?.getAttribute('value') || '',
-            referenceRangeHigh:
-              component
-                ?.getElementsByTagName('referenceRange')?.[0]
-                ?.getElementsByTagName('high')?.[0]
-                ?.getAttribute('value') || '',
-          };
-          data[codeId] = {
-            ...data[codeId],
-            isOutOfRange:
-              data[codeId].value &&
-              data[codeId].referenceRangeLow &&
-              data[codeId].referenceRangeHigh &&
-              (parseFloat(data[codeId].value || '') <
-                parseFloat(data[codeId].referenceRangeLow || '') ||
-                parseFloat(data[codeId].value || '') >
-                  parseFloat(data[codeId].referenceRangeHigh || '')),
-          };
-        }
+        const uCodeId = (
+          codeId ||
+          codeDisplayName ||
+          `missing-${uuid4()}`
+        )?.trim();
+        // if (codeSystem === LOINC_CODE_SYSTEM && codeId) {
+        data[uCodeId] = {
+          title: codeDisplayName,
+          value:
+            component
+              ?.getElementsByTagName('value')?.[0]
+              ?.getAttribute('value') ||
+            component
+              ?.getElementsByTagName('value')?.[0]
+              ?.getAttribute('displayName') ||
+            component
+              ?.getElementsByTagName('value')?.[0]
+              ?.textContent?.trim() ||
+            matchingSections?.[0]
+              ?.getElementsByTagName('text')?.[0]
+              ?.querySelector(
+                `[*|ID='${component
+                  ?.getElementsByTagName('value')?.[0]
+                  ?.getElementsByTagName('reference')?.[0]
+                  ?.getAttribute('value')
+                  ?.replace('#', '')}']`
+              )
+              ?.textContent?.trim() ||
+            '',
+          unit:
+            component
+              ?.getElementsByTagName('value')?.[0]
+              ?.getAttribute('unit') || '',
+          datetime:
+            component
+              ?.getElementsByTagName('effectiveTime')?.[0]
+              ?.getAttribute('value') || '',
+          datetimeLow:
+            component
+              ?.getElementsByTagName('effectiveTime')?.[0]
+              ?.getElementsByTagName('low')?.[0]
+              ?.getAttribute('value') || '',
+          datetimeHigh:
+            component
+              ?.getElementsByTagName('effectiveTime')?.[0]
+              ?.getElementsByTagName('high')?.[0]
+              ?.getAttribute('value') || '',
+          referenceRangeText:
+            component
+              ?.getElementsByTagName('referenceRange')?.[0]
+              ?.getElementsByTagName('text')?.[0]
+              ?.textContent?.trim() || '',
+          referenceRangeTextItems: [
+            ...(component?.getElementsByTagName('referenceRange') || []),
+          ].map(
+            (x) =>
+              x?.getElementsByTagName('text')?.[0]?.textContent?.trim() || ''
+          ),
+          referenceRangeLow:
+            component
+              ?.getElementsByTagName('referenceRange')?.[0]
+              ?.getElementsByTagName('low')?.[0]
+              ?.getAttribute('value') || '',
+          referenceRangeHigh:
+            component
+              ?.getElementsByTagName('referenceRange')?.[0]
+              ?.getElementsByTagName('high')?.[0]
+              ?.getAttribute('value') || '',
+        };
+        data[uCodeId] = {
+          ...data[uCodeId],
+          isOutOfRange:
+            data[uCodeId].value &&
+            data[uCodeId].referenceRangeLow &&
+            data[uCodeId].referenceRangeHigh &&
+            (parseFloat(data[uCodeId].value || '') <
+              parseFloat(data[uCodeId].referenceRangeLow || '') ||
+              parseFloat(data[uCodeId].value || '') >
+                parseFloat(data[uCodeId].referenceRangeHigh || '')),
+        };
       }
+      // }
       const uniqueDates = new Set([
         ...Object.values(data)
           .map((v) => v.datetime)
