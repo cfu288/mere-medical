@@ -8,7 +8,7 @@ export function parseCCDAResultsSection(
 ) {
   const matchingSections = getMatchingSections(sections, id);
 
-  if (!matchingSections) {
+  if (!matchingSections || matchingSections?.length === 0) {
     return null;
   }
 
@@ -34,7 +34,7 @@ export function parseCCDAResultsSection(
     )
   );
 
-  if (!sectionComponents || sectionComponents.length === 0) {
+  if (!sectionComponents || sectionComponents?.length === 0) {
     return null;
   }
 

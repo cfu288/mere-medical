@@ -17,7 +17,7 @@ export function parseCCDASocialHistorySection(
   const sectionEntries = [
     ...(matchingSections as unknown as HTMLElement[]),
   ]?.map((e) => [...e.getElementsByTagName('entry')]);
-  if (!sectionEntries) {
+  if (!sectionEntries || sectionEntries?.length === 0) {
     return null;
   }
 
