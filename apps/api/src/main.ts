@@ -5,16 +5,8 @@ import * as path from 'path';
 import { Logger as PinoLogger } from 'nestjs-pino';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import * as Sentry from '@sentry/node';
 
 import { AppModule } from './app/app.module';
-
-Sentry.init({
-  dsn: process.env.SENTRY_DSN,
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
-  tracesSampleRate: 1.0,
-});
 
 async function bootstrap() {
   const globalPrefix = 'api';

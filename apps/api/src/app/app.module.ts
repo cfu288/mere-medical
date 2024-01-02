@@ -22,9 +22,9 @@ if (checkIfSentryConfigured()) {
   imports.unshift(
     LoggerModule.forRoot({
       pinoHttp: {
-        level: process.env.NODE_ENV !== 'production' ? 'debug' : 'info',
+        level: process.env.NODE_ENV === 'development' ? 'debug' : 'info',
         transport:
-          process.env.NODE_ENV !== 'production'
+          process.env.NODE_ENV === 'development'
             ? { target: 'pino-pretty' }
             : {
                 target: 'pino-sentry-transport',
