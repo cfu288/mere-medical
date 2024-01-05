@@ -8,7 +8,7 @@ if (
   Config.SENTRY_WEB_DSN &&
   Config.SENTRY_WEB_DSN.includes('SENTRY_WEB_DSN') === false
 ) {
-  console.log('Sentry enabled');
+  console.debug('Sentry: DSN provided, enabled');
   Sentry.init({
     dsn: Config.SENTRY_WEB_DSN,
     transport: Sentry.makeBrowserOfflineTransport(Sentry.makeFetchTransport),
@@ -32,7 +32,7 @@ if (
     replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
   });
 } else {
-  console.log('Sentry disabled');
+  console.debug('Sentry: No DSN provided, disabled');
 }
 
 const root = ReactDOM.createRoot(
