@@ -34,6 +34,8 @@ jobs:
           context: .
           push: true
           tags: cfu288/mere-medical:latest,cfu288/mere-medical:${{ env.RELEASE_CALVER_VERSION }}
+          secrets: |
+            SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Create a GitHub release
         uses: ncipollo/release-action@v1
@@ -43,13 +45,23 @@ jobs:
           makeLatest: true
           allowUpdates: true
 
-      - name: Create Sentry release
+      - name: Create Sentry release - Web
         uses: getsentry/action-release@v1
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_RELEASE_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-          SENTRY_URL: https://sentry.meremedical.co
+          SENTRY_URL: https://sentry.meremedical.co/
+        with:
+          environment: production
+
+      - name: Create Sentry release - API
+        uses: getsentry/action-release@v1
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_RELEASE_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT_API }}
+          SENTRY_URL: https://sentry.meremedical.co/
         with:
           environment: production
 
