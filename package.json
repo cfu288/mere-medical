@@ -102,6 +102,7 @@
     "@react-hook/debounce": "^4.0.0",
     "@react-hook/throttle": "^2.2.0",
     "@sentry/node": "^7.91.0",
+    "@sentry/react": "^7.92.0",
     "@sentry/webpack-plugin": "^2.10.2",
     "@tailwindcss/forms": "^0.5.2",
     "@tailwindui/react": "^0.1.1",
