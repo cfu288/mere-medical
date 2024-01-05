@@ -22,7 +22,6 @@ import {
 import { RxDatabase } from 'rxdb';
 import { UserDocument } from '../models/user-document/UserDocument.type';
 import { getConnectionCardByUrl } from '../services/getConnectionCardByUrl';
-import { set } from 'date-fns';
 
 function removeEndSlash(url: string) {
   if (url?.endsWith('/')) {
