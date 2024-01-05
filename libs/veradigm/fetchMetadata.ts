@@ -7,10 +7,11 @@ import chalk from 'chalk';
  */
 (async () => {
   try {
+    const URL = process.env['DSTU2_ENDPOINTS_URL'];
     console.log('Starting DSTU2 Endpoint Metadata Fetcher for VERADIGM');
-    console.log(`Using URL: ${process.env.DSTU2_ENDPOINTS_URL}`);
+    console.log(`Using URL: ${URL}`);
 
-    const data = await fetch(process.env.DSTU2_ENDPOINTS_URL as string, {
+    const data = await fetch(URL as string, {
       headers: {
         Accept: 'application/json+fhir',
       },
