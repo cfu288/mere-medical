@@ -26,7 +26,7 @@ module.exports = function (webpackConfig, nxConfig) {
   if (config.mode === 'production') {
     mergeWebpackConfigs.push({
       plugins: [
-        new BundleAnalyzerPlugin(),
+        // new BundleAnalyzerPlugin(),
         new InjectManifest({
           swSrc: path.resolve(
             nxConfig.root,
@@ -45,8 +45,8 @@ module.exports = function (webpackConfig, nxConfig) {
         sentryWebpackPlugin({
           authToken: process.env.SENTRY_AUTH_TOKEN,
           org: 'sentry',
-          project: 'mere-api',
-          url: 'https://sentry.meremedical.co/',
+          project: 'mere-web',
+          url: 'https://sentry.meremedical.co',
         }),
       ],
     });
