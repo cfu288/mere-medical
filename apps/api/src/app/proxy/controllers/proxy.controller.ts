@@ -22,7 +22,7 @@ export class ProxyController {
     @Param() params
   ) {
     try {
-      Logger.log(
+      Logger.debug(
         `Proxy request was made with params: ${JSON.stringify(params)}`
       );
       this.proxyService.proxyRequest(request, response, params);

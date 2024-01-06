@@ -28,7 +28,7 @@ const proxyFactory = {
 
     proxy.on('proxyReq', function (proxyReq, req, res, opts) {
       const url = concatPath(`${proxyReq.protocol}//${proxyReq.host}`, req.url);
-      logger.log(`Sending ${req.method} ${url}`);
+      logger.debug(`Sending ${req.method} ${url}`);
 
       let cookies = (proxyReq.getHeader('cookie') || '') as string;
       const allowedCookies = options.allowedCookies || [];
@@ -67,7 +67,7 @@ const proxyFactory = {
         `${proxyRes['req'].protocol}//${proxyRes['req'].host}`,
         req.url
       );
-      logger.log(`Received ${req.method} ${url}`);
+      logger.debug(`Received ${req.method} ${url}`);
     });
     return proxy;
   },

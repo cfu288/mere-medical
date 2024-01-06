@@ -22,7 +22,7 @@ if (checkIfSentryConfigured()) {
   imports.unshift(
     LoggerModule.forRoot({
       pinoHttp: {
-        level: 'info',
+        level: 'warn',
         transport: {
           target: 'pino-sentry-transport',
           options: {
