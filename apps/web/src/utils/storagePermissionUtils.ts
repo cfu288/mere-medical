@@ -1,30 +1,32 @@
-export function requestPersistentStorage() {
-  if (navigator.storage && navigator.storage.persist) {
-    navigator.storage.persist().then((persistent) => {
-      if (persistent) {
-        console.log(
-          'Storage will not be cleared except by explicit user action'
-        );
-      } else {
-        console.log('Storage may be cleared by the UA under storage pressure.');
-      }
-    });
-  }
-}
-
 export function checkIfPersistentStorageAvailable() {
-  return !!navigator.storage && !!navigator.storage.persisted;
+  return (
+    !!navigator.storage &&
+    !!navigator.storage.persisted &&
+    !!navigator.storage &&
+    !!navigator.storage.persist
+  );
 }
 
-export async function checkPersistentStorage() {
-  if (navigator.storage && navigator.storage.persisted) {
+export function checkIfQuotaEstimateAvailable() {
+  return !!navigator.storage && !!navigator.storage.estimate;
+}
+
+export function requestPersistentStorage() {
+  if (checkIfPersistentStorageAvailable()) {
+    return navigator.storage.persist();
+  }
+  return Promise.reject('StorageManager not found');
+}
+
+export async function checkIfPersistentStorageEnabled() {
+  if (checkIfPersistentStorageAvailable()) {
     return await navigator.storage.persisted();
   }
   return Promise.reject('StorageManager not found');
 }
 
 export async function getStorageQuota() {
-  if (navigator.storage && navigator.storage.estimate) {
+  if (checkIfQuotaEstimateAvailable()) {
     return await navigator.storage.estimate();
   }
   return Promise.reject('StorageManager not found');

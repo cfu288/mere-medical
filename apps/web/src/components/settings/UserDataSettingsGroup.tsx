@@ -12,8 +12,9 @@ import { getFileFromFileList } from '../../pages/SettingsTab';
 import { RxDatabase } from 'rxdb';
 import {
   checkIfPersistentStorageAvailable,
-  checkPersistentStorage,
+  checkIfPersistentStorageEnabled,
   getStorageQuota,
+  requestPersistentStorage,
 } from '../../utils/storagePermissionUtils';
 
 export type ImportFields = {
@@ -130,7 +131,7 @@ export function UserDataSettingsGroup() {
         setQuotaDetails(quota);
       });
 
-      checkPersistentStorage().then((result) => {
+      checkIfPersistentStorageEnabled().then((result) => {
         setHasPersistentStorageEnabled(result);
       });
     }
@@ -281,7 +282,7 @@ export function UserDataSettingsGroup() {
                   !hasPersistentStorageEnabled && (
                     <button
                       onClick={() => {
-                        checkPersistentStorage().then((result) => {
+                        requestPersistentStorage().then((result) => {
                           if (result) {
                             notifyDispatch({
                               type: 'set_notification',
