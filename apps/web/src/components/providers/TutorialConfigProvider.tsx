@@ -5,9 +5,7 @@ import React, {
   PropsWithChildren,
   useEffect,
   useState,
-  useMemo,
 } from 'react';
-import { useLocalConfig } from './LocalConfigProvider';
 
 export const TutorialLocalStorageKeys = {
   WELCOME_SCREEN: 'tutorial_1699756120_welcome-screen',

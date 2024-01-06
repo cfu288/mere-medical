@@ -98,25 +98,24 @@ const isInstalledPWA = () => {
  */
 export function TutorialOverlay() {
   const tutorialConfig = useTutorialLocalStorage(),
-    updateTutorialConfig = useUpdateTutorialLocalStorage();
-
-  const tutorialSteps = useMemo(
-    () =>
-      getTutorialKeysFromLocalStorage(tutorialConfig)
-        .filter((key) =>
-          key !== TutorialLocalStorageKeys.INSTALL_PWA
-            ? true
-            : !isInstalledPWA()
-        )
-        .filter((key) =>
-          key !== TutorialLocalStorageKeys.ENABLE_ANALYTICS
-            ? true
-            : Config.SENTRY_WEB_DSN &&
-              !Config.SENTRY_WEB_DSN.includes('SENTRY_WEB_DSN') &&
-              Config.SENTRY_WEB_DSN.trim() !== ''
-        ),
-    [tutorialConfig]
-  );
+    updateTutorialConfig = useUpdateTutorialLocalStorage(),
+    tutorialSteps = useMemo(
+      () =>
+        getTutorialKeysFromLocalStorage(tutorialConfig)
+          .filter((key) =>
+            key !== TutorialLocalStorageKeys.INSTALL_PWA
+              ? true
+              : !isInstalledPWA()
+          )
+          .filter((key) =>
+            key !== TutorialLocalStorageKeys.ENABLE_ANALYTICS
+              ? true
+              : Config.SENTRY_WEB_DSN &&
+                Config.SENTRY_WEB_DSN.includes('SENTRY_WEB_DSN') === false &&
+                Config.SENTRY_WEB_DSN.trim() !== ''
+          ),
+      [tutorialConfig]
+    );
   const [state, dispatch] = React.useReducer(tutorialReducer, {
     currentStep: 0,
     steps: [],
