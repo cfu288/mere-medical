@@ -19,8 +19,10 @@ import { TimelineSkeleton } from './TimelineSkeleton';
 import { useScrollToHash } from '../components/hooks/useScrollToHash';
 import { SearchBar } from './SearchBar';
 import { Transition } from '@headlessui/react';
-import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ButtonLoadingSpinner } from '../components/connection/ButtonLoadingSpinner';
+import useIntersectionObserver from '../components/hooks/useIntersectionObserver';
+
+const PAGE_SIZE = 50;
 
 /**
  * This should really be a background process that runs after every data sync instead of every view
@@ -114,8 +116,6 @@ export enum QueryStatus {
   ERROR,
   COMPLETE,
 }
-
-const PAGE_SIZE = 250;
 
 function useRecordQuery(
   query: string
@@ -214,18 +214,7 @@ export function TimelineTab() {
             </TimelineYearHeaderWrapper>
           ))}
           {status !== QueryStatus.COMPLETE && (
-            <button
-              disabled={status === QueryStatus.LOADING_MORE}
-              className="border-1 hover:bg-primary-700 mt-6 w-full rounded border border-gray-300 py-2 px-4 font-bold hover:text-white disabled:bg-white disabled:text-gray-600"
-              onClick={loadNextPage}
-            >
-              Load more records
-              <span className="ml-2 inline-flex justify-center align-middle">
-                {status === QueryStatus.LOADING_MORE ? (
-                  <ButtonLoadingSpinner />
-                ) : null}
-              </span>
-            </button>
+            <LoadMoreButton status={status} loadNextPage={loadNextPage} />
           )}
         </>
       ) : (
@@ -279,7 +268,12 @@ export function TimelineTab() {
         ) : null}
         {hasRecords ? (
           <div className="flex w-full overflow-hidden">
-            <JumpToPanel items={data} isLoading={false} />
+            <JumpToPanel
+              items={data}
+              isLoading={false}
+              status={status}
+              loadMore={loadNextPage}
+            />
             <div className="px-auto flex h-full max-h-full w-full justify-center overflow-y-scroll">
               <div className="h-max w-full max-w-4xl flex-col px-4 pb-20 sm:px-6 sm:pb-6 lg:px-8">
                 <SearchBar query={query} setQuery={setQuery} status={status} />
@@ -293,5 +287,39 @@ export function TimelineTab() {
         ) : null}
       </Transition>
     </AppPage>
+  );
+}
+
+function LoadMoreButton({
+  status,
+  loadNextPage,
+}: {
+  status: QueryStatus;
+  loadNextPage: () => void;
+}) {
+  const ref = useRef<HTMLButtonElement | null>(null),
+    entry = useIntersectionObserver(ref, {}),
+    isVisible = !!entry?.isIntersecting;
+
+  useEffect(() => {
+    if (isVisible) {
+      loadNextPage();
+    }
+  }, [isVisible, loadNextPage]);
+
+  return (
+    <button
+      ref={ref}
+      disabled={status === QueryStatus.LOADING_MORE}
+      className="border-1 hover:bg-primary-700 mt-6 w-full rounded border border-gray-300 py-2 px-4 font-bold hover:text-white disabled:bg-gray-100 disabled:text-gray-600"
+      onClick={loadNextPage}
+    >
+      {status === QueryStatus.LOADING_MORE
+        ? 'Loading more records'
+        : 'Load more records'}
+      <span className="ml-2 inline-flex justify-center align-middle">
+        {status === QueryStatus.LOADING_MORE ? <ButtonLoadingSpinner /> : null}
+      </span>
+    </button>
   );
 }

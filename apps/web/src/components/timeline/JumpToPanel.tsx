@@ -3,10 +3,11 @@ import { BundleEntry, FhirResource } from 'fhir/r2';
 import React, { Fragment, memo, useMemo } from 'react';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { Link } from 'react-router-dom';
+import { QueryStatus } from '../../pages/TimelineTab';
 
 const parseYear = (key: string) => {
-  return format(parseISO(key), 'yyyy');
-},
+    return format(parseISO(key), 'yyyy');
+  },
   parseMonthDay = (key: string) => {
     return format(parseISO(key), 'MMM dd');
   },
@@ -17,9 +18,13 @@ const parseYear = (key: string) => {
 export function JumpToPanel({
   items,
   isLoading = false,
+  status,
+  loadMore,
 }: {
   items?: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>;
   isLoading: boolean;
+  status?: QueryStatus;
+  loadMore?: () => void;
 }) {
   const list = useMemo(() => {
     if (items) return Object.entries(items);
@@ -50,6 +55,20 @@ export function JumpToPanel({
                 />
               </Fragment>
             ))}
+          {loadMore && (
+            <>
+              {status !== undefined && status !== QueryStatus.COMPLETE && (
+                <li className="sticky top-10 bg-gray-50 p-1 pl-2">
+                  <button
+                    onClick={() => loadMore()}
+                    className="text-xs font-thin hover:underline"
+                  >
+                    Load More
+                  </button>
+                </li>
+              )}
+            </>
+          )}
         </ul>
       )}
     </div>
