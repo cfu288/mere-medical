@@ -39,7 +39,7 @@ export function TutorialEnableAnalytics({
                 localConfig?.use_sentry_reporting
                   ? 'bg-primary-500'
                   : 'bg-gray-200',
-                'focus:ring-primary-500 relative ml-4 inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2'
+                'focus:ring-primary-500 relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2'
               )}
               checked={localConfig?.use_sentry_reporting}
               onChange={(checked: boolean) => {
@@ -65,8 +65,10 @@ export function TutorialEnableAnalytics({
             ></Switch.Label>
           </Switch.Group>
           <p
-            className={`w-full pt-4 text-center text-gray-500 transition-colors ${
-              localConfig?.use_sentry_reporting ? 'text-white' : 'text-gray-200'
+            className={`mt-4 rounded-full px-2 py-1 text-center text-gray-500 transition-colors ${
+              localConfig?.use_sentry_reporting
+                ? 'bg-green-100 text-green-700'
+                : 'bg-red-100 text-red-700'
             }`}
           >
             {localConfig?.use_sentry_reporting ? (
