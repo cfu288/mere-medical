@@ -11,6 +11,11 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
 import { getFileFromFileList } from '../../pages/SettingsTab';
 import { RxDatabase } from 'rxdb';
+import {
+  checkIfPersistentStorageAvailable,
+  checkPersistentStorage,
+  getStorageQuota,
+} from '../../utils/storagePermissionUtils';
 
 export type ImportFields = {
   backup?: FileList;
@@ -20,12 +25,13 @@ export const exportData = (
   db: RxDatabase<DatabaseCollections>,
   setFileDownloadLink: (blob: string) => void
 ) => {
-  db.exportJSON().then((json) => {
+  return db.exportJSON().then((json) => {
     const jsonData = JSON.stringify(json);
     const blobUrl = URL.createObjectURL(
       new Blob([jsonData], { type: 'application/json' })
     );
     setFileDownloadLink(blobUrl);
+    return blobUrl;
   });
 };
 
@@ -71,7 +77,12 @@ export function UserDataSettingsGroup() {
   const db = useRxDb(),
     [fileDownloadLink, setFileDownloadLink] = useState(''),
     notifyDispatch = useNotificationDispatch(),
-    [backupInProgress, setBackupInProgress] = useState(false);
+    [backupInProgress, setBackupInProgress] = useState(false),
+    [quotaDetails, setQuotaDetails] = useState({} as StorageEstimate),
+    [hasPersistentStorageEnabled, setHasPersistentStorageEnabled] =
+      useState(false);
+
+  const clickDownloadRef = useRef<HTMLAnchorElement | null>(null);
 
   const importData: SubmitHandler<ImportFields> = useCallback(
     async (fields) => {
@@ -114,13 +125,25 @@ export function UserDataSettingsGroup() {
     }
   }, [backupFile]);
 
+  useEffect(() => {
+    if (checkIfPersistentStorageAvailable()) {
+      getStorageQuota().then((quota) => {
+        setQuotaDetails(quota);
+      });
+
+      checkPersistentStorage().then((result) => {
+        setHasPersistentStorageEnabled(result);
+      });
+    }
+  }, []);
+
   return (
     <>
       <h1 className="py-6 text-xl font-extrabold">Data</h1>
       <div className="divide-y divide-gray-200">
         <div className="px-4 sm:px-6">
           <ul className="mt-2 divide-y divide-gray-200">
-            <li className="flex items-center py-2">
+            <li className="flex items-center py-4">
               <div className="flex flex-1 flex-col">
                 <h2 className="text-lg font-black leading-6 text-gray-900">
                   Export data
@@ -129,39 +152,35 @@ export function UserDataSettingsGroup() {
                   Export all of your data in JSON format. You can use this to
                   backup your data and can import it back if needed.
                 </p>
-                <p className="pt-2 text-sm text-gray-500">
-                  It may take a couple of seconds to prepare the data for
-                  download.
-                </p>
               </div>
-              {fileDownloadLink ? (
-                <a href={fileDownloadLink} download="backup.json">
-                  <button
-                    type="button"
-                    className="relative ml-4 inline-flex flex-shrink-0 cursor-pointer items-center rounded-md border border-transparent bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                  >
-                    <ArrowDownTrayIcon
-                      className="-ml-1 mr-2 h-5 w-5"
-                      aria-hidden="true"
-                    />
-                    <p className="font-bold">Download Ready</p>
-                  </button>
-                </a>
-              ) : (
-                <button
-                  type="button"
-                  className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 relative ml-4 inline-flex flex-shrink-0 cursor-pointer items-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
-                  onClick={() => exportData(db, setFileDownloadLink)}
-                >
-                  <ArrowRightOnRectangleIcon
-                    className="-ml-1 mr-2 h-5 w-5"
-                    aria-hidden="true"
-                  />
-                  <p className="font-bold">Start data export</p>
-                </button>
-              )}
+              <button
+                type="button"
+                className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 relative ml-4 inline-flex flex-shrink-0 cursor-pointer items-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
+                onClick={() => {
+                  exportData(db, setFileDownloadLink).then((link) => {
+                    if (link) {
+                      clickDownloadRef.current?.click();
+                    }
+                  });
+                }}
+              >
+                <ArrowRightOnRectangleIcon
+                  className="-ml-1 mr-2 h-5 w-5"
+                  aria-hidden="true"
+                />
+                <p className="font-bold">Export</p>
+              </button>
+              <a
+                ref={clickDownloadRef}
+                id="downloadLink"
+                download={`mere_export_${new Date().toISOString()}.json`}
+                href={fileDownloadLink}
+                className="hidden"
+              >
+                hidden download button
+              </a>
             </li>
-            <li className="flex items-center py-2">
+            <li className="flex items-center py-4">
               <div className="flex flex-1 flex-col">
                 <h2 className="text-lg font-black leading-6 text-gray-900">
                   Import data
@@ -211,6 +230,81 @@ export function UserDataSettingsGroup() {
                   </button>
                 )}
               </form>
+            </li>
+            {/* Show storage usage  */}
+            <li className="flex items-center py-4">
+              <div className="flex flex-1 flex-col">
+                <h2 className="text-lg font-black leading-6 text-gray-900">
+                  Storage usage
+                </h2>
+                {/* show if persistant storage is enabled */}
+                <p className="pt-2 text-sm text-gray-500">
+                  {hasPersistentStorageEnabled
+                    ? 'Persistent storage is enabled.'
+                    : 'Persistent storage is not enabled - data may be cleared by the browser.'}
+                </p>
+                <p className="pt-1 text-sm text-gray-500">
+                  {quotaDetails.usage
+                    ? `You have used ${
+                        quotaDetails.usage >= 1024 * 1024 * 1024
+                          ? `${(
+                              quotaDetails.usage /
+                              1024 /
+                              1024 /
+                              1024
+                            ).toFixed(2)} GB`
+                          : `${(quotaDetails.usage / 1024 / 1024).toFixed(
+                              2
+                            )} MB`
+                      } of storage.`
+                    : 'Storage quota not available.'}
+                </p>
+                {/* show used storage */}
+                <p className="pt-1 text-sm text-gray-500">
+                  {quotaDetails.quota
+                    ? `You have a total of ${
+                        quotaDetails.quota >= 1024 * 1024 * 1024
+                          ? `${(
+                              quotaDetails.quota /
+                              1024 /
+                              1024 /
+                              1024
+                            ).toFixed(2)} GB`
+                          : `${(quotaDetails.quota / 1024 / 1024).toFixed(
+                              2
+                            )} MB`
+                      } of storage available.`
+                    : 'Storage quota not available.'}
+                </p>
+              </div>
+              <div>
+                {checkIfPersistentStorageAvailable() &&
+                  !hasPersistentStorageEnabled && (
+                    <button
+                      onClick={() => {
+                        checkPersistentStorage().then((result) => {
+                          if (result) {
+                            notifyDispatch({
+                              type: 'set_notification',
+                              message: `Persistent storage is enabled.`,
+                              variant: 'success',
+                            });
+                          } else {
+                            notifyDispatch({
+                              type: 'set_notification',
+                              message: `Persistent storage cannot be enabled. Try installing Mere as a PWA to enable persistant storage.`,
+                              variant: 'error',
+                            });
+                          }
+                          setHasPersistentStorageEnabled(result);
+                        });
+                      }}
+                      className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 relative mt-2 inline-flex flex-shrink-0 cursor-pointer items-center rounded-md border border-transparent px-4 py-2 text-sm font-bold text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
+                    >
+                      Enable
+                    </button>
+                  )}
+              </div>
             </li>
           </ul>
         </div>
