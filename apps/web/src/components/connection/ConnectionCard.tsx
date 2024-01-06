@@ -181,7 +181,6 @@ export function ConnectionCard({
               disabled={syncing}
               className="-ml-px flex flex-initial divide-x divide-gray-800 px-4 disabled:bg-slate-50"
               onClick={() => {
-                debugger;
                 setTenantUrlBySource(item);
                 window.location = getLoginUrlBySource(item);
               }}

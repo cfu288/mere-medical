@@ -32,6 +32,7 @@ export function PrivacyAndSecuritySettingsGroup() {
     localConfig = useLocalConfig(),
     [showPasswordPrompModal, setShowPasswordPromptModal] = useState(false),
     [showDecryptConfirmModal, setShowDecryptConfirmModal] = useState(false);
+  const updateLocalConfig = useUpdateLocalConfig();
 
   if (userPreferences !== undefined && rawUserPreferences !== undefined) {
     return (
@@ -143,6 +144,52 @@ export function PrivacyAndSecuritySettingsGroup() {
                       aria-hidden="true"
                       className={classNames(
                         userPreferences.use_proxy
+                          ? 'translate-x-5'
+                          : 'translate-x-0',
+                        'inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
+                      )}
+                    />
+                  </Switch>
+                </div>
+              </Switch.Group>
+              <Switch.Group
+                id="enable_analytics"
+                as="li"
+                className="flex flex-col py-4"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <Switch.Label
+                      as="h2"
+                      className="text-lg font-black leading-6 text-gray-900"
+                      passive
+                    >
+                      Enable Analytics
+                    </Switch.Label>
+                    <Switch.Description className="pt-2 text-sm text-gray-500">
+                      Help us understand how you use the app so we can improve
+                      your experience. No personally identifiable information is
+                      collected.
+                    </Switch.Description>
+                  </div>
+                  <Switch
+                    checked={localConfig.use_sentry_reporting}
+                    onChange={() => {
+                      updateLocalConfig({
+                        use_sentry_reporting: !localConfig.use_sentry_reporting,
+                      });
+                    }}
+                    className={classNames(
+                      localConfig.use_sentry_reporting
+                        ? 'bg-primary-500'
+                        : 'bg-gray-200',
+                      'focus:ring-primary-500 relative ml-4 inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2'
+                    )}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={classNames(
+                        localConfig.use_sentry_reporting
                           ? 'translate-x-5'
                           : 'translate-x-0',
                         'inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'

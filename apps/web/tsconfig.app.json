@@ -67,7 +67,8 @@
     "./src/components/timeline/ShowDocumentReferenceResultsExpandable/parseCCDA/parseCCDASocialHistorySection.1.tsx",
     "src/models/clinical-document/Date.ts",
     "./src/components/hooks/useSummaryPagePreferences.tsx",
-    "src/components/hooks/useConsoleLogEasterEgg.tsx"
+    "src/components/hooks/useConsoleLogEasterEgg.tsx",
+    "src/components/providers/SentryInitializer.tsx"
   ],
   "exclude": [
     "jest.config.ts",

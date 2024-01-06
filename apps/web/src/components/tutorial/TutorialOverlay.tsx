@@ -1,8 +1,8 @@
 import {
   TutorialLocalStorageKeys,
-  useLocalConfig,
-  useUpdateLocalConfig,
-} from '../providers/LocalConfigProvider';
+  useTutorialLocalStorage,
+  useUpdateTutorialLocalStorage,
+} from '../providers/TutorialConfigProvider';
 import React, { useEffect, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { TutorialItemWrapper } from './TutorialItemWrapper';
@@ -10,6 +10,8 @@ import { TutorialAddConnectionScreen } from './TutorialAddConnectionScreen';
 import { TutorialWelcomeScreen } from './TutorialWelcomeScreen';
 import { TutorialInstallPWAScreen } from './TutorialInstallPWAScreen';
 import { TutorialCompleteScreen } from './TutorialCompleteScreen';
+import { TutorialEnableAnalytics } from './TutorialEnableAnalytics';
+import Config from '../../environments/config.json';
 
 export type TutorialState = {
   currentStep: number;
@@ -95,14 +97,25 @@ const isInstalledPWA = () => {
  * Display a tutorial overlay carousel to the user on app start if localstrage keys are set
  */
 export function TutorialOverlay() {
-  const localConfig = useLocalConfig(),
-    updateLocalConfig = useUpdateLocalConfig();
+  const tutorialConfig = useTutorialLocalStorage(),
+    updateTutorialConfig = useUpdateTutorialLocalStorage();
+
   const tutorialSteps = useMemo(
     () =>
-      getTutorialKeysFromLocalStorage(localConfig).filter((key) =>
-        key !== TutorialLocalStorageKeys.INSTALL_PWA ? true : !isInstalledPWA()
-      ),
-    [localConfig]
+      getTutorialKeysFromLocalStorage(tutorialConfig)
+        .filter((key) =>
+          key !== TutorialLocalStorageKeys.INSTALL_PWA
+            ? true
+            : !isInstalledPWA()
+        )
+        .filter((key) =>
+          key !== TutorialLocalStorageKeys.ENABLE_ANALYTICS
+            ? true
+            : Config.SENTRY_WEB_DSN &&
+              !Config.SENTRY_WEB_DSN.includes('SENTRY_WEB_DSN') &&
+              Config.SENTRY_WEB_DSN.trim() !== ''
+        ),
+    [tutorialConfig]
   );
   const [state, dispatch] = React.useReducer(tutorialReducer, {
     currentStep: 0,
@@ -118,10 +131,10 @@ export function TutorialOverlay() {
       for (const key of state.steps) {
         newTutorialState[key] = false;
       }
-      updateLocalConfig(newTutorialState);
+      updateTutorialConfig(newTutorialState);
       dispatch({ type: 'initalize_steps', steps: [] });
     }
-  }, [state.isComplete, state.steps, updateLocalConfig]);
+  }, [state.isComplete, state.steps, updateTutorialConfig]);
 
   useEffect(() => {
     if (!state.isComplete) {
@@ -165,6 +178,14 @@ export function TutorialOverlay() {
               dispatch={dispatch}
             >
               <TutorialAddConnectionScreen dispatch={dispatch} />
+            </TutorialItemWrapper>
+            <TutorialItemWrapper
+              key={TutorialLocalStorageKeys.ENABLE_ANALYTICS}
+              localStorageKey={TutorialLocalStorageKeys.ENABLE_ANALYTICS}
+              state={state}
+              dispatch={dispatch}
+            >
+              <TutorialEnableAnalytics dispatch={dispatch} />
             </TutorialItemWrapper>
             <TutorialItemWrapper
               key={TutorialLocalStorageKeys.COMPLETE}
