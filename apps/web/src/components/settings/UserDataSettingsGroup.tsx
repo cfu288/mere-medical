@@ -233,7 +233,7 @@ export function UserDataSettingsGroup() {
             </li>
             {/* Show storage usage  */}
             <li className="flex items-center py-4">
-              <div className="flex flex-1 flex-col">
+              <div className="mr-2 flex flex-1 flex-col sm:mr-4">
                 <h2 className="text-lg font-black leading-6 text-gray-900">
                   Storage usage
                 </h2>
@@ -243,8 +243,23 @@ export function UserDataSettingsGroup() {
                     ? 'Persistent storage is enabled.'
                     : 'Persistent storage is not enabled - data may be cleared by the browser.'}
                 </p>
+                {/* Progress bar */}
+                {quotaDetails.usage && quotaDetails.quota && (
+                  <div className="mt-2 h-2.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                    <div
+                      className="bg-primary-500 h-2.5 rounded-full"
+                      style={{
+                        width: `${
+                          quotaDetails.usage / quotaDetails.quota <= 1
+                            ? 1
+                            : (quotaDetails.usage / quotaDetails.quota) * 100
+                        }%`,
+                      }}
+                    ></div>
+                  </div>
+                )}
                 <p className="pt-1 text-sm text-gray-500">
-                  {quotaDetails.usage
+                  {quotaDetails.usage && quotaDetails.quota
                     ? `You have used ${
                         quotaDetails.usage >= 1024 * 1024 * 1024
                           ? `${(
@@ -256,13 +271,7 @@ export function UserDataSettingsGroup() {
                           : `${(quotaDetails.usage / 1024 / 1024).toFixed(
                               2
                             )} MB`
-                      } of storage.`
-                    : 'Storage quota not available.'}
-                </p>
-                {/* show used storage */}
-                <p className="pt-1 text-sm text-gray-500">
-                  {quotaDetails.quota
-                    ? `You have a total of ${
+                      } out of ${
                         quotaDetails.quota >= 1024 * 1024 * 1024
                           ? `${(
                               quotaDetails.quota /
@@ -273,7 +282,7 @@ export function UserDataSettingsGroup() {
                           : `${(quotaDetails.quota / 1024 / 1024).toFixed(
                               2
                             )} MB`
-                      } of storage available.`
+                      } of total storage available.`
                     : 'Storage quota not available.'}
                 </p>
               </div>
