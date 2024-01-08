@@ -1,8 +1,16 @@
 const nxReactBaseConfig = require('@nx/react/plugins/webpack');
+const { DefinePlugin } = require('webpack');
 const { merge } = require('webpack-merge');
 const { InjectManifest } = require('workbox-webpack-plugin');
 const path = require('path');
 const { sentryWebpackPlugin } = require('@sentry/webpack-plugin');
+
+const commitHash = require('child_process')
+  .execSync('git describe --tag')
+  .toString()
+  .trim();
+
+console.log(JSON.stringify(commitHash));
 
 module.exports = function (webpackConfig, nxConfig) {
   // Fix that Nx uses a different attribute when serving the app
@@ -18,6 +26,11 @@ module.exports = function (webpackConfig, nxConfig) {
       },
     },
     devtool: 'source-map', // Source map generation must be turned on
+    plugins: [
+      new DefinePlugin({
+        MERE_APP_VERSION: JSON.stringify(commitHash),
+      }),
+    ],
   });
 
   // For production we add the service worker

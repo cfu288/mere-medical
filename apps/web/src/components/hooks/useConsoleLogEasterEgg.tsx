@@ -13,5 +13,6 @@ export function useConsoleLogEasterEgg() {
         'font-size: 15px;color: rgb(0, 97, 131);text-shadow: 2px 2px 0 rgb(39, 209, 255); margin-bottom: 4px;'
       );
     }
+    console.debug('Mere App Version: ', MERE_APP_VERSION);
   }, []);
 }

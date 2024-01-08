@@ -107,6 +107,46 @@ const SettingsTab: React.FC = () => {
       <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 pb-20 sm:px-6 sm:pb-6 lg:px-8">
         <PrivacyAndSecuritySettingsGroup />
         <UserDataSettingsGroup />
+        <div className="py-6 text-xl font-extrabold">About Mere</div>
+        {/* App version of MERE_APP_VERSION */}
+        <div className="text-sm text-gray-500">Version: {MERE_APP_VERSION}</div>
+        {/* Link to github */}
+        <div className="text-sm text-gray-500">
+          Find the source code on{' '}
+          <a
+            className="text-primary-500  hover:underline"
+            href="https://github.com/cfu288/mere-medical"
+          >
+            GitHub
+          </a>
+        </div>
+        {/* bug report email at cfu288@meremedical.co */}
+        <div className="text-sm text-gray-500">
+          Feature requests or bug reports:{' '}
+          <a
+            className="text-primary-500 hover:text-primary-900 hover:underline"
+            href="mailto:cfu288@meremedical.co"
+          >
+            Send an email
+          </a>{' '}
+          or{' '}
+          <a
+            className="text-primary-500 hover:text-primary-900 hover:underline"
+            href="https://github.com/cfu288/mere-medical/issues/new"
+          >
+            Create an issue
+          </a>
+        </div>
+        {/* Made with love by Chris Fu */}
+        <div className="text-sm text-gray-500">
+          Made with ❤️ by{' '}
+          <a
+            className="text-primary-500 hover:text-primary-900 hover:underline"
+            href="https://www.cfu288.com"
+          >
+            Chris Fu
+          </a>
+        </div>
       </div>
     </AppPage>
   );
