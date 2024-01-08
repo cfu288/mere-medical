@@ -16,6 +16,7 @@ import { TabWrapper } from '../components/TabWrapper';
 import { TutorialOverlay } from '../components/tutorial/TutorialOverlay';
 import Config from '../environments/config.json';
 import { TutorialConfigProvider } from '../components/providers/TutorialConfigProvider';
+import { UpdateAppChecker } from '../components/providers/UpdateAppChecker';
 
 export default function App() {
   useConsoleLogEasterEgg();
@@ -28,6 +29,7 @@ export default function App() {
         </TutorialConfigProvider>
         <SentryInitializer />
         <NotificationProvider>
+          <UpdateAppChecker />
           <RxDbProvider>
             <UserProvider>
               <UserPreferencesProvider>

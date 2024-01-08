@@ -53,13 +53,17 @@ function useSentryLogging() {
   const toggleSentryReporting = useCallback((enabled: boolean) => {
     const sentryClient = Sentry.getCurrentHub().getClient();
     if (sentryClient) {
-      console.log(`Sentry: ${enabled ? 'Enabling' : 'Disabling'} reporting`);
       sentryClient.getOptions().enabled = enabled;
+      console.log(
+        `Sentry: ${
+          sentryClient.getOptions().enabled ? 'Enabling' : 'Disabling'
+        } reporting`
+      );
     }
   }, []);
 
   useEffect(() => {
-    if (localConfig?.use_sentry_reporting) {
+    if (localConfig?.use_sentry_reporting === true) {
       toggleSentryReporting(true);
     } else {
       toggleSentryReporting(false);

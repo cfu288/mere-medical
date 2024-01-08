@@ -2,8 +2,6 @@ const nxReactBaseConfig = require('@nx/react/plugins/webpack');
 const { merge } = require('webpack-merge');
 const { InjectManifest } = require('workbox-webpack-plugin');
 const path = require('path');
-const BundleAnalyzerPlugin =
-  require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const { sentryWebpackPlugin } = require('@sentry/webpack-plugin');
 
 module.exports = function (webpackConfig, nxConfig) {
@@ -26,7 +24,6 @@ module.exports = function (webpackConfig, nxConfig) {
   if (config.mode === 'production') {
     mergeWebpackConfigs.push({
       plugins: [
-        // new BundleAnalyzerPlugin(),
         new InjectManifest({
           swSrc: path.resolve(
             nxConfig.root,

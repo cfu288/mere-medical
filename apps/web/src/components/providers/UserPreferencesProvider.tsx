@@ -87,7 +87,7 @@ function fetchUserPreferences(
       },
     })
     .$.subscribe((item) => {
-      console.log(item?.toMutableJSON());
+      console.debug(item?.toMutableJSON());
       handleChange({
         userPreferences: getUserPreferencesFromRxDocument(
           item as unknown as RxDocument<UserPreferencesDocument>,

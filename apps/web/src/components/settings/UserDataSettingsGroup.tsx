@@ -247,12 +247,10 @@ export function UserDataSettingsGroup() {
                 {quotaDetails.usage && quotaDetails.quota && (
                   <div className="mt-2 h-2.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
                     <div
-                      className="bg-primary-500 h-2.5 rounded-full"
+                      className="bg-primary-500 h-2.5 min-w-[0.625rem] rounded-full"
                       style={{
                         width: `${
-                          quotaDetails.usage / quotaDetails.quota <= 1
-                            ? 1
-                            : (quotaDetails.usage / quotaDetails.quota) * 100
+                          (quotaDetails.usage / quotaDetails.quota) * 100
                         }%`,
                       }}
                     ></div>

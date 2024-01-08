@@ -1,12 +1,15 @@
 /// <reference lib="webworker" />
 /* eslint-disable no-restricted-globals */
 // <reference lib="webworker" />
-import { precacheAndRoute } from 'workbox-precaching';
+import { precacheAndRoute, addPlugins } from 'workbox-precaching';
+import { BroadcastUpdatePlugin } from 'workbox-broadcast-update';
 import { clientsClaim, setCacheNameDetails } from 'workbox-core';
 import { pageCache, imageCache, staticResourceCache } from 'workbox-recipes';
 
 // ServiceWorkerGlobalScope is a type from the workbox-precaching module
 declare const self: Window & ServiceWorkerGlobalScope;
+
+addPlugins([new BroadcastUpdatePlugin()]);
 
 /**
  * Setting up pre-caching

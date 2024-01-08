@@ -68,7 +68,8 @@
     "src/models/clinical-document/Date.ts",
     "./src/components/hooks/useSummaryPagePreferences.tsx",
     "src/components/hooks/useConsoleLogEasterEgg.tsx",
-    "src/components/providers/SentryInitializer.tsx"
+    "src/components/providers/SentryInitializer.tsx",
+    "src/components/providers/UpdateAppChecker.tsx"
   ],
   "exclude": [
     "jest.config.ts",
