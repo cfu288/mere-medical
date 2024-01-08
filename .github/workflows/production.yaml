@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Generate CalVer env var
         run: echo "RELEASE_CALVER_VERSION=$(echo $(date '+%Y.%m.%d'))" >> $GITHUB_ENV

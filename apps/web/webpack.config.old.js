@@ -54,9 +54,9 @@ module.exports = function (webpackConfig, nxConfig) {
         }),
         sentryWebpackPlugin({
           authToken: process.env.SENTRY_AUTH_TOKEN,
-          org: 'sentry',
+          org: 'mere-medical',
           project: 'mere-web',
-          url: 'https://sentry.meremedical.co',
+          url: 'https://sentry.meremedical.co/',
         }),
       ],
     });
