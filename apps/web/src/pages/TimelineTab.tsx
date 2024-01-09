@@ -139,17 +139,33 @@ function useRecordQuery(
        * @param merge Merge results with existing results. If false, results overwrite existing results
        * @param loadMore Indicate whether this is an inital load or a load more query. Affects visual loading state
        */
-      async (merge = true, loadMore = false) => {
-        loadMore && setQueryStatus(QueryStatus.LOADING_MORE);
+      async ({
+        merge = true,
+        loadMore = false,
+      }: {
+        merge?: boolean;
+        loadMore?: boolean;
+      }) => {
         try {
+          if (loadMore) {
+            setQueryStatus(QueryStatus.LOADING_MORE);
+          }
           const groupedRecords = await fetchRecords(
             db,
             user.id,
             query,
             loadMore ? currentPage + 1 : currentPage
           );
-          loadMore && setCurrentPage(currentPage + 1);
-          if (merge) {
+          if (loadMore) {
+            console.debug('load next page: ', currentPage + 1);
+            setCurrentPage(currentPage + 1);
+          } else {
+            setCurrentPage(0);
+            console.debug('reset page to 0');
+          }
+          if (query?.trim() === '') {
+            setList(groupedRecords);
+          } else if (merge) {
             setList({ ...list, ...groupedRecords });
           } else {
             setList(groupedRecords);
@@ -169,18 +185,26 @@ function useRecordQuery(
       },
       [currentPage, db, list, query, user.id]
     ),
-    debounceExecQuery = useDebounceCallback(() => execQuery(false, false), 150),
-    loadNextPage = () => execQuery(true, true);
+    debounceExecQuery = useDebounceCallback(() => {
+      execQuery({ merge: false, loadMore: false });
+    }, 300),
+    loadNextPage = useDebounceCallback(() => {
+      execQuery({ merge: true, loadMore: true });
+    }, 300);
 
   useEffect(() => {
     if (!hasRun.current) {
       hasRun.current = true;
       setQueryStatus(QueryStatus.LOADING);
-      execQuery();
+      execQuery({
+        merge: false,
+        loadMore: false,
+      });
     }
   }, [execQuery, query]);
 
   useEffect(() => {
+    console.debug('query changed:, ', query);
     setQueryStatus(QueryStatus.LOADING);
     debounceExecQuery();
   }, [query, debounceExecQuery]);
@@ -213,9 +237,10 @@ export function TimelineTab() {
               <TimelineItem dateKey={dateKey} itemList={itemList} />
             </TimelineYearHeaderWrapper>
           ))}
-          {status !== QueryStatus.COMPLETE && (
-            <LoadMoreButton status={status} loadNextPage={loadNextPage} />
-          )}
+          {status !== QueryStatus.COMPLETE &&
+            status !== QueryStatus.LOADING && (
+              <LoadMoreButton status={status} loadNextPage={loadNextPage} />
+            )}
         </>
       ) : (
         []
@@ -262,7 +287,7 @@ export function TimelineTab() {
         leaveTo="opacity-75"
       >
         {hasNoRecords ? (
-          <div className="mx-auto w-full max-w-4xl gap-x-4 px-4 pt-2 pb-4 sm:px-6 lg:px-8">
+          <div className="mx-auto w-full max-w-4xl gap-x-4 px-4 pb-4 pt-2 sm:px-6 lg:px-8">
             <EmptyRecordsPlaceholder />
           </div>
         ) : null}
@@ -278,7 +303,7 @@ export function TimelineTab() {
               <div className="h-max w-full max-w-4xl flex-col px-4 pb-20 sm:px-6 sm:pb-6 lg:px-8">
                 <SearchBar query={query} setQuery={setQuery} status={status} />
                 {listItems}
-                {hasNoRecords ? (
+                {(Object.keys(data) || []).length === 0 ? (
                   <p className="font-xl">{`No records found with query: ${query}`}</p>
                 ) : null}
               </div>
@@ -311,7 +336,7 @@ function LoadMoreButton({
     <button
       ref={ref}
       disabled={status === QueryStatus.LOADING_MORE}
-      className="border-1 hover:bg-primary-700 mt-6 w-full rounded border border-gray-300 py-2 px-4 font-bold hover:text-white disabled:bg-gray-100 disabled:text-gray-600"
+      className="border-1 hover:bg-primary-700 mt-6 w-full rounded border border-gray-300 px-4 py-2 font-bold hover:text-white disabled:bg-gray-100 disabled:text-gray-600"
       onClick={loadNextPage}
     >
       {status === QueryStatus.LOADING_MORE
