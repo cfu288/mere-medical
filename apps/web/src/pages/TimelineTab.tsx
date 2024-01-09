@@ -110,27 +110,27 @@ async function fetchRecords(
 
 export enum QueryStatus {
   IDLE,
-  LOADING,
-  LOADING_MORE,
+  LOADING, // Initial load and queries with page === 0
+  LOADING_MORE, // Currently loading more results using loadNextPage
   SUCCESS,
   ERROR,
-  COMPLETE,
+  COMPLETE, // Indicates that there are no more results to load using loadNextPage
 }
 
-function useRecordQuery(
-  query: string
-): [
-  Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]> | undefined,
-  QueryStatus,
-  boolean,
-  () => void
-] {
+function useRecordQuery(query: string): {
+  data:
+    | Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>
+    | undefined; // Data returned by query, grouped records by date
+  status: QueryStatus;
+  initialized: boolean; // Indicates whether the query has run at least once
+  loadNextPage: () => void; // Function to load next page of results
+} {
   const db = useRxDb(),
     user = useUser(),
     hasRun = useRef(false),
-    [queryStatus, setQueryStatus] = useState(QueryStatus.IDLE),
+    [status, setQueryStatus] = useState(QueryStatus.IDLE),
     [initialized, setInitialized] = useState(false),
-    [list, setList] =
+    [data, setList] =
       useState<Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>>(),
     [currentPage, setCurrentPage] = useState(0),
     execQuery = useCallback(
@@ -139,23 +139,21 @@ function useRecordQuery(
        * @param merge Merge results with existing results. If false, results overwrite existing results
        * @param loadMore Indicate whether this is an inital load or a load more query. Affects visual loading state
        */
-      async ({
-        merge = true,
-        loadMore = false,
-      }: {
-        merge?: boolean;
-        loadMore?: boolean;
-      }) => {
+      async ({ loadMore = false }: { loadMore?: boolean }) => {
         try {
           if (loadMore) {
             setQueryStatus(QueryStatus.LOADING_MORE);
           }
+
+          // Execute query
           const groupedRecords = await fetchRecords(
             db,
             user.id,
             query,
             loadMore ? currentPage + 1 : currentPage
           );
+
+          // If load more, increment page. Otherwise, reset page to 0
           if (loadMore) {
             console.debug('load next page: ', currentPage + 1);
             setCurrentPage(currentPage + 1);
@@ -163,13 +161,17 @@ function useRecordQuery(
             setCurrentPage(0);
             console.debug('reset page to 0');
           }
-          if (query?.trim() === '') {
-            setList(groupedRecords);
-          } else if (merge) {
-            setList({ ...list, ...groupedRecords });
+
+          // Merge results with existing results or overwrite existing results
+          if (loadMore) {
+            setList({ ...data, ...groupedRecords });
           } else {
             setList(groupedRecords);
           }
+
+          // Set query status.
+          // Complete indicates that there are no more results to load
+          // Success indicates that there are more results to load
           if (
             Object.values(groupedRecords).reduce((a, b) => a + b.length, 0) <
             PAGE_SIZE
@@ -178,44 +180,46 @@ function useRecordQuery(
           } else {
             setQueryStatus(QueryStatus.SUCCESS);
           }
+
           setInitialized(true);
         } catch (e) {
           setQueryStatus(QueryStatus.ERROR);
         }
       },
-      [currentPage, db, list, query, user.id]
+      [currentPage, db, data, query, user.id]
     ),
-    debounceExecQuery = useDebounceCallback(() => {
-      execQuery({ merge: false, loadMore: false });
-    }, 300),
-    loadNextPage = useDebounceCallback(() => {
-      execQuery({ merge: true, loadMore: true });
-    }, 300);
+    debounceExecQuery = useDebounceCallback(
+      () => execQuery({ loadMore: false }),
+      300
+    ),
+    loadNextPage = useDebounceCallback(
+      () => execQuery({ loadMore: true }),
+      300
+    );
 
   useEffect(() => {
     if (!hasRun.current) {
       hasRun.current = true;
       setQueryStatus(QueryStatus.LOADING);
       execQuery({
-        merge: false,
         loadMore: false,
       });
     }
   }, [execQuery, query]);
 
   useEffect(() => {
-    console.debug('query changed:, ', query);
+    console.debug('query changed: ', query);
     setQueryStatus(QueryStatus.LOADING);
     debounceExecQuery();
   }, [query, debounceExecQuery]);
 
-  return [list, queryStatus, initialized, loadNextPage];
+  return { data, status, initialized, loadNextPage };
 }
 
 export function TimelineTab() {
   const user = useUser(),
     [query, setQuery] = useState(''),
-    [data, status, initialized, loadNextPage] = useRecordQuery(query),
+    { data, status, initialized, loadNextPage } = useRecordQuery(query),
     hasNoRecords = query === '' && (!data || Object.entries(data).length === 0),
     hasRecords =
       (data !== undefined && Object.entries(data).length > 0) ||
