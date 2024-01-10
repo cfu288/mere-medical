@@ -87,8 +87,10 @@ function registerValidSW(swUrl: string, config?: Config) {
               // content until all client tabs are closed.
               console.log(
                 'New content is available and will be used when all ' +
-                  'tabs for this page are closed. See https://cra.link/PWA.'
+                  'tabs for this page are closed.'
               );
+              // Write update ready to local storage
+              localStorage.setItem('updateReady', 'true');
 
               // Execute callback
               if (config && config.onUpdate) {
