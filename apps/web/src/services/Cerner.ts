@@ -532,7 +532,7 @@ export async function saveConnectionToDb({
             .update({
               $set: {
                 access_token: res.access_token,
-                expires_in: nowInSeconds + res.expires_in,
+                expires_at: nowInSeconds + res.expires_in,
                 scope: res.scope,
                 last_sync_was_error: false,
               },
@@ -560,7 +560,7 @@ export async function saveConnectionToDb({
           location: cernerBaseUrl,
           name: 'Cerner',
           access_token: res.access_token,
-          expires_in: nowInSeconds + res.expires_in,
+          expires_at: nowInSeconds + res.expires_in,
           scope: res.scope,
           id_token: res.id_token,
           auth_uri:
@@ -595,7 +595,7 @@ export async function refreshCernerConnectionTokenIfNeeded(
   db: RxDatabase<DatabaseCollections>
 ) {
   const nowInSeconds = Math.floor(Date.now() / 1000);
-  if (connectionDocument.get('expires_in') <= nowInSeconds) {
+  if (connectionDocument.get('expires_at') <= nowInSeconds) {
     try {
       const baseUrl = connectionDocument.get('location'),
         refreshToken = connectionDocument.get('refresh_token'),

@@ -2,6 +2,12 @@
 
 This library was generated with [Nx](https://nx.dev).
 
+## Fetching updated metadata
+
+```
+npm run fetch-endpoints
+```
+
 ## Building
 
 Run `nx build epic` to build the library.

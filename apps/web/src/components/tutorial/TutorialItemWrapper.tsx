@@ -1,4 +1,4 @@
-import { TutorialLocalStorageKeys } from '../providers/LocalConfigProvider';
+import { TutorialLocalStorageKeys } from '../providers/TutorialConfigProvider';
 import React, { PropsWithChildren } from 'react';
 import { motion } from 'framer-motion';
 import {

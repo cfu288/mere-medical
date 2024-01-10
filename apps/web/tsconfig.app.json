@@ -64,7 +64,15 @@
     "src/components/tutorial/TutorialItemWrapper.tsx",
     "./src/components/tutorial/TutorialContentScreen.tsx",
     "./src/pages/PinnedListCard.tsx",
-    "./src/components/timeline/ShowDocumentReferenceResultsExpandable/parseCCDA/parseCCDASocialHistorySection.1.tsx"
+    "./src/components/timeline/ShowDocumentReferenceResultsExpandable/parseCCDA/parseCCDASocialHistorySection.1.tsx",
+    "src/models/clinical-document/Date.ts",
+    "./src/components/hooks/useSummaryPagePreferences.tsx",
+    "src/components/hooks/useConsoleLogEasterEgg.tsx",
+    "src/components/providers/SentryInitializer.tsx",
+    "src/components/providers/UpdateAppChecker.tsx",
+    "src/components/hooks/DeveloperLogsProvider.tsx",
+    "src/components/settings/DeveloperSettingsGroup.tsx",
+    "src/components/settings/AboutMereSettingsGroup.tsx"
   ],
   "exclude": [
     "jest.config.ts",

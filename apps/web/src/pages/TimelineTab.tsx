@@ -19,8 +19,10 @@ import { TimelineSkeleton } from './TimelineSkeleton';
 import { useScrollToHash } from '../components/hooks/useScrollToHash';
 import { SearchBar } from './SearchBar';
 import { Transition } from '@headlessui/react';
-import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ButtonLoadingSpinner } from '../components/connection/ButtonLoadingSpinner';
+import useIntersectionObserver from '../components/hooks/useIntersectionObserver';
+
+const PAGE_SIZE = 50;
 
 /**
  * This should really be a background process that runs after every data sync instead of every view
@@ -108,29 +110,27 @@ async function fetchRecords(
 
 export enum QueryStatus {
   IDLE,
-  LOADING,
-  LOADING_MORE,
+  LOADING, // Initial load and queries with page === 0
+  LOADING_MORE, // Currently loading more results using loadNextPage
   SUCCESS,
   ERROR,
-  COMPLETE,
+  COMPLETE, // Indicates that there are no more results to load using loadNextPage
 }
 
-const PAGE_SIZE = 250;
-
-function useRecordQuery(
-  query: string
-): [
-  Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]> | undefined,
-  QueryStatus,
-  boolean,
-  () => void
-] {
+function useRecordQuery(query: string): {
+  data:
+    | Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>
+    | undefined; // Data returned by query, grouped records by date
+  status: QueryStatus;
+  initialized: boolean; // Indicates whether the query has run at least once
+  loadNextPage: () => void; // Function to load next page of results
+} {
   const db = useRxDb(),
     user = useUser(),
     hasRun = useRef(false),
-    [queryStatus, setQueryStatus] = useState(QueryStatus.IDLE),
+    [status, setQueryStatus] = useState(QueryStatus.IDLE),
     [initialized, setInitialized] = useState(false),
-    [list, setList] =
+    [data, setList] =
       useState<Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>>(),
     [currentPage, setCurrentPage] = useState(0),
     execQuery = useCallback(
@@ -139,21 +139,39 @@ function useRecordQuery(
        * @param merge Merge results with existing results. If false, results overwrite existing results
        * @param loadMore Indicate whether this is an inital load or a load more query. Affects visual loading state
        */
-      async (merge = true, loadMore = false) => {
-        loadMore && setQueryStatus(QueryStatus.LOADING_MORE);
+      async ({ loadMore = false }: { loadMore?: boolean }) => {
         try {
+          if (loadMore) {
+            setQueryStatus(QueryStatus.LOADING_MORE);
+          }
+
+          // Execute query
           const groupedRecords = await fetchRecords(
             db,
             user.id,
             query,
             loadMore ? currentPage + 1 : currentPage
           );
-          loadMore && setCurrentPage(currentPage + 1);
-          if (merge) {
-            setList({ ...list, ...groupedRecords });
+
+          // If load more, increment page. Otherwise, reset page to 0
+          if (loadMore) {
+            console.debug('load next page: ', currentPage + 1);
+            setCurrentPage(currentPage + 1);
+          } else {
+            setCurrentPage(0);
+            console.debug('reset page to 0');
+          }
+
+          // Merge results with existing results or overwrite existing results
+          if (loadMore) {
+            setList({ ...data, ...groupedRecords });
           } else {
             setList(groupedRecords);
           }
+
+          // Set query status.
+          // Complete indicates that there are no more results to load
+          // Success indicates that there are more results to load
           if (
             Object.values(groupedRecords).reduce((a, b) => a + b.length, 0) <
             PAGE_SIZE
@@ -162,36 +180,46 @@ function useRecordQuery(
           } else {
             setQueryStatus(QueryStatus.SUCCESS);
           }
+
           setInitialized(true);
         } catch (e) {
           setQueryStatus(QueryStatus.ERROR);
         }
       },
-      [currentPage, db, list, query, user.id]
+      [currentPage, db, data, query, user.id]
     ),
-    debounceExecQuery = useDebounceCallback(() => execQuery(false, false), 150),
-    loadNextPage = () => execQuery(true, true);
+    debounceExecQuery = useDebounceCallback(
+      () => execQuery({ loadMore: false }),
+      300
+    ),
+    loadNextPage = useDebounceCallback(
+      () => execQuery({ loadMore: true }),
+      300
+    );
 
   useEffect(() => {
     if (!hasRun.current) {
       hasRun.current = true;
       setQueryStatus(QueryStatus.LOADING);
-      execQuery();
+      execQuery({
+        loadMore: false,
+      });
     }
   }, [execQuery, query]);
 
   useEffect(() => {
+    console.debug('query changed: ', query);
     setQueryStatus(QueryStatus.LOADING);
     debounceExecQuery();
   }, [query, debounceExecQuery]);
 
-  return [list, queryStatus, initialized, loadNextPage];
+  return { data, status, initialized, loadNextPage };
 }
 
 export function TimelineTab() {
   const user = useUser(),
     [query, setQuery] = useState(''),
-    [data, status, initialized, loadNextPage] = useRecordQuery(query),
+    { data, status, initialized, loadNextPage } = useRecordQuery(query),
     hasNoRecords = query === '' && (!data || Object.entries(data).length === 0),
     hasRecords =
       (data !== undefined && Object.entries(data).length > 0) ||
@@ -213,20 +241,10 @@ export function TimelineTab() {
               <TimelineItem dateKey={dateKey} itemList={itemList} />
             </TimelineYearHeaderWrapper>
           ))}
-          {status !== QueryStatus.COMPLETE && (
-            <button
-              disabled={status === QueryStatus.LOADING_MORE}
-              className="border-1 hover:bg-primary-700 mt-6 w-full rounded border border-gray-300 py-2 px-4 font-bold hover:text-white disabled:bg-white disabled:text-gray-600"
-              onClick={loadNextPage}
-            >
-              Load more records
-              <span className="ml-2 inline-flex justify-center align-middle">
-                {status === QueryStatus.LOADING_MORE ? (
-                  <ButtonLoadingSpinner />
-                ) : null}
-              </span>
-            </button>
-          )}
+          {status !== QueryStatus.COMPLETE &&
+            status !== QueryStatus.LOADING && (
+              <LoadMoreButton status={status} loadNextPage={loadNextPage} />
+            )}
         </>
       ) : (
         []
@@ -273,18 +291,23 @@ export function TimelineTab() {
         leaveTo="opacity-75"
       >
         {hasNoRecords ? (
-          <div className="mx-auto w-full max-w-4xl gap-x-4 px-4 pt-2 pb-4 sm:px-6 lg:px-8">
+          <div className="mx-auto w-full max-w-4xl gap-x-4 px-4 pb-4 pt-2 sm:px-6 lg:px-8">
             <EmptyRecordsPlaceholder />
           </div>
         ) : null}
         {hasRecords ? (
           <div className="flex w-full overflow-hidden">
-            <JumpToPanel items={data} isLoading={false} />
+            <JumpToPanel
+              items={data}
+              isLoading={false}
+              status={status}
+              loadMore={loadNextPage}
+            />
             <div className="px-auto flex h-full max-h-full w-full justify-center overflow-y-scroll">
               <div className="h-max w-full max-w-4xl flex-col px-4 pb-20 sm:px-6 sm:pb-6 lg:px-8">
                 <SearchBar query={query} setQuery={setQuery} status={status} />
                 {listItems}
-                {hasNoRecords ? (
+                {(Object.keys(data) || []).length === 0 ? (
                   <p className="font-xl">{`No records found with query: ${query}`}</p>
                 ) : null}
               </div>
@@ -293,5 +316,39 @@ export function TimelineTab() {
         ) : null}
       </Transition>
     </AppPage>
+  );
+}
+
+function LoadMoreButton({
+  status,
+  loadNextPage,
+}: {
+  status: QueryStatus;
+  loadNextPage: () => void;
+}) {
+  const ref = useRef<HTMLButtonElement | null>(null),
+    entry = useIntersectionObserver(ref, {}),
+    isVisible = !!entry?.isIntersecting;
+
+  useEffect(() => {
+    if (isVisible) {
+      loadNextPage();
+    }
+  }, [isVisible, loadNextPage]);
+
+  return (
+    <button
+      ref={ref}
+      disabled={status === QueryStatus.LOADING_MORE}
+      className="border-1 hover:bg-primary-700 mt-6 w-full rounded border border-gray-300 px-4 py-2 font-bold hover:text-white disabled:bg-gray-100 disabled:text-gray-600"
+      onClick={loadNextPage}
+    >
+      {status === QueryStatus.LOADING_MORE
+        ? 'Loading more records'
+        : 'Load more records'}
+      <span className="ml-2 inline-flex justify-center align-middle">
+        {status === QueryStatus.LOADING_MORE ? <ButtonLoadingSpinner /> : null}
+      </span>
+    </button>
   );
 }

@@ -32,12 +32,20 @@ export async function getLoginUrlBySource(
 ): Promise<string & Location> {
   switch (item.get('source')) {
     case 'epic': {
-      return Promise.resolve(
-        getEpicLoginUrl(
-          item.get('location'),
-          item.get('tenant_id') === 'sandbox' ||
-            item.get('tenant_id') === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354'
-        )
+      let baseUrl = item.get('location');
+
+      // to stay backwards compatible with old epic connections
+      // append /oauth2/authorize to the end of the auth url, if it doesn't already exist
+      let authUrl = item.get('auth_uri');
+      if (authUrl === undefined) {
+        authUrl = baseUrl + '/oauth2/authorize';
+      }
+
+      return getEpicLoginUrl(
+        baseUrl,
+        authUrl,
+        item.get('tenant_id') === 'sandbox' ||
+          item.get('tenant_id') === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354'
       );
     }
     case 'cerner': {
@@ -67,8 +75,32 @@ export function setTenantUrlBySource(
 ): void {
   switch (item.get('source')) {
     case 'epic': {
+      // to stay backwards compatible with old epic connections
+      // append /api/FHIR/DSTU2/ to the end of the base url, if it doesn't already exist
+      let baseUrl = item.get('location');
+      if (
+        !baseUrl.endsWith('/api/FHIR/DSTU2/') ||
+        !baseUrl.endsWith('/api/FHIR/DSTU2')
+      ) {
+        baseUrl = baseUrl + '/api/FHIR/DSTU2/';
+      }
+
+      // to stay backwards compatible with old epic connections
+      // append /oauth2/authorize to the end of the auth url, if it doesn't already exist
+      let authUrl = item.get('auth_uri');
+      if (authUrl === undefined) {
+        authUrl = baseUrl + '/oauth2/authorize';
+      }
+
+      let tokenUrl = item.get('token_uri');
+      if (tokenUrl === undefined) {
+        tokenUrl = baseUrl + '/oauth2/token';
+      }
+
       setTenantEpicUrl(
-        item.get('location'),
+        baseUrl,
+        authUrl,
+        tokenUrl,
         item.get('name'),
         item.get('tenant_id')
       );
@@ -78,7 +110,7 @@ export function setTenantUrlBySource(
       setTenantCernerUrl(
         item.get('location'),
         item.get('auth_uri'),
-        item.get('auth_uri'),
+        item.get('token_uri'),
         item.get('name'),
         item.get('id')
       );
@@ -102,10 +134,14 @@ export function setTenantUrlBySource(
 
 function setTenantEpicUrl(
   s: string & Location,
+  a: string & Location,
+  t: string & Location,
   name: string,
   id: string
 ): void {
-  localStorage.setItem(EpicLocalStorageKeys.EPIC_URL, s);
+  localStorage.setItem(EpicLocalStorageKeys.EPIC_BASE_URL, s);
+  localStorage.setItem(EpicLocalStorageKeys.EPIC_AUTH_URL, a);
+  localStorage.setItem(EpicLocalStorageKeys.EPIC_TOKEN_URL, t);
   localStorage.setItem(EpicLocalStorageKeys.EPIC_NAME, name);
   localStorage.setItem(EpicLocalStorageKeys.EPIC_ID, id);
 }
@@ -147,10 +183,16 @@ const ConnectionTab: React.FC = () => {
     userPreferences = useUserPreferences(),
     onpatientLoginUrl = OnPatient.getLoginUrl(),
     handleToggleEpicPanel = useCallback(
-      (loc: string & Location, name: string, id: string) => {
-        setTenantEpicUrl(loc, name, id);
+      (
+        base: string & Location,
+        auth: string & Location,
+        token: string & Location,
+        name: string,
+        id: string
+      ) => {
+        setTenantEpicUrl(base, auth, token, name, id);
         setEpicOpen((x) => !x);
-        window.location = getEpicLoginUrl(loc, id === 'sandbox');
+        window.location = getEpicLoginUrl(base, auth, id === 'sandbox');
       },
       []
     ),
@@ -213,14 +255,14 @@ const ConnectionTab: React.FC = () => {
         </ul>
         <div className="mb-4 box-border	flex w-full justify-center align-middle">
           <a href={vaUrl} className="w-full">
-            <button className="bg-primary hover:bg-primary-600 active:bg-primary-700 w-full rounded-lg p-4 text-white duration-75 active:scale-[98%]">
+            <button className="bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-[98%] w-full rounded-lg p-4 text-white duration-75">
               <p className="font-bold">Log in to the VA</p>
             </button>
           </a>
         </div>
         <div className="mb-4 box-border	flex w-full justify-center align-middle">
           <button
-            className="bg-primary hover:bg-primary-600 active:bg-primary-700 w-full rounded-lg p-4 text-white duration-75 active:scale-[98%]"
+            className="bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-[98%] w-full rounded-lg p-4 text-white duration-75"
             onClick={() => setEpicOpen((x) => !x)}
           >
             <p className="font-bold">Log in to Epic MyChart</p>
@@ -228,7 +270,7 @@ const ConnectionTab: React.FC = () => {
         </div>
         <div className="mb-4 box-border	flex w-full justify-center align-middle">
           <button
-            className="bg-primary hover:bg-primary-600 active:bg-primary-700 w-full rounded-lg p-4 text-white duration-75 active:scale-[98%]"
+            className="bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-[98%] w-full rounded-lg p-4 text-white duration-75"
             onClick={() => {
               setCernerOpen((x) => !x);
             }}
@@ -238,7 +280,7 @@ const ConnectionTab: React.FC = () => {
         </div>
         <div className="mb-4 box-border	flex w-full justify-center align-middle">
           <button
-            className="bg-primary hover:bg-primary-600 active:bg-primary-700 w-full rounded-lg p-4 text-white duration-75 active:scale-[98%]"
+            className="bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-[98%] w-full rounded-lg p-4 text-white duration-75"
             onClick={() => {
               setVeradigmOpen((x) => !x);
             }}
@@ -250,7 +292,7 @@ const ConnectionTab: React.FC = () => {
           {userPreferences?.use_proxy ? (
             <a
               href={onpatientLoginUrl}
-              className=" bg-primary hover:bg-primary-600 active:bg-primary-700 w-full rounded-lg p-4 text-center text-white duration-75 active:scale-[98%]"
+              className=" bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-[98%] w-full rounded-lg p-4 text-center text-white duration-75"
             >
               <button>
                 <p className="font-bold">Log in to OnPatient</p>

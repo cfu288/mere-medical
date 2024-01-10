@@ -1,5 +1,16 @@
 {
   "name": "@mere/epic",
   "version": "0.0.1",
-  "type": "commonjs"
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "chalk": "^5.3.0",
+    "tsx": "^4.7.0"
+  },
+  "scripts": {
+    "fetch-endpoints": "tsx fetchMetadata.ts --openssl-config=openssl.cnf --no-experimental-fetch"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1"
+  }
 }

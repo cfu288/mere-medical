@@ -87,13 +87,14 @@ function fetchUserPreferences(
       },
     })
     .$.subscribe((item) => {
-      console.log(item?.toMutableJSON());
+      console.debug(item?.toMutableJSON());
       handleChange({
         userPreferences: getUserPreferencesFromRxDocument(
-          (item as unknown) as RxDocument<UserPreferencesDocument>,
+          item as unknown as RxDocument<UserPreferencesDocument>,
           user_id
         ),
-        rawUserPreferences: (item as unknown) as RxDocument<UserPreferencesDocument>,
+        rawUserPreferences:
+          item as unknown as RxDocument<UserPreferencesDocument>,
       });
     });
 }

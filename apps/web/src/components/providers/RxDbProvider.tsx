@@ -47,6 +47,11 @@ import { AppLoadingSkeleton } from './AppLoadingSkeleton';
 import { CryptedIndexedDBAdapter } from 'sylviejs/storage-adapter/crypted-indexeddb-adapter';
 import logo from '../../img/white-logo.svg';
 import { useLocalConfig } from './LocalConfigProvider';
+import {
+  SummaryPagePreferencesCollection,
+  SummaryPagePreferencesSchema,
+} from '../../models/summary-page-preferences/SummaryPagePreferences.collection';
+import { SummaryPagePreferencesMigrations } from '../../models/summary-page-preferences/SummaryPagePreferences.migration';
 
 if (process.env.NODE_ENV === 'development') {
   addRxPlugin(RxDBDevModePlugin);
@@ -61,6 +66,7 @@ export type DatabaseCollections = {
   connection_documents: ConnectionDocumentCollection;
   user_documents: UserDocumentCollection;
   user_preferences: UserPreferencesDocumentCollection;
+  summary_page_preferences: SummaryPagePreferencesCollection;
 };
 
 const RxDbContext = React.createContext<
@@ -85,6 +91,10 @@ export const databaseCollections = {
   user_preferences: {
     schema: UserPreferencesDocumentSchema,
     migrationStrategies: UserPreferencesMigrations,
+  },
+  summary_page_preferences: {
+    schema: SummaryPagePreferencesSchema,
+    migrationStrategies: SummaryPagePreferencesMigrations,
   },
 };
 
@@ -118,7 +128,7 @@ export function handleJSONDataImport(
           });
 
           if (Object.keys(errors).length > 0) {
-            console.group('There were some errors with import:');
+            console.group('Errors with import:');
             console.error(errors);
             console.groupEnd();
             reject(
@@ -326,19 +336,19 @@ export function RxDbProvider(props: RxDbProviderProps) {
             {initialized === 'COMPLETE' ? (
               <AppLoadingSkeleton ready />
             ) : (
-              <div className="bg-primary-900 mobile-full-height flex flex-1 flex-col justify-center">
+              <div className="bg-primary mobile-full-height flex flex-1 flex-col justify-center">
                 <div className="sm:mx-auto sm:w-full sm:max-w-md">
                   <img
                     className="mx-auto h-10 w-auto"
                     src={logo}
                     alt="Mere Logo"
                   />
-                  <h2 className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-white">
-                    Enter your encryption password
-                  </h2>
                 </div>
                 <div className="mx-4 mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
-                  <div className="rounded-lg bg-white px-6 py-12 shadow sm:mx-4 ">
+                  <div className="rounded-md bg-white px-6 pb-10 pt-2 shadow-md sm:mx-4">
+                    <h2 className="my-6 text-center text-xl font-semibold text-gray-700">
+                      Enter your encryption password
+                    </h2>
                     <form
                       className="space-y-6"
                       onSubmit={(e) => {
@@ -349,12 +359,13 @@ export function RxDbProvider(props: RxDbProviderProps) {
                       <div>
                         <label
                           htmlFor="password"
-                          className="block text-sm font-medium leading-6 text-gray-900"
+                          className="hidden text-sm font-medium leading-6 text-gray-900"
                         >
                           Password
                         </label>
                         <div className="">
                           <input
+                            placeholder="Password"
                             id="password"
                             name="password"
                             type="password"
@@ -365,14 +376,16 @@ export function RxDbProvider(props: RxDbProviderProps) {
                               setPassword(e.target.value);
                               initialized === 'ERROR' && setInitialized('IDLE');
                             }}
-                            className="focus:ring-primary-600 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6"
+                            className={`focus:ring-primary-600 block w-full rounded-md border-0 bg-gray-100 py-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset ${
+                              password === '' ? 'italic' : ''
+                            }`}
                           />
                         </div>
                       </div>
                       <div>
                         <button
                           type="submit"
-                          className="bg-primary-600 hover:bg-primary-500 focus-visible:outline-primary-600 flex w-full justify-center rounded-md px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                          className="bg-primary-700 hover:bg-primary-500 focus-visible:outline-primary-600 flex w-full justify-center rounded-md px-3 py-3 text-sm font-semibold leading-6 text-white shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
                         >
                           Unlock
                         </button>

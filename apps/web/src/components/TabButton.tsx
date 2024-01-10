@@ -31,7 +31,7 @@ export function TabButton({
           {icon}
         </p>
         <p
-          className={`pt-1 text-[11px] text-white md:pt-0 md:text-base md:text-white ${
+          className={`pt-1 text-[11px] md:pt-0 md:text-base md:text-white ${
             location === route ? 'text-primary font-bold' : 'text-slate-800'
           }`}
         >

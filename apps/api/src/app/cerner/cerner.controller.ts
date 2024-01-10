@@ -12,7 +12,7 @@ export class CernerController {
       const data = await this.cernerService.queryTenants(query);
       response.json(data);
     } catch (e) {
-      Logger.log(e);
+      Logger.error(e);
       response.status(500).send({ message: 'There was an error' });
     }
   }

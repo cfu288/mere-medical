@@ -9,6 +9,8 @@ import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.t
 import { PrivacyAndSecuritySettingsGroup } from '../components/settings/PrivacyAndSecuritySettingsGroup';
 import { UserDataSettingsGroup } from '../components/settings/UserDataSettingsGroup';
 import { UserCard } from '../components/settings/UserCard';
+import { DeveloperSettingsGroup } from '../components/settings/DeveloperSettingsGroup';
+import { AboutMereSettingsGroup } from '../components/settings/AboutMereSettingsGroup';
 
 export function fetchPatientRecords(
   db: RxDatabase<DatabaseCollections>,
@@ -104,9 +106,11 @@ const SettingsTab: React.FC = () => {
         <div className="py-6 text-xl font-extrabold">About Me</div>
       </div>
       <UserCard />
-      <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 pb-20 sm:px-6 sm:pb-6 lg:px-8">
+      <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pb-20 pt-2 sm:px-6 sm:pb-6 lg:px-8">
         <PrivacyAndSecuritySettingsGroup />
         <UserDataSettingsGroup />
+        <AboutMereSettingsGroup />
+        <DeveloperSettingsGroup />
       </div>
     </AppPage>
   );

@@ -46,4 +46,6 @@ COPY ./healthcheck.js /app/healthcheck.js
 COPY ./inject-env-and-start.sh /usr/bin/inject-env-and-start.sh
 RUN chmod +x /usr/bin/inject-env-and-start.sh
 
+ENV NODE_ENV production
+
 ENTRYPOINT [ "inject-env-and-start.sh" ]

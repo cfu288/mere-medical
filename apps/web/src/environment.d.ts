@@ -1,3 +1,4 @@
+/* eslint-disable no-var */
 declare global {
   namespace NodeJS {
     interface ProcessEnv {
@@ -7,6 +8,7 @@ declare global {
       TEST_VAR: string;
     }
   }
+  var MERE_APP_VERSION: number;
 }
 
 export {};

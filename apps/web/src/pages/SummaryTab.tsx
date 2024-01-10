@@ -31,6 +31,7 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { CardBase } from '../components/connection/CardBase';
 import { TimelineCardSubtitile } from '../components/timeline/TimelineCardSubtitile';
 import { PinnedListCard } from './PinnedListCard';
+import React from 'react';
 
 function fetchMedications(
   db: RxDatabase<DatabaseCollections>,
@@ -133,23 +134,32 @@ function fetchAllergy(db: RxDatabase<DatabaseCollections>, user_id: string) {
       return lst;
     });
 }
-function fetchPinned(db: RxDatabase<DatabaseCollections>, user_id: string) {
-  return db.clinical_documents
-    .find({
+
+async function fetchPinned(
+  db: RxDatabase<DatabaseCollections>,
+  user_id: string
+) {
+  const pinnedIds = await db.summary_page_preferences
+    .findOne({
       selector: {
         user_id: user_id,
-        'metadata.is_pinned': true,
       },
-      sort: [{ 'metadata.date': 'desc' }],
     })
-    .exec()
-    .then((list) => {
-      const lst = list as unknown as RxDocument<
-        ClinicalDocument<BundleEntry<FhirResource>>
-      >[];
+    .exec();
 
-      return lst;
-    });
+  if (pinnedIds === null) {
+    return [];
+  }
+
+  const pinnedIdsList = pinnedIds.pinned_labs || [];
+
+  return db.clinical_documents.findByIds(pinnedIdsList).then((map) => {
+    const lst = [...map.values()] as RxDocument<
+      ClinicalDocument<BundleEntry<FhirResource>>
+    >[];
+
+    return lst;
+  });
 }
 
 enum ActionTypes {
@@ -166,7 +176,7 @@ type SummaryState = {
   imm: ClinicalDocument<BundleEntry<Immunization>>[];
   careplan: ClinicalDocument<BundleEntry<CarePlan>>[];
   allergy: ClinicalDocument<BundleEntry<AllergyIntolerance>>[];
-  is_pinned: ClinicalDocument<BundleEntry<DiagnosticReport | Observation>>[];
+  pinned: ClinicalDocument<BundleEntry<DiagnosticReport | Observation>>[];
   initialized: boolean;
 };
 
@@ -182,9 +192,7 @@ type SummaryActions =
         imm: ClinicalDocument<BundleEntry<Immunization>>[];
         careplan: ClinicalDocument<BundleEntry<CarePlan>>[];
         allergy: ClinicalDocument<BundleEntry<AllergyIntolerance>>[];
-        is_pinned: ClinicalDocument<
-          BundleEntry<DiagnosticReport | Observation>
-        >[];
+        pinned: ClinicalDocument<BundleEntry<DiagnosticReport | Observation>>[];
       };
     };
 
@@ -215,7 +223,7 @@ function summaryReducer(state: SummaryState, action: SummaryActions) {
         cond: action.data.cond,
         careplan: action.data.careplan,
         allergy: action.data.allergy,
-        is_pinned: action.data.is_pinned,
+        pinned: action.data.pinned,
         status: ActionTypes.COMPLETED,
         initialized: true,
       };
@@ -232,7 +240,7 @@ function useSummaryData(): [
     imm: ClinicalDocument<BundleEntry<Immunization>>[];
     careplan: ClinicalDocument<BundleEntry<CarePlan>>[];
     allergy: ClinicalDocument<BundleEntry<AllergyIntolerance>>[];
-    is_pinned: ClinicalDocument<BundleEntry<DiagnosticReport | Observation>>[];
+    pinned: ClinicalDocument<BundleEntry<DiagnosticReport | Observation>>[];
     initialized: boolean;
   },
   React.Dispatch<SummaryActions>
@@ -246,7 +254,7 @@ function useSummaryData(): [
     imm: [],
     careplan: [],
     allergy: [],
-    is_pinned: [],
+    pinned: [],
     initialized: false,
   });
 
@@ -299,7 +307,7 @@ function useSummaryData(): [
           )
         ),
       ])
-        .then(([meds, cond, imm, careplan, allergy, is_pinned]) => {
+        .then(([meds, cond, imm, careplan, allergy, pinned]) => {
           reducer({
             type: ActionTypes.COMPLETED,
             data: {
@@ -308,7 +316,7 @@ function useSummaryData(): [
               imm,
               careplan,
               allergy,
-              is_pinned,
+              pinned,
             },
           });
         })
@@ -322,13 +330,13 @@ function useSummaryData(): [
 }
 
 function SummaryTab() {
-  const [{ meds, cond, imm, careplan, allergy, is_pinned, initialized }] =
+  const [{ meds, cond, imm, careplan, allergy, pinned, initialized }] =
     useSummaryData();
 
   return (
     <AppPage banner={<GenericBanner text="Summary" />}>
       {!initialized ? (
-        <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 pb-20 sm:px-6 sm:pb-6 lg:px-8">
+        <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pb-20 pt-2 sm:px-6 sm:pb-6 lg:px-8">
           <SkeletonListCard />
           <SkeletonListCard />
           <SkeletonListCard />
@@ -336,7 +344,7 @@ function SummaryTab() {
       ) : (
         <div
           className={
-            'mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 pb-20 lg:px-8' +
+            'mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pb-20 pt-2 lg:px-8' +
             'sm:mx-0 sm:grid sm:grid-cols-6 sm:pb-6'
           }
         >
@@ -345,13 +353,13 @@ function SummaryTab() {
           imm.length === 0 &&
           careplan.length === 0 &&
           allergy.length === 0 &&
-          is_pinned.length === 0 ? (
-            <div className="col-span-6">
+          pinned.length === 0 ? (
+            <div className="col-span-6 sm:col-span-3 ">
               <EmptyRecordsPlaceholder />
             </div>
           ) : (
             <>
-              {is_pinned.length === 0 ? (
+              {pinned.length === 0 ? (
                 <div className="col-span-6 sm:col-span-3 ">
                   <Disclosure defaultOpen={true}>
                     {({ open }) => (
@@ -406,7 +414,7 @@ function SummaryTab() {
                   </Disclosure>
                 </div>
               ) : (
-                <PinnedListCard items={is_pinned} />
+                <PinnedListCard items={pinned} />
               )}
               <MedicationsListCard items={meds} />
               <ConditionsListCard items={cond} />
