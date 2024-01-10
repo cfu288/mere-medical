@@ -17,6 +17,7 @@ import { TutorialOverlay } from '../components/tutorial/TutorialOverlay';
 import Config from '../environments/config.json';
 import { TutorialConfigProvider } from '../components/providers/TutorialConfigProvider';
 import { UpdateAppChecker } from '../components/providers/UpdateAppChecker';
+import { DeveloperLogsProvider } from '../components/providers/DeveloperLogsProvider';
 
 export default function App() {
   useConsoleLogEasterEgg();
@@ -24,24 +25,26 @@ export default function App() {
   return (
     <ErrorBoundary>
       <LocalConfigProvider>
-        <TutorialConfigProvider>
-          {Config.IS_DEMO !== 'enabled' && <TutorialOverlay />}
-        </TutorialConfigProvider>
-        <SentryInitializer />
-        <NotificationProvider>
-          <UpdateAppChecker />
-          <RxDbProvider>
-            <UserProvider>
-              <UserPreferencesProvider>
-                <Router>
-                  <SyncJobProvider>
-                    <TabWrapper />
-                  </SyncJobProvider>
-                </Router>
-              </UserPreferencesProvider>
-            </UserProvider>
-          </RxDbProvider>
-        </NotificationProvider>
+        <DeveloperLogsProvider>
+          <TutorialConfigProvider>
+            {Config.IS_DEMO !== 'enabled' && <TutorialOverlay />}
+          </TutorialConfigProvider>
+          <SentryInitializer />
+          <NotificationProvider>
+            <UpdateAppChecker />
+            <RxDbProvider>
+              <UserProvider>
+                <UserPreferencesProvider>
+                  <Router>
+                    <SyncJobProvider>
+                      <TabWrapper />
+                    </SyncJobProvider>
+                  </Router>
+                </UserPreferencesProvider>
+              </UserProvider>
+            </RxDbProvider>
+          </NotificationProvider>
+        </DeveloperLogsProvider>
       </LocalConfigProvider>
     </ErrorBoundary>
   );

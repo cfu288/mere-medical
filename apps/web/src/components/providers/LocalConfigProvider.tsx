@@ -10,11 +10,13 @@ import React, {
 interface LocalConfig {
   use_encrypted_database: boolean;
   use_sentry_reporting: boolean;
+  developer_mode_enabled?: boolean;
 }
 
 const defaultLocalConfig: LocalConfig = {
   use_encrypted_database: false,
   use_sentry_reporting: false,
+  developer_mode_enabled: false,
 };
 
 function getLocalConfig(): Partial<LocalConfig> {
