@@ -11,7 +11,7 @@ export function AboutMereSettingsGroup() {
     <>
       <div className="py-6 text-xl font-extrabold">About Mere</div>
       {/* App version of MERE_APP_VERSION */}
-      <div className="text-sm text-gray-500">Version: {MERE_APP_VERSION}</div>
+      <div className="text-sm text-gray-500">Version {MERE_APP_VERSION}</div>
       {/* Link to github */}
       <div className="text-sm text-gray-500">
         Find the source code on{' '}
