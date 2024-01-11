@@ -7,6 +7,7 @@ export function UpdateAppChecker() {
   useEffect(() => {
     if (localStorage.getItem('updateReady') === 'true') {
       localStorage.setItem('updateReady', 'false');
+      // Service worker installed, but not necessarily updated app cache
       const timeout = setTimeout(() => {
         notificationDispatch({
           message: `Mere is ready to update! Restart the app to see the latest version.`,
@@ -20,7 +21,7 @@ export function UpdateAppChecker() {
             text: 'Click to Restart',
           },
         });
-      }, 1000);
+      }, 10000);
       return () => clearTimeout(timeout);
     }
 
