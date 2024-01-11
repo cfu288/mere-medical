@@ -248,14 +248,14 @@ function ProfileImageModal({
             }}
           />
           <button
-            className='className="focus:ring-primary-500 focus:ring-offset-2" rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2'
+            className='className="focus:ring-primary-500 focus:ring-offset-2" rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2'
             onClick={() => uploadRef.current?.click()}
             type="button"
           >
             Select a new photo
           </button>
           <button
-            className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 ml-4 inline-flex justify-center rounded-md border border-transparent py-2 px-4 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
+            className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 ml-4 inline-flex justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
             type="submit"
           >
             Use Photo
@@ -320,7 +320,7 @@ export function EditUserForm({
         onSubmit={handleSubmit(submitUser)}
       >
         <div className="h-0 flex-1 overflow-y-auto rounded-lg">
-          <div className="bg-primary-700 py-6 px-4 sm:px-6 ">
+          <div className="bg-primary-700 px-4 py-6 sm:px-6 ">
             <div className="flex items-center justify-between">
               <Dialog.Title className="text-lg font-medium text-white">
                 Tell us about yourself
@@ -501,7 +501,7 @@ export function EditUserForm({
                       e.preventDefault();
                       setTogglePhotoModal((x) => !x);
                     }}
-                    className="file:focus:ring-primary-500 file:text-medium block w-full flex-1 py-2 text-sm text-gray-500 file:ml-5 file:mr-4 file:rounded-md file:border file:border-gray-300 file:bg-white  file:py-2 file:px-3 file:text-gray-700 hover:file:bg-gray-100 focus:outline-none file:focus:outline-none file:focus:ring-2 file:focus:ring-offset-2"
+                    className="file:focus:ring-primary-500 file:text-medium block w-full flex-1 py-2 text-sm text-gray-700 file:ml-5 file:mr-4 file:rounded-md file:border file:border-gray-300 file:bg-white  file:px-3 file:py-2 file:text-gray-700 hover:file:bg-gray-100 focus:outline-none file:focus:outline-none file:focus:ring-2 file:focus:ring-offset-2"
                   >
                     Upload photo
                   </button>
@@ -513,14 +513,14 @@ export function EditUserForm({
         <div className="flex flex-shrink-0 justify-end px-4 py-4">
           <button
             type="button"
-            className="focus:ring-primary-500 rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2"
+            className="focus:ring-primary-500 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2"
             onClick={toggleModal}
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 ml-4 inline-flex justify-center rounded-md border border-transparent py-2 px-4 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
+            className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 ml-4 inline-flex justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
           >
             Save
           </button>

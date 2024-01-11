@@ -290,11 +290,7 @@ export function TimelineTab() {
         leaveFrom="opacity-100"
         leaveTo="opacity-75"
       >
-        {hasNoRecords ? (
-          <div className="mx-auto w-full max-w-4xl gap-x-4 px-4 pb-4 pt-2 sm:px-6 lg:px-8">
-            <EmptyRecordsPlaceholder />
-          </div>
-        ) : null}
+        {hasNoRecords ? <EmptyRecordsPlaceholder /> : null}
         {hasRecords ? (
           <div className="flex w-full overflow-hidden">
             <JumpToPanel

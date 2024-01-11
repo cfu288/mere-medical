@@ -8,7 +8,7 @@ export function TimelineCardSubtitile({
   return (
     <p
       className={`text-xs font-medium md:text-sm ${
-        variant === 'light' ? 'text-gray-400 ' : 'text-gray-500'
+        variant === 'light' ? 'text-gray-400 ' : 'text-gray-700'
       } ${truncate ? 'truncate' : ''}`}
     >
       {children}

@@ -25,12 +25,12 @@ export function AppLoadingSkeleton({ ready }: { ready?: boolean }) {
           >
             <div className="relative h-24 w-24 md:h-48 md:w-48">
               <img
-                className="absolute top-0 left-0 h-24 w-24 animate-ping opacity-25 md:h-48 md:w-48"
+                className="absolute left-0 top-0 h-24 w-24 animate-ping opacity-25 md:h-48 md:w-48"
                 src={logoCol}
                 alt="Loading screen"
               ></img>
               <img
-                className="absolute top-0 left-0 h-24 w-24 opacity-25 md:h-48 md:w-48"
+                className="absolute left-0 top-0 h-24 w-24 opacity-25 md:h-48 md:w-48"
                 src={logoCol}
                 alt="Loading screen"
               ></img>
@@ -80,7 +80,7 @@ export function AppLoadingSkeleton({ ready }: { ready?: boolean }) {
               <div className="flex items-center">
                 <div className="inline-block h-10 w-10 rounded-full border-2 border-white bg-slate-100">
                   <svg
-                    className="h-full w-full rounded-full text-gray-500"
+                    className="h-full w-full rounded-full text-gray-700"
                     fill="currentColor"
                     viewBox="0 0 24 24"
                   >

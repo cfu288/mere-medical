@@ -77,7 +77,7 @@ export function TabWrapper() {
                 <div className="inline-block h-10 w-10 rounded-full border-2 border-white bg-slate-100">
                   {user.profile_picture?.data === undefined ? (
                     <svg
-                      className="h-full w-full rounded-full text-gray-500"
+                      className="h-full w-full rounded-full text-gray-700"
                       fill="currentColor"
                       viewBox="0 0 24 24"
                     >

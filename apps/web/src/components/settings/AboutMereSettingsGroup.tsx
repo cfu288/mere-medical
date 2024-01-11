@@ -11,9 +11,9 @@ export function AboutMereSettingsGroup() {
     <>
       <div className="py-6 text-xl font-extrabold">About Mere</div>
       {/* App version of MERE_APP_VERSION */}
-      <div className="text-sm text-gray-500">Version {MERE_APP_VERSION}</div>
+      <div className="text-sm text-gray-700">Version {MERE_APP_VERSION}</div>
       {/* Link to github */}
-      <div className="text-sm text-gray-500">
+      <div className="text-sm text-gray-700">
         Find the source code on{' '}
         <a
           className="text-primary-500  hover:underline"
@@ -23,7 +23,7 @@ export function AboutMereSettingsGroup() {
         </a>
       </div>
       {/* bug report email at cfu288@meremedical.co */}
-      <div className="text-sm text-gray-500">
+      <div className="text-sm text-gray-700">
         Feature requests or bug reports:{' '}
         <a
           className="text-primary-500 hover:text-primary-900 hover:underline"
@@ -40,7 +40,7 @@ export function AboutMereSettingsGroup() {
         </a>
       </div>
       {/* Made with love by Chris Fu */}
-      <div className="text-sm text-gray-500">
+      <div className="text-sm text-gray-700">
         Made with{' '}
         <span role="img" aria-label="love">
           ❤️
@@ -53,7 +53,7 @@ export function AboutMereSettingsGroup() {
           Chris Fu
         </a>
       </div>
-      <div className="text-sm text-gray-500">
+      <div className="text-sm text-gray-700">
         <button
           className="text-primary-500 hover:text-primary-900 hover:underline"
           onClick={() => {

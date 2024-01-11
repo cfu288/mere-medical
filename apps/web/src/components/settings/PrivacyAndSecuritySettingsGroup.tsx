@@ -51,12 +51,12 @@ export function PrivacyAndSecuritySettingsGroup() {
                   <div className="flex flex-col">
                     <Switch.Label
                       as="h2"
-                      className="text-lg font-black leading-6 text-gray-900"
+                      className="text-primary-800 text-lg leading-6 "
                       passive
                     >
                       Enable encrypted storage with password protection
                     </Switch.Label>
-                    <Switch.Description className="pt-2 text-sm text-gray-500">
+                    <Switch.Description className="pt-2 text-sm text-gray-700">
                       Enable password protection of your medical records. Will
                       require you to provide a password before accessing any
                       medical records.
@@ -100,18 +100,18 @@ export function PrivacyAndSecuritySettingsGroup() {
                   <div className="flex flex-col">
                     <Switch.Label
                       as="h2"
-                      className="text-lg font-black leading-6 text-gray-900"
+                      className="text-primary-800 text-lg leading-6"
                       passive
                     >
                       Use proxy to sync data
                     </Switch.Label>
-                    <Switch.Description className="pt-2 text-sm text-gray-500">
+                    <Switch.Description className="pt-2 text-sm text-gray-700">
                       Some patient portals disable direct communication from the
                       Mere app. If your app fails to login or sync data, you can
                       enable this setting to use a backend proxy to do login and
                       sync on your behalf.
                     </Switch.Description>
-                    <Switch.Description className="pt-2 text-sm text-gray-500">
+                    <Switch.Description className="pt-2 text-sm text-gray-700">
                       You should only enable this if you trust the organization
                       hosting the app, as the proxy will be able to access your
                       health data.
@@ -165,12 +165,12 @@ export function PrivacyAndSecuritySettingsGroup() {
                       <div className="flex flex-col">
                         <Switch.Label
                           as="h2"
-                          className="text-lg font-black leading-6 text-gray-900"
+                          className="text-primary-800 text-lg leading-6 "
                           passive
                         >
-                          Enable Analytics
+                          Enable analytics
                         </Switch.Label>
-                        <Switch.Description className="pt-2 text-sm text-gray-500">
+                        <Switch.Description className="pt-2 text-sm text-gray-700">
                           Help us understand how you use the app so we can
                           improve your experience. No personally identifiable
                           information is collected.
@@ -298,14 +298,14 @@ function PasswordPromptModal({
         <button
           type="button"
           disabled={isProcessing}
-          className="focus:ring-primary-500 rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-gray-300"
+          className="focus:ring-primary-500 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-gray-300"
           onClick={() => setToggleModal(false)}
         >
           Cancel
         </button>
         <button
           type="button"
-          className=" bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 ml-4 inline-flex justify-center rounded-md border border-transparent py-2 px-4 align-middle text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-gray-300 disabled:text-gray-700"
+          className=" bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 ml-4 inline-flex justify-center rounded-md border border-transparent px-4 py-2 align-middle text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-gray-300 disabled:text-gray-700"
           disabled={isProcessing}
           onClick={async () => {
             setIsProcessing(true);
@@ -397,7 +397,7 @@ function DatabasePasswordModal({
           <div className="w-full">
             <label
               htmlFor="password"
-              className="block text-sm font-medium leading-6 text-gray-900"
+              className="text-primary-900 block text-sm font-medium leading-6"
             >
               Password
             </label>
@@ -411,21 +411,21 @@ function DatabasePasswordModal({
               onChange={(e) => {
                 setPassword(e.target.value);
               }}
-              className="focus:ring-primary-600 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6"
+              className="focus:ring-primary-600 text-primary-900 block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6"
             />
           </div>
         </div>
         <div className="flex flex-shrink-0 justify-end px-4 py-4">
           <button
             type="button"
-            className="focus:ring-primary-500 rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2"
+            className="focus:ring-primary-500 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2"
             onClick={() => setToggleModal(false)}
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 ml-4 inline-flex justify-center rounded-md border border-transparent py-2 px-4 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
+            className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 ml-4 inline-flex justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
           >
             Set Password
           </button>

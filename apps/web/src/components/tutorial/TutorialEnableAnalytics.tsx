@@ -65,7 +65,7 @@ export function TutorialEnableAnalytics({
             ></Switch.Label>
           </Switch.Group>
           <p
-            className={`mt-4 rounded-full px-2 py-1 text-center text-gray-500 transition-colors ${
+            className={`mt-4 rounded-full px-2 py-1 text-center text-gray-700 transition-colors ${
               localConfig?.use_sentry_reporting
                 ? 'bg-green-100 text-green-700'
                 : 'bg-red-100 text-red-700'

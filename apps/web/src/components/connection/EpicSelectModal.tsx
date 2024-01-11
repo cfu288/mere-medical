@@ -69,7 +69,7 @@ export function EpicSelectModal({
       >
         <div className="relative px-4">
           <MagnifyingGlassIcon
-            className="pointer-events-none absolute top-3.5 left-8 h-5 w-5 text-gray-400"
+            className="pointer-events-none absolute left-8 top-3.5 h-5 w-5 text-gray-400"
             aria-hidden="true"
           />
           <Combobox.Input
@@ -99,14 +99,14 @@ export function EpicSelectModal({
         )}
 
         {query !== '' && items.length === 0 && (
-          <div className="py-14 px-6 text-center text-sm sm:px-14">
+          <div className="px-6 py-14 text-center text-sm sm:px-14">
             <ExclamationCircleIcon
               type="outline"
               name="exclamation-circle"
               className="mx-auto h-6 w-6 text-gray-400"
             />
             <p className="mt-4 font-semibold text-gray-900">No results found</p>
-            <p className="mt-2 text-gray-500">
+            <p className="mt-2 text-gray-700">
               No health system found for this search term. Please try again.
             </p>
           </div>

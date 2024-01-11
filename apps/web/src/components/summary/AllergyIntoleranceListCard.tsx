@@ -69,7 +69,7 @@ export function AllergyIntoleranceListCard({
                           </Fragment>
                         ))}
                       </p>
-                      <p className="truncate text-xs font-medium text-gray-500 md:text-sm">
+                      <p className="truncate text-xs font-medium text-gray-700 md:text-sm">
                         {item.metadata?.date
                           ? format(parseISO(item.metadata.date), 'MM/dd/yyyy')
                           : ''}

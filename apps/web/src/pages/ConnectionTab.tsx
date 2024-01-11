@@ -223,7 +223,7 @@ const ConnectionTab: React.FC = () => {
         <div className="py-6 text-xl font-extrabold">
           Connect to Patient Portal
         </div>
-        <div className="text-sm font-medium text-gray-500">
+        <div className="text-sm font-medium text-gray-700">
           Connect to a patient portal to automatic download your most recent
           data.
         </div>
@@ -240,7 +240,7 @@ const ConnectionTab: React.FC = () => {
         </ul>
         <div className="mb-4 box-border	flex w-full justify-center align-middle">
           <button
-            className="bg-primary hover:bg-primary-600 active:bg-primary-700 w-full rounded-lg p-4 text-white duration-75 active:scale-[98%]"
+            className="bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-[98%] w-full rounded-lg p-4 text-white duration-75"
             onClick={() => setEpicOpen((x) => !x)}
           >
             <p className="font-bold">Log in to Epic MyChart</p>
@@ -248,7 +248,7 @@ const ConnectionTab: React.FC = () => {
         </div>
         <div className="mb-4 box-border	flex w-full justify-center align-middle">
           <button
-            className="bg-primary hover:bg-primary-600 active:bg-primary-700 w-full rounded-lg p-4 text-white duration-75 active:scale-[98%]"
+            className="bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-[98%] w-full rounded-lg p-4 text-white duration-75"
             onClick={() => {
               setCernerOpen((x) => !x);
             }}
@@ -258,7 +258,7 @@ const ConnectionTab: React.FC = () => {
         </div>
         <div className="mb-4 box-border	flex w-full justify-center align-middle">
           <button
-            className="bg-primary hover:bg-primary-600 active:bg-primary-700 w-full rounded-lg p-4 text-white duration-75 active:scale-[98%]"
+            className="bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-[98%] w-full rounded-lg p-4 text-white duration-75"
             onClick={() => {
               setVeradigmOpen((x) => !x);
             }}
@@ -270,7 +270,7 @@ const ConnectionTab: React.FC = () => {
           {userPreferences?.use_proxy ? (
             <a
               href={onpatientLoginUrl}
-              className=" bg-primary hover:bg-primary-600 active:bg-primary-700 w-full rounded-lg p-4 text-center text-white duration-75 active:scale-[98%]"
+              className=" bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-[98%] w-full rounded-lg p-4 text-center text-white duration-75"
             >
               <button>
                 <p className="font-bold">Log in to OnPatient</p>

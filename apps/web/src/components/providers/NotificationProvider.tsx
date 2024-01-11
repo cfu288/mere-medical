@@ -108,14 +108,14 @@ function NotificationRenderer(
                         {props.data.message}
                       </p>
                     )}
-                    {/* <p className="mt-1 text-sm text-gray-500">
+                    {/* <p className="mt-1 text-sm text-gray-700">
                       Anyone with a link can now view this file.
                     </p> */}
                   </div>
                   <div className="ml-4 flex flex-shrink-0">
                     <button
                       type="button"
-                      className="focus:ring-primary-700 inline-flex rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                      className="focus:ring-primary-700 inline-flex rounded-md bg-white text-gray-400 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2"
                       onClick={() => {
                         dispatch({ type: 'hide_notification' });
                       }}

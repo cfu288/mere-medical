@@ -143,12 +143,12 @@ export function UserDataSettingsGroup() {
       <div className="divide-y divide-gray-200">
         <div className="px-4 sm:px-6">
           <ul className="mt-2 divide-y divide-gray-200">
-            <li className="flex items-center py-4">
+            <li className="flex items-center pb-4">
               <div className="flex flex-1 flex-col">
-                <h2 className="text-lg font-black leading-6 text-gray-900">
+                <h2 className="text-primary-800 text-lg leading-6">
                   Export data
                 </h2>
-                <p className="pt-2 text-sm text-gray-500">
+                <p className="pt-2 text-sm text-gray-700">
                   Export all of your data in JSON format. You can use this to
                   backup your data and can import it back if needed.
                 </p>
@@ -182,10 +182,10 @@ export function UserDataSettingsGroup() {
             </li>
             <li className="flex items-center py-4">
               <div className="flex flex-1 flex-col">
-                <h2 className="text-lg font-black leading-6 text-gray-900">
+                <h2 className="text-primary-800 text-lg leading-6">
                   Import data
                 </h2>
-                <p className="pt-2 text-sm text-gray-500">
+                <p className="pt-2 text-sm text-gray-700">
                   Import previously exported data
                 </p>
               </div>
@@ -234,18 +234,18 @@ export function UserDataSettingsGroup() {
             {/* Show storage usage  */}
             <li className="flex items-center py-4">
               <div className="mr-2 flex flex-1 flex-col sm:mr-4">
-                <h2 className="text-lg font-black leading-6 text-gray-900">
+                <h2 className="text-primary-800 text-lg leading-6">
                   Storage usage
                 </h2>
                 {/* show if persistant storage is enabled */}
-                <p className="pt-2 text-sm text-gray-500">
+                <p className="pt-2 text-sm text-gray-700">
                   {hasPersistentStorageEnabled
                     ? 'Persistent storage is enabled.'
                     : 'Persistent storage is not enabled - data may be cleared by the browser.'}
                 </p>
                 {/* Progress bar */}
                 {quotaDetails.usage && quotaDetails.quota && (
-                  <div className="mt-2 h-2.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                  <div className="mt-2 h-2.5 w-full rounded-full bg-gray-200 dark:bg-gray-300">
                     <div
                       className="bg-primary-500 h-2.5 min-w-[0.625rem] rounded-full"
                       style={{
@@ -256,7 +256,7 @@ export function UserDataSettingsGroup() {
                     ></div>
                   </div>
                 )}
-                <p className="pt-1 text-sm text-gray-500">
+                <p className="pt-1 text-sm text-gray-700">
                   {quotaDetails.usage && quotaDetails.quota
                     ? `You have used ${
                         quotaDetails.usage >= 1024 * 1024 * 1024

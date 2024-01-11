@@ -19,7 +19,7 @@ export function ModalHeader({
           {setClose ? (
             <button
               type="button"
-              className="ml-4 rounded bg-white text-gray-500 duration-75 hover:text-gray-700 focus:text-gray-700 focus:outline-none focus:ring-0 active:scale-90 active:bg-slate-50"
+              className="ml-4 rounded bg-white text-gray-700 duration-75 hover:text-gray-700 focus:text-gray-700 focus:outline-none focus:ring-0 active:scale-90 active:bg-slate-50"
               onClick={() => setClose(false)}
             >
               <span className="sr-only">Close</span>
