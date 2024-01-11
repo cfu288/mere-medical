@@ -7,19 +7,24 @@ export function UpdateAppChecker() {
   useEffect(() => {
     if (localStorage.getItem('updateReady') === 'true') {
       localStorage.setItem('updateReady', 'false');
-      notificationDispatch({
-        message: `Mere is ready to update! Restart the app to see the latest version.`,
-        variant: 'info',
-        type: 'set_notification',
-        button: {
-          action: () => {
-            localStorage.removeItem('updateReady');
-            window.location.replace(window.location.href);
+      const timeout = setTimeout(() => {
+        notificationDispatch({
+          message: `Mere is ready to update! Restart the app to see the latest version.`,
+          variant: 'info',
+          type: 'set_notification',
+          button: {
+            action: () => {
+              localStorage.removeItem('updateReady');
+              window.location.replace(window.location.href);
+            },
+            text: 'Click to Restart',
           },
-          text: 'Click to Restart',
-        },
-      });
+        });
+      }, 1000);
+      return () => clearTimeout(timeout);
     }
+
+    return () => undefined;
   }, [notificationDispatch]);
 
   return null;
