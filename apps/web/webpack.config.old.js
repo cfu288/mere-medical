@@ -10,8 +10,6 @@ const commitHash = require('child_process')
   .toString()
   .trim();
 
-console.log(JSON.stringify(commitHash));
-
 module.exports = function (webpackConfig, nxConfig) {
   // Fix that Nx uses a different attribute when serving the app
   nxConfig.options = nxConfig.options || nxConfig.buildOptions;
