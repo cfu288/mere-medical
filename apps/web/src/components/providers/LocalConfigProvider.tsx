@@ -53,7 +53,9 @@ export function LocalConfigProvider(props: LocalConfigProviderProps) {
   useEffect(() => {
     if (!hasRun.current) {
       hasRun.current = true;
-      setConfig(getLocalConfig());
+      const config = getLocalConfig();
+      console.debug(config);
+      setConfig(config);
     }
   }, []);
 
