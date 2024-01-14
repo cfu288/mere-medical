@@ -22,8 +22,16 @@ import {
   SkeletonTenantSelectModalResultItem,
   TenantSelectModelResultItem,
 } from './TenantSelectModelResultItem';
+import { Link } from 'react-router-dom';
+import { Routes } from '../../Routes';
 
-type EMRVendor = 'epic' | 'cerner' | 'veradigm' | 'onpatient' | 'va' | 'any';
+export type EMRVendor =
+  | 'epic'
+  | 'cerner'
+  | 'veradigm'
+  | 'onpatient'
+  | 'va'
+  | 'any';
 
 export type UnifiedDSTU2Endpoint = CernerDSTU2Endpoint &
   EpicDSTU2Endpoint &
@@ -130,7 +138,8 @@ export function TenantSelectModal({
     auth: string & Location,
     token: string & Location,
     name: string,
-    id: string
+    id: string,
+    vendor: EMRVendor
   ) => void;
 }) {
   const userPreferences = useUserPreferences();
@@ -211,7 +220,7 @@ export function TenantSelectModal({
       afterLeave={() => {
         dispatch({ type: 'hasClosedModal' });
       }}
-      overflowHidden
+      overflowXHidden
     >
       <>
         {!state.hasSelectedEmrVendor ? (
@@ -224,20 +233,20 @@ export function TenantSelectModal({
               <ul
                 className="grid w-full grid-cols-2 gap-x-4 gap-y-8 px-4 py-8 sm:grid-cols-3 sm:gap-x-8 sm:px-4 sm:py-12" // lg:grid-cols-4 xl:gap-x-8"
               >
-                {ConnectionSources.filter((item) => {
+                {ConnectionSources.map((item) => {
                   if (
                     !userPreferences?.use_proxy &&
                     item.vendor === 'onpatient'
                   ) {
-                    return false;
-                  } else {
-                    return true;
+                    return { ...item, enabled: false };
                   }
+
+                  return item;
                 }).map((file) => (
                   <li key={file.source} className="relative">
                     {file.href ? (
                       <a
-                        href={file.href}
+                        href={!file.enabled ? Routes.AddConnection : file.href}
                         className="absolute inset-0 focus:outline-none"
                       >
                         <div className="aspect-h-7 aspect-w-10 focus-within:ring-primary-500 bg-primary-700 hover:bg-primary-600 group block w-full overflow-hidden rounded-lg transition-all focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100">
@@ -262,10 +271,25 @@ export function TenantSelectModal({
                         <p className="pointer-events-none mt-2 block truncate text-sm font-medium text-gray-900">
                           {file.title}
                         </p>
-                        {file.alt && (
+                        {!file.enabled ? (
                           <p className="pointer-events-none block text-sm font-medium text-gray-500">
-                            {file.alt}
+                            To enable, go to{' '}
+                            <Link
+                              className="text-primary hover:text-primary-500 w-full text-center underline"
+                              to={`${Routes.Settings}#use_proxy`}
+                            >
+                              the settings page
+                            </Link>{' '}
+                            and enable the <code>use proxy</code> setting.
                           </p>
+                        ) : (
+                          <>
+                            {file.alt && (
+                              <p className="pointer-events-none block text-sm font-medium text-gray-500">
+                                {file.alt}
+                              </p>
+                            )}
+                          </>
                         )}
                       </a>
                     ) : (
@@ -341,13 +365,30 @@ export function TenantSelectModal({
                   <SkeletonTenantSelectModalResultItem />
                   <SkeletonTenantSelectModalResultItem />
                   <SkeletonTenantSelectModalResultItem />
+                  <SkeletonTenantSelectModalResultItem />
+                  <SkeletonTenantSelectModalResultItem />
+                  <SkeletonTenantSelectModalResultItem />
+                  <SkeletonTenantSelectModalResultItem />
+                  <SkeletonTenantSelectModalResultItem />
+                  <SkeletonTenantSelectModalResultItem />
+                  <SkeletonTenantSelectModalResultItem />
+                  <SkeletonTenantSelectModalResultItem />
+                  <SkeletonTenantSelectModalResultItem />
+                  <SkeletonTenantSelectModalResultItem />
                 </Combobox.Options>
               </Combobox>
             ) : (
               <>
                 <Combobox
                   onChange={(s: SelectOption) => {
-                    onClick(s.baseUrl, s.authUrl, s.tokenUrl, s.name, s.id);
+                    onClick(
+                      s.baseUrl,
+                      s.authUrl,
+                      s.tokenUrl,
+                      s.name,
+                      s.id,
+                      state.emrVendor
+                    );
                     setOpen(false);
                   }}
                 >
@@ -386,7 +427,6 @@ export function TenantSelectModal({
                       ))}
                     </Combobox.Options>
                   )}
-
                   {state.query !== '' && state.items.length === 0 && (
                     <div className="px-6 py-14 text-center text-sm sm:px-14">
                       <ExclamationCircleIcon
