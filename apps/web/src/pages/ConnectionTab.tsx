@@ -12,12 +12,9 @@ import {
 } from '../services/Cerner';
 
 import { AppPage } from '../components/AppPage';
-import { EpicSelectModal } from '../components/connection/EpicSelectModal';
 import { useUserPreferences } from '../components/providers/UserPreferencesProvider';
 import { Routes } from '../Routes';
 import { Link } from 'react-router-dom';
-import { CernerSelectModal } from '../components/connection/CernerSelectModal';
-import { VeradigmSelectModal } from '../components/connection/VeradigmSelectModal';
 import {
   VeradigmLocalStorageKeys,
   getLoginUrl as getVeradigmLoginUrl,
@@ -26,6 +23,7 @@ import { useConnectionCards } from '../components/hooks/useConnectionCards';
 import { ConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
 import { RxDocument } from 'rxdb';
 import React from 'react';
+import { TenantSelectModal } from '../components/connection/TenantSelectModal';
 
 export function getLoginUrlBySource(
   item: RxDocument<ConnectionDocument>
@@ -44,7 +42,7 @@ export function getLoginUrlBySource(
       return getEpicLoginUrl(
         baseUrl,
         authUrl,
-        item.get('tenant_id') === 'sandbox' ||
+        item.get('tenant_id') === 'sandbox_epic' ||
           item.get('tenant_id') === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354'
       );
     }
@@ -169,12 +167,12 @@ function setTenantVeradigmUrl(
 
 const ConnectionTab: React.FC = () => {
   const list = useConnectionCards(),
-    [epicOpen, setEpicOpen] = useState(false),
+    [openSelectModal, setOpenSelectModal] = useState(false),
     [cernerOpen, setCernerOpen] = useState(false),
     [veradigmOpen, setVeradigmOpen] = useState(false),
     userPreferences = useUserPreferences(),
     onpatientLoginUrl = OnPatient.getLoginUrl(),
-    handleToggleEpicPanel = useCallback(
+    handleTogglePanel = useCallback(
       (
         base: string & Location,
         auth: string & Location,
@@ -183,8 +181,8 @@ const ConnectionTab: React.FC = () => {
         id: string
       ) => {
         setTenantEpicUrl(base, auth, token, name, id);
-        setEpicOpen((x) => !x);
-        window.location = getEpicLoginUrl(base, auth, id === 'sandbox');
+        setOpenSelectModal((x) => !x);
+        window.location = getEpicLoginUrl(base, auth, id === 'sandbox_epic');
       },
       []
     ),
@@ -240,15 +238,15 @@ const ConnectionTab: React.FC = () => {
         </ul>
         <div className="mb-4 box-border	flex w-full justify-center align-middle">
           <button
-            className="bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-[98%] w-full rounded-lg p-4 text-white duration-75"
-            onClick={() => setEpicOpen((x) => !x)}
+            className="bg-primary hover:bg-primary-600 active:bg-primary-700 w-full rounded-lg p-4 text-white duration-75 active:scale-[98%]"
+            onClick={() => setOpenSelectModal((x) => !x)}
           >
-            <p className="font-bold">Log in to Epic MyChart</p>
+            <p className="font-bold">Add a new connection</p>
           </button>
         </div>
-        <div className="mb-4 box-border	flex w-full justify-center align-middle">
+        {/* <div className="mb-4 box-border	flex w-full justify-center align-middle">
           <button
-            className="bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-[98%] w-full rounded-lg p-4 text-white duration-75"
+            className="bg-primary hover:bg-primary-600 active:bg-primary-700 w-full rounded-lg p-4 text-white duration-75 active:scale-[98%]"
             onClick={() => {
               setCernerOpen((x) => !x);
             }}
@@ -258,19 +256,19 @@ const ConnectionTab: React.FC = () => {
         </div>
         <div className="mb-4 box-border	flex w-full justify-center align-middle">
           <button
-            className="bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-[98%] w-full rounded-lg p-4 text-white duration-75"
+            className="bg-primary hover:bg-primary-600 active:bg-primary-700 w-full rounded-lg p-4 text-white duration-75 active:scale-[98%]"
             onClick={() => {
               setVeradigmOpen((x) => !x);
             }}
           >
             <p className="font-bold">Log in to Allscripts Connect</p>
           </button>
-        </div>
-        <div className="mb-4 box-border	flex w-full justify-center align-middle">
+        </div> */}
+        {/* <div className="mb-4 box-border	flex w-full justify-center align-middle">
           {userPreferences?.use_proxy ? (
             <a
               href={onpatientLoginUrl}
-              className=" bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-[98%] w-full rounded-lg p-4 text-center text-white duration-75"
+              className=" bg-primary hover:bg-primary-600 active:bg-primary-700 w-full rounded-lg p-4 text-center text-white duration-75 active:scale-[98%]"
             >
               <button>
                 <p className="font-bold">Log in to OnPatient</p>
@@ -296,9 +294,14 @@ const ConnectionTab: React.FC = () => {
               </p>
             </div>
           )}
-        </div>
+        </div> */}
       </div>
-      <EpicSelectModal
+      <TenantSelectModal
+        open={openSelectModal}
+        setOpen={setOpenSelectModal}
+        onClick={handleTogglePanel}
+      />
+      {/* <EpicSelectModal
         open={epicOpen}
         setOpen={setEpicOpen}
         onClick={handleToggleEpicPanel}
@@ -312,7 +315,7 @@ const ConnectionTab: React.FC = () => {
         open={veradigmOpen}
         setOpen={setVeradigmOpen}
         onClick={handleToggleVeradigmPanel}
-      />
+      /> */}
     </AppPage>
   );
 };

@@ -4,7 +4,7 @@ import {
   ConnectionSources,
 } from '../../models/connection-document/ConnectionDocument.type';
 import { useRxDb } from '../providers/RxDbProvider';
-import onpatientLogo from '../../img/onpatient_logo.jpeg';
+import onpatientLogo from '../../img/onpatient-logo.jpeg';
 import epicLogo from '../../img/MyChartByEpic.png';
 import cernerLogo from '../../img/cerner-logo.png';
 import allscriptsConnectLogo from '../../img/allscripts-logo.png';

@@ -1,6 +1,7 @@
 [
   {},
   {},
+  {},
   {
     "cause": {
       "library": "SSL routines",
@@ -29,6 +30,7 @@
       "code": "ERR_SSL_UNSAFE_LEGACY_RENEGOTIATION_DISABLED"
     }
   },
+  {},
   {
     "cause": {
       "errno": -3008,
@@ -51,6 +53,7 @@
       "code": "ERR_SSL_UNSAFE_LEGACY_RENEGOTIATION_DISABLED"
     }
   },
+  {},
   {
     "cause": {
       "name": "ConnectTimeoutError",
@@ -67,14 +70,14 @@
   },
   {
     "cause": {
-      "library": "SSL routines",
-      "reason": "unsafe legacy renegotiation disabled",
-      "code": "ERR_SSL_UNSAFE_LEGACY_RENEGOTIATION_DISABLED"
+      "code": "UNABLE_TO_VERIFY_LEAF_SIGNATURE"
     }
   },
   {
     "cause": {
-      "code": "UNABLE_TO_VERIFY_LEAF_SIGNATURE"
+      "library": "SSL routines",
+      "reason": "unsafe legacy renegotiation disabled",
+      "code": "ERR_SSL_UNSAFE_LEGACY_RENEGOTIATION_DISABLED"
     }
   }
 ]
