@@ -9,8 +9,7 @@
     "analyze:web": "webpack-bundle-analyzer dist/apps/web/stats.json"
   },
   "engines": {
-    "node": "18.10.0",
-    "npm": "8.19.2"
+    "node": "20.11.0"
   },
   "browser": {
     "assert": false
