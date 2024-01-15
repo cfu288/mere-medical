@@ -1,5 +1,6 @@
 /* eslint-disable react/jsx-no-useless-fragment */
-import { memo, useEffect, useReducer } from 'react';
+import { memo, useEffect, useMemo, useReducer, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { Combobox } from '@headlessui/react';
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid';
@@ -13,17 +14,18 @@ import CernerLogo from '../../img/cerner-logo.png';
 import EpicLogo from '../../img/mychart-logo.svg';
 import OnpatientLogo from '../../img/onpatient-logo.jpeg';
 import { SelectOption } from '../../pages/ConnectionTab';
+import { Routes } from '../../Routes';
+import * as OnPatient from '../../services/OnPatient';
 import { Modal } from '../Modal';
 import { ModalHeader } from '../ModalHeader';
 import { useNotificationDispatch } from '../providers/NotificationProvider';
 import { useUserPreferences } from '../providers/UserPreferencesProvider';
-import * as OnPatient from '../../services/OnPatient';
+import { getLoginUrl as getVaLoginUrl } from '../../services/VA';
 import {
   SkeletonTenantSelectModalResultItem,
   TenantSelectModelResultItem,
 } from './TenantSelectModelResultItem';
-import { Link } from 'react-router-dom';
-import { Routes } from '../../Routes';
+import VALogo from '../../img/va-logo.png';
 
 export type EMRVendor =
   | 'epic'
@@ -36,71 +38,6 @@ export type EMRVendor =
 export type UnifiedDSTU2Endpoint = CernerDSTU2Endpoint &
   EpicDSTU2Endpoint &
   VeradigmDSTU2Endpoint & { vendor: EMRVendor };
-
-const ConnectionSources: {
-  title: string;
-  vendor: EMRVendor;
-  source: string;
-  alt?: string;
-  href?: string;
-  enabled: boolean;
-  customHandleClick?: () => void;
-  id: number;
-}[] = [
-  {
-    title: 'MyChart',
-    vendor: 'epic',
-    source: EpicLogo,
-    alt: 'Epic',
-    enabled: true,
-    id: 1,
-  },
-  {
-    title: 'Cerner',
-    vendor: 'cerner',
-    source: CernerLogo,
-    enabled: true,
-    id: 2,
-  },
-  {
-    title: 'Allscripts',
-    vendor: 'veradigm',
-    source: VeradigmLogo,
-    alt: 'Veradigm',
-    enabled: true,
-    id: 3,
-  },
-  {
-    title: 'OnPatient',
-    vendor: 'onpatient',
-    source: OnpatientLogo,
-    alt: 'Dr. Chrono',
-    href: OnPatient.getLoginUrl(),
-    enabled: true,
-    id: 4,
-  },
-  {
-    title: 'Veterans Affairs',
-    vendor: 'va',
-    source: '',
-    alt: 'Sandbox Only',
-    customHandleClick: () => {
-      alert(
-        'The Veterans Affairs health system is not yet implemented. Please select another health system.'
-      );
-    },
-    enabled: true,
-    id: 4,
-  },
-  {
-    title: 'Search All',
-    vendor: 'any',
-    source: '',
-    alt: 'Search all supported health systems',
-    enabled: true,
-    id: 5,
-  },
-];
 
 type TenantSelectState = {
   query: string;
@@ -126,6 +63,17 @@ const defaultState = {
   isLoadingResults: false,
 } as TenantSelectState;
 
+type SourceItem = {
+  title: string;
+  vendor: EMRVendor;
+  source: string;
+  alt?: string;
+  href?: string;
+  enabled: boolean;
+  customHandleClick?: () => void;
+  id: number;
+};
+
 export function TenantSelectModal({
   open,
   setOpen,
@@ -142,7 +90,9 @@ export function TenantSelectModal({
     vendor: EMRVendor
   ) => void;
 }) {
-  const userPreferences = useUserPreferences();
+  const userPreferences = useUserPreferences(),
+    notifyDispatch = useNotificationDispatch();
+
   const [state, dispatch] = useReducer(
     (
       state: TenantSelectState,
@@ -176,7 +126,83 @@ export function TenantSelectModal({
       isLoadingResults: false,
     }
   );
-  const notifyDispatch = useNotificationDispatch();
+
+  const [vaUrl, setVaUrl] = useState<string & Location>(
+    '' as string & Location
+  );
+
+  useEffect(() => {
+    // get VA url
+    getVaLoginUrl().then((url) => {
+      setVaUrl(url);
+    });
+  }, []);
+
+  const ConnectionSources: SourceItem[] = useMemo(() => {
+    const sources = [
+      {
+        title: 'MyChart',
+        vendor: 'epic',
+        source: EpicLogo,
+        alt: 'Epic',
+        enabled: true,
+        id: 1,
+      },
+      {
+        title: 'Cerner',
+        vendor: 'cerner',
+        source: CernerLogo,
+        enabled: true,
+        id: 2,
+      },
+      {
+        title: 'Allscripts',
+        vendor: 'veradigm',
+        source: VeradigmLogo,
+        alt: 'Veradigm',
+        enabled: true,
+        id: 3,
+      },
+      !userPreferences?.use_proxy
+        ? {
+            title: 'OnPatient',
+            vendor: 'onpatient',
+            source: OnpatientLogo,
+            alt: 'Dr. Chrono',
+            href: OnPatient.getLoginUrl(),
+            enabled: false,
+            id: 4,
+          }
+        : {
+            title: 'OnPatient',
+            vendor: 'onpatient',
+            source: OnpatientLogo,
+            alt: 'Dr. Chrono',
+            href: OnPatient.getLoginUrl(),
+            enabled: true,
+            id: 4,
+          },
+      {
+        title: 'Veterans Affairs',
+        vendor: 'va',
+        source: VALogo,
+        alt: 'Sandbox Only',
+        href: vaUrl,
+        enabled: true,
+        id: 4,
+      },
+      {
+        title: 'Search All',
+        vendor: 'any',
+        source: '',
+        alt: 'Search all supported health systems',
+        enabled: true,
+        id: 5,
+      },
+    ];
+
+    return sources as SourceItem[];
+  }, [userPreferences?.use_proxy, vaUrl]);
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -234,15 +260,7 @@ export function TenantSelectModal({
               <ul
                 className="grid w-full grid-cols-2 gap-x-4 gap-y-8 px-4 py-8 sm:grid-cols-3 sm:gap-x-8 sm:px-4 sm:py-12" // lg:grid-cols-4 xl:gap-x-8"
               >
-                {ConnectionSources.map((item) => {
-                  if (
-                    !userPreferences?.use_proxy &&
-                    item.vendor === 'onpatient'
-                  ) {
-                    return { ...item, enabled: false };
-                  }
-                  return item;
-                }).map((file) => (
+                {ConnectionSources.map((file) => (
                   <li key={file.source} className="relative">
                     {file.href ? (
                       <a

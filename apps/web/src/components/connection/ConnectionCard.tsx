@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ConnectionDocument,
   ConnectionSources,
@@ -111,6 +111,23 @@ export function ConnectionCard({
     }, [baseUrl, db, item, syncD, userPreferences]);
 
   const [showModal, setShowModal] = useState(false);
+  const [showPeriodText, setShowPeriodText] = useState('...');
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (syncing) {
+      interval = setInterval(() => {
+        if (showPeriodText === '...') {
+          setShowPeriodText('.');
+        } else if (showPeriodText === '.') {
+          setShowPeriodText('..');
+        } else if (showPeriodText === '..') {
+          setShowPeriodText('...');
+        }
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [showPeriodText, syncing]);
 
   return (
     <li
@@ -146,9 +163,12 @@ export function ConnectionCard({
             </div>
           ) : (
             <p className="mt-1 truncate text-sm font-medium text-gray-700">
-              Connected
-              {item.get('last_refreshed') &&
-                formatConnectedTimestampText(item.get('last_refreshed'))}
+              {syncing
+                ? `Syncing now${showPeriodText}`
+                : `Connected ${
+                    item.get('last_refreshed') &&
+                    formatConnectedTimestampText(item.get('last_refreshed'))
+                  }`}
             </p>
           )}
         </div>
