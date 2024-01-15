@@ -138,7 +138,7 @@ export function ConnectionCard({
         <img
           className="h-10 w-10 flex-shrink-0 rounded-full bg-gray-300"
           src={getImage(item.get('source'))}
-          alt=""
+          alt={`${item.get('source')} logo`}
         />
         <div className="flex-1 truncate">
           <div className="flex items-center space-x-3">
@@ -166,8 +166,9 @@ export function ConnectionCard({
               {syncing
                 ? `Syncing now${showPeriodText}`
                 : `Connected ${
-                    item.get('last_refreshed') &&
-                    formatConnectedTimestampText(item.get('last_refreshed'))
+                    item.get('last_refreshed')
+                      ? formatConnectedTimestampText(item.get('last_refreshed'))
+                      : ''
                   }`}
             </p>
           )}
