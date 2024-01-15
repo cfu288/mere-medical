@@ -16,18 +16,20 @@ export function ModalHeader({
   return (
     <Dialog.Title className="flex w-full flex-col p-4 pb-2">
       {/* <div className="flex w-full flex-col p-4 px-0 pb-2"> */}
-      <div className="flex justify-between">
+      <div className="flex items-end justify-between">
         {back ? (
           <button
             type="button"
-            className="rounded bg-white text-gray-700 duration-75 hover:text-gray-700 focus:text-gray-700 focus:outline-none focus:ring-0 active:scale-90 active:bg-slate-50"
+            className="mr-4 rounded bg-white text-gray-700 duration-75 hover:text-gray-700 focus:text-gray-700 focus:outline-none focus:ring-0 active:scale-90 active:bg-slate-50"
             onClick={back}
           >
             <span className="sr-only">Back</span>
             <ChevronLeftIcon className="h-8 w-8" aria-hidden="true" />
           </button>
         ) : null}
-        <p className="w-full text-xl font-bold">{title}</p>
+        <p className={`w-full text-xl font-bold ${back ? 'text-center' : ''}`}>
+          {title}
+        </p>
         {setClose ? (
           <button
             type="button"

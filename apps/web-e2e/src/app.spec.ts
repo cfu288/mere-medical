@@ -51,7 +51,7 @@ test('Epic add new connection flow works', async ({ page }) => {
 
   // See if modal has opened
   await page.waitForSelector(
-    'text=Select your EPIC healthcare institution to log in'
+    'text=Select your healthcare institution to log in'
   );
 
   // Search for Sandbox

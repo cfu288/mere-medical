@@ -24,6 +24,8 @@ import {
   setTenantUrlBySource,
 } from '../../pages/ConnectionTab';
 import React from 'react';
+import { Modal } from '../Modal';
+import { ModalHeader } from '../ModalHeader';
 
 function getImage(logo: ConnectionSources) {
   switch (logo) {
@@ -104,6 +106,8 @@ export function ConnectionCard({
       }
     }, [baseUrl, db, item, syncD, userPreferences]);
 
+  const [showModal, setShowModal] = useState(false);
+
   return (
     <li
       key={item.id}
@@ -152,7 +156,7 @@ export function ConnectionCard({
             className={`flex w-0 flex-1 ${
               deleting ? 'disabled:bg-slate-50' : ''
             }`}
-            onClick={() => removeDocument(item)}
+            onClick={() => setShowModal(true)}
           >
             <div className="relative -mr-px inline-flex h-full w-0 flex-1 items-center justify-center rounded-bl-lg border border-transparent px-1 py-4 text-sm font-medium text-gray-700 hover:text-gray-700">
               Disconnect Source
@@ -192,6 +196,38 @@ export function ConnectionCard({
           ) : null}
         </div>
       </div>
+      {/* Add confirm modal before delete: Are you sure you want to remove this connection? */}
+      <Modal
+        open={showModal}
+        setOpen={setShowModal}
+        overflowHidden
+        overflowXHidden
+      >
+        <ModalHeader
+          title="Remove Connection"
+          subtitle="Are you sure you want to remove this connection?"
+          setClose={(x: boolean) => setShowModal(x)}
+        />
+        <div className="m-4 flex justify-end">
+          <button
+            type="button"
+            className="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+            onClick={() => setShowModal(false)}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="ml-3 inline-flex justify-center rounded-md border border-red-300 bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-600"
+            onClick={() => {
+              removeDocument(item);
+              setShowModal(false);
+            }}
+          >
+            Remove
+          </button>
+        </div>
+      </Modal>
     </li>
   );
 }

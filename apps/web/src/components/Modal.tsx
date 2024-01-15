@@ -9,12 +9,14 @@ export function Modal({
   children,
   overflowHidden = false,
   overflowXHidden = false,
+  flex = false,
 }: PropsWithChildren<{
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   afterLeave?: () => void;
   overflowHidden?: boolean;
   overflowXHidden?: boolean;
+  flex?: boolean;
 }>) {
   return (
     <Transition.Root show={open} as={Fragment} afterLeave={afterLeave} appear>
@@ -43,7 +45,9 @@ export function Modal({
             leaveTo="opacity-0 scale-95"
           >
             <Dialog.Panel
-              className={`mx-auto w-screen transform rounded-xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 transition-all sm:w-auto sm:min-w-[50%] sm:max-w-3xl ${
+              className={`${
+                flex ? 'flex flex-col' : ''
+              } mx-auto w-screen transform rounded-xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 transition-all sm:w-auto sm:min-w-[50%] sm:max-w-3xl ${
                 overflowHidden ? 'overflow-hidden' : ''
               } ${overflowXHidden ? 'overflow-x-hidden' : ''}`}
             >

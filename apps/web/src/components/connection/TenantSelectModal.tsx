@@ -221,6 +221,7 @@ export function TenantSelectModal({
         dispatch({ type: 'hasClosedModal' });
       }}
       overflowXHidden
+      flex
     >
       <>
         {!state.hasSelectedEmrVendor ? (
@@ -229,7 +230,7 @@ export function TenantSelectModal({
               title={'Which patient portal do you use?'}
               setClose={() => setOpen((x) => !x)}
             />
-            <div className="flex flex-col items-center justify-center">
+            <div className="flex h-full max-h-full scroll-py-3 flex-col items-center justify-center overflow-y-scroll pt-8 sm:pt-0">
               <ul
                 className="grid w-full grid-cols-2 gap-x-4 gap-y-8 px-4 py-8 sm:grid-cols-3 sm:gap-x-8 sm:px-4 sm:py-12" // lg:grid-cols-4 xl:gap-x-8"
               >
@@ -240,7 +241,6 @@ export function TenantSelectModal({
                   ) {
                     return { ...item, enabled: false };
                   }
-
                   return item;
                 }).map((file) => (
                   <li key={file.source} className="relative">
@@ -343,7 +343,7 @@ export function TenantSelectModal({
         ) : (
           <>
             <ModalHeader
-              title={`Select your ${state.emrVendor.toLocaleUpperCase()} healthcare institution to log in`}
+              title={`Select your healthcare institution to log in`}
               setClose={() => setOpen((x) => !x)}
               back={() => {
                 dispatch({ type: 'goBackToEMRVendorSelect' });
@@ -353,7 +353,7 @@ export function TenantSelectModal({
               <Combobox>
                 <Combobox.Options
                   static
-                  className="max-h-full scroll-py-3 overflow-y-scroll p-3 sm:max-h-96"
+                  className="max-h-full scroll-py-3 overflow-y-scroll p-3"
                 >
                   <SkeletonTenantSelectModalResultItem />
                   <SkeletonTenantSelectModalResultItem />
@@ -399,7 +399,7 @@ export function TenantSelectModal({
                     />
                     <Combobox.Input
                       title="tenant-search-bar"
-                      className="focus:ring-primary-700 h-12 w-full divide-y-2 rounded-xl border-0 bg-gray-50 bg-transparent pl-11 pr-4 text-gray-800 placeholder-gray-400 hover:border-gray-200 focus:ring-2 sm:text-sm"
+                      className="focus:ring-primary-700 h-12 w-full divide-y-2 rounded-xl border-0 bg-gray-100 bg-transparent pl-11 pr-4 text-gray-800 placeholder-gray-400 hover:border-gray-200 focus:ring-2 sm:text-sm"
                       placeholder="Search for your health system"
                       onChange={(event) =>
                         dispatch({

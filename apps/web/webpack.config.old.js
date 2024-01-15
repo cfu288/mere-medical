@@ -29,6 +29,7 @@ module.exports = function (webpackConfig, nxConfig) {
         MERE_APP_VERSION: JSON.stringify(commitHash),
       }),
     ],
+    ignoreWarnings: [/Failed to parse source map/],
   });
 
   // For production we add the service worker

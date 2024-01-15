@@ -33,6 +33,9 @@ module.exports = {
       16: '16',
     },
     extend: {
+      screens: {
+        xs: '480px',
+      },
       fontFamily: {
         sans: [
           'Avenir',
