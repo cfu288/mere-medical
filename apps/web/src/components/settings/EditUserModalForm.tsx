@@ -248,7 +248,7 @@ function ProfileImageModal({
             }}
           />
           <button
-            className='className="focus:ring-primary-500 focus:ring-offset-2" rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2'
+            className='className="focus:ring-primary-500 focus:ring-offset-2" rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2'
             onClick={() => uploadRef.current?.click()}
             type="button"
           >
@@ -348,7 +348,7 @@ export function EditUserForm({
             <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-gray-200 sm:pt-5">
               <label
                 htmlFor="first-name"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+                className="block text-sm font-medium text-gray-800 sm:mt-px sm:pt-2"
               >
                 First name
               </label>
@@ -371,7 +371,7 @@ export function EditUserForm({
             <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
               <label
                 htmlFor="lastName"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+                className="block text-sm font-medium text-gray-800 sm:mt-px sm:pt-2"
               >
                 Last name
               </label>
@@ -394,7 +394,7 @@ export function EditUserForm({
             <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+                className="block text-sm font-medium text-gray-800 sm:mt-px sm:pt-2"
               >
                 Email address
               </label>
@@ -422,7 +422,7 @@ export function EditUserForm({
             <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
               <label
                 htmlFor="date-of-birth"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+                className="block text-sm font-medium text-gray-800 sm:mt-px sm:pt-2"
               >
                 Date of Birth
               </label>
@@ -450,7 +450,7 @@ export function EditUserForm({
             <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
               <label
                 htmlFor="gender"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+                className="block text-sm font-medium text-gray-800 sm:mt-px sm:pt-2"
               >
                 Gender
               </label>
@@ -473,7 +473,7 @@ export function EditUserForm({
             <div className="sm:grid sm:grid-cols-3 sm:items-center sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
               <label
                 htmlFor="photo"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-gray-800"
               >
                 Photo
               </label>
@@ -501,7 +501,7 @@ export function EditUserForm({
                       e.preventDefault();
                       setTogglePhotoModal((x) => !x);
                     }}
-                    className="file:focus:ring-primary-500 file:text-medium block w-full flex-1 py-2 text-sm text-gray-700 file:ml-5 file:mr-4 file:rounded-md file:border file:border-gray-300 file:bg-white  file:px-3 file:py-2 file:text-gray-700 hover:file:bg-gray-100 focus:outline-none file:focus:outline-none file:focus:ring-2 file:focus:ring-offset-2"
+                    className="file:focus:ring-primary-500 file:text-medium block w-full flex-1 py-2 text-sm text-gray-800 file:ml-5 file:mr-4 file:rounded-md file:border file:border-gray-300 file:bg-white  file:px-3 file:py-2 file:text-gray-800 hover:file:bg-gray-100 focus:outline-none file:focus:outline-none file:focus:ring-2 file:focus:ring-offset-2"
                   >
                     Upload photo
                   </button>
@@ -513,7 +513,7 @@ export function EditUserForm({
         <div className="flex flex-shrink-0 justify-end px-4 py-4">
           <button
             type="button"
-            className="focus:ring-primary-500 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2"
+            className="focus:ring-primary-500 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2"
             onClick={toggleModal}
           >
             Cancel

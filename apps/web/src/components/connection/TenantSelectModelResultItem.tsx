@@ -31,7 +31,7 @@ export function TenantSelectModelResultItem({
           <p
             className={classNames(
               'text-sm font-medium',
-              active ? 'text-gray-900' : 'text-gray-700'
+              active ? 'text-gray-900' : 'text-gray-800'
             )}
           >
             {name}
@@ -48,7 +48,7 @@ export function SkeletonTenantSelectModalResultItem() {
   return (
     <div className="mb-2 flex cursor-default select-none rounded-xl p-3">
       <div className="ml-4 flex-auto">
-        <div className="text-sm font-medium text-gray-700">
+        <div className="text-sm font-medium text-gray-800">
           <div
             className={`h-4 animate-pulse rounded bg-gray-200`}
             style={{ width: `${randomTailwindWidth}%` }}

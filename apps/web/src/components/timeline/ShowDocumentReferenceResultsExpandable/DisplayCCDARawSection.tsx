@@ -22,7 +22,7 @@ export function DisplayCCDARawSection({
               />
             </div>
           </Disclosure.Button>
-          <Disclosure.Panel className="m-4 text-sm text-gray-700">
+          <Disclosure.Panel className="m-4 text-sm text-gray-800">
             <p
               className="p-2"
               dangerouslySetInnerHTML={{

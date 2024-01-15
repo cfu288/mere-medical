@@ -25,7 +25,7 @@ export const ImmunizationCard = memo(function ImmunizationCard({
         />
 
         <TimelineCardTitle>{item.metadata?.display_name}</TimelineCardTitle>
-        <p className="truncate text-xs font-medium text-gray-700 md:text-sm">
+        <p className="truncate text-xs font-medium text-gray-800 md:text-sm">
           {item.metadata?.date ? format(parseISO(item.metadata.date), 'p') : ''}
         </p>
         {conn?.get('name') ? (

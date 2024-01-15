@@ -80,7 +80,7 @@ export function AppLoadingSkeleton({ ready }: { ready?: boolean }) {
               <div className="flex items-center">
                 <div className="inline-block h-10 w-10 rounded-full border-2 border-white bg-slate-100">
                   <svg
-                    className="h-full w-full rounded-full text-gray-700"
+                    className="h-full w-full rounded-full text-gray-800"
                     fill="currentColor"
                     viewBox="0 0 24 24"
                   >

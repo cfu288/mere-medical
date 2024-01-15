@@ -17,7 +17,7 @@ function TimelineSkeletonUnmemoed() {
               {/* Left sided date */}
               <div className="mt-2 flex h-6 grow animate-pulse items-center justify-end gap-x-4 pt-5">
                 <div className="h-6 w-12 rounded-md bg-gray-200"></div>
-                <div className="text-gray-400">•</div>
+                <div className="text-gray-700">•</div>
               </div>
               {/* Clinical card rendering */}
               <div className="md:w-3/4 flex w-4/5 flex-col gap-y-2">
@@ -31,7 +31,7 @@ function TimelineSkeletonUnmemoed() {
                 <div className="h-6 w-12 rounded-md bg-gray-200"></div>
               </div>
               {/* Spacer between date and card */}
-              <div className="flex-column relative flex justify-center pt-5 font-black text-gray-400">
+              <div className="flex-column relative flex justify-center pt-5 font-black text-gray-700">
                 <div className="">•</div>
               </div>
               {/* Clinical card rendering */}

@@ -184,7 +184,7 @@ export function ObservationResultRow({
                 {/* Comment string (if exists) */}
                 {getComments(item) ? (
                   <div
-                    className={`col-span-2 col-start-4 flex self-center text-xs text-gray-700`}
+                    className={`col-span-2 col-start-4 flex self-center text-xs text-gray-800`}
                   >
                     {getComments(item)}
                   </div>

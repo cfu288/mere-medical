@@ -30,7 +30,7 @@ export function PinnedListCard({
                 <div className="min-w-0 flex-1">
                   {items.length > 0 ? (
                     <>
-                      <div className="grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-200 p-2 px-4 text-gray-700">
+                      <div className="grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-200 p-2 px-4 text-gray-800">
                         <div className="col-span-3 text-sm font-semibold">
                           Name
                         </div>

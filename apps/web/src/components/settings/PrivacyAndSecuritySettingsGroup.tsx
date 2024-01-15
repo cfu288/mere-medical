@@ -56,7 +56,7 @@ export function PrivacyAndSecuritySettingsGroup() {
                     >
                       Enable encrypted storage with password protection
                     </Switch.Label>
-                    <Switch.Description className="pt-2 text-sm text-gray-700">
+                    <Switch.Description className="pt-2 text-sm text-gray-800">
                       Enable password protection of your medical records. Will
                       require you to provide a password before accessing any
                       medical records.
@@ -76,7 +76,7 @@ export function PrivacyAndSecuritySettingsGroup() {
                       localConfig.use_encrypted_database
                         ? 'bg-primary-500'
                         : 'bg-gray-200',
-                      'focus:ring-primary-500 relative ml-4 inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2'
+                      'focus:ring-primary-500 relative ml-4 inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2',
                     )}
                   >
                     <span
@@ -85,7 +85,7 @@ export function PrivacyAndSecuritySettingsGroup() {
                         localConfig.use_encrypted_database
                           ? 'translate-x-5'
                           : 'translate-x-0',
-                        'inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
+                        'inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
                       )}
                     />
                   </Switch>
@@ -105,13 +105,13 @@ export function PrivacyAndSecuritySettingsGroup() {
                     >
                       Use proxy to sync data
                     </Switch.Label>
-                    <Switch.Description className="pt-2 text-sm text-gray-700">
+                    <Switch.Description className="pt-2 text-sm text-gray-800">
                       Some patient portals disable direct communication from the
                       Mere app. If your app fails to login or sync data, you can
                       enable this setting to use a backend proxy to do login and
                       sync on your behalf.
                     </Switch.Description>
-                    <Switch.Description className="pt-2 text-sm text-gray-700">
+                    <Switch.Description className="pt-2 text-sm text-gray-800">
                       You should only enable this if you trust the organization
                       hosting the app, as the proxy will be able to access your
                       health data.
@@ -138,7 +138,7 @@ export function PrivacyAndSecuritySettingsGroup() {
                       userPreferences.use_proxy
                         ? 'bg-primary-500'
                         : 'bg-gray-200',
-                      'focus:ring-primary-500 relative ml-4 inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2'
+                      'focus:ring-primary-500 relative ml-4 inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2',
                     )}
                   >
                     <span
@@ -147,7 +147,7 @@ export function PrivacyAndSecuritySettingsGroup() {
                         userPreferences.use_proxy
                           ? 'translate-x-5'
                           : 'translate-x-0',
-                        'inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
+                        'inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
                       )}
                     />
                   </Switch>
@@ -170,7 +170,7 @@ export function PrivacyAndSecuritySettingsGroup() {
                         >
                           Enable analytics
                         </Switch.Label>
-                        <Switch.Description className="pt-2 text-sm text-gray-700">
+                        <Switch.Description className="pt-2 text-sm text-gray-800">
                           Help us understand how you use the app so we can
                           improve your experience. No personally identifiable
                           information is collected.
@@ -188,7 +188,7 @@ export function PrivacyAndSecuritySettingsGroup() {
                           localConfig.use_sentry_reporting
                             ? 'bg-primary-500'
                             : 'bg-gray-200',
-                          'focus:ring-primary-500 relative ml-4 inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2'
+                          'focus:ring-primary-500 relative ml-4 inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2',
                         )}
                       >
                         <span
@@ -197,7 +197,7 @@ export function PrivacyAndSecuritySettingsGroup() {
                             localConfig.use_sentry_reporting
                               ? 'translate-x-5'
                               : 'translate-x-0',
-                            'inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
+                            'inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
                           )}
                         />
                       </Switch>
@@ -241,7 +241,7 @@ function PasswordPromptModal({
     // Export current database
     try {
       const internalStorageAdapter = (await getStorageAdapter(
-        db
+        db,
       )) as CryptedIndexedDBAdapter;
       const internalDb = await getInternalLokiStorage(db);
 
@@ -255,7 +255,7 @@ function PasswordPromptModal({
           } else {
             resolve();
           }
-        })
+        }),
       );
 
       const json = await db.exportJSON();
@@ -298,14 +298,14 @@ function PasswordPromptModal({
         <button
           type="button"
           disabled={isProcessing}
-          className="focus:ring-primary-500 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-gray-300"
+          className="focus:ring-primary-500 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-gray-300"
           onClick={() => setToggleModal(false)}
         >
           Cancel
         </button>
         <button
           type="button"
-          className=" bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 ml-4 inline-flex justify-center rounded-md border border-transparent px-4 py-2 align-middle text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-gray-300 disabled:text-gray-700"
+          className=" bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 ml-4 inline-flex justify-center rounded-md border border-transparent px-4 py-2 align-middle text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-gray-300 disabled:text-gray-800"
           disabled={isProcessing}
           onClick={async () => {
             setIsProcessing(true);
@@ -365,7 +365,7 @@ function DatabasePasswordModal({
           } else {
             resolve();
           }
-        })
+        }),
       );
 
       // Update local config to use encrypted database
@@ -376,7 +376,7 @@ function DatabasePasswordModal({
       setToggleModal(false);
       setTimeout(() => window.location.reload(), 0);
     },
-    [db, setToggleModal, updateLocalConfig]
+    [db, setToggleModal, updateLocalConfig],
   );
 
   return (
@@ -411,14 +411,14 @@ function DatabasePasswordModal({
               onChange={(e) => {
                 setPassword(e.target.value);
               }}
-              className="focus:ring-primary-600 text-primary-900 block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6"
+              className="focus:ring-primary-600 text-primary-900 block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-700 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6"
             />
           </div>
         </div>
         <div className="flex flex-shrink-0 justify-end px-4 py-4">
           <button
             type="button"
-            className="focus:ring-primary-500 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2"
+            className="focus:ring-primary-500 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2"
             onClick={() => setToggleModal(false)}
           >
             Cancel

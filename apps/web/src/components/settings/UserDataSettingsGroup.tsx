@@ -148,7 +148,7 @@ export function UserDataSettingsGroup() {
                 <h2 className="text-primary-800 text-lg leading-6">
                   Export data
                 </h2>
-                <p className="pt-2 text-sm text-gray-700">
+                <p className="pt-2 text-sm text-gray-800">
                   Export all of your data in JSON format. You can use this to
                   backup your data and can import it back if needed.
                 </p>
@@ -185,7 +185,7 @@ export function UserDataSettingsGroup() {
                 <h2 className="text-primary-800 text-lg leading-6">
                   Import data
                 </h2>
-                <p className="pt-2 text-sm text-gray-700">
+                <p className="pt-2 text-sm text-gray-800">
                   Import previously exported data
                 </p>
               </div>
@@ -238,7 +238,7 @@ export function UserDataSettingsGroup() {
                   Storage usage
                 </h2>
                 {/* show if persistant storage is enabled */}
-                <p className="pt-2 text-sm text-gray-700">
+                <p className="pt-2 text-sm text-gray-800">
                   {hasPersistentStorageEnabled
                     ? 'Persistent storage is enabled.'
                     : 'Persistent storage is not enabled - data may be cleared by the browser.'}
@@ -256,7 +256,7 @@ export function UserDataSettingsGroup() {
                     ></div>
                   </div>
                 )}
-                <p className="pt-1 text-sm text-gray-700">
+                <p className="pt-1 text-sm text-gray-800">
                   {quotaDetails.usage && quotaDetails.quota
                     ? `You have used ${
                         quotaDetails.usage >= 1024 * 1024 * 1024

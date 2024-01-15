@@ -9,7 +9,7 @@ export function EmptyRecordsPlaceholder() {
         <h1 className="text-primary-700 text-4xl font-bold">
           Link your medical records
         </h1>
-        <p className="mt-2 max-w-96 text-xl text-gray-700">
+        <p className="mt-2 max-w-96 text-xl text-gray-800">
           Get started by connecting to a patient portal
         </p>
         <div className="mt-8">

@@ -87,7 +87,7 @@ export function TenantSelectModal({
     token: string & Location,
     name: string,
     id: string,
-    vendor: EMRVendor
+    vendor: EMRVendor,
   ) => void;
 }) {
   const userPreferences = useUserPreferences(),
@@ -96,7 +96,7 @@ export function TenantSelectModal({
   const [state, dispatch] = useReducer(
     (
       state: TenantSelectState,
-      action: TenantSelectAction
+      action: TenantSelectAction,
     ): TenantSelectState => {
       switch (action.type) {
         case 'setQuery':
@@ -124,11 +124,11 @@ export function TenantSelectModal({
       emrVendor: 'any',
       hasSelectedEmrVendor: false,
       isLoadingResults: false,
-    }
+    },
   );
 
   const [vaUrl, setVaUrl] = useState<string & Location>(
-    '' as string & Location
+    '' as string & Location,
   );
 
   useEffect(() => {
@@ -215,7 +215,7 @@ export function TenantSelectModal({
           new URLSearchParams({ query: state.query }),
         {
           signal: abortController.signal,
-        }
+        },
       )
         .then((x) => x.json())
         .then((x) => dispatch({ type: 'setItems', payload: x }))
@@ -290,7 +290,7 @@ export function TenantSelectModal({
                           {file.title}
                         </p>
                         {!file.enabled ? (
-                          <p className="pointer-events-none block text-sm font-medium text-gray-500">
+                          <p className="pointer-events-none block text-sm font-medium text-gray-700">
                             To enable, go to{' '}
                             <Link
                               className="text-primary hover:text-primary-500 w-full text-center underline"
@@ -303,7 +303,7 @@ export function TenantSelectModal({
                         ) : (
                           <>
                             {file.alt && (
-                              <p className="pointer-events-none block text-sm font-medium text-gray-500">
+                              <p className="pointer-events-none block text-sm font-medium text-gray-700">
                                 {file.alt}
                               </p>
                             )}
@@ -347,7 +347,7 @@ export function TenantSelectModal({
                           {file.title}
                         </p>
                         {file.alt && (
-                          <p className="pointer-events-none block text-sm font-medium text-gray-500">
+                          <p className="pointer-events-none block text-sm font-medium text-gray-700">
                             {file.alt}
                           </p>
                         )}
@@ -405,14 +405,14 @@ export function TenantSelectModal({
                       s.tokenUrl,
                       s.name,
                       s.id,
-                      state.emrVendor
+                      state.emrVendor,
                     );
                     setOpen(false);
                   }}
                 >
                   <div className="relative px-4">
                     <MagnifyingGlassIcon
-                      className="pointer-events-none absolute left-8 top-3.5 h-5 w-5 text-gray-400"
+                      className="pointer-events-none absolute left-8 top-3.5 h-5 w-5 text-gray-700"
                       aria-hidden="true"
                     />
                     <Combobox.Input
@@ -450,12 +450,12 @@ export function TenantSelectModal({
                       <ExclamationCircleIcon
                         type="outline"
                         name="exclamation-circle"
-                        className="mx-auto h-6 w-6 text-gray-400"
+                        className="mx-auto h-6 w-6 text-gray-700"
                       />
                       <p className="mt-4 font-semibold text-gray-900">
                         No results found
                       </p>
-                      <p className="mt-2 text-gray-700">
+                      <p className="mt-2 text-gray-800">
                         No health system found for this search term. Please try
                         again.
                       </p>

@@ -67,7 +67,7 @@ export function NavigationBar({ absolute = true }: { absolute?: boolean }) {
     <div
       className={`${
         absolute ? 'absolute' : ''
-      } top-0 left-0 isolate z-50 w-full`}
+      } left-0 top-0 isolate z-50 w-full`}
     >
       <div className="px-6 py-6 lg:px-8">
         <nav
@@ -126,7 +126,7 @@ export function NavigationBar({ absolute = true }: { absolute?: boolean }) {
                       <a
                         key={item.name}
                         href={item.href}
-                        className="-mx-3 block rounded-lg py-2 px-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-400/10"
+                        className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-400/10"
                       >
                         {item.name}
                       </a>
@@ -135,7 +135,7 @@ export function NavigationBar({ absolute = true }: { absolute?: boolean }) {
                   <div className="py-6">
                     <a
                       href="#"
-                      className="-mx-3 block rounded-lg py-2.5 px-3 text-base font-semibold leading-6 text-gray-900 hover:bg-gray-400/10"
+                      className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-6 text-gray-900 hover:bg-gray-400/10"
                     ></a>
                   </div>
                 </div>
@@ -224,16 +224,16 @@ export default function Home() {
                   <div className="slideUpDelay2 rounded-md opacity-0 shadow">
                     <a
                       href="https://demo.meremedical.co/timeline"
-                      className="bg-primary-700 hover:bg-primary-600 flex w-full items-center justify-center rounded-md border border-transparent px-8 py-3 text-base font-medium text-white hover:text-white md:py-4 md:px-10 md:text-lg"
+                      className="bg-primary-700 hover:bg-primary-600 flex w-full items-center justify-center rounded-md border border-transparent px-8 py-3 text-base font-medium text-white hover:text-white md:px-10 md:py-4 md:text-lg"
                       data-umami-event="see-demo"
                     >
                       See Demo
                     </a>
                   </div>
-                  <div className="slideUpDelay3 mt-3 rounded-md opacity-0 shadow sm:mt-0 sm:ml-3">
+                  <div className="slideUpDelay3 mt-3 rounded-md opacity-0 shadow sm:ml-3 sm:mt-0">
                     <a
                       href="https://app.meremedical.co/timeline"
-                      className="text-primary-700 hover:text-primary-600 flex w-full items-center justify-center rounded-md border border-transparent bg-white px-8 py-3 text-base font-medium hover:bg-gray-50 md:py-4 md:px-10 md:text-lg"
+                      className="text-primary-700 hover:text-primary-600 flex w-full items-center justify-center rounded-md border border-transparent bg-white px-8 py-3 text-base font-medium hover:bg-gray-50 md:px-10 md:py-4 md:text-lg"
                       data-umami-event="try-the-beta"
                     >
                       Try the Beta
@@ -292,7 +292,7 @@ export default function Home() {
             {/* Right Hero */}
             <div className="lg:rounded-tr-0 lg:left-100 relative mt-24 flex h-80 w-auto overflow-hidden rounded-bl-[80px] rounded-tr-[80px] bg-[#F1F4F9] px-4 sm:h-[32rem] lg:absolute lg:inset-y-0 lg:left-1/2 lg:right-0 lg:mt-0 lg:block lg:h-4/5 lg:w-full lg:overflow-visible lg:px-0 lg:pt-6">
               <img
-                className="fadeIn m-5 mx-auto  self-center rounded-md opacity-0 sm:max-w-xl lg:absolute lg:-bottom-10 lg:mx-0 lg:mb-0 lg:mt-20 lg:ml-10 lg:h-5/6 lg:w-auto lg:max-w-5xl lg:self-center lg:rounded-2xl lg:p-0"
+                className="fadeIn m-5 mx-auto  self-center rounded-md opacity-0 sm:max-w-xl lg:absolute lg:-bottom-10 lg:mx-0 lg:mb-0 lg:ml-10 lg:mt-20 lg:h-5/6 lg:w-auto lg:max-w-5xl lg:self-center lg:rounded-2xl lg:p-0"
                 src="/img/timeline-desktop.webp"
                 alt="web timeline screenshot"
               />
@@ -430,7 +430,7 @@ export default function Home() {
                       {feature.name}
                     </p>
                   </dt>
-                  <dd className="mt-4 ml-0 font-light text-gray-600">
+                  <dd className="ml-0 mt-4 font-light text-gray-600">
                     {feature.description}
                   </dd>
                 </div>
@@ -548,7 +548,7 @@ function TestimonialSection() {
 export function Footer() {
   return (
     <footer className="bg-primary-900">
-      <div className="mx-auto max-w-md overflow-hidden py-12 px-4 sm:max-w-3xl sm:px-6 lg:max-w-7xl lg:px-8">
+      <div className="mx-auto max-w-md overflow-hidden px-4 py-12 sm:max-w-3xl sm:px-6 lg:max-w-7xl lg:px-8">
         <div className="mx-auto flex w-full items-center pb-4">
           <img
             aria-hidden="true"
@@ -564,14 +564,14 @@ export function Footer() {
             <div key={item.name} className="px-5 py-2">
               <a
                 href={item.href}
-                className="text-base text-gray-400 hover:text-gray-300"
+                className="text-base text-gray-700 hover:text-gray-300"
               >
                 {item.name}
               </a>
             </div>
           ))}
         </nav>
-        <p className="mt-8 text-center text-base text-gray-400">
+        <p className="mt-8 text-center text-base text-gray-700">
           &copy; 2023 Mere Medical. All rights reserved.
         </p>
       </div>

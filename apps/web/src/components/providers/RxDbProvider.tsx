@@ -100,15 +100,15 @@ export const databaseCollections = {
 
 export function handleJSONDataImport(
   jsonString: string,
-  db: RxDatabase<DatabaseCollections>
+  db: RxDatabase<DatabaseCollections>,
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     if (jsonString) {
       const data = JSON.parse(
-        jsonString as string
+        jsonString as string,
       ) as RxDumpDatabaseAny<DatabaseCollections>;
       Promise.all(
-        Object.values(db.collections).map((col) => col?.remove())
+        Object.values(db.collections).map((col) => col?.remove()),
       ).then(async () => {
         await db.addCollections<DatabaseCollections>(databaseCollections);
         try {
@@ -135,22 +135,22 @@ export function handleJSONDataImport(
               Error(
                 `${
                   Object.keys(errors).length
-                } documents were not able to be imported`
-              )
+                } documents were not able to be imported`,
+              ),
             );
           } else {
             resolve(
               `${
                 Object.keys(success).length
-              } documents were successfully imported`
+              } documents were successfully imported`,
             );
           }
         } catch (e) {
           console.error(e);
           reject(
             Error(
-              'There was an error importing your data: ' + (e as Error).message
-            )
+              'There was an error importing your data: ' + (e as Error).message,
+            ),
           );
         }
       });
@@ -189,13 +189,13 @@ export async function initEncryptedRxDb(password: string) {
   try {
     // RxDB adds a .db extension to the database name, lets check it first
     await (cryptedStorageAdapter as CryptedIndexedDBAdapter).loadDatabaseAsync(
-      'mere_db.db'
+      'mere_db.db',
     );
   } catch (e) {
     console.error(e);
     if (e instanceof DOMException) {
       throw Error(
-        'There was an error decrypting your records with the provided password.'
+        'There was an error decrypting your records with the provided password.',
       );
     } else if (e === null) {
       // This is a new database, so we need to create it. No throw
@@ -219,7 +219,7 @@ export async function initEncryptedRxDb(password: string) {
 }
 
 export async function getInternalLokiStorage(
-  db: RxDatabase<DatabaseCollections>
+  db: RxDatabase<DatabaseCollections>,
 ) {
   try {
     const internalDb = ((await db.internalStore.internals) as any)
@@ -228,7 +228,7 @@ export async function getInternalLokiStorage(
     return (await internalDb).databaseState.database as Loki;
   } catch (e) {
     throw Error(
-      'There was an error with updating encrypted database. If you have multiple tabs of Mere open, please close the other ones and try again.'
+      'There was an error with updating encrypted database. If you have multiple tabs of Mere open, please close the other ones and try again.',
     );
   }
 }
@@ -268,14 +268,14 @@ export function RxDbProvider(props: RxDbProviderProps) {
           console.error(err);
           setInitialized('ERROR');
           setError(
-            'There was an error decrypting your records with the provided password.'
+            'There was an error decrypting your records with the provided password.',
           );
         });
     } catch (e) {
       console.error(e);
       setInitialized('ERROR');
       setError(
-        'There was an error decrypting your records with the provided password.'
+        'There was an error decrypting your records with the provided password.',
       );
       setPassword('');
     }
@@ -318,7 +318,7 @@ export function RxDbProvider(props: RxDbProviderProps) {
           console.error(err);
           setInitialized('ERROR');
           setError(
-            'There was an error initializing the database. Please try again.'
+            'There was an error initializing the database. Please try again.',
           );
         });
     }
@@ -353,7 +353,7 @@ export function RxDbProvider(props: RxDbProviderProps) {
                 </div>
                 <div className="sm:max-w-[480px] mx-4 mt-10 sm:mx-auto sm:w-full">
                   <div className="rounded-md bg-white px-6 pb-10 pt-2 shadow-md sm:mx-4">
-                    <h2 className="my-6 text-center text-xl font-semibold text-gray-700">
+                    <h2 className="my-6 text-center text-xl font-semibold text-gray-800">
                       Enter your encryption password
                     </h2>
                     <form
@@ -383,7 +383,7 @@ export function RxDbProvider(props: RxDbProviderProps) {
                               setPassword(e.target.value);
                               initialized === 'ERROR' && setInitialized('IDLE');
                             }}
-                            className={`focus:ring-primary-600 block w-full rounded-md border-0 bg-gray-100 py-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset ${
+                            className={`focus:ring-primary-600 block w-full rounded-md border-0 bg-gray-100 py-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-700 focus:ring-2 focus:ring-inset ${
                               password === '' ? 'italic' : ''
                             }`}
                           />

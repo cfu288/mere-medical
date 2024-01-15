@@ -56,7 +56,7 @@ export function DisplayCCDAAssesmentSection({
               />
             </div>
           </Disclosure.Button>
-          <Disclosure.Panel className="m-1 text-sm text-gray-700">
+          <Disclosure.Panel className="m-1 text-sm text-gray-800">
             <div
               className="prose prose-sm max-w-none"
               dangerouslySetInnerHTML={{ __html: data.value || '' }}

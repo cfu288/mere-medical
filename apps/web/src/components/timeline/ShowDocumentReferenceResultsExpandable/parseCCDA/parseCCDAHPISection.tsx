@@ -87,7 +87,7 @@ export function parseCCDAHPISection(
                 />
               </div>
             </Disclosure.Button>
-            <Disclosure.Panel className="m-1 text-sm text-gray-700">
+            <Disclosure.Panel className="m-1 text-sm text-gray-800">
               <p
                 className="text-md whitespace-wrap max-h-screen overflow-y-scroll p-2 text-gray-900"
                 dangerouslySetInnerHTML={{

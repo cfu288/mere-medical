@@ -37,7 +37,7 @@ type NotificationProviderProps = {
 };
 
 const NotificationDispatchContext = React.createContext<Dispatch | undefined>(
-  undefined
+  undefined,
 );
 
 function notificationReducer(state: NotificationData, action: Action) {
@@ -61,7 +61,7 @@ function notificationReducer(state: NotificationData, action: Action) {
 }
 
 function NotificationRenderer(
-  props: React.PropsWithChildren<{ data: NotificationData }>
+  props: React.PropsWithChildren<{ data: NotificationData }>,
 ) {
   const dispatch = useNotificationDispatch();
 
@@ -125,7 +125,7 @@ function NotificationRenderer(
                   <div className="ml-4 flex flex-shrink-0">
                     <button
                       type="button"
-                      className="focus:ring-primary-700 inline-flex rounded-md bg-white text-gray-400 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                      className="focus:ring-primary-700 inline-flex rounded-md bg-white text-gray-700 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2"
                       onClick={() => {
                         dispatch({ type: 'hide_notification' });
                       }}
@@ -185,7 +185,7 @@ function useNotificationDispatch() {
   const context = React.useContext(NotificationDispatchContext);
   if (context === undefined) {
     throw new Error(
-      'useNotificationDispatch must be used within a NotificationProvider'
+      'useNotificationDispatch must be used within a NotificationProvider',
     );
   }
 

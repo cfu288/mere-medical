@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-no-useless-fragment */
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, FhirResource } from 'fhir/r2';
 import React, { Fragment, memo, useMemo } from 'react';
@@ -100,11 +101,9 @@ const YearHeader = memo(YearHeaderUnmemo);
 function LinkUnmemo({ date }: { date: string }) {
   if (date) {
     return (
-      <Link to={`#${parseMonthDayYear(date)}`}>
-        <li className="p-1 pl-4 text-xs font-thin hover:underline">
-          {parseMonthDay(date)}
-        </li>
-      </Link>
+      <li className="p-1 pl-4 text-xs font-thin hover:underline">
+        <Link to={`#${parseMonthDayYear(date)}`}>{parseMonthDay(date)}</Link>
+      </li>
     );
   }
   return null;

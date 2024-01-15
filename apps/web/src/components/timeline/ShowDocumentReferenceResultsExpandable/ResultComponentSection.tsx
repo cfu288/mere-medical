@@ -26,7 +26,7 @@ export function ResultComponentSection({
               />
             </div>
           </Disclosure.Button>
-          <Disclosure.Panel className="m-1 text-sm text-gray-700">
+          <Disclosure.Panel className="m-1 text-sm text-gray-800">
             <table className="min-w-full divide-y divide-gray-300">
               <thead>
                 <tr>

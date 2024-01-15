@@ -22,7 +22,7 @@ export function DisplayCCDAElementSection({
               />
             </div>
           </Disclosure.Button>
-          <Disclosure.Panel className="m-4 overflow-x-auto text-sm text-gray-700">
+          <Disclosure.Panel className="m-4 overflow-x-auto text-sm text-gray-800">
             {content}
           </Disclosure.Panel>
         </>

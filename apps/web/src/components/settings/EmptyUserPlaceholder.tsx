@@ -5,7 +5,7 @@ export function EmptyUserPlaceholder({ openModal }: { openModal: () => void }) {
       className="focus:ring-primary-500 relative mt-4 block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 text-center hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2"
     >
       <svg
-        className="mx-auto h-12 w-12 text-gray-400"
+        className="mx-auto h-12 w-12 text-gray-700"
         xmlns="http://www.w3.org/2000/svg"
         stroke="currentColor"
         fill="none"

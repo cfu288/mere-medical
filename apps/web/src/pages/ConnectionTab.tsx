@@ -207,7 +207,7 @@ const ConnectionTab: React.FC = () => {
         <div className="py-6 text-xl font-extrabold">
           Connect to Patient Portal
         </div>
-        <div className="text-sm font-medium text-gray-700">
+        <div className="text-sm font-medium text-gray-800">
           Connect to a patient portal to automatic download your most recent
           data.
         </div>

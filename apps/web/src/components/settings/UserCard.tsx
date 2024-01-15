@@ -19,7 +19,7 @@ export function UserCard() {
   const user = useUser(),
     db = useRxDb(),
     [defaultValues, setDefaultValues] = useState<NewUserFormFields | undefined>(
-      undefined
+      undefined,
     ),
     [openEditUserModal, setOpenEditUserModal] = useState(false);
 
@@ -27,21 +27,21 @@ export function UserCard() {
     fetchPatientRecords(db, user.id).then((data) => {
       const res = data.map((item) => item.toMutableJSON());
       const firstName = parseGivenName(
-          res.filter((i) => parseGivenName(i) !== undefined)?.[0]
+          res.filter((i) => parseGivenName(i) !== undefined)?.[0],
         ),
         lastName = parseFamilyName(
-          res.filter((i) => parseFamilyName(i) !== undefined)?.[0]
+          res.filter((i) => parseFamilyName(i) !== undefined)?.[0],
         ),
         email = parseEmail(res.filter((i) => parseEmail(i) !== undefined)?.[0]),
         birthDate = parseBirthday(
-          res.filter((i) => parseBirthday(i) !== undefined)?.[0]
+          res.filter((i) => parseBirthday(i) !== undefined)?.[0],
         ),
         gender = parseGender(
           res.filter(
             (i) =>
               parseGender(i) !== undefined &&
-              parseGender(i)?.toLocaleLowerCase() !== 'unknown'
-          )?.[0]
+              parseGender(i)?.toLocaleLowerCase() !== 'unknown',
+          )?.[0],
         );
 
       setDefaultValues({
@@ -72,7 +72,7 @@ export function UserCard() {
             className="flex-colrounded-lg relative col-span-1 flex border bg-white text-center"
           >
             <button
-              className="absolute top-4 right-4 flex justify-center text-gray-400"
+              className="absolute top-4 right-4 flex justify-center text-gray-700"
               aria-label="Edit profile"
               onClick={() => {
                 setOpenEditUserModal(true);
