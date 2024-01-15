@@ -136,7 +136,6 @@ export function ObservationResultRow({
                       {getValueUnit(item)}
                     </span>
                   </span>
-
                   <p
                     className={`text-xs font-light ${isOutOfRangeResult(item) ? 'text-red-700' : 'text-primary-700'}`}
                   >
