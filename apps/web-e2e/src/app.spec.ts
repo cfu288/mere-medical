@@ -40,13 +40,22 @@ test('Epic add new connection flow works', async ({ page }) => {
   await page.click('text=Skip Tutorial');
 
   // Start add connection flow by clicking on button with text "Log in to Epic MyChart"
-  await page.click('text=Log in to Epic MyChart');
+  await page.click('text=Add a new connection');
 
   // See if modal has opened
-  await page.waitForSelector('text=Select your Epic health system to log in');
+  await page.waitForSelector('text=Which patient portal do you use?');
+
+  // Click on Epic MyChart option
+  await page.getByText('Select MyChart');
+  await page.getByText('Select MyChart').click();
+
+  // See if modal has opened
+  await page.waitForSelector(
+    'text=Select your healthcare institution to log in'
+  );
 
   // Search for Sandbox
-  await page.getByTitle('epic-search-bar').fill('Sandbo');
+  await page.getByTitle('tenant-search-bar').fill('Sandbo');
 
   // Click on Sandbox - redirected to MyChart
   await page.waitForSelector('text=Sandbox');
@@ -78,5 +87,5 @@ test('Epic add new connection flow works', async ({ page }) => {
   // MyChart has granted access, redirecting back to Mere
   await page.waitForSelector('text=Add Connections');
   await expect(page).toHaveTitle(/Mere/);
-  await page.waitForSelector('text=MyChart - Sandbox');
+  await page.waitForSelector('text=MyChart - Epic MyChart Sandbox');
 });

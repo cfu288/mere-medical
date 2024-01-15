@@ -8,6 +8,6 @@ export const baseConfig: PlaywrightTestConfig = {
   use: {
     baseURL,
   },
-  timeout: 5 * 60 * 1000,
+  timeout: 3 * 60 * 1000,
   reporter: process.env.CI ? 'dot' : 'list',
 };
