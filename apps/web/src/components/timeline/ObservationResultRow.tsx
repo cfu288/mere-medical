@@ -42,7 +42,7 @@ function SparklineGraphSvg({
 }) {
   const sparklineValues = useMemo(
     () => relatedLabs.map((rl) => (rl ? getValueQuantity(rl) : 0)) as number[],
-    [relatedLabs]
+    [relatedLabs],
   );
   const sparklineSvg = useMemo(() => {
     return relatedLabs.length > 1 ? (
@@ -53,7 +53,7 @@ function SparklineGraphSvg({
             NormalizePathLine(
               sparklineValues,
               getReferenceRangeLow(relatedLabs[0])?.value,
-              getReferenceRangeHigh(relatedLabs[0])?.value
+              getReferenceRangeHigh(relatedLabs[0])?.value,
             ).line
           }
           strokeWidth="1.5"
@@ -95,7 +95,7 @@ export function ObservationResultRow({
 }) {
   const loinc = useMemo(
     () => item.metadata?.loinc_coding || [],
-    [item.metadata?.loinc_coding]
+    [item.metadata?.loinc_coding],
   );
 
   const [isPinned, handleTogglePin] = useLabPinning(item);
@@ -123,17 +123,26 @@ export function ObservationResultRow({
                   </p>
                 </div>
                 {/* Value string */}
-                <div
-                  className={`col-span-2 flex self-center text-sm ${
-                    isOutOfRangeResult(item) && 'text-red-700'
-                  }`}
-                >
-                  {getValueQuantity(item) !== undefined
-                    ? `  ${getValueQuantity(item)}`
-                    : ''}
-                  {getValueUnit(item)}
-                  {getInterpretationText(item) ||
-                    (getValueString(item) && `${getValueString(item)}`)}
+                <div className={`col-span-2 flex flex-col self-center`}>
+                  <span
+                    className={`text-sm ${
+                      isOutOfRangeResult(item) && 'text-red-700'
+                    }`}
+                  >
+                    {getValueQuantity(item) !== undefined
+                      ? `  ${getValueQuantity(item)}`
+                      : ''}
+                    <span className={`pl-1 inline text-xs font-light`}>
+                      {getValueUnit(item)}
+                    </span>
+                  </span>
+
+                  <p
+                    className={`text-xs font-light ${isOutOfRangeResult(item) ? 'text-red-700' : 'text-primary-700'}`}
+                  >
+                    {getInterpretationText(item) ||
+                      (getValueString(item) && `${getValueString(item)}`)}
+                  </p>
                 </div>
                 {/* Graphing button */}
                 <div className="flex-rows col-span-1 flex items-end justify-end align-middle">
@@ -217,7 +226,7 @@ export function ObservationResultRow({
                             <p className="">
                               {format(
                                 parseISO(rl.metadata?.date || ''),
-                                'MM/dd/yyyy'
+                                'MM/dd/yyyy',
                               )}
                             </p>
                             <p className="text-xs font-light text-gray-600">
@@ -232,11 +241,17 @@ export function ObservationResultRow({
                             }`}
                           >
                             <p>
-                              {getValueQuantity(rl) !== undefined
-                                ? `  ${getValueQuantity(rl)}`
+                              {getValueQuantity(item) !== undefined
+                                ? `  ${getValueQuantity(item)}`
                                 : ''}
-                              {getValueUnit(rl)}{' '}
-                              {getInterpretationText(rl) || getValueString(rl)}
+                              {getValueUnit(item)}
+                            </p>
+                            <p
+                              className={`text-xs font-light ${isOutOfRangeResult(item) ? 'text-red-700' : 'text-primary-700'}`}
+                            >
+                              {getInterpretationText(item) ||
+                                (getValueString(item) &&
+                                  `${getValueString(item)}`)}
                             </p>
                           </div>
                         </Fragment>
@@ -311,23 +326,23 @@ function HistoricalRelatedLabsChart({
       [
         'x',
         ...relatedLabs.map((rl) =>
-          format(parseISO(rl.metadata?.date || ''), 'yyyy-MM-dd')
+          format(parseISO(rl.metadata?.date || ''), 'yyyy-MM-dd'),
         ),
       ],
     ],
-    [chartDisplayName, relatedLabs]
+    [chartDisplayName, relatedLabs],
   );
   const chartMin = useMemo(
     () =>
       Math.min(
         ...(relatedLabs.map((rl) =>
-          (getReferenceRangeLow(rl)?.value || Math.max) >
-          (getValueQuantity(rl) || Math.max)
+          (getReferenceRangeLow(rl)?.value || Number.MAX_SAFE_INTEGER) >
+          (getValueQuantity(rl) || Number.MAX_SAFE_INTEGER)
             ? getValueQuantity(rl)
-            : getReferenceRangeLow(rl)?.value
-        ) as number[])
+            : getReferenceRangeLow(rl)?.value,
+        ) as number[]),
       ),
-    [relatedLabs]
+    [relatedLabs],
   );
   const chartOptions: ChartOptions = useMemo(() => {
     return {
@@ -406,7 +421,7 @@ function GeneratePathLine(valueArr: number[]) {
 export function NormalizePathLine(
   valueArr: number[],
   rangeMin?: number,
-  rangeMax?: number
+  rangeMax?: number,
 ) {
   let min = Math.min(...valueArr);
   let max = Math.max(...valueArr);
@@ -431,15 +446,15 @@ export function NormalizePathLine(
     minLine: rangeMin
       ? GeneratePathLine(
           Array(normalized.length).fill(
-            20 - ((rangeMin - min) / (max - min)) * 20
-          )
+            20 - ((rangeMin - min) / (max - min)) * 20,
+          ),
         )
       : '',
     maxLine: rangeMax
       ? GeneratePathLine(
           Array(normalized.length).fill(
-            20 - ((rangeMax - min) / (max - min)) * 20
-          )
+            20 - ((rangeMax - min) / (max - min)) * 20,
+          ),
         )
       : '',
   };
@@ -465,14 +480,14 @@ const closeXSvg = (
 );
 
 function useLabPinning(
-  item: ClinicalDocument<BundleEntry<Observation>>
+  item: ClinicalDocument<BundleEntry<Observation>>,
 ): [isPinned: boolean, handleTogglePin: () => void] {
   const user = useUser();
   const db = useRxDb();
   const summaryPagePreferencesDoc = useSummaryPagePreferences(user.id);
   const pinnedSet = useMemo(
     () => new Set(summaryPagePreferencesDoc?.pinned_labs || []),
-    [summaryPagePreferencesDoc?.pinned_labs]
+    [summaryPagePreferencesDoc?.pinned_labs],
   );
   const [isPinned, setIsPinned] = useState<boolean>(pinnedSet.has(item.id!));
   const handleTogglePin = useCallback(() => {
@@ -540,7 +555,7 @@ function useRelatedLoincLabs(loinc: string[]) {
             new Date(a.get('metadata.date') || '') <
             new Date(b.get('metadata.date') || '')
               ? -1
-              : 1
+              : 1,
           ) as unknown as RxDocument<
             ClinicalDocument<BundleEntry<Observation>>
           >[];
