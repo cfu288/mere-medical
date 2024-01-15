@@ -68,6 +68,7 @@ export function useRelatedDocuments({
           selector: {
             user_id: user.id,
             'metadata.id': { $in: listToQuery },
+            // 'metadata.id': { $in: listToQuery },
           },
         })
         .exec()

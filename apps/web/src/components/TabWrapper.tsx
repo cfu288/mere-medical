@@ -18,6 +18,7 @@ import { useUser } from './providers/UserProvider';
 import { TimelineTab } from '../pages/TimelineTab';
 import CernerRedirect from '../pages/CernerRedirect';
 import VeradigmRedirect from '../pages/VeradigmRedirect';
+import VARedirect from '../pages/VARedirect';
 
 export function TabWrapper() {
   const user = useUser();
@@ -40,6 +41,7 @@ export function TabWrapper() {
             path={AppRoutes.VeradigmCallback}
             element={<VeradigmRedirect />}
           />
+          <Route path={AppRoutes.VACallback} element={<VARedirect />} />
           <Route path="*" element={<Navigate to={AppRoutes.Timeline} />} />
         </Routes>
       </div>

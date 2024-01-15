@@ -1,7 +1,12 @@
 import { BaseDocument } from '../BaseDocument';
 import { TDateISO } from '../clinical-document/Date';
 
-export type ConnectionSources = 'epic' | 'onpatient' | 'cerner' | 'veradigm';
+export type ConnectionSources =
+  | 'epic'
+  | 'onpatient'
+  | 'cerner'
+  | 'veradigm'
+  | 'va';
 
 export interface ConnectionDocument extends BaseDocument {
   user_id: string;
@@ -30,6 +35,18 @@ export interface CernerConnectionDocument extends ConnectionDocument {
   auth_uri: string | Location; // the OAuth authorization url
   token_uri: string | Location; // the OAuth token url
 }
+
+export interface VAConnectionDocument extends ConnectionDocument {
+  id_token: string; // An OAuth ID token
+  auth_uri: string; // the OAuth authorization url
+  token_uri: string; // the OAuth token url
+  patient: string; // A patient identifier
+}
+
+export type CreateVAConnectionDocument = Omit<
+  VAConnectionDocument,
+  'last_refreshed' | 'last_sync_attempt' | 'last_sync_was_error'
+>;
 
 export type CreateCernerConnectionDocument = Omit<
   CernerConnectionDocument,

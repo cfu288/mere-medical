@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ConnectionDocument,
   ConnectionSources,
@@ -8,6 +8,7 @@ import onpatientLogo from '../../img/onpatient-logo.jpeg';
 import epicLogo from '../../img/MyChartByEpic.png';
 import cernerLogo from '../../img/cerner-logo.png';
 import allscriptsConnectLogo from '../../img/allscripts-logo.png';
+import vaLogo from '../../img/va-logo.png';
 import { differenceInDays, format, parseISO } from 'date-fns';
 import { RxDocument } from 'rxdb';
 import { useNotificationDispatch } from '../providers/NotificationProvider';
@@ -40,6 +41,9 @@ function getImage(logo: ConnectionSources) {
     }
     case 'veradigm': {
       return allscriptsConnectLogo;
+    }
+    case 'va': {
+      return vaLogo;
     }
     default: {
       return undefined;
@@ -107,6 +111,23 @@ export function ConnectionCard({
     }, [baseUrl, db, item, syncD, userPreferences]);
 
   const [showModal, setShowModal] = useState(false);
+  const [showPeriodText, setShowPeriodText] = useState('...');
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (syncing) {
+      interval = setInterval(() => {
+        if (showPeriodText === '...') {
+          setShowPeriodText('.');
+        } else if (showPeriodText === '.') {
+          setShowPeriodText('..');
+        } else if (showPeriodText === '..') {
+          setShowPeriodText('...');
+        }
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [showPeriodText, syncing]);
 
   return (
     <li
@@ -142,9 +163,12 @@ export function ConnectionCard({
             </div>
           ) : (
             <p className="mt-1 truncate text-sm font-medium text-gray-700">
-              Connected
-              {item.get('last_refreshed') &&
-                formatConnectedTimestampText(item.get('last_refreshed'))}
+              {syncing
+                ? `Syncing now${showPeriodText}`
+                : `Connected ${
+                    item.get('last_refreshed') &&
+                    formatConnectedTimestampText(item.get('last_refreshed'))
+                  }`}
             </p>
           )}
         </div>
@@ -184,9 +208,9 @@ export function ConnectionCard({
             <button
               disabled={syncing}
               className="-ml-px flex flex-initial divide-x divide-gray-800 px-4 disabled:bg-slate-50"
-              onClick={() => {
+              onClick={async () => {
                 setTenantUrlBySource(item);
-                window.location = getLoginUrlBySource(item);
+                window.location = await getLoginUrlBySource(item);
               }}
             >
               <div className="relative inline-flex h-full flex-initial items-center justify-center rounded-br-lg border border-transparent py-4 text-sm font-bold text-red-500 hover:text-gray-700">

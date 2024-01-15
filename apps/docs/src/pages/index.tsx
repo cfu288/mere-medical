@@ -191,14 +191,6 @@ export default function Home() {
           property="og:description"
           content="Manage all of your medical records in one place. Mere is a personal health record that syncs your records across hospital systems for you. Open-source, self-hostable, and offline-first"
         />
-        {process.env.NODE_ENV === 'production' && (
-          <script
-            async
-            defer
-            data-website-id="923df902-e3c6-4d55-8c84-51cd5881ed81"
-            src="https://umami.mari.casa/umami.js"
-          ></script>
-        )}
       </Head>
       <NavigationBar />
       <main className="relative overflow-x-hidden overflow-y-hidden bg-white">

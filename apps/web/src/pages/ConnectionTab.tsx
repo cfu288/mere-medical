@@ -1,36 +1,21 @@
-import { useCallback, useState } from 'react';
-import * as OnPatient from '../services/OnPatient';
-import { GenericBanner } from '../components/GenericBanner';
-import { ConnectionCard } from '../components/connection/ConnectionCard';
-import {
-  EpicLocalStorageKeys,
-  getLoginUrl as getEpicLoginUrl,
-} from '../services/Epic';
-import {
-  CernerLocalStorageKeys,
-  getLoginUrl as getCernerLoginUrl,
-} from '../services/Cerner';
+import React, { useCallback, useState } from 'react';
+import { RxDocument } from 'rxdb';
 
 import { AppPage } from '../components/AppPage';
-import { useUserPreferences } from '../components/providers/UserPreferencesProvider';
-import { Routes } from '../Routes';
-import { Link } from 'react-router-dom';
-import {
-  VeradigmLocalStorageKeys,
-  getLoginUrl as getVeradigmLoginUrl,
-} from '../services/Veradigm';
+import { ConnectionCard } from '../components/connection/ConnectionCard';
+import { EMRVendor, TenantSelectModal } from '../components/connection/TenantSelectModal';
+import { GenericBanner } from '../components/GenericBanner';
 import { useConnectionCards } from '../components/hooks/useConnectionCards';
 import { ConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
-import { RxDocument } from 'rxdb';
-import React from 'react';
-import {
-  EMRVendor,
-  TenantSelectModal,
-} from '../components/connection/TenantSelectModal';
+import { CernerLocalStorageKeys, getLoginUrl as getCernerLoginUrl } from '../services/Cerner';
+import { EpicLocalStorageKeys, getLoginUrl as getEpicLoginUrl } from '../services/Epic';
+import * as OnPatient from '../services/OnPatient';
+import { getLoginUrl as getVaLoginUrl } from '../services/VA';
+import { getLoginUrl as getVeradigmLoginUrl, VeradigmLocalStorageKeys } from '../services/Veradigm';
 
-export function getLoginUrlBySource(
+export async function getLoginUrlBySource(
   item: RxDocument<ConnectionDocument>
-): string & Location {
+): Promise<string & Location> {
   switch (item.get('source')) {
     case 'epic': {
       let baseUrl = item.get('location');
@@ -50,13 +35,20 @@ export function getLoginUrlBySource(
       );
     }
     case 'cerner': {
-      return getCernerLoginUrl(item.get('location'), item.get('auth_uri'));
+      return Promise.resolve(
+        getCernerLoginUrl(item.get('location'), item.get('auth_uri'))
+      );
     }
     case 'veradigm': {
-      return getVeradigmLoginUrl(item.get('location'), item.get('auth_uri'));
+      return Promise.resolve(
+        getVeradigmLoginUrl(item.get('location'), item.get('auth_uri'))
+      );
     }
     case 'onpatient': {
-      return OnPatient.getLoginUrl();
+      return Promise.resolve(OnPatient.getLoginUrl());
+    }
+    case 'va': {
+      return getVaLoginUrl();
     }
     default: {
       return '' as string & Location;
@@ -208,6 +200,7 @@ const ConnectionTab: React.FC = () => {
       []
     );
 
+
   return (
     <AppPage banner={<GenericBanner text="Add Connections" />}>
       <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 sm:px-6 lg:px-8">
@@ -229,6 +222,13 @@ const ConnectionTab: React.FC = () => {
             />
           ))}
         </ul>
+        {/* <div className="mb-4 box-border	flex w-full justify-center align-middle">
+          <a href={vaUrl} className="w-full">
+            <button className="bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-[98%] w-full rounded-lg p-4 text-white duration-75">
+              <p className="font-bold">Log in to the VA</p>
+            </button>
+          </a>
+        </div> */}
         <div className="mb-4 box-border	flex w-full justify-center align-middle">
           <button
             className="bg-primary hover:bg-primary-600 active:bg-primary-700 w-full rounded-lg p-4 text-white duration-75 active:scale-[98%]"
@@ -237,38 +237,6 @@ const ConnectionTab: React.FC = () => {
             <p className="font-bold">Add a new connection</p>
           </button>
         </div>
-
-        {/* <div className="mb-4 box-border	flex w-full justify-center align-middle">
-          {userPreferences?.use_proxy ? (
-            <a
-              href={onpatientLoginUrl}
-              className=" bg-primary hover:bg-primary-600 active:bg-primary-700 w-full rounded-lg p-4 text-center text-white duration-75 active:scale-[98%]"
-            >
-              <button>
-                <p className="font-bold">Log in to OnPatient</p>
-              </button>
-            </a>
-          ) : (
-            <div className="mb-4 flex w-full flex-col items-center">
-              <button
-                disabled
-                className="w-full rounded-lg p-4 text-center text-white disabled:bg-gray-300"
-              >
-                <p className="font-bold">Log in to OnPatient</p>
-              </button>
-              <p className="pt-2">
-                To log in with OnPatient, go to{' '}
-                <Link
-                  className="text-primary hover:text-primary-500 w-full text-center underline"
-                  to={`${Routes.Settings}#use_proxy`}
-                >
-                  the settings page
-                </Link>{' '}
-                and enable the <code>use proxy</code> setting.
-              </p>
-            </div>
-          )}
-        </div> */}
       </div>
       <TenantSelectModal
         open={openSelectModal}
