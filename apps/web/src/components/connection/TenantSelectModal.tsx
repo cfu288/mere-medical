@@ -265,7 +265,7 @@ export function TenantSelectModal({
                             type="button"
                             className="absolute inset-0 focus:outline-none"
                           >
-                            <span className="sr-only">Select {file.title}</span>
+                            <span className="sr-only">{`Select ${file.title}`}</span>
                           </button>
                         </div>
                         <p className="pointer-events-none mt-2 block truncate text-sm font-medium text-gray-900">
@@ -322,7 +322,7 @@ export function TenantSelectModal({
                             type="button"
                             className="absolute inset-0 focus:outline-none"
                           >
-                            <span className="sr-only">Select {file.title}</span>
+                            <span className="sr-only">{`Select ${file.title}`}</span>
                           </button>
                         </div>
                         <p className="pointer-events-none mt-2 block truncate text-sm font-medium text-gray-900">
