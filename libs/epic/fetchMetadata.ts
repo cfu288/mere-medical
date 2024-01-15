@@ -20,11 +20,13 @@ import chalk from 'chalk';
       id: string;
       name: string;
       url: string;
+      managingOrganization: string;
     }[] = data?.entry.map((i: any) => {
       return {
         id: i.resource?.id,
         name: i.resource?.name,
         url: i.resource?.address,
+        managingOrganization: i.resource?.managingOrganization?.reference,
       };
     });
 
@@ -36,6 +38,7 @@ import chalk from 'chalk';
       id: string;
       name: string;
       url: string;
+      managingOrganization: string;
     }) => {
       const meta_url = `${item.url}metadata`;
       const res = await (
@@ -58,7 +61,7 @@ import chalk from 'chalk';
         )?.[0]?.valueUri,
         manage = sec_ext.filter(
           (x: { url: string & Location }) => x.url === 'manage'
-        )?.[0]?.valueUri;
+        )?.[0]?.valueUrik;
 
       console.log('- ' + meta_url);
       return {
@@ -69,6 +72,7 @@ import chalk from 'chalk';
         authorize,
         introspect,
         manage,
+        managingOrganization: item.managingOrganization,
       };
     };
 
@@ -104,8 +108,8 @@ import chalk from 'chalk';
 
       // add sandbox
       results.push({
-        id: 'sandbox',
-        name: 'Sandbox',
+        id: 'sandbox_epic',
+        name: 'Epic MyChart Sandbox',
         url: 'https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/DSTU2/',
         token: 'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/token',
         authorize:

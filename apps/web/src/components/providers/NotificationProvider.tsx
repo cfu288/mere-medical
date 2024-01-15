@@ -7,7 +7,15 @@ import { useEffect } from 'react';
 type NotificationType = 'error' | 'success' | 'info';
 
 type Action =
-  | { type: 'set_notification'; message: string; variant: NotificationType }
+  | {
+      type: 'set_notification';
+      message: string;
+      variant: NotificationType;
+      button?: {
+        action: () => void;
+        text: string;
+      };
+    }
   | { type: 'hide_notification' };
 
 type Dispatch = (action: Action) => void;
@@ -16,6 +24,10 @@ export type NotificationData = {
   message?: string;
   showNotification: boolean;
   variant: NotificationType;
+  button?: {
+    action: () => void;
+    text: string;
+  };
 };
 
 type NotificationProviderProps = {
@@ -36,6 +48,7 @@ function notificationReducer(state: NotificationData, action: Action) {
         showNotification: true,
         message: action.message,
         variant: action.variant,
+        button: action.button,
       };
     }
     case 'hide_notification': {
@@ -108,14 +121,11 @@ function NotificationRenderer(
                         {props.data.message}
                       </p>
                     )}
-                    {/* <p className="mt-1 text-sm text-gray-500">
-                      Anyone with a link can now view this file.
-                    </p> */}
                   </div>
                   <div className="ml-4 flex flex-shrink-0">
                     <button
                       type="button"
-                      className="focus:ring-primary-700 inline-flex rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                      className="focus:ring-primary-700 inline-flex rounded-md bg-white text-gray-400 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2"
                       onClick={() => {
                         dispatch({ type: 'hide_notification' });
                       }}
@@ -125,6 +135,20 @@ function NotificationRenderer(
                     </button>
                   </div>
                 </div>
+                {props.data.button && (
+                  <div className="mt-4 w-full">
+                    <button
+                      type="button"
+                      className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 w-full rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
+                      onClick={() => {
+                        props.data.button!.action();
+                        dispatch({ type: 'hide_notification' });
+                      }}
+                    >
+                      {props.data.button!.text || 'Ok'}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </Transition>

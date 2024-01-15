@@ -21,7 +21,7 @@ export function DeveloperSettingsGroup() {
       <button
         className="bg-primary-500 hover:bg-primary-700 rounded px-4 py-2 font-bold text-white"
         onClick={() => {
-          window.location.reload();
+          window.location.replace(window.location.href);
         }}
       >
         Refresh

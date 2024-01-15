@@ -2,12 +2,12 @@ import React from 'react';
 
 export function SkeletonSearchBar() {
   return (
-    <div className="mt-4 mb-1 w-full sm:mt-6">
+    <div className="mb-1 mt-4 w-full sm:mt-6">
       <div className="relative flex items-center">
         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 ">
           <svg
             aria-hidden="true"
-            className="h-5 w-5 text-gray-500 dark:text-gray-400"
+            className="h-5 w-5 text-gray-700 dark:text-gray-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"

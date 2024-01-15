@@ -49,10 +49,10 @@ export class ProxyService {
       );
       // Temp workaround for sandbox
       const isSandbox =
-        serviceId === 'sandbox' ||
+        serviceId === 'sandbox_epic' ||
         serviceId === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354';
       if (isSandbox) {
-        serviceId = 'sandbox';
+        serviceId = 'sandbox_epic';
       }
 
       if (services.has(serviceId) || isSandbox) {

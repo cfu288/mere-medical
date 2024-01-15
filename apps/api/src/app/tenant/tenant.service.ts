@@ -12,40 +12,54 @@ import {
   DSTU2Endpoint as VeradigmDSTU2Endpoint,
 } from '@mere/veradigm';
 
-type DSTU2Endpoint = CernerDSTU2Endpoint &
+type UnifiedDSTU2Endpoint = CernerDSTU2Endpoint &
   EpicDSTU2Endpoint &
   VeradigmDSTU2Endpoint & { vendor: 'EPIC' | 'CERNER' | 'VERADIGM' };
 
 const searchItems = []
   .concat(
-    (EpicDSTU2TenantEndpoints as unknown as DSTU2Endpoint[]).map((i) => {
+    (EpicDSTU2TenantEndpoints as unknown as UnifiedDSTU2Endpoint[]).map((i) => {
       i.vendor = 'EPIC';
       return i;
     })
   )
   .concat(
-    (CernerDSTU2TenantEndpoints as unknown as DSTU2Endpoint[]).map((i) => {
-      i.vendor = 'CERNER';
-      return i;
-    })
+    (CernerDSTU2TenantEndpoints as unknown as UnifiedDSTU2Endpoint[]).map(
+      (i) => {
+        i.vendor = 'CERNER';
+        return i;
+      }
+    )
   )
   .concat(
-    (VeradigmDSTU2TenantEndpoints as unknown as DSTU2Endpoint[]).map((i) => {
-      i.vendor = 'VERADIGM';
-      return i;
-    })
+    (VeradigmDSTU2TenantEndpoints as unknown as UnifiedDSTU2Endpoint[]).map(
+      (i) => {
+        i.vendor = 'VERADIGM';
+        return i;
+      }
+    )
   );
 
 @Injectable()
 export class TenantService {
   private readonly items = searchItems;
 
-  async queryTenants(query: string): Promise<DSTU2Endpoint[]> {
-    return filteredItemsWithQuery(this.items, query);
+  async queryTenants(
+    query: string,
+    vendors: string[]
+  ): Promise<UnifiedDSTU2Endpoint[]> {
+    return filteredItemsWithQuery(this.items, query, vendors);
   }
 }
 
-function filteredItemsWithQuery(items: DSTU2Endpoint[], query: string) {
+function filteredItemsWithQuery(
+  items: UnifiedDSTU2Endpoint[],
+  query: string,
+  vendors?: string[] | string
+) {
+  if (vendors && vendors.length) {
+    items = items.filter((item) => [...vendors].includes(item.vendor));
+  }
   if (query === '' || query === undefined) {
     return items.sort((x, y) => (x.name > y.name ? 1 : -1)).slice(0, 100);
   }

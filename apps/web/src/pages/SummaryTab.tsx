@@ -333,98 +333,120 @@ function SummaryTab() {
   const [{ meds, cond, imm, careplan, allergy, pinned, initialized }] =
     useSummaryData();
 
-  return (
-    <AppPage banner={<GenericBanner text="Summary" />}>
-      {!initialized ? (
-        <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pb-20 pt-2 sm:px-6 sm:pb-6 lg:px-8">
-          <SkeletonListCard />
-          <SkeletonListCard />
-          <SkeletonListCard />
-        </div>
-      ) : (
+  if (!initialized) {
+    return (
+      <AppPage banner={<GenericBanner text="Summary" />}>
         <div
           className={
             'mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pb-20 pt-2 lg:px-8' +
             'sm:mx-0 sm:grid sm:grid-cols-6 sm:pb-6'
           }
         >
-          {meds.length === 0 &&
-          cond.length === 0 &&
-          imm.length === 0 &&
-          careplan.length === 0 &&
-          allergy.length === 0 &&
-          pinned.length === 0 ? (
-            <div className="col-span-6 sm:col-span-3 ">
-              <EmptyRecordsPlaceholder />
+          <div className="col-span-6 sm:col-span-3">
+            <SkeletonListCard />
+          </div>
+          <div className="col-span-6 sm:col-span-3">
+            <SkeletonListCard />
+          </div>
+          <div className="col-span-6 sm:col-span-3">
+            <SkeletonListCard />
+          </div>
+          <div className="col-span-6 sm:col-span-3">
+            <SkeletonListCard />
+          </div>
+        </div>
+      </AppPage>
+    );
+  }
+
+  if (
+    meds.length === 0 &&
+    cond.length === 0 &&
+    imm.length === 0 &&
+    careplan.length === 0 &&
+    allergy.length === 0 &&
+    pinned.length === 0
+  ) {
+    return (
+      <AppPage banner={<GenericBanner text="Summary" />}>
+        <EmptyRecordsPlaceholder />
+      </AppPage>
+    );
+  }
+
+  return (
+    <AppPage banner={<GenericBanner text="Summary" />}>
+      <div
+        className={
+          'mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pb-20 pt-2 lg:px-8' +
+          'sm:mx-0 sm:grid sm:grid-cols-6 sm:pb-6'
+        }
+      >
+        <>
+          {pinned.length === 0 ? (
+            <div className="col-span-6 sm:col-span-3">
+              <Disclosure defaultOpen={true}>
+                {({ open }) => (
+                  <>
+                    <Disclosure.Button className="w-full font-bold">
+                      <div className="flex w-full items-center justify-between py-6 text-xl font-extrabold">
+                        Bookmarked Labs
+                        <ChevronDownIcon
+                          className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 ${
+                            open ? 'rotate-180 transform ' : ''
+                          }`}
+                        />
+                      </div>
+                    </Disclosure.Button>
+                    <Disclosure.Panel>
+                      <CardBase>
+                        <div className="min-w-0 flex-1">
+                          <div className="py-2">
+                            <p className="text-sm font-bold text-gray-900 md:text-base">
+                              Your bookmarked labs will show up here.
+                            </p>
+                            <TimelineCardSubtitile
+                              truncate={false}
+                              variant="dark"
+                            >
+                              You can bookmark labs by clicking the bookmark
+                              icon{' '}
+                              <span className="inline-flex">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth="1.5"
+                                  stroke="currentColor"
+                                  className="h-2 w-2"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z"
+                                  />
+                                </svg>
+                              </span>{' '}
+                              next to any lab on the timeline page.
+                            </TimelineCardSubtitile>
+                          </div>
+                        </div>
+                      </CardBase>
+                    </Disclosure.Panel>
+                  </>
+                )}
+              </Disclosure>
             </div>
           ) : (
-            <>
-              {pinned.length === 0 ? (
-                <div className="col-span-6 sm:col-span-3 ">
-                  <Disclosure defaultOpen={true}>
-                    {({ open }) => (
-                      <>
-                        <Disclosure.Button className="w-full font-bold">
-                          <div className="flex w-full items-center justify-between py-6 text-xl font-extrabold">
-                            Bookmarked Labs
-                            <ChevronDownIcon
-                              className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 ${
-                                open ? 'rotate-180 transform ' : ''
-                              }`}
-                            />
-                          </div>
-                        </Disclosure.Button>
-                        <Disclosure.Panel>
-                          <CardBase>
-                            <div className="min-w-0 flex-1">
-                              <div className="py-2">
-                                <p className="text-sm font-bold text-gray-900 md:text-base">
-                                  Your bookmarked labs will show up here.
-                                </p>
-                                <TimelineCardSubtitile
-                                  truncate={false}
-                                  variant="dark"
-                                >
-                                  You can bookmark labs by clicking the bookmark
-                                  icon{' '}
-                                  <span className="inline-flex">
-                                    <svg
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      fill="none"
-                                      viewBox="0 0 24 24"
-                                      strokeWidth="1.5"
-                                      stroke="currentColor"
-                                      className="h-2 w-2"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z"
-                                      />
-                                    </svg>
-                                  </span>{' '}
-                                  next to any lab on the timeline page.
-                                </TimelineCardSubtitile>
-                              </div>
-                            </div>
-                          </CardBase>
-                        </Disclosure.Panel>
-                      </>
-                    )}
-                  </Disclosure>
-                </div>
-              ) : (
-                <PinnedListCard items={pinned} />
-              )}
-              <MedicationsListCard items={meds} />
-              <ConditionsListCard items={cond} />
-              <ImmunizationListCard items={imm} />
-              <CarePlanListCard items={careplan} />
-              <AllergyIntoleranceListCard items={allergy} />
-            </>
+            <PinnedListCard items={pinned} />
           )}
-        </div>
-      )}
+        </>
+        <MedicationsListCard items={meds} />
+        <ConditionsListCard items={cond} />
+        <ImmunizationListCard items={imm} />
+        <CarePlanListCard items={careplan} />
+        <AllergyIntoleranceListCard items={allergy} />
+      </div>
     </AppPage>
   );
 }

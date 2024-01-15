@@ -65,7 +65,7 @@ export function ImmunizationListCard({
                       <p className="text-sm font-bold text-gray-900 md:text-base">
                         {item?.[0].metadata?.display_name}
                       </p>
-                      <ul className="truncate pl-2 text-sm font-medium text-gray-500">
+                      <ul className="truncate pl-2 text-sm font-medium text-gray-700">
                         {item.map((x) => (
                           <li key={x.id}>
                             {`• ${

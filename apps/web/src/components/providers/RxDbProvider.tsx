@@ -221,9 +221,16 @@ export async function initEncryptedRxDb(password: string) {
 export async function getInternalLokiStorage(
   db: RxDatabase<DatabaseCollections>
 ) {
-  const internalDb = ((await db.internalStore.internals) as any)
-    ?.localState as Promise<any>;
-  return (await internalDb).databaseState.database as Loki;
+  try {
+    const internalDb = ((await db.internalStore.internals) as any)
+      ?.localState as Promise<any>;
+    console.log(await db.internalStore.internals);
+    return (await internalDb).databaseState.database as Loki;
+  } catch (e) {
+    throw Error(
+      'There was an error with updating encrypted database. If you have multiple tabs of Mere open, please close the other ones and try again.'
+    );
+  }
 }
 
 export async function getStorageAdapter(db: RxDatabase<DatabaseCollections>) {
@@ -344,7 +351,7 @@ export function RxDbProvider(props: RxDbProviderProps) {
                     alt="Mere Logo"
                   />
                 </div>
-                <div className="mx-4 mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
+                <div className="sm:max-w-[480px] mx-4 mt-10 sm:mx-auto sm:w-full">
                   <div className="rounded-md bg-white px-6 pb-10 pt-2 shadow-md sm:mx-4">
                     <h2 className="my-6 text-center text-xl font-semibold text-gray-700">
                       Enter your encryption password

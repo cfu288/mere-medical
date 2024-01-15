@@ -45,7 +45,7 @@ export function TabWrapper() {
           <Route path="*" element={<Navigate to={AppRoutes.Timeline} />} />
         </Routes>
       </div>
-      <div className="flex-0 md:bg-primary-800 absolute bottom-0 left-0 z-20 w-full bg-slate-50 md:relative md:bottom-auto md:top-0 md:h-full md:w-auto">
+      <div className="flex-0 md:bg-primary-800 absolute bottom-0 left-0 z-20 w-full bg-slate-100 md:relative md:bottom-auto md:top-0 md:h-full md:w-auto">
         <div className="pb-safe mx-auto flex w-full max-w-3xl justify-around md:h-full md:w-64 md:flex-col md:justify-start">
           <img
             src={logo}
@@ -79,7 +79,7 @@ export function TabWrapper() {
                 <div className="inline-block h-10 w-10 rounded-full border-2 border-white bg-slate-100">
                   {user.profile_picture?.data === undefined ? (
                     <svg
-                      className="h-full w-full rounded-full text-gray-500"
+                      className="h-full w-full rounded-full text-gray-700"
                       fill="currentColor"
                       viewBox="0 0 24 24"
                     >

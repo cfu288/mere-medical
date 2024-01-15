@@ -102,7 +102,7 @@ async function getFHIRResource<T extends FhirResource>(
     Config.PUBLIC_URL,
     '/api/proxy',
     `?serviceId=${
-      epicId === Config.EPIC_SANDBOX_CLIENT_ID ? 'sandbox' : epicId
+      epicId === Config.EPIC_SANDBOX_CLIENT_ID ? 'sandbox_epic' : epicId
     }`,
     `&target=${encodeURIComponent(
       `${fhirResourceUrl}?${new URLSearchParams(params)}`
@@ -430,7 +430,8 @@ async function fetchAttachmentData(
     const defaultUrl = url;
     const proxyUrlExtension = url.replace(baseUrl, '');
     const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${
-      epicId === 'sandbox' || epicId === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354'
+      epicId === 'sandbox_epic' ||
+      epicId === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354'
         ? Config.EPIC_SANDBOX_CLIENT_ID
         : epicId
     }&target=${`${encodeURIComponent(proxyUrlExtension)}&target_type=base`}`;
@@ -481,7 +482,8 @@ export async function fetchAccessTokenWithCode(
   const body = new URLSearchParams({
     grant_type: 'authorization_code',
     client_id: `${
-      epicId === 'sandbox' || epicId === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354'
+      epicId === 'sandbox_epic' ||
+      epicId === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354'
         ? Config.EPIC_SANDBOX_CLIENT_ID
         : Config.EPIC_CLIENT_ID
     }`,
@@ -521,7 +523,8 @@ export async function registerDynamicClient({
   const validJWKS = jsonWebKeySet as JsonWebKeyWKid;
   const request: EpicDynamicRegistrationRequest = {
     software_id:
-      epicId === 'sandbox' || epicId === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354'
+      epicId === 'sandbox_epic' ||
+      epicId === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354'
         ? Config.EPIC_SANDBOX_CLIENT_ID
         : Config.EPIC_CLIENT_ID,
     jwks: {

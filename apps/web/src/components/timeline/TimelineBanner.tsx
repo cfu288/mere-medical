@@ -20,7 +20,7 @@ export function TimelineBanner({
               ></img>
             ) : (
               <svg
-                className="h-full w-full rounded-full text-gray-500"
+                className="h-full w-full rounded-full text-gray-700"
                 fill="currentColor"
                 viewBox="0 0 24 24"
               >

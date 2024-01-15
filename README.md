@@ -94,7 +94,7 @@ services:
 2. Set up NPM and install NPM packages
 
    ```sh
-   nvm install v18.10.0
+   nvm install v20.11.0
    nvm use
    npm install
    ```
