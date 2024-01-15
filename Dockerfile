@@ -1,4 +1,4 @@
-FROM node:18.10.0 as build-api-stage
+FROM node:20.11.0 as build-api-stage
 
 WORKDIR /app
 COPY package*.json /app/
@@ -11,7 +11,7 @@ RUN npm prune --production
 RUN node-prune
 
 
-FROM node:18.10.0 as build-web-base
+FROM node:20.11.0 as build-web-base
 
 WORKDIR /app
 COPY package*.json /app/
@@ -20,7 +20,7 @@ COPY ./ /app/
 COPY ./nginx.conf /nginx.conf
 
 
-FROM node:18.10.0 as build-web-stage
+FROM node:20.11.0 as build-web-stage
 
 COPY --from=build-web-base . .
 WORKDIR /app
