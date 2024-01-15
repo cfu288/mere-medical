@@ -119,7 +119,7 @@ function HandleInitalSync({ children }: PropsWithChildren) {
     conList = useConnectionCards(),
     db = useRxDb(),
     isDemo = Config.IS_DEMO === 'enabled',
-    currentlyRunning = useRef(false),
+    currentSyncJobLength = Object.keys(sync).length,
     syncJobEntries = useMemo(() => new Set(Object.keys(sync)), [sync]),
     handleFetchData = useCallback(
       (item: RxDocument<ConnectionDocument>) => {
@@ -151,12 +151,12 @@ function HandleInitalSync({ children }: PropsWithChildren) {
 
   useEffect(() => {
     if (!isDemo) {
-      console.debug('Current Sync Jobs In Progress: '+ Object.keys(sync).length);
-      if (Object.keys(sync).length === 0) {
+      console.debug('Current Sync Jobs In Progress: '+ currentSyncJobLength);
+      if (currentSyncJobLength === 0) {
         startSyncAllConnections();
       }
     }
-  }, [isDemo, startSyncAllConnections, sync]);
+  }, [isDemo, startSyncAllConnections, currentSyncJobLength]);
 
   return <>{children}</>;
 }

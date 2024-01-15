@@ -11,8 +11,8 @@ import { DSTU2Endpoint as VeradigmDSTU2Endpoint } from '@mere/veradigm';
 
 import VeradigmLogo from '../../img/allscripts-logo.png';
 import CernerLogo from '../../img/cerner-logo.png';
-import EpicLogo from '../../img/mychart-logo.svg';
-import OnpatientLogo from '../../img/onpatient-logo.jpeg';
+import EpicLogo from '../../img/mychart-logo.png';
+import OnpatientLogo from '../../img/onpatient-logo-full.webp';
 import { SelectOption } from '../../pages/ConnectionTab';
 import { Routes } from '../../Routes';
 import * as OnPatient from '../../services/OnPatient';
