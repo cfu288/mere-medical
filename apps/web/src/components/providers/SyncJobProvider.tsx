@@ -200,12 +200,17 @@ function startSyncConnection(
           )}, last sync was an error and was more than a week ago`
         );
         if (!syncJobEntries.has(item.get('id'))) {
-          // Start sync, make sure this only runs once
           // Add a delay to allow other parts of the app to load before starting sync
-          setTimeout(
-            () => handleFetchData(item),
-            1000 + Math.ceil(Math.random() * 300)
-          );
+          setTimeout(() => {
+            if ('requestIdleCallback' in window) {
+              // if requestIdleCallback is available, use it
+              window.requestIdleCallback(() => handleFetchData(item), {
+                timeout: 1000 * 60,
+              });
+            } else {
+              handleFetchData(item);
+            }
+          }, 2000 + Math.ceil(Math.random() * 300));
         }
       }
     } else {
@@ -223,7 +228,7 @@ function startSyncConnection(
           } else {
             handleFetchData(item);
           }
-        }, 1000 + Math.ceil(Math.random() * 300));
+        }, 2000 + Math.ceil(Math.random() * 300));
       }
     }
   } else {
