@@ -45,11 +45,18 @@ export function getValueQuantity(
     item.data_record.raw.resource,
     'valueQuantity.value',
   )?.[0];
-  // if more than 5 sig figs and a decimal is present, return the value to 5 sig figs
-  // if (val && val?.toString().length > 5) {
-  //   return Number.isInteger(val) ? val : val?.toPrecision(5);
-  // }
+
   return val;
+}
+
+function formatValueQuantity(
+  item: ClinicalDocument<BundleEntry<Observation>>,
+): string | undefined {
+  const val: number | undefined = getValueQuantity(item);
+  if (val && val?.toString().length > 5) {
+    return Number.isInteger(val) ? `${val}` : val?.toPrecision(5);
+  }
+  return undefined;
 }
 
 export function getValueString(

@@ -106,15 +106,15 @@ export function PrivacyAndSecuritySettingsGroup() {
                       Use proxy to sync data
                     </Switch.Label>
                     <Switch.Description className="pt-2 text-sm text-gray-800">
-                      Some patient portals disable direct communication from the
-                      Mere app. If your app fails to login or sync data, you can
-                      enable this setting to use a backend proxy to do login and
-                      sync on your behalf.
+                      Some patient portals cannot communicate directly with
+                      Mere. This option enables a seperate proxy service to
+                      handle login and sync for Mere. Disabling this setting
+                      will increase privacy but can break some connections.
                     </Switch.Description>
                     <Switch.Description className="pt-2 text-sm text-gray-800">
                       You should only enable this if you trust the organization
-                      hosting the app, as the proxy will be able to access your
-                      health data.
+                      hosting the app, as the proxy will be able to access all
+                      your health data.
                     </Switch.Description>
                   </div>
                   <Switch
@@ -281,11 +281,13 @@ function PasswordPromptModal({
         use_encrypted_database: false,
       });
 
+      setToggleModal(false);
+
       setTimeout(() => window.location.reload(), 0);
     } catch (e) {
       console.error(e);
     }
-  }, [db, updateLocalConfig]);
+  }, [db, setToggleModal, updateLocalConfig]);
 
   return (
     <Modal open={toggleModal} setOpen={() => setToggleModal(false)}>
@@ -332,11 +334,13 @@ function DatabasePasswordModal({
   setToggleModal: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const [password, setPassword] = useState('');
+  const [isSettingPassword, setIsSettingPassword] = useState(false);
   const updateLocalConfig = useUpdateLocalConfig();
   const db = useRxDb();
 
   const submitPassword = useCallback(
     async (password: string) => {
+      setIsSettingPassword(true);
       // Migrate current RxDB Dexie database to encrypted database, as seen in RxDBProvider.tsx
       // Export current database
       const json = await db.exportJSON();
@@ -372,6 +376,8 @@ function DatabasePasswordModal({
       updateLocalConfig({
         use_encrypted_database: true,
       });
+
+      setIsSettingPassword(true);
 
       setToggleModal(false);
       setTimeout(() => window.location.reload(), 0);
@@ -418,16 +424,19 @@ function DatabasePasswordModal({
         <div className="flex flex-shrink-0 justify-end px-4 py-4">
           <button
             type="button"
-            className="focus:ring-primary-500 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2"
+            disabled={isSettingPassword}
+            className="focus:ring-primary-500 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-gray-300 disabled:text-gray-800"
             onClick={() => setToggleModal(false)}
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 ml-4 inline-flex justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
+            disabled={isSettingPassword}
+            className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 ml-4 inline-flex justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-gray-300 disabled:text-gray-800"
           >
-            Set Password
+            <p className={`${isSettingPassword ? 'mr-2' : ''}`}>Set Password</p>
+            {isSettingPassword && <ButtonLoadingSpinner />}
           </button>
         </div>
       </form>

@@ -1,4 +1,5 @@
 import React, { PropsWithChildren } from 'react';
+import * as Sentry from '@sentry/browser';
 
 export interface ErrorBoundaryState {
   hasError: boolean;
@@ -24,6 +25,7 @@ export class ErrorBoundary extends React.Component<
   override componentDidCatch(error: Error | unknown, errorInfo: unknown) {
     // You can also log the error to an error reporting service
     console.error(error, errorInfo);
+    Sentry.captureException(error);
   }
 
   override render() {
@@ -42,7 +44,7 @@ export class ErrorBoundary extends React.Component<
           <button
             className="bg-primary-500 mt-4 rounded px-4 py-2 text-white"
             onClick={() => {
-              window.location.reload();
+              window.location.replace(window.location.href);
             }}
           >
             Reload

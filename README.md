@@ -168,9 +168,11 @@ services:
 
 ## Design Goals
 
-1. Respect user autonomy/control at all costs. Prioritize privacy/security and UX - if those are in conflict, ask the user what they would prefer but default to security. Be transparent about decisions and data usage.
-2. Where feasible, build features to be local first (run on the users device). This essentially means client side/offline first. Mere's core functionality should continue to work without any internet connection.
-3. For features that cannot be client-side, enable users to self-host server side functionality where feasible. This means that the user should be able to run Mere on their own server and not rely on a third party.
-4. Optionally fall back to third party services when self-hosting is not feasible. Should only apply to features that are not core functionality and should always be opt-in.
+1. Respect user autonomy and user control.
+2. Prioritize privacy/security and UX - if those are in conflict, ask the user what they would prefer but default to security.
+3. Be transparent about decisions on data storage, handling, and usage.
+4. Where feasible, build features to be local first (run on the users device). This essentially means client side/offline first. Mere's core functionality should continue to work without any internet connection.
+5. For features that cannot be client-side, enable users to self-host server side functionality where feasible. This means that the user should be able to run Mere on their own server and not rely on a third party.
+6. Optionally fall back to third party services when self-hosting is not feasible. Should only apply to features that are not core functionality and should always be opt-in.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
