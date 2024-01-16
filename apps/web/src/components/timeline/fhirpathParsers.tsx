@@ -41,14 +41,14 @@ export function getValueUnit(
 export function getValueQuantity(
   item: ClinicalDocument<BundleEntry<Observation>>,
 ): number | undefined {
-  const val = fhirpath.evaluate(
+  const val: number | undefined = fhirpath.evaluate(
     item.data_record.raw.resource,
     'valueQuantity.value',
   )?.[0];
   // if more than 5 sig figs and a decimal is present, return the value to 5 sig figs
-  if (val.toString().length > 5) {
-    return Number.isInteger(val) ? val : val?.toPrecision(5);
-  }
+  // if (val && val?.toString().length > 5) {
+  //   return Number.isInteger(val) ? val : val?.toPrecision(5);
+  // }
   return val;
 }
 
