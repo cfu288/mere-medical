@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-} from 'react';
+import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 import { PropsWithChildren } from 'react';
 import { RxDocument, RxDatabase } from 'rxdb';
 import {
@@ -28,6 +22,7 @@ import Config from '../../environments/config.json';
 import { useUserPreferences } from './UserPreferencesProvider';
 import { useConnectionCards } from '../hooks/useConnectionCards';
 import { refreshVAConnectionTokenIfNeeded } from '../../services/VA';
+import { unstable_useBlocker } from 'react-router-dom';
 
 type SyncJobProviderProps = PropsWithChildren<unknown>;
 
@@ -36,7 +31,7 @@ const SyncJobContext = React.createContext<
 >({});
 
 const SyncJobDispatchContext = React.createContext<Dispatch | undefined>(
-  undefined
+  undefined,
 );
 
 type Action =
@@ -54,10 +49,10 @@ type Dispatch = (action: Action) => void;
 
 const syncJobReducer: (
   state: Record<string, Subject<PromiseSettledResult<void[]>[]>>,
-  action: Action
+  action: Action,
 ) => Record<string, Subject<PromiseSettledResult<void[]>[]>> = (
   state: Record<string, Subject<PromiseSettledResult<void[]>[]>>,
-  action: Action
+  action: Action,
 ) => {
   switch (action.type) {
     case 'add_job': {
@@ -67,8 +62,8 @@ const syncJobReducer: (
           action.connectionDocument,
           action.db,
           action.baseUrl,
-          action.useProxy
-        )
+          action.useProxy,
+        ),
       );
       observable.subscribe(subject);
       return {
@@ -94,7 +89,7 @@ const syncJobReducer: (
 export function SyncJobProvider(props: SyncJobProviderProps) {
   const [state, dispatch] = React.useReducer(
     syncJobReducer,
-    {} as Record<string, Subject<PromiseSettledResult<void[]>[]>>
+    {} as Record<string, Subject<PromiseSettledResult<void[]>[]>>,
   );
 
   return (
@@ -134,24 +129,21 @@ function HandleInitalSync({ children }: PropsWithChildren) {
           });
         }
       },
-      [db, syncD, userPreferences]
+      [db, syncD, userPreferences],
     ),
-    startSyncAllConnections = useCallback(
-      () => {
-        if (conList) {
-          console.group('Syncing Connections:');
-          for (const item of conList) {
-            startSyncConnection(item, syncJobEntries, handleFetchData);
-          }
-          console.groupEnd();
+    startSyncAllConnections = useCallback(() => {
+      if (conList) {
+        console.group('Syncing Connections:');
+        for (const item of conList) {
+          startSyncConnection(item, syncJobEntries, handleFetchData);
         }
-      },
-      [conList, handleFetchData, syncJobEntries]
-    );
+        console.groupEnd();
+      }
+    }, [conList, handleFetchData, syncJobEntries]);
 
   useEffect(() => {
     if (!isDemo) {
-      console.debug('Current Sync Jobs In Progress: '+ currentSyncJobLength);
+      console.debug('Current Sync Jobs In Progress: ' + currentSyncJobLength);
       if (currentSyncJobLength === 0) {
         startSyncAllConnections();
       }
@@ -164,13 +156,13 @@ function HandleInitalSync({ children }: PropsWithChildren) {
 function startSyncConnection(
   item: RxDocument<ConnectionDocument>,
   syncJobEntries: Set<string>,
-  handleFetchData: (item: RxDocument<ConnectionDocument>) => void
+  handleFetchData: (item: RxDocument<ConnectionDocument>) => void,
 ) {
   if (
     !item.get('last_refreshed') ||
     (item.get('last_refreshed') &&
       Math.abs(
-        differenceInDays(parseISO(item.get('last_refreshed')), new Date())
+        differenceInDays(parseISO(item.get('last_refreshed')), new Date()),
       ) >= 1)
   ) {
     // Greater than 1 day, consider syncing
@@ -183,24 +175,46 @@ function startSyncConnection(
           Math.abs(
             differenceInDays(
               parseISO(item.get('last_sync_attempt')),
-              new Date()
-            )
+              new Date(),
+            ),
           ) <= 7)
       ) {
         console.log(
           `Skipping sync for ${item.get(
-            'name'
-          )}, last sync attempt was an error and was less than a week ago`
+            'name',
+          )}, last sync attempt was an error and was less than a week ago`,
         );
       } else {
         console.log(
           `Now syncing ${item.get(
-            'name'
-          )}, last sync was an error and was more than a week ago`
+            'name',
+          )}, last sync was an error and was more than a week ago`,
         );
         if (!syncJobEntries.has(item.get('id'))) {
           // Add a delay to allow other parts of the app to load before starting sync
-          setTimeout(() => {
+          setTimeout(
+            () => {
+              if ('requestIdleCallback' in window) {
+                // if requestIdleCallback is available, use it
+                window.requestIdleCallback(() => handleFetchData(item), {
+                  timeout: 1000 * 60,
+                });
+              } else {
+                handleFetchData(item);
+              }
+            },
+            2000 + Math.ceil(Math.random() * 300),
+          );
+        }
+      }
+    } else {
+      console.log(
+        `Now syncing ${item.get('name')}, last sync was over a day ago`,
+      );
+      if (!syncJobEntries.has(item.get('id'))) {
+        // Add a delay to allow other parts of the app to load before starting sync
+        setTimeout(
+          () => {
             if ('requestIdleCallback' in window) {
               // if requestIdleCallback is available, use it
               window.requestIdleCallback(() => handleFetchData(item), {
@@ -209,32 +223,16 @@ function startSyncConnection(
             } else {
               handleFetchData(item);
             }
-          }, 2000 + Math.ceil(Math.random() * 300));
-        }
-      }
-    } else {
-      console.log(
-        `Now syncing ${item.get('name')}, last sync was over a day ago`
-      );
-      if (!syncJobEntries.has(item.get('id'))) {
-        // Add a delay to allow other parts of the app to load before starting sync
-        setTimeout(() => {
-          if ('requestIdleCallback' in window) {
-            // if requestIdleCallback is available, use it
-            window.requestIdleCallback(() => handleFetchData(item), {
-              timeout: 1000 * 60,
-            });
-          } else {
-            handleFetchData(item);
-          }
-        }, 2000 + Math.ceil(Math.random() * 300));
+          },
+          2000 + Math.ceil(Math.random() * 300),
+        );
       }
     }
   } else {
     console.log(
       `Skipping sync for ${item.get(
-        'name'
-      )}, last successful sync was less than a day ago`
+        'name',
+      )}, last successful sync was less than a day ago`,
     );
   }
 }
@@ -258,7 +256,7 @@ function OnHandleUnsubscribeJobs({ children }: PropsWithChildren) {
 
           console.group('Sync Errors:');
           errors.forEach((x) =>
-            console.error((x as PromiseRejectedResult).reason)
+            console.error((x as PromiseRejectedResult).reason),
           );
           console.groupEnd();
 
@@ -331,19 +329,19 @@ async function fetchMedicalRecords(
   connectionDocument: RxDocument<ConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
   baseUrl: string,
-  useProxy = false
+  useProxy = false,
 ) {
   switch (connectionDocument.get('source') as ConnectionSources) {
     case 'onpatient': {
       try {
         const syncJob = await OnPatient.syncAllRecords(
           connectionDocument.toMutableJSON(),
-          db
+          db,
         );
         await updateConnectionDocumentTimestamps(
           syncJob,
           connectionDocument,
-          db
+          db,
         );
         return syncJob;
       } catch (e) {
@@ -351,8 +349,8 @@ async function fetchMedicalRecords(
         await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
         throw new Error(
           `Error refreshing ${connectionDocument.get(
-            'name'
-          )} access - try logging in again`
+            'name',
+          )} access - try logging in again`,
         );
       }
     }
@@ -361,18 +359,18 @@ async function fetchMedicalRecords(
         await refreshEpicConnectionTokenIfNeeded(
           connectionDocument,
           db,
-          useProxy
+          useProxy,
         );
         const syncJob = await Epic.syncAllRecords(
           baseUrl,
           connectionDocument.toMutableJSON() as unknown as EpicConnectionDocument,
           db,
-          useProxy
+          useProxy,
         );
         await updateConnectionDocumentTimestamps(
           syncJob,
           connectionDocument,
-          db
+          db,
         );
         return syncJob;
       } catch (e) {
@@ -380,8 +378,8 @@ async function fetchMedicalRecords(
         await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
         throw new Error(
           `Error refreshing ${connectionDocument.get(
-            'name'
-          )} access - try logging in again`
+            'name',
+          )} access - try logging in again`,
         );
       }
     }
@@ -391,12 +389,12 @@ async function fetchMedicalRecords(
         const syncJob = await Cerner.syncAllRecords(
           baseUrl,
           connectionDocument.toMutableJSON() as unknown as CernerConnectionDocument,
-          db
+          db,
         );
         await updateConnectionDocumentTimestamps(
           syncJob,
           connectionDocument,
-          db
+          db,
         );
         return syncJob;
       } catch (e) {
@@ -404,8 +402,8 @@ async function fetchMedicalRecords(
         await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
         throw new Error(
           `Error refreshing ${connectionDocument.get(
-            'name'
-          )} access - try logging in again`
+            'name',
+          )} access - try logging in again`,
         );
       }
     }
@@ -415,12 +413,12 @@ async function fetchMedicalRecords(
         const syncJob = await VA.syncAllRecords(
           baseUrl,
           connectionDocument.toMutableJSON() as unknown as VAConnectionDocument,
-          db
+          db,
         );
         await updateConnectionDocumentTimestamps(
           syncJob,
           connectionDocument,
-          db
+          db,
         );
         return syncJob;
       } catch (e) {
@@ -428,8 +426,8 @@ async function fetchMedicalRecords(
         await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
         throw new Error(
           `Error refreshing ${connectionDocument.get(
-            'name'
-          )} access - try logging in again`
+            'name',
+          )} access - try logging in again`,
         );
       }
     }
@@ -438,12 +436,12 @@ async function fetchMedicalRecords(
         const syncJob = await Veradigm.syncAllRecords(
           baseUrl,
           connectionDocument.toMutableJSON() as unknown as VeradigmConnectionDocument,
-          db
+          db,
         );
         await updateConnectionDocumentTimestamps(
           syncJob,
           connectionDocument,
-          db
+          db,
         );
         return syncJob;
       } catch (e) {
@@ -451,15 +449,15 @@ async function fetchMedicalRecords(
         await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
         throw new Error(
           `Error refreshing ${connectionDocument.get(
-            'name'
-          )} access - try logging in again`
+            'name',
+          )} access - try logging in again`,
         );
       }
     }
 
     default: {
       throw Error(
-        `Cannot sync unknown source: ${connectionDocument.get('source')}`
+        `Cannot sync unknown source: ${connectionDocument.get('source')}`,
       );
     }
   }
@@ -473,7 +471,7 @@ async function fetchMedicalRecords(
  */
 async function updateConnectionDocumentErrorTimestamps(
   connectionDocument: RxDocument<ConnectionDocument>,
-  db: RxDatabase<DatabaseCollections>
+  db: RxDatabase<DatabaseCollections>,
 ) {
   const newCd = connectionDocument.toMutableJSON();
   newCd.last_sync_attempt = new Date().toISOString();
@@ -492,7 +490,7 @@ async function updateConnectionDocumentErrorTimestamps(
 async function updateConnectionDocumentTimestamps(
   syncJob: PromiseSettledResult<void[]>[],
   connectionDocument: RxDocument<ConnectionDocument>,
-  db: RxDatabase<DatabaseCollections>
+  db: RxDatabase<DatabaseCollections>,
 ) {
   const anySuccess = syncJob.some((i) => i.status === 'fulfilled');
   if (anySuccess) {
@@ -513,16 +511,16 @@ async function updateConnectionDocumentTimestamps(
  */
 async function refreshCernerConnectionTokenIfNeeded(
   connectionDocument: RxDocument<ConnectionDocument>,
-  db: RxDatabase<DatabaseCollections>
+  db: RxDatabase<DatabaseCollections>,
 ) {
   const nowInSeconds = Math.floor(Date.now() / 1000);
   if (connectionDocument.get('source') !== 'cerner') {
     return Promise.reject(
       new Error(
         `Cannot refresh connection token for source: ${connectionDocument.get(
-          'source'
-        )}, expected 'cerner'`
-      )
+          'source',
+        )}, expected 'cerner'`,
+      ),
     );
   }
   if (connectionDocument.get('expires_at') <= nowInSeconds) {
@@ -534,7 +532,7 @@ async function refreshCernerConnectionTokenIfNeeded(
 
       const access_token_data = await Cerner.fetchAccessTokenWithRefreshToken(
         refreshToken,
-        tokenUri
+        tokenUri,
       );
 
       return await Cerner.saveConnectionToDb({
@@ -559,16 +557,16 @@ async function refreshCernerConnectionTokenIfNeeded(
 async function refreshEpicConnectionTokenIfNeeded(
   connectionDocument: RxDocument<ConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
-  useProxy = false
+  useProxy = false,
 ) {
   const nowInSeconds = Math.floor(Date.now() / 1000);
   if (connectionDocument.get('source') !== 'epic') {
     return Promise.reject(
       new Error(
         `Cannot refresh connection token for source: ${connectionDocument.get(
-          'source'
-        )}, expected 'epic'`
-      )
+          'source',
+        )}, expected 'epic'`,
+      ),
     );
   }
   if (connectionDocument.get('expires_at') <= nowInSeconds) {
@@ -585,7 +583,7 @@ async function refreshEpicConnectionTokenIfNeeded(
         clientId,
         epicTokenUrl,
         epicId,
-        useProxy
+        useProxy,
       );
 
       return await Epic.saveConnectionToDb({

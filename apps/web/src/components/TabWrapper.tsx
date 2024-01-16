@@ -1,24 +1,16 @@
+import { Link, Outlet } from 'react-router-dom';
+
 import {
   Cog6ToothIcon,
   NewspaperIcon,
   PlusCircleIcon,
   QueueListIcon,
 } from '@heroicons/react/24/outline';
-import React from 'react';
-import { Routes, Route, Navigate, Link } from 'react-router-dom';
-import ConnectionTab from '../pages/ConnectionTab';
-import OnPatientRedirect from '../pages/OnPatientRedirect';
-import { Routes as AppRoutes } from '../Routes';
-import SummaryTab from '../pages/SummaryTab';
-import SettingsTab from '../pages/SettingsTab';
-import EpicRedirect from '../pages/EpicRedirect';
+
 import logo from '../img/white-logo.svg';
-import { TabButton } from './TabButton';
+import { Routes as AppRoutes } from '../Routes';
 import { useUser } from './providers/UserProvider';
-import { TimelineTab } from '../pages/TimelineTab';
-import CernerRedirect from '../pages/CernerRedirect';
-import VeradigmRedirect from '../pages/VeradigmRedirect';
-import VARedirect from '../pages/VARedirect';
+import { TabButton } from './TabButton';
 
 export function TabWrapper() {
   const user = useUser();
@@ -26,24 +18,7 @@ export function TabWrapper() {
   return (
     <div className="mobile-full-height flex max-w-[100vw] overflow-hidden md:flex-row-reverse">
       <div className="flex-grow">
-        <Routes>
-          <Route path={AppRoutes.Timeline} element={<TimelineTab />} />
-          <Route path={AppRoutes.AddConnection} element={<ConnectionTab />} />
-          <Route path={AppRoutes.Summary} element={<SummaryTab />} />
-          <Route path={AppRoutes.Settings} element={<SettingsTab />} />
-          <Route
-            path={AppRoutes.OnPatientCallback}
-            element={<OnPatientRedirect />}
-          />
-          <Route path={AppRoutes.EpicCallback} element={<EpicRedirect />} />
-          <Route path={AppRoutes.CernerCallback} element={<CernerRedirect />} />
-          <Route
-            path={AppRoutes.VeradigmCallback}
-            element={<VeradigmRedirect />}
-          />
-          <Route path={AppRoutes.VACallback} element={<VARedirect />} />
-          <Route path="*" element={<Navigate to={AppRoutes.Timeline} />} />
-        </Routes>
+        <Outlet />
       </div>
       <div className="flex-0 md:bg-primary-800 absolute bottom-0 left-0 z-20 w-full bg-slate-100 md:relative md:bottom-auto md:top-0 md:h-full md:w-auto">
         <div className="pb-safe mx-auto flex w-full max-w-3xl justify-around md:h-full md:w-64 md:flex-col md:justify-start">
