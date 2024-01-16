@@ -43,6 +43,7 @@ import { TimelineTab } from '../pages/TimelineTab';
 import VARedirect from '../pages/VARedirect';
 import VeradigmRedirect from '../pages/VeradigmRedirect';
 import { Routes as AppRoutes } from '../Routes';
+import { flattenObject } from './flattenObject';
 
 export default function App() {
   useConsoleLogEasterEgg();
@@ -118,10 +119,23 @@ async function addBatchToVectorStorage(
   documents: RxDocument<ClinicalDocument<unknown>, {}>[],
   vectorStorage: VectorStorage<any>,
 ) {
-  const docList = documents.map((x) =>
+  const docList = documents.map((x) => {
     // trim at 22000 characters (aprox 8k tokens)
-    JSON.stringify(x.data_record.raw)?.substring(0, 22000),
-  );
+    const content = JSON.stringify(x.data_record.raw)?.substring(0, 22000);
+    if (x.data_record.content_type === 'application/json') {
+      const newUnflatObject: any = x.data_record.raw;
+      delete newUnflatObject.link;
+      delete newUnflatObject.fullUrl;
+      delete newUnflatObject.search;
+      delete newUnflatObject.resource.subject;
+      delete newUnflatObject.resource.id;
+      const newFlatObject = flattenObject(newUnflatObject);
+
+      const serialzed = Object.values(newFlatObject).join('|');
+      return Object.values(newFlatObject).join('|');
+    }
+    return content;
+  });
   const metaList = documents.map((x) =>
     JSON.stringify({
       category: x.data_record.resource_type,
@@ -181,24 +195,11 @@ function VectorGenerator({ children }: { children: React.ReactNode }) {
   const vectorStorage = useVectorStorage();
   const rxdb = useRxDb();
   const vsSync = useRef<VectorGeneratorSync>();
-  // useGeneratingVectorsProcess();
 
   useEffect(() => {
-    // if (vectorStorage && rxdb && !vsSync.current) {
-    //   vsSync.current = new VectorGeneratorSync(rxdb, vectorStorage);
-    //   vsSync.current.startSync();
-    // }
-    if (vectorStorage && rxdb) {
-      vectorStorage
-        .similaritySearch({
-          query: 'cbc bloodwork',
-        })
-        .then((results) => {
-          // Display the search results
-          results.similarItems.forEach((item) => {
-            console.log(item.metadata);
-          });
-        });
+    if (vectorStorage && rxdb && !vsSync.current) {
+      vsSync.current = new VectorGeneratorSync(rxdb, vectorStorage);
+      vsSync.current.startSync();
     }
   }, [rxdb, vectorStorage]);
 

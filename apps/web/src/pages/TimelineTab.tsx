@@ -21,8 +21,72 @@ import { SearchBar } from './SearchBar';
 import { Transition } from '@headlessui/react';
 import { ButtonLoadingSpinner } from '../components/connection/ButtonLoadingSpinner';
 import useIntersectionObserver from '../components/hooks/useIntersectionObserver';
+import { VectorStorage } from 'vector-storage';
+import { useVectorStorage } from '../app/App';
 
 const PAGE_SIZE = 50;
+
+async function fetchRecordsWithVector(
+  db: RxDatabase<DatabaseCollections>,
+  vectorStorage: VectorStorage<any>,
+  query?: string,
+) {
+  if (!query) {
+    return {};
+  }
+  let start = Date.now();
+  console.debug('Starting vector search');
+  const results = await vectorStorage.similaritySearch({
+    query,
+    k: 20,
+  });
+  console.debug(`Vector search took ${Date.now() - start}ms`);
+
+  // Display the search results
+  const ids = results.similarItems.map((item) => {
+    return JSON.parse(item.metadata).id;
+  });
+
+  const docs = await db.clinical_documents
+    .find({
+      selector: {
+        id: { $in: ids },
+      },
+    })
+    .exec();
+
+  const lst = docs as unknown as RxDocument<
+    ClinicalDocument<BundleEntry<FhirResource>>
+  >[];
+
+  // Group records by date
+  const groupedRecords: Record<
+    string, // date to group by
+    ClinicalDocument<BundleEntry<FhirResource>>[] // documents/cards for date
+  > = {};
+
+  lst.forEach((item) => {
+    if (item.get('metadata')?.date === undefined) {
+      console.warn('Date is undefined for object:');
+      console.log(item.toJSON());
+    } else {
+      const date = item.get('metadata')?.date
+        ? format(parseISO(item.get('metadata')?.date), 'yyyy-MM-dd')
+        : '-1';
+      if (groupedRecords[date]) {
+        groupedRecords[date].push(
+          item.toMutableJSON() as ClinicalDocument<BundleEntry<FhirResource>>,
+        );
+      } else {
+        groupedRecords[date] = [item.toMutableJSON()];
+      }
+    }
+  });
+
+  console.debug(groupedRecords);
+
+  return groupedRecords;
+}
 
 /**
  * This should really be a background process that runs after every data sync instead of every view
@@ -33,7 +97,7 @@ async function fetchRecords(
   db: RxDatabase<DatabaseCollections>,
   user_id: string,
   query?: string,
-  page?: number
+  page?: number,
 ) {
   const parsedQuery = query?.trim() === '' ? undefined : query;
   let selector: MangoQuerySelector<ClinicalDocument<unknown>> = {
@@ -92,7 +156,7 @@ async function fetchRecords(
             groupedRecords[date].push(
               item.toMutableJSON() as ClinicalDocument<
                 BundleEntry<FhirResource>
-              >
+              >,
             );
           } else {
             groupedRecords[date] = [item.toMutableJSON()];
@@ -133,6 +197,7 @@ function useRecordQuery(query: string): {
     [data, setList] =
       useState<Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>>(),
     [currentPage, setCurrentPage] = useState(0),
+    vectorStorage = useVectorStorage(),
     execQuery = useCallback(
       /**
        *
@@ -140,17 +205,29 @@ function useRecordQuery(query: string): {
        * @param loadMore Indicate whether this is an inital load or a load more query. Affects visual loading state
        */
       async ({ loadMore = false }: { loadMore?: boolean }) => {
+        setInitialized(true);
+        setQueryStatus(QueryStatus.COMPLETE);
+        if (!vectorStorage) {
+          console.error('Vector storage is undefined');
+          return;
+        }
         try {
           if (loadMore) {
             setQueryStatus(QueryStatus.LOADING_MORE);
           }
 
           // Execute query
-          const groupedRecords = await fetchRecords(
+          // const groupedRecords = await fetchRecords(
+          //   db,
+          //   user.id,
+          //   query,
+          //   loadMore ? currentPage + 1 : currentPage,
+          // );
+
+          const groupedRecords = await fetchRecordsWithVector(
             db,
-            user.id,
+            vectorStorage,
             query,
-            loadMore ? currentPage + 1 : currentPage
           );
 
           // If load more, increment page. Otherwise, reset page to 0
@@ -183,18 +260,19 @@ function useRecordQuery(query: string): {
 
           setInitialized(true);
         } catch (e) {
+          console.error(e);
           setQueryStatus(QueryStatus.ERROR);
         }
       },
-      [currentPage, db, data, query, user.id]
+      [vectorStorage, db, query, currentPage, data],
     ),
     debounceExecQuery = useDebounceCallback(
       () => execQuery({ loadMore: false }),
-      300
+      1000,
     ),
     loadNextPage = useDebounceCallback(
       () => execQuery({ loadMore: true }),
-      300
+      300,
     );
 
   useEffect(() => {
@@ -249,7 +327,7 @@ export function TimelineTab() {
       ) : (
         []
       ),
-    [data, loadNextPage, status]
+    [data, loadNextPage, status],
   );
 
   return (
@@ -290,26 +368,26 @@ export function TimelineTab() {
         leaveFrom="opacity-100"
         leaveTo="opacity-75"
       >
-        {hasNoRecords ? <EmptyRecordsPlaceholder /> : null}
-        {hasRecords ? (
-          <div className="flex w-full overflow-hidden">
-            <JumpToPanel
-              items={data}
-              isLoading={false}
-              status={status}
-              loadMore={loadNextPage}
-            />
-            <div className="px-auto flex h-full max-h-full w-full justify-center overflow-y-scroll">
-              <div className="h-max w-full max-w-4xl flex-col px-4 pb-20 sm:px-6 sm:pb-6 lg:px-8">
-                <SearchBar query={query} setQuery={setQuery} status={status} />
-                {listItems}
-                {(Object.keys(data) || []).length === 0 ? (
-                  <p className="font-xl">{`No records found with query: ${query}`}</p>
-                ) : null}
-              </div>
+        {/* {hasNoRecords ? <EmptyRecordsPlaceholder /> : null} */}
+        {/* {hasRecords ? ( */}
+        <div className="flex w-full overflow-hidden">
+          <JumpToPanel
+            items={data}
+            isLoading={false}
+            status={status}
+            loadMore={loadNextPage}
+          />
+          <div className="px-auto flex h-full max-h-full w-full justify-center overflow-y-scroll">
+            <div className="h-max w-full max-w-4xl flex-col px-4 pb-20 sm:px-6 sm:pb-6 lg:px-8">
+              <SearchBar query={query} setQuery={setQuery} status={status} />
+              {listItems}
+              {(Object.keys(data || {}) || []).length === 0 ? (
+                <p className="font-xl">{`No records found with query: ${query}`}</p>
+              ) : null}
             </div>
           </div>
-        ) : null}
+        </div>
+        {/* ) : null} */}
       </Transition>
     </AppPage>
   );

@@ -72,7 +72,8 @@
     "src/components/providers/UpdateAppChecker.tsx",
     "src/components/hooks/DeveloperLogsProvider.tsx",
     "src/components/settings/DeveloperSettingsGroup.tsx",
-    "src/components/settings/AboutMereSettingsGroup.tsx"
+    "src/components/settings/AboutMereSettingsGroup.tsx",
+    "./src/app/flattenObject.tsx"
   ],
   "exclude": [
     "jest.config.ts",
