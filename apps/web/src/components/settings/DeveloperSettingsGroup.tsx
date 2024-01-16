@@ -26,6 +26,17 @@ export function DeveloperSettingsGroup() {
       >
         Refresh
       </button>
+      <div className="pb-2 pt-4 text-lg font-bold">Throw test exception</div>
+      <button
+        className="bg-red-500 hover:bg-red-700 rounded px-4 py-2 font-bold text-white"
+        onClick={() => {
+          setTimeout(() => {
+            throw new Error('This is a sample error used for debugging');
+          });
+        }}
+      >
+        Throw error
+      </button>
     </>
   );
 }
