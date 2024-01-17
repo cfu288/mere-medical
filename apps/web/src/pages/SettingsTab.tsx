@@ -1,6 +1,6 @@
 import { AppPage } from '../components/AppPage';
 import { GenericBanner } from '../components/GenericBanner';
-import { DatabaseCollections } from '../components/providers/RxDbProvider';
+import { DatabaseCollections } from '../components/providers/DatabaseCollections';
 import { useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { RxDatabase, RxDocument } from 'rxdb';

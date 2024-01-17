@@ -1,7 +1,5 @@
-import {
-  DatabaseCollections,
-  useRxDb,
-} from '../components/providers/RxDbProvider';
+import { useRxDb } from '../components/providers/RxDbProvider';
+import { DatabaseCollections } from '../components/providers/DatabaseCollections';
 import { GenericBanner } from '../components/GenericBanner';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 import {
@@ -35,7 +33,7 @@ import React from 'react';
 
 function fetchMedications(
   db: RxDatabase<DatabaseCollections>,
-  user_id: string
+  user_id: string,
 ) {
   return db.clinical_documents
     .find({
@@ -94,7 +92,7 @@ function fetchConditions(db: RxDatabase<DatabaseCollections>, user_id: string) {
 
 function fetchImmunizations(
   db: RxDatabase<DatabaseCollections>,
-  user_id: string
+  user_id: string,
 ) {
   return db.clinical_documents
     .find({
@@ -137,7 +135,7 @@ function fetchAllergy(db: RxDatabase<DatabaseCollections>, user_id: string) {
 
 async function fetchPinned(
   db: RxDatabase<DatabaseCollections>,
-  user_id: string
+  user_id: string,
 ) {
   const pinnedIds = await db.summary_page_preferences
     .findOne({
@@ -243,7 +241,7 @@ function useSummaryData(): [
     pinned: ClinicalDocument<BundleEntry<DiagnosticReport | Observation>>[];
     initialized: boolean;
   },
-  React.Dispatch<SummaryActions>
+  React.Dispatch<SummaryActions>,
 ] {
   const db = useRxDb(),
     user = useUser();
@@ -267,44 +265,44 @@ function useSummaryData(): [
             (item) =>
               item.toMutableJSON() as ClinicalDocument<
                 BundleEntry<MedicationStatement>
-              >
-          )
+              >,
+          ),
         ),
         fetchConditions(db, user.id).then((data) =>
           data.map(
             (item) =>
-              item.toMutableJSON() as ClinicalDocument<BundleEntry<Condition>>
-          )
+              item.toMutableJSON() as ClinicalDocument<BundleEntry<Condition>>,
+          ),
         ),
         fetchImmunizations(db, user.id).then((data) =>
           data.map(
             (item) =>
               item.toMutableJSON() as ClinicalDocument<
                 BundleEntry<Immunization>
-              >
-          )
+              >,
+          ),
         ),
         fetchCarePlan(db, user.id).then((data) =>
           data.map(
             (item) =>
-              item.toMutableJSON() as ClinicalDocument<BundleEntry<CarePlan>>
-          )
+              item.toMutableJSON() as ClinicalDocument<BundleEntry<CarePlan>>,
+          ),
         ),
         fetchAllergy(db, user.id).then((data) =>
           data.map(
             (item) =>
               item.toMutableJSON() as ClinicalDocument<
                 BundleEntry<AllergyIntolerance>
-              >
-          )
+              >,
+          ),
         ),
         fetchPinned(db, user.id).then((data) =>
           data.map(
             (item) =>
               item.toMutableJSON() as ClinicalDocument<
                 BundleEntry<DiagnosticReport | Observation>
-              >
-          )
+              >,
+          ),
         ),
       ])
         .then(([meds, cond, imm, careplan, allergy, pinned]) => {

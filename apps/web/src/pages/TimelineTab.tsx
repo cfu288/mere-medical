@@ -1,10 +1,8 @@
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, FhirResource } from 'fhir/r2';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  DatabaseCollections,
-  useRxDb,
-} from '../components/providers/RxDbProvider';
+import { useRxDb } from '../components/providers/RxDbProvider';
+import { DatabaseCollections } from '../components/providers/DatabaseCollections';
 import { MangoQuerySelector, RxDatabase, RxDocument } from 'rxdb';
 import { EmptyRecordsPlaceholder } from '../components/EmptyRecordsPlaceholder';
 import { useUser } from '../components/providers/UserProvider';
@@ -175,7 +173,7 @@ export enum QueryStatus {
   LOADING_MORE, // Currently loading more results using loadNextPage
   SUCCESS,
   ERROR,
-  COMPLETE, // Indicates that there are no more results to load using loadNextPage
+  COMPLETE_HIDE_LOAD_MORE, // Indicates that there are no more results to load using loadNextPage
 }
 
 function useRecordQuery(query: string): {
@@ -203,12 +201,13 @@ function useRecordQuery(query: string): {
        */
       async ({ loadMore = false }: { loadMore?: boolean }) => {
         setInitialized(true);
-        setQueryStatus(QueryStatus.COMPLETE);
+        setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
         if (!vectorStorage) {
           console.error('Vector storage is undefined');
           return;
         }
         try {
+          let isAiSearch = false;
           if (loadMore) {
             setQueryStatus(QueryStatus.LOADING_MORE);
           }
@@ -222,6 +221,8 @@ function useRecordQuery(query: string): {
           );
 
           if (Object.keys(groupedRecords).length === 0) {
+            // If no results, try AI search
+            isAiSearch = true;
             groupedRecords = await fetchRecordsWithVector(
               db,
               vectorStorage,
@@ -252,9 +253,14 @@ function useRecordQuery(query: string): {
             Object.values(groupedRecords).reduce((a, b) => a + b.length, 0) <
             PAGE_SIZE
           ) {
-            setQueryStatus(QueryStatus.COMPLETE);
+            setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
           } else {
             setQueryStatus(QueryStatus.SUCCESS);
+          }
+
+          if (isAiSearch) {
+            // disable paging for AI search
+            setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
           }
 
           setInitialized(true);
@@ -263,7 +269,7 @@ function useRecordQuery(query: string): {
           setQueryStatus(QueryStatus.ERROR);
         }
       },
-      [vectorStorage, db, query, currentPage, data],
+      [vectorStorage, db, user.id, query, currentPage, data],
     ),
     debounceExecQuery = useDebounceCallback(
       () => execQuery({ loadMore: false }),
@@ -318,10 +324,9 @@ export function TimelineTab() {
               <TimelineItem dateKey={dateKey} itemList={itemList} />
             </TimelineYearHeaderWrapper>
           ))}
-          {status !== QueryStatus.COMPLETE &&
+          {status !== QueryStatus.COMPLETE_HIDE_LOAD_MORE &&
             status !== QueryStatus.LOADING && (
-              <></>
-              // <LoadMoreButton status={status} loadNextPage={loadNextPage} />
+              <LoadMoreButton status={status} loadNextPage={loadNextPage} />
             )}
         </>
       ) : (
@@ -368,26 +373,26 @@ export function TimelineTab() {
         leaveFrom="opacity-100"
         leaveTo="opacity-75"
       >
-        {/* {hasNoRecords ? <EmptyRecordsPlaceholder /> : null} */}
-        {/* {hasRecords ? ( */}
-        <div className="flex w-full overflow-hidden">
-          <JumpToPanel
-            items={data}
-            isLoading={false}
-            status={status}
-            loadMore={loadNextPage}
-          />
-          <div className="px-auto flex h-full max-h-full w-full justify-center overflow-y-scroll">
-            <div className="h-max w-full max-w-4xl flex-col px-4 pb-20 sm:px-6 sm:pb-6 lg:px-8">
-              <SearchBar query={query} setQuery={setQuery} status={status} />
-              {listItems}
-              {(Object.keys(data || {}) || []).length === 0 ? (
-                <p className="font-xl">{`No records found with query: ${query}`}</p>
-              ) : null}
+        {hasNoRecords ? <EmptyRecordsPlaceholder /> : null}
+        {hasRecords ? (
+          <div className="flex w-full overflow-hidden">
+            <JumpToPanel
+              items={data}
+              isLoading={false}
+              status={status}
+              loadMore={loadNextPage}
+            />
+            <div className="px-auto flex h-full max-h-full w-full justify-center overflow-y-scroll">
+              <div className="h-max w-full max-w-4xl flex-col px-4 pb-20 sm:px-6 sm:pb-6 lg:px-8">
+                <SearchBar query={query} setQuery={setQuery} status={status} />
+                {listItems}
+                {(Object.keys(data || {}) || []).length === 0 ? (
+                  <p className="font-xl">{`No records found with query: ${query}`}</p>
+                ) : null}
+              </div>
             </div>
           </div>
-        </div>
-        {/* ) : null} */}
+        ) : null}
       </Transition>
     </AppPage>
   );

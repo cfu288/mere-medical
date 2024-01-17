@@ -5,9 +5,17 @@ import { IVSOptions } from './types/IVSOptions';
 import { IVSSimilaritySearchParams } from './types/IVSSimilaritySearchParams';
 import { constants } from './common/constants';
 import { filterDocuments, getObjectSizeInMB } from './common/helpers';
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import { DatabaseCollections } from 'apps/web/src/components/providers/DatabaseCollections';
+import { RxDatabase } from 'rxdb';
 
-export class VectorStorage<T> {
+export class VectorStorage<
+  T extends {
+    [key: string]: any;
+  },
+> {
   private db!: IDBPDatabase<any>;
+  private rxdb!: RxDatabase<DatabaseCollections>;
   private documents: Array<IVSDocument<T>> = [];
   private readonly maxSizeInMB: number;
   private readonly debounceTime: number;
@@ -21,38 +29,43 @@ export class VectorStorage<T> {
     this.openaiModel = options.openaiModel ?? constants.DEFAULT_OPENAI_MODEL;
     this.embedTextsFn = options.embedTextsFn ?? this.embedTexts; // Use the custom function if provided, else use the default one
     this.openaiApiKey = options.openAIApiKey;
+    this.rxdb! = options.rxdb!;
     if (!this.openaiApiKey && !options.embedTextsFn) {
       console.error(
         'VectorStorage: pass as an option either an OpenAI API key or a custom embedTextsFn function.',
       );
     } else {
-      this.loadFromIndexDbStorage();
+      this.loadFromRxDbStorage();
     }
   }
 
-  public async addText(text: string, metadata: T): Promise<IVSDocument<T>> {
-    // Create a document from the text and metadata
-    const doc: IVSDocument<T> = {
-      metadata,
-      text,
-      timestamp: Date.now(),
-      vector: [],
-      vectorMag: 0,
-    };
-    const docs = await this.addDocuments([doc]);
-    return docs[0];
-  }
+  // public async addText(text: string, metadata: T): Promise<IVSDocument<T>> {
+  //   // Create a document from the text and metadata
+  //   const doc: IVSDocument<T> = {
+  //     metadata,
+  //     text,
+  //     timestamp: Date.now(),
+  //     vector: [],
+  //     vectorMag: 0,
+  //   };
+  //   const docs = await this.addDocuments([doc]);
+  //   return docs[0];
+  // }
 
   public async addTexts(
-    texts: string[],
+    texts: {
+      id: string;
+      text: string;
+    }[],
     metadatas: T[],
   ): Promise<Array<IVSDocument<T>>> {
     if (texts.length !== metadatas.length) {
       throw new Error('The lengths of texts and metadata arrays must match.');
     }
-    const docs: Array<IVSDocument<T>> = texts.map((text, index) => ({
+    const docs: Array<IVSDocument<T>> = texts.map((item, index) => ({
+      id: item.id,
       metadata: metadatas[index],
-      text,
+      text: item.text,
       timestamp: Date.now(),
       vector: [],
       vectorMag: 0,
@@ -109,7 +122,7 @@ export class VectorStorage<T> {
       try {
         requestIdleCallback(
           async () => {
-            await this.saveToIndexDbStorage();
+            await this.saveToRxDbStorage();
           },
           {
             timeout: 1000 * 60,
@@ -155,16 +168,19 @@ export class VectorStorage<T> {
   private async addDocuments(
     documents: Array<IVSDocument<T>>,
   ): Promise<Array<IVSDocument<T>>> {
-    // filter out already existing documents
+    // filter out already existing documents by id
     const newDocuments = documents.filter(
-      (doc) => !this.documents.some((d) => d.text === doc.text),
+      (doc) =>
+        !this.documents.some((d) => {
+          return d.id === doc.id;
+        }),
     );
     // If there are no new documents, return an empty array
     if (newDocuments.length === 0) {
       return [];
     }
     const newVectors = await this.embedTextsFn(
-      newDocuments.map((doc) => doc.text),
+      newDocuments.map((doc) => doc.text!),
     );
     // Assign vectors and precompute vector magnitudes for new documents
     newDocuments.forEach((doc, index) => {
@@ -176,7 +192,7 @@ export class VectorStorage<T> {
     this.removeDocsLRU();
     // Save to index db storage
     try {
-      await this.saveToIndexDbStorage();
+      await this.saveToRxDbStorage();
     } catch (e) {
       console.error(e);
     }
@@ -264,7 +280,17 @@ export class VectorStorage<T> {
     });
   }
 
-  private async loadFromIndexDbStorage(): Promise<void> {
+  private async loadFromRxDbStorage(): Promise<void> {
+    const start = performance.now();
+    const rxDocs = await this.rxdb.vector_storage.find().exec();
+    this.documents = rxDocs.map((rxDoc) => rxDoc.toJSON() as IVSDocument<T>);
+    console.debug(
+      `Loading from index db took ${(performance.now() - start).toFixed(2)}ms`,
+    );
+    this.removeDocsLRU();
+  }
+
+  private async loadFromIndexDbStorageOld(): Promise<void> {
     let start;
     if (!this.db) {
       start = performance.now();
@@ -279,7 +305,25 @@ export class VectorStorage<T> {
     this.removeDocsLRU();
   }
 
-  private async saveToIndexDbStorage(): Promise<void> {
+  private async saveToRxDbStorage(): Promise<void> {
+    const totalStart = performance.now();
+    try {
+      const db = this.rxdb;
+      await db.vector_storage.bulkUpsert(
+        this.documents.map((doc) => {
+          const { text, ...restOfDoc } = doc;
+          return restOfDoc;
+        }),
+      );
+    } catch (error: any) {
+      console.error('Failed to save to RxDB:', error.message);
+    }
+    console.debug(
+      `Saving to RxDB took ${(performance.now() - totalStart).toFixed(2)}ms`,
+    );
+  }
+
+  private async saveToIndexDbStorageOld(): Promise<void> {
     console.group('saveToIndexDbStorage');
     const totalStart = performance.now();
     let start;
@@ -316,6 +360,7 @@ export class VectorStorage<T> {
   }
 
   private removeDocsLRU(): void {
+    return;
     const clearTask = () => {
       const start = performance.now();
       if (getObjectSizeInMB(this.documents) > this.maxSizeInMB) {
@@ -329,9 +374,9 @@ export class VectorStorage<T> {
           this.documents.shift();
         }
       }
-      // console.debug(
-      //   `LRU removal took ${(performance.now() - start).toFixed(2)}ms`,
-      // );
+      console.debug(
+        `LRU removal took ${(performance.now() - start).toFixed(2)}ms`,
+      );
     };
 
     requestIdleCallback(clearTask, {

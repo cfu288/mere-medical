@@ -18,22 +18,10 @@ import { RxDBMigrationPlugin } from 'rxdb/plugins/migration';
 import { RxDBJsonDumpPlugin } from 'rxdb/plugins/json-dump';
 import { RxDBUpdatePlugin } from 'rxdb/plugins/update';
 import { RxDBQueryBuilderPlugin } from 'rxdb/plugins/query-builder';
-import {
-  ClinicalDocumentCollection,
-  ClinicalDocumentSchema,
-} from '../../models/clinical-document/ClinicalDocument.collection';
-import {
-  ConnectionDocumentCollection,
-  ConnectionDocumentSchema,
-} from '../../models/connection-document/ConnectionDocument.collection';
-import {
-  UserDocumentCollection,
-  UserDocumentSchema,
-} from '../../models/user-document/UserDocument.collection';
-import {
-  UserPreferencesDocumentCollection,
-  UserPreferencesDocumentSchema,
-} from '../../models/user-preferences/UserPreferences.collection';
+import { ClinicalDocumentSchema } from '../../models/clinical-document/ClinicalDocument.collection';
+import { ConnectionDocumentSchema } from '../../models/connection-document/ConnectionDocument.collection';
+import { UserDocumentSchema } from '../../models/user-document/UserDocument.collection';
+import { UserPreferencesDocumentSchema } from '../../models/user-preferences/UserPreferences.collection';
 import { UserDocumentMigrations } from '../../models/user-document/UserDocument.migration';
 import { UserPreferencesMigrations } from '../../models/user-preferences/UserPreferences.migration';
 import { getRxStorageDexie } from 'rxdb/plugins/dexie';
@@ -47,11 +35,11 @@ import { AppLoadingSkeleton } from './AppLoadingSkeleton';
 import { CryptedIndexedDBAdapter } from 'sylviejs/storage-adapter/crypted-indexeddb-adapter';
 import logo from '../../img/white-logo.svg';
 import { useLocalConfig } from './LocalConfigProvider';
-import {
-  SummaryPagePreferencesCollection,
-  SummaryPagePreferencesSchema,
-} from '../../models/summary-page-preferences/SummaryPagePreferences.collection';
+import { SummaryPagePreferencesSchema } from '../../models/summary-page-preferences/SummaryPagePreferences.collection';
 import { SummaryPagePreferencesMigrations } from '../../models/summary-page-preferences/SummaryPagePreferences.migration';
+import { DatabaseCollections } from './DatabaseCollections';
+import { VectorStorageDocumentSchema } from '../../models/vector-storage-document/VectorStorageDocument.collection';
+import { VectorStorageDocumentMigrations } from '../../models/vector-storage-document/VectorStorageDocument.migration';
 
 if (process.env.NODE_ENV === 'development') {
   addRxPlugin(RxDBDevModePlugin);
@@ -60,14 +48,6 @@ addRxPlugin(RxDBUpdatePlugin);
 addRxPlugin(RxDBMigrationPlugin);
 addRxPlugin(RxDBJsonDumpPlugin);
 addRxPlugin(RxDBQueryBuilderPlugin);
-
-export type DatabaseCollections = {
-  clinical_documents: ClinicalDocumentCollection;
-  connection_documents: ConnectionDocumentCollection;
-  user_documents: UserDocumentCollection;
-  user_preferences: UserPreferencesDocumentCollection;
-  summary_page_preferences: SummaryPagePreferencesCollection;
-};
 
 const RxDbContext = React.createContext<
   RxDatabase<DatabaseCollections> | undefined
@@ -95,6 +75,10 @@ export const databaseCollections = {
   summary_page_preferences: {
     schema: SummaryPagePreferencesSchema,
     migrationStrategies: SummaryPagePreferencesMigrations,
+  },
+  vector_storage: {
+    schema: VectorStorageDocumentSchema,
+    // migrationStrategies: VectorStorageDocumentMigrations,
   },
 };
 

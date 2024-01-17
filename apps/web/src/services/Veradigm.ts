@@ -17,7 +17,7 @@ import {
   DocumentReference,
 } from 'fhir/r2';
 import { RxDatabase } from 'rxdb';
-import { DatabaseCollections } from '../components/providers/RxDbProvider';
+import { DatabaseCollections } from '../components/providers/DatabaseCollections';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 
 export enum VeradigmLocalStorageKeys {
@@ -52,7 +52,7 @@ Patient Password	Allscripts#1
 
 export function getLoginUrl(
   baseUrl: string,
-  authorizeUrl: string
+  authorizeUrl: string,
 ): string & Location {
   const params = {
     client_id: `${Config.VERADIGM_CLIENT_ID}`,
@@ -65,7 +65,7 @@ export function getLoginUrl(
   if (authorizeUrl?.endsWith('/')) {
     return `${authorizeUrl.substring(
       0,
-      authorizeUrl.length - 1
+      authorizeUrl.length - 1,
     )}?${new URLSearchParams(params)}` as string & Location;
   }
 
@@ -74,7 +74,7 @@ export function getLoginUrl(
 
 export async function fetchAccessTokenWithCode(
   code: string,
-  veradigmTokenUrl: string
+  veradigmTokenUrl: string,
 ): Promise<VeradigmAuthResponse> {
   const defaultUrl = `${veradigmTokenUrl}`;
   const res = await fetch(defaultUrl, {
@@ -100,7 +100,7 @@ async function getFHIRResource<T extends FhirResource>(
   baseUrl: string,
   connectionDocument: VeradigmConnectionDocument,
   fhirResourceUrl: string,
-  params?: Record<string, string>
+  params?: Record<string, string>,
 ): Promise<BundleEntry<T>[]> {
   const defaultUrl = params
     ? `${baseUrl}${fhirResourceUrl}?${new URLSearchParams(params)}`
@@ -129,23 +129,24 @@ async function syncFHIRResource<T extends FhirResource>(
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
   mapper: (proc: BundleEntry<T>) => ClinicalDocument<BundleEntry<T>>,
-  params?: Record<string, string>
+  params?: Record<string, string>,
 ) {
   const resc = await getFHIRResource<T>(
     baseUrl,
     connectionDocument,
     fhirResourceUrl,
-    params
+    params,
   );
 
   const cds = resc
     .filter(
       (i) =>
-        i.resource?.resourceType.toLowerCase() === fhirResourceUrl.toLowerCase()
+        i.resource?.resourceType.toLowerCase() ===
+        fhirResourceUrl.toLowerCase(),
     )
     .map(mapper);
   const cdsmap = await db.clinical_documents.bulkUpsert(
-    cds as unknown as ClinicalDocument[]
+    cds as unknown as ClinicalDocument[],
   );
   return cdsmap;
 }
@@ -161,7 +162,7 @@ function parseAccessToken(token: string) {
       .map(function (c) {
         return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
       })
-      .join('')
+      .join(''),
   );
 
   return JSON.parse(jsonPayload) as {
@@ -185,7 +186,7 @@ function parseAccessToken(token: string) {
 export async function syncAllRecords(
   baseUrl: string,
   connectionDocument: VeradigmConnectionDocument,
-  db: RxDatabase<DatabaseCollections>
+  db: RxDatabase<DatabaseCollections>,
 ): Promise<PromiseSettledResult<void[]>[]> {
   const procMapper = (proc: BundleEntry<Procedure>) =>
     DSTU2.mapProcedureToClinicalDocument(proc, connectionDocument);
@@ -205,7 +206,7 @@ export async function syncAllRecords(
     DSTU2.mapAllergyIntoleranceToClinicalDocument(a, connectionDocument);
 
   const patientId = parseAccessToken(
-    connectionDocument.access_token
+    connectionDocument.access_token,
   ).local_patient_id;
 
   const syncJob = await Promise.allSettled([
@@ -217,7 +218,7 @@ export async function syncAllRecords(
       procMapper,
       {
         patient: patientId,
-      }
+      },
     ),
     syncFHIRResource<Patient>(
       baseUrl,
@@ -227,7 +228,7 @@ export async function syncAllRecords(
       patientMapper,
       {
         _id: patientId,
-      }
+      },
     ),
     syncFHIRResource<Observation>(
       baseUrl,
@@ -238,7 +239,7 @@ export async function syncAllRecords(
       {
         patient: patientId,
         category: 'laboratory',
-      }
+      },
     ),
     syncFHIRResource<DiagnosticReport>(
       baseUrl,
@@ -248,7 +249,7 @@ export async function syncAllRecords(
       drMapper,
       {
         patient: patientId,
-      }
+      },
     ),
     syncFHIRResource<MedicationStatement>(
       baseUrl,
@@ -258,7 +259,7 @@ export async function syncAllRecords(
       medStatementMapper,
       {
         patient: patientId,
-      }
+      },
     ),
     syncFHIRResource<Immunization>(
       baseUrl,
@@ -268,7 +269,7 @@ export async function syncAllRecords(
       immMapper,
       {
         patient: patientId,
-      }
+      },
     ),
     syncFHIRResource<Condition>(
       baseUrl,
@@ -278,7 +279,7 @@ export async function syncAllRecords(
       conditionMapper,
       {
         patient: patientId,
-      }
+      },
     ),
     syncDocumentReferences(baseUrl, connectionDocument, db, {
       patient: patientId,
@@ -291,7 +292,7 @@ export async function syncAllRecords(
       allergyIntoleranceMapper,
       {
         patient: patientId,
-      }
+      },
     ),
   ]);
 
@@ -302,7 +303,7 @@ async function syncDocumentReferences(
   baseUrl: string,
   connectionDocument: VeradigmConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
-  params: Record<string, string>
+  params: Record<string, string>,
 ) {
   const documentReferenceMapper = (dr: BundleEntry<DocumentReference>) =>
     DSTU2.mapDocumentReferenceToClinicalDocument(dr, connectionDocument);
@@ -313,7 +314,7 @@ async function syncDocumentReferences(
     db,
     'DocumentReference',
     documentReferenceMapper,
-    params
+    params,
   );
 
   const docs = await db.clinical_documents
@@ -333,12 +334,12 @@ async function syncDocumentReferences(
     (doc) =>
       doc.toMutableJSON() as unknown as ClinicalDocument<
         BundleEntry<DocumentReference>
-      >
+      >,
   );
   // for each docref, get attachments and sync them
   const cdsmap = docRefItems.map(async (item) => {
     const attachmentUrls = item.data_record.raw.resource?.content.map(
-      (a) => a.attachment.url
+      (a) => a.attachment.url,
     );
     if (attachmentUrls) {
       for (const attachmentUrl of attachmentUrls) {
@@ -359,7 +360,7 @@ async function syncDocumentReferences(
             // attachment does not exist, sync it
             const { contentType, raw } = await fetchAttachmentData(
               attachmentUrl,
-              connectionDocument
+              connectionDocument,
             );
             if (raw && contentType) {
               const cd: ClinicalDocument = {
@@ -382,7 +383,7 @@ async function syncDocumentReferences(
               };
 
               await db.clinical_documents.insert(
-                cd as unknown as ClinicalDocument
+                cd as unknown as ClinicalDocument,
               );
             }
           } else {
@@ -397,7 +398,7 @@ async function syncDocumentReferences(
 
 async function fetchAttachmentData(
   url: string,
-  cd: VeradigmConnectionDocument
+  cd: VeradigmConnectionDocument,
 ): Promise<{ contentType: string | null; raw: string | Blob | undefined }> {
   try {
     const res = await fetch(url, {
@@ -407,7 +408,7 @@ async function fetchAttachmentData(
     });
     if (!res.ok) {
       throw new Error(
-        'Could not get document as the user is unauthorized. Try logging in again.'
+        'Could not get document as the user is unauthorized. Try logging in again.',
       );
     }
     const contentType = res.headers.get('Content-Type');
@@ -423,7 +424,7 @@ async function fetchAttachmentData(
     return { contentType, raw };
   } catch (e) {
     throw new Error(
-      'Could not get document as the user is unauthorized. Try logging in again.'
+      'Could not get document as the user is unauthorized. Try logging in again.',
     );
   }
 }

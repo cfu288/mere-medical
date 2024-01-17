@@ -1,20 +1,30 @@
 import { IVSDocument } from '../types/IVSDocument';
 import { IVSFilterCriteria, IVSFilterOptions } from '../types/IVSFilterOptions';
 
-export function filterDocuments(documents: Array<IVSDocument<any>>, filterOptions?: IVSFilterOptions): Array<IVSDocument<any>> {
+export function filterDocuments(
+  documents: Array<IVSDocument<any>>,
+  filterOptions?: IVSFilterOptions,
+): Array<IVSDocument<any>> {
   let filteredDocuments = documents;
   if (filterOptions) {
     if (filterOptions.include) {
-      filteredDocuments = filteredDocuments.filter((doc) => matchesCriteria(doc, filterOptions.include!));
+      filteredDocuments = filteredDocuments.filter((doc) =>
+        matchesCriteria(doc, filterOptions.include!),
+      );
     }
     if (filterOptions.exclude) {
-      filteredDocuments = filteredDocuments.filter((doc) => !matchesCriteria(doc, filterOptions.exclude!));
+      filteredDocuments = filteredDocuments.filter(
+        (doc) => !matchesCriteria(doc, filterOptions.exclude!),
+      );
     }
   }
   return filteredDocuments;
 }
 
-function matchesCriteria(document: IVSDocument<any>, criteria: IVSFilterCriteria): boolean {
+function matchesCriteria(
+  document: IVSDocument<any>,
+  criteria: IVSFilterCriteria,
+): boolean {
   if (criteria.metadata) {
     for (const key in criteria.metadata) {
       if (document.metadata[key] !== criteria.metadata[key]) {
@@ -22,12 +32,12 @@ function matchesCriteria(document: IVSDocument<any>, criteria: IVSFilterCriteria
       }
     }
   }
-  if (criteria.text) {
-    const texts = Array.isArray(criteria.text) ? criteria.text : [criteria.text];
-    if (!texts.includes(document.text)) {
-      return false;
-    }
-  }
+  // if (criteria.text) {
+  //   const texts = Array.isArray(criteria.text) ? criteria.text : [criteria.text];
+  //   if (!texts.includes(document.text)) {
+  //     return false;
+  //   }
+  // }
   return true;
 }
 
@@ -37,7 +47,10 @@ export function getObjectSizeInMB(obj: object): number {
   return kilobytes / 1024;
 }
 
-export function debounce(func: (...args: any[]) => void, delay: number): (...args: any[]) => void {
+export function debounce(
+  func: (...args: any[]) => void,
+  delay: number,
+): (...args: any[]) => void {
   let timeoutId: NodeJS.Timeout | null = null;
 
   return function (this: any, ...args: any[]) {

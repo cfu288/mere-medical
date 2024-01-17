@@ -3,10 +3,8 @@ import { NavigateFunction, useNavigate } from 'react-router-dom';
 import { RxDatabase } from 'rxdb';
 import { AppPage } from '../components/AppPage';
 import { GenericBanner } from '../components/GenericBanner';
-import {
-  DatabaseCollections,
-  useRxDb,
-} from '../components/providers/RxDbProvider';
+import { useRxDb } from '../components/providers/RxDbProvider';
+import { DatabaseCollections } from '../components/providers/DatabaseCollections';
 import { Routes } from '../Routes';
 import {
   DynamicRegistrationError,
@@ -49,7 +47,7 @@ function useEpicDynamicRegistrationLogin() {
         code = searchRequest.get('code'),
         epicBaseUrl = localStorage.getItem(EpicLocalStorageKeys.EPIC_BASE_URL),
         epicTokenUrl = localStorage.getItem(
-          EpicLocalStorageKeys.EPIC_TOKEN_URL
+          EpicLocalStorageKeys.EPIC_TOKEN_URL,
         ),
         epicAuthUrl = localStorage.getItem(EpicLocalStorageKeys.EPIC_AUTH_URL),
         epicName = localStorage.getItem(EpicLocalStorageKeys.EPIC_NAME),
@@ -221,7 +219,7 @@ const handleLogin = async ({
     epicTokenUrl,
     epicName,
     epicId,
-    enableProxy
+    enableProxy,
   );
 
   // Attempt dynamic registration
@@ -250,12 +248,12 @@ const handleLogin = async ({
       return Promise.reject(
         new DynamicRegistrationError(
           'This MyChart instance does not support dynamic client registration, which means we cannot automatically fetch your records in the future. We will still try to pull your records once, but you will need to sign in again to pull them again in the future.',
-          res
-        )
+          res,
+        ),
       );
     }
     return Promise.reject(
-      new Error('There was an error registering you at this MyChart instance')
+      new Error('There was an error registering you at this MyChart instance'),
     );
   }
 
@@ -264,7 +262,7 @@ const handleLogin = async ({
     dynamicRegResponse.client_id,
     epicTokenUrl,
     epicId,
-    enableProxy
+    enableProxy,
   );
 
   await saveConnectionToDb({

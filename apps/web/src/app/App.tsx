@@ -8,6 +8,7 @@ import {
   RouterProvider,
 } from 'react-router-dom';
 import { RxDatabase, RxDocument } from 'rxdb';
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import { VectorStorage } from '@mere/vector-storage';
 
 import { ErrorBoundary } from '../components/ErrorBoundary';
@@ -18,11 +19,8 @@ import {
   useLocalConfig,
 } from '../components/providers/LocalConfigProvider';
 import { NotificationProvider } from '../components/providers/NotificationProvider';
-import {
-  DatabaseCollections,
-  RxDbProvider,
-  useRxDb,
-} from '../components/providers/RxDbProvider';
+import { RxDbProvider, useRxDb } from '../components/providers/RxDbProvider';
+import { DatabaseCollections } from '../components/providers/DatabaseCollections';
 import { SentryInitializer } from '../components/providers/SentryInitializer';
 import { SyncJobProvider } from '../components/providers/SyncJobProvider';
 import { TutorialConfigProvider } from '../components/providers/TutorialConfigProvider';
@@ -86,7 +84,8 @@ const VectorStorageContext = React.createContext<
 >(undefined);
 
 function VectorStorageProvider({ children }: { children: React.ReactNode }) {
-  const [vectorStore, setVectorStore] = useState<VectorStorage<any>>();
+  const [vectorStore, setVectorStore] = useState<VectorStorage<DocMeta>>();
+  const rxdb = useRxDb();
   const localConfig = useLocalConfig();
 
   useEffect(() => {
@@ -96,17 +95,19 @@ function VectorStorageProvider({ children }: { children: React.ReactNode }) {
       localConfig?.experimental__openai_api_key.length > 47
     ) {
       console.log('Initializing VectorStorage');
-      const store = new VectorStorage({
+      const store = new VectorStorage<DocMeta>({
         openAIApiKey: localConfig?.experimental__openai_api_key,
         debounceTime: 300,
         // 10gb
         maxSizeInMB: 10 * 1000,
+        rxdb: rxdb,
       });
       setVectorStore(store);
     }
   }, [
     localConfig?.experimental__openai_api_key,
     localConfig?.experimental__use_openai_rag,
+    rxdb,
   ]);
 
   return (
@@ -116,7 +117,7 @@ function VectorStorageProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-type DocMeta = {
+export type DocMeta = {
   category: ClinicalDocumentResourceType;
   document_type: string;
   id: string;
@@ -125,19 +126,24 @@ type DocMeta = {
 
 const PAGE_SIZE = 100;
 const MAX_CHARS = 18000;
+
 async function addBatchToVectorStorage(
   documents: RxDocument<ClinicalDocument<unknown>, {}>[],
-  vectorStorage: VectorStorage<any>,
+  vectorStorage: VectorStorage<DocMeta>,
 ) {
   // allocate to min length
-  const docList: string[] = Array<string>(documents.length);
+  const docList: { id: string; text: string }[] = Array<{
+    id: string;
+    text: string;
+  }>(documents.length);
   const metaList: DocMeta[] = Array<DocMeta>(documents.length);
   documents.forEach((x) => {
     // trim at 22000 characters (aprox 8k tokens)
+    const docId = x.id!;
     const meta = {
       category: x.data_record.resource_type,
       document_type: 'clinical_document',
-      id: x.id!,
+      id: docId,
       url: x.metadata?.id!,
     };
 
@@ -164,22 +170,21 @@ async function addBatchToVectorStorage(
       // const serialzedKeys = [...new Set(Object.keys(newFlatObject))].join('|');
       // console.log(serialzed);
       // console.log(serialzedKeys);
-      docList.push(serialzed);
+      docList.push({ id: docId, text: serialzed });
       metaList.push(meta);
     } else if (x.data_record.content_type === 'application/xml') {
       const contentFull = JSON.stringify(x.data_record.raw);
       if (contentFull.length > MAX_CHARS) {
         for (let offset = 0; offset < contentFull.length; offset += MAX_CHARS) {
-          console.log(offset - MAX_CHARS);
           const chunk = contentFull.substring(
             offset,
             Math.min(offset + MAX_CHARS, contentFull.length),
           );
-          docList.push(chunk);
+          docList.push({ id: docId, text: chunk });
           metaList.push(meta);
         }
       } else {
-        docList.push(contentFull);
+        docList.push({ id: docId, text: contentFull });
         metaList.push(meta);
       }
     }
@@ -199,6 +204,8 @@ class VectorGeneratorSync {
   private vectorStorage: VectorStorage<any>;
   private page: number;
   private isDone: boolean;
+  private totalDocuments: number;
+  private currentDocumentsProcessed: number;
 
   constructor(
     db: RxDatabase<DatabaseCollections>,
@@ -208,6 +215,8 @@ class VectorGeneratorSync {
     this.vectorStorage = vectorStorage;
     this.page = 0;
     this.isDone = false;
+    this.totalDocuments = 0;
+    this.currentDocumentsProcessed = 0;
   }
 
   public async syncNextBatch() {
@@ -217,16 +226,25 @@ class VectorGeneratorSync {
         .skip(this.page ? this.page * PAGE_SIZE : 0)
         .limit(PAGE_SIZE)
         .exec();
-      if (documents.length !== PAGE_SIZE) {
+      if (
+        documents.length + this.currentDocumentsProcessed >=
+        this.totalDocuments
+      ) {
         this.isDone = true;
       }
-      console.log('syncing current batch: ' + this.page);
+
       await addBatchToVectorStorage(documents, this.vectorStorage);
+      this.currentDocumentsProcessed =
+        this.currentDocumentsProcessed + documents.length;
       this.page = this.page + 1;
     }
+    console.debug(
+      `VectorSync: ${((this.currentDocumentsProcessed / this.totalDocuments) * 100).toFixed(1)}%; ${this.currentDocumentsProcessed} of ${this.totalDocuments} total documents`,
+    );
   }
 
   public async startSync() {
+    this.totalDocuments = await this.db.clinical_documents.count().exec();
     while (!this.isDone) {
       await this.syncNextBatch();
     }
@@ -241,7 +259,7 @@ function VectorGenerator({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (vectorStorage && rxdb && !vsSync.current) {
       vsSync.current = new VectorGeneratorSync(rxdb, vectorStorage);
-      // vsSync.current.startSync();
+      vsSync.current.startSync();
     }
   }, [rxdb, vectorStorage]);
 

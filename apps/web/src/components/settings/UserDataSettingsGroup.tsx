@@ -1,8 +1,5 @@
-import {
-  DatabaseCollections,
-  handleJSONDataImport,
-  useRxDb,
-} from '../providers/RxDbProvider';
+import { handleJSONDataImport, useRxDb } from '../providers/RxDbProvider';
+import { DatabaseCollections } from '../providers/DatabaseCollections';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { useNotificationDispatch } from '../providers/NotificationProvider';
@@ -23,12 +20,12 @@ export type ImportFields = {
 
 export const exportData = (
   db: RxDatabase<DatabaseCollections>,
-  setFileDownloadLink: (blob: string) => void
+  setFileDownloadLink: (blob: string) => void,
 ) => {
   return db.exportJSON().then((json) => {
     const jsonData = JSON.stringify(json);
     const blobUrl = URL.createObjectURL(
-      new Blob([jsonData], { type: 'application/json' })
+      new Blob([jsonData], { type: 'application/json' }),
     );
     setFileDownloadLink(blobUrl);
     return blobUrl;
@@ -37,7 +34,7 @@ export const exportData = (
 
 export const handleImport = (
   fields: ImportFields,
-  db: RxDatabase<DatabaseCollections>
+  db: RxDatabase<DatabaseCollections>,
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
     const file = getFileFromFileList(fields.backup);
@@ -59,15 +56,15 @@ export const handleImport = (
       };
       reader.onerror = function (error) {
         reject(
-          Error('There was an error importing your data' + error.target?.error)
+          Error('There was an error importing your data' + error.target?.error),
         );
       };
       reader.readAsText(file);
     } else {
       reject(
         Error(
-          'There was an error importing your data: Unable to parse file from file list'
-        )
+          'There was an error importing your data: Unable to parse file from file list',
+        ),
       );
     }
   });
@@ -105,7 +102,7 @@ export function UserDataSettingsGroup() {
         });
       }
     },
-    [db, notifyDispatch]
+    [db, notifyDispatch],
   );
 
   const {
@@ -267,7 +264,7 @@ export function UserDataSettingsGroup() {
                               1024
                             ).toFixed(2)} GB`
                           : `${(quotaDetails.usage / 1024 / 1024).toFixed(
-                              2
+                              2,
                             )} MB`
                       } out of ${
                         quotaDetails.quota >= 1024 * 1024 * 1024
@@ -278,7 +275,7 @@ export function UserDataSettingsGroup() {
                               1024
                             ).toFixed(2)} GB`
                           : `${(quotaDetails.quota / 1024 / 1024).toFixed(
-                              2
+                              2,
                             )} MB`
                       } of total storage available.`
                     : 'Storage quota not available.'}

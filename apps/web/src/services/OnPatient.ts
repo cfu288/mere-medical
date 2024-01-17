@@ -15,7 +15,7 @@ import {
   FhirResource,
 } from 'fhir/r2';
 import { RxDatabase } from 'rxdb';
-import { DatabaseCollections } from '../components/providers/RxDbProvider';
+import { DatabaseCollections } from '../components/providers/DatabaseCollections';
 import { DSTU2 } from '.';
 import Config from '../environments/config.json';
 import { ConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
@@ -35,7 +35,7 @@ export function getLoginUrl(): string & Location {
 
 async function getFHIRResource<T extends FhirResource>(
   connectionDocument: ConnectionDocument,
-  fhirResourcePathUrl: string
+  fhirResourcePathUrl: string,
 ): Promise<BundleEntry<T>[]> {
   const res = await fetch(`${OnPatientDSTU2Url}/${fhirResourcePathUrl}`, {
     headers: {
@@ -57,27 +57,28 @@ async function syncFHIRResource<T extends FhirResource>(
   connectionDocument: ConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
-  mapper: (proc: BundleEntry<T>) => ClinicalDocument<BundleEntry<T>>
+  mapper: (proc: BundleEntry<T>) => ClinicalDocument<BundleEntry<T>>,
 ) {
   const fhirResources = await getFHIRResource<T>(
     connectionDocument,
-    fhirResourceUrl
+    fhirResourceUrl,
   );
   const cds = fhirResources
     .filter(
       (i) =>
-        i.resource?.resourceType.toLowerCase() === fhirResourceUrl.toLowerCase()
+        i.resource?.resourceType.toLowerCase() ===
+        fhirResourceUrl.toLowerCase(),
     )
     .map(mapper);
   const cdsmap = await db.clinical_documents.bulkUpsert(
-    cds as unknown as ClinicalDocument[]
+    cds as unknown as ClinicalDocument[],
   );
   return cdsmap;
 }
 
 export async function syncAllRecords(
   connectionDocument: ConnectionDocument,
-  db: RxDatabase<DatabaseCollections>
+  db: RxDatabase<DatabaseCollections>,
 ): Promise<PromiseSettledResult<void[]>[]> {
   const immMapper = (dr: BundleEntry<Immunization>) =>
     DSTU2.mapImmunizationToClinicalDocument(dr, connectionDocument);
@@ -99,37 +100,37 @@ export async function syncAllRecords(
       connectionDocument,
       db,
       'Immunization',
-      immMapper
+      immMapper,
     ),
     syncFHIRResource<Procedure>(
       connectionDocument,
       db,
       'Procedure',
-      procMapper
+      procMapper,
     ),
     syncFHIRResource<Condition>(
       connectionDocument,
       db,
       'Condition',
-      conditionMapper
+      conditionMapper,
     ),
     syncFHIRResource<Observation>(
       connectionDocument,
       db,
       'Observation',
-      obsMapper
+      obsMapper,
     ),
     syncFHIRResource<DiagnosticReport>(
       connectionDocument,
       db,
       'DiagnosticReport',
-      drMapper
+      drMapper,
     ),
     syncFHIRResource<MedicationStatement>(
       connectionDocument,
       db,
       'MedicationStatement',
-      medStatementMapper
+      medStatementMapper,
     ),
     syncFHIRResource<Patient>(connectionDocument, db, 'Patient', patientMapper),
   ]);

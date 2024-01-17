@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { RxDatabase, RxDocument } from 'rxdb';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
-import { DatabaseCollections, useRxDb } from '../providers/RxDbProvider';
+import { useRxDb } from '../providers/RxDbProvider';
+import { DatabaseCollections } from '../providers/DatabaseCollections';
 
 /**
  * This hook is used to get the clinical document given a metadata.id
@@ -34,7 +35,7 @@ export function useClinicalDoc(id?: string) {
  */
 async function getClinicalDocWithMetaId(
   id: string,
-  db: RxDatabase<DatabaseCollections>
+  db: RxDatabase<DatabaseCollections>,
 ) {
   if (!id) {
     return [];
