@@ -21,7 +21,7 @@ import { SearchBar } from './SearchBar';
 import { Transition } from '@headlessui/react';
 import { ButtonLoadingSpinner } from '../components/connection/ButtonLoadingSpinner';
 import useIntersectionObserver from '../components/hooks/useIntersectionObserver';
-import { VectorStorage } from 'vector-storage';
+import { VectorStorage } from '@mere/vector-storage';
 import { useVectorStorage } from '../app/App';
 
 const PAGE_SIZE = 50;
@@ -34,17 +34,14 @@ async function fetchRecordsWithVector(
   if (!query) {
     return {};
   }
-  let start = Date.now();
-  console.debug('Starting vector search');
   const results = await vectorStorage.similaritySearch({
     query,
-    k: 20,
+    k: 10,
   });
-  console.debug(`Vector search took ${Date.now() - start}ms`);
 
   // Display the search results
   const ids = results.similarItems.map((item) => {
-    return JSON.parse(item.metadata).id;
+    return item.metadata.id;
   });
 
   const docs = await db.clinical_documents
@@ -217,18 +214,20 @@ function useRecordQuery(query: string): {
           }
 
           // Execute query
-          // const groupedRecords = await fetchRecords(
-          //   db,
-          //   user.id,
-          //   query,
-          //   loadMore ? currentPage + 1 : currentPage,
-          // );
-
-          const groupedRecords = await fetchRecordsWithVector(
+          let groupedRecords = await fetchRecords(
             db,
-            vectorStorage,
+            user.id,
             query,
+            loadMore ? currentPage + 1 : currentPage,
           );
+
+          if (Object.keys(groupedRecords).length === 0) {
+            groupedRecords = await fetchRecordsWithVector(
+              db,
+              vectorStorage,
+              query,
+            );
+          }
 
           // If load more, increment page. Otherwise, reset page to 0
           if (loadMore) {
@@ -268,7 +267,7 @@ function useRecordQuery(query: string): {
     ),
     debounceExecQuery = useDebounceCallback(
       () => execQuery({ loadMore: false }),
-      1000,
+      300,
     ),
     loadNextPage = useDebounceCallback(
       () => execQuery({ loadMore: true }),
@@ -321,7 +320,8 @@ export function TimelineTab() {
           ))}
           {status !== QueryStatus.COMPLETE &&
             status !== QueryStatus.LOADING && (
-              <LoadMoreButton status={status} loadNextPage={loadNextPage} />
+              <></>
+              // <LoadMoreButton status={status} loadNextPage={loadNextPage} />
             )}
         </>
       ) : (

@@ -8,7 +8,7 @@ import {
   RouterProvider,
 } from 'react-router-dom';
 import { RxDatabase, RxDocument } from 'rxdb';
-import { VectorStorage } from 'vector-storage';
+import { VectorStorage } from '@mere/vector-storage';
 
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { useConsoleLogEasterEgg } from '../components/hooks/useConsoleLogEasterEgg';
@@ -32,7 +32,10 @@ import { UserProvider } from '../components/providers/UserProvider';
 import { TabWrapper } from '../components/TabWrapper';
 import { TutorialOverlay } from '../components/tutorial/TutorialOverlay';
 import Config from '../environments/config.json';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
+import {
+  ClinicalDocument,
+  ClinicalDocumentResourceType,
+} from '../models/clinical-document/ClinicalDocument.type';
 import CernerRedirect from '../pages/CernerRedirect';
 import ConnectionTab from '../pages/ConnectionTab';
 import EpicRedirect from '../pages/EpicRedirect';
@@ -95,7 +98,7 @@ function VectorStorageProvider({ children }: { children: React.ReactNode }) {
       console.log('Initializing VectorStorage');
       const store = new VectorStorage({
         openAIApiKey: localConfig?.experimental__openai_api_key,
-        debounceTime: 1000,
+        debounceTime: 300,
         // 10gb
         maxSizeInMB: 10 * 1000,
       });
@@ -113,15 +116,31 @@ function VectorStorageProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-const PAGE_SIZE = 100;
+type DocMeta = {
+  category: ClinicalDocumentResourceType;
+  document_type: string;
+  id: string;
+  url: string;
+};
 
+const PAGE_SIZE = 100;
+const MAX_CHARS = 18000;
 async function addBatchToVectorStorage(
   documents: RxDocument<ClinicalDocument<unknown>, {}>[],
   vectorStorage: VectorStorage<any>,
 ) {
-  const docList = documents.map((x) => {
+  // allocate to min length
+  const docList: string[] = Array<string>(documents.length);
+  const metaList: DocMeta[] = Array<DocMeta>(documents.length);
+  documents.forEach((x) => {
     // trim at 22000 characters (aprox 8k tokens)
-    const content = JSON.stringify(x.data_record.raw)?.substring(0, 22000);
+    const meta = {
+      category: x.data_record.resource_type,
+      document_type: 'clinical_document',
+      id: x.id!,
+      url: x.metadata?.id!,
+    };
+
     if (x.data_record.content_type === 'application/json') {
       const newUnflatObject: any = x.data_record.raw;
       delete newUnflatObject.link;
@@ -129,22 +148,45 @@ async function addBatchToVectorStorage(
       delete newUnflatObject.search;
       delete newUnflatObject.resource.subject;
       delete newUnflatObject.resource.id;
-      const newFlatObject = flattenObject(newUnflatObject);
+      delete newUnflatObject.resource.status;
+      const newFlatObject = flattenObject(
+        Object.keys(newUnflatObject)
+          .sort()
+          .reduce((obj: any, key: any) => {
+            obj[key] = newUnflatObject[key];
+            return obj;
+          }, {}),
+      );
 
-      const serialzed = Object.values(newFlatObject).join('|');
-      return Object.values(newFlatObject).join('|');
+      const serialzed = [...new Set(Object.values(newFlatObject))]
+        .join('|')
+        .substring(0, MAX_CHARS);
+      // const serialzedKeys = [...new Set(Object.keys(newFlatObject))].join('|');
+      // console.log(serialzed);
+      // console.log(serialzedKeys);
+      docList.push(serialzed);
+      metaList.push(meta);
+    } else if (x.data_record.content_type === 'application/xml') {
+      const contentFull = JSON.stringify(x.data_record.raw);
+      if (contentFull.length > MAX_CHARS) {
+        for (let offset = 0; offset < contentFull.length; offset += MAX_CHARS) {
+          console.log(offset - MAX_CHARS);
+          const chunk = contentFull.substring(
+            offset,
+            Math.min(offset + MAX_CHARS, contentFull.length),
+          );
+          docList.push(chunk);
+          metaList.push(meta);
+        }
+      } else {
+        docList.push(contentFull);
+        metaList.push(meta);
+      }
     }
-    return content;
   });
-  const metaList = documents.map((x) =>
-    JSON.stringify({
-      category: x.data_record.resource_type,
-      document_type: 'clinical_document',
-      id: x.id,
-      url: x.metadata?.id,
-    }),
-  );
+
   return await vectorStorage.addTexts(docList, metaList);
+  // return Promise.resolve([]);
 }
 
 /**
@@ -199,7 +241,7 @@ function VectorGenerator({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (vectorStorage && rxdb && !vsSync.current) {
       vsSync.current = new VectorGeneratorSync(rxdb, vectorStorage);
-      vsSync.current.startSync();
+      // vsSync.current.startSync();
     }
   }, [rxdb, vectorStorage]);
 
