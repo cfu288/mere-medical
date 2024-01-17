@@ -64,25 +64,57 @@ export class VectorStorage<T> {
     similarItems: Array<IVSSimilaritySearchItem<T>>;
     query: { text: string; embedding: number[] };
   }> {
+    console.group('similaritySearch');
+    const totalStart = performance.now();
     const { query, k = 4, filterOptions, includeValues } = params;
+    console.debug('Starting vector search');
+    let start = performance.now();
     const queryEmbedding = await this.embedText(query);
+    console.debug(
+      `Query embedding took ${(performance.now() - start).toFixed(2)}ms`,
+    );
+    start = performance.now();
     const queryMagnitude = await this.calculateMagnitude(queryEmbedding);
+    console.debug(
+      `Magnitude calculation took ${(performance.now() - start).toFixed(2)}ms`,
+    );
+    start = performance.now();
     const filteredDocuments = filterDocuments(this.documents, filterOptions);
+    console.debug(`Filtering took ${(performance.now() - start).toFixed(2)}ms`);
+    start = performance.now();
     const scoresPairs: Array<[IVSDocument<T>, number]> =
       this.calculateSimilarityScores(
         filteredDocuments,
         queryEmbedding,
         queryMagnitude,
       );
+    console.debug(
+      `Similarity scores calculation took ${(performance.now() - start).toFixed(2)}ms`,
+    );
+    start = performance.now();
     const sortedPairs = scoresPairs.sort((a, b) => b[1] - a[1]);
+    console.debug(`Sorting took ${(performance.now() - start).toFixed(2)}ms`);
+    start = performance.now();
     const results = sortedPairs
       .slice(0, k)
       .map((pair) => ({ ...pair[0], score: pair[1] }));
+    console.debug(`Slice took ${(performance.now() - start).toFixed(2)}ms`);
+    start = performance.now();
     this.updateHitCounters(results);
+    console.debug(
+      `Hit counters update took ${(performance.now() - start).toFixed(2)}ms`,
+    );
     if (results.length > 0) {
       this.removeDocsLRU();
       try {
-        await this.saveToIndexDbStorage();
+        requestIdleCallback(
+          async () => {
+            await this.saveToIndexDbStorage();
+          },
+          {
+            timeout: 1000 * 60,
+          },
+        );
       } catch (e) {
         console.error(e);
       }
@@ -93,6 +125,10 @@ export class VectorStorage<T> {
         delete result.vectorMag;
       });
     }
+    console.debug(
+      `Total similarity search took ${(performance.now() - totalStart).toFixed(2)}ms`,
+    );
+    console.groupEnd();
     return {
       query: { embedding: queryEmbedding, text: query },
       similarItems: results,
@@ -229,42 +265,87 @@ export class VectorStorage<T> {
   }
 
   private async loadFromIndexDbStorage(): Promise<void> {
+    let start;
     if (!this.db) {
+      start = performance.now();
       this.db = await this.initDB();
+      console.debug(`DB init took ${(performance.now() - start).toFixed(2)}ms`);
     }
+    start = performance.now();
     this.documents = await this.db.getAll('documents');
+    console.debug(
+      `Loading from index db took ${(performance.now() - start).toFixed(2)}ms`,
+    );
     this.removeDocsLRU();
   }
 
   private async saveToIndexDbStorage(): Promise<void> {
+    console.group('saveToIndexDbStorage');
+    const totalStart = performance.now();
+    let start;
     if (!this.db) {
+      start = performance.now();
       this.db = await this.initDB();
+      console.debug(`DB init took ${(performance.now() - start).toFixed(2)}ms`);
     }
     try {
+      start = performance.now();
       const tx = this.db.transaction('documents', 'readwrite');
       await tx.objectStore('documents').clear();
+      console.debug(
+        `Clearing took ${(performance.now() - start).toFixed(2)}ms`,
+      );
+      start = performance.now();
       for (const doc of this.documents) {
         // eslint-disable-next-line no-await-in-loop
         await tx.objectStore('documents').put(doc);
       }
+      console.debug(`Putting took ${(performance.now() - start).toFixed(2)}ms`);
+      start = performance.now();
       await tx.done;
+      console.debug(
+        `Transaction done took ${(performance.now() - start).toFixed(2)}ms`,
+      );
     } catch (error: any) {
       console.error('Failed to save to IndexedDB:', error.message);
     }
+    console.debug(
+      `Saving to index db took ${(performance.now() - totalStart).toFixed(2)}ms`,
+    );
+    console.groupEnd();
   }
 
   private removeDocsLRU(): void {
-    if (getObjectSizeInMB(this.documents) > this.maxSizeInMB) {
-      // Sort documents by hit counter (ascending) and then by timestamp (ascending)
-      this.documents.sort(
-        (a, b) => (a.hits ?? 0) - (b.hits ?? 0) || a.timestamp - b.timestamp,
-      );
+    const clearTask = () => {
+      const start = performance.now();
+      if (getObjectSizeInMB(this.documents) > this.maxSizeInMB) {
+        // Sort documents by hit counter (ascending) and then by timestamp (ascending)
+        this.documents.sort(
+          (a, b) => (a.hits ?? 0) - (b.hits ?? 0) || a.timestamp - b.timestamp,
+        );
 
-      // Remove documents until the size is below the limit
-      while (getObjectSizeInMB(this.documents) > this.maxSizeInMB) {
-        this.documents.shift();
+        // Remove documents until the size is below the limit
+        while (getObjectSizeInMB(this.documents) > this.maxSizeInMB) {
+          this.documents.shift();
+        }
       }
-    }
+      // console.debug(
+      //   `LRU removal took ${(performance.now() - start).toFixed(2)}ms`,
+      // );
+    };
+
+    requestIdleCallback(clearTask, {
+      timeout: 1000 * 60,
+    });
+  }
+}
+
+function requestIdleCallback(fn: () => void, options?: { timeout: number }) {
+  if ('requestIdleCallback' in window) {
+    // if requestIdleCallback is available, use it
+    window.requestIdleCallback(fn, options);
+  } else {
+    setTimeout(fn, 0);
   }
 }
 
