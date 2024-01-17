@@ -1,0 +1,33 @@
+{
+  "name": "@mere/vector-storage",
+  "version": "0.0.1",
+  "description": "A lightweight and efficient vector database for storing and searching text embeddings in the browser's local storage. The package uses OpenAI's API to generate embeddings for text documents and provides functionality for similarity search, filtering, and automatic management of local storage space. It is designed for use cases where client-side storage and retrieval of text embeddings are needed.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "bump": "npm version patch",
+    "package": "npm run lint && npm run build && npm run bump && npm publish",
+    "lint": "eslint --ext .ts src"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0",
+    "dexie": "^3.2.3",
+    "idb": "^7.1.1"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.194",
+    "@types/node": "^18.16.13",
+    "@typescript-eslint/eslint-plugin": "^5.59.2",
+    "@typescript-eslint/parser": "^5.59.2",
+    "eslint": "^8.39.0",
+    "eslint-config-eslint": "^7.0.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-config-standard-with-typescript": "^34.0.1",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-sort-imports-es6-autofix": "^0.6.0",
+    "eslint-plugin-sort-keys-fix": "^1.1.2",
+    "typescript": "^5.0.4"
+  }
+}

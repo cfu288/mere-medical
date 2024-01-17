@@ -1,0 +1,30 @@
+{
+  "name": "vector-storage",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/vector-storage/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/vector-storage",
+        "main": "libs/vector-storage/src/index.ts",
+        "tsConfig": "libs/vector-storage/tsconfig.lib.json",
+        "assets": ["libs/vector-storage/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/vector-storage/jest.config.ts"
+      }
+    }
+  },
+  "tags": []
+}
