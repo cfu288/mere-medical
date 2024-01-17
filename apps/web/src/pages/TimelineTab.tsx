@@ -1,26 +1,29 @@
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, FhirResource } from 'fhir/r2';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useRxDb } from '../components/providers/RxDbProvider';
-import { DatabaseCollections } from '../components/providers/DatabaseCollections';
 import { MangoQuerySelector, RxDatabase, RxDocument } from 'rxdb';
-import { EmptyRecordsPlaceholder } from '../components/EmptyRecordsPlaceholder';
-import { useUser } from '../components/providers/UserProvider';
+
+import { Transition } from '@headlessui/react';
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import { VectorStorage } from '@mere/vector-storage';
+import { useDebounceCallback } from '@react-hook/debounce';
+
 import { AppPage } from '../components/AppPage';
+import { ButtonLoadingSpinner } from '../components/connection/ButtonLoadingSpinner';
+import { EmptyRecordsPlaceholder } from '../components/EmptyRecordsPlaceholder';
+import useIntersectionObserver from '../components/hooks/useIntersectionObserver';
+import { useScrollToHash } from '../components/hooks/useScrollToHash';
+import { DatabaseCollections } from '../components/providers/DatabaseCollections';
+import { useRxDb } from '../components/providers/RxDbProvider';
+import { useUser } from '../components/providers/UserProvider';
+import { useVectorStorage } from '../components/providers/VectorStorageProvider';
 import { JumpToPanel } from '../components/timeline/JumpToPanel';
 import { TimelineBanner } from '../components/timeline/TimelineBanner';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 import { TimelineItem } from '../components/timeline/TimelineItem';
 import { TimelineYearHeaderWrapper } from '../components/timeline/TimelineYearHeaderWrapper';
-import { useDebounceCallback } from '@react-hook/debounce';
-import { TimelineSkeleton } from './TimelineSkeleton';
-import { useScrollToHash } from '../components/hooks/useScrollToHash';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 import { SearchBar } from './SearchBar';
-import { Transition } from '@headlessui/react';
-import { ButtonLoadingSpinner } from '../components/connection/ButtonLoadingSpinner';
-import useIntersectionObserver from '../components/hooks/useIntersectionObserver';
-import { VectorStorage } from '@mere/vector-storage';
-import { useVectorStorage } from '../app/App';
+import { TimelineSkeleton } from './TimelineSkeleton';
 
 const PAGE_SIZE = 50;
 

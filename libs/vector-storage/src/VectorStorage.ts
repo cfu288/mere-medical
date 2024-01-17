@@ -1,10 +1,9 @@
 import { ICreateEmbeddingResponse } from './types/ICreateEmbeddingResponse';
-import { IDBPDatabase, openDB } from 'idb';
 import { IVSDocument, IVSSimilaritySearchItem } from './types/IVSDocument';
 import { IVSOptions } from './types/IVSOptions';
 import { IVSSimilaritySearchParams } from './types/IVSSimilaritySearchParams';
 import { constants } from './common/constants';
-import { filterDocuments, getObjectSizeInMB } from './common/helpers';
+import { filterDocuments } from './common/helpers';
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import { DatabaseCollections } from 'apps/web/src/components/providers/DatabaseCollections';
 import { RxDatabase } from 'rxdb';
@@ -14,18 +13,14 @@ export class VectorStorage<
     [key: string]: any;
   },
 > {
-  private db!: IDBPDatabase<any>;
   private rxdb!: RxDatabase<DatabaseCollections>;
   private documents: Array<IVSDocument<T>> = [];
-  private readonly maxSizeInMB: number;
-  private readonly debounceTime: number;
   private readonly openaiModel: string;
   private readonly openaiApiKey?: string;
   private readonly embedTextsFn: (texts: string[]) => Promise<number[][]>;
+  private hasLoadedFromStorage = false;
 
   constructor(options: IVSOptions = {}) {
-    this.maxSizeInMB = options.maxSizeInMB ?? constants.DEFAULT_MAX_SIZE_IN_MB;
-    this.debounceTime = options.debounceTime ?? constants.DEFAULT_DEBOUNCE_TIME;
     this.openaiModel = options.openaiModel ?? constants.DEFAULT_OPENAI_MODEL;
     this.embedTextsFn = options.embedTextsFn ?? this.embedTexts; // Use the custom function if provided, else use the default one
     this.openaiApiKey = options.openAIApiKey;
@@ -34,23 +29,33 @@ export class VectorStorage<
       console.error(
         'VectorStorage: pass as an option either an OpenAI API key or a custom embedTextsFn function.',
       );
-    } else {
-      this.loadFromRxDbStorage();
     }
   }
 
-  // public async addText(text: string, metadata: T): Promise<IVSDocument<T>> {
-  //   // Create a document from the text and metadata
-  //   const doc: IVSDocument<T> = {
-  //     metadata,
-  //     text,
-  //     timestamp: Date.now(),
-  //     vector: [],
-  //     vectorMag: 0,
-  //   };
-  //   const docs = await this.addDocuments([doc]);
-  //   return docs[0];
-  // }
+  public async initDb() {
+    await this.loadFromRxDbStorage();
+    this.hasLoadedFromStorage = true;
+  }
+
+  public async addText(
+    item: {
+      id: string;
+      text: string;
+    },
+    metadata: T,
+  ): Promise<IVSDocument<T>> {
+    // Create a document from the text and metadata
+    const doc: IVSDocument<T> = {
+      id: item.id,
+      metadata: metadata,
+      text: item.text,
+      timestamp: Date.now(),
+      vector: [],
+      vectorMag: 0,
+    };
+    const docs = await this.addDocuments([doc]);
+    return docs[0];
+  }
 
   public async addTexts(
     texts: {
@@ -118,7 +123,7 @@ export class VectorStorage<
       `Hit counters update took ${(performance.now() - start).toFixed(2)}ms`,
     );
     if (results.length > 0) {
-      this.removeDocsLRU();
+      // Don't let saving to storage block returning the results
       try {
         requestIdleCallback(
           async () => {
@@ -148,36 +153,22 @@ export class VectorStorage<
     };
   }
 
-  private async initDB(): Promise<IDBPDatabase<any>> {
-    return await openDB<any>('VectorStorageDatabase', undefined, {
-      upgrade(db) {
-        const documentStore = db.createObjectStore('documents', {
-          autoIncrement: true,
-          keyPath: 'id',
-        });
-        documentStore.createIndex('text', 'text', { unique: true });
-        documentStore.createIndex('metadata', 'metadata');
-        documentStore.createIndex('timestamp', 'timestamp');
-        documentStore.createIndex('vector', 'vector');
-        documentStore.createIndex('vectorMag', 'vectorMag');
-        documentStore.createIndex('hits', 'hits');
-      },
-    });
-  }
-
   private async addDocuments(
     documents: Array<IVSDocument<T>>,
   ): Promise<Array<IVSDocument<T>>> {
+    if (!this.hasLoadedFromStorage) {
+      await this.initDb();
+    }
     // filter out already existing documents by id
+    const existingDocumentIdSet = new Set(this.documents.map((doc) => doc.id));
     const newDocuments = documents.filter(
-      (doc) =>
-        !this.documents.some((d) => {
-          return d.id === doc.id;
-        }),
+      (doc) => !existingDocumentIdSet.has(doc.id),
     );
     // If there are no new documents, return an empty array
     if (newDocuments.length === 0) {
       return [];
+    } else {
+      debugger;
     }
     const newVectors = await this.embedTextsFn(
       newDocuments.map((doc) => doc.text!),
@@ -189,7 +180,6 @@ export class VectorStorage<
     });
     // Add new documents to the store
     this.documents.push(...newDocuments);
-    this.removeDocsLRU();
     // Save to index db storage
     try {
       await this.saveToRxDbStorage();
@@ -254,6 +244,7 @@ export class VectorStorage<
     return similarityScores;
   }
 
+  // slower than calculateSimilarityScores
   private calculateSimilarityScoresOld(
     filteredDocuments: Array<IVSDocument<T>>,
     queryVector: number[],
@@ -287,22 +278,6 @@ export class VectorStorage<
     console.debug(
       `Loading from index db took ${(performance.now() - start).toFixed(2)}ms`,
     );
-    this.removeDocsLRU();
-  }
-
-  private async loadFromIndexDbStorageOld(): Promise<void> {
-    let start;
-    if (!this.db) {
-      start = performance.now();
-      this.db = await this.initDB();
-      console.debug(`DB init took ${(performance.now() - start).toFixed(2)}ms`);
-    }
-    start = performance.now();
-    this.documents = await this.db.getAll('documents');
-    console.debug(
-      `Loading from index db took ${(performance.now() - start).toFixed(2)}ms`,
-    );
-    this.removeDocsLRU();
   }
 
   private async saveToRxDbStorage(): Promise<void> {
@@ -321,67 +296,6 @@ export class VectorStorage<
     console.debug(
       `Saving to RxDB took ${(performance.now() - totalStart).toFixed(2)}ms`,
     );
-  }
-
-  private async saveToIndexDbStorageOld(): Promise<void> {
-    console.group('saveToIndexDbStorage');
-    const totalStart = performance.now();
-    let start;
-    if (!this.db) {
-      start = performance.now();
-      this.db = await this.initDB();
-      console.debug(`DB init took ${(performance.now() - start).toFixed(2)}ms`);
-    }
-    try {
-      start = performance.now();
-      const tx = this.db.transaction('documents', 'readwrite');
-      await tx.objectStore('documents').clear();
-      console.debug(
-        `Clearing took ${(performance.now() - start).toFixed(2)}ms`,
-      );
-      start = performance.now();
-      for (const doc of this.documents) {
-        // eslint-disable-next-line no-await-in-loop
-        await tx.objectStore('documents').put(doc);
-      }
-      console.debug(`Putting took ${(performance.now() - start).toFixed(2)}ms`);
-      start = performance.now();
-      await tx.done;
-      console.debug(
-        `Transaction done took ${(performance.now() - start).toFixed(2)}ms`,
-      );
-    } catch (error: any) {
-      console.error('Failed to save to IndexedDB:', error.message);
-    }
-    console.debug(
-      `Saving to index db took ${(performance.now() - totalStart).toFixed(2)}ms`,
-    );
-    console.groupEnd();
-  }
-
-  private removeDocsLRU(): void {
-    return;
-    const clearTask = () => {
-      const start = performance.now();
-      if (getObjectSizeInMB(this.documents) > this.maxSizeInMB) {
-        // Sort documents by hit counter (ascending) and then by timestamp (ascending)
-        this.documents.sort(
-          (a, b) => (a.hits ?? 0) - (b.hits ?? 0) || a.timestamp - b.timestamp,
-        );
-
-        // Remove documents until the size is below the limit
-        while (getObjectSizeInMB(this.documents) > this.maxSizeInMB) {
-          this.documents.shift();
-        }
-      }
-      console.debug(
-        `LRU removal took ${(performance.now() - start).toFixed(2)}ms`,
-      );
-    };
-
-    requestIdleCallback(clearTask, {
-      timeout: 1000 * 60,
-    });
   }
 }
 

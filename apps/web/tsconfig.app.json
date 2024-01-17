@@ -73,8 +73,9 @@
     "src/components/hooks/DeveloperLogsProvider.tsx",
     "src/components/settings/DeveloperSettingsGroup.tsx",
     "src/components/settings/AboutMereSettingsGroup.tsx",
-    "./src/app/flattenObject.tsx",
-    "./src/components/providers/DatabaseCollections.tsx"
+    "src/utils/flattenObject.tsx",
+    "./src/components/providers/DatabaseCollections.tsx",
+    "src/components/providers/VectorStorageProvider.tsx"
   ],
   "exclude": [
     "jest.config.ts",
