@@ -24,6 +24,7 @@ import { TimelineYearHeaderWrapper } from '../components/timeline/TimelineYearHe
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 import { SearchBar } from './SearchBar';
 import { TimelineSkeleton } from './TimelineSkeleton';
+import { useLocalConfig } from '../components/providers/LocalConfigProvider';
 
 const PAGE_SIZE = 50;
 
@@ -188,6 +189,7 @@ function useRecordQuery(query: string): {
   loadNextPage: () => void; // Function to load next page of results
 } {
   const db = useRxDb(),
+    { experimental__use_openai_rag } = useLocalConfig(),
     user = useUser(),
     hasRun = useRef(false),
     [status, setQueryStatus] = useState(QueryStatus.IDLE),
@@ -223,14 +225,16 @@ function useRecordQuery(query: string): {
             loadMore ? currentPage + 1 : currentPage,
           );
 
-          if (Object.keys(groupedRecords).length === 0) {
-            // If no results, try AI search
-            isAiSearch = true;
-            groupedRecords = await fetchRecordsWithVector(
-              db,
-              vectorStorage,
-              query,
-            );
+          if (experimental__use_openai_rag) {
+            if (Object.keys(groupedRecords).length === 0) {
+              // If no results, try AI search
+              isAiSearch = true;
+              groupedRecords = await fetchRecordsWithVector(
+                db,
+                vectorStorage,
+                query,
+              );
+            }
           }
 
           // If load more, increment page. Otherwise, reset page to 0
