@@ -1,24 +1,24 @@
+import { BundleEntry, Patient } from 'fhir/r2';
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { RxDatabase, RxDocument } from 'rxdb';
+
+import { Switch } from '@headlessui/react';
+
 import { AppPage } from '../components/AppPage';
 import { GenericBanner } from '../components/GenericBanner';
 import { DatabaseCollections } from '../components/providers/DatabaseCollections';
-import { useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
-import { RxDatabase, RxDocument } from 'rxdb';
-import { BundleEntry, Patient } from 'fhir/r2';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
-import { PrivacyAndSecuritySettingsGroup } from '../components/settings/PrivacyAndSecuritySettingsGroup';
-import { UserDataSettingsGroup } from '../components/settings/UserDataSettingsGroup';
-import { UserCard } from '../components/settings/UserCard';
-import { DeveloperSettingsGroup } from '../components/settings/DeveloperSettingsGroup';
-import { AboutMereSettingsGroup } from '../components/settings/AboutMereSettingsGroup';
 import {
   useLocalConfig,
   useUpdateLocalConfig,
 } from '../components/providers/LocalConfigProvider';
-import { Switch } from '@headlessui/react';
-import { ref } from 'yup';
+import { AboutMereSettingsGroup } from '../components/settings/AboutMereSettingsGroup';
+import { DeveloperSettingsGroup } from '../components/settings/DeveloperSettingsGroup';
+import { PrivacyAndSecuritySettingsGroup } from '../components/settings/PrivacyAndSecuritySettingsGroup';
+import { UserCard } from '../components/settings/UserCard';
+import { UserDataSettingsGroup } from '../components/settings/UserDataSettingsGroup';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 import { classNames } from '../utils/StyleUtils';
-import uuid4 from '../utils/UUIDUtils';
 
 export function fetchPatientRecords(
   db: RxDatabase<DatabaseCollections>,
@@ -128,7 +128,8 @@ const SettingsTab: React.FC = () => {
 export default SettingsTab;
 
 function ExperimentalSettingsGroup() {
-  const localConfig = useLocalConfig();
+  const { experimental__openai_api_key, experimental__use_openai_rag } =
+    useLocalConfig();
   const updateLocalConfig = useUpdateLocalConfig();
 
   return (
@@ -149,25 +150,27 @@ function ExperimentalSettingsGroup() {
                     className="text-primary-800 text-lg leading-6"
                     passive
                   >
-                    Use OpenAI RAG
+                    Enable Mere Assistant
                   </Switch.Label>
                   <Switch.Description className="pt-2 text-sm text-gray-800">
-                    Enable the use of OpenAI RAG for summarization and search.
+                    Enable the use of OpenAI APIs for improved search and Q&A
+                    features.
                   </Switch.Description>
                   <Switch.Description className="pt-2 text-sm text-red-800">
-                    WARNING: will send your data to OpenAI.
+                    <b>WARNING</b>: Enabling this feature will send your medical
+                    records to OpenAI for processing.
                   </Switch.Description>
                 </div>
                 <Switch
-                  checked={localConfig.experimental__use_openai_rag}
+                  checked={experimental__use_openai_rag}
                   onChange={() => {
                     updateLocalConfig({
                       experimental__use_openai_rag:
-                        !localConfig.experimental__use_openai_rag,
+                        !experimental__use_openai_rag,
                     });
                   }}
                   className={classNames(
-                    localConfig.experimental__use_openai_rag
+                    experimental__use_openai_rag
                       ? 'bg-primary-500'
                       : 'bg-gray-200',
                     'focus:ring-primary-500 relative ml-4 inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2',
@@ -176,7 +179,7 @@ function ExperimentalSettingsGroup() {
                   <span
                     aria-hidden="true"
                     className={classNames(
-                      localConfig.experimental__use_openai_rag
+                      experimental__use_openai_rag
                         ? 'translate-x-5'
                         : 'translate-x-0',
                       'inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
@@ -190,7 +193,7 @@ function ExperimentalSettingsGroup() {
               type="password"
               className="border-2 border-gray-200 rounded-md p-2 w-full"
               placeholder="OpenAI API Key"
-              value={localConfig.experimental__openai_api_key || ''}
+              value={experimental__openai_api_key || ''}
               onChange={(e) => {
                 updateLocalConfig({
                   experimental__openai_api_key: e.target.value,

@@ -25,6 +25,7 @@ import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.t
 import { SearchBar } from './SearchBar';
 import { TimelineSkeleton } from './TimelineSkeleton';
 import { useLocalConfig } from '../components/providers/LocalConfigProvider';
+import { useNotificationDispatch } from '../components/providers/NotificationProvider';
 
 const PAGE_SIZE = 50;
 
@@ -192,6 +193,7 @@ function useRecordQuery(query: string): {
     { experimental__use_openai_rag } = useLocalConfig(),
     user = useUser(),
     hasRun = useRef(false),
+    notifyDispatch = useNotificationDispatch(),
     [status, setQueryStatus] = useState(QueryStatus.IDLE),
     [initialized, setInitialized] = useState(false),
     [data, setList] =
@@ -227,6 +229,11 @@ function useRecordQuery(query: string): {
 
           if (experimental__use_openai_rag) {
             if (Object.keys(groupedRecords).length === 0) {
+              notifyDispatch({
+                type: 'set_notification',
+                message: `No exact match found for "${query}". Trying AI search...`,
+                variant: 'info',
+              });
               // If no results, try AI search
               isAiSearch = true;
               groupedRecords = await fetchRecordsWithVector(
@@ -276,7 +283,15 @@ function useRecordQuery(query: string): {
           setQueryStatus(QueryStatus.ERROR);
         }
       },
-      [vectorStorage, db, user.id, query, currentPage, data],
+      [
+        vectorStorage,
+        db,
+        user.id,
+        query,
+        currentPage,
+        experimental__use_openai_rag,
+        data,
+      ],
     ),
     debounceExecQuery = useDebounceCallback(
       () => execQuery({ loadMore: false }),
@@ -310,10 +325,13 @@ export function TimelineTab() {
   const user = useUser(),
     [query, setQuery] = useState(''),
     { data, status, initialized, loadNextPage } = useRecordQuery(query),
-    hasNoRecords = query === '' && (!data || Object.entries(data).length === 0),
-    hasRecords =
-      (data !== undefined && Object.entries(data).length > 0) ||
-      (query !== '' && data !== undefined);
+    hasNoRecords = query === '' && (!data || Object.entries(data).length === 0);
+  // hasRecords =
+  //   (data !== undefined && Object.entries(data).length > 0) ||
+  //   (query !== '' && data !== undefined);
+
+  const [enableAIQuestionAnswering, setEnableAIQuestionAnswering] =
+    useState(false);
 
   useScrollToHash();
 
@@ -380,8 +398,11 @@ export function TimelineTab() {
         leaveFrom="opacity-100"
         leaveTo="opacity-75"
       >
-        {hasNoRecords ? <EmptyRecordsPlaceholder /> : null}
-        {hasRecords ? (
+        {!(
+          status === QueryStatus.LOADING_MORE || status === QueryStatus.LOADING
+        ) && hasNoRecords ? (
+          <EmptyRecordsPlaceholder />
+        ) : (
           <div className="flex w-full overflow-hidden">
             <JumpToPanel
               items={data}
@@ -391,7 +412,13 @@ export function TimelineTab() {
             />
             <div className="px-auto flex h-full max-h-full w-full justify-center overflow-y-scroll">
               <div className="h-max w-full max-w-4xl flex-col px-4 pb-20 sm:px-6 sm:pb-6 lg:px-8">
-                <SearchBar query={query} setQuery={setQuery} status={status} />
+                <SearchBar
+                  query={query}
+                  setQuery={setQuery}
+                  status={status}
+                  enableAIQuestionAnswering={enableAIQuestionAnswering}
+                  setEnableAIQuestionAnswering={setEnableAIQuestionAnswering}
+                />
                 {listItems}
                 {(Object.keys(data || {}) || []).length === 0 ? (
                   <p className="font-xl">{`No records found with query: ${query}`}</p>
@@ -399,7 +426,7 @@ export function TimelineTab() {
               </div>
             </div>
           </div>
-        ) : null}
+        )}
       </Transition>
     </AppPage>
   );

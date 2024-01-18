@@ -1,19 +1,38 @@
 import React from 'react';
 import { ButtonLoadingSpinner } from '../components/connection/ButtonLoadingSpinner';
 import { QueryStatus } from './TimelineTab';
+import { useLocalConfig } from '../components/providers/LocalConfigProvider';
+
+function generateRandomQuestion() {
+  const questions = [
+    'How are my liver enzymes?',
+    'When was my last flu shot?',
+    'What was my blood pressure last visit?',
+    'How is my cholesterol?',
+    'What are my allergies?',
+    // Add more questions as needed
+  ];
+  const randomIndex = Math.floor(Math.random() * questions.length);
+  return questions[randomIndex];
+}
 
 export function SearchBar({
   query,
   setQuery,
   status,
+  enableAIQuestionAnswering,
+  setEnableAIQuestionAnswering,
 }: {
   query: string;
   setQuery: (s: string) => void;
   status: QueryStatus;
+  enableAIQuestionAnswering?: boolean;
+  setEnableAIQuestionAnswering?: (b: boolean) => void;
 }) {
+  const { experimental__use_openai_rag } = useLocalConfig();
   return (
-    <div className="mb-1 mt-4 w-full sm:mt-6">
-      <div className="relative flex items-center">
+    <div className="mb-1 mt-4 w-full sm:mt-6 flex flex-row">
+      <div className="relative flex items-center flex-1">
         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 ">
           <svg
             aria-hidden="true"
@@ -36,7 +55,11 @@ export function SearchBar({
           type="text"
           name="search"
           id="search"
-          placeholder="Search your medical records"
+          placeholder={
+            enableAIQuestionAnswering
+              ? 'Ask a question (e.g., ' + generateRandomQuestion() + ')'
+              : 'Search your medical records'
+          }
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="focus:border-primary-500 focus:ring-primary-500 block w-full rounded-md border-gray-300 pl-10 pr-12 shadow-sm sm:text-sm"
@@ -47,6 +70,21 @@ export function SearchBar({
           </div>
         </div>
       </div>
+
+      {experimental__use_openai_rag && setEnableAIQuestionAnswering && (
+        <button
+          onClick={() =>
+            setEnableAIQuestionAnswering(!enableAIQuestionAnswering)
+          }
+          className={`self-stretch transition-color text-xs ml-2 ${
+            enableAIQuestionAnswering
+              ? 'bg-primary-700 text-primary-50 hover:text-primary-100 hover:bg-primary-600'
+              : 'bg-gray-50 text-gray-800 hover:bg-gray-100'
+          } rounded-md px-2 py-1 mt-1`}
+        >
+          {enableAIQuestionAnswering ? ' AI On' : ' AI Off'}
+        </button>
+      )}
     </div>
   );
 }
