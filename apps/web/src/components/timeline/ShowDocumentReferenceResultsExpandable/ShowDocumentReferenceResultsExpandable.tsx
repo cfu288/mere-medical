@@ -43,7 +43,6 @@ export function ShowDocumentResultsExpandable({
 
   useEffect(() => {
     if (expanded) {
-      debugger;
       if (
         attachment?.get('data_record.content_type') === 'application/xml' &&
         checkIfXmlIsCCDA(attachment.get('data_record.raw'))

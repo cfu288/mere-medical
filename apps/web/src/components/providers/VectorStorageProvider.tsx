@@ -62,6 +62,68 @@ export function VectorStorageProvider({
 const PAGE_SIZE = 100;
 const MAX_CHARS = 18000;
 
+export function prepareClinicalDocumentForVectorization(
+  document: ClinicalDocument<unknown>,
+) {
+  // need to maintain lists since documents can be chunked into multiple documents
+  const docList: { id: string; text: string }[] = Array<{
+    id: string;
+    text: string;
+  }>();
+  const metaList: DocMeta[] = Array<DocMeta>();
+  const docId = document.id!;
+  const meta = {
+    category: document.data_record.resource_type,
+    document_type: 'clinical_document',
+    id: docId,
+    url: document.metadata?.id!,
+  };
+
+  if (document.data_record.content_type === 'application/json') {
+    const newUnflatObject: any = document.data_record.raw;
+    delete newUnflatObject.link;
+    delete newUnflatObject.fullUrl;
+    delete newUnflatObject.search;
+    delete newUnflatObject.resource.subject;
+    delete newUnflatObject.resource.id;
+    delete newUnflatObject.resource.status;
+    const newFlatObject = flattenObject(
+      Object.keys(newUnflatObject)
+        .sort()
+        .reduce((obj: any, key: any) => {
+          obj[key] = newUnflatObject[key];
+          return obj;
+        }, {}),
+    );
+
+    const serialzed = [...new Set(Object.values(newFlatObject))]
+      .join('|')
+      .substring(0, MAX_CHARS);
+    // const serialzedKeys = [...new Set(Object.keys(newFlatObject))].join('|');
+    // console.log(serialzed);
+    // console.log(serialzedKeys);
+    docList.push({ id: docId, text: serialzed });
+    metaList.push(meta);
+  } else if (document.data_record.content_type === 'application/xml') {
+    const contentFull = JSON.stringify(document.data_record.raw);
+    if (contentFull.length > MAX_CHARS) {
+      for (let offset = 0; offset < contentFull.length; offset += MAX_CHARS) {
+        const chunk = contentFull.substring(
+          offset,
+          Math.min(offset + MAX_CHARS, contentFull.length),
+        );
+        docList.push({ id: docId, text: chunk });
+        metaList.push(meta);
+      }
+    } else {
+      docList.push({ id: docId, text: contentFull });
+      metaList.push(meta);
+    }
+  }
+
+  return { docList, metaList };
+}
+
 async function addBatchToVectorStorage(
   documents: RxDocument<ClinicalDocument<unknown>, {}>[],
   vectorStorage: VectorStorage<DocMeta>,

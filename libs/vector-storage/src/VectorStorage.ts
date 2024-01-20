@@ -167,9 +167,8 @@ export class VectorStorage<
     // If there are no new documents, return an empty array
     if (newDocuments.length === 0) {
       return [];
-    } else {
-      debugger;
     }
+
     const newVectors = await this.embedTextsFn(
       newDocuments.map((doc) => doc.text!),
     );

@@ -37,6 +37,7 @@ import { TimelineTab } from '../pages/TimelineTab';
 import VARedirect from '../pages/VARedirect';
 import VeradigmRedirect from '../pages/VeradigmRedirect';
 import { Routes as AppRoutes } from '../Routes';
+import React from 'react';
 
 export default function App() {
   useConsoleLogEasterEgg();

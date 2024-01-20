@@ -1,4 +1,4 @@
-import { format, parseISO } from 'date-fns';
+import { format, parse, parseISO } from 'date-fns';
 import { BundleEntry, FhirResource } from 'fhir/r2';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MangoQuerySelector, RxDatabase, RxDocument } from 'rxdb';
@@ -16,7 +16,10 @@ import { useScrollToHash } from '../components/hooks/useScrollToHash';
 import { DatabaseCollections } from '../components/providers/DatabaseCollections';
 import { useRxDb } from '../components/providers/RxDbProvider';
 import { useUser } from '../components/providers/UserProvider';
-import { useVectorStorage } from '../components/providers/VectorStorageProvider';
+import {
+  prepareClinicalDocumentForVectorization,
+  useVectorStorage,
+} from '../components/providers/VectorStorageProvider';
 import { JumpToPanel } from '../components/timeline/JumpToPanel';
 import { TimelineBanner } from '../components/timeline/TimelineBanner';
 import { TimelineItem } from '../components/timeline/TimelineItem';
@@ -26,6 +29,7 @@ import { SearchBar } from './SearchBar';
 import { TimelineSkeleton } from './TimelineSkeleton';
 import { useLocalConfig } from '../components/providers/LocalConfigProvider';
 import { useNotificationDispatch } from '../components/providers/NotificationProvider';
+import React from 'react';
 
 const PAGE_SIZE = 50;
 
@@ -181,7 +185,10 @@ export enum QueryStatus {
   COMPLETE_HIDE_LOAD_MORE, // Indicates that there are no more results to load using loadNextPage
 }
 
-function useRecordQuery(query: string): {
+function useRecordQuery(
+  query: string,
+  enableAIQuestionAnswering?: boolean,
+): {
   data:
     | Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>
     | undefined; // Data returned by query, grouped records by date
@@ -207,7 +214,6 @@ function useRecordQuery(query: string): {
        * @param loadMore Indicate whether this is an inital load or a load more query. Affects visual loading state
        */
       async ({ loadMore = false }: { loadMore?: boolean }) => {
-        setInitialized(true);
         setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
         if (!vectorStorage) {
           console.error('Vector storage is undefined');
@@ -228,19 +234,23 @@ function useRecordQuery(query: string): {
           );
 
           if (experimental__use_openai_rag) {
-            if (Object.keys(groupedRecords).length === 0) {
-              notifyDispatch({
-                type: 'set_notification',
-                message: `No exact match found for "${query}". Trying AI search...`,
-                variant: 'info',
-              });
-              // If no results, try AI search
-              isAiSearch = true;
-              groupedRecords = await fetchRecordsWithVector(
-                db,
-                vectorStorage,
-                query,
-              );
+            if (enableAIQuestionAnswering) {
+              if (Object.keys(groupedRecords).length === 0) {
+                notifyDispatch({
+                  type: 'set_notification',
+                  message: `No exact match found for "${query}". Trying AI search...`,
+                  variant: 'info',
+                });
+                setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
+                // If no results, try AI search
+                isAiSearch = true;
+                groupedRecords = await fetchRecordsWithVector(
+                  db,
+                  vectorStorage,
+                  query,
+                );
+                setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
+              }
             }
           }
 
@@ -290,12 +300,14 @@ function useRecordQuery(query: string): {
         query,
         currentPage,
         experimental__use_openai_rag,
+        enableAIQuestionAnswering,
+        notifyDispatch,
         data,
       ],
     ),
     debounceExecQuery = useDebounceCallback(
       () => execQuery({ loadMore: false }),
-      300,
+      experimental__use_openai_rag ? 1000 : 300,
     ),
     loadNextPage = useDebounceCallback(
       () => execQuery({ loadMore: true }),
@@ -324,14 +336,141 @@ function useRecordQuery(query: string): {
 export function TimelineTab() {
   const user = useUser(),
     [query, setQuery] = useState(''),
-    { data, status, initialized, loadNextPage } = useRecordQuery(query),
-    hasNoRecords = query === '' && (!data || Object.entries(data).length === 0);
-  // hasRecords =
-  //   (data !== undefined && Object.entries(data).length > 0) ||
-  //   (query !== '' && data !== undefined);
+    { experimental__openai_api_key } = useLocalConfig(),
+    [enableAIQuestionAnswering, setEnableAIQuestionAnswering] = useState(false),
+    { data, status, initialized, loadNextPage } = useRecordQuery(
+      query,
+      enableAIQuestionAnswering,
+    ),
+    hasNoRecords = query === '' && (!data || Object.entries(data).length === 0),
+    [aiResponseText, setAiResponseText] = useState(''),
+    askAI = useCallback(async () => {
+      setAiResponseText('');
+      if (data) {
+        //prepare data as plattened list
+        const dataAsList: string[] = [];
 
-  const [enableAIQuestionAnswering, setEnableAIQuestionAnswering] =
-    useState(false);
+        for (const [_, itemList] of Object.entries(data)) {
+          for (const item of itemList) {
+            const minilist =
+              prepareClinicalDocumentForVectorization(item).docList;
+            const texts = [...minilist.map((i) => i.text)];
+            dataAsList.push(...texts);
+          }
+        }
+
+        const response = await fetch(
+          'https://api.openai.com/v1/chat/completions',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${experimental__openai_api_key}`,
+            },
+            body: JSON.stringify({
+              model: 'gpt-4',
+              messages: [
+                {
+                  role: 'system',
+                  content:
+                    'You are a medical AI assistant. You will be given some data about a patient and a question. Please answer the question using the data provided and direct your answer directly to the patient.',
+                },
+                {
+                  role: 'system',
+                  content: `Here is some relevant information about your patient: 
+  Today's Date: ${new Date().toISOString()};
+  ${user?.first_name && user?.last_name ? 'Name: ' + (user?.first_name + ' ' + user?.last_name) : ''}
+  ${user?.birthday ? 'DOB: ' + user?.birthday : ''}
+  Data: ${JSON.stringify(dataAsList)}`,
+                },
+                {
+                  role: 'user',
+                  content: `The question is: ${query}`,
+                },
+              ],
+              stream: true,
+            }),
+          },
+        );
+        const reader = response.body!.getReader();
+        const decoder = new TextDecoder('utf-8');
+
+        // Read the response as a stream of data
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+              break;
+            }
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n');
+            const parsedLines = lines
+
+              .map((line) => line.replace(/^data: /, '').trim()) // Remove the "data: " prefix
+              .filter((line) => line !== '' && line !== '[DONE]') // Remove empty lines and "[DONE]"
+              .map((line: string) => JSON.parse(line));
+            for (const parsedLine of parsedLines) {
+              const { choices } = parsedLine;
+              const { delta } = choices[0];
+              const { content } = delta;
+
+              if (content) {
+                // resultText.innerText += content;
+                setAiResponseText((c) => c + content);
+                console.log(content);
+              }
+            }
+          }
+        } catch (e) {
+          console.error(e);
+        } finally {
+          reader.releaseLock();
+        }
+
+        // debugger;
+        // if (!reader) {
+        //   console.error('Reader is undefined');
+        //   alert('Reader is undefined');
+        //   return;
+        // }
+        // let streamHasNotEnded = true;
+        // while (streamHasNotEnded) {
+        //   const { done, value } = await reader.read();
+        //   if (done) {
+        //     streamHasNotEnded = false;
+        //     break;
+        //   }
+        //   // Massage and parse the chunk of data
+        //   const chunk = decoder.decode(value);
+        //   const lines = chunk.split('\\n');
+        //   const parsedLines = lines
+        //     .map((line) => line.replace(/^data: /, '').trim()) // Remove the "data: " prefix
+        //     .filter((line) => line !== '' && line !== '[DONE]') // Remove empty lines and "[DONE]"
+        //     .map((line) => JSON.parse(line)); // Parse the JSON string
+
+        //   for (const parsedLine of parsedLines) {
+        //     const { choices } = parsedLine;
+        //     const { delta } = choices[0];
+        //     const { content } = delta;
+        //     // Update the UI with the new content
+        //     if (content) {
+        //       // resultText.innerText += content;
+        //       setAiResponseText((c) => c + content);
+        //     }
+        //   }
+        // }
+      } else {
+        console.error('Data is undefined');
+        alert('Data is undefined');
+      }
+    }, [
+      data,
+      experimental__openai_api_key,
+      query,
+      user?.birthday,
+      user?.first_name,
+      user?.last_name,
+    ]);
 
   useScrollToHash();
 
@@ -418,6 +557,8 @@ export function TimelineTab() {
                   status={status}
                   enableAIQuestionAnswering={enableAIQuestionAnswering}
                   setEnableAIQuestionAnswering={setEnableAIQuestionAnswering}
+                  aiResponse={aiResponseText}
+                  askAI={askAI}
                 />
                 {listItems}
                 {(Object.keys(data || {}) || []).length === 0 ? (
