@@ -70,7 +70,11 @@ export function SearchBar({
             }
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="focus:border-primary-500 focus:ring-primary-500 block w-full rounded-md border-gray-300 pl-10 pr-12 shadow-sm sm:text-sm"
+            className={`${
+              enableAIQuestionAnswering
+                ? 'focus:border-indigo-500 focus:ring-indigo-500'
+                : 'focus:border-primary-500 focus:ring-primary-500'
+            } transition-colors block w-full rounded-md border-gray-300 pl-10 pr-12 shadow-sm sm:text-sm`}
           />
           <div className="absolute inset-y-0 right-0 flex py-1.5 pr-1.5">
             <div className="inline-flex items-center px-2 ">
@@ -84,13 +88,13 @@ export function SearchBar({
             onClick={() =>
               setEnableAIQuestionAnswering(!enableAIQuestionAnswering)
             }
-            className={`self-stretch transition-color text-xs ml-2 ${
+            className={`self-stretch text-xs ml-2 transition-all ${
               enableAIQuestionAnswering
-                ? 'bg-primary-700 text-primary-50 hover:text-primary-100 hover:bg-primary-600'
+                ? 'bg-indigo-700 text-indigo-50 hover:text-indigo-100 hover:bg-indigo-600'
                 : 'bg-gray-50 text-gray-800 hover:bg-gray-100'
-            } rounded-md px-2 py-1 mt-1`}
+            } rounded-md px-2 py-1`}
           >
-            {enableAIQuestionAnswering ? ' AI On' : ' AI Off'}
+            {enableAIQuestionAnswering ? '✨ AI On' : 'AI Off'}
           </button>
         )}
       </div>
@@ -103,23 +107,25 @@ export function SearchBar({
               setLoadingState('COMPLETE');
             }}
             disabled={loadingState === 'LOADING'}
-            className={`transition-color text-xs ml-2 ${
+            className={`transition-all text-xs ml-2 hover:scale-105 active:scale-100 ${
               enableAIQuestionAnswering
-                ? 'bg-primary-700 text-primary-50 hover:text-primary-100 hover:bg-primary-600'
-                : 'bg-gray-50 text-gray-800 hover:bg-gray-100'
-            } rounded-md mt-2 disabled:opacity-50 disabled:cursor-not-allowed p-2`}
+                ? 'bg-indigo-700 text-indigo-50 hover:bg-indigo-600'
+                : ''
+            } rounded-md mt-2 disabled:opacity-50 disabled:cursor-not-allowed p-2 disabled:bg-gradient-to-br disabled:from-indigo-700 disabled:via-purple-700 disabled:to-primary-700 font-bold hover:bg-gradient-to-br hover:from-indigo-700 hover:via-purple-700 hover:to-primary-700 background-animate`}
           >
             {' '}
             {loadingState === 'LOADING' ? (
               <>The AI is thinking</>
             ) : (
-              <>
-                Ask AI your question <span className="hidden sm:inline">→</span>
-              </>
+              <>{`✨ Ask AI "${query}"`} </>
             )}
           </button>
           {aiResponse && (
-            <div className="whitespace-pre-line w-full p-2 mt-2 border rounded-md overflow-y-auto text-xs sm:mx-auto max-w-96">
+            <div className="relative whitespace-pre-line w-full p-2 pb-4 my-2 border rounded-md overflow-y-auto text-xs sm:mx-auto max-w-lg bg-indigo-50 border-indigo-200">
+              {/* add badge in top right corner that says experimental */}
+              <div className="absolute bottom-0 right-0 bg-indigo-200 text-indigo-700 text-xs font-bold p-1 px-2 bg-opacity-40 rounded-br-md rounded-tl-md">
+                Experimental
+              </div>
               {aiResponse}
             </div>
           )}

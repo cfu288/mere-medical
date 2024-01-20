@@ -1,4 +1,4 @@
-import { format, parse, parseISO } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { BundleEntry, FhirResource } from 'fhir/r2';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MangoQuerySelector, RxDatabase, RxDocument } from 'rxdb';
@@ -33,17 +33,19 @@ import React from 'react';
 
 const PAGE_SIZE = 50;
 
-async function fetchRecordsWithVector(
+async function fetchRecordsWithVectorSearch(
   db: RxDatabase<DatabaseCollections>,
   vectorStorage: VectorStorage<any>,
   query?: string,
+  numResults = 10,
 ) {
   if (!query) {
     return {};
   }
+
   const results = await vectorStorage.similaritySearch({
     query,
-    k: 10,
+    k: numResults,
   });
 
   // Display the search results
@@ -86,10 +88,28 @@ async function fetchRecordsWithVector(
       }
     }
   });
+  // sort map object by keys which are dates
+  // dates are in YYYY-MM-DD format
+  // use date-fns to parse and compare dates
 
-  console.debug(groupedRecords);
+  const ordered = Object.keys(groupedRecords)
+    .sort((a, b) => {
+      const aDate = parseISO(a);
+      const bDate = parseISO(b);
+      if (aDate > bDate) {
+        return -1;
+      } else if (aDate < bDate) {
+        return 1;
+      } else {
+        return 0;
+      }
+    })
+    .reduce((obj: any, key) => {
+      obj[key] = groupedRecords[key];
+      return obj;
+    }, {});
 
-  return groupedRecords;
+  return ordered;
 }
 
 /**
@@ -244,7 +264,7 @@ function useRecordQuery(
                 setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
                 // If no results, try AI search
                 isAiSearch = true;
-                groupedRecords = await fetchRecordsWithVector(
+                groupedRecords = await fetchRecordsWithVectorSearch(
                   db,
                   vectorStorage,
                   query,
@@ -325,10 +345,14 @@ function useRecordQuery(
   }, [execQuery, query]);
 
   useEffect(() => {
-    console.debug('query changed: ', query);
+    console.debug(
+      'query changed or AI toggled: ',
+      query,
+      enableAIQuestionAnswering,
+    );
     setQueryStatus(QueryStatus.LOADING);
     debounceExecQuery();
-  }, [query, debounceExecQuery]);
+  }, [query, debounceExecQuery, enableAIQuestionAnswering]);
 
   return { data, status, initialized, loadNextPage };
 }
@@ -368,19 +392,20 @@ export function TimelineTab() {
               Authorization: `Bearer ${experimental__openai_api_key}`,
             },
             body: JSON.stringify({
-              model: 'gpt-4',
+              model: 'gpt-4-1106-preview',
               messages: [
                 {
                   role: 'system',
                   content:
-                    'You are a medical AI assistant. You will be given some data about a patient and a question. Please answer the question using the data provided and direct your answer directly to the patient.',
+                    'You are a medical AI assistant. You will be given some data about a patient and a question. Please answer the question using the data provided and address the patient directly.',
                 },
                 {
                   role: 'system',
-                  content: `Here is some relevant information about your patient: 
+                  content: `Here is some information about your patient. Ignore any information that is not relevant to the question: 
   Today's Date: ${new Date().toISOString()};
   ${user?.first_name && user?.last_name ? 'Name: ' + (user?.first_name + ' ' + user?.last_name) : ''}
   ${user?.birthday ? 'DOB: ' + user?.birthday : ''}
+  ${user.gender ? 'Gender:' + user?.gender : ''}
   Data: ${JSON.stringify(dataAsList)}`,
                 },
                 {
@@ -415,9 +440,7 @@ export function TimelineTab() {
               const { content } = delta;
 
               if (content) {
-                // resultText.innerText += content;
                 setAiResponseText((c) => c + content);
-                console.log(content);
               }
             }
           }
@@ -426,39 +449,6 @@ export function TimelineTab() {
         } finally {
           reader.releaseLock();
         }
-
-        // debugger;
-        // if (!reader) {
-        //   console.error('Reader is undefined');
-        //   alert('Reader is undefined');
-        //   return;
-        // }
-        // let streamHasNotEnded = true;
-        // while (streamHasNotEnded) {
-        //   const { done, value } = await reader.read();
-        //   if (done) {
-        //     streamHasNotEnded = false;
-        //     break;
-        //   }
-        //   // Massage and parse the chunk of data
-        //   const chunk = decoder.decode(value);
-        //   const lines = chunk.split('\\n');
-        //   const parsedLines = lines
-        //     .map((line) => line.replace(/^data: /, '').trim()) // Remove the "data: " prefix
-        //     .filter((line) => line !== '' && line !== '[DONE]') // Remove empty lines and "[DONE]"
-        //     .map((line) => JSON.parse(line)); // Parse the JSON string
-
-        //   for (const parsedLine of parsedLines) {
-        //     const { choices } = parsedLine;
-        //     const { delta } = choices[0];
-        //     const { content } = delta;
-        //     // Update the UI with the new content
-        //     if (content) {
-        //       // resultText.innerText += content;
-        //       setAiResponseText((c) => c + content);
-        //     }
-        //   }
-        // }
       } else {
         console.error('Data is undefined');
         alert('Data is undefined');
@@ -469,6 +459,7 @@ export function TimelineTab() {
       query,
       user?.birthday,
       user?.first_name,
+      user?.gender,
       user?.last_name,
     ]);
 
