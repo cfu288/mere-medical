@@ -12,7 +12,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { RxDocument } from 'rxdb';
+import { RxDatabase, RxDocument } from 'rxdb';
 
 import BillboardJS, { IChart } from '@billboard.js/react';
 import { Disclosure } from '@headlessui/react';
@@ -34,6 +34,8 @@ import {
   getValueString,
   getComments,
 } from './fhirpathParsers';
+import { UserDocument } from '../../models/user-document/UserDocument.type';
+import { DatabaseCollections } from '../providers/DatabaseCollections';
 
 function SparklineGraphSvg({
   relatedLabs,
@@ -532,7 +534,7 @@ function useLabPinning(
   return [isPinned, handleTogglePin];
 }
 
-function useRelatedLoincLabs(loinc: string[]) {
+export function useRelatedLoincLabs(loinc: string[]) {
   const db = useRxDb(),
     user = useUser(),
     [relatedLabs, setRelatedLabs] = useState<
@@ -540,15 +542,35 @@ function useRelatedLoincLabs(loinc: string[]) {
     >([]);
 
   useEffect(() => {
+    getRelatedLoincLabs({ loinc, db, user }).then(setRelatedLabs);
+  }, [db, loinc, user]);
+
+  return relatedLabs;
+}
+
+export function getRelatedLoincLabs({
+  loinc,
+  db,
+  user,
+  limit,
+}: {
+  loinc: string[];
+  db: RxDatabase<DatabaseCollections>;
+  user: UserDocument;
+  limit?: number;
+}): Promise<RxDocument<ClinicalDocument<BundleEntry<Observation>>>[]> {
+  return new Promise((resolve, reject) => {
     if (loinc && loinc?.length > 0) {
-      db.clinical_documents
-        .find({
-          selector: {
-            user_id: user.id,
-            'metadata.loinc_coding': { $in: loinc },
-          },
-        })
-        .exec()
+      const q = db.clinical_documents.find({
+        selector: {
+          user_id: user.id,
+          'metadata.loinc_coding': { $in: loinc },
+        },
+      });
+      if (limit) {
+        q.limit(limit);
+      }
+      q.exec()
         .then((res) => {
           const sorted = res.sort((a, b) =>
             new Date(a.get('metadata.date') || '') <
@@ -568,10 +590,13 @@ function useRelatedLoincLabs(loinc: string[]) {
             }
             return false;
           });
-          setRelatedLabs(unique);
+          return resolve(unique);
+        })
+        .catch((err) => {
+          reject(err);
         });
+    } else {
+      resolve([]);
     }
-  }, [db.clinical_documents, loinc, user.id]);
-
-  return relatedLabs;
+  });
 }

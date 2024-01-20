@@ -1,5 +1,10 @@
 import { format, parseISO } from 'date-fns';
-import { BundleEntry, FhirResource } from 'fhir/r2';
+import {
+  BundleEntry,
+  DiagnosticReport,
+  FhirResource,
+  Observation,
+} from 'fhir/r2';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MangoQuerySelector, RxDatabase, RxDocument } from 'rxdb';
 
@@ -30,6 +35,7 @@ import { TimelineSkeleton } from './TimelineSkeleton';
 import { useLocalConfig } from '../components/providers/LocalConfigProvider';
 import { useNotificationDispatch } from '../components/providers/NotificationProvider';
 import React from 'react';
+import { getRelatedLoincLabs } from '../components/timeline/ObservationResultRow';
 
 const PAGE_SIZE = 50;
 
@@ -359,6 +365,7 @@ function useRecordQuery(
 
 export function TimelineTab() {
   const user = useUser(),
+    db = useRxDb(),
     [query, setQuery] = useState(''),
     { experimental__openai_api_key } = useLocalConfig(),
     [enableAIQuestionAnswering, setEnableAIQuestionAnswering] = useState(false),
@@ -372,16 +379,44 @@ export function TimelineTab() {
       setAiResponseText('');
       if (data) {
         //prepare data as plattened list
-        const dataAsList: string[] = [];
+        const dataAsList: Set<string> = new Set();
 
         for (const [_, itemList] of Object.entries(data)) {
           for (const item of itemList) {
             const minilist =
               prepareClinicalDocumentForVectorization(item).docList;
             const texts = [...minilist.map((i) => i.text)];
-            dataAsList.push(...texts);
+            for (const t of texts) {
+              dataAsList.add(t);
+            }
+            // get related documents if item is a diagnostic report or observation
+            if (
+              item.data_record.raw.resource?.resourceType ===
+                'DiagnosticReport' ||
+              item.data_record.raw.resource?.resourceType === 'Observation'
+            ) {
+              const loinc = item.metadata?.loinc_coding || [];
+              const relatedDocs = await getRelatedLoincLabs({
+                loinc,
+                db,
+                user,
+                limit: 5,
+              });
+              const relatedList = relatedDocs.flatMap(
+                (i) => prepareClinicalDocumentForVectorization(i).docList,
+              );
+              const relatedTexts = relatedList.map((i) => i.text);
+              for (const rt of relatedTexts) {
+                dataAsList.add(rt);
+              }
+            }
+          }
+          if (dataAsList.size > 100) {
+            break;
           }
         }
+
+        console.log(dataAsList);
 
         const response = await fetch(
           'https://api.openai.com/v1/chat/completions',
@@ -406,7 +441,7 @@ export function TimelineTab() {
   ${user?.first_name && user?.last_name ? 'Name: ' + (user?.first_name + ' ' + user?.last_name) : ''}
   ${user?.birthday ? 'DOB: ' + user?.birthday : ''}
   ${user.gender ? 'Gender:' + user?.gender : ''}
-  Data: ${JSON.stringify(dataAsList)}`,
+  Data: ${JSON.stringify([...dataAsList])}`,
                 },
                 {
                   role: 'user',

@@ -1,6 +1,6 @@
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
@@ -24,6 +24,12 @@ export function ShowDiagnosticReportResultsExpandable({
   loading?: boolean;
 }) {
   const toggleOpen = () => setExpanded((x) => !x);
+
+  useEffect(() => {
+    if (expanded) {
+      console.log('docs', docs);
+    }
+  }, [docs, expanded]);
 
   return (
     <Modal open={expanded} setOpen={setExpanded}>

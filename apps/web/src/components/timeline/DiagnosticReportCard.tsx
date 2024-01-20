@@ -35,7 +35,7 @@ export function useRelatedDocuments({
 }): [
   RxDocument<ClinicalDocument<BundleEntry<Observation>>>[],
   boolean,
-  'loading' | 'idle' | 'success'
+  'loading' | 'idle' | 'success',
 ] {
   const db = useRxDb(),
     user = useUser(),
@@ -50,7 +50,7 @@ export function useRelatedDocuments({
       if (isDrResult) {
         const references = allScripts
           ? new Set(
-              isDrResult.map((item) => `${conn.location}${item.reference}`)
+              isDrResult.map((item) => `${conn.location}${item.reference}`),
             )
           : new Set(isDrResult.map((item) => `${item.reference}`));
         return [...references] as string[];
@@ -77,12 +77,12 @@ export function useRelatedDocuments({
             (a.metadata?.loinc_coding?.[0] || '') <
             (b.metadata?.loinc_coding?.[0] || '')
               ? 1
-              : -1
+              : -1,
           );
           setDocs(
             sorted as unknown as RxDocument<
               ClinicalDocument<BundleEntry<Observation>>
-            >[]
+            >[],
           );
           setStatus('success');
           const abnormalLabs = (
