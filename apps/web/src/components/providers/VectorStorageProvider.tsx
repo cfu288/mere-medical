@@ -44,6 +44,9 @@ export function VectorStorageProvider({
         openAIApiKey: localConfig?.experimental__openai_api_key,
         rxdb: rxdb,
       });
+      if (!store.hasInitialized) {
+        store.initialize();
+      }
       setVectorStore(store);
     }
   }, [

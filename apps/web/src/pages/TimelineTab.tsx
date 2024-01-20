@@ -1,10 +1,5 @@
 import { format, parseISO } from 'date-fns';
-import {
-  BundleEntry,
-  DiagnosticReport,
-  FhirResource,
-  Observation,
-} from 'fhir/r2';
+import { BundleEntry, FhirResource } from 'fhir/r2';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MangoQuerySelector, RxDatabase, RxDocument } from 'rxdb';
 
@@ -241,10 +236,7 @@ function useRecordQuery(
        */
       async ({ loadMore = false }: { loadMore?: boolean }) => {
         setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
-        if (!vectorStorage) {
-          console.error('Vector storage is undefined');
-          return;
-        }
+
         try {
           let isAiSearch = false;
           if (loadMore) {
@@ -259,23 +251,25 @@ function useRecordQuery(
             loadMore ? currentPage + 1 : currentPage,
           );
 
-          if (experimental__use_openai_rag) {
-            if (enableAIQuestionAnswering) {
-              if (Object.keys(groupedRecords).length === 0) {
-                notifyDispatch({
-                  type: 'set_notification',
-                  message: `No exact match found for "${query}". Trying AI search...`,
-                  variant: 'info',
-                });
-                setQueryStatus(QueryStatus.LOADING);
-                // If no results, try AI search
-                isAiSearch = true;
-                groupedRecords = await fetchRecordsWithVectorSearch(
-                  db,
-                  vectorStorage,
-                  query,
-                );
-                setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
+          if (vectorStorage) {
+            if (experimental__use_openai_rag) {
+              if (enableAIQuestionAnswering) {
+                if (Object.keys(groupedRecords).length === 0) {
+                  notifyDispatch({
+                    type: 'set_notification',
+                    message: `No exact match found for "${query}". Trying AI search...`,
+                    variant: 'info',
+                  });
+                  setQueryStatus(QueryStatus.LOADING);
+                  // If no results, try AI search
+                  isAiSearch = true;
+                  groupedRecords = await fetchRecordsWithVectorSearch(
+                    db,
+                    vectorStorage,
+                    query,
+                  );
+                  setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
+                }
               }
             }
           }
@@ -367,11 +361,11 @@ export function TimelineTab() {
   const user = useUser(),
     db = useRxDb(),
     [query, setQuery] = useState(''),
-    { experimental__openai_api_key } = useLocalConfig(),
-    [enableAIQuestionAnswering, setEnableAIQuestionAnswering] = useState(true),
+    { experimental__openai_api_key, experimental__use_openai_rag } =
+      useLocalConfig(),
     { data, status, initialized, loadNextPage } = useRecordQuery(
       query,
-      enableAIQuestionAnswering,
+      experimental__use_openai_rag,
     ),
     hasNoRecords = query === '' && (!data || Object.entries(data).length === 0),
     [aiResponseText, setAiResponseText] = useState(''),
@@ -576,8 +570,6 @@ export function TimelineTab() {
                   query={query}
                   setQuery={setQuery}
                   status={status}
-                  enableAIQuestionAnswering={enableAIQuestionAnswering}
-                  setEnableAIQuestionAnswering={setEnableAIQuestionAnswering}
                   aiResponse={aiResponseText}
                   askAI={askAI}
                 />

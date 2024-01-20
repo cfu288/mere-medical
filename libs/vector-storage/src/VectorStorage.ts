@@ -18,7 +18,7 @@ export class VectorStorage<
   private readonly openaiModel: string;
   private readonly openaiApiKey?: string;
   private readonly embedTextsFn: (texts: string[]) => Promise<number[][]>;
-  private hasLoadedFromStorage = false;
+  public hasInitialized = false;
 
   constructor(options: IVSOptions = {}) {
     this.openaiModel = options.openaiModel ?? constants.DEFAULT_OPENAI_MODEL;
@@ -32,9 +32,9 @@ export class VectorStorage<
     }
   }
 
-  public async initDb() {
+  public async initialize() {
     await this.loadFromRxDbStorage();
-    this.hasLoadedFromStorage = true;
+    this.hasInitialized = true;
   }
 
   public async addText(
@@ -156,8 +156,8 @@ export class VectorStorage<
   private async addDocuments(
     documents: Array<IVSDocument<T>>,
   ): Promise<Array<IVSDocument<T>>> {
-    if (!this.hasLoadedFromStorage) {
-      await this.initDb();
+    if (!this.hasInitialized) {
+      await this.initialize();
     }
     // filter out already existing documents by id
     const existingDocumentIdSet = new Set(this.documents.map((doc) => doc.id));

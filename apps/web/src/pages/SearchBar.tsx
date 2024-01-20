@@ -20,8 +20,6 @@ export function SearchBar({
   query,
   setQuery,
   status,
-  enableAIQuestionAnswering,
-  setEnableAIQuestionAnswering,
   askAI,
   aiResponse,
 }: {
@@ -29,7 +27,6 @@ export function SearchBar({
   setQuery: (s: string) => void;
   status: QueryStatus;
   enableAIQuestionAnswering?: boolean;
-  setEnableAIQuestionAnswering?: (b: boolean) => void;
   askAI?: () => Promise<void>;
   aiResponse?: string;
 }) {
@@ -84,7 +81,7 @@ export function SearchBar({
               name="search"
               id="search"
               placeholder={
-                enableAIQuestionAnswering
+                experimental__use_openai_rag
                   ? 'Search or ask a question (e.g., ' +
                     generateRandomQuestion() +
                     ')'
@@ -93,7 +90,7 @@ export function SearchBar({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className={`${
-                enableAIQuestionAnswering
+                experimental__use_openai_rag
                   ? 'focus:border-indigo-500 focus:ring-indigo-500'
                   : 'focus:border-primary-500 focus:ring-primary-500'
               } transition-colors block w-full rounded-md border-gray-300 pl-10 ${status === QueryStatus.LOADING ? 'pr-12' : ''} shadow-sm sm:text-sm`}
