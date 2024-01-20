@@ -58,49 +58,57 @@ export function SearchBar({
               ></path>
             </svg>
           </div>
-          <input
-            tabIndex={1}
-            type="text"
-            name="search"
-            id="search"
-            placeholder={
-              enableAIQuestionAnswering
-                ? 'Search or ask a question (e.g., ' +
-                  generateRandomQuestion() +
-                  ')'
-                : 'Search your medical records'
-            }
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className={`${
-              enableAIQuestionAnswering
-                ? 'focus:border-indigo-500 focus:ring-indigo-500'
-                : 'focus:border-primary-500 focus:ring-primary-500'
-            } transition-colors block w-full rounded-md border-gray-300 pl-10 ${status === QueryStatus.LOADING ? 'pr-12' : ''} shadow-sm sm:text-sm`}
-          />
+          {experimental__use_openai_rag ? (
+            <div className="w-full bg-gradient-to-br from-indigo-400 via-purple-300 to-primary-600 p-[3px] background-animate rounded-md">
+              <input
+                tabIndex={1}
+                type="text"
+                name="search"
+                id="search"
+                placeholder={
+                  experimental__use_openai_rag
+                    ? '✨ Search or ask a question (e.g., ' +
+                      generateRandomQuestion() +
+                      ')'
+                    : 'Search your medical records'
+                }
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className={`border-transparent border-0 focus:border-transparent focus:ring-0 outline-none transition-colors block w-full rounded-md pl-10 ${status === QueryStatus.LOADING ? 'pr-12' : ''} shadow-sm sm:text-sm`}
+              />
+            </div>
+          ) : (
+            <input
+              tabIndex={1}
+              type="text"
+              name="search"
+              id="search"
+              placeholder={
+                enableAIQuestionAnswering
+                  ? 'Search or ask a question (e.g., ' +
+                    generateRandomQuestion() +
+                    ')'
+                  : 'Search your medical records'
+              }
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className={`${
+                enableAIQuestionAnswering
+                  ? 'focus:border-indigo-500 focus:ring-indigo-500'
+                  : 'focus:border-primary-500 focus:ring-primary-500'
+              } transition-colors block w-full rounded-md border-gray-300 pl-10 ${status === QueryStatus.LOADING ? 'pr-12' : ''} shadow-sm sm:text-sm`}
+            />
+          )}
+
+          {/* */}
           <div className="absolute inset-y-0 right-0 flex py-1.5 pr-1.5">
             <div className="inline-flex items-center px-2 ">
               {status === QueryStatus.LOADING && <ButtonLoadingSpinner />}
             </div>
           </div>
         </div>
-
-        {experimental__use_openai_rag && setEnableAIQuestionAnswering && (
-          <button
-            onClick={() =>
-              setEnableAIQuestionAnswering(!enableAIQuestionAnswering)
-            }
-            className={`self-stretch text-xs ml-2 transition-all ${
-              enableAIQuestionAnswering
-                ? 'bg-indigo-700 text-indigo-50 hover:text-indigo-100 hover:bg-indigo-600'
-                : 'bg-gray-50 text-gray-800 hover:bg-gray-100'
-            } rounded-md px-2 py-1`}
-          >
-            {enableAIQuestionAnswering ? '✨ AI On' : 'AI Off'}
-          </button>
-        )}
       </div>
-      {enableAIQuestionAnswering && query && query.length > 3 && (
+      {experimental__use_openai_rag && query && query.length > 3 && (
         <div className="w-full flex flex-col justify-center align-middle items-center my-4">
           <button
             onClick={async () => {
@@ -108,9 +116,11 @@ export function SearchBar({
               askAI && (await askAI());
               setLoadingState('COMPLETE');
             }}
-            disabled={loadingState === 'LOADING'}
+            disabled={
+              loadingState === 'LOADING' || status === QueryStatus.LOADING
+            }
             className={`transition-all text-xs hover:scale-105 active:scale-100 shadow-indigo-500/50 hover:shadow-indigo-400/50 shadow-md hover:shadow-lg active:shadow-sm active:shadow-indigo-600/50 ${
-              enableAIQuestionAnswering
+              experimental__use_openai_rag
                 ? 'bg-indigo-700 text-indigo-50 hover:bg-indigo-600'
                 : ''
             } rounded-md disabled:opacity-50 disabled:cursor-not-allowed p-2 disabled:bg-gradient-to-br disabled:scale-100 disabled:shadow-indigo-200/50 disabled:from-indigo-700 disabled:via-purple-700 disabled:to-primary-700 font-bold hover:bg-gradient-to-br hover:from-indigo-700 hover:via-purple-700 hover:to-primary-700 background-animate`}

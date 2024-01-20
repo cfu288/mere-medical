@@ -267,7 +267,7 @@ function useRecordQuery(
                   message: `No exact match found for "${query}". Trying AI search...`,
                   variant: 'info',
                 });
-                setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
+                setQueryStatus(QueryStatus.LOADING);
                 // If no results, try AI search
                 isAiSearch = true;
                 groupedRecords = await fetchRecordsWithVectorSearch(
@@ -368,7 +368,7 @@ export function TimelineTab() {
     db = useRxDb(),
     [query, setQuery] = useState(''),
     { experimental__openai_api_key } = useLocalConfig(),
-    [enableAIQuestionAnswering, setEnableAIQuestionAnswering] = useState(false),
+    [enableAIQuestionAnswering, setEnableAIQuestionAnswering] = useState(true),
     { data, status, initialized, loadNextPage } = useRecordQuery(
       query,
       enableAIQuestionAnswering,
@@ -415,8 +415,6 @@ export function TimelineTab() {
             break;
           }
         }
-
-        console.log(dataAsList);
 
         const response = await fetch(
           'https://api.openai.com/v1/chat/completions',
@@ -488,15 +486,12 @@ export function TimelineTab() {
         console.error('Data is undefined');
         alert('Data is undefined');
       }
-    }, [
-      data,
-      experimental__openai_api_key,
-      query,
-      user?.birthday,
-      user?.first_name,
-      user?.gender,
-      user?.last_name,
-    ]);
+    }, [data, db, experimental__openai_api_key, query, user]);
+
+  useEffect(() => {
+    // on query change, clear AI response
+    setAiResponseText('');
+  }, [query]);
 
   useScrollToHash();
 

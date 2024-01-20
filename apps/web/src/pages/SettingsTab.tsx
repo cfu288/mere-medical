@@ -150,11 +150,11 @@ function ExperimentalSettingsGroup() {
                     className="text-primary-800 text-lg leading-6"
                     passive
                   >
-                    Enable Mere Assistant
+                    Enable Mere AI Assistant
                   </Switch.Label>
                   <Switch.Description className="pt-2 text-sm text-gray-800">
-                    Enable the use of OpenAI APIs for improved search and Q&A
-                    features.
+                    Enable Mere to use OpenAIs models for improved search and
+                    Q&A features.
                   </Switch.Description>
                   <Switch.Description className="pt-2 text-sm text-red-800">
                     <b>WARNING</b>: Enabling this feature will send your medical
