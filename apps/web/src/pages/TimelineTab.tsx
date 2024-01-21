@@ -28,7 +28,6 @@ import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.t
 import { SearchBar } from './SearchBar';
 import { TimelineSkeleton } from './TimelineSkeleton';
 import { useLocalConfig } from '../components/providers/LocalConfigProvider';
-import { useNotificationDispatch } from '../components/providers/NotificationProvider';
 import React from 'react';
 import { getRelatedLoincLabs } from '../components/timeline/ObservationResultRow';
 
@@ -223,7 +222,6 @@ function useRecordQuery(
     { experimental__use_openai_rag } = useLocalConfig(),
     user = useUser(),
     hasRun = useRef(false),
-    notifyDispatch = useNotificationDispatch(),
     [status, setQueryStatus] = useState(QueryStatus.IDLE),
     [initialized, setInitialized] = useState(false),
     [data, setList] =
@@ -364,124 +362,7 @@ export function TimelineTab() {
       experimental__use_openai_rag,
     ),
     hasNoRecords = query === '' && (!data || Object.entries(data).length === 0),
-    [aiResponseText, setAiResponseText] = useState(''),
-    askAI = useCallback(async () => {
-      setAiResponseText('');
-      if (data) {
-        //prepare data as plattened list
-        const dataAsList: Set<string> = new Set();
-
-        for (const [_, itemList] of Object.entries(data)) {
-          for (const item of itemList) {
-            const minilist =
-              prepareClinicalDocumentForVectorization(item).docList;
-            const texts = [...minilist.map((i) => i.text)];
-            for (const t of texts) {
-              dataAsList.add(t);
-            }
-            // get related documents if item is a diagnostic report or observation
-            if (
-              item.data_record.raw.resource?.resourceType ===
-                'DiagnosticReport' ||
-              item.data_record.raw.resource?.resourceType === 'Observation'
-            ) {
-              const loinc = item.metadata?.loinc_coding || [];
-              const relatedDocs = await getRelatedLoincLabs({
-                loinc,
-                db,
-                user,
-                limit: 5,
-              });
-              const relatedList = relatedDocs.flatMap(
-                (i) => prepareClinicalDocumentForVectorization(i).docList,
-              );
-              const relatedTexts = relatedList.map((i) => i.text);
-              for (const rt of relatedTexts) {
-                dataAsList.add(rt);
-              }
-            }
-          }
-          if (dataAsList.size > 100) {
-            break;
-          }
-        }
-
-        const response = await fetch(
-          'https://api.openai.com/v1/chat/completions',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${experimental__openai_api_key}`,
-            },
-            body: JSON.stringify({
-              model: 'gpt-4-1106-preview',
-              messages: [
-                {
-                  role: 'system',
-                  content:
-                    'You are a medical AI assistant. You will be given some data about a patient and a question. Please answer the question using the data provided and address the patient directly.',
-                },
-                {
-                  role: 'system',
-                  content: `Here is some information about your patient. Ignore any information that is not relevant to the question: 
-  Today's Date: ${new Date().toISOString()};
-  ${user?.first_name && user?.last_name ? 'Name: ' + (user?.first_name + ' ' + user?.last_name) : ''}
-  ${user?.birthday ? 'DOB: ' + user?.birthday : ''}
-  ${user.gender ? 'Gender:' + user?.gender : ''}
-  Data: ${JSON.stringify([...dataAsList])}`,
-                },
-                {
-                  role: 'user',
-                  content: `The question is: ${query}`,
-                },
-              ],
-              stream: true,
-            }),
-          },
-        );
-        const reader = response.body!.getReader();
-        const decoder = new TextDecoder('utf-8');
-
-        // Read the response as a stream of data
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) {
-              break;
-            }
-            const chunk = decoder.decode(value);
-            const lines = chunk.split('\n');
-            const parsedLines = lines
-
-              .map((line) => line.replace(/^data: /, '').trim()) // Remove the "data: " prefix
-              .filter((line) => line !== '' && line !== '[DONE]') // Remove empty lines and "[DONE]"
-              .map((line: string) => JSON.parse(line));
-            for (const parsedLine of parsedLines) {
-              const { choices } = parsedLine;
-              const { delta } = choices[0];
-              const { content } = delta;
-
-              if (content) {
-                setAiResponseText((c) => c + content);
-              }
-            }
-          }
-        } catch (e) {
-          console.error(e);
-        } finally {
-          reader.releaseLock();
-        }
-      } else {
-        console.error('Data is undefined');
-        alert('Data is undefined');
-      }
-    }, [data, db, experimental__openai_api_key, query, user]);
-
-  useEffect(() => {
-    // on query change, clear AI response
-    setAiResponseText('');
-  }, [query]);
+    [aiResponseText, setAiResponseText] = useState('');
 
   useScrollToHash();
 
@@ -562,13 +443,7 @@ export function TimelineTab() {
             />
             <div className="px-auto flex h-full max-h-full w-full justify-center overflow-y-scroll">
               <div className="h-max w-full max-w-4xl flex-col px-4 pb-20 sm:px-6 sm:pb-6 lg:px-8">
-                <SearchBar
-                  query={query}
-                  setQuery={setQuery}
-                  status={status}
-                  aiResponse={aiResponseText}
-                  askAI={askAI}
-                />
+                <SearchBar query={query} setQuery={setQuery} status={status} />
                 {listItems}
                 {(Object.keys(data || {}) || []).length === 0 ? (
                   <p className="font-xl">{`No records found with query: ${query}`}</p>
