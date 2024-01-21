@@ -38,6 +38,7 @@ import VARedirect from '../pages/VARedirect';
 import VeradigmRedirect from '../pages/VeradigmRedirect';
 import { Routes as AppRoutes } from '../Routes';
 import React from 'react';
+import MereAITab from '../pages/MereAITab';
 
 export default function App() {
   useConsoleLogEasterEgg();
@@ -83,6 +84,10 @@ const router = createBrowserRouter([
       {
         path: AppRoutes.AddConnection,
         element: <ConnectionTab />,
+      },
+      {
+        path: AppRoutes.MereAIAssistant,
+        element: <MereAITab />,
       },
       {
         path: AppRoutes.Summary,

@@ -31,7 +31,7 @@
     "./src/components/connection/ButtonLoadingSpinner.tsx",
     "./src/components/timeline/SkeletonLoadingText.tsx",
     "src/pages/TimelineSkeleton.tsx",
-    "./src/pages/SkeletonSearchBar.tsx",
+    "src/components/hooks/SkeletonSearchBar.tsx",
     "./src/pages/SearchBar.tsx",
     "./src/pages/SkeletonTimelineYearHeader.tsx",
     "./src/pages/SkeletonJumpToPanel.tsx",
@@ -75,7 +75,8 @@
     "src/components/settings/AboutMereSettingsGroup.tsx",
     "src/utils/flattenObject.tsx",
     "./src/components/providers/DatabaseCollections.tsx",
-    "src/components/providers/VectorStorageProvider.tsx"
+    "src/components/providers/VectorStorageProvider.tsx",
+    "./src/pages/usePeriodAnimation.tsx"
   ],
   "exclude": [
     "jest.config.ts",

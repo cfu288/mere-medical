@@ -34,7 +34,7 @@ import { getRelatedLoincLabs } from '../components/timeline/ObservationResultRow
 
 const PAGE_SIZE = 50;
 
-async function fetchRecordsWithVectorSearch(
+export async function fetchRecordsWithVectorSearch(
   db: RxDatabase<DatabaseCollections>,
   vectorStorage: VectorStorage<any>,
   query?: string,
@@ -110,7 +110,9 @@ async function fetchRecordsWithVectorSearch(
       return obj;
     }, {});
 
-  return ordered;
+  return ordered as Promise<
+    Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>
+  >;
 }
 
 /**
@@ -255,11 +257,6 @@ function useRecordQuery(
             if (experimental__use_openai_rag) {
               if (enableAIQuestionAnswering) {
                 if (Object.keys(groupedRecords).length === 0) {
-                  notifyDispatch({
-                    type: 'set_notification',
-                    message: `No exact match found for "${query}". Trying AI search...`,
-                    variant: 'info',
-                  });
                   setQueryStatus(QueryStatus.LOADING);
                   // If no results, try AI search
                   isAiSearch = true;
@@ -321,7 +318,6 @@ function useRecordQuery(
         currentPage,
         experimental__use_openai_rag,
         enableAIQuestionAnswering,
-        notifyDispatch,
         data,
       ],
     ),

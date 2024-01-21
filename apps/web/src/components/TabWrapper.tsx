@@ -5,15 +5,18 @@ import {
   NewspaperIcon,
   PlusCircleIcon,
   QueueListIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
 
 import logo from '../img/white-logo.svg';
 import { Routes as AppRoutes } from '../Routes';
 import { useUser } from './providers/UserProvider';
 import { TabButton } from './TabButton';
+import { useLocalConfig } from './providers/LocalConfigProvider';
 
 export function TabWrapper() {
-  const user = useUser();
+  const user = useUser(),
+    { experimental__use_openai_rag } = useLocalConfig();
 
   return (
     <div className="mobile-full-height flex max-w-[100vw] overflow-hidden md:flex-row-reverse">
@@ -37,6 +40,14 @@ export function TabWrapper() {
             title="Summary"
             icon={<QueueListIcon />}
           />
+          {experimental__use_openai_rag && (
+            <TabButton
+              route={AppRoutes.MereAIAssistant}
+              title="Mere AI Assistant"
+              smallTitle="Assistant"
+              icon={<SparklesIcon />}
+            />
+          )}
           <TabButton
             route={AppRoutes.AddConnection}
             title="Connections"

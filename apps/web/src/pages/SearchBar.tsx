@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ButtonLoadingSpinner } from '../components/connection/ButtonLoadingSpinner';
 import { QueryStatus } from './TimelineTab';
 import { useLocalConfig } from '../components/providers/LocalConfigProvider';
+import { usePeriodAnimation } from './usePeriodAnimation';
 
 function generateRandomQuestion() {
   const questions = [
@@ -34,6 +35,14 @@ export function SearchBar({
   const [loadingState, setLoadingState] = React.useState<
     'IDLE' | 'LOADING' | 'COMPLETE'
   >('IDLE');
+  const placeholder = useMemo(
+    () =>
+      experimental__use_openai_rag
+        ? '✨ Search you records with AI' //Search or ask a question (e.g., ' + generateRandomQuestion() + ')'
+        : 'Search your medical records',
+    [experimental__use_openai_rag],
+  );
+  const periodText = usePeriodAnimation();
   return (
     <>
       <div className="mb-1 mt-4 w-full sm:mt-6 flex flex-row">
@@ -62,13 +71,7 @@ export function SearchBar({
                 type="text"
                 name="search"
                 id="search"
-                placeholder={
-                  experimental__use_openai_rag
-                    ? '✨ Search or ask a question (e.g., ' +
-                      generateRandomQuestion() +
-                      ')'
-                    : 'Search your medical records'
-                }
+                placeholder={placeholder}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 className={`border-transparent border-0 focus:border-transparent focus:ring-0 outline-none transition-colors block w-full rounded-md pl-10 ${status === QueryStatus.LOADING ? 'pr-12' : ''} shadow-sm sm:text-sm`}
@@ -80,13 +83,7 @@ export function SearchBar({
               type="text"
               name="search"
               id="search"
-              placeholder={
-                experimental__use_openai_rag
-                  ? 'Search or ask a question (e.g., ' +
-                    generateRandomQuestion() +
-                    ')'
-                  : 'Search your medical records'
-              }
+              placeholder={placeholder}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className={`${
@@ -99,36 +96,40 @@ export function SearchBar({
 
           {/* */}
           <div className="absolute inset-y-0 right-0 flex py-1.5 pr-1.5">
-            <div className="inline-flex items-center px-2 ">
-              {status === QueryStatus.LOADING && <ButtonLoadingSpinner />}
+            <div className="inline-flex items-center">
+              <button
+                onClick={async () => {
+                  setLoadingState('LOADING');
+                  askAI && (await askAI());
+                  setLoadingState('COMPLETE');
+                }}
+                disabled={
+                  loadingState === 'LOADING' || status === QueryStatus.LOADING
+                }
+                className={`transition-all text-xs hover:scale-105 active:scale-100 shadow-indigo-500/50 hover:shadow-indigo-400/50 shadow-md hover:shadow-lg active:shadow-sm active:shadow-indigo-600/50 ${
+                  experimental__use_openai_rag
+                    ? 'bg-indigo-700 text-indigo-50 hover:bg-indigo-600'
+                    : ''
+                } rounded-md disabled:opacity-50 disabled:cursor-not-allowed p-2 py-1.5 disabled:bg-gradient-to-br disabled:scale-100 disabled:shadow-indigo-200/50 disabled:from-indigo-700 disabled:via-purple-700 disabled:to-primary-700 font-bold hover:bg-gradient-to-br hover:from-indigo-700 hover:via-purple-700 hover:to-primary-700 background-animate`}
+              >
+                {' '}
+                {loadingState === 'LOADING' ? (
+                  <>{periodText}</>
+                ) : (
+                  <>{`✨ Ask AI`} </>
+                )}
+              </button>
+              {status === QueryStatus.LOADING && (
+                <span className="px-2">
+                  <ButtonLoadingSpinner />
+                </span>
+              )}
             </div>
           </div>
         </div>
       </div>
       {experimental__use_openai_rag && query && query.length > 3 && (
         <div className="w-full flex flex-col justify-center align-middle items-center my-4">
-          <button
-            onClick={async () => {
-              setLoadingState('LOADING');
-              askAI && (await askAI());
-              setLoadingState('COMPLETE');
-            }}
-            disabled={
-              loadingState === 'LOADING' || status === QueryStatus.LOADING
-            }
-            className={`transition-all text-xs hover:scale-105 active:scale-100 shadow-indigo-500/50 hover:shadow-indigo-400/50 shadow-md hover:shadow-lg active:shadow-sm active:shadow-indigo-600/50 ${
-              experimental__use_openai_rag
-                ? 'bg-indigo-700 text-indigo-50 hover:bg-indigo-600'
-                : ''
-            } rounded-md disabled:opacity-50 disabled:cursor-not-allowed p-2 disabled:bg-gradient-to-br disabled:scale-100 disabled:shadow-indigo-200/50 disabled:from-indigo-700 disabled:via-purple-700 disabled:to-primary-700 font-bold hover:bg-gradient-to-br hover:from-indigo-700 hover:via-purple-700 hover:to-primary-700 background-animate`}
-          >
-            {' '}
-            {loadingState === 'LOADING' ? (
-              <>The AI is thinking</>
-            ) : (
-              <>{`✨ Ask AI "${query}"`} </>
-            )}
-          </button>
           {aiResponse && (
             <div className="relative whitespace-pre-line w-full p-2 pb-4 my-2 mt-4 border rounded-md overflow-y-auto text-xs sm:mx-auto sm:max-w-7xl bg-indigo-50 border-indigo-200">
               {/* add badge in top right corner that says experimental */}
