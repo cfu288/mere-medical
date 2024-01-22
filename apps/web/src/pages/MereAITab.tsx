@@ -32,6 +32,7 @@ function generateRandomQuestion() {
     'What was my blood pressure last visit?',
     'How is my cholesterol?',
     'What are my allergies?',
+    'What are my medications?',
     // Add more questions as needed
   ];
   const randomIndex = Math.floor(Math.random() * questions.length);
@@ -56,16 +57,20 @@ function MereAITab() {
   const [aiLoadingText, setAiLoadingText] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const isAiMessage = (message: ChatMessage) => message.user === 'AI';
+  const periodText = usePeriodAnimation();
 
   const askAI = useCallback(
     async (
       query: string,
       data: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>,
+      streamingCallback?: (message: string) => void,
+      messages: ChatMessage[] = [],
     ) => {
       if (data) {
-        //prepare data as plattened list
+        //prepare data as flattened list
         const dataAsList: Set<string> = new Set();
 
+        // fetch relevant health records
         for (const [_, itemList] of Object.entries(data)) {
           for (const item of itemList) {
             const minilist =
@@ -101,6 +106,44 @@ function MereAITab() {
           }
         }
 
+        const promptMessages = [
+          {
+            role: 'system',
+            content:
+              'You are a medical AI assistant. A patient is asking you a question. Please address the patient directly and answer the question.',
+          },
+          {
+            role: 'system',
+            content: `Here is some demographic information about the patient.
+Today's Date: ${new Date().toISOString()};
+${user?.first_name && user?.last_name ? 'Name: ' + (user?.first_name + ' ' + user?.last_name) : ''}
+${user?.birthday ? 'DOB: ' + user?.birthday : ''}
+${user?.birthday ? 'Age: ' + (differenceInDays(new Date(), parseISO(user?.birthday)) / 365)?.toFixed(1) : ''}
+${user.gender ? 'Gender:' + user?.gender : ''}`,
+          },
+        ];
+
+        promptMessages.push(
+          ...messages.slice(-5).map((m) => {
+            return {
+              role: m.user === 'AI' ? 'assistant' : 'user',
+              content: m.text,
+            };
+          }),
+        );
+
+        promptMessages.push({
+          role: 'user',
+          content: `${query}`,
+        });
+
+        promptMessages.push({
+          role: 'system',
+          content: `Here are some medical records that may be relevant. Ignore any information that is not relevant to the question.
+    Data: ${JSON.stringify([...dataAsList])}`,
+        });
+
+        // Send quert and relevant data to OpenAI
         const response = await fetch(
           'https://api.openai.com/v1/chat/completions',
           {
@@ -111,26 +154,7 @@ function MereAITab() {
             },
             body: JSON.stringify({
               model: 'gpt-4-1106-preview',
-              messages: [
-                {
-                  role: 'system',
-                  content:
-                    'You are a medical AI assistant. You will be given some data about a patient and a question. Please answer the question using the data provided and address the patient directly.',
-                },
-                {
-                  role: 'system',
-                  content: `Here is some information about your patient. Ignore any information that is not relevant to the question: 
-Today's Date: ${new Date().toISOString()};
-${user?.first_name && user?.last_name ? 'Name: ' + (user?.first_name + ' ' + user?.last_name) : ''}
-${user?.birthday ? 'DOB: ' + user?.birthday : ''}
-${user.gender ? 'Gender:' + user?.gender : ''}
-Data: ${JSON.stringify([...dataAsList])}`,
-                },
-                {
-                  role: 'user',
-                  content: `The question is: ${query}`,
-                },
-              ],
+              messages: promptMessages,
               stream: true,
             }),
           },
@@ -158,7 +182,9 @@ Data: ${JSON.stringify([...dataAsList])}`,
               const { content } = delta;
 
               if (content) {
-                setAiLoadingText((c) => c + content);
+                if (streamingCallback) {
+                  streamingCallback(content);
+                }
                 responseText += content;
               }
             }
@@ -172,7 +198,7 @@ Data: ${JSON.stringify([...dataAsList])}`,
       }
       return Promise.resolve();
     },
-    [db, experimental__openai_api_key, user, setAiLoadingText],
+    [db, experimental__openai_api_key, user],
   );
 
   const callAskAI = useCallback(
@@ -187,7 +213,12 @@ Data: ${JSON.stringify([...dataAsList])}`,
                 ClinicalDocument<BundleEntry<FhirResource>>[]
               >,
             ) => {
-              const responseText = await askAI(messageText, groupedRecords);
+              const responseText = await askAI(
+                messageText,
+                groupedRecords,
+                (c: string) => setAiLoadingText((p) => p + c),
+                messages,
+              );
               if (responseText) {
                 setMessages((e) => [
                   ...e,
@@ -224,7 +255,14 @@ Data: ${JSON.stringify([...dataAsList])}`,
           });
       }
     },
-    [askAI, db, isLoadingAiResponse, notificationDispatch, vectorStorage],
+    [
+      askAI,
+      db,
+      isLoadingAiResponse,
+      messages,
+      notificationDispatch,
+      vectorStorage,
+    ],
   );
 
   useEffect(() => {
@@ -262,7 +300,8 @@ Data: ${JSON.stringify([...dataAsList])}`,
               message={{
                 id: 'loading',
                 user: 'AI',
-                text: aiLoadingText,
+                text:
+                  aiLoadingText || 'Mere Assistant is thinking' + periodText,
                 timestamp: new Date(),
               }}
               isAiMessage={true}
@@ -299,18 +338,41 @@ const MessageBubble = memo(function MessageBubble({
   const user = useUser();
   return (
     <div
-      className={`flex gap-2.5 mt-6 items-start ${isAiMessage ? 'justify-start' : 'justify-end'}`}
+      dir={isAiMessage ? 'ltr' : 'rtl'}
+      className={`flex gap-2.5 mt-6 items-start justify-start `}
     >
-      {isAiMessage && (
+      {isAiMessage ? (
         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 via-purple-300 to-primary-600 background-animate">
           <SparklesIcon className="w-8 h-8 p-2 text-white" />
         </div>
+      ) : (
+        <>
+          {user?.profile_picture?.data ? (
+            <div className=" w-8 h-8 flex-shrink-0 rounded-full border border-indigo-700">
+              <img
+                className="h-full w-full rounded-full text-gray-300"
+                src={user.profile_picture.data}
+                alt="profile"
+              ></img>
+            </div>
+          ) : (
+            <div className=" w-8 h-8 flex-shrink-0 rounded-full border border-indigo-700">
+              <svg
+                className="h-full w-full rounded-full text-gray-300"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </div>
+          )}
+        </>
       )}
       <div
         dir="ltr"
-        className={`flex flex-col w-full max-w-[320px] leading-1.5 p-4 rounded-e-xl rounded-es-xl ${isAiMessage ? 'bg-indigo-100 border-indigo-200' : 'border-gray-200 bg-gray-100'}`}
+        className={`flex flex-col w-full max-w-[320px] md:max-w-md lg:max-w-lg leading-1.5 p-4 rounded-e-xl rounded-es-xl ${isAiMessage ? 'bg-indigo-100 border-indigo-200' : 'border-gray-200 bg-gray-100'}`}
       >
-        <div className="flex items-center space-x-2 rtl:space-x-reverse">
+        <div className="flex items-center space-x-2 ">
           <span
             className={`text-sm font-semibold ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
           >
@@ -360,7 +422,7 @@ const ChatInput = memo(function ChatInput({
   const [message, setMessage] = useState('');
   const periodText = usePeriodAnimation();
   const placeholderText = useMemo(
-    () => 'Search or ask a question (e.g., ' + generateRandomQuestion() + ')',
+    () => 'Ask a question (e.g., ' + generateRandomQuestion() + ')',
     [],
   );
 
@@ -397,119 +459,3 @@ const ChatInput = memo(function ChatInput({
 });
 
 export default MereAITab;
-
-// Streaming API, we want to use this instead of the promise based API
-/**
- *     askAI = useCallback(async () => {
-      setAiResponseText('');
-      if (data) {
-        //prepare data as plattened list
-        const dataAsList: Set<string> = new Set();
-
-        for (const [_, itemList] of Object.entries(data)) {
-          for (const item of itemList) {
-            const minilist =
-              prepareClinicalDocumentForVectorization(item).docList;
-            const texts = [...minilist.map((i) => i.text)];
-            for (const t of texts) {
-              dataAsList.add(t);
-            }
-            // get related documents if item is a diagnostic report or observation
-            if (
-              item.data_record.raw.resource?.resourceType ===
-                'DiagnosticReport' ||
-              item.data_record.raw.resource?.resourceType === 'Observation'
-            ) {
-              const loinc = item.metadata?.loinc_coding || [];
-              const relatedDocs = await getRelatedLoincLabs({
-                loinc,
-                db,
-                user,
-                limit: 5,
-              });
-              const relatedList = relatedDocs.flatMap(
-                (i) => prepareClinicalDocumentForVectorization(i).docList,
-              );
-              const relatedTexts = relatedList.map((i) => i.text);
-              for (const rt of relatedTexts) {
-                dataAsList.add(rt);
-              }
-            }
-          }
-          if (dataAsList.size > 100) {
-            break;
-          }
-        }
-
-        const response = await fetch(
-          'https://api.openai.com/v1/chat/completions',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${experimental__openai_api_key}`,
-            },
-            body: JSON.stringify({
-              model: 'gpt-4-1106-preview',
-              messages: [
-                {
-                  role: 'system',
-                  content:
-                    'You are a medical AI assistant. You will be given some data about a patient and a question. Please answer the question using the data provided and address the patient directly.',
-                },
-                {
-                  role: 'system',
-                  content: `Here is some information about your patient. Ignore any information that is not relevant to the question: 
-  Today's Date: ${new Date().toISOString()};
-  ${user?.first_name && user?.last_name ? 'Name: ' + (user?.first_name + ' ' + user?.last_name) : ''}
-  ${user?.birthday ? 'DOB: ' + user?.birthday : ''}
-  ${user.gender ? 'Gender:' + user?.gender : ''}
-  Data: ${JSON.stringify([...dataAsList])}`,
-                },
-                {
-                  role: 'user',
-                  content: `The question is: ${query}`,
-                },
-              ],
-              stream: true,
-            }),
-          },
-        );
-        const reader = response.body!.getReader();
-        const decoder = new TextDecoder('utf-8');
-
-        // Read the response as a stream of data
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) {
-              break;
-            }
-            const chunk = decoder.decode(value);
-            const lines = chunk.split('\n');
-            const parsedLines = lines
-
-              .map((line) => line.replace(/^data: /, '').trim()) // Remove the "data: " prefix
-              .filter((line) => line !== '' && line !== '[DONE]') // Remove empty lines and "[DONE]"
-              .map((line: string) => JSON.parse(line));
-            for (const parsedLine of parsedLines) {
-              const { choices } = parsedLine;
-              const { delta } = choices[0];
-              const { content } = delta;
-
-              if (content) {
-                setAiResponseText((c) => c + content);
-              }
-            }
-          }
-        } catch (e) {
-          console.error(e);
-        } finally {
-          reader.releaseLock();
-        }
-      } else {
-        console.error('Data is undefined');
-        alert('Data is undefined');
-      }
-    }, [data, db, experimental__openai_api_key, query, user]);
- */
