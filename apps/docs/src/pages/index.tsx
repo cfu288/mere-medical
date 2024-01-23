@@ -26,13 +26,13 @@ const features = [
     name: 'Self-Hosted',
     img: '/img/self.svg',
     description:
-      'Mere respects the privacy, security, and integrity of your info at all times. Run it on your own servers at home without worrying about your sensitive data falling into the wrong hands.',
+      'Run Mere on your own servers at home without worrying about your sensitive data falling into the wrong hands.',
   },
   {
     name: 'Offline First',
     img: '/img/offline.svg',
     description:
-      'Mere is offline-first. Everything will be available right on your device for anytime-access – whether you’re connected to the web or not.',
+      'Mere is offline-first. Everything will be available right on your device for anytime-access – even with no internet access!',
   },
   {
     name: 'Built on Standards',
@@ -326,17 +326,11 @@ export default function Home() {
                     access them?
                   </p>
                   <p className="text-lg leading-relaxed">
-                    Medical record organization is critical. With the rise of
-                    the digital age, managing your patient profile should be
-                    easy.
-                  </p>
-                  <p className="text-lg leading-relaxed">
                     Today, our medical records are all over the place - saved as
                     PDF's on a computer, as images on our phones, even in tall
-                    stacks of paper in some filing cabinet. Even when we have
-                    access to our medical records via online patient portals, we
-                    have a different portal for each hospital and doctor we
-                    visit.
+                    stacks of paper in some filing cabinet. Each doctor's office
+                    and hospital has their own patient portal which never seem
+                    to talk to each other.
                   </p>
                 </div>
               </div>
@@ -358,18 +352,15 @@ export default function Home() {
                   experience.
                 </p>
                 <p className="mt-6 max-w-3xl text-lg leading-relaxed text-white">
-                  Mere is an open-source, self-hostable, local-first, and free
-                  personal health record that connects to multiple patient
-                  portals and allows you to upload your own paper records. With
-                  Mere, you can easily manage your own medical records under one
-                  digital roof.
+                  With Mere, you can easily manage your own medical records
+                  under one digital roof.
                 </p>
                 <div className="mb-0 mt-8 flex items-center justify-start rounded-md bg-[#8799D040] p-4">
                   <div className="ml-2 mr-4 flex aspect-square h-[35px] w-[35px] items-center justify-center rounded-full bg-[#7CE8C7]">
                     <p className="text-primary-900 mb-0 text-lg">1</p>
                   </div>
                   <p className=" text-md mb-0 flex h-max max-w-xl items-center justify-center align-bottom font-semibold leading-7 text-white">
-                    Offline first - Everything is stored locally on your device
+                    Local first - Everything is stored locally on your device
                   </p>
                 </div>
                 <div className="mt-8 flex items-center justify-start rounded-md bg-[#8799D040] p-4">
@@ -557,22 +548,22 @@ export function Footer() {
           ></img>
         </div>
         <nav
-          className="-mx-5 -my-2 flex flex-wrap justify-center"
+          className="-mx-5 -my-2 mt-4 flex flex-wrap justify-center"
           aria-label="Footer"
         >
           {footerNavigation.main.map((item) => (
             <div key={item.name} className="px-5 py-2">
               <a
                 href={item.href}
-                className="text-base text-gray-700 hover:text-gray-300"
+                className="text-base text-white hover:text-gray-300"
               >
                 {item.name}
               </a>
             </div>
           ))}
         </nav>
-        <p className="mt-8 text-center text-base text-gray-700">
-          &copy; 2023 Mere Medical. All rights reserved.
+        <p className="mt-8 text-center text-base text-gray-200">
+          &copy; 2024 Mere Medical. All rights reserved.
         </p>
       </div>
     </footer>
