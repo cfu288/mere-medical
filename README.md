@@ -27,11 +27,12 @@
     <img src="https://img.shields.io/badge/Discord-7289DA?style=flat&logo=discord&logoColor=white" alt="Discord">
   </a>
   <a href="https://github.com/cfu288/mere-medical/actions/workflows/staging.yaml">
-    <img src="https://github.com/cfu288/mere-medical/actions/workflows/staging.yaml/badge.svg" alt="Build Status">
+    <img src="https://img.shields.io/github/actions/workflow/status/cfu288/mere-medical/staging.yaml" alt="Build Status">
   </a>
-  <a>
-    <img src="https://img.shields.io/github/license/cfu288/mere-medical.svg" alt="licence">
-  </a>
+  <img src="https://img.shields.io/github/license/cfu288/mere-medical.svg" alt="licence">
+  <img src="https://img.shields.io/github/v/release/cfu288/mere-medical.svg" alt="release">
+  <img src="https://img.shields.io/docker/image-size/cfu288/mere-medical.svg" alt="docker image size">
+  <img src="https://img.shields.io/github/sponsors/cfu288" alt="sponsor">
 </p>
 
 > [!WARNING]  
