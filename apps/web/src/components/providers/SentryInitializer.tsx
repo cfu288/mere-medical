@@ -57,7 +57,7 @@ function useSentryLogging() {
       console.log(
         `Sentry: ${
           sentryClient.getOptions().enabled ? 'Enabling' : 'Disabling'
-        } reporting`
+        } reporting`,
       );
     }
   }, []);

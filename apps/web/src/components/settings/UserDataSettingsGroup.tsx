@@ -16,6 +16,7 @@ import {
   getStorageQuota,
   requestPersistentStorage,
 } from '../../utils/storagePermissionUtils';
+import { Link } from 'react-router-dom';
 
 export type ImportFields = {
   backup?: FileList;
@@ -172,15 +173,15 @@ export function UserDataSettingsGroup() {
                 />
                 <p className="font-bold">Export</p>
               </button>
-              <a
+              <Link
                 ref={clickDownloadRef}
                 id="downloadLink"
                 download={`mere_export_${new Date().toISOString()}.json`}
-                href={fileDownloadLink}
+                to={fileDownloadLink}
                 className="hidden"
               >
                 hidden download button
-              </a>
+              </Link>
             </li>
             <li className="flex items-center py-4">
               <div className="flex flex-1 flex-col">
