@@ -37,9 +37,24 @@ const UpdateLocalConfigContext = React.createContext<
   (config: Partial<LocalConfig>) => void
 >(() => {});
 
+/**
+ * Helper function that allows you to get a value from the local config
+ * Does not update when the config changes
+ * @param key
+ * @returns
+ */
+export const getLocalConfigValue = (key: keyof LocalConfig) => {
+  const configObject = localStorage.getItem('config');
+  if (configObject) {
+    const config = JSON.parse(configObject);
+    return config[key];
+  }
+  return undefined;
+};
+
 export function LocalConfigProvider(props: LocalConfigProviderProps) {
   const [config, setConfig] = useState<Partial<LocalConfig> | undefined>(
-      undefined
+      undefined,
     ),
     hasRun = useRef(false);
 
