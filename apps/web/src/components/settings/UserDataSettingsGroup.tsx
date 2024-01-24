@@ -156,32 +156,34 @@ export function UserDataSettingsGroup() {
                   backup your data and can import it back if needed.
                 </p>
               </div>
-              <button
-                type="button"
-                className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 relative ml-4 inline-flex flex-shrink-0 cursor-pointer items-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
-                onClick={() => {
-                  exportData(db, setFileDownloadLink).then((link) => {
-                    if (link) {
-                      clickDownloadRef.current?.click();
-                    }
-                  });
-                }}
-              >
-                <ArrowRightOnRectangleIcon
-                  className="-ml-1 mr-2 h-5 w-5"
-                  aria-hidden="true"
-                />
-                <p className="font-bold">Export</p>
-              </button>
-              <Link
-                ref={clickDownloadRef}
-                id="downloadLink"
-                download={`mere_export_${new Date().toISOString()}.json`}
-                to={fileDownloadLink}
-                className="hidden"
-              >
-                hidden download button
-              </Link>
+              {!fileDownloadLink ? (
+                <button
+                  type="button"
+                  className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 relative ml-4 inline-flex flex-shrink-0 cursor-pointer items-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
+                  onClick={() => {
+                    exportData(db, setFileDownloadLink).then((link) => {
+                      if (link) {
+                        clickDownloadRef.current?.click();
+                      }
+                    });
+                  }}
+                >
+                  <p className="font-bold">Start Export</p>
+                </button>
+              ) : (
+                <a
+                  type="button"
+                  className="bg-green-600 hover:bg-green-700 focus:ring-green-500 relative ml-4 inline-flex flex-shrink-0 cursor-pointer items-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
+                  ref={clickDownloadRef}
+                  target="_blank"
+                  rel="noreferrer"
+                  id="downloadLink"
+                  download={`mere_export_${new Date().toISOString()}.json`}
+                  href={fileDownloadLink}
+                >
+                  Download
+                </a>
+              )}
             </li>
             <li className="flex items-center py-4">
               <div className="flex flex-1 flex-col">
