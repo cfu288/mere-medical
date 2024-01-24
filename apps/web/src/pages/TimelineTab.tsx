@@ -372,16 +372,13 @@ function useRecordQuery(
 
 export function TimelineTab() {
   const user = useUser(),
-    db = useRxDb(),
     [query, setQuery] = useState(''),
-    { experimental__openai_api_key, experimental__use_openai_rag } =
-      useLocalConfig(),
+    { experimental__use_openai_rag } = useLocalConfig(),
     { data, status, initialized, loadNextPage } = useRecordQuery(
       query,
       experimental__use_openai_rag,
     ),
-    hasNoRecords = query === '' && (!data || Object.entries(data).length === 0),
-    [aiResponseText, setAiResponseText] = useState('');
+    hasNoRecords = query === '' && (!data || Object.entries(data).length === 0);
 
   useScrollToHash();
 

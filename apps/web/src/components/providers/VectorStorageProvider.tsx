@@ -85,27 +85,27 @@ export function prepareClinicalDocumentForVectorization(
   };
 
   if (document.data_record.content_type === 'application/json') {
-    // const newUnflatObject: any = document.data_record.raw;
-    // delete newUnflatObject.link;
-    // delete newUnflatObject.fullUrl;
-    // delete newUnflatObject.search;
-    // delete newUnflatObject.resource.subject;
-    // delete newUnflatObject.resource.id;
-    // delete newUnflatObject.resource.status;
-    // delete newUnflatObject.resource.identifier;
-    // const newFlatObject = flattenObject(
-    //   Object.keys(newUnflatObject)
-    //     .sort()
-    //     .reduce((obj: any, key: any) => {
-    //       obj[key] = newUnflatObject[key];
-    //       return obj;
-    //     }, {}),
-    // );
-    // const serialzed = [...new Set(Object.values(newFlatObject))]
-    //   .join('|')
-    //   .substring(0, MAX_CHARS);
-    // docList.push({ id: docId, text: serialzed });
-    // metaList.push(meta);
+    const newUnflatObject: any = document.data_record.raw;
+    delete newUnflatObject.link;
+    delete newUnflatObject.fullUrl;
+    delete newUnflatObject.search;
+    delete newUnflatObject.resource.subject;
+    delete newUnflatObject.resource.id;
+    delete newUnflatObject.resource.status;
+    delete newUnflatObject.resource.identifier;
+    const newFlatObject = flattenObject(
+      Object.keys(newUnflatObject)
+        .sort()
+        .reduce((obj: any, key: any) => {
+          obj[key] = newUnflatObject[key];
+          return obj;
+        }, {}),
+    );
+    const serialzed = [...new Set(Object.values(newFlatObject))]
+      .join('|')
+      .substring(0, MAX_CHARS);
+    docList.push({ id: docId, text: serialzed });
+    metaList.push(meta);
   } else if (document.data_record.content_type === 'application/xml') {
     const contentFull = document.data_record.raw as string;
     if (contentFull.length > CHUNK_SIZE) {
