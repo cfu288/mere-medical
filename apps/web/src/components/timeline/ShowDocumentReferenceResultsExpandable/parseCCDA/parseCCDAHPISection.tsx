@@ -1,11 +1,11 @@
 import { Disclosure } from '@headlessui/react';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
-import { LOINC_CODE_SYSTEM } from '../ShowDocumentReferenceResultsExpandable';
+import { LOINC_CODE_SYSTEM } from '../ShowDocumentReferenceAttachmentExpandable';
 import { getMatchingSections, parseDateString } from './parseCCDA';
 
 export function parseCCDAHPISection(
   sections: HTMLCollectionOf<HTMLElement>,
-  id: string[] | string
+  id: string[] | string,
 ) {
   const matchingSections = getMatchingSections(sections, id);
   if (!matchingSections) {
@@ -13,7 +13,7 @@ export function parseCCDAHPISection(
   }
 
   const entry = [...matchingSections].map(
-    (x) => x.getElementsByTagName('entry')?.[0]
+    (x) => x.getElementsByTagName('entry')?.[0],
   )?.[0];
   if (!entry) {
     return null;

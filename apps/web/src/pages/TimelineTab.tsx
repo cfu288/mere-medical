@@ -65,6 +65,8 @@ export async function fetchRecordsWithVectorSearch(
     ClinicalDocument<BundleEntry<FhirResource>>
   >[];
 
+  debugger;
+
   // Group records by date
   const groupedRecords: Record<
     string, // date to group by
@@ -75,6 +77,15 @@ export async function fetchRecordsWithVectorSearch(
     if (item.get('metadata')?.date === undefined) {
       console.warn('Date is undefined for object:');
       console.log(item.toJSON());
+      // set date to min date
+      const minDate = new Date(0).toISOString();
+      if (groupedRecords[minDate]) {
+        groupedRecords[minDate].push(
+          item.toMutableJSON() as ClinicalDocument<BundleEntry<FhirResource>>,
+        );
+      } else {
+        groupedRecords[minDate] = [item.toMutableJSON()];
+      }
     } else {
       const date = item.get('metadata')?.date
         ? format(parseISO(item.get('metadata')?.date), 'yyyy-MM-dd')
@@ -92,26 +103,34 @@ export async function fetchRecordsWithVectorSearch(
   // dates are in YYYY-MM-DD format
   // use date-fns to parse and compare dates
 
-  const ordered = Object.keys(groupedRecords)
-    .sort((a, b) => {
-      const aDate = parseISO(a);
-      const bDate = parseISO(b);
-      if (aDate > bDate) {
-        return -1;
-      } else if (aDate < bDate) {
-        return 1;
-      } else {
-        return 0;
-      }
-    })
-    .reduce((obj: any, key) => {
-      obj[key] = groupedRecords[key];
-      return obj;
-    }, {});
+  debugger;
+  console.warn(groupedRecords);
 
-  return ordered as Promise<
-    Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>
-  >;
+  try {
+    const ordered = Object.keys(groupedRecords)
+      .sort((a, b) => {
+        const aDate = parseISO(a);
+        const bDate = parseISO(b);
+        if (aDate > bDate) {
+          return -1;
+        } else if (aDate < bDate) {
+          return 1;
+        } else {
+          return 0;
+        }
+      })
+      .reduce((obj: any, key) => {
+        obj[key] = groupedRecords[key];
+        return obj;
+      }, {});
+    return ordered as Promise<
+      Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>
+    >;
+  } catch (e) {
+    console.error(e);
+  }
+
+  return groupedRecords;
 }
 
 /**

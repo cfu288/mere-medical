@@ -1,11 +1,11 @@
 import uuid4 from 'apps/web/src/utils/UUIDUtils';
 import { ResultComponentSection } from '../ResultComponentSection';
-import { LOINC_CODE_SYSTEM } from '../ShowDocumentReferenceResultsExpandable';
+import { LOINC_CODE_SYSTEM } from '../ShowDocumentReferenceAttachmentExpandable';
 import { getMatchingSections } from './parseCCDA';
 
 export function parseCCDAResultsSection(
   sections: HTMLCollectionOf<HTMLElement>,
-  id: string[] | string
+  id: string[] | string,
 ) {
   const matchingSections = getMatchingSections(sections, id);
 
@@ -24,15 +24,15 @@ export function parseCCDAResultsSection(
           return firstEl.getAttribute('displayName');
         }
         return firstEl.textContent?.trim();
-      })
+      }),
   )?.[0];
 
   const sectionComponents = [
     ...(matchingSections as unknown as HTMLElement[]),
   ]?.map((e) =>
     [...e.getElementsByTagName('entry')].map((x) =>
-      x.getElementsByTagName('component')
-    )
+      x.getElementsByTagName('component'),
+    ),
   );
 
   if (!sectionComponents || sectionComponents?.length === 0) {
@@ -84,7 +84,7 @@ export function parseCCDAResultsSection(
                   ?.getElementsByTagName('value')?.[0]
                   ?.getElementsByTagName('reference')?.[0]
                   ?.getAttribute('value')
-                  ?.replace('#', '')}']`
+                  ?.replace('#', '')}']`,
               )
               ?.textContent?.trim() ||
             '',
@@ -115,7 +115,7 @@ export function parseCCDAResultsSection(
             ...(component?.getElementsByTagName('referenceRange') || []),
           ].map(
             (x) =>
-              x?.getElementsByTagName('text')?.[0]?.textContent?.trim() || ''
+              x?.getElementsByTagName('text')?.[0]?.textContent?.trim() || '',
           ),
           referenceRangeLow:
             component

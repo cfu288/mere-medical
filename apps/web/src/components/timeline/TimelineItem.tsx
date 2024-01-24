@@ -21,6 +21,7 @@ import { ObservationCard } from './ObservationCard';
 import { ProcedureCard } from './ProcedureCard';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { EncounterCard } from './EncounterCard';
+import { DocumentReferenceAttachmentCard } from './DocumentReferenceCard';
 
 export function TimelineItem({
   dateKey,
@@ -88,6 +89,13 @@ export function TimelineItem({
               <DocumentReferenceCard
                 key={item.id}
                 item={item as ClinicalDocument<BundleEntry<DocumentReference>>}
+              />
+            )}
+            {item.data_record.resource_type ===
+              'documentreference_attachment' && (
+              <DocumentReferenceAttachmentCard
+                key={item.id}
+                item={item as unknown as ClinicalDocument<string>}
               />
             )}
             {item.data_record.resource_type === 'encounter' && (

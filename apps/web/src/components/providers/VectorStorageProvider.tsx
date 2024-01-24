@@ -64,6 +64,7 @@ export function VectorStorageProvider({
 
 const PAGE_SIZE = 100;
 const MAX_CHARS = 18000;
+const CHUNK_SIZE = 1000;
 
 export function prepareClinicalDocumentForVectorization(
   document: ClinicalDocument<unknown>,
@@ -74,6 +75,7 @@ export function prepareClinicalDocumentForVectorization(
     text: string;
   }>();
   const metaList: DocMeta[] = Array<DocMeta>();
+
   const docId = document.id!;
   const meta = {
     category: document.data_record.resource_type,
@@ -83,44 +85,41 @@ export function prepareClinicalDocumentForVectorization(
   };
 
   if (document.data_record.content_type === 'application/json') {
-    const newUnflatObject: any = document.data_record.raw;
-    delete newUnflatObject.link;
-    delete newUnflatObject.fullUrl;
-    delete newUnflatObject.search;
-    delete newUnflatObject.resource.subject;
-    delete newUnflatObject.resource.id;
-    delete newUnflatObject.resource.status;
-    const newFlatObject = flattenObject(
-      Object.keys(newUnflatObject)
-        .sort()
-        .reduce((obj: any, key: any) => {
-          obj[key] = newUnflatObject[key];
-          return obj;
-        }, {}),
-    );
-
-    const serialzed = [...new Set(Object.values(newFlatObject))]
-      .join('|')
-      .substring(0, MAX_CHARS);
-    // const serialzedKeys = [...new Set(Object.keys(newFlatObject))].join('|');
-    // console.log(serialzed);
-    // console.log(serialzedKeys);
-    docList.push({ id: docId, text: serialzed });
-    metaList.push(meta);
+    // const newUnflatObject: any = document.data_record.raw;
+    // delete newUnflatObject.link;
+    // delete newUnflatObject.fullUrl;
+    // delete newUnflatObject.search;
+    // delete newUnflatObject.resource.subject;
+    // delete newUnflatObject.resource.id;
+    // delete newUnflatObject.resource.status;
+    // delete newUnflatObject.resource.identifier;
+    // const newFlatObject = flattenObject(
+    //   Object.keys(newUnflatObject)
+    //     .sort()
+    //     .reduce((obj: any, key: any) => {
+    //       obj[key] = newUnflatObject[key];
+    //       return obj;
+    //     }, {}),
+    // );
+    // const serialzed = [...new Set(Object.values(newFlatObject))]
+    //   .join('|')
+    //   .substring(0, MAX_CHARS);
+    // docList.push({ id: docId, text: serialzed });
+    // metaList.push(meta);
   } else if (document.data_record.content_type === 'application/xml') {
-    const contentFull = JSON.stringify(document.data_record.raw);
-    if (contentFull.length > MAX_CHARS) {
-      for (let offset = 0; offset < contentFull.length; offset += MAX_CHARS) {
+    const contentFull = document.data_record.raw as string;
+    if (contentFull.length > CHUNK_SIZE) {
+      for (let offset = 0; offset < contentFull.length; offset += CHUNK_SIZE) {
         const chunk = contentFull.substring(
           offset,
-          Math.min(offset + MAX_CHARS, contentFull.length),
+          Math.min(offset + CHUNK_SIZE, contentFull.length),
         );
-        docList.push({ id: docId, text: chunk });
+        docList.push({ id: `${docId}_chunk${offset}`, text: chunk });
         metaList.push(meta);
       }
     } else {
-      docList.push({ id: docId, text: contentFull });
-      metaList.push(meta);
+      // docList.push({ id: docId, text: contentFull });
+      // metaList.push(meta);
     }
   }
 
@@ -138,56 +137,10 @@ async function addBatchToVectorStorage(
   }>(documents.length);
   const metaList: DocMeta[] = Array<DocMeta>(documents.length);
   documents.forEach((x) => {
-    // trim at 22000 characters (aprox 8k tokens)
-    const docId = x.id!;
-    const meta = {
-      category: x.data_record.resource_type,
-      document_type: 'clinical_document',
-      id: docId,
-      url: x.metadata?.id!,
-    };
-
-    if (x.data_record.content_type === 'application/json') {
-      const newUnflatObject: any = x.data_record.raw;
-      delete newUnflatObject.link;
-      delete newUnflatObject.fullUrl;
-      delete newUnflatObject.search;
-      delete newUnflatObject.resource.subject;
-      delete newUnflatObject.resource.id;
-      delete newUnflatObject.resource.status;
-      const newFlatObject = flattenObject(
-        Object.keys(newUnflatObject)
-          .sort()
-          .reduce((obj: any, key: any) => {
-            obj[key] = newUnflatObject[key];
-            return obj;
-          }, {}),
-      );
-
-      const serialzed = [...new Set(Object.values(newFlatObject))]
-        .join('|')
-        .substring(0, MAX_CHARS);
-      // const serialzedKeys = [...new Set(Object.keys(newFlatObject))].join('|');
-      // console.log(serialzed);
-      // console.log(serialzedKeys);
-      docList.push({ id: docId, text: serialzed });
-      metaList.push(meta);
-    } else if (x.data_record.content_type === 'application/xml') {
-      const contentFull = JSON.stringify(x.data_record.raw);
-      if (contentFull.length > MAX_CHARS) {
-        for (let offset = 0; offset < contentFull.length; offset += MAX_CHARS) {
-          const chunk = contentFull.substring(
-            offset,
-            Math.min(offset + MAX_CHARS, contentFull.length),
-          );
-          docList.push({ id: docId, text: chunk });
-          metaList.push(meta);
-        }
-      } else {
-        docList.push({ id: docId, text: contentFull });
-        metaList.push(meta);
-      }
-    }
+    const { docList: docListChunk, metaList: metaListChunk } =
+      prepareClinicalDocumentForVectorization(x);
+    docListChunk.forEach((y) => docList.push(y));
+    metaListChunk.forEach((y) => metaList.push(y));
   });
 
   return await vectorStorage.addTexts(docList, metaList);
