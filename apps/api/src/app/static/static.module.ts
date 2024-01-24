@@ -7,6 +7,9 @@ import { ServeStaticModule } from '@nestjs/serve-static';
   imports: [
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'web'),
+      serveStaticOptions: {
+        extensions: ['.json'],
+      },
     }),
   ],
 })

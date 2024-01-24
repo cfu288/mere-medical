@@ -1,0 +1,19 @@
+version: '3'
+services:
+  mere_dev:
+    build:
+      context: ..
+      dockerfile: ./.devcontainer/Dockerfile
+    network_mode: 'host'
+    volumes:
+      - ..:/workspace:Z
+    user: node
+    command: 'sleep infinity'
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2000M
+        reservations:
+          cpus: '2'
+          memory: 2000M

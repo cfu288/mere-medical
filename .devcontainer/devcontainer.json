@@ -1,0 +1,67 @@
+{
+    "name": "meremedical",
+    "dockerComposeFile": ["docker-compose.yml"],
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "editor.tabSize": 4,
+                "editor.defaultFormatter": "esbenp.prettier-vscode",
+                "eslint.format.enable": true,
+                "eslint.alwaysShowStatus": true,
+                "typescript.validate.enable": true,
+                "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
+                "typescript.inlayHints.parameterNames.enabled": "all",
+                "typescript.inlayHints.parameterTypes.enabled": true,
+                "typescript.inlayHints.variableTypes.enabled": true,
+                "typescript.inlayHints.enumConstants.enabled": true,
+                "typescript.tsdk": "./node_modules/typescript/lib",
+                "editor.detectIndentation": true,
+                "editor.formatOnSave": true,
+                "editor.codeActionsOnSave": {
+                    "source.organizeImports": true,
+                    "source.fixAll": true,
+                    "source.trimTrailingWhitespace": true,
+                    "source.trimAutoWhitespace": true
+                },
+                "[json][yaml]": {
+                    "editor.defaultFormatter": "esbenp.prettier-vscode"
+                },
+                "[typescript]": {
+                    "editor.defaultFormatter": "esbenp.prettier-vscode",
+                    "editor.inlayHints.enabled": "on"
+                },
+                "[typescriptreact]": {
+                    "editor.defaultFormatter": "esbenp.prettier-vscode"
+                },
+                "terminal.integrated.defaultProfile.linux": "zsh",
+                "terminal.integrated.profiles.linux": {
+                    "zsh": {
+                        "path": "zsh"
+                    }
+                },
+                "workbench.iconTheme": "vscode-icons",
+                "files.watcherExclude": {
+                    "**/.git/objects/**": true,
+                    "**/node_modules/**": true
+                }
+            },
+            "extensions": [
+                "nrwl.angular-console",
+                "esbenp.prettier-vscode",
+                "firsttris.vscode-jest-runner",
+                "GitHub.copilot",
+            ]
+        }
+    },
+    "service": "mere_dev",
+    "workspaceFolder": "/workspace",
+    "userEnvProbe": "loginInteractiveShell",
+
+    // Use 'forwardPorts' to make a list of ports inside the container available locally.
+    // "forwardPorts": [],
+
+    // Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
+    "remoteUser": "node",
+
+    "postCreateCommand": "sh .devcontainer/initialize.sh"
+}
