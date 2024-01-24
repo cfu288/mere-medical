@@ -1,0 +1,61 @@
+ARG VARIANT=22.04
+FROM ubuntu:${VARIANT}
+
+ARG USER=node
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+ENV DEBIAN_FRONTEND=noninteractive
+ENV NODE_VERSION=20.x
+
+## Create unpriv user
+RUN groupadd --gid $USER_GID $USER \
+    && useradd --uid $USER_UID --gid $USER_GID -m $USER \
+    && apt-get update \
+    && apt-get install -y sudo \
+    && echo $USER ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USER \
+    && chmod 0440 /etc/sudoers.d/$USER
+
+# Install curl
+RUN apt-get update && \
+    apt-get install -y wget curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install node
+RUN curl -sL https://deb.nodesource.com/setup_${NODE_VERSION} | bash - && \
+    apt-get install -y nodejs && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install typescript global
+RUN npm install -g typescript@latest
+
+# [Optional] Uncomment this section to install additional OS packages.
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get -y install --no-install-recommends \
+    git \
+    libnss3-tools \
+    jq \
+    golang \
+    ssh \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN \
+    git clone https://github.com/FiloSottile/mkcert /tmp/mkcert && \
+    cd /tmp/mkcert && \
+    go build -ldflags "-X main.Version=$(git describe --tags)" && \
+    sudo mv mkcert /usr/bin/ && \
+    rm -rf /tmp/mkcert
+
+## Uses "Spaceship" theme with some customization. Uses some bundled plugins and installs some more from github
+USER $USER_UID
+ENV ZSH_THEME="spaceship"
+RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v1.1.5/zsh-in-docker.sh)" -- \
+    -t https://github.com/denysdovhan/spaceship-prompt \
+    -a 'SPACESHIP_PROMPT_ADD_NEWLINE="false"' \
+    -a 'SPACESHIP_PROMPT_SEPARATE_LINE="false"' \
+    -p git \
+    -p ssh-agent \
+    -p https://github.com/zsh-users/zsh-autosuggestions \
+    -p https://github.com/zsh-users/zsh-completions
