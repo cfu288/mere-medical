@@ -48,10 +48,19 @@ export async function fetchRecordsWithVectorSearch(
     return item.id;
   });
 
+  // IDs may have '_chunk148000' appended to them. Remove this
+  const cleanedIds = [
+    ...new Set(
+      ids.map((id) => {
+        return id.split('_chunk')[0];
+      }),
+    ),
+  ];
+
   const docs = await db.clinical_documents
     .find({
       selector: {
-        id: { $in: ids },
+        id: { $in: cleanedIds },
       },
     })
     .exec();
