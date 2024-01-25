@@ -8,11 +8,12 @@ import { VectorStorage } from '@mere/vector-storage';
 import { useDebounceCallback } from '@react-hook/debounce';
 
 import { AppPage } from '../components/AppPage';
-import { ButtonLoadingSpinner } from '../components/connection/ButtonLoadingSpinner';
 import { EmptyRecordsPlaceholder } from '../components/EmptyRecordsPlaceholder';
+import { ButtonLoadingSpinner } from '../components/connection/ButtonLoadingSpinner';
 import useIntersectionObserver from '../components/hooks/useIntersectionObserver';
 import { useScrollToHash } from '../components/hooks/useScrollToHash';
 import { DatabaseCollections } from '../components/providers/DatabaseCollections';
+import { useLocalConfig } from '../components/providers/LocalConfigProvider';
 import { useRxDb } from '../components/providers/RxDbProvider';
 import { useUser } from '../components/providers/UserProvider';
 import { useVectors } from '../components/providers/vector-provider';
@@ -23,8 +24,6 @@ import { TimelineYearHeaderWrapper } from '../components/timeline/TimelineYearHe
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 import { SearchBar } from './SearchBar';
 import { TimelineSkeleton } from './TimelineSkeleton';
-import { useLocalConfig } from '../components/providers/LocalConfigProvider';
-import React from 'react';
 
 const PAGE_SIZE = 50;
 
@@ -56,6 +55,10 @@ export async function fetchRecordsWithVectorSearch(
       }),
     ),
   ];
+
+  // TODO: Currently we throw away the chunk id. We should use
+  // chunked IDs to fetch the correct chunk of data and somehow
+  // highlight the relevant data from the larger document
 
   const docs = await db.clinical_documents
     .find({
