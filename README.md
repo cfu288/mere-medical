@@ -39,7 +39,10 @@
 > Mere is currently pre-release software: updates may break backwards compatibility.
 
 > [!NOTE]  
-> This project is supported by a single developer who is also a full-time medical student and soon to be medical resident. If you would like to support this project, please consider [sponsoring](https://github.com/sponsors/cfu288) or help by tackling one of the [issues](https://github.com/cfu288/mere-medical/issues). I will make a good effort to respond to issues and PRs in a timely fashion, but please be patient.
+> This project is supported by a single developer who is also a full-time medical student and soon to be medical resident. If you would like to support this project, please consider [sponsoring](https://github.com/sponsors/cfu288) or help by tackling one of the [issues](https://github.com/cfu288/mere-medical/issues).
+
+> [!INFO]
+> If Mere doesn't fit your needs, another great open-source PHR is [Fasten Health](https://www.fastenhealth.com/)
 
 ## What is Mere Medical
 
