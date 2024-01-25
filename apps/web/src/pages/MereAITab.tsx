@@ -46,38 +46,31 @@ function MereAITab() {
     (messageText: string) => {
       if (!isLoadingAiResponse && vectorStorage) {
         setIsLoadingAiResponse(true);
-        fetchRecordsWithVectorSearch(db, vectorStorage, messageText)
-          .then(
-            async (
-              groupedRecords: Record<
-                string,
-                ClinicalDocument<BundleEntry<FhirResource>>[]
-              >,
-            ) => {
-              const responseText = await performRAGwithOpenAI({
-                query: messageText,
-                data: groupedRecords,
-                streamingCallback: (c: string) =>
-                  setAiLoadingText((p) => p + c),
-                messages: messages,
-                openAiKey: experimental__openai_api_key,
-                db,
-                user,
-              });
-              if (responseText) {
-                setMessages((e) => [
-                  ...e,
-                  {
-                    user: 'AI',
-                    text: responseText,
-                    timestamp: new Date(),
-                    id: uuid4(),
-                  },
-                ]);
-              }
-              setAiLoadingText('');
-            },
-          )
+        fetchRecordsWithVectorSearch(db, vectorStorage, messageText, 8, true)
+          .then(async ({ records, chunkMetadata }) => {
+            const responseText = await performRAGwithOpenAI({
+              query: messageText,
+              data: records,
+              chunkMetadata,
+              streamingCallback: (c: string) => setAiLoadingText((p) => p + c),
+              messages: messages,
+              openAiKey: experimental__openai_api_key,
+              db,
+              user,
+            });
+            if (responseText) {
+              setMessages((e) => [
+                ...e,
+                {
+                  user: 'AI',
+                  text: responseText,
+                  timestamp: new Date(),
+                  id: uuid4(),
+                },
+              ]);
+            }
+            setAiLoadingText('');
+          })
           .catch((e) => {
             notificationDispatch({
               message: e,
@@ -329,18 +322,48 @@ const prepareDataForOpenAI = async ({
   data,
   db,
   user,
+  chunkMetadata,
 }: {
   data: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>;
   db: RxDatabase<DatabaseCollections>;
   user: UserDocument;
+  chunkMetadata: {
+    id: string;
+    chunk:
+      | {
+          offset: number;
+          size: number;
+        }
+      | undefined;
+  }[];
 }) => {
   const dataAsList: Set<string> = new Set();
 
   for (const itemList of Object.values(data)) {
     for (const item of itemList) {
-      const minilist = prepareClinicalDocumentForVectorization(item).docList;
-      const texts = minilist.map((i) => i.text);
-      texts.forEach((t) => dataAsList.add(t));
+      const chunkedClinicalDocsList =
+        prepareClinicalDocumentForVectorization(item).docList;
+
+      const chunkedCliicalDocsContainsAtLeastOneChunk =
+        chunkedClinicalDocsList.some((i) => i.chunk);
+
+      if (!chunkedCliicalDocsContainsAtLeastOneChunk) {
+        const texts = chunkedClinicalDocsList.map((i) => i.text);
+        texts.forEach((t) => dataAsList.add(t));
+      } else {
+        //pull only relevant chunks, not all of them. Keys for relevant chunks are stored in chunkMetadata
+        const relevantChunks = chunkedClinicalDocsList.filter((i) => {
+          const chunkWithSameId = chunkMetadata.find((chunk) => {
+            const tmp = chunk.id;
+            const tmp1 = i.id;
+            const areEqual = tmp === tmp1;
+            return areEqual;
+          });
+          return chunkWithSameId !== undefined;
+        });
+        const texts = relevantChunks.map((i) => i.text);
+        texts.forEach((t) => dataAsList.add(t));
+      }
 
       if (
         item.data_record.raw.resource?.resourceType === 'DiagnosticReport' ||
@@ -419,7 +442,8 @@ Data: ${JSON.stringify(preparedData)}`,
       Authorization: `Bearer ${openAiKey}`,
     },
     body: JSON.stringify({
-      model: 'gpt-4-1106-preview',
+      // model: 'gpt-4-turbo-preview',
+      model: 'gpt-3.5-turbo-16k',
       messages: promptMessages,
       stream: true,
     }),
@@ -466,6 +490,7 @@ Data: ${JSON.stringify(preparedData)}`,
 const performRAGwithOpenAI = async ({
   query,
   data,
+  chunkMetadata,
   streamingCallback,
   messages = [],
   openAiKey,
@@ -474,6 +499,15 @@ const performRAGwithOpenAI = async ({
 }: {
   query: string;
   data: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>;
+  chunkMetadata: {
+    id: string;
+    chunk:
+      | {
+          offset: number;
+          size: number;
+        }
+      | undefined;
+  }[];
   streamingCallback?: (message: string) => void;
   messages: ChatMessage[];
   openAiKey?: string;
@@ -481,7 +515,12 @@ const performRAGwithOpenAI = async ({
   user: UserDocument;
 }) => {
   if (data) {
-    const preparedData = await prepareDataForOpenAI({ data, db, user });
+    const preparedData = await prepareDataForOpenAI({
+      data,
+      db,
+      user,
+      chunkMetadata,
+    });
     const responseText = await callOpenAI({
       query,
       messages,

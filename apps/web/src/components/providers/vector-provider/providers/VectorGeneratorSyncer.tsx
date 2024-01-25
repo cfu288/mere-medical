@@ -45,7 +45,12 @@ export class VectorGeneratorSyncer {
         this.isDone = true;
       }
 
-      await addBatchToVectorStorage(documents, this.vectorStorage);
+      try {
+        await addBatchToVectorStorage(documents, this.vectorStorage);
+      } catch (e) {
+        console.error(e);
+      }
+
       this.currentDocumentsProcessed =
         this.currentDocumentsProcessed + documents.length;
       this.page = this.page + 1;

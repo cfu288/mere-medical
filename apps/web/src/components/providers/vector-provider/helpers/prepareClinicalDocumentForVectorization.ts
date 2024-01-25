@@ -1,7 +1,7 @@
 import { ClinicalDocument } from '../../../../models/clinical-document/ClinicalDocument.type';
 import { flattenObject } from '../../../../utils/flattenObject';
 import { DocMeta } from '../providers/VectorStorageProvider';
-import { MAX_CHARS, CHUNK_SIZE } from '../constants';
+import { MAX_CHARS, CHUNK_SIZE, CHUNK_OVERLAP } from '../constants';
 
 /**
  * For each clinical document, prepare the document for vectorization
@@ -18,10 +18,11 @@ export function prepareClinicalDocumentForVectorization(
   document: ClinicalDocument<unknown>,
 ) {
   // need to maintain lists since documents can be chunked into multiple documents
-  const docList: { id: string; text: string }[] = Array<{
+  const docList: {
     id: string;
     text: string;
-  }>();
+    chunk?: { offset: number; size: number };
+  }[] = [];
   const metaList: DocMeta[] = Array<DocMeta>();
 
   const docId = document.id!;
@@ -55,21 +56,51 @@ export function prepareClinicalDocumentForVectorization(
     docList.push({ id: docId, text: serialzed });
     metaList.push(meta);
   } else if (document.data_record.content_type === 'application/xml') {
-    const contentFull = document.data_record.raw as string;
-    if (contentFull.length > CHUNK_SIZE) {
-      for (let offset = 0; offset < contentFull.length; offset += CHUNK_SIZE) {
-        const chunk = contentFull.substring(
-          offset,
-          Math.min(offset + CHUNK_SIZE, contentFull.length),
-        );
-        docList.push({ id: `${docId}_chunk${offset}`, text: chunk });
-        metaList.push(meta);
-      }
-    } else {
-      // docList.push({ id: docId, text: contentFull });
-      // metaList.push(meta);
-    }
+    chunkXmlContent(
+      document.data_record.raw as string,
+      meta,
+      docId,
+      docList,
+      metaList,
+    );
   }
 
   return { docList, metaList };
+}
+
+function chunkXmlContent(
+  content: string,
+  meta: DocMeta,
+  documentId: string,
+  chunkedDocumentsList: Array<{
+    id: string;
+    text: string;
+    chunk?: { offset: number; size: number };
+  }>,
+  chunkedMetadataList: Array<DocMeta>,
+) {
+  if (content.length > CHUNK_SIZE) {
+    for (
+      let offset = 0, chunkId = 0;
+      offset < content.length;
+      offset += CHUNK_SIZE - CHUNK_OVERLAP, chunkId++
+    ) {
+      const chunkData = content.substring(
+        offset,
+        Math.min(offset + CHUNK_SIZE, content.length),
+      );
+      chunkedDocumentsList.push({
+        id: `${documentId}_chunk${chunkId}`,
+        text: chunkData,
+        chunk: {
+          offset: offset,
+          size: chunkData.length,
+        },
+      });
+      chunkedMetadataList.push(meta);
+    }
+  } else {
+    chunkedDocumentsList.push({ id: documentId, text: content });
+    chunkedMetadataList.push(meta);
+  }
 }

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MangoQuerySelector, RxDatabase, RxDocument } from 'rxdb';
 
 import { Transition } from '@headlessui/react';
-import { VectorStorage } from '@mere/vector-storage';
+import { IVSSimilaritySearchParams, VectorStorage } from '@mere/vector-storage';
 import { useDebounceCallback } from '@react-hook/debounce';
 
 import { AppPage } from '../components/AppPage';
@@ -32,19 +32,56 @@ export async function fetchRecordsWithVectorSearch(
   vectorStorage: VectorStorage<any>,
   query?: string,
   numResults = 10,
-) {
+  enableSearchAttachments = false,
+): Promise<{
+  records: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>;
+  chunkMetadata: {
+    id: string;
+    chunk:
+      | {
+          offset: number;
+          size: number;
+        }
+      | undefined;
+  }[];
+}> {
   if (!query) {
-    return {};
+    return {
+      records: {},
+      chunkMetadata: [],
+    };
   }
 
-  const results = await vectorStorage.similaritySearch({
+  let searchParams: IVSSimilaritySearchParams = {
     query,
     k: numResults,
-  });
+  };
+
+  if (!enableSearchAttachments) {
+    searchParams = {
+      ...searchParams,
+      filterOptions: {
+        exclude: {
+          metadata: {
+            category: 'documentreference_attachment',
+          },
+        },
+      },
+    };
+  }
+
+  const results = await vectorStorage.similaritySearch(searchParams);
 
   // Display the search results
   const ids = results.similarItems.map((item) => {
     return item.id;
+  });
+
+  const idsWithChunkData = results.similarItems.map((item) => {
+    return {
+      id: item.id,
+      chunk: item.chunk,
+    };
   });
 
   // IDs may have '_chunk148000' appended to them. Remove this
@@ -56,14 +93,13 @@ export async function fetchRecordsWithVectorSearch(
     ),
   ];
 
-  // TODO: Currently we throw away the chunk id. We should use
-  // chunked IDs to fetch the correct chunk of data and somehow
-  // highlight the relevant data from the larger document
-
   const docs = await db.clinical_documents
     .find({
       selector: {
         id: { $in: cleanedIds },
+        'data_record.resource_type': {
+          $nin: ['patient', 'careplan', 'allergyintolerance'],
+        },
       },
     })
     .exec();
@@ -121,14 +157,16 @@ export async function fetchRecordsWithVectorSearch(
         obj[key] = groupedRecords[key];
         return obj;
       }, {});
-    return ordered as Promise<
-      Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>
-    >;
+    const res = { records: ordered, chunkMetadata: idsWithChunkData };
+    console.debug(res);
+    return res;
   } catch (e) {
     console.error(e);
   }
 
-  return groupedRecords;
+  const res = { records: groupedRecords, chunkMetadata: idsWithChunkData };
+  console.debug(res);
+  return res;
 }
 
 /**
@@ -275,11 +313,15 @@ function useRecordQuery(
                   setQueryStatus(QueryStatus.LOADING);
                   // If no results, try AI search
                   isAiSearch = true;
-                  groupedRecords = await fetchRecordsWithVectorSearch(
-                    db,
-                    vectorStorage,
-                    query,
-                  );
+                  groupedRecords = (
+                    await fetchRecordsWithVectorSearch(
+                      db,
+                      vectorStorage,
+                      query,
+                      10,
+                      true,
+                    )
+                  ).records;
                   setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
                 }
               }

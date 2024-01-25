@@ -23,13 +23,14 @@ export class VectorStorage<
 > {
   private rxdb!: RxDatabase<T>;
   private documents: Array<IVSDocument> = [];
-  private readonly openaiModel: string;
+  private readonly embeddingModel: string;
   private readonly openaiApiKey?: string;
   private readonly embedTextsFn: (texts: string[]) => Promise<number[][]>;
   public hasInitialized = false;
 
   constructor(options: IVSOptions<T> = {}) {
-    this.openaiModel = options.openaiModel ?? constants.DEFAULT_OPENAI_MODEL;
+    this.embeddingModel =
+      options.embeddingModel ?? constants.DEFAULT_OPENAI_EMBEDDING_MODEL;
     this.embedTextsFn = options.embedTextsFn ?? this.embedTexts; // Use the custom function if provided, else use the default one
     this.openaiApiKey = options.openAIApiKey;
     this.rxdb! = options.rxdb!;
@@ -49,6 +50,7 @@ export class VectorStorage<
     item: {
       id: string;
       text: string;
+      chunk?: { offset: number; size: number };
     },
     metadata: Record<string, any>,
   ): Promise<IVSDocument> {
@@ -57,6 +59,7 @@ export class VectorStorage<
       id: item.id,
       metadata: metadata,
       text: item.text,
+      chunk: item.chunk || undefined,
       timestamp: Date.now(),
       vector: [],
       vectorMag: 0,
@@ -69,6 +72,7 @@ export class VectorStorage<
     texts: {
       id: string;
       text: string;
+      chunk?: { offset: number; size: number };
     }[],
     metadatas: Record<string, any>[],
   ): Promise<Array<IVSDocument>> {
@@ -79,6 +83,7 @@ export class VectorStorage<
       id: item.id,
       metadata: metadatas[index],
       text: item.text,
+      chunk: item.chunk || undefined,
       timestamp: Date.now(),
       vector: [],
       vectorMag: 0,
@@ -183,6 +188,7 @@ export class VectorStorage<
     // Assign vectors and precompute vector magnitudes for new documents
     newDocuments.forEach((doc, index) => {
       doc.vector = newVectors[index];
+      doc.model = this.embeddingModel;
       doc.vectorMag = calcVectorMagnitude(doc);
     });
     // Add new documents to the store
@@ -200,7 +206,8 @@ export class VectorStorage<
     const response = await fetch(constants.OPENAI_API_URL, {
       body: JSON.stringify({
         input: texts,
-        model: this.openaiModel,
+        model: this.embeddingModel,
+        dimensions: 512,
       }),
       headers: {
         Authorization: `Bearer ${this.openaiApiKey}`,
@@ -249,27 +256,6 @@ export class VectorStorage<
       similarityScores[i] = [doc, score];
     }
     return similarityScores;
-  }
-
-  // slower than calculateSimilarityScores
-  private calculateSimilarityScoresOld(
-    filteredDocuments: Array<IVSDocument>,
-    queryVector: number[],
-    queryMagnitude: number,
-  ): Array<[IVSDocument, number]> {
-    return filteredDocuments.map((doc) => {
-      const dotProduct = doc.vector!.reduce(
-        (sum, val, i) => sum + val * queryVector[i],
-        0,
-      );
-      let score = getCosineSimilarityScore(
-        dotProduct,
-        doc.vectorMag!,
-        queryMagnitude,
-      );
-      score = normalizeScore(score); // Normalize the score
-      return [doc, score];
-    });
   }
 
   private updateHitCounters(results: Array<IVSDocument>): void {

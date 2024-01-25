@@ -5,6 +5,9 @@ export interface IVSDocument {
     [key: string]: any;
   }; // metadata: An object containing additional information about the document. The structure of this object can vary depending on the application.
   text?: string; // text: The actual text of the document. This is what is used to calculate the document's vector representation.
+  chunk?: { offset: number; size: number };
+  model?: string; // model: The name of the embedding model used to calculate the document's vector representation.
+  // chunk: If the document is too long to be processed by the embedding model, it is split into chunks. This field contains information about the chunk.
   timestamp: number; // timestamp: The time when the document was added to the vector storage, represented as a Unix timestamp (milliseconds since the Unix Epoch).
   vectorMag?: number; // vecMag: The magnitude of the document's vector representation. This is precomputed to speed up similarity calculations.
   vector?: number[]; // vector: The vector representation of the document. This is calculated by an embedding model, such as the OpenAI model.
