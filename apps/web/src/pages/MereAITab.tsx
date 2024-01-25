@@ -6,10 +6,8 @@ import { SparklesIcon } from '@heroicons/react/24/outline';
 import { useUser } from '../components/providers/UserProvider';
 import { fetchRecordsWithVectorSearch } from './TimelineTab';
 import { useRxDb } from '../components/providers/RxDbProvider';
-import {
-  prepareClinicalDocumentForVectorization,
-  useVectorStorage,
-} from '../components/providers/VectorStorageProvider';
+import { useVectors } from '../components/providers/vector-provider';
+import { prepareClinicalDocumentForVectorization } from '../components/providers/vector-provider/helpers/prepareClinicalDocumentForVectorization';
 import { BundleEntry, FhirResource } from 'fhir/r2';
 import { getRelatedLoincLabs } from '../components/timeline/ObservationResultRow';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
@@ -25,7 +23,7 @@ import { RxDatabase } from 'rxdb';
 function MereAITab() {
   const user = useUser(),
     db = useRxDb(),
-    vectorStorage = useVectorStorage(),
+    vectorStorage = useVectors(),
     { experimental__openai_api_key } = useLocalConfig(),
     notificationDispatch = useNotificationDispatch(),
     periodText = usePeriodAnimation();

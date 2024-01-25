@@ -75,8 +75,14 @@
     "src/components/settings/AboutMereSettingsGroup.tsx",
     "src/utils/flattenObject.tsx",
     "./src/components/providers/DatabaseCollections.tsx",
-    "src/components/providers/VectorStorageProvider.tsx",
-    "./src/pages/usePeriodAnimation.tsx"
+    "src/components/providers/vector-provider/providers/VectorStorageProvider.tsx",
+    "./src/pages/usePeriodAnimation.tsx",
+    "src/components/providers/vector-provider/providers/VectorGeneratorSyncer.tsx",
+    "src/components/providers/prepareClinicalDocumentForVectorization.ts",
+    "./src/components/providers/vector-provider/VectorProvider.tsx",
+    "src/components/providers/vector-provider/providers/VectorGeneratorSyncInitializer.tsx",
+    "src/components/providers/vector-provider/constants.ts",
+    "src/components/providers/vector-provider/hooks/useVectors.tsx"
   ],
   "exclude": [
     "jest.config.ts",

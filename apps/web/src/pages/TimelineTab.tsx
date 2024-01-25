@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MangoQuerySelector, RxDatabase, RxDocument } from 'rxdb';
 
 import { Transition } from '@headlessui/react';
-// eslint-disable-next-line @nx/enforce-module-boundaries
 import { VectorStorage } from '@mere/vector-storage';
 import { useDebounceCallback } from '@react-hook/debounce';
 
@@ -16,10 +15,7 @@ import { useScrollToHash } from '../components/hooks/useScrollToHash';
 import { DatabaseCollections } from '../components/providers/DatabaseCollections';
 import { useRxDb } from '../components/providers/RxDbProvider';
 import { useUser } from '../components/providers/UserProvider';
-import {
-  prepareClinicalDocumentForVectorization,
-  useVectorStorage,
-} from '../components/providers/VectorStorageProvider';
+import { useVectors } from '../components/providers/vector-provider';
 import { JumpToPanel } from '../components/timeline/JumpToPanel';
 import { TimelineBanner } from '../components/timeline/TimelineBanner';
 import { TimelineItem } from '../components/timeline/TimelineItem';
@@ -29,7 +25,6 @@ import { SearchBar } from './SearchBar';
 import { TimelineSkeleton } from './TimelineSkeleton';
 import { useLocalConfig } from '../components/providers/LocalConfigProvider';
 import React from 'react';
-import { getRelatedLoincLabs } from '../components/timeline/ObservationResultRow';
 
 const PAGE_SIZE = 50;
 
@@ -50,7 +45,7 @@ export async function fetchRecordsWithVectorSearch(
 
   // Display the search results
   const ids = results.similarItems.map((item) => {
-    return item.metadata.id;
+    return item.id;
   });
 
   const docs = await db.clinical_documents
@@ -64,8 +59,6 @@ export async function fetchRecordsWithVectorSearch(
   const lst = docs as unknown as RxDocument<
     ClinicalDocument<BundleEntry<FhirResource>>
   >[];
-
-  debugger;
 
   // Group records by date
   const groupedRecords: Record<
@@ -99,13 +92,6 @@ export async function fetchRecordsWithVectorSearch(
       }
     }
   });
-  // sort map object by keys which are dates
-  // dates are in YYYY-MM-DD format
-  // use date-fns to parse and compare dates
-
-  debugger;
-  console.warn(groupedRecords);
-
   try {
     const ordered = Object.keys(groupedRecords)
       .sort((a, b) => {
@@ -246,7 +232,7 @@ function useRecordQuery(
     [data, setList] =
       useState<Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>>(),
     [currentPage, setCurrentPage] = useState(0),
-    vectorStorage = useVectorStorage(),
+    vectorStorage = useVectors(),
     execQuery = useCallback(
       /**
        *

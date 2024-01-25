@@ -4,23 +4,31 @@ import { IVSOptions } from './types/IVSOptions';
 import { IVSSimilaritySearchParams } from './types/IVSSimilaritySearchParams';
 import { constants } from './common/constants';
 import { filterDocuments } from './common/helpers';
-// eslint-disable-next-line @nx/enforce-module-boundaries
-import { DatabaseCollections } from 'apps/web/src/components/providers/DatabaseCollections';
-import { RxDatabase } from 'rxdb';
+import { RxCollection, RxDatabase } from 'rxdb';
 
 export class VectorStorage<
   T extends {
-    [key: string]: any;
+    vector_storage: RxCollection<{
+      id: string; // id: A unique identifier for the document. This is used to identify the document in similarity search results.
+      hits?: number; // hits: Optional field that counts the number of times this document has been returned in a similarity search. Omitted if 0.
+      metadata: {
+        [key: string]: any;
+      }; // metadata: An object containing additional information about the document. The structure of this object can vary depending on the application.
+      // text: string; // text: The actual text of the document. This is what is used to calculate the document's vector representation.
+      timestamp: number; // timestamp: The time when the document was added to the vector storage, represented as a Unix timestamp (milliseconds since the Unix Epoch).
+      vectorMag?: number; // vecMag: The magnitude of the document's vector representation. This is precomputed to speed up similarity calculations.
+      vector?: number[]; // vec
+    }>;
   },
 > {
-  private rxdb!: RxDatabase<DatabaseCollections>;
-  private documents: Array<IVSDocument<T>> = [];
+  private rxdb!: RxDatabase<T>;
+  private documents: Array<IVSDocument> = [];
   private readonly openaiModel: string;
   private readonly openaiApiKey?: string;
   private readonly embedTextsFn: (texts: string[]) => Promise<number[][]>;
   public hasInitialized = false;
 
-  constructor(options: IVSOptions = {}) {
+  constructor(options: IVSOptions<T> = {}) {
     this.openaiModel = options.openaiModel ?? constants.DEFAULT_OPENAI_MODEL;
     this.embedTextsFn = options.embedTextsFn ?? this.embedTexts; // Use the custom function if provided, else use the default one
     this.openaiApiKey = options.openAIApiKey;
@@ -42,10 +50,10 @@ export class VectorStorage<
       id: string;
       text: string;
     },
-    metadata: T,
-  ): Promise<IVSDocument<T>> {
+    metadata: Record<string, any>,
+  ): Promise<IVSDocument> {
     // Create a document from the text and metadata
-    const doc: IVSDocument<T> = {
+    const doc: IVSDocument = {
       id: item.id,
       metadata: metadata,
       text: item.text,
@@ -62,12 +70,12 @@ export class VectorStorage<
       id: string;
       text: string;
     }[],
-    metadatas: T[],
-  ): Promise<Array<IVSDocument<T>>> {
+    metadatas: Record<string, any>[],
+  ): Promise<Array<IVSDocument>> {
     if (texts.length !== metadatas.length) {
       throw new Error('The lengths of texts and metadata arrays must match.');
     }
-    const docs: Array<IVSDocument<T>> = texts.map((item, index) => ({
+    const docs: Array<IVSDocument> = texts.map((item, index) => ({
       id: item.id,
       metadata: metadatas[index],
       text: item.text,
@@ -79,7 +87,7 @@ export class VectorStorage<
   }
 
   public async similaritySearch(params: IVSSimilaritySearchParams): Promise<{
-    similarItems: Array<IVSSimilaritySearchItem<T>>;
+    similarItems: Array<IVSSimilaritySearchItem>;
     query: { text: string; embedding: number[] };
   }> {
     console.group('similaritySearch');
@@ -100,7 +108,7 @@ export class VectorStorage<
     const filteredDocuments = filterDocuments(this.documents, filterOptions);
     console.debug(`Filtering took ${(performance.now() - start).toFixed(2)}ms`);
     start = performance.now();
-    const scoresPairs: Array<[IVSDocument<T>, number]> =
+    const scoresPairs: Array<[IVSDocument, number]> =
       this.calculateSimilarityScores(
         filteredDocuments,
         queryEmbedding,
@@ -154,8 +162,8 @@ export class VectorStorage<
   }
 
   private async addDocuments(
-    documents: Array<IVSDocument<T>>,
-  ): Promise<Array<IVSDocument<T>>> {
+    documents: Array<IVSDocument>,
+  ): Promise<Array<IVSDocument>> {
     if (!this.hasInitialized) {
       await this.initialize();
     }
@@ -221,10 +229,10 @@ export class VectorStorage<
   }
 
   private calculateSimilarityScores(
-    filteredDocuments: Array<IVSDocument<T>>,
+    filteredDocuments: Array<IVSDocument>,
     queryVector: number[],
     queryMagnitude: number,
-  ): Array<[IVSDocument<T>, number]> {
+  ): Array<[IVSDocument, number]> {
     const similarityScores = new Array(filteredDocuments.length);
     for (let i = 0; i < filteredDocuments.length; i++) {
       const doc = filteredDocuments[i];
@@ -245,10 +253,10 @@ export class VectorStorage<
 
   // slower than calculateSimilarityScores
   private calculateSimilarityScoresOld(
-    filteredDocuments: Array<IVSDocument<T>>,
+    filteredDocuments: Array<IVSDocument>,
     queryVector: number[],
     queryMagnitude: number,
-  ): Array<[IVSDocument<T>, number]> {
+  ): Array<[IVSDocument, number]> {
     return filteredDocuments.map((doc) => {
       const dotProduct = doc.vector!.reduce(
         (sum, val, i) => sum + val * queryVector[i],
@@ -264,7 +272,7 @@ export class VectorStorage<
     });
   }
 
-  private updateHitCounters(results: Array<IVSDocument<T>>): void {
+  private updateHitCounters(results: Array<IVSDocument>): void {
     results.forEach((doc) => {
       doc.hits = (doc.hits ?? 0) + 1; // Update hit counter
     });
@@ -273,7 +281,7 @@ export class VectorStorage<
   private async loadFromRxDbStorage(): Promise<void> {
     const start = performance.now();
     const rxDocs = await this.rxdb.vector_storage.find().exec();
-    this.documents = rxDocs.map((rxDoc) => rxDoc.toJSON() as IVSDocument<T>);
+    this.documents = rxDocs.map((rxDoc) => rxDoc.toJSON() as IVSDocument);
     console.debug(
       `Loading from index db took ${(performance.now() - start).toFixed(2)}ms`,
     );
@@ -307,7 +315,7 @@ function requestIdleCallback(fn: () => void, options?: { timeout: number }) {
   }
 }
 
-function calcVectorMagnitude(doc: IVSDocument<any>): number {
+function calcVectorMagnitude(doc: IVSDocument): number {
   return Math.sqrt(doc.vector!.reduce((sum, val) => sum + val * val, 0));
 }
 

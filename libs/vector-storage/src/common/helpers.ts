@@ -2,9 +2,9 @@ import { IVSDocument } from '../types/IVSDocument';
 import { IVSFilterCriteria, IVSFilterOptions } from '../types/IVSFilterOptions';
 
 export function filterDocuments(
-  documents: Array<IVSDocument<any>>,
+  documents: Array<IVSDocument>,
   filterOptions?: IVSFilterOptions,
-): Array<IVSDocument<any>> {
+): Array<IVSDocument> {
   let filteredDocuments = documents;
   if (filterOptions) {
     if (filterOptions.include) {
@@ -22,7 +22,7 @@ export function filterDocuments(
 }
 
 function matchesCriteria(
-  document: IVSDocument<any>,
+  document: IVSDocument,
   criteria: IVSFilterCriteria,
 ): boolean {
   if (criteria.metadata) {

@@ -1,6 +1,6 @@
-import { BundleEntry, DiagnosticReport, FhirResource } from 'fhir/r2';
-import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
-import { prepareClinicalDocumentForVectorization } from './VectorStorageProvider';
+import { BundleEntry, DiagnosticReport } from 'fhir/r2';
+import { ClinicalDocument } from '../../../../models/clinical-document/ClinicalDocument.type';
+import { prepareClinicalDocumentForVectorization } from '../helpers/prepareClinicalDocumentForVectorization';
 
 const testClinicalDocument: ClinicalDocument<BundleEntry<DiagnosticReport>> = {
   user_id: 'c3664aed-e146-4f24-b323-37da0f16069d',
