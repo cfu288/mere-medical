@@ -10,7 +10,11 @@ import { constants } from './common/constants';
 import { filterDocuments } from './common/helpers';
 import { RxCollection, RxDatabase } from 'rxdb';
 
-export class VectorStorage<T extends RxCollection<Omit<IVSDocument, 'text'>>> {
+export class VectorStorage<
+  T extends {
+    vector_storage: RxCollection<Omit<IVSDocument, 'text'>>;
+  },
+> {
   private rxdb!: RxDatabase<T>;
   private documents: Array<IVSDocument> = [];
   private readonly embeddingModel: string;
