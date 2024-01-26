@@ -6,7 +6,7 @@ import { ShowDiagnosticReportResultsExpandable } from './ShowDiagnosticReportRes
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
 import { CardBase } from '../connection/CardBase';
 import useIntersectionObserver from '../hooks/useIntersectionObserver';
-import { RxDocument } from 'rxdb';
+import { RxDatabase, RxDocument } from 'rxdb';
 import { useRxDb } from '../providers/RxDbProvider';
 import { useUser } from '../providers/UserProvider';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
@@ -18,6 +18,71 @@ import { OpenableCardIcon } from './OpenableCardIcon';
 import { TimelineCardSubtitile } from './TimelineCardSubtitile';
 import { AbnormalResultIcon } from './AbnormalResultIcon';
 import { isOutOfRangeResult } from './fhirpathParsers';
+import { UserDocument } from '../../models/user-document/UserDocument.type';
+import { DatabaseCollections } from '../providers/DatabaseCollections';
+
+/**
+ * Function that encapsulates the logic of the useRelatedDocuments Hook.
+ * @param {object} params - The parameters for fetching related documents.
+ * @param {RxDatabase<DatabaseCollections>} params.db - The database instance.
+ * @param {UserDocument} params.user - The user document.
+ * @param {ClinicalDocument<BundleEntry<DiagnosticReport>>} params.item - The clinical document item.
+ * @param {ConnectionDocument} [params.conn] - The connection document, if available.
+ * @returns {Promise<[RxDocument<ClinicalDocument<BundleEntry<Observation>>>[], boolean]>} A promise that resolves to a tuple containing related observations and whether or not there is an abnormal value in the set.
+ */
+export async function getRelatedDocuments({
+  db,
+  user,
+  item,
+  conn,
+}: {
+  db: RxDatabase<DatabaseCollections>;
+  user: UserDocument;
+  item: ClinicalDocument<BundleEntry<DiagnosticReport>>;
+  conn?: ConnectionDocument;
+}): Promise<
+  [RxDocument<ClinicalDocument<BundleEntry<Observation>>>[], boolean]
+> {
+  const listToQuery: string[] = [];
+  const isDrResult = item.data_record.raw.resource?.result;
+  const allScripts = conn?.source === 'veradigm';
+  if (isDrResult) {
+    const references = allScripts
+      ? new Set(isDrResult.map((item) => `${conn.location}${item.reference}`))
+      : new Set(isDrResult.map((item) => `${item.reference}`));
+    listToQuery.push(...references);
+  }
+
+  const docs = await db.clinical_documents
+    .find({
+      selector: {
+        user_id: user.id,
+        'metadata.id': { $in: listToQuery },
+      },
+    })
+    .exec();
+
+  const sorted = docs.sort((a, b) =>
+    (a.metadata?.loinc_coding?.[0] || '') <
+    (b.metadata?.loinc_coding?.[0] || '')
+      ? 1
+      : -1,
+  );
+
+  const abnormalLabs = (
+    sorted as unknown as RxDocument<
+      ClinicalDocument<BundleEntry<Observation>>
+    >[]
+  ).filter((i) => isOutOfRangeResult(i));
+  const isAbnormalResult = abnormalLabs.length > 0;
+
+  return [
+    sorted as unknown as RxDocument<
+      ClinicalDocument<BundleEntry<Observation>>
+    >[],
+    isAbnormalResult,
+  ];
+}
 
 /**
  * Fetches a set of Observations linked to a DiagnosticReport and indicates if there is an abnormal value in the set
@@ -42,67 +107,31 @@ export function useRelatedDocuments({
     [docs, setDocs] = useState<
       RxDocument<ClinicalDocument<BundleEntry<Observation>>>[]
     >([]),
-    [status, setStatus] = useState<'loading' | 'idle' | 'success'>('idle'),
-    listToQuery = useMemo(() => {
-      const retList: string[] = [];
-      const isDrResult = item.data_record.raw.resource?.result;
-      const allScripts = conn?.source === 'veradigm';
-      if (isDrResult) {
-        const references = allScripts
-          ? new Set(
-              isDrResult.map((item) => `${conn.location}${item.reference}`),
-            )
-          : new Set(isDrResult.map((item) => `${item.reference}`));
-        return [...references] as string[];
-      }
-      return retList;
-    }, [conn?.location, conn?.source, item.data_record.raw.resource]);
-
-  const [isAbnormalResult, setIsAbnormalResult] = useState(false);
+    [isAbnormalResult, setIsAbnormalResult] = useState(false),
+    [status, setStatus] = useState<'loading' | 'idle' | 'success'>('idle');
 
   useEffect(() => {
+    let isMounted = true;
     if (shouldLoadRelatedDocuments && docs.length === 0) {
       setStatus('loading');
-      db.clinical_documents
-        .find({
-          selector: {
-            user_id: user.id,
-            'metadata.id': { $in: listToQuery },
-            // 'metadata.id': { $in: listToQuery },
-          },
+      getRelatedDocuments({ db, user, item, conn })
+        .then(([relatedDocs, hasAbnormalResult]) => {
+          if (isMounted) {
+            setDocs(relatedDocs);
+            setIsAbnormalResult(hasAbnormalResult);
+            setStatus('success');
+          }
         })
-        .exec()
-        .then((res) => {
-          const sorted = res.sort((a, b) =>
-            (a.metadata?.loinc_coding?.[0] || '') <
-            (b.metadata?.loinc_coding?.[0] || '')
-              ? 1
-              : -1,
-          );
-          setDocs(
-            sorted as unknown as RxDocument<
-              ClinicalDocument<BundleEntry<Observation>>
-            >[],
-          );
-          setStatus('success');
-          const abnormalLabs = (
-            sorted as unknown as RxDocument<
-              ClinicalDocument<BundleEntry<Observation>>
-            >[]
-          ).filter((i) => isOutOfRangeResult(i));
-          if (abnormalLabs.length > 0) {
-            setIsAbnormalResult(true);
+        .catch(() => {
+          if (isMounted) {
+            setStatus('idle');
           }
         });
     }
-  }, [
-    db.clinical_documents,
-    docs.length,
-    shouldLoadRelatedDocuments,
-    item.metadata?.display_name,
-    listToQuery,
-    user.id,
-  ]);
+    return () => {
+      isMounted = false;
+    };
+  }, [db, user, item, conn, shouldLoadRelatedDocuments, docs.length]);
 
   return [docs, isAbnormalResult, status];
 }

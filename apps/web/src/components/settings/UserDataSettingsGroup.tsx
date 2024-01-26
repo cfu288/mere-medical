@@ -13,7 +13,6 @@ import {
   getStorageQuota,
   requestPersistentStorage,
 } from '../../utils/storagePermissionUtils';
-import { Link } from 'react-router-dom';
 import React from 'react';
 
 export type ImportFields = {
