@@ -111,8 +111,8 @@ const SettingsTab: React.FC = () => {
       <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pb-20 pt-2 sm:px-6 sm:pb-6 lg:px-8">
         <PrivacyAndSecuritySettingsGroup />
         <UserDataSettingsGroup />
-        <ExperimentalSettingsGroup />
         <AboutMereSettingsGroup />
+        <ExperimentalSettingsGroup />
         <DeveloperSettingsGroup />
       </div>
     </AppPage>

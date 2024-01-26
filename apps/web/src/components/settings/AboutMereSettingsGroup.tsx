@@ -67,6 +67,21 @@ export function AboutMereSettingsGroup() {
             : 'Disable developer mode'}{' '}
         </button>
       </div>
+      <div className="text-sm text-gray-800">
+        <button
+          className="text-primary-500 hover:text-primary-900 hover:underline"
+          onClick={() => {
+            updateLocalConfig({
+              experimental_features_enabled:
+                !localConfig.experimental_features_enabled,
+            });
+          }}
+        >
+          {!localConfig.experimental_features_enabled
+            ? 'Enable experimental features'
+            : 'Disable experimental features'}{' '}
+        </button>
+      </div>
     </>
   );
 }

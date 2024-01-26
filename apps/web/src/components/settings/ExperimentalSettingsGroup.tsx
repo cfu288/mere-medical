@@ -8,8 +8,11 @@ import { useEffect, useState } from 'react';
 import { useNotificationDispatch } from '../providers/NotificationProvider';
 
 export function ExperimentalSettingsGroup() {
-  const { experimental__openai_api_key, experimental__use_openai_rag } =
-    useLocalConfig();
+  const {
+    experimental_features_enabled,
+    experimental__openai_api_key,
+    experimental__use_openai_rag,
+  } = useLocalConfig();
   const updateLocalConfig = useUpdateLocalConfig();
   const [openApiKey, setOpenApiKey] = useState('');
   const notificationDispatch = useNotificationDispatch();
@@ -17,6 +20,10 @@ export function ExperimentalSettingsGroup() {
   useEffect(() => {
     setOpenApiKey(experimental__openai_api_key || '');
   }, [experimental__openai_api_key]);
+
+  if (!experimental_features_enabled) {
+    return null;
+  }
 
   return (
     <>
@@ -44,7 +51,8 @@ export function ExperimentalSettingsGroup() {
                   </Switch.Description>
                   <Switch.Description className="pt-2 text-sm text-red-800">
                     <b>WARNING</b>: Enabling this feature will send your medical
-                    records to OpenAI for processing.
+                    records to OpenAI for processing. Currently a work in
+                    progress - keys are stored in plaintext in localStorage.
                   </Switch.Description>
                 </div>
                 <Switch
