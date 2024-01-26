@@ -1,5 +1,9 @@
 import { ICreateEmbeddingResponse } from './types/ICreateEmbeddingResponse';
-import { IVSDocument, IVSSimilaritySearchItem } from './types/IVSDocument';
+import {
+  IVSChunkMeta,
+  IVSDocument,
+  IVSSimilaritySearchItem,
+} from './types/IVSDocument';
 import { IVSOptions } from './types/IVSOptions';
 import { IVSSimilaritySearchParams } from './types/IVSSimilaritySearchParams';
 import { constants } from './common/constants';
@@ -50,7 +54,7 @@ export class VectorStorage<
     item: {
       id: string;
       text: string;
-      chunk?: { offset: number; size: number };
+      chunk?: IVSChunkMeta;
     },
     metadata: Record<string, any>,
   ): Promise<IVSDocument> {
@@ -72,7 +76,7 @@ export class VectorStorage<
     texts: {
       id: string;
       text: string;
-      chunk?: { offset: number; size: number };
+      chunk?: IVSChunkMeta;
     }[],
     metadatas: Record<string, any>[],
   ): Promise<Array<IVSDocument>> {
@@ -137,18 +141,18 @@ export class VectorStorage<
     );
     if (results.length > 0) {
       // Don't let saving to storage block returning the results
-      try {
-        requestIdleCallback(
-          async () => {
+      requestIdleCallback(
+        async () => {
+          try {
             await this.saveToRxDbStorage();
-          },
-          {
-            timeout: 1000 * 60,
-          },
-        );
-      } catch (e) {
-        console.error(e);
-      }
+          } catch (e) {
+            console.error(e);
+          }
+        },
+        {
+          timeout: 1000 * 60,
+        },
+      );
     }
     if (!includeValues) {
       results.forEach((result) => {

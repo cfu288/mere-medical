@@ -22,7 +22,7 @@ import {
 import { ConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
 import uuid4 from '../utils/UUIDUtils';
 import { UserDocument } from '../models/user-document/UserDocument.type';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
+import { CreateClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 
 function parseId<T = FhirResource>(bundleItem: BundleEntry<T>) {
   // OnPatient returns an array instead of a string, not to spec
@@ -38,9 +38,9 @@ function parseId<T = FhirResource>(bundleItem: BundleEntry<T>) {
 
 export function mapProcedureToClinicalDocument(
   bundleItem: BundleEntry<Procedure>,
-  connectionDocument: Pick<ConnectionDocument, 'user_id' | 'id'>
-): ClinicalDocument<BundleEntry<Procedure>> {
-  const cd: ClinicalDocument<BundleEntry<Procedure>> = {
+  connectionDocument: Pick<ConnectionDocument, 'user_id' | 'id'>,
+): CreateClinicalDocument<BundleEntry<Procedure>> {
+  const cd: CreateClinicalDocument<BundleEntry<Procedure>> = {
     //id: uuid4(),
     user_id: connectionDocument.user_id,
     connection_record_id: connectionDocument.id,
@@ -62,9 +62,9 @@ export function mapProcedureToClinicalDocument(
 
 export function mapMedicationStatementToClinicalDocument(
   bundleItem: BundleEntry<MedicationStatement>,
-  connectionDocument: ConnectionDocument
+  connectionDocument: ConnectionDocument,
 ) {
-  const cd: ClinicalDocument<BundleEntry<MedicationStatement>> = {
+  const cd: CreateClinicalDocument<BundleEntry<MedicationStatement>> = {
     //id: uuid4(),
     user_id: connectionDocument.user_id,
     connection_record_id: connectionDocument.id,
@@ -91,9 +91,9 @@ export function mapMedicationStatementToClinicalDocument(
 
 export function mapObservationToClinicalDocument(
   bundleItem: BundleEntry<Observation>,
-  connectionDocument: ConnectionDocument
+  connectionDocument: ConnectionDocument,
 ) {
-  const cd: ClinicalDocument<BundleEntry<Observation>> = {
+  const cd: CreateClinicalDocument<BundleEntry<Observation>> = {
     //id: uuid4(),
     user_id: connectionDocument.user_id,
     connection_record_id: connectionDocument.id,
@@ -111,7 +111,7 @@ export function mapObservationToClinicalDocument(
       loinc_coding:
         bundleItem.resource?.code.coding
           ?.filter(
-            (i) => i.system === 'http://loinc.org' && i.code !== undefined
+            (i) => i.system === 'http://loinc.org' && i.code !== undefined,
           )
           .map((i) => i.code as string) || [],
     },
@@ -121,9 +121,9 @@ export function mapObservationToClinicalDocument(
 
 export function mapDiagnosticReportToClinicalDocument(
   bundleItem: BundleEntry<DiagnosticReport>,
-  connectionDocument: ConnectionDocument
+  connectionDocument: ConnectionDocument,
 ) {
-  const cd: ClinicalDocument<BundleEntry<DiagnosticReport>> = {
+  const cd: CreateClinicalDocument<BundleEntry<DiagnosticReport>> = {
     //id: uuid4(),
     user_id: connectionDocument.user_id,
     connection_record_id: connectionDocument.id,
@@ -156,9 +156,9 @@ export function mapPatientToUserDocument(bundleItem: BundleEntry<Patient>) {
 
 export function mapPatientToClinicalDocument(
   bundleItem: BundleEntry<Patient>,
-  connectionDocument: ConnectionDocument
+  connectionDocument: ConnectionDocument,
 ) {
-  const cd: ClinicalDocument<BundleEntry<Patient>> = {
+  const cd: CreateClinicalDocument<BundleEntry<Patient>> = {
     user_id: connectionDocument.user_id,
     connection_record_id: connectionDocument.id,
     data_record: {
@@ -178,9 +178,9 @@ export function mapPatientToClinicalDocument(
 
 export function mapImmunizationToClinicalDocument(
   bundleItem: BundleEntry<Immunization>,
-  connectionDocument: ConnectionDocument
+  connectionDocument: ConnectionDocument,
 ) {
-  const cd: ClinicalDocument<BundleEntry<Immunization>> = {
+  const cd: CreateClinicalDocument<BundleEntry<Immunization>> = {
     //id: uuid4(),
     user_id: connectionDocument.user_id,
     connection_record_id: connectionDocument.id,
@@ -202,9 +202,9 @@ export function mapImmunizationToClinicalDocument(
 
 export function mapConditionToClinicalDocument(
   bundleItem: BundleEntry<Condition>,
-  connectionDocument: ConnectionDocument
+  connectionDocument: ConnectionDocument,
 ) {
-  const cd: ClinicalDocument<BundleEntry<Condition>> = {
+  const cd: CreateClinicalDocument<BundleEntry<Condition>> = {
     //id: uuid4(),
     user_id: connectionDocument.user_id,
     connection_record_id: connectionDocument.id,
@@ -226,9 +226,9 @@ export function mapConditionToClinicalDocument(
 
 export function mapEncounterToClinicalDocument(
   bundleItem: BundleEntry<Encounter>,
-  connectionDocument: ConnectionDocument
+  connectionDocument: ConnectionDocument,
 ) {
-  const cd: ClinicalDocument<BundleEntry<Encounter>> = {
+  const cd: CreateClinicalDocument<BundleEntry<Encounter>> = {
     //id: uuid4(),
     user_id: connectionDocument.user_id,
     connection_record_id: connectionDocument.id,
@@ -250,9 +250,9 @@ export function mapEncounterToClinicalDocument(
 
 export function mapAllergyIntoleranceToClinicalDocument(
   bundleItem: BundleEntry<AllergyIntolerance>,
-  connectionDocument: ConnectionDocument
+  connectionDocument: ConnectionDocument,
 ) {
-  const cd: ClinicalDocument<BundleEntry<AllergyIntolerance>> = {
+  const cd: CreateClinicalDocument<BundleEntry<AllergyIntolerance>> = {
     //id: uuid4(),
     user_id: connectionDocument.user_id,
     connection_record_id: connectionDocument.id,
@@ -275,9 +275,9 @@ export function mapAllergyIntoleranceToClinicalDocument(
 
 export function mapPractitionerToClinicalDocument(
   bundleItem: BundleEntry<Practitioner>,
-  connectionDocument: ConnectionDocument
+  connectionDocument: ConnectionDocument,
 ) {
-  const cd: ClinicalDocument<BundleEntry<Practitioner>> = {
+  const cd: CreateClinicalDocument<BundleEntry<Practitioner>> = {
     //id: uuid4(),
     user_id: connectionDocument.user_id,
     connection_record_id: connectionDocument.id,
@@ -299,9 +299,9 @@ export function mapPractitionerToClinicalDocument(
 
 export function mapDocumentReferenceToClinicalDocument(
   bundleItem: BundleEntry<DocumentReference>,
-  connectionDocument: ConnectionDocument
+  connectionDocument: ConnectionDocument,
 ) {
-  const cd: ClinicalDocument<BundleEntry<DocumentReference>> = {
+  const cd: CreateClinicalDocument<BundleEntry<DocumentReference>> = {
     //id: uuid4(),
     user_id: connectionDocument.user_id,
     connection_record_id: connectionDocument.id,
@@ -326,9 +326,9 @@ export function mapDocumentReferenceToClinicalDocument(
 
 export function mapCarePlanToClinicalDocument(
   bundleItem: BundleEntry<CarePlan>,
-  connectionDocument: ConnectionDocument
+  connectionDocument: ConnectionDocument,
 ) {
-  const cd: ClinicalDocument<BundleEntry<CarePlan>> = {
+  const cd: CreateClinicalDocument<BundleEntry<CarePlan>> = {
     //id: uuid4(),
     user_id: connectionDocument.user_id,
     connection_record_id: connectionDocument.id,

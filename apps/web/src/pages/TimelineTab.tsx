@@ -8,8 +8,8 @@ import { IVSSimilaritySearchParams, VectorStorage } from '@mere/vector-storage';
 import { useDebounceCallback } from '@react-hook/debounce';
 
 import { AppPage } from '../components/AppPage';
-import { EmptyRecordsPlaceholder } from '../components/EmptyRecordsPlaceholder';
 import { ButtonLoadingSpinner } from '../components/connection/ButtonLoadingSpinner';
+import { EmptyRecordsPlaceholder } from '../components/EmptyRecordsPlaceholder';
 import useIntersectionObserver from '../components/hooks/useIntersectionObserver';
 import { useScrollToHash } from '../components/hooks/useScrollToHash';
 import { DatabaseCollections } from '../components/providers/DatabaseCollections';
@@ -25,234 +25,6 @@ import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.t
 import { SearchBar } from './SearchBar';
 import { TimelineSkeleton } from './TimelineSkeleton';
 
-const PAGE_SIZE = 50;
-
-export async function fetchRecordsWithVectorSearch(
-  db: RxDatabase<DatabaseCollections>,
-  vectorStorage: VectorStorage<any>,
-  query?: string,
-  numResults = 10,
-  enableSearchAttachments = false,
-): Promise<{
-  records: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>;
-  chunkMetadata: {
-    id: string;
-    chunk:
-      | {
-          offset: number;
-          size: number;
-        }
-      | undefined;
-  }[];
-}> {
-  if (!query) {
-    return {
-      records: {},
-      chunkMetadata: [],
-    };
-  }
-
-  let searchParams: IVSSimilaritySearchParams = {
-    query,
-    k: numResults,
-  };
-
-  if (!enableSearchAttachments) {
-    searchParams = {
-      ...searchParams,
-      filterOptions: {
-        exclude: {
-          metadata: {
-            category: 'documentreference_attachment',
-          },
-        },
-      },
-    };
-  }
-
-  const results = await vectorStorage.similaritySearch(searchParams);
-
-  // Display the search results
-  const ids = results.similarItems.map((item) => {
-    return item.id;
-  });
-
-  const idsWithChunkData = results.similarItems.map((item) => {
-    return {
-      id: item.id,
-      chunk: item.chunk,
-    };
-  });
-
-  // IDs may have '_chunk148000' appended to them. Remove this
-  const cleanedIds = [
-    ...new Set(
-      ids.map((id) => {
-        return id.split('_chunk')[0];
-      }),
-    ),
-  ];
-
-  const docs = await db.clinical_documents
-    .find({
-      selector: {
-        id: { $in: cleanedIds },
-        'data_record.resource_type': {
-          $nin: ['patient', 'careplan', 'allergyintolerance'],
-        },
-      },
-    })
-    .exec();
-
-  const lst = docs as unknown as RxDocument<
-    ClinicalDocument<BundleEntry<FhirResource>>
-  >[];
-
-  // Group records by date
-  const groupedRecords: Record<
-    string, // date to group by
-    ClinicalDocument<BundleEntry<FhirResource>>[] // documents/cards for date
-  > = {};
-
-  lst.forEach((item) => {
-    if (item.get('metadata')?.date === undefined) {
-      console.warn('Date is undefined for object:');
-      console.log(item.toJSON());
-      // set date to min date
-      const minDate = new Date(0).toISOString();
-      if (groupedRecords[minDate]) {
-        groupedRecords[minDate].push(
-          item.toMutableJSON() as ClinicalDocument<BundleEntry<FhirResource>>,
-        );
-      } else {
-        groupedRecords[minDate] = [item.toMutableJSON()];
-      }
-    } else {
-      const date = item.get('metadata')?.date
-        ? format(parseISO(item.get('metadata')?.date), 'yyyy-MM-dd')
-        : '-1';
-      if (groupedRecords[date]) {
-        groupedRecords[date].push(
-          item.toMutableJSON() as ClinicalDocument<BundleEntry<FhirResource>>,
-        );
-      } else {
-        groupedRecords[date] = [item.toMutableJSON()];
-      }
-    }
-  });
-  try {
-    const ordered = Object.keys(groupedRecords)
-      .sort((a, b) => {
-        const aDate = parseISO(a);
-        const bDate = parseISO(b);
-        if (aDate > bDate) {
-          return -1;
-        } else if (aDate < bDate) {
-          return 1;
-        } else {
-          return 0;
-        }
-      })
-      .reduce((obj: any, key) => {
-        obj[key] = groupedRecords[key];
-        return obj;
-      }, {});
-    const res = { records: ordered, chunkMetadata: idsWithChunkData };
-    console.debug(res);
-    return res;
-  } catch (e) {
-    console.error(e);
-  }
-
-  const res = { records: groupedRecords, chunkMetadata: idsWithChunkData };
-  console.debug(res);
-  return res;
-}
-
-/**
- * This should really be a background process that runs after every data sync instead of every view
- * @param db
- * @returns
- */
-async function fetchRecords(
-  db: RxDatabase<DatabaseCollections>,
-  user_id: string,
-  query?: string,
-  page?: number,
-) {
-  const parsedQuery = query?.trim() === '' ? undefined : query;
-  let selector: MangoQuerySelector<ClinicalDocument<unknown>> = {
-    user_id: user_id,
-    'data_record.resource_type': {
-      $nin: [
-        'patient',
-        'observation',
-        'careplan',
-        'allergyintolerance',
-        'documentreference_attachment',
-      ],
-    },
-    'metadata.date': { $nin: [null, undefined, ''] },
-  };
-  if (parsedQuery) {
-    selector['data_record.resource_type']['$nin'] = [
-      'patient',
-      'careplan',
-      'allergyintolerance',
-      'documentreference_attachment',
-    ];
-    selector = {
-      ...selector,
-      'metadata.display_name': { $regex: `.*${parsedQuery}.*`, $options: 'si' },
-    };
-  }
-  const gr = db.clinical_documents
-    .find({
-      selector,
-      sort: [{ 'metadata.date': 'desc' }],
-    })
-    .skip(page ? page * PAGE_SIZE : 0)
-    .limit(PAGE_SIZE)
-    .exec()
-    .then((list) => {
-      const lst = list as unknown as RxDocument<
-        ClinicalDocument<BundleEntry<FhirResource>>
-      >[];
-
-      // Group records by date
-      const groupedRecords: Record<
-        string, // date to group by
-        ClinicalDocument<BundleEntry<FhirResource>>[] // documents/cards for date
-      > = {};
-
-      lst.forEach((item) => {
-        if (item.get('metadata')?.date === undefined) {
-          console.warn('Date is undefined for object:');
-          console.log(item.toJSON());
-        } else {
-          const date = item.get('metadata')?.date
-            ? format(parseISO(item.get('metadata')?.date), 'yyyy-MM-dd')
-            : '-1';
-          if (groupedRecords[date]) {
-            groupedRecords[date].push(
-              item.toMutableJSON() as ClinicalDocument<
-                BundleEntry<FhirResource>
-              >,
-            );
-          } else {
-            groupedRecords[date] = [item.toMutableJSON()];
-          }
-        }
-      });
-
-      console.debug(groupedRecords);
-
-      return groupedRecords;
-    });
-
-  return gr;
-}
-
 export enum QueryStatus {
   IDLE,
   LOADING, // Initial load and queries with page === 0
@@ -260,154 +32,6 @@ export enum QueryStatus {
   SUCCESS,
   ERROR,
   COMPLETE_HIDE_LOAD_MORE, // Indicates that there are no more results to load using loadNextPage
-}
-
-function useRecordQuery(
-  query: string,
-  enableAIQuestionAnswering?: boolean,
-): {
-  data:
-    | Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>
-    | undefined; // Data returned by query, grouped records by date
-  status: QueryStatus;
-  initialized: boolean; // Indicates whether the query has run at least once
-  loadNextPage: () => void; // Function to load next page of results
-} {
-  const db = useRxDb(),
-    { experimental__use_openai_rag } = useLocalConfig(),
-    user = useUser(),
-    hasRun = useRef(false),
-    [status, setQueryStatus] = useState(QueryStatus.IDLE),
-    [initialized, setInitialized] = useState(false),
-    [data, setList] =
-      useState<Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>>(),
-    [currentPage, setCurrentPage] = useState(0),
-    vectorStorage = useVectors(),
-    execQuery = useCallback(
-      /**
-       *
-       * @param merge Merge results with existing results. If false, results overwrite existing results
-       * @param loadMore Indicate whether this is an inital load or a load more query. Affects visual loading state
-       */
-      async ({ loadMore = false }: { loadMore?: boolean }) => {
-        setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
-
-        try {
-          let isAiSearch = false;
-          if (loadMore) {
-            setQueryStatus(QueryStatus.LOADING_MORE);
-          }
-
-          // Execute query
-          let groupedRecords = await fetchRecords(
-            db,
-            user.id,
-            query,
-            loadMore ? currentPage + 1 : currentPage,
-          );
-
-          if (vectorStorage) {
-            if (experimental__use_openai_rag) {
-              if (enableAIQuestionAnswering) {
-                if (Object.keys(groupedRecords).length === 0) {
-                  setQueryStatus(QueryStatus.LOADING);
-                  // If no results, try AI search
-                  isAiSearch = true;
-                  groupedRecords = (
-                    await fetchRecordsWithVectorSearch(
-                      db,
-                      vectorStorage,
-                      query,
-                      10,
-                      true,
-                    )
-                  ).records;
-                  setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
-                }
-              }
-            }
-          }
-
-          // If load more, increment page. Otherwise, reset page to 0
-          if (loadMore) {
-            console.debug('load next page: ', currentPage + 1);
-            setCurrentPage(currentPage + 1);
-          } else {
-            setCurrentPage(0);
-            console.debug('reset page to 0');
-          }
-
-          // Merge results with existing results or overwrite existing results
-          if (loadMore) {
-            setList({ ...data, ...groupedRecords });
-          } else {
-            setList(groupedRecords);
-          }
-
-          // Set query status.
-          // Complete indicates that there are no more results to load
-          // Success indicates that there are more results to load
-          if (
-            Object.values(groupedRecords).reduce((a, b) => a + b.length, 0) <
-            PAGE_SIZE
-          ) {
-            setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
-          } else {
-            setQueryStatus(QueryStatus.SUCCESS);
-          }
-
-          if (isAiSearch) {
-            // disable paging for AI search
-            setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
-          }
-
-          setInitialized(true);
-        } catch (e) {
-          console.error(e);
-          setQueryStatus(QueryStatus.ERROR);
-        }
-      },
-      [
-        vectorStorage,
-        db,
-        user.id,
-        query,
-        currentPage,
-        experimental__use_openai_rag,
-        enableAIQuestionAnswering,
-        data,
-      ],
-    ),
-    debounceExecQuery = useDebounceCallback(
-      () => execQuery({ loadMore: false }),
-      experimental__use_openai_rag ? 1000 : 300,
-    ),
-    loadNextPage = useDebounceCallback(
-      () => execQuery({ loadMore: true }),
-      300,
-    );
-
-  useEffect(() => {
-    if (!hasRun.current) {
-      hasRun.current = true;
-      setQueryStatus(QueryStatus.LOADING);
-      execQuery({
-        loadMore: false,
-      });
-    }
-  }, [execQuery, query]);
-
-  useEffect(() => {
-    console.debug(
-      'query changed or AI toggled: ',
-      query,
-      enableAIQuestionAnswering,
-    );
-    setQueryStatus(QueryStatus.LOADING);
-    debounceExecQuery();
-  }, [query, debounceExecQuery, enableAIQuestionAnswering]);
-
-  return { data, status, initialized, loadNextPage };
 }
 
 export function TimelineTab() {
@@ -513,6 +137,160 @@ export function TimelineTab() {
   );
 }
 
+/**
+ * Fetches records from the database and groups them by date
+ * @param query Query to execute
+ * @param enableAISemanticSearch Enable vector based semantic search
+ * @returns
+ */
+function useRecordQuery(
+  query: string,
+  enableAISemanticSearch?: boolean,
+): {
+  data:
+    | Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>
+    | undefined; // Data returned by query, grouped records by date
+  status: QueryStatus;
+  initialized: boolean; // Indicates whether the query has run at least once
+  loadNextPage: () => void; // Function to load next page of results
+} {
+  const db = useRxDb(),
+    { experimental__use_openai_rag } = useLocalConfig(),
+    user = useUser(),
+    hasRun = useRef(false),
+    [status, setQueryStatus] = useState(QueryStatus.IDLE),
+    [initialized, setInitialized] = useState(false),
+    [data, setList] =
+      useState<Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>>(),
+    [currentPage, setCurrentPage] = useState(0),
+    vectorStorage = useVectors(),
+    execQuery = useCallback(
+      /**
+       *
+       * @param merge Merge results with existing results. If false, results overwrite existing results
+       * @param loadMore Indicate whether this is an inital load or a load more query. Affects visual loading state
+       */
+      async ({ loadMore = false }: { loadMore?: boolean }) => {
+        setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
+
+        try {
+          let isAiSearch = false;
+          if (loadMore) {
+            setQueryStatus(QueryStatus.LOADING_MORE);
+          }
+
+          // Execute query
+          let groupedRecords = await fetchRecords(
+            db,
+            user.id,
+            query,
+            loadMore ? currentPage + 1 : currentPage,
+          );
+
+          if (vectorStorage) {
+            if (experimental__use_openai_rag) {
+              if (enableAISemanticSearch) {
+                if (Object.keys(groupedRecords).length === 0) {
+                  setQueryStatus(QueryStatus.LOADING);
+                  // If no results, try AI search
+                  isAiSearch = true;
+                  groupedRecords = (
+                    await fetchRecordsWithVectorSearch({
+                      db,
+                      vectorStorage,
+                      query,
+                      numResults: 10,
+                      enableSearchAttachments: true,
+                    })
+                  ).records;
+                  setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
+                }
+              }
+            }
+          }
+
+          // If load more, increment page. Otherwise, reset page to 0
+          if (loadMore) {
+            console.debug('load next page: ', currentPage + 1);
+            setCurrentPage(currentPage + 1);
+          } else {
+            setCurrentPage(0);
+            console.debug('reset page to 0');
+          }
+
+          // Merge results with existing results or overwrite existing results
+          if (loadMore) {
+            setList({ ...data, ...groupedRecords });
+          } else {
+            setList(groupedRecords);
+          }
+
+          // Set query status.
+          // Complete indicates that there are no more results to load
+          // Success indicates that there are more results to load
+          if (
+            Object.values(groupedRecords).reduce((a, b) => a + b.length, 0) <
+            PAGE_SIZE
+          ) {
+            setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
+          } else {
+            setQueryStatus(QueryStatus.SUCCESS);
+          }
+
+          if (isAiSearch) {
+            // disable paging for AI search
+            setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
+          }
+
+          setInitialized(true);
+        } catch (e) {
+          console.error(e);
+          setQueryStatus(QueryStatus.ERROR);
+        }
+      },
+      [
+        vectorStorage,
+        db,
+        user.id,
+        query,
+        currentPage,
+        experimental__use_openai_rag,
+        enableAISemanticSearch,
+        data,
+      ],
+    ),
+    debounceExecQuery = useDebounceCallback(
+      () => execQuery({ loadMore: false }),
+      experimental__use_openai_rag ? 1000 : 300,
+    ),
+    loadNextPage = useDebounceCallback(
+      () => execQuery({ loadMore: true }),
+      300,
+    );
+
+  useEffect(() => {
+    if (!hasRun.current) {
+      hasRun.current = true;
+      setQueryStatus(QueryStatus.LOADING);
+      execQuery({
+        loadMore: false,
+      });
+    }
+  }, [execQuery, query]);
+
+  useEffect(() => {
+    console.debug(
+      'query changed or AI toggled: ',
+      query,
+      enableAISemanticSearch,
+    );
+    setQueryStatus(QueryStatus.LOADING);
+    debounceExecQuery();
+  }, [query, debounceExecQuery, enableAISemanticSearch]);
+
+  return { data, status, initialized, loadNextPage };
+}
+
 function LoadMoreButton({
   status,
   loadNextPage,
@@ -545,4 +323,229 @@ function LoadMoreButton({
       </span>
     </button>
   );
+}
+
+const PAGE_SIZE = 50;
+
+export async function fetchRecordsWithVectorSearch({
+  db,
+  vectorStorage,
+  query,
+  numResults = 10,
+  enableSearchAttachments = false,
+}: {
+  db: RxDatabase<DatabaseCollections>;
+  vectorStorage: VectorStorage<any>;
+  query?: string;
+  numResults: number;
+  enableSearchAttachments: boolean;
+}): Promise<{
+  records: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>;
+  idsOfMostRelatedChunksFromSemanticSearch: string[];
+}> {
+  if (!query) {
+    return {
+      records: {},
+      idsOfMostRelatedChunksFromSemanticSearch: [],
+    };
+  }
+
+  let searchParams: IVSSimilaritySearchParams = {
+    query,
+    k: numResults,
+  };
+
+  if (!enableSearchAttachments) {
+    searchParams = {
+      ...searchParams,
+      filterOptions: {
+        exclude: {
+          metadata: {
+            category: 'documentreference_attachment',
+          },
+        },
+      },
+    };
+  }
+
+  const results = await vectorStorage.similaritySearch(searchParams);
+
+  // Display the search results
+  const ids = results.similarItems.map((item) => {
+    return item.id;
+  });
+
+  // IDs may have '_chunk148000' appended to them. Remove this
+  const cleanedIds = [
+    ...new Set(
+      ids.map((id) => {
+        return id.split('_chunk')[0];
+      }),
+    ),
+  ];
+
+  const docs = await db.clinical_documents
+    .find({
+      selector: {
+        id: { $in: cleanedIds },
+        'data_record.resource_type': {
+          $nin: ['patient', 'careplan', 'allergyintolerance'],
+        },
+      },
+    })
+    .exec();
+
+  const lst = docs as unknown as RxDocument<
+    ClinicalDocument<BundleEntry<FhirResource>>
+  >[];
+
+  // Group records by date
+  const groupedRecords: Record<
+    string, // date to group by
+    ClinicalDocument<BundleEntry<FhirResource>>[] // documents/cards for date
+  > = {};
+
+  lst.forEach((item) => {
+    if (item.get('metadata')?.date === undefined) {
+      console.warn('Date is undefined for object:');
+      console.log(item.toJSON());
+      // set date to min date
+      const minDate = new Date(0).toISOString();
+      if (groupedRecords[minDate]) {
+        groupedRecords[minDate].push(
+          item.toMutableJSON() as ClinicalDocument<BundleEntry<FhirResource>>,
+        );
+      } else {
+        groupedRecords[minDate] = [item.toMutableJSON()];
+      }
+    } else {
+      const date = item.get('metadata')?.date
+        ? format(parseISO(item.get('metadata')?.date), 'yyyy-MM-dd')
+        : '-1';
+      if (groupedRecords[date]) {
+        groupedRecords[date].push(
+          item.toMutableJSON() as ClinicalDocument<BundleEntry<FhirResource>>,
+        );
+      } else {
+        groupedRecords[date] = [item.toMutableJSON()];
+      }
+    }
+  });
+  try {
+    const ordered = Object.keys(groupedRecords)
+      .sort((a, b) => {
+        const aDate = parseISO(a);
+        const bDate = parseISO(b);
+        if (aDate > bDate) {
+          return -1;
+        } else if (aDate < bDate) {
+          return 1;
+        } else {
+          return 0;
+        }
+      })
+      .reduce((obj: any, key) => {
+        obj[key] = groupedRecords[key];
+        return obj;
+      }, {});
+    const res = {
+      records: ordered,
+      idsOfMostRelatedChunksFromSemanticSearch: ids,
+    };
+    console.debug(res);
+    return res;
+  } catch (e) {
+    console.error(e);
+  }
+
+  const res = {
+    records: groupedRecords,
+    idsOfMostRelatedChunksFromSemanticSearch: ids,
+  };
+  console.debug(res);
+  return res;
+}
+
+/**
+ * Fetches records from the database and groups them by date
+ * @param db
+ * @returns
+ */
+async function fetchRecords(
+  db: RxDatabase<DatabaseCollections>,
+  user_id: string,
+  query?: string,
+  page?: number,
+): Promise<Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>> {
+  const parsedQuery = query?.trim() === '' ? undefined : query;
+  let selector: MangoQuerySelector<ClinicalDocument<unknown>> = {
+    user_id: user_id,
+    'data_record.resource_type': {
+      $nin: [
+        'patient',
+        'observation',
+        'careplan',
+        'allergyintolerance',
+        'documentreference_attachment',
+      ],
+    },
+    'metadata.date': { $nin: [null, undefined, ''] },
+  };
+  if (parsedQuery) {
+    selector['data_record.resource_type']['$nin'] = [
+      'patient',
+      'careplan',
+      'allergyintolerance',
+      'documentreference_attachment',
+    ];
+    selector = {
+      ...selector,
+      'metadata.display_name': { $regex: `.*${parsedQuery}.*`, $options: 'si' },
+    };
+  }
+  const gr = db.clinical_documents
+    .find({
+      selector,
+      sort: [{ 'metadata.date': 'desc' }],
+    })
+    .skip(page ? page * PAGE_SIZE : 0)
+    .limit(PAGE_SIZE)
+    .exec()
+    .then((list) => {
+      const lst = list as unknown as RxDocument<
+        ClinicalDocument<BundleEntry<FhirResource>>
+      >[];
+
+      // Group records by date
+      const groupedRecords: Record<
+        string, // date to group by
+        ClinicalDocument<BundleEntry<FhirResource>>[] // documents/cards for date
+      > = {};
+
+      lst.forEach((item) => {
+        if (item.get('metadata')?.date === undefined) {
+          console.warn('Date is undefined for object:');
+          console.log(item.toJSON());
+        } else {
+          const date = item.get('metadata')?.date
+            ? format(parseISO(item.get('metadata')?.date), 'yyyy-MM-dd')
+            : '-1';
+          if (groupedRecords[date]) {
+            groupedRecords[date].push(
+              item.toMutableJSON() as ClinicalDocument<
+                BundleEntry<FhirResource>
+              >,
+            );
+          } else {
+            groupedRecords[date] = [item.toMutableJSON()];
+          }
+        }
+      });
+
+      console.debug(groupedRecords);
+
+      return groupedRecords;
+    });
+
+  return gr;
 }

@@ -51,12 +51,12 @@ module.exports = function (webpackConfig, nxConfig) {
           // relative to webpack's output directory
           swDest: 'service-worker.js',
         }),
-        sentryWebpackPlugin({
-          authToken: process.env.SENTRY_AUTH_TOKEN,
-          org: 'mere-medical',
-          project: 'mere-web',
-          url: 'https://sentry.meremedical.co/',
-        }),
+        // sentryWebpackPlugin({
+        //   authToken: process.env.SENTRY_AUTH_TOKEN,
+        //   org: 'mere-medical',
+        //   project: 'mere-web',
+        //   url: 'https://sentry.meremedical.co/',
+        // }),
       ],
     });
   }

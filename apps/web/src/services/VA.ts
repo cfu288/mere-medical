@@ -22,7 +22,10 @@ import {
 import { Routes } from '../Routes';
 import { DSTU2 } from '.';
 import Config from '../environments/config.json';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
+import {
+  ClinicalDocument,
+  CreateClinicalDocument,
+} from '../models/clinical-document/ClinicalDocument.type';
 import { UserDocument } from '../models/user-document/UserDocument.type';
 import uuid4 from '../utils/UUIDUtils';
 import { DatabaseCollections } from '../components/providers/DatabaseCollections';
@@ -180,7 +183,7 @@ async function syncFHIRResource<T extends FhirResource>(
   connectionDocument: VAConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
-  mapper: (proc: BundleEntry<T>) => ClinicalDocument<BundleEntry<T>>,
+  mapper: (proc: BundleEntry<T>) => CreateClinicalDocument<BundleEntry<T>>,
   params?: Record<string, string>,
 ) {
   const resc = await getAllFHIRResourcesWithPaging<T>(
@@ -386,7 +389,7 @@ async function syncDocumentReferences(
             );
             if (raw && contentType) {
               // save as ClinicalDocument
-              const cd: ClinicalDocument = {
+              const cd: CreateClinicalDocument<string | Blob> = {
                 user_id: connectionDocument.user_id,
                 connection_record_id: connectionDocument.id,
                 data_record: {

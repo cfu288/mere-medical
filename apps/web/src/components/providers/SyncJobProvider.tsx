@@ -144,8 +144,8 @@ function HandleInitalSync({ children }: PropsWithChildren) {
 
   useEffect(() => {
     if (!isDemo) {
-      console.debug('Current Sync Jobs In Progress: ' + currentSyncJobLength);
       if (currentSyncJobLength === 0) {
+        console.debug('Current Sync Jobs In Progress: ' + currentSyncJobLength);
         startSyncAllConnections();
       }
     }

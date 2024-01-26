@@ -1,24 +1,27 @@
+import { differenceInDays, format, parseISO } from 'date-fns';
+import { BundleEntry, FhirResource } from 'fhir/r2';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { RxDatabase } from 'rxdb';
+
+import { SparklesIcon } from '@heroicons/react/24/outline';
+import { IVSChunkMeta } from '@mere/vector-storage';
+
+import { AppPage } from '../components/AppPage';
 /* eslint-disable react/jsx-no-useless-fragment */
 import { GenericBanner } from '../components/GenericBanner';
-import { AppPage } from '../components/AppPage';
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { SparklesIcon } from '@heroicons/react/24/outline';
-import { useUser } from '../components/providers/UserProvider';
-import { fetchRecordsWithVectorSearch } from './TimelineTab';
-import { useRxDb } from '../components/providers/RxDbProvider';
-import { useVectors } from '../components/providers/vector-provider';
-import { prepareClinicalDocumentForVectorization } from '../components/providers/vector-provider/helpers/prepareClinicalDocumentForVectorization';
-import { BundleEntry, FhirResource } from 'fhir/r2';
-import { getRelatedLoincLabs } from '../components/timeline/ObservationResultRow';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
+import { DatabaseCollections } from '../components/providers/DatabaseCollections';
 import { useLocalConfig } from '../components/providers/LocalConfigProvider';
 import { useNotificationDispatch } from '../components/providers/NotificationProvider';
-import { differenceInDays, format, parseISO } from 'date-fns';
-import { usePeriodAnimation } from './usePeriodAnimation';
-import uuid4 from '../utils/UUIDUtils';
-import { DatabaseCollections } from '../components/providers/DatabaseCollections';
+import { useRxDb } from '../components/providers/RxDbProvider';
+import { useUser } from '../components/providers/UserProvider';
+import { useVectors } from '../components/providers/vector-provider';
+import { prepareClinicalDocumentForVectorization } from '../components/providers/vector-provider/helpers/prepareClinicalDocumentForVectorization';
+import { getRelatedLoincLabs } from '../components/timeline/ObservationResultRow';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 import { UserDocument } from '../models/user-document/UserDocument.type';
-import { RxDatabase } from 'rxdb';
+import uuid4 from '../utils/UUIDUtils';
+import { fetchRecordsWithVectorSearch } from './TimelineTab';
+import { usePeriodAnimation } from './usePeriodAnimation';
 
 function MereAITab() {
   const user = useUser(),
@@ -46,31 +49,40 @@ function MereAITab() {
     (messageText: string) => {
       if (!isLoadingAiResponse && vectorStorage) {
         setIsLoadingAiResponse(true);
-        fetchRecordsWithVectorSearch(db, vectorStorage, messageText, 8, true)
-          .then(async ({ records, chunkMetadata }) => {
-            const responseText = await performRAGwithOpenAI({
-              query: messageText,
-              data: records,
-              chunkMetadata,
-              streamingCallback: (c: string) => setAiLoadingText((p) => p + c),
-              messages: messages,
-              openAiKey: experimental__openai_api_key,
-              db,
-              user,
-            });
-            if (responseText) {
-              setMessages((e) => [
-                ...e,
-                {
-                  user: 'AI',
-                  text: responseText,
-                  timestamp: new Date(),
-                  id: uuid4(),
-                },
-              ]);
-            }
-            setAiLoadingText('');
-          })
+        fetchRecordsWithVectorSearch({
+          db,
+          vectorStorage,
+          query: messageText,
+          numResults: 8,
+          enableSearchAttachments: true,
+        })
+          .then(
+            async ({ records, idsOfMostRelatedChunksFromSemanticSearch }) => {
+              const responseText = await performRAGwithOpenAI({
+                query: messageText,
+                data: records,
+                idsOfMostRelatedChunksFromSemanticSearch,
+                streamingCallback: (c: string) =>
+                  setAiLoadingText((p) => p + c),
+                messages: messages,
+                openAiKey: experimental__openai_api_key,
+                db,
+                user,
+              });
+              if (responseText) {
+                setMessages((e) => [
+                  ...e,
+                  {
+                    user: 'AI',
+                    text: responseText,
+                    timestamp: new Date(),
+                    id: uuid4(),
+                  },
+                ]);
+              }
+              setAiLoadingText('');
+            },
+          )
           .catch((e) => {
             notificationDispatch({
               message: e,
@@ -322,20 +334,12 @@ const prepareDataForOpenAI = async ({
   data,
   db,
   user,
-  chunkMetadata,
+  idsOfMostRelatedChunksFromSemanticSearch,
 }: {
   data: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>;
   db: RxDatabase<DatabaseCollections>;
   user: UserDocument;
-  chunkMetadata: {
-    id: string;
-    chunk:
-      | {
-          offset: number;
-          size: number;
-        }
-      | undefined;
-  }[];
+  idsOfMostRelatedChunksFromSemanticSearch: string[];
 }) => {
   const dataAsList: Set<string> = new Set();
 
@@ -351,16 +355,17 @@ const prepareDataForOpenAI = async ({
         const texts = chunkedClinicalDocsList.map((i) => i.text);
         texts.forEach((t) => dataAsList.add(t));
       } else {
-        //pull only relevant chunks, not all of them. Keys for relevant chunks are stored in chunkMetadata
-        const relevantChunks = chunkedClinicalDocsList.filter((i) => {
-          const chunkWithSameId = chunkMetadata.find((chunk) => {
-            const tmp = chunk.id;
-            const tmp1 = i.id;
-            const areEqual = tmp === tmp1;
-            return areEqual;
-          });
-          return chunkWithSameId !== undefined;
-        });
+        // chunkedClinicalDocsList contains many chunks, but we only want to pull the ones that are relevant
+        // The relevant ones are the ones that have an id inside chunkMetadata
+        const relevantChunks = chunkedClinicalDocsList.filter(
+          (clinicalDocsChunk) => {
+            const chunkWithSameId =
+              idsOfMostRelatedChunksFromSemanticSearch.find(
+                (metaChunkId) => metaChunkId === clinicalDocsChunk.id,
+              );
+            return chunkWithSameId !== undefined;
+          },
+        );
         const texts = relevantChunks.map((i) => i.text);
         texts.forEach((t) => dataAsList.add(t));
       }
@@ -490,7 +495,7 @@ Data: ${JSON.stringify(preparedData)}`,
 const performRAGwithOpenAI = async ({
   query,
   data,
-  chunkMetadata,
+  idsOfMostRelatedChunksFromSemanticSearch,
   streamingCallback,
   messages = [],
   openAiKey,
@@ -499,37 +504,34 @@ const performRAGwithOpenAI = async ({
 }: {
   query: string;
   data: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>;
-  chunkMetadata: {
-    id: string;
-    chunk:
-      | {
-          offset: number;
-          size: number;
-        }
-      | undefined;
-  }[];
+  idsOfMostRelatedChunksFromSemanticSearch: string[];
   streamingCallback?: (message: string) => void;
   messages: ChatMessage[];
   openAiKey?: string;
   db: RxDatabase<DatabaseCollections>;
   user: UserDocument;
 }) => {
-  if (data) {
-    const preparedData = await prepareDataForOpenAI({
-      data,
-      db,
-      user,
-      chunkMetadata,
-    });
-    const responseText = await callOpenAI({
-      query,
-      messages,
-      openAiKey,
-      preparedData,
-      streamingCallback,
-      user,
-    });
-    return Promise.resolve(responseText);
+  try {
+    if (data) {
+      const preparedData = await prepareDataForOpenAI({
+        data,
+        db,
+        user,
+        idsOfMostRelatedChunksFromSemanticSearch,
+      });
+      const responseText = await callOpenAI({
+        query,
+        messages,
+        openAiKey,
+        preparedData,
+        streamingCallback,
+        user,
+      });
+      return Promise.resolve(responseText);
+    }
+    return Promise.resolve();
+  } catch (e) {
+    console.error(e);
+    return Promise.reject(e);
   }
-  return Promise.resolve();
 };

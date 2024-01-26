@@ -29,9 +29,12 @@ import { Routes } from '../Routes';
 import { DSTU2 } from '.';
 import Config from '../environments/config.json';
 import { JsonWebKeySet } from './JWTTools';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 import { UserDocument } from '../models/user-document/UserDocument.type';
 import uuid4 from '../utils/UUIDUtils';
+import {
+  ClinicalDocument,
+  CreateClinicalDocument,
+} from '../models/clinical-document/ClinicalDocument.type';
 
 export enum CernerLocalStorageKeys {
   CERNER_BASE_URL = 'cernerBaseUrl',
@@ -137,7 +140,7 @@ async function getFHIRResource<T extends FhirResource>(
  * @param connectionDocument RxDocument of the connection document
  * @param db RxDatabase to save to
  * @param fhirResourceUrl URL path FHIR resource to sync. e.g. Patient, Procedure, etc. Exclude the leading slash.
- * @param mapper Function to map the FHIR resource to a ClinicalDocument
+ * @param mapper Function to map the FHIR resource to a CreateClinicalDocument
  * @param params Query parameters to pass to the FHIR request
  * @returns
  */
@@ -146,7 +149,7 @@ async function syncFHIRResource<T extends FhirResource>(
   connectionDocument: CernerConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
-  mapper: (proc: BundleEntry<T>) => ClinicalDocument<BundleEntry<T>>,
+  mapper: (proc: BundleEntry<T>) => CreateClinicalDocument<BundleEntry<T>>,
   params?: Record<string, string>,
 ) {
   const resc = await getFHIRResource<T>(
@@ -339,7 +342,7 @@ async function syncDocumentReferences(
   // format all the document references
   const docRefItems = docs.map(
     (doc) =>
-      doc.toMutableJSON() as unknown as ClinicalDocument<
+      doc.toMutableJSON() as unknown as CreateClinicalDocument<
         BundleEntry<DocumentReference>
       >,
   );
@@ -370,8 +373,8 @@ async function syncDocumentReferences(
               connectionDocument,
             );
             if (raw && contentType) {
-              // save as ClinicalDocument
-              const cd: ClinicalDocument = {
+              // save as CreateClinicalDocument
+              const cd: CreateClinicalDocument<string | Blob> = {
                 user_id: connectionDocument.user_id,
                 connection_record_id: connectionDocument.id,
                 data_record: {
@@ -391,7 +394,7 @@ async function syncDocumentReferences(
               };
 
               await db.clinical_documents.insert(
-                cd as unknown as ClinicalDocument,
+                cd as unknown as ClinicalDocument<string | Blob>,
               );
             }
           } else {

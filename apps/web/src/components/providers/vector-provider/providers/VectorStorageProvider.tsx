@@ -15,7 +15,7 @@ export type DocMeta = {
   category: ClinicalDocumentResourceType;
   document_type: string;
   id: string;
-  url: string;
+  url?: string;
 };
 
 /**

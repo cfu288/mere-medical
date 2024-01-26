@@ -18,7 +18,10 @@ import {
 } from 'fhir/r2';
 import { RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../components/providers/DatabaseCollections';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
+import {
+  ClinicalDocument,
+  CreateClinicalDocument,
+} from '../models/clinical-document/ClinicalDocument.type';
 
 export enum VeradigmLocalStorageKeys {
   VERADIGM_BASE_URL = 'veradigmBaseUrl',
@@ -128,7 +131,7 @@ async function syncFHIRResource<T extends FhirResource>(
   connectionDocument: VeradigmConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
-  mapper: (proc: BundleEntry<T>) => ClinicalDocument<BundleEntry<T>>,
+  mapper: (proc: BundleEntry<T>) => CreateClinicalDocument<BundleEntry<T>>,
   params?: Record<string, string>,
 ) {
   const resc = await getFHIRResource<T>(
@@ -363,7 +366,7 @@ async function syncDocumentReferences(
               connectionDocument,
             );
             if (raw && contentType) {
-              const cd: ClinicalDocument = {
+              const cd: CreateClinicalDocument<string | Blob> = {
                 user_id: connectionDocument.user_id,
                 connection_record_id: connectionDocument.id,
                 data_record: {

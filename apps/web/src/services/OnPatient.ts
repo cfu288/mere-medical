@@ -19,7 +19,10 @@ import { DatabaseCollections } from '../components/providers/DatabaseCollections
 import { DSTU2 } from '.';
 import Config from '../environments/config.json';
 import { ConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
+import {
+  ClinicalDocument,
+  CreateClinicalDocument,
+} from '../models/clinical-document/ClinicalDocument.type';
 
 export const OnPatientBaseUrl = 'https://onpatient.com';
 export const OnPatientDSTU2Url = `${OnPatientBaseUrl}/api/fhir`;
@@ -57,7 +60,7 @@ async function syncFHIRResource<T extends FhirResource>(
   connectionDocument: ConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
-  mapper: (proc: BundleEntry<T>) => ClinicalDocument<BundleEntry<T>>,
+  mapper: (proc: BundleEntry<T>) => CreateClinicalDocument<BundleEntry<T>>,
 ) {
   const fhirResources = await getFHIRResource<T>(
     connectionDocument,

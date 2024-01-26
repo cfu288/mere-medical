@@ -33,7 +33,10 @@ import { JsonWebKeyWKid, signJwt } from './JWTTools';
 import { getPublicKey, IDBKeyConfig } from './WebCrypto';
 import { JsonWebKeySet } from '../services/JWTTools';
 import { UserDocument } from '../models/user-document/UserDocument.type';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
+import {
+  ClinicalDocument,
+  CreateClinicalDocument,
+} from '../models/clinical-document/ClinicalDocument.type';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
 
 const URLJoin = (...args: string[]) =>
@@ -139,7 +142,7 @@ async function syncFHIRResource<T extends FhirResource>(
   connectionDocument: EpicConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
-  mapper: (proc: BundleEntry<T>) => ClinicalDocument<BundleEntry<T>>,
+  mapper: (proc: BundleEntry<T>) => CreateClinicalDocument<BundleEntry<T>>,
   params: Record<string, string>,
   useProxy = false,
 ) {
@@ -381,7 +384,7 @@ async function syncDocumentReferences(
             );
             if (raw && contentType) {
               // save as ClinicalDocument
-              const cd: ClinicalDocument = {
+              const cd: CreateClinicalDocument<string | Blob> = {
                 user_id: connectionDocument.user_id,
                 connection_record_id: connectionDocument.id,
                 data_record: {
