@@ -52,7 +52,8 @@ export function ExperimentalSettingsGroup() {
                   <Switch.Description className="pt-2 text-sm text-red-800">
                     <b>WARNING</b>: Enabling this feature will send your medical
                     records to OpenAI for processing. Currently a work in
-                    progress - keys are stored in plaintext in localStorage.
+                    progress - keys are stored insecurely as plaintext in
+                    localStorage.
                   </Switch.Description>
                 </div>
                 <Switch
