@@ -53,7 +53,7 @@ function MereAITab() {
           db,
           vectorStorage,
           query: messageText,
-          numResults: 8,
+          numResults: 10,
           enableSearchAttachments: true,
         })
           .then(
@@ -447,8 +447,8 @@ Data: ${JSON.stringify(preparedData)}`,
       Authorization: `Bearer ${openAiKey}`,
     },
     body: JSON.stringify({
-      // model: 'gpt-4-turbo-preview',
-      model: 'gpt-3.5-turbo-16k',
+      model: 'gpt-4-turbo-preview',
+      // model: 'gpt-3.5-turbo-16k',
       messages: promptMessages,
       stream: true,
     }),
