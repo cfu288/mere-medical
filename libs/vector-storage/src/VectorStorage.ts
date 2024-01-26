@@ -10,21 +10,7 @@ import { constants } from './common/constants';
 import { filterDocuments } from './common/helpers';
 import { RxCollection, RxDatabase } from 'rxdb';
 
-export class VectorStorage<
-  T extends {
-    vector_storage: RxCollection<{
-      id: string; // id: A unique identifier for the document. This is used to identify the document in similarity search results.
-      hits?: number; // hits: Optional field that counts the number of times this document has been returned in a similarity search. Omitted if 0.
-      metadata: {
-        [key: string]: any;
-      }; // metadata: An object containing additional information about the document. The structure of this object can vary depending on the application.
-      // text: string; // text: The actual text of the document. This is what is used to calculate the document's vector representation.
-      timestamp: number; // timestamp: The time when the document was added to the vector storage, represented as a Unix timestamp (milliseconds since the Unix Epoch).
-      vectorMag?: number; // vecMag: The magnitude of the document's vector representation. This is precomputed to speed up similarity calculations.
-      vector?: number[]; // vec
-    }>;
-  },
-> {
+export class VectorStorage<T extends RxCollection<Omit<IVSDocument, 'text'>>> {
   private rxdb!: RxDatabase<T>;
   private documents: Array<IVSDocument> = [];
   private readonly embeddingModel: string;
