@@ -53,7 +53,7 @@ function MereAITab() {
           db,
           vectorStorage,
           query: messageText,
-          numResults: 10,
+          numResults: 8,
           enableSearchAttachments: true,
         })
           .then(

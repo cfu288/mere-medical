@@ -199,7 +199,7 @@ function useRecordQuery(
                       db,
                       vectorStorage,
                       query,
-                      numResults: 10,
+                      numResults: 20,
                       enableSearchAttachments: true,
                     })
                   ).records;
@@ -337,7 +337,7 @@ export async function fetchRecordsWithVectorSearch({
   db: RxDatabase<DatabaseCollections>;
   vectorStorage: VectorStorage<any>;
   query?: string;
-  numResults: number;
+  numResults?: number;
   enableSearchAttachments: boolean;
 }): Promise<{
   records: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>;
