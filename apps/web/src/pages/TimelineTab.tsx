@@ -22,8 +22,8 @@ import { TimelineBanner } from '../components/timeline/TimelineBanner';
 import { TimelineItem } from '../components/timeline/TimelineItem';
 import { TimelineYearHeaderWrapper } from '../components/timeline/TimelineYearHeaderWrapper';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
-import { SearchBar } from './SearchBar';
-import { TimelineSkeleton } from './TimelineSkeleton';
+import { SearchBar } from '../components/timeline/SearchBar';
+import { TimelineSkeleton } from '../components/timeline/TimelineSkeleton';
 
 export enum QueryStatus {
   IDLE,

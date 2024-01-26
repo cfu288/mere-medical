@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { QueryStatus } from './TimelineTab';
-import { useLocalConfig } from '../components/providers/LocalConfigProvider';
+import { QueryStatus } from '../../pages/TimelineTab';
+import { useLocalConfig } from '../providers/LocalConfigProvider';
 
 function LoadingSpinner({ tailwindColor }: { tailwindColor?: string }) {
   return (

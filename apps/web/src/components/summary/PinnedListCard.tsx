@@ -1,9 +1,9 @@
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
+import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
 import { Disclosure } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
-import { CardBase } from '../components/connection/CardBase';
-import { ObservationResultRow } from '../components/timeline/ObservationResultRow';
+import { CardBase } from '../connection/CardBase';
+import { ObservationResultRow } from '../timeline/ObservationResultRow';
 
 export function PinnedListCard({
   items,

@@ -3,22 +3,16 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { RxDatabase, RxDocument } from 'rxdb';
 
-import { Switch } from '@headlessui/react';
-
 import { AppPage } from '../components/AppPage';
 import { GenericBanner } from '../components/GenericBanner';
 import { DatabaseCollections } from '../components/providers/DatabaseCollections';
-import {
-  useLocalConfig,
-  useUpdateLocalConfig,
-} from '../components/providers/LocalConfigProvider';
 import { AboutMereSettingsGroup } from '../components/settings/AboutMereSettingsGroup';
 import { DeveloperSettingsGroup } from '../components/settings/DeveloperSettingsGroup';
 import { PrivacyAndSecuritySettingsGroup } from '../components/settings/PrivacyAndSecuritySettingsGroup';
 import { UserCard } from '../components/settings/UserCard';
 import { UserDataSettingsGroup } from '../components/settings/UserDataSettingsGroup';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
-import { classNames } from '../utils/StyleUtils';
+import { ExperimentalSettingsGroup } from '../components/settings/ExperimentalSettingsGroup';
 
 export function fetchPatientRecords(
   db: RxDatabase<DatabaseCollections>,
@@ -126,83 +120,3 @@ const SettingsTab: React.FC = () => {
 };
 
 export default SettingsTab;
-
-function ExperimentalSettingsGroup() {
-  const { experimental__openai_api_key, experimental__use_openai_rag } =
-    useLocalConfig();
-  const updateLocalConfig = useUpdateLocalConfig();
-
-  return (
-    <>
-      <h1 className="py-6 text-xl font-extrabold">Experimental</h1>
-      <div className="divide-y divide-gray-200">
-        <div className="px-4 sm:px-6">
-          <ul className="mt-2 divide-y divide-gray-200">
-            <Switch.Group
-              id="experimental__use_rag"
-              as="li"
-              className="flex flex-col pb-4"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex flex-col">
-                  <Switch.Label
-                    as="h2"
-                    className="text-primary-800 text-lg leading-6"
-                    passive
-                  >
-                    Enable Mere AI Assistant
-                  </Switch.Label>
-                  <Switch.Description className="pt-2 text-sm text-gray-800">
-                    Enable Mere to use OpenAIs models for improved search and
-                    Q&A features.
-                  </Switch.Description>
-                  <Switch.Description className="pt-2 text-sm text-red-800">
-                    <b>WARNING</b>: Enabling this feature will send your medical
-                    records to OpenAI for processing.
-                  </Switch.Description>
-                </div>
-                <Switch
-                  checked={experimental__use_openai_rag}
-                  onChange={() => {
-                    updateLocalConfig({
-                      experimental__use_openai_rag:
-                        !experimental__use_openai_rag,
-                    });
-                  }}
-                  className={classNames(
-                    experimental__use_openai_rag
-                      ? 'bg-primary-500'
-                      : 'bg-gray-200',
-                    'focus:ring-primary-500 relative ml-4 inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2',
-                  )}
-                >
-                  <span
-                    aria-hidden="true"
-                    className={classNames(
-                      experimental__use_openai_rag
-                        ? 'translate-x-5'
-                        : 'translate-x-0',
-                      'inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
-                    )}
-                  />
-                </Switch>
-              </div>
-            </Switch.Group>
-            {/* password input api key */}
-            <input
-              type="password"
-              className="border-2 border-gray-200 rounded-md p-2 w-full"
-              placeholder="OpenAI API Key"
-              value={experimental__openai_api_key || ''}
-              onChange={(e) => {
-                updateLocalConfig({
-                  experimental__openai_api_key: e.target.value,
-                });
-              }}
-            />
-          </ul>
-        </div>
-      </div>
-    </>
-  );
-}

@@ -28,7 +28,7 @@ import { Disclosure } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { CardBase } from '../components/connection/CardBase';
 import { TimelineCardSubtitile } from '../components/timeline/TimelineCardSubtitile';
-import { PinnedListCard } from './PinnedListCard';
+import { PinnedListCard } from '../components/summary/PinnedListCard';
 import React from 'react';
 
 function fetchMedications(

@@ -21,7 +21,7 @@ import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.t
 import { UserDocument } from '../models/user-document/UserDocument.type';
 import uuid4 from '../utils/UUIDUtils';
 import { fetchRecordsWithVectorSearch } from './TimelineTab';
-import { usePeriodAnimation } from './usePeriodAnimation';
+import { usePeriodAnimation } from '../components/hooks/usePeriodAnimation';
 
 function MereAITab() {
   const user = useUser(),
