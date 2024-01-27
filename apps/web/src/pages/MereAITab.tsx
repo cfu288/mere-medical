@@ -54,12 +54,13 @@ function MereAITab() {
         setIsLoadingAiResponse(true);
         Promise.all([
           // Attachments can predominate search results
-          // So we do one search without attachments and one with
+          // So we do one search without attachments and
+          // one with and then combine the results
           fetchRecordsWithVectorSearch({
             db,
             vectorStorage,
             query: messageText,
-            numResults: 8,
+            numResults: 5,
             enableSearchAttachments: false,
             groupByDate: false,
           }),
@@ -67,7 +68,7 @@ function MereAITab() {
             db,
             vectorStorage,
             query: messageText,
-            numResults: 4,
+            numResults: 5,
             enableSearchAttachments: true,
             groupByDate: false,
           }),
@@ -250,7 +251,7 @@ const MessageBubble = memo(function MessageBubble({
       )}
       <div
         dir="ltr"
-        className={`flex flex-col w-full max-w-sm md:max-w-md lg:max-w-lg leading-1.5 p-4 rounded-e-xl rounded-es-xl gap-0 ${isAiMessage ? 'bg-indigo-100 border-indigo-200' : 'border-gray-200 bg-gray-100'}`}
+        className={`flex flex-col w-full max-w-[320px] md:max-w-md lg:max-w-lg leading-1.5 p-4 rounded-e-xl rounded-es-xl gap-0 ${isAiMessage ? 'bg-indigo-100 border-indigo-200' : 'border-gray-200 bg-gray-100'}`}
       >
         <div className="flex items-center space-x-2 ">
           <span
@@ -295,7 +296,7 @@ const MessageBubble = memo(function MessageBubble({
               // p: ({ node, ...props }) => <p {...props} className={``} />,
               li: ({ node, ...props }) => <li {...props} className={``} />,
               table: ({ node, ...props }) => (
-                <div className="border border-indigo-300 rounded-md ">
+                <div className="mx-auto border border-indigo-300 rounded-md overflow-x-auto overflow-y-hidden w-full max-w-[280px] md:max-w-[24rem]">
                   <table {...props} className={`-my-1 table-auto rounded-md`}>
                     {props.children || null}
                   </table>
@@ -356,10 +357,9 @@ const ChatInput = memo(function ChatInput({
         onSubmit(message);
       }}
     >
-      <div className="flex flex-row items-center p-2 rounded-lg bg-gray-50 justify-center align-middle">
+      <div className="flex flex-row items-center p-2 rounded-lg bg-gray-50 justify-center align-middle pb-safe">
         <input
           id="chat"
-          // rows={1}
           value={message}
           className="block mr-2 h-full p-2.5 w-full text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
           placeholder={placeholderText}
@@ -419,7 +419,7 @@ const prepareDataForOpenAI = async ({
   db,
   user,
   idsOfMostRelatedChunksFromSemanticSearch,
-  softLimit = 50,
+  softLimit = 150,
 }: {
   data: ClinicalDocument<BundleEntry<FhirResource>>[];
   db: RxDatabase<DatabaseCollections>;
@@ -521,11 +521,11 @@ const callOpenAI = async ({
     {
       role: 'system',
       content:
-        'You are a medical AI assistant. A patient is asking you a question. Please address the patient directly by name if provided and respond in Markdown format (use tables when displaying data). Explain your answer concisely.',
+        'You are a medical AI assistant. A patient is asking you a question. Please address the patient directly by name if provided and respond in Markdown format. Use tables when displaying data up to 4 columns. Be concise.',
     },
     {
       role: 'system',
-      content: `Here is some demographic information about the patient.
+      content: `Demographic information about the patient.
 Today's Date: ${new Date().toISOString()};
 ${user?.first_name && user?.last_name ? 'Name: ' + (user?.first_name + ' ' + user?.last_name) : ''}
 ${user?.birthday ? 'DOB: ' + user?.birthday : ''}
@@ -542,8 +542,8 @@ ${user.gender ? 'Gender:' + user?.gender : ''}`,
     },
     {
       role: 'system',
-      content: `Here are a subset of medical records you found that may help answer the question. Ignore any records not relevant to the question in your response.
-Data: ${JSON.stringify(preparedData)}`,
+      content: `Subset of medical records you found that may help answer the question. Ignore records not relevant to the question.
+Data: ${JSON.stringify(preparedData, null, 2)}`,
     },
   ];
 

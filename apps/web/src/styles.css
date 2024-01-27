@@ -27,7 +27,10 @@
 }
 
 .pb-safe {
-  padding-bottom: calc(env(safe-area-inset-bottom, 1.5rem) - 0.75rem);
+  padding-bottom: max(
+    calc(env(safe-area-inset-bottom, 1.5rem) - 0.75rem),
+    0.5rem
+  );
 }
 
 html {
