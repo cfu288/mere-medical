@@ -78,8 +78,8 @@ export function AboutMereSettingsGroup() {
           }}
         >
           {!localConfig.experimental_features_enabled
-            ? 'Enable experimental features'
-            : 'Disable experimental features'}{' '}
+            ? 'Show experimental features'
+            : 'Hide experimental features'}{' '}
         </button>
       </div>
     </>
