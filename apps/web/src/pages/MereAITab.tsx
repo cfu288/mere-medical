@@ -24,6 +24,7 @@ import { usePeriodAnimation } from '../components/hooks/usePeriodAnimation';
 import { getRelatedDocuments } from '../components/timeline/DiagnosticReportCard';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import grainImage from '../img/grain.svg';
 
 function MereAITab() {
   const user = useUser(),
@@ -153,8 +154,16 @@ function MereAITab() {
 
   return (
     <AppPage banner={<GenericBanner text="Mere AI Assistant" />}>
-      <div className="flex flex-col h-full overflow-hidden">
-        <div className="w-full bg-indigo-200 text-indigo-700 text-xs font-bold p-1 px-2 bg-opacity-40 text-center">
+      <div className="relative flex flex-col h-full overflow-hidden">
+        <div
+          style={{
+            background: 'rgb(199 210 254 / 0.4)',
+            // @ts-ignore
+            '--image-url': `url(${grainImage})`,
+            backdropFilter: 'blur(10px)',
+          }}
+          className={`absolute top-0 left-0 bg-[backdrop-filter:var(--tw-backdrop-blur)] w-full text-indigo-700 text-xs sm:text-sm font-bold p-1 px-2 bg-opacity-40 text-center`}
+        >
           Experimental
         </div>
         <div className="grow overflow-y-auto p-4" ref={scrollRef}>
@@ -352,7 +361,7 @@ const ChatInput = memo(function ChatInput({
           id="chat"
           // rows={1}
           value={message}
-          className="block mr-2 h-full p-2.5 w-full text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
+          className="block mr-2 h-full p-2.5 w-full text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
           placeholder={placeholderText}
           onChange={(e) => setMessage(e.target.value)}
         ></input>
