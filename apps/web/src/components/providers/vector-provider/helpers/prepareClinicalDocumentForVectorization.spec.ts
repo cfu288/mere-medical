@@ -1,4 +1,4 @@
-import { BundleEntry, DiagnosticReport } from 'fhir/r2';
+import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
 import { ClinicalDocument } from '../../../../models/clinical-document/ClinicalDocument.type';
 import { prepareClinicalDocumentForVectorization } from './prepareClinicalDocumentForVectorization';
 
@@ -161,8 +161,91 @@ const testDRClinicalDocument: ClinicalDocument<BundleEntry<DiagnosticReport>> =
     id: '876128fe-21aa-4e14-a7f6-7f0491878356|c3664aed-e146-4f24-b323-37da0f16069d|https://www.example.com',
   };
 
+const textObsClinicalDocument: ClinicalDocument<BundleEntry<Observation>> = {
+  id: '876128fe-21aa-4e14-a7f6-7f0491878356|c3664aed-e146-4f24-b323-37da0f16069d|https://www.example.com',
+  user_id: 'c3664aed-e146-4f24-b323-37da0f16069d',
+  connection_record_id: '876128fe-21aa-4e14-a7f6-7f0491878356',
+  data_record: {
+    raw: {
+      link: [
+        {
+          relation: 'self',
+          url: 'https://fhir.healthcare.org/api/FHIR/DSTU2/Observation/12345ABCDEF',
+        },
+      ],
+      fullUrl:
+        'https://fhir.healthcare.org/api/FHIR/DSTU2/Observation/12345ABCDEF',
+      resource: {
+        resourceType: 'Observation',
+        id: '12345ABCDEF',
+        status: 'final',
+        category: {
+          coding: [
+            {
+              system: 'http://hl7.org/fhir/observation-category',
+              code: 'laboratory',
+              display: 'Laboratory',
+            },
+          ],
+          text: 'Laboratory',
+        },
+        code: {
+          coding: [
+            {
+              system: 'http://loinc.org',
+              code: '84295-9',
+              display: 'Glucose level in Blood',
+            },
+          ],
+          text: 'GLUCOSE (LABCORP)',
+        },
+        subject: {
+          display: 'Doe, John',
+          reference:
+            'https://fhir.healthcare.org/api/FHIR/DSTU2/Patient/67890XYZ',
+        },
+        effectiveDateTime: '2023-01-01T07:30:00Z',
+        issued: '2010-01-01T09:00:00Z',
+        valueQuantity: {
+          value: 5.6,
+          unit: 'mmol/L',
+          system: 'http://unitsofmeasure.org',
+          code: 'mmol/L',
+        },
+        referenceRange: [
+          {
+            low: {
+              value: 3.9,
+              unit: 'mmol/L',
+              system: 'http://unitsofmeasure.org',
+              code: 'mmol/L',
+            },
+            high: {
+              value: 6.1,
+              unit: 'mmol/L',
+              system: 'http://unitsofmeasure.org',
+              code: 'mmol/L',
+            },
+            text: '3.9 - 6.1 mmol/L',
+          },
+        ],
+      },
+      search: { mode: 'match' },
+    },
+    format: 'FHIR.DSTU2',
+    content_type: 'application/json',
+    resource_type: 'observation',
+    version_history: [],
+  },
+  metadata: {
+    id: 'https://www.example.com',
+    date: '2023-03-14T16:48:00Z',
+    display_name: 'SODIUM (QUEST)',
+  },
+};
+
 describe('VectorStorageProvider', () => {
-  describe('prepareClinicalDocumentForVectorization', () => {
+  describe('prepareClinicalDocumentForVectorization can serialize DR', () => {
     it('can serialize a DiagnosticReport correctly', async () => {
       const result = await prepareClinicalDocumentForVectorization(
         testDRClinicalDocument,
@@ -180,6 +263,28 @@ describe('VectorStorageProvider', () => {
       );
       expect(result.metaList[0].document_type).toBe('clinical_document');
       expect(result.metaList[0].category).toBe('diagnosticreport');
+      expect(result.metaList[0].url).toBe('https://www.example.com');
+    });
+  });
+
+  describe('prepareClinicalDocumentForVectorization can serialize Observation', () => {
+    it('can serialize a Observation correctly', async () => {
+      const result = await prepareClinicalDocumentForVectorization(
+        textObsClinicalDocument,
+      );
+      expect(result.docList).toHaveLength(1);
+      expect(result.docList[0].id).toBe(
+        '876128fe-21aa-4e14-a7f6-7f0491878356|c3664aed-e146-4f24-b323-37da0f16069d|https://www.example.com',
+      );
+      expect(result.docList[0].text).toBe(
+        'Observation|http://loinc.org|84295-9|Glucose level in Blood|GLUCOSE (LABCORP)|2023-01-01T07:30:00Z|2010-01-01T09:00:00Z|5.6|mmol/L|http://unitsofmeasure.org|3.9|6.1|3.9 - 6.1 mmol/L',
+      );
+      expect(result.metaList).toHaveLength(1);
+      expect(result.metaList[0].id).toBe(
+        '876128fe-21aa-4e14-a7f6-7f0491878356|c3664aed-e146-4f24-b323-37da0f16069d|https://www.example.com',
+      );
+      expect(result.metaList[0].document_type).toBe('clinical_document');
+      expect(result.metaList[0].category).toBe('observation');
       expect(result.metaList[0].url).toBe('https://www.example.com');
     });
   });
