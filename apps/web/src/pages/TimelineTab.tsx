@@ -201,6 +201,7 @@ function useRecordQuery(
                       query,
                       numResults: 20,
                       enableSearchAttachments: true,
+                      groupByDate: true,
                     })
                   ).records;
                   setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
@@ -333,12 +334,14 @@ export async function fetchRecordsWithVectorSearch({
   query,
   numResults = 10,
   enableSearchAttachments = false,
+  groupByDate = true,
 }: {
   db: RxDatabase<DatabaseCollections>;
   vectorStorage: VectorStorage<any>;
   query?: string;
   numResults?: number;
-  enableSearchAttachments: boolean;
+  enableSearchAttachments?: boolean;
+  groupByDate?: boolean;
 }): Promise<{
   records: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>;
   idsOfMostRelatedChunksFromSemanticSearch: string[];
@@ -398,6 +401,15 @@ export async function fetchRecordsWithVectorSearch({
   const lst = docs as unknown as RxDocument<
     ClinicalDocument<BundleEntry<FhirResource>>
   >[];
+
+  if (!groupByDate) {
+    return {
+      records: {
+        [new Date(0).toISOString()]: lst.map((item) => item.toMutableJSON()),
+      },
+      idsOfMostRelatedChunksFromSemanticSearch: ids,
+    };
+  }
 
   // Group records by date
   const groupedRecords: Record<

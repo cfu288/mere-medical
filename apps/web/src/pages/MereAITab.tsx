@@ -1,10 +1,9 @@
 import { differenceInDays, format, parseISO } from 'date-fns';
-import { BundleEntry, FhirResource } from 'fhir/r2';
+import { BundleEntry, DiagnosticReport, FhirResource } from 'fhir/r2';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RxDatabase } from 'rxdb';
 
 import { SparklesIcon } from '@heroicons/react/24/outline';
-import { IVSChunkMeta } from '@mere/vector-storage';
 
 import { AppPage } from '../components/AppPage';
 /* eslint-disable react/jsx-no-useless-fragment */
@@ -22,6 +21,9 @@ import { UserDocument } from '../models/user-document/UserDocument.type';
 import uuid4 from '../utils/UUIDUtils';
 import { fetchRecordsWithVectorSearch } from './TimelineTab';
 import { usePeriodAnimation } from '../components/hooks/usePeriodAnimation';
+import { getRelatedDocuments } from '../components/timeline/DiagnosticReportCard';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 function MereAITab() {
   const user = useUser(),
@@ -49,40 +51,58 @@ function MereAITab() {
     (messageText: string) => {
       if (!isLoadingAiResponse && vectorStorage) {
         setIsLoadingAiResponse(true);
-        fetchRecordsWithVectorSearch({
-          db,
-          vectorStorage,
-          query: messageText,
-          numResults: 8,
-          enableSearchAttachments: true,
-        })
-          .then(
-            async ({ records, idsOfMostRelatedChunksFromSemanticSearch }) => {
-              const responseText = await performRAGwithOpenAI({
-                query: messageText,
-                data: records,
-                idsOfMostRelatedChunksFromSemanticSearch,
-                streamingCallback: (c: string) =>
-                  setAiLoadingText((p) => p + c),
-                messages: messages,
-                openAiKey: experimental__openai_api_key,
-                db,
-                user,
-              });
-              if (responseText) {
-                setMessages((e) => [
-                  ...e,
-                  {
-                    user: 'AI',
-                    text: responseText,
-                    timestamp: new Date(),
-                    id: uuid4(),
-                  },
-                ]);
-              }
-              setAiLoadingText('');
-            },
-          )
+        Promise.all([
+          // Attachments can predominate search results
+          // So we do one search without attachments and one with
+          fetchRecordsWithVectorSearch({
+            db,
+            vectorStorage,
+            query: messageText,
+            numResults: 8,
+            enableSearchAttachments: false,
+            groupByDate: false,
+          }),
+          fetchRecordsWithVectorSearch({
+            db,
+            vectorStorage,
+            query: messageText,
+            numResults: 4,
+            enableSearchAttachments: true,
+            groupByDate: false,
+          }),
+        ])
+          .then(async (mixedResults) => {
+            const records: ClinicalDocument<BundleEntry<FhirResource>>[] = [
+              ...Object.values(mixedResults[0].records).flat(),
+              ...Object.values(mixedResults[1].records).flat(),
+            ];
+            const idsOfMostRelatedChunksFromSemanticSearch = [
+              ...mixedResults[0].idsOfMostRelatedChunksFromSemanticSearch,
+              ...mixedResults[1].idsOfMostRelatedChunksFromSemanticSearch,
+            ];
+            const responseText = await performRAGwithOpenAI({
+              query: messageText,
+              data: records,
+              idsOfMostRelatedChunksFromSemanticSearch,
+              streamingCallback: (c: string) => setAiLoadingText((p) => p + c),
+              messages: messages,
+              openAiKey: experimental__openai_api_key,
+              db,
+              user,
+            });
+            if (responseText) {
+              setMessages((e) => [
+                ...e,
+                {
+                  user: 'AI',
+                  text: responseText,
+                  timestamp: new Date(),
+                  id: uuid4(),
+                },
+              ]);
+            }
+            setAiLoadingText('');
+          })
           .catch((e) => {
             notificationDispatch({
               message: e,
@@ -221,7 +241,7 @@ const MessageBubble = memo(function MessageBubble({
       )}
       <div
         dir="ltr"
-        className={`flex flex-col w-full max-w-[320px] md:max-w-md lg:max-w-lg leading-1.5 p-4 rounded-e-xl rounded-es-xl ${isAiMessage ? 'bg-indigo-100 border-indigo-200' : 'border-gray-200 bg-gray-100'}`}
+        className={`flex flex-col w-full max-w-sm md:max-w-md lg:max-w-lg leading-1.5 p-4 rounded-e-xl rounded-es-xl gap-0 ${isAiMessage ? 'bg-indigo-100 border-indigo-200' : 'border-gray-200 bg-gray-100'}`}
       >
         <div className="flex items-center space-x-2 ">
           <span
@@ -240,9 +260,64 @@ const MessageBubble = memo(function MessageBubble({
           </span>
         </div>
         <p
-          className={`whitespace-pre-line text-sm font-normal pt-2.5 ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
+          className={`block whitespace-pre-line text-sm font-normal pt-2.5 ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
         >
-          {message.text}
+          <Markdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              h1: ({ node, ...props }) => (
+                <h1 {...props} className={`-my-1 text-2xl font-semibold`} />
+              ),
+              h2: ({ node, ...props }) => (
+                <h2 {...props} className={`-my-1 text-1xl font-semibold`} />
+              ),
+              h3: ({ node, ...props }) => (
+                <h3 {...props} className={`-my-1 text-xl font-semibold`} />
+              ),
+              h4: ({ node, ...props }) => (
+                <h4 {...props} className={`-my-1 text-lg font-semibold`} />
+              ),
+              ol: ({ node, ...props }) => (
+                <ol {...props} className={`-my-1 list-decimal list-inside`} />
+              ),
+              ul: ({ node, ...props }) => (
+                <ul {...props} className={`-my-1 list-disc list-inside`} />
+              ),
+              // p: ({ node, ...props }) => <p {...props} className={``} />,
+              li: ({ node, ...props }) => <li {...props} className={``} />,
+              table: ({ node, ...props }) => (
+                <div className="border border-indigo-300 rounded-md ">
+                  <table {...props} className={`-my-1 table-auto rounded-md`}>
+                    {props.children || null}
+                  </table>
+                </div>
+              ),
+              pre: ({ node, ...props }) => (
+                <pre {...props} className={`-my-1`} />
+              ),
+              p: ({ node, ...props }) => <p {...props} className={`-my-1`} />,
+              thead: ({ node, ...props }) => (
+                <thead
+                  {...props}
+                  className={`uppercase rounded-tr-md rounded-tl-md border-b border-indigo-300`}
+                />
+              ),
+              tbody: ({ node, ...props }) => (
+                <tbody {...props} className={`divide-y divide-indigo-200`} />
+              ),
+              tr: ({ node, ...props }) => (
+                <tr {...props} className={`-my-1 `} />
+              ),
+              th: ({ node, ...props }) => (
+                <th {...props} className={`-my-1 p-1`} />
+              ),
+              td: ({ node, ...props }) => (
+                <td {...props} className={`-my-1 p-1`} />
+              ),
+            }}
+          >
+            {message.text}
+          </Markdown>
         </p>
       </div>
     </div>
@@ -335,65 +410,88 @@ const prepareDataForOpenAI = async ({
   db,
   user,
   idsOfMostRelatedChunksFromSemanticSearch,
+  softLimit = 50,
 }: {
-  data: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>;
+  data: ClinicalDocument<BundleEntry<FhirResource>>[];
   db: RxDatabase<DatabaseCollections>;
   user: UserDocument;
   idsOfMostRelatedChunksFromSemanticSearch: string[];
+  softLimit?: number;
 }) => {
-  const dataAsList: Set<string> = new Set();
+  const dataAsSet: Set<string> = new Set();
 
-  for (const itemList of Object.values(data)) {
-    for (const item of itemList) {
-      const chunkedClinicalDocsList =
-        prepareClinicalDocumentForVectorization(item).docList;
+  for (const item of data) {
+    const chunkedClinicalDocsList =
+      prepareClinicalDocumentForVectorization(item).docList;
 
-      const chunkedCliicalDocsContainsAtLeastOneChunk =
-        chunkedClinicalDocsList.some((i) => i.chunk);
+    const chunkedCliicalDocsContainsAtLeastOneChunk =
+      chunkedClinicalDocsList.some((i) => i.chunk);
 
-      if (!chunkedCliicalDocsContainsAtLeastOneChunk) {
-        const texts = chunkedClinicalDocsList.map((i) => i.text);
-        texts.forEach((t) => dataAsList.add(t));
-      } else {
-        // chunkedClinicalDocsList contains many chunks, but we only want to pull the ones that are relevant
-        // The relevant ones are the ones that have an id inside chunkMetadata
-        const relevantChunks = chunkedClinicalDocsList.filter(
-          (clinicalDocsChunk) => {
-            const chunkWithSameId =
-              idsOfMostRelatedChunksFromSemanticSearch.find(
-                (metaChunkId) => metaChunkId === clinicalDocsChunk.id,
-              );
-            return chunkWithSameId !== undefined;
-          },
-        );
-        const texts = relevantChunks.map((i) => i.text);
-        texts.forEach((t) => dataAsList.add(t));
-      }
-
-      if (
-        item.data_record.raw.resource?.resourceType === 'DiagnosticReport' ||
-        item.data_record.raw.resource?.resourceType === 'Observation'
-      ) {
-        const loinc = item.metadata?.loinc_coding || [];
-        const relatedDocs = await getRelatedLoincLabs({
-          loinc,
-          db,
-          user,
-          limit: 5,
-        });
-        const relatedList = relatedDocs.flatMap(
-          (i) => prepareClinicalDocumentForVectorization(i).docList,
-        );
-        relatedList.forEach((i) => dataAsList.add(i.text));
-      }
+    if (!chunkedCliicalDocsContainsAtLeastOneChunk) {
+      const texts = chunkedClinicalDocsList.map((i) => i.text);
+      texts.forEach((t) => dataAsSet.add(t));
+    } else {
+      // chunkedClinicalDocsList contains many chunks, but we only want to pull the ones that are relevant
+      // The relevant ones are the ones that have an id inside chunkMetadata
+      const relevantChunks = chunkedClinicalDocsList.filter(
+        (clinicalDocsChunk) => {
+          const chunkWithSameId = idsOfMostRelatedChunksFromSemanticSearch.find(
+            (metaChunkId) => metaChunkId === clinicalDocsChunk.id,
+          );
+          return chunkWithSameId !== undefined;
+        },
+      );
+      const texts = relevantChunks.map((i) => i.text);
+      texts.forEach((t) => dataAsSet.add(t));
     }
-    if (dataAsList.size > 100) {
+
+    if (item.data_record.raw.resource?.resourceType === 'Observation') {
+      const loinc = item.metadata?.loinc_coding || [];
+      // To help the AI understand the trend of an observation, we can get the
+      // last 5 related labs with the same LOINC code and add them to the context
+      const relatedDocs = await getRelatedLoincLabs({
+        loinc,
+        db,
+        user,
+        limit: 5,
+      });
+      const relatedList = relatedDocs.flatMap(
+        (i) => prepareClinicalDocumentForVectorization(i).docList,
+      );
+      relatedList.forEach((i) => dataAsSet.add(i.text));
+    } else if (
+      item.data_record.raw.resource?.resourceType === 'DiagnosticReport'
+    ) {
+      // A DiagnosticReport is a summary of a bunch of Observations
+      // So we can get the related Observations from the DiagnosticReport
+      const relatedDocsAndAbnormalIndicators = await getRelatedDocuments({
+        db,
+        user,
+        item: item as ClinicalDocument<BundleEntry<DiagnosticReport>>,
+      });
+      const relatedDocs = relatedDocsAndAbnormalIndicators[0];
+      const relatedList = relatedDocs.flatMap(
+        (i) => prepareClinicalDocumentForVectorization(i).docList,
+      );
+      relatedList.forEach((i) => dataAsSet.add(i.text));
+    }
+    // Prevent context from getting too large
+    if (dataAsSet.size >= softLimit) {
+      // trim the set to 100
       break;
     }
   }
 
-  return [...dataAsList];
+  return [...dataAsSet];
 };
+
+const SUPPORTED_OPENAI_GENERATIVE_MODELS = [
+  'gpt-3.5-turbo-16k',
+  'gpt-4-turbo-preview',
+] as const;
+
+type SUPPORTED_OPENAI_GENERATIVE_MODELS =
+  (typeof SUPPORTED_OPENAI_GENERATIVE_MODELS)[number];
 
 const callOpenAI = async ({
   query,
@@ -414,7 +512,7 @@ const callOpenAI = async ({
     {
       role: 'system',
       content:
-        'You are a medical AI assistant. A patient is asking you a question. Please address the patient directly and explain your answer step by step. Show your work if possible.',
+        'You are a medical AI assistant. A patient is asking you a question. Please address the patient directly by name if provided and respond in Markdown format (use tables when displaying data). Explain your answer concisely.',
     },
     {
       role: 'system',
@@ -431,11 +529,11 @@ ${user.gender ? 'Gender:' + user?.gender : ''}`,
     })),
     {
       role: 'user',
-      content: query,
+      content: `The question is: ${query}`,
     },
     {
       role: 'system',
-      content: `Here are some medical records that may be relevant. Ignore and leave out any records not relevant to the question in your response.
+      content: `Here are a subset of medical records you found that may help answer the question. Ignore any records not relevant to the question in your response.
 Data: ${JSON.stringify(preparedData)}`,
     },
   ];
@@ -489,6 +587,8 @@ Data: ${JSON.stringify(preparedData)}`,
     reader.releaseLock();
   }
 
+  console.log(responseText);
+
   return responseText;
 };
 
@@ -503,7 +603,7 @@ const performRAGwithOpenAI = async ({
   user,
 }: {
   query: string;
-  data: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>;
+  data: ClinicalDocument<BundleEntry<FhirResource>>[];
   idsOfMostRelatedChunksFromSemanticSearch: string[];
   streamingCallback?: (message: string) => void;
   messages: ChatMessage[];
@@ -532,6 +632,6 @@ const performRAGwithOpenAI = async ({
     return Promise.resolve();
   } catch (e) {
     console.error(e);
-    return Promise.reject(e);
+    throw e;
   }
 };

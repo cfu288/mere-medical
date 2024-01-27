@@ -74,6 +74,7 @@ function serializeAndChunkJSONForVectorization(
   delete newUnflatObject.link;
   delete newUnflatObject.fullUrl;
   delete newUnflatObject.search;
+  delete newUnflatObject.resource.category;
   delete newUnflatObject.resource.subject;
   delete newUnflatObject.resource.id;
   delete newUnflatObject.resource.status;
