@@ -1,20 +1,22 @@
+import { BundleEntry, Patient } from 'fhir/r2';
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { RxDatabase, RxDocument } from 'rxdb';
+
 import { AppPage } from '../components/AppPage';
 import { GenericBanner } from '../components/GenericBanner';
-import { DatabaseCollections } from '../components/providers/RxDbProvider';
-import { useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
-import { RxDatabase, RxDocument } from 'rxdb';
-import { BundleEntry, Patient } from 'fhir/r2';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
-import { PrivacyAndSecuritySettingsGroup } from '../components/settings/PrivacyAndSecuritySettingsGroup';
-import { UserDataSettingsGroup } from '../components/settings/UserDataSettingsGroup';
-import { UserCard } from '../components/settings/UserCard';
-import { DeveloperSettingsGroup } from '../components/settings/DeveloperSettingsGroup';
+import { DatabaseCollections } from '../components/providers/DatabaseCollections';
 import { AboutMereSettingsGroup } from '../components/settings/AboutMereSettingsGroup';
+import { DeveloperSettingsGroup } from '../components/settings/DeveloperSettingsGroup';
+import { PrivacyAndSecuritySettingsGroup } from '../components/settings/PrivacyAndSecuritySettingsGroup';
+import { UserCard } from '../components/settings/UserCard';
+import { UserDataSettingsGroup } from '../components/settings/UserDataSettingsGroup';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
+import { ExperimentalSettingsGroup } from '../components/settings/ExperimentalSettingsGroup';
 
 export function fetchPatientRecords(
   db: RxDatabase<DatabaseCollections>,
-  user_id: string
+  user_id: string,
 ) {
   return db.clinical_documents
     .find({
@@ -34,39 +36,39 @@ export function fetchPatientRecords(
 }
 
 export function parseGivenName(
-  item: ClinicalDocument<BundleEntry<Patient>>
+  item: ClinicalDocument<BundleEntry<Patient>>,
 ): string | undefined {
   return item?.data_record.raw.resource?.name?.[0].given?.[0];
 }
 
 export function parseFamilyName(
-  item: ClinicalDocument<BundleEntry<Patient>>
+  item: ClinicalDocument<BundleEntry<Patient>>,
 ): string | undefined {
   return item?.data_record.raw.resource?.name?.[0].family?.[0];
 }
 
 export function parseEmail(
-  item: ClinicalDocument<BundleEntry<Patient>>
+  item: ClinicalDocument<BundleEntry<Patient>>,
 ): string | undefined {
   return item?.data_record.raw.resource?.telecom?.find(
-    (x) => x.system === 'email'
+    (x) => x.system === 'email',
   )?.value;
 }
 
 export function parseBirthday(
-  item: ClinicalDocument<BundleEntry<Patient>>
+  item: ClinicalDocument<BundleEntry<Patient>>,
 ): string | undefined {
   return item?.data_record.raw.resource?.birthDate;
 }
 
 export function parseGender(
-  item: ClinicalDocument<BundleEntry<Patient>>
+  item: ClinicalDocument<BundleEntry<Patient>>,
 ): string | undefined {
   return item?.data_record.raw.resource?.gender;
 }
 
 export function getFileFromFileList(
-  fileOrFileList: FileList | File | undefined
+  fileOrFileList: FileList | File | undefined,
 ): File | undefined {
   let pp: File | null;
   try {
@@ -110,6 +112,7 @@ const SettingsTab: React.FC = () => {
         <PrivacyAndSecuritySettingsGroup />
         <UserDataSettingsGroup />
         <AboutMereSettingsGroup />
+        <ExperimentalSettingsGroup />
         <DeveloperSettingsGroup />
       </div>
     </AppPage>

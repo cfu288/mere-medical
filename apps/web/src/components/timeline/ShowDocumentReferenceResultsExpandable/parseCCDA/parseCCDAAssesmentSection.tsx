@@ -1,12 +1,12 @@
 import { Disclosure } from '@headlessui/react';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
 import { title } from 'process';
-import { LOINC_CODE_SYSTEM } from '../ShowDocumentReferenceResultsExpandable';
+import { LOINC_CODE_SYSTEM } from '../ShowDocumentReferenceAttachmentExpandable';
 import { getMatchingSections, parseDateString } from './parseCCDA';
 
 export function parseCCDAAssesmentSection(
   sections: HTMLCollectionOf<HTMLElement>,
-  id: string[] | string
+  id: string[] | string,
 ): CCDAAssesmentData | null {
   const matchingSections = getMatchingSections(sections, id);
   if (!matchingSections) {
@@ -18,7 +18,7 @@ export function parseCCDAAssesmentSection(
   const textComponent = [...(matchingSections as unknown as HTMLElement[])]
     ?.map((e) => [
       ...(e.getElementsByTagName(
-        'text'
+        'text',
       ) as unknown as HTMLCollectionOf<HTMLElement>),
     ])
     ?.flat()?.[0];

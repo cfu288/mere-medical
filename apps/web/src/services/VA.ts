@@ -22,10 +22,13 @@ import {
 import { Routes } from '../Routes';
 import { DSTU2 } from '.';
 import Config from '../environments/config.json';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
+import {
+  ClinicalDocument,
+  CreateClinicalDocument,
+} from '../models/clinical-document/ClinicalDocument.type';
 import { UserDocument } from '../models/user-document/UserDocument.type';
 import uuid4 from '../utils/UUIDUtils';
-import { DatabaseCollections } from '../components/providers/RxDbProvider';
+import { DatabaseCollections } from '../components/providers/DatabaseCollections';
 
 export enum VALocalStorageKeys {
   VA_BASE_URL = 'vaBaseUrl',
@@ -45,7 +48,7 @@ export function getDSTU2Url(baseUrl = VA_BASE_URL) {
 }
 
 export async function getLoginUrl(
-  authorizeUrl = VA_AUTH_URL
+  authorizeUrl = VA_AUTH_URL,
 ): Promise<string & Location> {
   const params = {
     client_id: `${Config.VA_CLIENT_ID}`,
@@ -116,7 +119,7 @@ async function getAllFHIRResourcesWithPaging<T extends FhirResource>(
   baseUrl: string,
   connectionDocument: VAConnectionDocument,
   fhirResourceUrl: string,
-  params?: Record<string, string>
+  params?: Record<string, string>,
 ): Promise<BundleEntry<T>[]> {
   let page = 0;
   let totalEntriesCount = 0;
@@ -132,7 +135,7 @@ async function getAllFHIRResourcesWithPaging<T extends FhirResource>(
         ...params,
         page: `${page}`,
         _count: 1000,
-      }
+      },
     );
     totalEntriesCount = entries.length;
     allEntries.push(...entries);
@@ -144,7 +147,7 @@ async function getFHIRResource<T extends FhirResource>(
   baseUrl: string,
   connectionDocument: VAConnectionDocument,
   fhirResourceUrl: string,
-  params?: Record<string, any>
+  params?: Record<string, any>,
 ): Promise<BundleEntry<T>[]> {
   const defaultUrl = `${baseUrl}${fhirResourceUrl}${
     !params ? '' : `?${new URLSearchParams(params)}`
@@ -180,24 +183,25 @@ async function syncFHIRResource<T extends FhirResource>(
   connectionDocument: VAConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
-  mapper: (proc: BundleEntry<T>) => ClinicalDocument<BundleEntry<T>>,
-  params?: Record<string, string>
+  mapper: (proc: BundleEntry<T>) => CreateClinicalDocument<BundleEntry<T>>,
+  params?: Record<string, string>,
 ) {
   const resc = await getAllFHIRResourcesWithPaging<T>(
     baseUrl,
     connectionDocument,
     fhirResourceUrl,
-    params
+    params,
   );
 
   const cds = resc
     .filter(
       (i) =>
-        i.resource?.resourceType.toLowerCase() === fhirResourceUrl.toLowerCase()
+        i.resource?.resourceType.toLowerCase() ===
+        fhirResourceUrl.toLowerCase(),
     )
     .map(mapper);
   const cdsmap = await db.clinical_documents.bulkUpsert(
-    cds as unknown as ClinicalDocument[]
+    cds as unknown as ClinicalDocument[],
   );
   return cdsmap;
 }
@@ -213,7 +217,7 @@ async function syncFHIRResource<T extends FhirResource>(
 export async function syncAllRecords(
   baseUrl: string,
   connectionDocument: VAConnectionDocument,
-  db: RxDatabase<DatabaseCollections>
+  db: RxDatabase<DatabaseCollections>,
 ): Promise<PromiseSettledResult<void[]>[]> {
   const procMapper = (proc: BundleEntry<Procedure>) =>
     DSTU2.mapProcedureToClinicalDocument(proc, connectionDocument);
@@ -243,14 +247,14 @@ export async function syncAllRecords(
       procMapper,
       {
         patient: patientId,
-      }
+      },
     ),
     syncFHIRResource<Patient>(
       baseUrl,
       connectionDocument,
       db,
       `Patient/${patientId}`,
-      patientMapper
+      patientMapper,
     ),
     syncFHIRResource<Observation>(
       baseUrl,
@@ -260,7 +264,7 @@ export async function syncAllRecords(
       obsMapper,
       {
         patient: patientId,
-      }
+      },
     ),
     syncFHIRResource<DiagnosticReport>(
       baseUrl,
@@ -270,7 +274,7 @@ export async function syncAllRecords(
       drMapper,
       {
         patient: patientId,
-      }
+      },
     ),
     syncFHIRResource<MedicationStatement>(
       baseUrl,
@@ -280,7 +284,7 @@ export async function syncAllRecords(
       medStatementMapper,
       {
         patient: patientId,
-      }
+      },
     ),
     syncFHIRResource<Immunization>(
       baseUrl,
@@ -290,7 +294,7 @@ export async function syncAllRecords(
       immMapper,
       {
         patient: patientId,
-      }
+      },
     ),
     syncFHIRResource<Condition>(
       baseUrl,
@@ -300,7 +304,7 @@ export async function syncAllRecords(
       conditionMapper,
       {
         patient: patientId,
-      }
+      },
     ),
     // syncDocumentReferences(baseUrl, connectionDocument, db, {
     //   patient: patientId,
@@ -313,7 +317,7 @@ export async function syncAllRecords(
       allergyIntoleranceMapper,
       {
         patient: patientId,
-      }
+      },
     ),
   ]);
 
@@ -324,7 +328,7 @@ async function syncDocumentReferences(
   baseUrl: string,
   connectionDocument: VAConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
-  params: Record<string, string>
+  params: Record<string, string>,
 ) {
   const documentReferenceMapper = (dr: BundleEntry<DocumentReference>) =>
     DSTU2.mapDocumentReferenceToClinicalDocument(dr, connectionDocument);
@@ -335,7 +339,7 @@ async function syncDocumentReferences(
     db,
     'DocumentReference',
     documentReferenceMapper,
-    params
+    params,
   );
 
   const docs = await db.clinical_documents
@@ -355,12 +359,12 @@ async function syncDocumentReferences(
     (doc: { toMutableJSON: () => unknown }) =>
       doc.toMutableJSON() as unknown as ClinicalDocument<
         BundleEntry<DocumentReference>
-      >
+      >,
   );
   // for each docref, get attachments and sync them
   const cdsmap = docRefItems.map(async (item) => {
     const attachmentUrls = item.data_record.raw.resource?.content.map(
-      (a) => a.attachment.url
+      (a) => a.attachment.url,
     );
     if (attachmentUrls) {
       for (const attachmentUrl of attachmentUrls) {
@@ -381,11 +385,11 @@ async function syncDocumentReferences(
             // attachment does not exist, sync it
             const { contentType, raw } = await fetchAttachmentData(
               attachmentUrl,
-              connectionDocument
+              connectionDocument,
             );
             if (raw && contentType) {
               // save as ClinicalDocument
-              const cd: ClinicalDocument = {
+              const cd: CreateClinicalDocument<string | Blob> = {
                 user_id: connectionDocument.user_id,
                 connection_record_id: connectionDocument.id,
                 data_record: {
@@ -405,7 +409,7 @@ async function syncDocumentReferences(
               };
 
               await db.clinical_documents.insert(
-                cd as unknown as ClinicalDocument
+                cd as unknown as ClinicalDocument,
               );
             }
           } else {
@@ -426,7 +430,7 @@ async function syncDocumentReferences(
  */
 async function fetchAttachmentData(
   url: string,
-  cd: VAConnectionDocument
+  cd: VAConnectionDocument,
 ): Promise<{ contentType: string | null; raw: string | Blob | undefined }> {
   try {
     const res = await fetch(url, {
@@ -436,7 +440,7 @@ async function fetchAttachmentData(
     });
     if (!res.ok) {
       throw new Error(
-        'Could not get document as the user is unauthorized. Try logging in again.'
+        'Could not get document as the user is unauthorized. Try logging in again.',
       );
     }
     const contentType = res.headers.get('Content-Type');
@@ -452,7 +456,7 @@ async function fetchAttachmentData(
     return { contentType, raw };
   } catch (e) {
     throw new Error(
-      'Could not get document as the user is unauthorized. Try logging in again.'
+      'Could not get document as the user is unauthorized. Try logging in again.',
     );
   }
 }
@@ -466,7 +470,7 @@ async function fetchAttachmentData(
  */
 export async function fetchAccessTokenWithCode(
   code: string,
-  vaTokenUrl: string
+  vaTokenUrl: string,
 ): Promise<VAAuthResponse> {
   const defaultUrl = `${vaTokenUrl}`;
   const res = await fetch(defaultUrl, {
@@ -491,7 +495,7 @@ export async function fetchAccessTokenWithCode(
 
 export async function fetchAccessTokenWithRefreshToken(
   refreshToken: string,
-  vaTokenUrl: string
+  vaTokenUrl: string,
 ): Promise<VAAuthResponse> {
   const defaultUrl = vaTokenUrl;
   const res = await fetch(defaultUrl, {
@@ -513,7 +517,7 @@ export async function fetchAccessTokenWithRefreshToken(
 
 export async function getConnectionCardByUrl<T extends ConnectionDocument>(
   url: string,
-  db: RxDatabase<DatabaseCollections>
+  db: RxDatabase<DatabaseCollections>,
 ): Promise<RxDocument<T>> {
   return db.connection_documents
     .findOne({
@@ -592,7 +596,7 @@ export async function saveConnectionToDb({
       }
     } else {
       reject(
-        new Error('Error completing authentication: no access token provided')
+        new Error('Error completing authentication: no access token provided'),
       );
     }
   });
@@ -605,7 +609,7 @@ export async function saveConnectionToDb({
  */
 export async function refreshVAConnectionTokenIfNeeded(
   connectionDocument: RxDocument<ConnectionDocument>,
-  db: RxDatabase<DatabaseCollections>
+  db: RxDatabase<DatabaseCollections>,
 ) {
   try {
     const nowInSeconds = Math.floor(Date.now() / 1000);
@@ -617,7 +621,7 @@ export async function refreshVAConnectionTokenIfNeeded(
 
       const access_token_data = await fetchAccessTokenWithRefreshToken(
         refreshToken,
-        tokenUri
+        tokenUri,
       );
 
       return await saveConnectionToDb({

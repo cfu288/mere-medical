@@ -9,12 +9,13 @@ import { RxDatabase, RxDocument } from 'rxdb';
 import { Subscription } from 'rxjs';
 import uuid4 from '../../utils/UUIDUtils';
 import { UserPreferencesDocument } from '../../models/user-preferences/UserPreferences.type';
-import { DatabaseCollections, useRxDb } from './RxDbProvider';
+import { useRxDb } from './RxDbProvider';
+import { DatabaseCollections } from './DatabaseCollections';
 import { useUser } from './UserProvider';
 
 // Takes a user id and returns a default user preferences document
 function createDefaultPreferences(
-  user_id: string
+  user_id: string,
 ): Partial<UserPreferencesDocument> {
   return { use_proxy: true, user_id, id: uuid4() };
 }
@@ -26,7 +27,7 @@ function createDefaultPreferences(
  */
 export function getUserPreferencesFromRxDocument(
   item: RxDocument<UserPreferencesDocument> | undefined,
-  user_id: string
+  user_id: string,
 ) {
   return {
     ...createDefaultPreferences(user_id),
@@ -42,7 +43,7 @@ export function getUserPreferencesFromRxDocument(
  */
 function createUserPreferencesIfNone(
   db: RxDatabase<DatabaseCollections>,
-  user_id: string
+  user_id: string,
 ): Promise<boolean> {
   return new Promise((resolve, reject) => {
     db.user_preferences
@@ -78,7 +79,7 @@ function createUserPreferencesIfNone(
 function fetchUserPreferences(
   db: RxDatabase<DatabaseCollections>,
   user_id: string,
-  handleChange: (item: UserPreferencesContextType | undefined) => void
+  handleChange: (item: UserPreferencesContextType | undefined) => void,
 ): Subscription {
   return db.user_preferences
     .findOne({
@@ -91,7 +92,7 @@ function fetchUserPreferences(
       handleChange({
         userPreferences: getUserPreferencesFromRxDocument(
           item as unknown as RxDocument<UserPreferencesDocument>,
-          user_id
+          user_id,
         ),
         rawUserPreferences:
           item as unknown as RxDocument<UserPreferencesDocument>,
@@ -123,7 +124,7 @@ export function UserPreferencesProvider(props: UserPreferencesProviderProps) {
   const db = useRxDb(),
     user = useUser(),
     [upContext, setUpContext] = useState<UserPreferencesDocument | undefined>(
-      undefined
+      undefined,
     ),
     [rupContext, setRupContext] = useState<
       RxDocument<UserPreferencesDocument> | undefined

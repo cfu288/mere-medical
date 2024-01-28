@@ -1,8 +1,8 @@
 import React, { Fragment, memo } from 'react';
-import { SkeletonTimelineCard } from '../components/timeline/SkeletonTimelineCard';
+import { SkeletonTimelineCard } from './SkeletonTimelineCard';
 import { SkeletonTimelineYearHeader } from './SkeletonTimelineYearHeader';
-import { SkeletonSearchBar } from './SkeletonSearchBar';
-import { JumpToPanel } from '../components/timeline/JumpToPanel';
+import { SkeletonSearchBar } from '../hooks/SkeletonSearchBar';
+import { JumpToPanel } from './JumpToPanel';
 
 function TimelineSkeletonUnmemoed() {
   return (

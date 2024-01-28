@@ -5,22 +5,25 @@ import {
   NewspaperIcon,
   PlusCircleIcon,
   QueueListIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
 
 import logo from '../img/white-logo.svg';
 import { Routes as AppRoutes } from '../Routes';
 import { useUser } from './providers/UserProvider';
 import { TabButton } from './TabButton';
+import { useLocalConfig } from './providers/LocalConfigProvider';
 
 export function TabWrapper() {
-  const user = useUser();
+  const user = useUser(),
+    { experimental__use_openai_rag } = useLocalConfig();
 
   return (
-    <div className="mobile-full-height flex max-w-[100vw] overflow-hidden md:flex-row-reverse">
-      <div className="flex-grow">
+    <div className="mobile-full-height flex flex-col max-w-[100vw]  md:flex-row-reverse">
+      <div className="flex-grow overflow-y-auto">
         <Outlet />
       </div>
-      <div className="flex-0 md:bg-primary-800 absolute bottom-0 left-0 z-20 w-full bg-slate-100 md:relative md:bottom-auto md:top-0 md:h-full md:w-auto">
+      <div className="flex-0 md:bg-primary-800  z-20 w-full bg-slate-100 md:relative md:bottom-auto md:top-0 md:h-full md:w-auto">
         <div className="pb-safe mx-auto flex w-full max-w-3xl justify-around md:h-full md:w-64 md:flex-col md:justify-start">
           <img
             src={logo}
@@ -37,6 +40,14 @@ export function TabWrapper() {
             title="Summary"
             icon={<QueueListIcon />}
           />
+          {experimental__use_openai_rag && (
+            <TabButton
+              route={AppRoutes.MereAIAssistant}
+              title="Mere AI Assistant"
+              smallTitle="Assistant"
+              icon={<SparklesIcon />}
+            />
+          )}
           <TabButton
             route={AppRoutes.AddConnection}
             title="Connections"

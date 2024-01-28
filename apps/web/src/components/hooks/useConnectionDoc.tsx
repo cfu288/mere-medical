@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import { RxDatabase, RxDocument } from 'rxdb';
 import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
-import { DatabaseCollections, useRxDb } from '../providers/RxDbProvider';
+import { useRxDb } from '../providers/RxDbProvider';
+import { DatabaseCollections } from '../providers/DatabaseCollections';
 
 export function useConnectionDoc(id: string) {
   const db = useRxDb(),
     [conn, setConn] = useState<RxDocument<ConnectionDocument>>(),
     getList = useCallback(() => {
-      getConnectionCards(id, db).then((list) => {
-        setConn((list as unknown) as RxDocument<ConnectionDocument>);
+      getConnectionCardById(id, db).then((list) => {
+        setConn(list as unknown as RxDocument<ConnectionDocument>);
       });
     }, [db, id]);
 
@@ -19,9 +20,9 @@ export function useConnectionDoc(id: string) {
   return conn;
 }
 
-async function getConnectionCards(
+export async function getConnectionCardById(
   id: string,
-  db: RxDatabase<DatabaseCollections>
+  db: RxDatabase<DatabaseCollections>,
 ) {
   return db.connection_documents
     .findOne({
@@ -30,5 +31,5 @@ async function getConnectionCards(
       },
     })
     .exec()
-    .then((list) => (list as unknown) as RxDocument<ConnectionDocument>);
+    .then((list) => list as unknown as RxDocument<ConnectionDocument>);
 }

@@ -5,10 +5,12 @@ import { Routes as AppRoutes } from '../Routes';
 export function TabButton({
   route,
   title,
+  smallTitle = '',
   icon,
 }: {
   route: AppRoutes;
   title: string;
+  smallTitle?: string;
   icon: JSX.Element;
 }) {
   const location = useLocation()?.pathname;
@@ -30,13 +32,32 @@ export function TabButton({
         >
           {icon}
         </p>
-        <p
-          className={`pt-1 text-[11px] md:pt-0 md:text-base md:text-white ${
-            location === route ? 'text-primary font-bold' : 'text-slate-800'
-          }`}
-        >
-          {title}
-        </p>
+        {smallTitle ? (
+          <>
+            <p
+              className={`hidden md:block pt-1 text-[11px] md:pt-0 md:text-base md:text-white ${
+                location === route ? 'text-primary font-bold' : 'text-slate-800'
+              }`}
+            >
+              {title}
+            </p>
+            <p
+              className={`${!smallTitle ? '' : 'md:hidden'} pt-1 text-[11px] md:pt-0 md:text-base md:text-white ${
+                location === route ? 'text-primary font-bold' : 'text-slate-800'
+              }`}
+            >
+              {smallTitle}
+            </p>
+          </>
+        ) : (
+          <p
+            className={`pt-1 text-[11px] md:pt-0 md:text-base md:text-white ${
+              location === route ? 'text-primary font-bold' : 'text-slate-800'
+            }`}
+          >
+            {title}
+          </p>
+        )}
       </>
     </Link>
   );

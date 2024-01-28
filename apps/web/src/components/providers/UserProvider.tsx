@@ -4,7 +4,8 @@ import { RxDatabase, RxDocument } from 'rxdb';
 import { Subscription } from 'rxjs';
 import uuid4 from '../../utils/UUIDUtils';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
-import { DatabaseCollections, useRxDb } from './RxDbProvider';
+import { useRxDb } from './RxDbProvider';
+import { DatabaseCollections } from './DatabaseCollections';
 
 const defaultUser: UserDocument = {
   id: uuid4(),
@@ -17,8 +18,8 @@ function fetchUsers(
   handleChange: (
     item:
       | { user: UserDocument; rawUser: RxDocument<UserDocument> | null }
-      | undefined
-  ) => void
+      | undefined,
+  ) => void,
 ) {
   return db.user_documents
     .findOne({
@@ -38,7 +39,7 @@ function fetchUsers(
 }
 
 function createUserIfNone(
-  db: RxDatabase<DatabaseCollections>
+  db: RxDatabase<DatabaseCollections>,
 ): Promise<boolean> {
   return new Promise((resolve, reject) => {
     db.user_documents
@@ -64,7 +65,7 @@ type UserProviderProps = PropsWithChildren<unknown>;
 
 const UserContext = React.createContext<UserDocument>(defaultUser);
 const RawUserContext = React.createContext<RxDocument<UserDocument> | null>(
-  null
+  null,
 );
 
 export function UserProvider(props: UserProviderProps) {

@@ -19,7 +19,7 @@ import {
   Procedure,
 } from 'fhir/r2';
 import { RxDocument, RxDatabase } from 'rxdb';
-import { DatabaseCollections } from '../components/providers/RxDbProvider';
+import { DatabaseCollections } from '../components/providers/DatabaseCollections';
 import {
   CernerConnectionDocument,
   ConnectionDocument,
@@ -29,9 +29,12 @@ import { Routes } from '../Routes';
 import { DSTU2 } from '.';
 import Config from '../environments/config.json';
 import { JsonWebKeySet } from './JWTTools';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 import { UserDocument } from '../models/user-document/UserDocument.type';
 import uuid4 from '../utils/UUIDUtils';
+import {
+  ClinicalDocument,
+  CreateClinicalDocument,
+} from '../models/clinical-document/ClinicalDocument.type';
 
 export enum CernerLocalStorageKeys {
   CERNER_BASE_URL = 'cernerBaseUrl',
@@ -43,7 +46,7 @@ export enum CernerLocalStorageKeys {
 
 export function getLoginUrl(
   baseUrl: string,
-  authorizeUrl: string
+  authorizeUrl: string,
 ): string & Location {
   const params = {
     client_id: `${Config.CERNER_CLIENT_ID}`,
@@ -90,7 +93,7 @@ function parseIdToken(token: string) {
       .map(function (c) {
         return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
       })
-      .join('')
+      .join(''),
   );
 
   return JSON.parse(jsonPayload) as {
@@ -110,10 +113,10 @@ async function getFHIRResource<T extends FhirResource>(
   baseUrl: string,
   connectionDocument: CernerConnectionDocument,
   fhirResourceUrl: string,
-  params?: Record<string, string>
+  params?: Record<string, string>,
 ): Promise<BundleEntry<T>[]> {
   const defaultUrl = `${baseUrl}${fhirResourceUrl}?${new URLSearchParams(
-    params
+    params,
   )}`;
 
   const res = await fetch(defaultUrl, {
@@ -137,7 +140,7 @@ async function getFHIRResource<T extends FhirResource>(
  * @param connectionDocument RxDocument of the connection document
  * @param db RxDatabase to save to
  * @param fhirResourceUrl URL path FHIR resource to sync. e.g. Patient, Procedure, etc. Exclude the leading slash.
- * @param mapper Function to map the FHIR resource to a ClinicalDocument
+ * @param mapper Function to map the FHIR resource to a CreateClinicalDocument
  * @param params Query parameters to pass to the FHIR request
  * @returns
  */
@@ -146,24 +149,25 @@ async function syncFHIRResource<T extends FhirResource>(
   connectionDocument: CernerConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
-  mapper: (proc: BundleEntry<T>) => ClinicalDocument<BundleEntry<T>>,
-  params?: Record<string, string>
+  mapper: (proc: BundleEntry<T>) => CreateClinicalDocument<BundleEntry<T>>,
+  params?: Record<string, string>,
 ) {
   const resc = await getFHIRResource<T>(
     baseUrl,
     connectionDocument,
     fhirResourceUrl,
-    params
+    params,
   );
 
   const cds = resc
     .filter(
       (i) =>
-        i.resource?.resourceType.toLowerCase() === fhirResourceUrl.toLowerCase()
+        i.resource?.resourceType.toLowerCase() ===
+        fhirResourceUrl.toLowerCase(),
     )
     .map(mapper);
   const cdsmap = await db.clinical_documents.bulkUpsert(
-    cds as unknown as ClinicalDocument[]
+    cds as unknown as ClinicalDocument[],
   );
   return cdsmap;
 }
@@ -179,7 +183,7 @@ async function syncFHIRResource<T extends FhirResource>(
 export async function syncAllRecords(
   baseUrl: string,
   connectionDocument: CernerConnectionDocument,
-  db: RxDatabase<DatabaseCollections>
+  db: RxDatabase<DatabaseCollections>,
 ): Promise<PromiseSettledResult<void[]>[]> {
   const procMapper = (proc: BundleEntry<Procedure>) =>
     DSTU2.mapProcedureToClinicalDocument(proc, connectionDocument);
@@ -214,7 +218,7 @@ export async function syncAllRecords(
       procMapper,
       {
         patient: patientId,
-      }
+      },
     ),
     syncFHIRResource<Patient>(
       baseUrl,
@@ -224,7 +228,7 @@ export async function syncAllRecords(
       patientMapper,
       {
         id: patientId,
-      }
+      },
     ),
     syncFHIRResource<Observation>(
       baseUrl,
@@ -235,7 +239,7 @@ export async function syncAllRecords(
       {
         patient: patientId,
         category: 'laboratory',
-      }
+      },
     ),
     syncFHIRResource<DiagnosticReport>(
       baseUrl,
@@ -245,7 +249,7 @@ export async function syncAllRecords(
       drMapper,
       {
         patient: patientId,
-      }
+      },
     ),
     syncFHIRResource<MedicationStatement>(
       baseUrl,
@@ -255,7 +259,7 @@ export async function syncAllRecords(
       medStatementMapper,
       {
         patient: patientId,
-      }
+      },
     ),
     syncFHIRResource<Immunization>(
       baseUrl,
@@ -265,7 +269,7 @@ export async function syncAllRecords(
       immMapper,
       {
         patient: patientId,
-      }
+      },
     ),
     syncFHIRResource<Condition>(
       baseUrl,
@@ -275,7 +279,7 @@ export async function syncAllRecords(
       conditionMapper,
       {
         patient: patientId,
-      }
+      },
     ),
     syncDocumentReferences(baseUrl, connectionDocument, db, {
       patient: patientId,
@@ -288,7 +292,7 @@ export async function syncAllRecords(
       encounterMapper,
       {
         patient: patientId,
-      }
+      },
     ),
     syncFHIRResource<AllergyIntolerance>(
       baseUrl,
@@ -298,7 +302,7 @@ export async function syncAllRecords(
       allergyIntoleranceMapper,
       {
         patient: patientId,
-      }
+      },
     ),
   ]);
 
@@ -309,7 +313,7 @@ async function syncDocumentReferences(
   baseUrl: string,
   connectionDocument: CernerConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
-  params: Record<string, string>
+  params: Record<string, string>,
 ) {
   const documentReferenceMapper = (dr: BundleEntry<DocumentReference>) =>
     DSTU2.mapDocumentReferenceToClinicalDocument(dr, connectionDocument);
@@ -320,7 +324,7 @@ async function syncDocumentReferences(
     db,
     'DocumentReference',
     documentReferenceMapper,
-    params
+    params,
   );
 
   const docs = await db.clinical_documents
@@ -338,14 +342,14 @@ async function syncDocumentReferences(
   // format all the document references
   const docRefItems = docs.map(
     (doc) =>
-      doc.toMutableJSON() as unknown as ClinicalDocument<
+      doc.toMutableJSON() as unknown as CreateClinicalDocument<
         BundleEntry<DocumentReference>
-      >
+      >,
   );
   // for each docref, get attachments and sync them
   const cdsmap = docRefItems.map(async (item) => {
     const attachmentUrls = item.data_record.raw.resource?.content.map(
-      (a) => a.attachment.url
+      (a) => a.attachment.url,
     );
     if (attachmentUrls) {
       for (const attachmentUrl of attachmentUrls) {
@@ -366,11 +370,11 @@ async function syncDocumentReferences(
             // attachment does not exist, sync it
             const { contentType, raw } = await fetchAttachmentData(
               attachmentUrl,
-              connectionDocument
+              connectionDocument,
             );
             if (raw && contentType) {
-              // save as ClinicalDocument
-              const cd: ClinicalDocument = {
+              // save as CreateClinicalDocument
+              const cd: CreateClinicalDocument<string | Blob> = {
                 user_id: connectionDocument.user_id,
                 connection_record_id: connectionDocument.id,
                 data_record: {
@@ -390,7 +394,7 @@ async function syncDocumentReferences(
               };
 
               await db.clinical_documents.insert(
-                cd as unknown as ClinicalDocument
+                cd as unknown as ClinicalDocument<string | Blob>,
               );
             }
           } else {
@@ -411,7 +415,7 @@ async function syncDocumentReferences(
  */
 async function fetchAttachmentData(
   url: string,
-  cd: CernerConnectionDocument
+  cd: CernerConnectionDocument,
 ): Promise<{ contentType: string | null; raw: string | Blob | undefined }> {
   try {
     const res = await fetch(url, {
@@ -421,7 +425,7 @@ async function fetchAttachmentData(
     });
     if (!res.ok) {
       throw new Error(
-        'Could not get document as the user is unauthorized. Try logging in again.'
+        'Could not get document as the user is unauthorized. Try logging in again.',
       );
     }
     const contentType = res.headers.get('Content-Type');
@@ -437,7 +441,7 @@ async function fetchAttachmentData(
     return { contentType, raw };
   } catch (e) {
     throw new Error(
-      'Could not get document as the user is unauthorized. Try logging in again.'
+      'Could not get document as the user is unauthorized. Try logging in again.',
     );
   }
 }
@@ -451,7 +455,7 @@ async function fetchAttachmentData(
  */
 export async function fetchAccessTokenWithCode(
   code: string,
-  cernerTokenUrl: string
+  cernerTokenUrl: string,
 ): Promise<CernerAuthResponse> {
   const defaultUrl = `${cernerTokenUrl}`;
   const res = await fetch(defaultUrl, {
@@ -475,7 +479,7 @@ export async function fetchAccessTokenWithCode(
 
 export async function fetchAccessTokenWithRefreshToken(
   refreshToken: string,
-  cernerTokenUrl: string
+  cernerTokenUrl: string,
 ): Promise<CernerAuthResponse> {
   const defaultUrl = cernerTokenUrl;
   const res = await fetch(defaultUrl, {
@@ -497,7 +501,7 @@ export async function fetchAccessTokenWithRefreshToken(
 
 export async function getConnectionCardByUrl<T extends ConnectionDocument>(
   url: string,
-  db: RxDatabase<DatabaseCollections>
+  db: RxDatabase<DatabaseCollections>,
 ): Promise<RxDocument<T>> {
   return db.connection_documents
     .findOne({
@@ -520,7 +524,7 @@ export async function saveConnectionToDb({
 }) {
   const doc = await getConnectionCardByUrl<CernerConnectionDocument>(
     cernerBaseUrl,
-    db
+    db,
   );
   return new Promise((resolve, reject) => {
     if (res?.access_token && res?.expires_in && res?.id_token) {
@@ -579,7 +583,7 @@ export async function saveConnectionToDb({
       }
     } else {
       reject(
-        new Error('Error completing authentication: no access token provided')
+        new Error('Error completing authentication: no access token provided'),
       );
     }
   });
@@ -592,7 +596,7 @@ export async function saveConnectionToDb({
  */
 export async function refreshCernerConnectionTokenIfNeeded(
   connectionDocument: RxDocument<ConnectionDocument>,
-  db: RxDatabase<DatabaseCollections>
+  db: RxDatabase<DatabaseCollections>,
 ) {
   const nowInSeconds = Math.floor(Date.now() / 1000);
   if (connectionDocument.get('expires_at') <= nowInSeconds) {
@@ -604,7 +608,7 @@ export async function refreshCernerConnectionTokenIfNeeded(
 
       const access_token_data = await fetchAccessTokenWithRefreshToken(
         refreshToken,
-        tokenUri
+        tokenUri,
       );
 
       return await saveConnectionToDb({

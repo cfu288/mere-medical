@@ -2,6 +2,7 @@ export enum Routes {
   Timeline = '/timeline',
   AddConnection = '/connections',
   Summary = '/summary',
+  MereAIAssistant = '/assistant',
   Settings = '/settings',
   OnPatientCallback = '/onpatient/callback',
   EpicCallback = '/epic/callback',

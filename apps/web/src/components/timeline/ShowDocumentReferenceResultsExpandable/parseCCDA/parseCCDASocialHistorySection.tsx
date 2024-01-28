@@ -1,13 +1,13 @@
 import {
   LOINC_CODE_SYSTEM,
   SNOMED_CT_CODE_SYSTEM,
-} from '../ShowDocumentReferenceResultsExpandable';
+} from '../ShowDocumentReferenceAttachmentExpandable';
 import { SocialHistoryComponentSection } from '../SocialHistoryComponentSection';
 import { getMatchingSections } from './parseCCDA';
 
 export function parseCCDASocialHistorySection(
   sections: HTMLCollectionOf<HTMLElement>,
-  id: string[] | string
+  id: string[] | string,
 ) {
   const matchingSections = getMatchingSections(sections, id);
   if (!matchingSections) {
@@ -24,7 +24,7 @@ export function parseCCDASocialHistorySection(
   const extractedSocialHistory: Record<string, CCDASocialHistoryItem> =
     extractSocialHistoryWithEntityRelationships(
       sectionEntries?.[0],
-      matchingSections?.[0]
+      matchingSections?.[0],
     );
 
   const uniqueDates = new Set([
@@ -39,13 +39,13 @@ export function parseCCDASocialHistorySection(
 
 function extractSocialHistoryWithEntityRelationships(
   sectionEntries: Element[],
-  matchingSections: HTMLElement
+  matchingSections: HTMLElement,
 ) {
   const extractedSocialHistory: Record<string, CCDASocialHistoryItem> = {};
 
   function extractNested(
     entryRelationship: Element,
-    currentEntity: Record<string, CCDASocialHistoryItem> | undefined
+    currentEntity: Record<string, CCDASocialHistoryItem> | undefined,
   ) {
     const { codeId: subCodeId, codeDisplayName: subCodeDisplayName } =
       getCodeIdSystemAndDisplayName(entryRelationship);
@@ -65,7 +65,7 @@ function extractSocialHistoryWithEntityRelationships(
       ]) {
         extractNested(
           subEntryRelationship,
-          currentEntity?.[uSubCodeId].entityRelationships
+          currentEntity?.[uSubCodeId].entityRelationships,
         );
       }
     }
@@ -82,7 +82,7 @@ function extractSocialHistoryWithEntityRelationships(
             codeDisplayName,
             entry: component,
             section: matchingSections,
-          }
+          },
         );
       }
       for (const entryRelationship of [
@@ -93,7 +93,7 @@ function extractSocialHistoryWithEntityRelationships(
         }
         extractNested(
           entryRelationship,
-          extractedSocialHistory[uCodeId].entityRelationships
+          extractedSocialHistory[uCodeId].entityRelationships,
         );
       }
     }
@@ -117,7 +117,7 @@ function getCodeIdSystemAndDisplayName(component: Element) {
       ?.getElementsByTagName('code')[0]
       ?.getElementsByTagName('translation');
     const loincTranslation = [...translations].find(
-      (t) => t?.getAttribute('codeSystem') === LOINC_CODE_SYSTEM
+      (t) => t?.getAttribute('codeSystem') === LOINC_CODE_SYSTEM,
     );
     if (loincTranslation) {
       codeId = loincTranslation?.getAttribute('code');
@@ -144,7 +144,7 @@ function getEntryRelationshipsOfSameDepth(entry: Element) {
   // get min length of all parents, and filter entryRelationships to only those with that length
   const minParentLength = Math.min(...entryRelationshipsParentLength);
   const entryRelationshipsAtSameLevel = [...entryRelationships].filter(
-    (_, i) => entryRelationshipsParentLength[i] === minParentLength
+    (_, i) => entryRelationshipsParentLength[i] === minParentLength,
   );
   return entryRelationshipsAtSameLevel;
 }
@@ -154,7 +154,7 @@ function getValue(entry: Element, section: Element) {
   // If there is a value element or interpretationCode, return value
   let children = [...entry.children];
   const childIsObservation = children.some(
-    (child) => child.tagName === 'observation'
+    (child) => child.tagName === 'observation',
   );
   // replace children with observation children if child is observation
   if (childIsObservation) {
@@ -162,7 +162,7 @@ function getValue(entry: Element, section: Element) {
   }
   const hasValueOrInterpretationCodeAsChild = children.some(
     (child) =>
-      child.tagName === 'value' || child.tagName === 'interpretationCode'
+      child.tagName === 'value' || child.tagName === 'interpretationCode',
   );
   let valueIfEntryRelationshipCheck = '';
   if (hasValueOrInterpretationCodeAsChild) {
@@ -180,7 +180,7 @@ function getValue(entry: Element, section: Element) {
             ?.getElementsByTagName('value')?.[0]
             ?.getElementsByTagName('reference')?.[0]
             ?.getAttribute('value')
-            ?.replace('#', '')}']`
+            ?.replace('#', '')}']`,
         )?.textContent ||
       ''
     ).trim();

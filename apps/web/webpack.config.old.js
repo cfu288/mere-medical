@@ -42,7 +42,7 @@ module.exports = function (webpackConfig, nxConfig) {
             'apps',
             'web',
             'src',
-            'service-worker.ts'
+            'service-worker.ts',
           ),
           dontCacheBustURLsMatching: /\.[0-9a-f]{8}\./,
           exclude: [/\.map$/, /asset-manifest\.json$/, /LICENSE/],

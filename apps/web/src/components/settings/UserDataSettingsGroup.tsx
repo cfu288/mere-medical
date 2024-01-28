@@ -1,8 +1,5 @@
-import {
-  DatabaseCollections,
-  handleJSONDataImport,
-  useRxDb,
-} from '../providers/RxDbProvider';
+import { handleJSONDataImport, useRxDb } from '../providers/RxDbProvider';
+import { DatabaseCollections } from '../providers/DatabaseCollections';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { useNotificationDispatch } from '../providers/NotificationProvider';
@@ -16,7 +13,7 @@ import {
   getStorageQuota,
   requestPersistentStorage,
 } from '../../utils/storagePermissionUtils';
-import { Link } from 'react-router-dom';
+import React from 'react';
 
 export type ImportFields = {
   backup?: FileList;

@@ -9,7 +9,8 @@ import {
   VeradigmConnectionDocument,
   VAConnectionDocument,
 } from '../../models/connection-document/ConnectionDocument.type';
-import { DatabaseCollections, useRxDb } from './RxDbProvider';
+import { useRxDb } from './RxDbProvider';
+import { DatabaseCollections } from './DatabaseCollections';
 import * as OnPatient from '../../services/OnPatient';
 import * as Epic from '../../services/Epic';
 import * as Cerner from '../../services/Cerner';
@@ -143,8 +144,8 @@ function HandleInitalSync({ children }: PropsWithChildren) {
 
   useEffect(() => {
     if (!isDemo) {
-      console.debug('Current Sync Jobs In Progress: ' + currentSyncJobLength);
       if (currentSyncJobLength === 0) {
+        console.debug('Current Sync Jobs In Progress: ' + currentSyncJobLength);
         startSyncAllConnections();
       }
     }

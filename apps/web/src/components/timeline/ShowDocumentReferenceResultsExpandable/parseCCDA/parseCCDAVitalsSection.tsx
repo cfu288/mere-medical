@@ -1,9 +1,9 @@
-import { LOINC_CODE_SYSTEM } from '../ShowDocumentReferenceResultsExpandable';
+import { LOINC_CODE_SYSTEM } from '../ShowDocumentReferenceAttachmentExpandable';
 import { getMatchingSections, parseDateString } from './parseCCDA';
 
 export function parseCCDAVitalsSection(
   sections: HTMLCollectionOf<HTMLElement>,
-  id: string[] | string
+  id: string[] | string,
 ) {
   const matchingSections = getMatchingSections(sections, id);
 
@@ -15,8 +15,8 @@ export function parseCCDAVitalsSection(
     ...(matchingSections as unknown as HTMLElement[]),
   ]?.map((e) =>
     [...e.getElementsByTagName('entry')].map((x) =>
-      x.getElementsByTagName('component')
-    )
+      x.getElementsByTagName('component'),
+    ),
   )?.[0];
 
   if (!sectionComponents) {

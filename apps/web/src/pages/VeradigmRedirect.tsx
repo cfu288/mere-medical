@@ -5,10 +5,8 @@ import {
   CreateVeradigmConnectionDocument,
   VeradigmConnectionDocument,
 } from '../models/connection-document/ConnectionDocument.type';
-import {
-  DatabaseCollections,
-  useRxDb,
-} from '../components/providers/RxDbProvider';
+import { useRxDb } from '../components/providers/RxDbProvider';
+import { DatabaseCollections } from '../components/providers/DatabaseCollections';
 import { Routes } from '../Routes';
 import { useNotificationDispatch } from '../components/providers/NotificationProvider';
 import { AppPage } from '../components/AppPage';
@@ -49,7 +47,7 @@ export async function saveConnectionToDb({
 }) {
   const doc = await getConnectionCardByUrl<VeradigmConnectionDocument>(
     veradigmBaseUrl,
-    db
+    db,
   );
   return new Promise((resolve, reject) => {
     if (res.access_token && res.expires_in && res.token_type && user.id) {
@@ -106,7 +104,7 @@ export async function saveConnectionToDb({
       }
     } else {
       reject(
-        new Error('Error completing authentication: no access token provided')
+        new Error('Error completing authentication: no access token provided'),
       );
     }
   });
@@ -128,16 +126,16 @@ const VeradigmRedirect: React.FC = () => {
         errorMsg = searchRequest.get('error'),
         errorMsgDescription = searchRequest.get('error_description'),
         veradigmUrl = localStorage.getItem(
-          VeradigmLocalStorageKeys.VERADIGM_BASE_URL
+          VeradigmLocalStorageKeys.VERADIGM_BASE_URL,
         ),
         veradigmName = localStorage.getItem(
-          VeradigmLocalStorageKeys.VERADIGM_NAME
+          VeradigmLocalStorageKeys.VERADIGM_NAME,
         ),
         veradigmAuthUrl = localStorage.getItem(
-          VeradigmLocalStorageKeys.VERADIGM_AUTH_URL
+          VeradigmLocalStorageKeys.VERADIGM_AUTH_URL,
         ),
         veradigmTokenUrl = localStorage.getItem(
-          VeradigmLocalStorageKeys.VERADIGM_TOKEN_URL
+          VeradigmLocalStorageKeys.VERADIGM_TOKEN_URL,
         );
       // TODO: use tenant specific urls in connection document
 
@@ -150,7 +148,7 @@ const VeradigmRedirect: React.FC = () => {
       ) {
         getConnectionCardByUrl<VeradigmConnectionDocument>(
           veradigmUrl,
-          db
+          db,
         ).then((doc) => {
           fetchAccessTokenWithCode(code, removeEndSlash(veradigmTokenUrl))
             .then((res) => {
