@@ -60,7 +60,7 @@ function MereAITab() {
             db,
             vectorStorage,
             query: messageText,
-            numResults: 5,
+            numResults: 10,
             enableSearchAttachments: false,
             groupByDate: false,
           }),
@@ -68,7 +68,7 @@ function MereAITab() {
             db,
             vectorStorage,
             query: messageText,
-            numResults: 5,
+            numResults: 3,
             enableSearchAttachments: true,
             groupByDate: false,
           }),
@@ -350,14 +350,14 @@ const ChatInput = memo(function ChatInput({
 
   return (
     <form
-      className="flex-none pb-4 bg-gray-50 md:pb-0"
+      className="flex-none bg-gray-50"
       onSubmit={(e) => {
         e.preventDefault();
         setMessage('');
         onSubmit(message);
       }}
     >
-      <div className="flex flex-row items-center p-2 rounded-lg bg-gray-50 justify-center align-middle pb-safe">
+      <div className="flex flex-row items-center p-2 rounded-lg bg-gray-50 justify-center align-middle">
         <input
           id="chat"
           value={message}
@@ -462,7 +462,7 @@ const prepareDataForOpenAI = async ({
         loinc,
         db,
         user,
-        limit: 5,
+        limit: 3,
       });
       const relatedList = relatedDocs.flatMap(
         (i) => prepareClinicalDocumentForVectorization(i).docList,
