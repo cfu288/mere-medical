@@ -31,6 +31,4 @@ The prompt you might see on your Android device will differ depending on which d
 
 # Chrome
 
-Go to the [Mere App Web Page](https://app.meremedical.co) and look at the URL bar in the top right. These browsers will show an install badge (icon) in the URL bar (see the image below), stating that the app is installable. See an example image below:
-
-![browser install](./browser.avif)
+Go to the [Mere App Web Page](https://app.meremedical.co) and look at the URL bar in the top right. These browsers will show an install badge (icon) in the URL bar (see the image below), stating that the app is installable.
