@@ -16,7 +16,9 @@ hide_table_of_contents: false
 
 A quick update on my life: I'm now in my fourth year of medical school, in the midst of applying for residencies in Internal Medicine I've still been working on Mere in the small pockets of time I find in between rotations and studying for board exams. Its incredible how much progress can be made by small and consistent updates over a long period of time. I'm excited to share the latest developments that have been brewing behind the scenes.
 
-# What's New with Mere?
+<!--truncate-->
+
+## Things we've accomplished in 2023:
 
 ## Features
 
