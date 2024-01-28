@@ -25,6 +25,7 @@ import { getRelatedDocuments } from '../components/timeline/DiagnosticReportCard
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import grainImage from '../img/grain.svg';
+import React from 'react';
 
 function MereAITab() {
   const user = useUser(),
