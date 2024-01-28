@@ -14,7 +14,9 @@ hide_table_of_contents: false
 
 # It's Been a While
 
-A quick update on my life: I'm now in my fourth year of medical school, in the midst of applying for residencies in Internal Medicine I've still been working on Mere in the small pockets of time I find in between rotations and studying for board exams. Its incredible how much progress can be made by small and consistent updates over a long period of time. I'm excited to share the latest developments that have been brewing behind the scenes.
+A quick update on my life: I'm now in my fourth year of medical school, in the midst of applying for residency.
+
+I've still been working on Mere in the pockets of time I find in between rotations, studying for board exams, and residency interviews. Its incredible how much progress can be made by small and consistent updates over a long period of time. I'm excited to share the latest developments that have been brewing behind the scenes.
 
 <!--truncate-->
 
