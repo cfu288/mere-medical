@@ -131,7 +131,7 @@
     "react-virtualized-auto-sizer": "^1.0.7",
     "react-window": "^1.8.8",
     "reflect-metadata": "^0.1.13",
-    "regenerator-runtime": "0.13.7",
+    "regenerator-runtime": "0.14.1",
     "remark-gfm": "^4.0.0",
     "rxdb": "^13.17.1",
     "rxjs": "^7.5.6",
