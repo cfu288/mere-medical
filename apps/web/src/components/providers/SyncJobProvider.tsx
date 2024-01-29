@@ -23,7 +23,6 @@ import Config from '../../environments/config.json';
 import { useUserPreferences } from './UserPreferencesProvider';
 import { useConnectionCards } from '../hooks/useConnectionCards';
 import { refreshVAConnectionTokenIfNeeded } from '../../services/VA';
-import { unstable_useBlocker } from 'react-router-dom';
 
 type SyncJobProviderProps = PropsWithChildren<unknown>;
 
