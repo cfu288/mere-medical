@@ -1,0 +1,236 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="CDA.xsl"?>
+<!--
+
+	Title: US_Realm_Header_Template
+	Original Filename: US_Realm_Header_Template.xml
+	Version: 1.0
+	Revision History:
+	01/31/2011 bam created
+    07/29/2011 RWM modified
+
+-->
+<ClinicalDocument xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="urn:hl7-org:v3 http://xreg2.nist.gov:8080/hitspValidation/schema/cdar2c32/infrastructure/cda/C32_CDA.xsd"
+    xmlns="urn:hl7-org:v3"
+    xmlns:mif="urn:hl7-org:v3/mif">
+    <!--
+
+********************************************************
+
+  CDA Header
+
+********************************************************
+
+	-->
+    <realmCode code="US" />
+    <typeId root="2.16.840.1.113883.1.3" extension="POCD_HD000040" />
+    <!-- US General Header Template -->
+    <templateId root="2.16.840.1.113883.10.20.22.1.1" />
+    <!-- *** Note:  The next templateId, code and title will differ depending on what type of
+    document is being sent. *** -->
+    <!-- conforms to the document specific requirements  -->
+    <templateId root="2.16.840.1.113883.10.20.22.1.2" />
+    <id extension="999021" root="2.16.840.1.113883.19" />
+    <code codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" code="34133-9"
+        displayName="Summarization of Episode Note" />
+    <title>Good Health Health Summary</title>
+    <effectiveTime value="20050329171504+0500" />
+    <confidentialityCode code="N" codeSystem="2.16.840.1.113883.5.25" />
+    <languageCode code="en-US" />
+    <setId extension="111199021" root="2.16.840.1.113883.19" />
+    <versionNumber value="1" />
+    <!-- ********************************************************
+
+     CDA Body
+
+     ******************************************************** -->
+    <component>
+        <structuredBody>
+            <!-- *********************** -->
+            <!--
+
+********************************************************
+
+ENCOUNTER
+
+********************************************************
+
+-->
+            <section>
+                <!-- *** Encounters section (entries required) (V3) *** -->
+                <templateId root="2.16.840.1.113883.10.20.22.2.22.1" extension="2015-08-01" />
+                <templateId root="2.16.840.1.113883.10.20.22.2.22.1" />
+                <code code="46240-8" codeSystem="2.16.840.1.113883.6.1" displayName="Encounters" />
+                <title>ENCOUNTERS</title>
+                <text>
+                    <table border="1" width="100%">
+                        <thead>
+                            <tr>
+                                <th>Encounter</th>
+                                <th>Performer</th>
+                                <th>Location</th>
+                                <th>Encounter date</th>
+                                <th>Diagnosis</th>
+                                <th>Diagnosis Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ID="Encounter1">
+                                <td ID="Encounter1_type">Office outpatient visit</td>
+                                <td>Dr. Samir Kahn <content ID="Encounter1_performer_type">Internal
+                                    Medicine</content>
+                                </td>
+                                <td>Community Urgent Care (Urgent Care Center) <paragraph>1004
+                                    Healthcare Dr.</paragraph>
+                        <paragraph>Portland, OR 97005</paragraph>
+                                </td>
+                                <td>August 15, 2012</td>
+                                <td ID="Encounter1_diagnosis">Costal Chondritis</td>
+                                <td ID="Encounter1_diagnosis_status">Active</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </text>
+                <entry typeCode="DRIV">
+                    <encounter classCode="ENC" moodCode="EVN">
+                        <!-- ** Encounter Activity (V3) ** -->
+                        <templateId root="2.16.840.1.113883.10.20.22.4.49" extension="2015-08-01" />
+                        <templateId root="2.16.840.1.113883.10.20.22.4.49" />
+                        <id root="2a620155-9d11-439e-92b3-5d9815ff4de8" />
+                        <!-- Selected reasonable encounter/code. Not in test data -->
+                        <code code="99213"
+                            displayName="Office or other outpatient visit for the evaluation and management of an established patient, which requires a medically appropriate history and/or examination and low level of medical decision making. When using time for code selection, 20-29 minutes of total time is spent on the date of the encounter."
+                            codeSystemName="CPT" codeSystem="2.16.840.1.113883.6.12"
+                            codeSystemVersion="4">
+                            <value xsi:type="CD" code="55561003" displayName="Active"
+                                codeSystem="2.16.840.1.113883.6.96"
+                                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+                                <originalText>
+                                    <reference value="#Encounter1_type" />
+                                </originalText>
+                            </value>
+                        </code>
+                        <text>
+                            <reference value="#Encounter1" />
+                        </text>
+                        <!-- August 15, 2012 - added time (pacific time) since but not present in
+                        test data -->
+                        <effectiveTime value="201208151000-0800" />
+                        <!-- Not specified in test data, but could infer Dr. Khan from the test
+                        scenario narrative-->
+                        <performer>
+                            <assignedEntity>
+                                <!-- Fake Provider NPI "12345678910" -->
+                                <id root="2.16.840.1.113883.4.6" extension="12345678910" />
+                                <code code="207R00000X" codeSystem="2.16.840.1.113883.6.101"
+                                    codeSystemName="Health Care Provider Taxonomy"
+                                    displayName="Allopathic &amp; Osteopathic Physicians; Internal Medicine">
+                                    <originalText>
+                                        <reference value="Encounter1_performer_type" />
+                                    </originalText>
+                                </code>
+                                <assignedPerson>
+                                    <name>
+                                        <prefix>Dr.</prefix>
+                                        <given>Samir</given>
+                                        <family>Khan</family>
+                                        <!--  Could alternately use <suffix>MD</suffix> -->
+                                    </name>
+                                </assignedPerson>
+                            </assignedEntity>
+                        </performer>
+                        <participant typeCode="LOC">
+                            <!-- Location is inferred from the care team address in test data -->
+                            <participantRole classCode="SDLOC">
+                                <templateId root="2.16.840.1.113883.10.20.22.4.32" />
+                                <!-- Service Delivery Location template -->
+                                <code code="1160-1" codeSystem="2.16.840.1.113883.6.259"
+                                    codeSystemName="HealthcareServiceLocation"
+                                    displayName="Urgent Care Center" />
+                                <addr>
+                                    <streetAddressLine>1004 Healthcare Dr.</streetAddressLine>
+                                    <city>Portland</city>
+                                    <state>OR</state>
+                                    <postalCode>97005</postalCode>
+                                </addr>
+                                <telecom value="tel:+1(555)555-1004" />
+                                <playingEntity classCode="PLC">
+                                    <name>Get Well Clinic</name>
+                                </playingEntity>
+                            </participantRole>
+                        </participant>
+                        <entryRelationship typeCode="REFR">
+                            <act classCode="ACT" moodCode="EVN">
+                                <!-- Encounter Diagnosis -->
+                                <templateId root="2.16.840.1.113883.10.20.22.4.80"
+                                    extension="2015-08-01" />
+                                <templateId root="2.16.840.1.113883.10.20.22.4.80" />
+                                <code code="29308-4" displayName="Diagnosis"
+                                    codeSystem="2.16.840.1.113883.6.1"
+                                    codeSystemName="LOINC" />
+                                <!-- This example uses the Problem Status Observation to represent
+                                status of the diagnosis.
+                                     The statusCode of the encounter diagnosis is an alternative approach.-->
+                                <entryRelationship typeCode="SUBJ">
+                                    <observation classCode="OBS" moodCode="EVN">
+                                        <!-- Problem Observation -->
+                                        <templateId root="2.16.840.1.113883.10.20.22.4.4"
+                                            extension="2015-08-01" />
+                                        <templateId root="2.16.840.1.113883.10.20.22.4.4" />
+                                        <id root="db734647-fc99-424c-a864-7e3cda82e704" />
+                                        <code code="282291009"
+                                            displayName="Diagnosis interpretation"
+                                            codeSystem="2.16.840.1.113883.6.96"
+                                            codeSystemName="SNOMED CT">
+                                            <translation code="29308-4" displayName="Diagnosis"
+                                                codeSystem="2.16.840.1.113883.6.1"
+                                                codeSystemName="LOINC" />
+                                        </code>
+                                        <statusCode code="completed" />
+                                        <!-- This same data may be represented in the Problem List -->
+                                        <effectiveTime>
+                                            <low value="20120815" />
+                                        </effectiveTime>
+                                        <!-- Test data is SNOMED but in practice this is probably an
+                                        ICD9/10 code -->
+                                        <value xsi:type="CD" code="64109004"
+                                            displayName="Costal chondritis"
+                                            codeSystem="2.16.840.1.113883.6.96">
+                                            <originalText>
+                                                <reference value="#Encounter1_diagnosis" />
+                                            </originalText>
+                                        </value>
+                                        <entryRelationship typeCode="REFR">
+                                            <observation classCode="OBS" moodCode="EVN">
+                                                <!-- Problem Status which is strange on an encounter
+                                                diagnosis but 
+                                                         included due to the test data -->
+                                                <!-- C-CDA R2.0 deprecated this template -->
+                                                <templateId root="2.16.840.1.113883.10.20.22.4.6" />
+                                                <code code="33999-4" displayName="Status"
+                                                    codeSystem="2.16.840.1.113883.6.1"
+                                                    codeSystemName="LOINC" />
+                                                <statusCode code="completed" />
+                                                <value xsi:type="CD" code="55561003"
+                                                    displayName="Active"
+                                                    codeSystem="2.16.840.1.113883.6.96">
+                                                    <originalText>
+                                                        <reference
+                                                            value="#Encounter1_diagnosis_status" />
+                                                    </originalText>
+                                                </value>
+                                            </observation>
+                                        </entryRelationship>
+                                    </observation>
+                                </entryRelationship>
+                            </act>
+                        </entryRelationship>
+                    </encounter>
+                </entry>
+            </section>
+
+        </structuredBody>
+    </component>
+</ClinicalDocument>

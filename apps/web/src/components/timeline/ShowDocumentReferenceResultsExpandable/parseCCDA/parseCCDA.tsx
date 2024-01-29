@@ -18,9 +18,13 @@ import {
   DisplayCCDAAssesmentSection,
   parseCCDAAssesmentSection,
 } from './parseCCDAAssesmentSection';
+import {
+  DisplayCCDAEncounterSection,
+  parseCCDAEncounterSection,
+} from './parseCCDAEncounterSection';
 
 export function parseCCDA(
-  raw: string
+  raw: string,
 ): Partial<Record<CCDAStructureDefinitionKeys2_1, string | JSX.Element>> {
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(raw, 'text/xml');
@@ -88,6 +92,18 @@ export function parseCCDA(
           parsedDoc[k] = parseCCDASection(sections, val);
         }
         break;
+      case 'ENCOUNTERS_SECTION':
+        try {
+          const encData = parseCCDAEncounterSection(sections, val);
+          console.log(encData);
+          if (encData) {
+            parsedDoc[k] = <DisplayCCDAEncounterSection data={encData} />;
+          }
+        } catch (e) {
+          console.error(e);
+          parsedDoc[k] = parseCCDASection(sections, val);
+        }
+        break;
       default:
         parsedDoc[k] = parseCCDASection(sections, val);
         break;
@@ -133,20 +149,21 @@ export function parseDateString(d: string) {
 
 export function getMatchingSections(
   sections: HTMLCollectionOf<HTMLElement>,
-  id: string[] | string
+  id: string[] | string,
 ) {
   return [...(sections as unknown as HTMLElement[])]?.filter((s) =>
     Array.isArray(id)
       ? id.includes(
-          s?.getElementsByTagName('templateId')?.[0]?.getAttribute('root') || ''
+          s?.getElementsByTagName('templateId')?.[0]?.getAttribute('root') ||
+            '',
         )
-      : s?.getElementsByTagName('templateId')?.[0]?.getAttribute('root') === id
+      : s?.getElementsByTagName('templateId')?.[0]?.getAttribute('root') === id,
   );
 }
 
 export function parseCCDASection(
   sections: HTMLCollectionOf<HTMLElement>,
-  id: string[] | string
+  id: string[] | string,
 ) {
   const matchingSections = getMatchingSections(sections, id);
 

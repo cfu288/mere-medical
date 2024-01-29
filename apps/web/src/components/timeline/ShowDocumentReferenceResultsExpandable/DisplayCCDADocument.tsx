@@ -305,9 +305,9 @@ export function DisplayCCDADocument({
         />
       )}
       {ccda?.ENCOUNTERS_SECTION && (
-        <DisplayCCDARawSection
+        <DisplayCCDAElementSection
           title="Encounters"
-          content={(ccda.ENCOUNTERS_SECTION as string) || ''}
+          content={(ccda.ENCOUNTERS_SECTION as JSX.Element) || ''}
         />
       )}
     </>
