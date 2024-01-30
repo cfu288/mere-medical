@@ -7,20 +7,14 @@ import {
   SNOMED_CT_CODE_SYSTEM,
 } from '../ShowDocumentReferenceAttachmentExpandable';
 import { getMatchingSections, parseDateString } from './parseCCDA';
-import {
-  CCDAAuthor,
-  CCDAParticipant,
-  CCDAPerformer,
-} from './parseCCDAEncounterSection';
 
 function getCodeIdSystemAndDisplayName(component: Element) {
   let codeId =
     component?.getElementsByTagName('code')?.[0]?.getAttribute('code') || '';
   let codeSystem =
-    component?.getElementsByTagName('code')[0]?.getAttribute('codeSystem') ||
-    '';
+    component?.getElementsByTagName('code')[0].getAttribute('codeSystem') || '';
   let codeDisplayName: string =
-    component?.getElementsByTagName('code')[0]?.getAttribute('displayName') ||
+    component?.getElementsByTagName('code')[0].getAttribute('displayName') ||
     component
       ?.getElementsByTagName('code')[0]
       ?.getElementsByTagName('originalText')?.[0]
@@ -42,10 +36,12 @@ function getCodeIdSystemAndDisplayName(component: Element) {
   return { codeId, codeSystem, codeDisplayName };
 }
 
-function getPerformersFromElement(element: Element): Partial<CCDAPerformer>[] {
+function getPerformersFromEncounter(
+  encounter: Element,
+): Partial<CCDAPerformer>[] {
   const performers: Partial<CCDAPerformer>[] = [];
 
-  const performerElements = element.getElementsByTagName('performer');
+  const performerElements = getChildOfElementByTagName(encounter, 'performer');
   for (const performer of performerElements) {
     const assignedEntityElement =
       performer.getElementsByTagName('assignedEntity')[0];
@@ -111,14 +107,17 @@ function getPerformersFromElement(element: Element): Partial<CCDAPerformer>[] {
   return performers;
 }
 
-function getParticipantsFromElement(
-  element: Element,
+function getParticipantsFromEncounter(
+  encounter: Element,
 ): Partial<CCDAParticipant>[] {
-  if (!element) {
+  if (!encounter) {
     return [];
   }
 
-  const participantElements = element.getElementsByTagName('participant');
+  const participantElements = getChildOfElementByTagName(
+    encounter,
+    'participant',
+  );
 
   const participants = Array.from(participantElements)
     .map((participantElement) => {
@@ -181,12 +180,12 @@ function getParticipantsFromElement(
   return participants;
 }
 
-function getAuthorsFromElement(encounter: Element): Partial<CCDAAuthor>[] {
+function getAuthorsFromEncounter(encounter: Element): Partial<CCDAAuthor>[] {
   if (!encounter) {
     return [];
   }
 
-  const authorElements = encounter.getElementsByTagName('author');
+  const authorElements = getChildOfElementByTagName(encounter, 'author');
 
   const authors = Array.from(authorElements)
     .map((authorElement) => {
@@ -251,60 +250,122 @@ function getAuthorsFromElement(encounter: Element): Partial<CCDAAuthor>[] {
   return authors;
 }
 
-function getComponentsFromEntry(
-  entry: Element,
+function getValue(entry: Element, section: Element) {
+  // Walk through each child of entry. if there is a entryRelationship, set value to ""
+  // If there is a value element or interpretationCode, return value
+  let children = [...entry.children];
+  const childIsObservation = children.some(
+    (child) => child.tagName === 'observation',
+  );
+  // replace children with observation children if child is observation
+  if (childIsObservation) {
+    children = [...entry.getElementsByTagName('observation')[0].children];
+  }
+  const hasValueOrInterpretationCodeAsChild = children.some(
+    (child) =>
+      child.tagName === 'value' ||
+      child.tagName === 'interpretationCode' ||
+      child.tagName === 'text',
+  );
+  let valueIfEntryRelationshipCheck = '';
+  if (hasValueOrInterpretationCodeAsChild) {
+    valueIfEntryRelationshipCheck = (
+      entry?.getElementsByTagName('value')?.[0]?.getAttribute('value') ||
+      entry?.getElementsByTagName('value')?.[0]?.getAttribute('displayName') ||
+      entry?.getElementsByTagName('value')?.[0]?.textContent?.trim() ||
+      entry
+        ?.getElementsByTagName('interpretationCode')?.[0]
+        ?.getElementsByTagName('originalText')?.[0]?.innerHTML ||
+      section
+        ?.getElementsByTagName('text')?.[0]
+        ?.querySelector(
+          `[*|ID='${entry
+            ?.getElementsByTagName('value')?.[0]
+            ?.getElementsByTagName('reference')?.[0]
+            ?.getAttribute('value')
+            ?.replace('#', '')}']`,
+        )?.textContent ||
+      ''
+    ).trim();
+
+    // console.log(section?.getElementsByTagName('text')?.[0]);
+    // console.log(section?.getElementsByTagName('text')?.[1]);
+    // console.log(
+    //   `[*|ID='${entry
+    //     ?.getElementsByTagName('reference')?.[0]
+    //     ?.getAttribute('value')
+    //     ?.replace('#', '')}']`,
+    // );
+    // console.log();
+    // console.log(
+    //   section
+    //     ?.getElementsByTagName('text')?.[1]
+    //     ?.querySelector(
+    //       `[*|ID='${entry
+    //         ?.getElementsByTagName('reference')?.[0]
+    //         ?.getAttribute('value')
+    //         ?.replace('#', '')}']`,
+    //     )?.textContent,
+    // );
+  }
+  // debugger;
+  return valueIfEntryRelationshipCheck;
+}
+
+function getEntryRelationshipsFromEncounter(
+  encounter: Element,
   section: Element,
 ): Partial<{
-  code?: {
-    codeId?: string;
-    codeSystem?: string;
-    codeDisplayName?: string;
-  };
-  effectiveDateTime?: string;
-  effectiveDateTimeLow?: string;
-  effectiveDateTimeHigh?: string;
-  performer?: Partial<CCDAPerformer>[];
-}>[] {
-  if (!entry) {
-    return [];
+  code?: string;
+  codeSystem?: string;
+  displayName?: string;
+  value?: string;
+  fallbackHtml?: string;
+  interpretationCode?: string;
+  interpretationCodeSystem?: string;
+  interpretationDisplayName?: string;
+  originalText?: string;
+}> {
+  if (!encounter) {
+    return {} as any;
   }
 
-  const components = entry.getElementsByTagName('component');
+  const {
+    codeId: code,
+    codeDisplayName: displayName,
+    codeSystem,
+  } = getCodeIdSystemAndDisplayName(encounter);
+  const value = getValue(encounter, section);
+  const fallbackValue = section.getElementsByTagName('text')?.[0]?.innerHTML;
 
-  const componentsFromEntry = Array.from(components).map((component) => {
-    const codeElement = component.getElementsByTagName('code')[0];
-    const { codeId, codeSystem, codeDisplayName } =
-      getCodeIdSystemAndDisplayName(codeElement);
-
-    const effectiveTimeElement =
-      component.getElementsByTagName('effectiveTime')[0];
-    const effectiveTime =
-      effectiveTimeElement?.getAttribute('value') || undefined;
-    const effectiveTimeLow =
-      effectiveTimeElement
-        ?.getElementsByTagName('low')?.[0]
-        ?.getAttribute('value') || undefined;
-    const effectiveTimeHigh =
-      effectiveTimeElement
-        ?.getElementsByTagName('high')?.[0]
-        ?.getAttribute('value') || undefined;
-
-    const performer = getPerformersFromElement(component);
-
-    return {
-      code: {
-        codeId,
-        codeSystem,
-        codeDisplayName,
-      },
-      effectiveTime,
-      effectiveTimeLow,
-      effectiveTimeHigh,
-      performer,
-    };
-  });
-
-  return componentsFromEntry;
+  const interpretationCodeElement =
+    encounter.getElementsByTagName('interpretationCode')[0];
+  const interpretationCode =
+    (interpretationCodeElement
+      ? interpretationCodeElement.getAttribute('code')
+      : '') || '';
+  const interpretationCodeSystem =
+    (interpretationCodeElement
+      ? interpretationCodeElement.getAttribute('codeSystem')
+      : '') || '';
+  const interpretationDisplayName =
+    (interpretationCodeElement
+      ? interpretationCodeElement.getAttribute('displayName')
+      : '') || '';
+  const originalTextElement = encounter.getElementsByTagName('originalText')[0];
+  const originalText = originalTextElement ? originalTextElement.innerHTML : '';
+  const entryRelationship = {
+    code,
+    codeSystem,
+    displayName,
+    value,
+    fallbackHtml: fallbackValue,
+    interpretationCode,
+    interpretationCodeSystem,
+    interpretationDisplayName,
+    originalText,
+  };
+  return entryRelationship;
 }
 
 function getChildOfElementByTagName(element: Element, tagName: string) {
@@ -313,10 +374,10 @@ function getChildOfElementByTagName(element: Element, tagName: string) {
   return childMatchesTag;
 }
 
-export function parseCCDACareTeamSection(
+export function parseCCDAPlanOfTreatmentSection(
   sections: HTMLCollectionOf<HTMLElement>,
   id: string[] | string,
-): Partial<CCDACareTeamData> | null {
+): Partial<CCDAPlanOfTreatmentData> | null {
   const matchingSections = getMatchingSections(sections, id);
   if (!matchingSections) {
     return null;
@@ -326,15 +387,17 @@ export function parseCCDACareTeamSection(
   const titleElement = section?.getElementsByTagName('title')?.[0];
   const title = (titleElement ? titleElement.textContent : '') || '';
   const textComponent = [...section.getElementsByTagName('text')].shift();
+  const description = (textComponent ? textComponent.innerHTML : '') || '';
 
   const entry = section.getElementsByTagName('entry')?.[0];
+  const encounterFromEntry = entry?.getElementsByTagName('encounter')?.[0];
+  const codeFromEncounter = getCodeIdSystemAndDisplayName(encounterFromEntry);
 
-  // one or more
-  const componentFromEntry = entry.children[0];
-
-  const authorsFromElement = getAuthorsFromElement(componentFromEntry);
+  const performersFromEncounter =
+    getPerformersFromEncounter(encounterFromEntry);
+  const authorsFromEncounter = getAuthorsFromEncounter(encounterFromEntry);
   const participantsFromEncounter =
-    getParticipantsFromElement(componentFromEntry);
+    getParticipantsFromEncounter(encounterFromEntry);
   // Parse date, type, department, care team, effective time, location, and diagnosis from the encounter section
   const effectiveTimeElement =
     section.getElementsByTagName('effectiveTime')?.[0];
@@ -355,32 +418,41 @@ export function parseCCDACareTeamSection(
       : '') || '';
 
   const code = getCodeIdSystemAndDisplayName(section);
-  const components = getComponentsFromEntry(componentFromEntry, section);
 
-  const performers = components
-    .map((component) => {
-      return component.performer;
-    })
-    .flat()
-    .filter((performer) => performer !== undefined) as Partial<CCDAPerformer>[];
+  const departmentElement =
+    section
+      .getElementsByTagName('participant')?.[0]
+      ?.getElementsByTagName('code')?.[0] || '';
+  const department =
+    (departmentElement
+      ? departmentElement.getElementsByTagName('originalText')?.[0]?.textContent
+      : '') || '';
 
-  const encounterData: Partial<CCDACareTeamData> = {
+  const value = getEntryRelationshipsFromEncounter(encounterFromEntry, section);
+
+  const encounterData: Partial<CCDAPlanOfTreatmentData> = {
     title,
+    date: effectiveTime, // Assuming the effectiveTime is the date for the encounter
     code,
-    performers, // Parsed care team data
-    author: authorsFromElement,
+    encounterCode: codeFromEncounter,
+    department,
+    // careTeam, // Parsed care team data
+    performer: performersFromEncounter,
+    author: authorsFromEncounter,
     participant: participantsFromEncounter,
+    description,
     effectiveTime,
     effectiveTimeLow,
     effectiveTimeHigh,
+    planOfTreatment: value,
   };
   return encounterData;
 }
 
-export function DisplayCCDACareTeamSection({
+export function DisplayCCDAPlanOfTreatmentSection({
   data,
 }: {
-  data: Partial<CCDACareTeamData>;
+  data: Partial<CCDAPlanOfTreatmentData>;
 }) {
   return (
     <Disclosure defaultOpen>
@@ -398,6 +470,20 @@ export function DisplayCCDACareTeamSection({
           </Disclosure.Button>
           <Disclosure.Panel className="m-1 text-sm text-gray-900">
             <div className="bg-gray-50 border-gray-200 overflow-hidden rounded-lg border">
+              {data.department && (
+                <div className="border-t border-gray-200">
+                  <dl>
+                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                      <dt className="text-sm font-medium text-gray-500">
+                        Department:
+                      </dt>
+                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                        {data.department}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              )}
               {data.effectiveTime && (
                 <div className="border-t border-gray-200">
                   <dl>
@@ -436,6 +522,61 @@ export function DisplayCCDACareTeamSection({
                             </>
                           )}
                         </dl>
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              )}
+              {data.performer && data.performer.length > 0 && (
+                <div className="border-t border-gray-200">
+                  <dl>
+                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                      <dt className="text-sm font-medium text-gray-500">
+                        Performers:
+                      </dt>
+                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                        <ul className="border border-gray-200 rounded-md divide-y divide-gray-200">
+                          {data.performer.map((performer, index) => (
+                            <li
+                              key={index}
+                              className="pl-3 pr-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between text-sm"
+                            >
+                              <span className="items-center">
+                                {performer.assignedEntity?.assignedPerson?.name
+                                  .prefix + ' '}
+                                {performer.assignedEntity?.assignedPerson?.name
+                                  ?.given + ' '}
+                                {performer.assignedEntity?.assignedPerson?.name
+                                  ?.family + ' '}
+                                {
+                                  performer.assignedEntity?.assignedPerson?.name
+                                    .suffix
+                                }
+                              </span>
+                              <p className="flex flex-col">
+                                {performer.assignedEntity?.telecom &&
+                                  performer.assignedEntity.telecom.length >
+                                    0 && (
+                                    <>
+                                      {performer.assignedEntity.telecom.map(
+                                        (contact, contactIndex) => (
+                                          <span className="sm:ml-4 flex-shrink-0">
+                                            <a
+                                              key={contactIndex}
+                                              href={`${contact.value}`}
+                                              className="text-indigo-600 hover:text-indigo-900"
+                                            >
+                                              {contact.value}
+                                            </a>
+                                          </span>
+                                        ),
+                                      )}
+                                    </>
+                                  )}
+                              </p>
+                            </li>
+                          ))}
+                        </ul>
                       </dd>
                     </div>
                   </dl>
@@ -511,123 +652,102 @@ export function DisplayCCDACareTeamSection({
                   </dl>
                 </div>
               )}
-              {data.participant &&
-                data.participant.some(
-                  (participant) =>
-                    participant.participantRole?.playingEntity?.name,
-                ) && (
-                  <div className="border-t border-gray-200">
-                    <dl>
-                      <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                        <dt className="text-sm font-medium text-gray-500">
-                          Participants:
-                        </dt>
-
-                        <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                          <ul className="border border-gray-200 rounded-md divide-y divide-gray-200">
-                            {data.participant.map((participant, index) => (
-                              <li
-                                key={index}
-                                className="pl-3 pr-4 py-3 flex flex-col justify-between text-sm"
-                              >
-                                <p className="flex flex-col font-semibold">
-                                  {
-                                    participant.participantRole?.playingEntity
-                                      ?.name
-                                  }
-                                </p>
-                                <p className="flex flex-col">
-                                  {participant.participantRole?.addr?.map(
-                                    (addr, addrIndex) => (
-                                      <>
-                                        {addr.streetAddressLine && (
-                                          <span className="flex-shrink-0">
-                                            {addr.streetAddressLine}
-                                          </span>
-                                        )}
-                                        {addr.city &&
-                                          addr.state &&
-                                          addr.postalCode && (
-                                            <span className="flex-shrink-0">
-                                              {addr.city}, {addr.state}{' '}
-                                              {addr.postalCode}
-                                            </span>
-                                          )}
-                                        {addr.country && (
-                                          <span className="flex-shrink-0">
-                                            {addr.country}
-                                          </span>
-                                        )}
-                                      </>
-                                    ),
-                                  )}
-                                </p>
-                                {participant.participantRole?.telecom &&
-                                  participant.participantRole.telecom.length >
-                                    0 && (
-                                    <span className="ml-4 flex-shrink-0">
-                                      {participant.participantRole.telecom.map(
-                                        (contact, contactIndex) => (
-                                          <a
-                                            key={contactIndex}
-                                            href={`${contact.value}`}
-                                            className="text-indigo-600 hover:text-indigo-900"
-                                          >
-                                            {contact.value}
-                                          </a>
-                                        ),
-                                      )}
-                                    </span>
-                                  )}
-                              </li>
-                            ))}
-                          </ul>
-                        </dd>
-                      </div>
-                    </dl>
-                  </div>
-                )}
-              {data.performers && data.performers.length > 0 && (
+              {data.participant && data.participant.length > 0 && (
                 <div className="border-t border-gray-200">
                   <dl>
-                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-1 sm:gap-4 sm:px-6">
+                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                       <dt className="text-sm font-medium text-gray-500">
-                        Care Team:
+                        Participants:
                       </dt>
-                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-1">
+                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                         <ul className="border border-gray-200 rounded-md divide-y divide-gray-200">
-                          {data.performers.map((team, index) => (
+                          {data.participant.map((participant, index) => (
                             <li
                               key={index}
                               className="pl-3 pr-4 py-3 flex flex-col justify-between text-sm"
                             >
-                              <p>
-                                {team.assignedEntity?.assignedPerson?.name
-                                  .prefix + ' '}
-                                {team.assignedEntity?.assignedPerson?.name
-                                  ?.given + ' '}
-                                {team.assignedEntity?.assignedPerson?.name
-                                  ?.family + ' '}
+                              <p className="flex flex-col font-semibold">
                                 {
-                                  team.assignedEntity?.assignedPerson?.name
-                                    .suffix
+                                  participant.participantRole?.playingEntity
+                                    ?.name
                                 }
                               </p>
                               <p className="flex flex-col">
-                                {team.assignedEntity?.telecom?.map(
-                                  (contact, contactIndex) => (
-                                    <a
-                                      key={contactIndex}
-                                      href={`${contact.value}`}
-                                      className="text-indigo-600 hover:text-indigo-900"
-                                    >
-                                      {contact.value}
-                                    </a>
+                                {participant.participantRole?.addr?.map(
+                                  (addr, addrIndex) => (
+                                    <>
+                                      {addr.streetAddressLine && (
+                                        <span className="flex-shrink-0">
+                                          {addr.streetAddressLine}
+                                        </span>
+                                      )}
+                                      {addr.city &&
+                                        addr.state &&
+                                        addr.postalCode && (
+                                          <span className="flex-shrink-0">
+                                            {addr.city}, {addr.state}{' '}
+                                            {addr.postalCode}
+                                          </span>
+                                        )}
+                                      {addr.country && (
+                                        <span className="flex-shrink-0">
+                                          {addr.country}
+                                        </span>
+                                      )}
+                                    </>
                                   ),
                                 )}
                               </p>
+                              {participant.participantRole?.telecom &&
+                                participant.participantRole.telecom.length >
+                                  0 && (
+                                  <span className="ml-4 flex-shrink-0">
+                                    {participant.participantRole.telecom.map(
+                                      (contact, contactIndex) => (
+                                        <a
+                                          key={contactIndex}
+                                          href={`${contact.value}`}
+                                          className="text-indigo-600 hover:text-indigo-900"
+                                        >
+                                          {contact.value}
+                                        </a>
+                                      ),
+                                    )}
+                                  </span>
+                                )}
                             </li>
                           ))}
+                        </ul>
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              )}
+              {data.planOfTreatment && (
+                <div className="border-t border-gray-200">
+                  <dl>
+                    <div className="bg-gray-50 px-4 py-5">
+                      {/* sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"> */}
+                      <dt className="text-sm font-medium text-gray-500 mb-2">
+                        Plan Of Treatment:
+                      </dt>
+                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                        <ul className="border border-gray-200 rounded-md divide-y divide-gray-200">
+                          {data.planOfTreatment.value && (
+                            <div className="p-2 flex flex-col items-center justify-between text-sm overflow-x-scroll [&_table]:table-auto [&_tr]:border-b ">
+                              {data.planOfTreatment.value}
+                            </div>
+                          )}
+                          {data.planOfTreatment.fallbackHtml && (
+                            <div
+                              className="p-2 flex flex-col items-center justify-between text-sm overflow-x-scroll [&_table]:table-auto [&_tr]:border-b [&_caption]:text-center  [&_caption]:font-bold [&_caption]:text-lg [&_caption]:uppercase [&_caption]:py-1"
+                              dangerouslySetInnerHTML={{
+                                __html:
+                                  (data.planOfTreatment
+                                    .fallbackHtml as string) || '',
+                              }}
+                            />
+                          )}
                         </ul>
                       </dd>
                     </div>
@@ -642,18 +762,106 @@ export function DisplayCCDACareTeamSection({
   );
 }
 
-export interface CCDACareTeamData {
+export interface CCDAAuthor {
+  assignedAuthor: {
+    addr: Array<{
+      streetAddressLine?: string;
+      city?: string;
+      state?: string;
+      postalCode?: string;
+      country?: string;
+    }>;
+    telecom: Array<{
+      value?: string;
+    }>;
+    representedOrganization: {
+      name?: string;
+      addr: Array<{
+        streetAddressLine?: string;
+        city?: string;
+        state?: string;
+        postalCode?: string;
+        country?: string;
+      }>;
+    };
+  };
+}
+
+export interface CCDAPerformer {
+  assignedEntity: {
+    code: {
+      code: string;
+      codeSystem: string;
+      displayName: string;
+    };
+    assignedPerson: {
+      name: {
+        given: string;
+        family: string;
+        prefix: string;
+        suffix: string;
+      };
+    };
+    telecom: {
+      value: string;
+    }[];
+    representedOrganization: {
+      name: string;
+    };
+  };
+}
+
+export interface CCDAParticipant {
+  participantRole?: {
+    code?: {
+      code?: string;
+      codeSystem?: string;
+      displayName?: string;
+    };
+    addr?: {
+      streetAddressLine?: string;
+      city?: string;
+      state?: string;
+      postalCode?: string;
+      country?: string;
+    }[];
+    telecom?: {
+      value?: string;
+    }[];
+    playingEntity?: {
+      name?: string;
+      desc?: string;
+    };
+  };
+}
+
+export interface CCDAPlanOfTreatmentData {
   title?: string;
+  date?: string;
   code?: {
     codeId?: string;
     codeSystem?: string;
     codeDisplayName?: string;
   };
+  encounterCode?: {
+    codeId?: string;
+    codeSystem?: string;
+    codeDisplayName?: string;
+  };
+  performer?: Partial<CCDAPerformer>[];
+  participant?: Partial<CCDAParticipant>[];
+  author?: Partial<CCDAAuthor>[];
+  department?: string;
+  careTeam?: {
+    name: string;
+    role: string;
+  }[];
+  description?: string;
   effectiveTime?: string;
   effectiveTimeLow?: string;
   effectiveTimeHigh?: string;
-  participant?: Partial<CCDAParticipant>[];
-  author?: Partial<CCDAAuthor>[];
-  performers?: Partial<CCDAPerformer>[];
-  description?: string;
+  planOfTreatment?: {
+    value?: string;
+    fallbackHtml?: string;
+  };
 }

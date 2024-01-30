@@ -229,9 +229,9 @@ export function DisplayCCDADocument({
         />
       )}
       {ccda?.PLAN_OF_TREATMENT_SECTION && (
-        <DisplayCCDARawSection
+        <DisplayCCDAElementSection
           title="Plan of Treatment"
-          content={(ccda.PLAN_OF_TREATMENT_SECTION as string) || ''}
+          content={(ccda.PLAN_OF_TREATMENT_SECTION as JSX.Element) || ''}
         />
       )}
       {ccda?.GOALS_SECTION && (

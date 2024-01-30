@@ -26,6 +26,10 @@ import {
   DisplayCCDACareTeamSection,
   parseCCDACareTeamSection,
 } from './parseCCDACareTeamSection';
+import {
+  parseCCDAPlanOfTreatmentSection,
+  DisplayCCDAPlanOfTreatmentSection,
+} from './parseCCDAPlanOfTreatmentSection';
 
 export function parseCCDA(
   raw: string,
@@ -112,6 +116,22 @@ export function parseCCDA(
           const encData = parseCCDAEncounterSection(sections, val);
           if (encData) {
             parsedDoc[k] = <DisplayCCDAEncounterSection data={encData} />;
+          }
+        } catch (e) {
+          console.error(e);
+          parsedDoc[k] = parseCCDASection(sections, val);
+        }
+        break;
+      case 'PLAN_OF_TREATMENT_SECTION':
+        try {
+          const planOfTreatment = parseCCDAPlanOfTreatmentSection(
+            sections,
+            val,
+          );
+          if (planOfTreatment) {
+            parsedDoc[k] = (
+              <DisplayCCDAPlanOfTreatmentSection data={planOfTreatment} />
+            );
           }
         } catch (e) {
           console.error(e);
