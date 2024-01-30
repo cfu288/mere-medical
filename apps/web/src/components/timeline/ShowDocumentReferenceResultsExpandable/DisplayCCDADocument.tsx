@@ -287,9 +287,9 @@ export function DisplayCCDADocument({
         />
       )}
       {ccda?.CARE_TEAMS_SECTION && (
-        <DisplayCCDARawSection
+        <DisplayCCDAElementSection
           title="Care Team"
-          content={(ccda.CARE_TEAMS_SECTION as string) || ''}
+          content={(ccda.CARE_TEAMS_SECTION as JSX.Element) || ''}
         />
       )}
       {ccda?.PAYERS_SECTION && (

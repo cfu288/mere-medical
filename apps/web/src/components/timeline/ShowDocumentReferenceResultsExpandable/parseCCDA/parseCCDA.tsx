@@ -22,6 +22,10 @@ import {
   DisplayCCDAEncounterSection,
   parseCCDAEncounterSection,
 } from './parseCCDAEncounterSection';
+import {
+  DisplayCCDACareTeamSection,
+  parseCCDACareTeamSection,
+} from './parseCCDACareTeamSection';
 
 export function parseCCDA(
   raw: string,
@@ -92,10 +96,20 @@ export function parseCCDA(
           parsedDoc[k] = parseCCDASection(sections, val);
         }
         break;
+      case 'CARE_TEAMS_SECTION':
+        try {
+          const careTeamData = parseCCDACareTeamSection(sections, val);
+          if (careTeamData) {
+            parsedDoc[k] = <DisplayCCDACareTeamSection data={careTeamData} />;
+          }
+        } catch (e) {
+          console.error(e);
+          parsedDoc[k] = parseCCDASection(sections, val);
+        }
+        break;
       case 'ENCOUNTERS_SECTION':
         try {
           const encData = parseCCDAEncounterSection(sections, val);
-          console.log(encData);
           if (encData) {
             parsedDoc[k] = <DisplayCCDAEncounterSection data={encData} />;
           }
