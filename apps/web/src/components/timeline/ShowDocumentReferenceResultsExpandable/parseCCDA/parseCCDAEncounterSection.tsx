@@ -544,18 +544,12 @@ export function DisplayCCDAEncounterSection({
                               className="pl-3 pr-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between text-sm"
                             >
                               <span className="items-center">
-                                {
-                                  performer.assignedEntity?.assignedPerson?.name
-                                    .prefix
-                                }
-                                {
-                                  performer.assignedEntity?.assignedPerson?.name
-                                    ?.given
-                                }{' '}
-                                {
-                                  performer.assignedEntity?.assignedPerson?.name
-                                    ?.family
-                                }
+                                {performer.assignedEntity?.assignedPerson?.name
+                                  .prefix + ' '}
+                                {performer.assignedEntity?.assignedPerson?.name
+                                  ?.given + ' '}
+                                {performer.assignedEntity?.assignedPerson?.name
+                                  ?.family + ' '}
                                 {
                                   performer.assignedEntity?.assignedPerson?.name
                                     .suffix

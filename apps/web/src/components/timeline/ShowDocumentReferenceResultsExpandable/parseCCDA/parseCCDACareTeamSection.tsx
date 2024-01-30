@@ -645,18 +645,12 @@ export function DisplayCCDACareTeamSection({
                               className="pl-3 pr-4 py-3 flex flex-col justify-between text-sm"
                             >
                               <p>
-                                {
-                                  team.assignedEntity?.assignedPerson?.name
-                                    .prefix
-                                }
-                                {
-                                  team.assignedEntity?.assignedPerson?.name
-                                    ?.given
-                                }{' '}
-                                {
-                                  team.assignedEntity?.assignedPerson?.name
-                                    ?.family
-                                }
+                                {team.assignedEntity?.assignedPerson?.name
+                                  .prefix + ' '}
+                                {team.assignedEntity?.assignedPerson?.name
+                                  ?.given + ' '}
+                                {team.assignedEntity?.assignedPerson?.name
+                                  ?.family + ' '}
                                 {
                                   team.assignedEntity?.assignedPerson?.name
                                     .suffix
