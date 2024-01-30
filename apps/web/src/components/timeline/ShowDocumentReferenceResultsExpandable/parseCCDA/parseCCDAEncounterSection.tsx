@@ -309,12 +309,12 @@ function getEntryRelationshipsFromEncounter(
     'entryRelationship',
   );
 
-  const entryRelationships = Array.from(entryRelationshipElements).map(
-    (entryRelationshipElement) => {
+  const entryRelationships = Array.from(entryRelationshipElements)
+    .map((entryRelationshipElement) => {
       const observationElement =
         entryRelationshipElement.getElementsByTagName('observation')[0];
       if (!observationElement) {
-        return null;
+        return undefined;
       }
       const {
         codeId: code,
@@ -349,8 +349,9 @@ function getEntryRelationshipsFromEncounter(
         originalText,
       };
       return entryRelationship;
-    },
-  );
+    })
+    .filter((i) => i !== undefined);
+
   return entryRelationships as Partial<{
     code?: string;
     codeSystem?: string;
@@ -435,14 +436,13 @@ export function parseCCDAEncounterSection(
     encounterCode: codeFromEncounter,
     department,
     // careTeam, // Parsed care team data
-    performers: performersFromEncounter,
-    authors: authorsFromEncounter,
-    participants: participantsFromEncounter,
+    performer: performersFromEncounter,
+    author: authorsFromEncounter,
+    participant: participantsFromEncounter,
     description,
     effectiveTime,
     effectiveTimeLow,
     effectiveTimeHigh,
-    // locations: locations,
     diagnosises: diagnosis,
   };
   return encounterData;
@@ -467,8 +467,8 @@ export function DisplayCCDAEncounterSection({
               />
             </div>
           </Disclosure.Button>
-          <Disclosure.Panel className="m-1 text-sm text-gray-800">
-            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+          <Disclosure.Panel className="m-1 text-sm text-gray-900">
+            <div className="bg-gray-50 border-gray-200 overflow-hidden rounded-lg border">
               {data.department && (
                 <div className="border-t border-gray-200">
                   <dl>
@@ -526,7 +526,7 @@ export function DisplayCCDAEncounterSection({
                   </dl>
                 </div>
               )}
-              {data.performers && data.performers.length > 0 && (
+              {data.performer && data.performer.length > 0 && (
                 <div className="border-t border-gray-200">
                   <dl>
                     <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
@@ -535,12 +535,12 @@ export function DisplayCCDAEncounterSection({
                       </dt>
                       <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                         <ul className="border border-gray-200 rounded-md divide-y divide-gray-200">
-                          {data.performers.map((performer, index) => (
+                          {data.performer.map((performer, index) => (
                             <li
                               key={index}
-                              className="pl-3 pr-4 py-3 flex items-center justify-between text-sm"
+                              className="pl-3 pr-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between text-sm"
                             >
-                              <p className="w-0 flex-1 flex items-center">
+                              <span className="items-center">
                                 {
                                   performer.assignedEntity?.assignedPerson?.name
                                     ?.given
@@ -549,7 +549,7 @@ export function DisplayCCDAEncounterSection({
                                   performer.assignedEntity?.assignedPerson?.name
                                     ?.family
                                 }
-                              </p>
+                              </span>
                               <p className="flex flex-col">
                                 {performer.assignedEntity?.telecom &&
                                   performer.assignedEntity.telecom.length >
@@ -557,7 +557,7 @@ export function DisplayCCDAEncounterSection({
                                     <>
                                       {performer.assignedEntity.telecom.map(
                                         (contact, contactIndex) => (
-                                          <span className="ml-4 flex-shrink-0">
+                                          <span className="sm:ml-4 flex-shrink-0">
                                             <a
                                               key={contactIndex}
                                               href={`${contact.value}`}
@@ -579,7 +579,7 @@ export function DisplayCCDAEncounterSection({
                   </dl>
                 </div>
               )}
-              {data.authors && data.authors.length > 0 && (
+              {data.author && data.author.length > 0 && (
                 <div className="border-t border-gray-200">
                   <dl>
                     <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
@@ -588,12 +588,12 @@ export function DisplayCCDAEncounterSection({
                       </dt>
                       <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                         <ul className="border border-gray-200 rounded-md divide-y divide-gray-200">
-                          {data.authors.map((author, index) => (
+                          {data.author.map((author, index) => (
                             <li
                               key={index}
-                              className="pl-3 pr-4 py-3 flex items-center justify-between text-sm"
+                              className="pl-3 pr-4 py-3 flex flex-col justify-between text-sm"
                             >
-                              <p className="w-0 flex-1 flex items-center">
+                              <p className="flex flex-col font-semibold">
                                 {
                                   author.assignedAuthor?.representedOrganization
                                     ?.name
@@ -604,20 +604,20 @@ export function DisplayCCDAEncounterSection({
                                   (addr) => (
                                     <>
                                       {addr.streetAddressLine && (
-                                        <span className="ml-4 flex-shrink-0">
+                                        <span className="flex-shrink-0">
                                           {addr.streetAddressLine}
                                         </span>
                                       )}
                                       {addr.city &&
                                         addr.state &&
                                         addr.postalCode && (
-                                          <span className="ml-4 flex-shrink-0">
+                                          <span className="flex-shrink-0">
                                             {addr.city}, {addr.state}{' '}
                                             {addr.postalCode}
                                           </span>
                                         )}
                                       {addr.country && (
-                                        <span className="ml-4 flex-shrink-0">
+                                        <span className="flex-shrink-0">
                                           {addr.country}
                                         </span>
                                       )}
@@ -627,12 +627,12 @@ export function DisplayCCDAEncounterSection({
                               </p>
                               {author.assignedAuthor?.telecom &&
                                 author.assignedAuthor.telecom.length > 0 && (
-                                  <span className="ml-4 flex-shrink-0">
+                                  <span className="flex-shrink-0">
                                     {author.assignedAuthor.telecom.map(
                                       (contact, contactIndex) => (
                                         <a
                                           key={contactIndex}
-                                          href={`tel:${contact.value}`}
+                                          href={`${contact.value}`}
                                           className="text-indigo-600 hover:text-indigo-900"
                                         >
                                           {contact.value}
@@ -649,7 +649,7 @@ export function DisplayCCDAEncounterSection({
                   </dl>
                 </div>
               )}
-              {data.participants && data.participants.length > 0 && (
+              {data.participant && data.participant.length > 0 && (
                 <div className="border-t border-gray-200">
                   <dl>
                     <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
@@ -658,12 +658,12 @@ export function DisplayCCDAEncounterSection({
                       </dt>
                       <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                         <ul className="border border-gray-200 rounded-md divide-y divide-gray-200">
-                          {data.participants.map((participant, index) => (
+                          {data.participant.map((participant, index) => (
                             <li
                               key={index}
-                              className="pl-3 pr-4 py-3 flex items-center justify-between text-sm"
+                              className="pl-3 pr-4 py-3 flex flex-col justify-between text-sm"
                             >
-                              <p className="w-0 flex-1 flex items-center">
+                              <p className="flex flex-col font-semibold">
                                 {
                                   participant.participantRole?.playingEntity
                                     ?.name
@@ -674,20 +674,20 @@ export function DisplayCCDAEncounterSection({
                                   (addr, addrIndex) => (
                                     <>
                                       {addr.streetAddressLine && (
-                                        <span className="ml-4 flex-shrink-0">
+                                        <span className="flex-shrink-0">
                                           {addr.streetAddressLine}
                                         </span>
                                       )}
                                       {addr.city &&
                                         addr.state &&
                                         addr.postalCode && (
-                                          <span className="ml-4 flex-shrink-0">
+                                          <span className="flex-shrink-0">
                                             {addr.city}, {addr.state}{' '}
                                             {addr.postalCode}
                                           </span>
                                         )}
                                       {addr.country && (
-                                        <span className="ml-4 flex-shrink-0">
+                                        <span className="flex-shrink-0">
                                           {addr.country}
                                         </span>
                                       )}
@@ -731,7 +731,7 @@ export function DisplayCCDAEncounterSection({
                         <ul className="border border-gray-200 rounded-md divide-y divide-gray-200">
                           {data.diagnosises.map((diag, index) => (
                             <>
-                              {(diag?.originalText || diag?.displayName) && (
+                              {diag?.originalText || diag?.displayName ? (
                                 <li
                                   key={index}
                                   className="pl-3 pr-4 py-3 flex items-center justify-between text-sm"
@@ -742,6 +742,8 @@ export function DisplayCCDAEncounterSection({
                                       ''}
                                   </p>
                                 </li>
+                              ) : (
+                                <>{JSON.stringify(data.diagnosises)}</>
                               )}
                             </>
                           ))}
@@ -844,9 +846,9 @@ export interface CCDAEncounterData {
     codeSystem?: string;
     codeDisplayName?: string;
   };
-  performers?: Partial<CCDAPerformer>[];
-  participants?: Partial<CCDAParticipant>[];
-  authors?: Partial<CCDAAuthor>[];
+  performer?: Partial<CCDAPerformer>[];
+  participant?: Partial<CCDAParticipant>[];
+  author?: Partial<CCDAAuthor>[];
   department?: string;
   careTeam?: {
     name: string;

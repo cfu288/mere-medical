@@ -51,57 +51,57 @@ describe('parseCCDAEncounterSection', () => {
 
       expect(results.effectiveTime).toEqual('201208151000-0800');
 
-      expect(results.performers).toHaveLength(1);
+      expect(results.performer).toHaveLength(1);
       expect(
-        results.performers?.[0].assignedEntity?.assignedPerson.name.family,
+        results.performer?.[0].assignedEntity?.assignedPerson.name.family,
       ).toEqual('Khan');
       expect(
-        results.performers?.[0].assignedEntity?.assignedPerson.name.given,
+        results.performer?.[0].assignedEntity?.assignedPerson.name.given,
       ).toEqual('Samir');
       expect(
-        results.performers?.[0].assignedEntity?.assignedPerson.name.prefix,
+        results.performer?.[0].assignedEntity?.assignedPerson.name.prefix,
       ).toEqual('Dr.');
-      expect(results.performers?.[0].assignedEntity?.code?.code).toEqual(
+      expect(results.performer?.[0].assignedEntity?.code?.code).toEqual(
         '207R00000X',
       );
-      expect(results.performers?.[0].assignedEntity?.code?.codeSystem).toEqual(
+      expect(results.performer?.[0].assignedEntity?.code?.codeSystem).toEqual(
         '2.16.840.1.113883.6.101',
       );
-      expect(results.performers?.[0].assignedEntity?.code?.displayName).toEqual(
+      expect(results.performer?.[0].assignedEntity?.code?.displayName).toEqual(
         'Allopathic & Osteopathic Physicians; Internal Medicine',
       );
 
-      expect(results.participants).toHaveLength(1);
-      expect(results.participants?.[0].participantRole?.code?.code).toEqual(
+      expect(results.participant).toHaveLength(1);
+      expect(results.participant?.[0].participantRole?.code?.code).toEqual(
         '1160-1',
       );
       expect(
-        results.participants?.[0].participantRole?.code?.codeSystem,
+        results.participant?.[0].participantRole?.code?.codeSystem,
       ).toEqual('2.16.840.1.113883.6.259');
       expect(
-        results.participants?.[0].participantRole?.code?.displayName,
+        results.participant?.[0].participantRole?.code?.displayName,
       ).toEqual('Urgent Care Center');
       // expect(
       //   results.participants?.[0].participantRole?.code?.codeSystemName,
       // ).toEqual('HealthcareServiceLocation');
       // addr
       expect(
-        results.participants?.[0].participantRole?.addr?.[0].streetAddressLine,
+        results.participant?.[0].participantRole?.addr?.[0].streetAddressLine,
       ).toEqual('1004 Healthcare Dr.');
-      expect(results.participants?.[0].participantRole?.addr?.[0].city).toEqual(
+      expect(results.participant?.[0].participantRole?.addr?.[0].city).toEqual(
         'Portland',
       );
+      expect(results.participant?.[0].participantRole?.addr?.[0].state).toEqual(
+        'OR',
+      );
       expect(
-        results.participants?.[0].participantRole?.addr?.[0].state,
-      ).toEqual('OR');
-      expect(
-        results.participants?.[0].participantRole?.addr?.[0].postalCode,
+        results.participant?.[0].participantRole?.addr?.[0].postalCode,
       ).toEqual('97005');
       expect(
-        results.participants?.[0].participantRole?.telecom?.[0].value,
+        results.participant?.[0].participantRole?.telecom?.[0].value,
       ).toEqual('tel:+1(555)555-1004');
       expect(
-        results.participants?.[0].participantRole?.playingEntity?.name,
+        results.participant?.[0].participantRole?.playingEntity?.name,
       ).toEqual('Get Well Clinic');
 
       expect(results.diagnosises).toHaveLength(1);
