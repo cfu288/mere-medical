@@ -89,7 +89,7 @@ export function parseCCDAHPISection(
             </Disclosure.Button>
             <Disclosure.Panel className="m-1 text-sm text-gray-800">
               <p
-                className="text-md whitespace-wrap max-h-screen overflow-y-scroll p-2 text-gray-900 sm:prose prose-sm"
+                className="text-md whitespace-wrap max-h-screen overflow-y-scroll p-2 sm:prose prose-sm"
                 dangerouslySetInnerHTML={{
                   __html: extractedNote?.text || 'No note',
                 }}
