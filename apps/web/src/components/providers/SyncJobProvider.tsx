@@ -133,7 +133,7 @@ function HandleInitalSync({ children }: PropsWithChildren) {
     ),
     startSyncAllConnections = useCallback(() => {
       if (conList) {
-        console.group('Syncing Connections:');
+        console.group('SyncJobProvider: Syncing Connections:');
         for (const item of conList) {
           startSyncConnection(item, syncJobEntries, handleFetchData);
         }
@@ -144,7 +144,10 @@ function HandleInitalSync({ children }: PropsWithChildren) {
   useEffect(() => {
     if (!isDemo) {
       if (currentSyncJobLength === 0) {
-        console.debug('Current Sync Jobs In Progress: ' + currentSyncJobLength);
+        console.debug(
+          'SyncJobProvider: Current Sync Jobs In Progress: ' +
+            currentSyncJobLength,
+        );
         startSyncAllConnections();
       }
     }

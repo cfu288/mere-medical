@@ -89,7 +89,7 @@ export class VectorStorage<
     similarItems: Array<IVSSimilaritySearchItem>;
     query: { text: string; embedding: number[] };
   }> {
-    console.group('similaritySearch');
+    console.group('VectorStorage: similaritySearch');
     const totalStart = performance.now();
     const { query, k = 4, filterOptions, includeValues } = params;
     console.debug('Starting vector search');

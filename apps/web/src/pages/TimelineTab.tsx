@@ -212,11 +212,11 @@ function useRecordQuery(
 
           // If load more, increment page. Otherwise, reset page to 0
           if (loadMore) {
-            console.debug('load next page: ', currentPage + 1);
+            console.debug('TimelineTab: load next page: ', currentPage + 1);
             setCurrentPage(currentPage + 1);
           } else {
             setCurrentPage(0);
-            console.debug('reset page to 0');
+            console.debug('TimelineTab: reset page to 0');
           }
 
           // Merge results with existing results or overwrite existing results
@@ -281,7 +281,7 @@ function useRecordQuery(
 
   useEffect(() => {
     console.debug(
-      'query changed or AI toggled: ',
+      'TimelineTab: query changed or AI toggled: ',
       query,
       enableAISemanticSearch,
     );
@@ -464,7 +464,6 @@ export async function fetchRecordsWithVectorSearch({
       records: ordered,
       idsOfMostRelatedChunksFromSemanticSearch: ids,
     };
-    console.debug(res);
     return res;
   } catch (e) {
     console.error(e);
@@ -474,7 +473,6 @@ export async function fetchRecordsWithVectorSearch({
     records: groupedRecords,
     idsOfMostRelatedChunksFromSemanticSearch: ids,
   };
-  console.debug(res);
   return res;
 }
 
@@ -554,7 +552,7 @@ async function fetchRecords(
         }
       });
 
-      console.debug(groupedRecords);
+      console.debug('TimelineTab: ', groupedRecords);
 
       return groupedRecords;
     });

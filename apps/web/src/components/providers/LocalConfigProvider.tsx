@@ -75,7 +75,7 @@ export function LocalConfigProvider(props: LocalConfigProviderProps) {
     if (!hasRun.current) {
       hasRun.current = true;
       const config = getLocalConfig();
-      console.debug(config);
+      console.debug('LocalConfigProvider:', config);
       setConfig(config);
     }
   }, []);

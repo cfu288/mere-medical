@@ -24,12 +24,11 @@ export const exportData = (
   setFileDownloadLink: (blob: string) => void,
 ) => {
   return db.exportJSON().then((json) => {
-    console.debug('Exporting data:', json);
+    console.debug('UserDataSettingsGroup: Exporting data:', json);
     const jsonData = JSON.stringify(json);
     const blobUrl = URL.createObjectURL(
       new Blob([jsonData], { type: 'application/json' }),
     );
-    console.debug('Blob url:', blobUrl);
     setFileDownloadLink(blobUrl);
     return blobUrl;
   });
