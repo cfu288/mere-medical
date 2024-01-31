@@ -287,26 +287,6 @@ function getValue(entry: Element, section: Element) {
         )?.textContent ||
       ''
     ).trim();
-
-    // console.log(section?.getElementsByTagName('text')?.[0]);
-    // console.log(section?.getElementsByTagName('text')?.[1]);
-    // console.log(
-    //   `[*|ID='${entry
-    //     ?.getElementsByTagName('reference')?.[0]
-    //     ?.getAttribute('value')
-    //     ?.replace('#', '')}']`,
-    // );
-    // console.log();
-    // console.log(
-    //   section
-    //     ?.getElementsByTagName('text')?.[1]
-    //     ?.querySelector(
-    //       `[*|ID='${entry
-    //         ?.getElementsByTagName('reference')?.[0]
-    //         ?.getAttribute('value')
-    //         ?.replace('#', '')}']`,
-    //     )?.textContent,
-    // );
   }
   // debugger;
   return valueIfEntryRelationshipCheck;
@@ -369,6 +349,9 @@ function getEntryRelationshipsFromEncounter(
 }
 
 function getChildOfElementByTagName(element: Element, tagName: string) {
+  if (!element || element.children.length === 0) {
+    return [];
+  }
   const children = [...element.children];
   const childMatchesTag = children.filter((child) => child.tagName === tagName);
   return childMatchesTag;
@@ -382,6 +365,7 @@ export function parseCCDAPlanOfTreatmentSection(
   if (!matchingSections) {
     return null;
   }
+  console.log(matchingSections?.[0]?.innerHTML);
 
   const section = matchingSections[0];
   const titleElement = section?.getElementsByTagName('title')?.[0];
@@ -427,8 +411,11 @@ export function parseCCDAPlanOfTreatmentSection(
     (departmentElement
       ? departmentElement.getElementsByTagName('originalText')?.[0]?.textContent
       : '') || '';
-
-  const value = getEntryRelationshipsFromEncounter(encounterFromEntry, section);
+  const planOfTreatment = getEntryRelationshipsFromEncounter(
+    encounterFromEntry,
+    section,
+  );
+  console.log('planOfTreatment', planOfTreatment);
 
   const encounterData: Partial<CCDAPlanOfTreatmentData> = {
     title,
@@ -436,7 +423,6 @@ export function parseCCDAPlanOfTreatmentSection(
     code,
     encounterCode: codeFromEncounter,
     department,
-    // careTeam, // Parsed care team data
     performer: performersFromEncounter,
     author: authorsFromEncounter,
     participant: participantsFromEncounter,
@@ -444,7 +430,7 @@ export function parseCCDAPlanOfTreatmentSection(
     effectiveTime,
     effectiveTimeLow,
     effectiveTimeHigh,
-    planOfTreatment: value,
+    planOfTreatment: { ...planOfTreatment, fallbackHtml: description },
   };
   return encounterData;
 }
