@@ -22,9 +22,9 @@ export function DisplayCCDARawSection({
               />
             </div>
           </Disclosure.Button>
-          <Disclosure.Panel className="m-4 text-sm text-gray-800">
+          <Disclosure.Panel className="m-4 text-sm text-gray-800 ">
             <p
-              className="p-2"
+              className="p-2 sm:prose prose-sm overflow-x-auto [&_table]:table-auto [&_tr]:border-b [&_caption]:text-center"
               dangerouslySetInnerHTML={{
                 __html: content || '',
               }}

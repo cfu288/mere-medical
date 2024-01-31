@@ -58,7 +58,7 @@ export function DisplayCCDAAssesmentSection({
           </Disclosure.Button>
           <Disclosure.Panel className="m-1 text-sm text-gray-800">
             <div
-              className="prose prose-sm max-w-none"
+              className="sm:prose prose-sm max-w-none [&_table]:table-auto [&_tr]:border-b [&_caption]:text-center"
               dangerouslySetInnerHTML={{ __html: data.value || '' }}
             />
           </Disclosure.Panel>

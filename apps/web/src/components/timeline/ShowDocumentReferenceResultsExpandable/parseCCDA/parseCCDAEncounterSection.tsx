@@ -378,7 +378,7 @@ export function parseCCDAEncounterSection(
   id: string[] | string,
 ): Partial<CCDAEncounterData> | null {
   const matchingSections = getMatchingSections(sections, id);
-  if (!matchingSections) {
+  if (!matchingSections || matchingSections.length === 0) {
     return null;
   }
 
@@ -529,61 +529,66 @@ export function DisplayCCDAEncounterSection({
                   </dl>
                 </div>
               )}
-              {data.performer && data.performer.length > 0 && (
-                <div className="border-t border-gray-200">
-                  <dl>
-                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                      <dt className="text-sm font-medium text-gray-500">
-                        Performers:
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        <ul className="border border-gray-200 rounded-md divide-y divide-gray-200">
-                          {data.performer.map((performer, index) => (
-                            <li
-                              key={index}
-                              className="pl-3 pr-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between text-sm"
-                            >
-                              <span className="items-center">
-                                {performer.assignedEntity?.assignedPerson?.name
-                                  .prefix + ' '}
-                                {performer.assignedEntity?.assignedPerson?.name
-                                  ?.given + ' '}
-                                {performer.assignedEntity?.assignedPerson?.name
-                                  ?.family + ' '}
-                                {
-                                  performer.assignedEntity?.assignedPerson?.name
-                                    .suffix
-                                }
-                              </span>
-                              <p className="flex flex-col">
-                                {performer.assignedEntity?.telecom &&
-                                  performer.assignedEntity.telecom.length >
-                                    0 && (
-                                    <>
-                                      {performer.assignedEntity.telecom.map(
-                                        (contact, contactIndex) => (
-                                          <span className="sm:ml-4 flex-shrink-0">
-                                            <a
-                                              key={contactIndex}
-                                              href={`${contact.value}`}
-                                              className="text-indigo-600 hover:text-indigo-900"
-                                            >
-                                              {contact.value}
-                                            </a>
-                                          </span>
-                                        ),
-                                      )}
-                                    </>
-                                  )}
-                              </p>
-                            </li>
-                          ))}
-                        </ul>
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
-              )}
+              {data.performer &&
+                data.performer.some(
+                  (i) =>
+                    i.assignedEntity?.assignedPerson.name.family ||
+                    i.assignedEntity?.assignedPerson.name.given,
+                ) && (
+                  <div className="border-t border-gray-200">
+                    <dl>
+                      <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt className="text-sm font-medium text-gray-500">
+                          Performers:
+                        </dt>
+                        <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                          <ul className="border border-gray-200 rounded-md divide-y divide-gray-200">
+                            {data.performer.map((performer, index) => (
+                              <li
+                                key={index}
+                                className="pl-3 pr-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between text-sm"
+                              >
+                                <span className="items-center">
+                                  {performer.assignedEntity?.assignedPerson
+                                    ?.name.prefix + ' '}
+                                  {performer.assignedEntity?.assignedPerson
+                                    ?.name?.given + ' '}
+                                  {performer.assignedEntity?.assignedPerson
+                                    ?.name?.family + ' '}
+                                  {
+                                    performer.assignedEntity?.assignedPerson
+                                      ?.name.suffix
+                                  }
+                                </span>
+                                <p className="flex flex-col">
+                                  {performer.assignedEntity?.telecom &&
+                                    performer.assignedEntity.telecom.length >
+                                      0 && (
+                                      <>
+                                        {performer.assignedEntity.telecom.map(
+                                          (contact, contactIndex) => (
+                                            <span className="sm:ml-4 flex-shrink-0">
+                                              <a
+                                                key={contactIndex}
+                                                href={`${contact.value}`}
+                                                className="text-indigo-600 hover:text-indigo-900"
+                                              >
+                                                {contact.value}
+                                              </a>
+                                            </span>
+                                          ),
+                                        )}
+                                      </>
+                                    )}
+                                </p>
+                              </li>
+                            ))}
+                          </ul>
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+                )}
               {data.author && data.author.length > 0 && (
                 <div className="border-t border-gray-200">
                   <dl>

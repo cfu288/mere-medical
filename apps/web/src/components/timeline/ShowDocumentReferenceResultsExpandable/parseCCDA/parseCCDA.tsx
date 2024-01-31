@@ -201,8 +201,22 @@ export function parseCCDASection(
 ) {
   const matchingSections = getMatchingSections(sections, id);
 
-  return [...(matchingSections as unknown as HTMLElement[])]
-    ?.map((x) => x.innerHTML)
-    .flat()
-    .join();
+  try {
+    const res = [...(matchingSections as unknown as HTMLElement[])];
+    // try and parse <text> elements
+    const text = res
+      ?.map((x) => x.getElementsByTagName('text')?.[0])
+      .flat()
+      .map((x) => (x as any).innerHTML)
+      .join();
+
+    return text;
+  } catch (e) {
+    const res = [...(matchingSections as unknown as HTMLElement[])];
+
+    return res
+      ?.map((x) => x.innerHTML)
+      .flat()
+      .join();
+  }
 }

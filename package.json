@@ -35,6 +35,7 @@
     "@playwright/test": "^1.37.0",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
     "@svgr/webpack": "^6.1.2",
+    "@tailwindcss/typography": "^0.5.10",
     "@testing-library/react": "13.4.0",
     "@types/fhir": "^0.0.35",
     "@types/jest": "29.4.4",

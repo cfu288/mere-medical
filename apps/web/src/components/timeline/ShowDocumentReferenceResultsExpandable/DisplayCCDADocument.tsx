@@ -266,14 +266,6 @@ export function DisplayCCDADocument({
           }
         />
       )}
-      {ccda?.HOSPITAL_DISCHARGE_INSTRUCTIONS_SECTION && (
-        <DisplayCCDARawSection
-          title="Hospital Discharge Instructions"
-          content={
-            (ccda.HOSPITAL_DISCHARGE_INSTRUCTIONS_SECTION as string) || ''
-          }
-        />
-      )}
       {ccda?.DISCHARGE_MEDICATIONS_SECTION && (
         <DisplayCCDARawSection
           title="Discharge Medications"

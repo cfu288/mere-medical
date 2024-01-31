@@ -323,11 +323,13 @@ export function parseCCDACareTeamSection(
   }
 
   const section = matchingSections[0];
+  if (!section) {
+    return null;
+  }
   const titleElement = section?.getElementsByTagName('title')?.[0];
   const title = (titleElement ? titleElement.textContent : '') || '';
-  const textComponent = [...section.getElementsByTagName('text')].shift();
 
-  const entry = section.getElementsByTagName('entry')?.[0];
+  const entry = section?.getElementsByTagName('entry')?.[0];
 
   // one or more
   const componentFromEntry = entry.children[0];
