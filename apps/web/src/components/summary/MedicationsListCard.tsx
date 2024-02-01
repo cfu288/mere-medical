@@ -1,4 +1,4 @@
-import { Disclosure } from '@headlessui/react';
+import { Disclosure, Transition } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, MedicationStatement } from 'fhir/r2';
@@ -27,24 +27,33 @@ export function MedicationsListCard({
                 />
               </div>
             </Disclosure.Button>
-            <Disclosure.Panel>
-              <CardBase>
-                <div className="min-w-0 flex-1">
-                  {items.map((item) => (
-                    <div className="py-2" key={item.id}>
-                      <p className="text-sm font-bold text-gray-900 md:text-base">
-                        {item.metadata?.display_name}
-                      </p>
-                      <TimelineCardSubtitile variant="dark">
-                        {item.metadata?.date
-                          ? format(parseISO(item.metadata.date), 'MM/dd/yyyy')
-                          : ''}
-                      </TimelineCardSubtitile>
-                    </div>
-                  ))}
-                </div>
-              </CardBase>
-            </Disclosure.Panel>
+            <Transition
+              enter="transition duration-100 ease-out"
+              enterFrom="transform scale-95 opacity-0"
+              enterTo="transform scale-100 opacity-100"
+              leave="transition duration-75 ease-out"
+              leaveFrom="transform scale-100 opacity-100"
+              leaveTo="transform scale-95 opacity-0"
+            >
+              <Disclosure.Panel>
+                <CardBase>
+                  <div className="min-w-0 flex-1">
+                    {items.map((item) => (
+                      <div className="py-2" key={item.id}>
+                        <p className="text-sm font-bold text-gray-900 md:text-base">
+                          {item.metadata?.display_name}
+                        </p>
+                        <TimelineCardSubtitile variant="dark">
+                          {item.metadata?.date
+                            ? format(parseISO(item.metadata.date), 'MM/dd/yyyy')
+                            : ''}
+                        </TimelineCardSubtitile>
+                      </div>
+                    ))}
+                  </div>
+                </CardBase>
+              </Disclosure.Panel>
+            </Transition>
           </>
         )}
       </Disclosure>

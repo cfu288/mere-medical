@@ -5,7 +5,7 @@
   "CERNER_CLIENT_ID": "839e55ba-ceff-4f39-af51-fb374a2f9b18",
   "VERADIGM_CLIENT_ID": "15c911e0-fe01-4679-bfb0-5630c430e78f",
   "VA_CLIENT_ID": "0oaqxwxoyuQVVZ7l52p7",
-  "IS_DEMO": "disabled",
+  "IS_DEMO": "enabled",
   "PUBLIC_URL": "https://localhost:4200",
   "SENTRY_WEB_DSN": "https://bed0dd4532565cd0504163dd767512db@sentry.meremedical.co/3"
 }

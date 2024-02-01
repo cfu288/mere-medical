@@ -1,6 +1,6 @@
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
-import { Disclosure } from '@headlessui/react';
+import { Disclosure, Transition } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { CardBase } from '../connection/CardBase';
 import { ObservationResultRow } from '../timeline/ObservationResultRow';
@@ -25,37 +25,46 @@ export function PinnedListCard({
                 />
               </div>
             </Disclosure.Button>
-            <Disclosure.Panel>
-              <CardBase removePadding={true}>
-                <div className="min-w-0 flex-1">
-                  {items.length > 0 ? (
-                    <>
-                      <div className="grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-200 p-2 px-4 text-gray-800">
-                        <div className="col-span-3 text-sm font-semibold">
-                          Name
+            <Transition
+              enter="transition duration-100 ease-out"
+              enterFrom="transform scale-95 opacity-0"
+              enterTo="transform scale-100 opacity-100"
+              leave="transition duration-75 ease-out"
+              leaveFrom="transform scale-100 opacity-100"
+              leaveTo="transform scale-95 opacity-0"
+            >
+              <Disclosure.Panel>
+                <CardBase removePadding={true}>
+                  <div className="min-w-0 flex-1">
+                    {items.length > 0 ? (
+                      <>
+                        <div className="grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-200 p-2 px-4 text-gray-800">
+                          <div className="col-span-3 text-sm font-semibold">
+                            Name
+                          </div>
+                          <div className="col-span-2 text-sm font-semibold">
+                            Value
+                          </div>
                         </div>
-                        <div className="col-span-2 text-sm font-semibold">
-                          Value
+                        {items.map((item, i, arr) => (
+                          <ObservationResultRow
+                            item={item as any}
+                            key={JSON.stringify(item)}
+                            hideBottomDivider={i === arr.length - 1}
+                          />
+                        ))}
+                      </>
+                    ) : (
+                      <div className="mx-4 flex flex-col border-b-2 border-solid border-gray-100 py-2">
+                        <div className="self-center font-semibold text-gray-600">
+                          No data available for this report
                         </div>
                       </div>
-                      {items.map((item, i, arr) => (
-                        <ObservationResultRow
-                          item={item as any}
-                          key={JSON.stringify(item)}
-                          hideBottomDivider={i === arr.length - 1}
-                        />
-                      ))}
-                    </>
-                  ) : (
-                    <div className="mx-4 flex flex-col border-b-2 border-solid border-gray-100 py-2">
-                      <div className="self-center font-semibold text-gray-600">
-                        No data available for this report
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardBase>
-            </Disclosure.Panel>
+                    )}
+                  </div>
+                </CardBase>
+              </Disclosure.Panel>
+            </Transition>
           </>
         )}
       </Disclosure>

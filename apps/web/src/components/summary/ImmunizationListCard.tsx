@@ -1,4 +1,4 @@
-import { Disclosure } from '@headlessui/react';
+import { Disclosure, Transition } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, Immunization } from 'fhir/r2';
@@ -7,11 +7,11 @@ import { CardBase } from '../connection/CardBase';
 
 function getVaccineCode(item: ClinicalDocument<BundleEntry<Immunization>>) {
   let code = item.data_record.raw.resource?.vaccineCode?.coding?.filter((i) =>
-    i.system?.endsWith('cvx')
+    i.system?.endsWith('cvx'),
   )?.[0];
   if (!code) {
     code = item.data_record.raw.resource?.vaccineCode?.coding?.filter((i) =>
-      i.system?.endsWith('ndc')
+      i.system?.endsWith('ndc'),
     )?.[0];
   }
   return code?.code || '';
@@ -57,34 +57,43 @@ export function ImmunizationListCard({
                 />
               </div>
             </Disclosure.Button>
-            <Disclosure.Panel className="">
-              <CardBase>
-                <div className="min-w-0 flex-1">
-                  {[...sortItems.entries()].map(([key, item]) => (
-                    <div className="py-2" key={item?.[0].id}>
-                      <p className="text-sm font-bold text-gray-900 md:text-base">
-                        {item?.[0].metadata?.display_name}
-                      </p>
-                      <ul className="truncate pl-2 text-sm font-medium text-gray-800">
-                        {item.map((x) => (
-                          <li key={x.id}>
-                            {`• ${
-                              x.metadata?.date
-                                ? format(
-                                    parseISO(x.metadata.date),
-                                    'MM/dd/yyyy'
-                                  )
-                                : ''
-                            }
+            <Transition
+              enter="transition duration-100 ease-out"
+              enterFrom="transform scale-95 opacity-0"
+              enterTo="transform scale-100 opacity-100"
+              leave="transition duration-75 ease-out"
+              leaveFrom="transform scale-100 opacity-100"
+              leaveTo="transform scale-95 opacity-0"
+            >
+              <Disclosure.Panel className="">
+                <CardBase>
+                  <div className="min-w-0 flex-1">
+                    {[...sortItems.entries()].map(([key, item]) => (
+                      <div className="py-2" key={item?.[0].id}>
+                        <p className="text-sm font-bold text-gray-900 md:text-base">
+                          {item?.[0].metadata?.display_name}
+                        </p>
+                        <ul className="truncate pl-2 text-sm font-medium text-gray-800">
+                          {item.map((x) => (
+                            <li key={x.id}>
+                              {`• ${
+                                x.metadata?.date
+                                  ? format(
+                                      parseISO(x.metadata.date),
+                                      'MM/dd/yyyy',
+                                    )
+                                  : ''
+                              }
                     `}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-              </CardBase>
-            </Disclosure.Panel>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </CardBase>
+              </Disclosure.Panel>
+            </Transition>
           </>
         )}
       </Disclosure>

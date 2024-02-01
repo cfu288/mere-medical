@@ -1,4 +1,4 @@
-import { Disclosure } from '@headlessui/react';
+import { Disclosure, Transition } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { format, parseISO } from 'date-fns';
 import { AllergyIntolerance, BundleEntry } from 'fhir/r2';
@@ -8,29 +8,29 @@ import { CardBase } from '../connection/CardBase';
 import * as fhirpath from 'fhirpath';
 
 function getAllergyText(
-  item: ClinicalDocument<BundleEntry<AllergyIntolerance>>
+  item: ClinicalDocument<BundleEntry<AllergyIntolerance>>,
 ) {
   return fhirpath.evaluate(
     item.data_record.raw.resource,
-    'substance.text'
+    'substance.text',
   )?.[0];
 }
 
 function hasAllergyReactions(
-  item: ClinicalDocument<BundleEntry<AllergyIntolerance>>
+  item: ClinicalDocument<BundleEntry<AllergyIntolerance>>,
 ) {
   return fhirpath.evaluate(
     item.data_record.raw.resource,
-    'reaction.exists()'
+    'reaction.exists()',
   )?.[0];
 }
 
 function getAllergyReactions(
-  item: ClinicalDocument<BundleEntry<AllergyIntolerance>>
+  item: ClinicalDocument<BundleEntry<AllergyIntolerance>>,
 ) {
   return fhirpath.evaluate(
     item.data_record.raw.resource,
-    'reaction.manifestation.text'
+    'reaction.manifestation.text',
   );
 }
 
@@ -55,30 +55,39 @@ export function AllergyIntoleranceListCard({
                 />
               </div>
             </Disclosure.Button>
-            <Disclosure.Panel>
-              <CardBase>
-                <div className="min-w-0 flex-1 shrink">
-                  {items.map((item) => (
-                    <div className="py-2" key={item.id}>
-                      <p className="text-sm font-bold text-gray-900 md:text-base">
-                        {getAllergyText(item)}{' '}
-                        {hasAllergyReactions(item) && ' - '}
-                        {getAllergyReactions(item).map((man, i, arr) => (
-                          <Fragment key={man}>
-                            {`${man}${i < (arr.length - 1 || 0) ? ', ' : ''}`}
-                          </Fragment>
-                        ))}
-                      </p>
-                      <p className="truncate text-xs font-medium text-gray-800 md:text-sm">
-                        {item.metadata?.date
-                          ? format(parseISO(item.metadata.date), 'MM/dd/yyyy')
-                          : ''}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </CardBase>
-            </Disclosure.Panel>
+            <Transition
+              enter="transition duration-100 ease-out"
+              enterFrom="transform scale-95 opacity-0"
+              enterTo="transform scale-100 opacity-100"
+              leave="transition duration-75 ease-out"
+              leaveFrom="transform scale-100 opacity-100"
+              leaveTo="transform scale-95 opacity-0"
+            >
+              <Disclosure.Panel>
+                <CardBase>
+                  <div className="min-w-0 flex-1 shrink">
+                    {items.map((item) => (
+                      <div className="py-2" key={item.id}>
+                        <p className="text-sm font-bold text-gray-900 md:text-base">
+                          {getAllergyText(item)}{' '}
+                          {hasAllergyReactions(item) && ' - '}
+                          {getAllergyReactions(item).map((man, i, arr) => (
+                            <Fragment key={man}>
+                              {`${man}${i < (arr.length - 1 || 0) ? ', ' : ''}`}
+                            </Fragment>
+                          ))}
+                        </p>
+                        <p className="truncate text-xs font-medium text-gray-800 md:text-sm">
+                          {item.metadata?.date
+                            ? format(parseISO(item.metadata.date), 'MM/dd/yyyy')
+                            : ''}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </CardBase>
+              </Disclosure.Panel>
+            </Transition>
           </Fragment>
         )}
       </Disclosure>
