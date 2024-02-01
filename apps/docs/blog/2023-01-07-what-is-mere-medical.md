@@ -1,11 +1,7 @@
 ---
 slug: what-is-mere-medical
 title: What is Mere Medical?
-authors:
-  name: Christopher Fu
-  title: Developer of Mere Medical
-  url: https://cfu288.com
-  image_url: https://files.meremedical.co/profile.jpg
+authors: [cfu288]
 ---
 
 About a year ago, I was a second-year medical student preparing to start my third-year clinical rotations. It was a pretty exciting but terrifying time - I was also getting ready to take my first set of board exams. On top of long days of studying, I had to complete a lot of paperwork required by the school and the hospitals I would be rotating at. One of the biggest things I needed to get done before starting my rotations was ensuring I was up to date on my vaccinations and had my latest health records.

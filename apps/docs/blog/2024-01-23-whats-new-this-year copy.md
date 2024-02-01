@@ -2,11 +2,7 @@
 slug: whats-new-this-year-2024
 title: What's New with Mere This Year
 description: A lot has changed behind the scenes
-authors:
-  name: Christopher Fu
-  title: Developer of Mere Medical
-  url: https://cfu288.com
-  image_url: https://files.meremedical.co/profile.jpg
+authors: [cfu288]
 toc_min_heading_level: 2
 toc_max_heading_level: 5
 hide_table_of_contents: false

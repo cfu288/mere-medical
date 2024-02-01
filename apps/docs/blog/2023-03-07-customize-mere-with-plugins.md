@@ -2,11 +2,7 @@
 slug: exploring-extensibility-with-cds-hooks
 title: Personalizing Your Personal Health Record with Plugins
 description: A proposal to supercharge your personal health record with third-party CDS hooks
-authors:
-  name: Christopher Fu
-  title: Developer of Mere Medical
-  url: https://cfu288.com
-  image_url: https://files.meremedical.co/profile.jpg
+authors: [cfu288]
 ---
 
 Personal health records (PHRs) such as Mere do a great job of syncing and showing you your medical records across different healthcare providers. Mere makes it easy to read and search for your medical records across multiple health systems. Want to compare your last red blood cell count to your previous lab results? Mere will generate a graph for you. Need help remembering which vaccines you've already gotten? Mere can group and summarize your entire vaccine history in one view.

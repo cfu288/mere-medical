@@ -73,7 +73,7 @@ interface IVSOptions {
   openAIApiKey: string; // The OpenAI API key used for generating embeddings.
   maxSizeInMB?: number; // The maximum size of the storage in megabytes. Defaults to 2GB
   debounceTime?: number; // The debounce time in milliseconds for saving to IndexedDB. Defaults to 0.
-  openaiModel?: string; // The OpenAI model used for generating embeddings. Defaults to 'text-embedding-ada-002'.
+  openaiModel?: string; // The OpenAI model used for generating embeddings. Defaults to 'text-embedding-3-large'.
 }
 ```
 

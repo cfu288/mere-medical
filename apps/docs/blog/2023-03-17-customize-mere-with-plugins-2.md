@@ -2,11 +2,7 @@
 slug: exploring-extensibility-with-cds-hooks-part-2
 title: Digging Deeper into CDS Hooks for Personal Health Records
 description: A proposal to supercharge your personal health record with third-party CDS hooks
-authors:
-  name: Christopher Fu
-  title: Developer of Mere Medical
-  url: https://cfu288.com
-  image_url: https://files.meremedical.co/profile.jpg
+authors: [cfu288]
 toc_min_heading_level: 2
 toc_max_heading_level: 5
 hide_table_of_contents: false
