@@ -365,7 +365,6 @@ export function parseCCDAPlanOfTreatmentSection(
   if (!matchingSections) {
     return null;
   }
-  console.log(matchingSections?.[0]?.innerHTML);
 
   const section = matchingSections[0];
   const titleElement = section?.getElementsByTagName('title')?.[0];

@@ -245,4 +245,14 @@ describe('parseCCDAResultsSection', () => {
   //     expect(e).toBeNull();
   //   }
   // });
+
+  // it('minify demo.json', () => {
+  //   const jsonFile = fs.readFileSync('demo.json').toString();
+  //   // write back
+  //   try {
+  //     fs.writeFileSync('demo.new.json', JSON.stringify(JSON.parse(jsonFile)));
+  //   } catch (e) {
+  //     expect(e).toBeNull();
+  //   }
+  // });
 });

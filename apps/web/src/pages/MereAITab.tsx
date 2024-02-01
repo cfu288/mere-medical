@@ -271,7 +271,7 @@ const MessageBubble = memo(function MessageBubble({
           </span>
         </div>
         <p
-          className={`block whitespace-pre-line text-sm font-normal pt-2.5 ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
+          className={`prose block whitespace-pre-line text-sm font-normal pt-2.5 ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
         >
           <Markdown
             remarkPlugins={[remarkGfm]}
