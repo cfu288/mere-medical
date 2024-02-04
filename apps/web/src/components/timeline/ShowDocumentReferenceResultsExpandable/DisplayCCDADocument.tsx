@@ -297,10 +297,20 @@ export function DisplayCCDADocument({
         />
       )}
       {ccda?.ENCOUNTERS_SECTION && (
-        <DisplayCCDAElementSection
-          title="Encounters"
-          content={(ccda.ENCOUNTERS_SECTION as JSX.Element) || ''}
-        />
+        <>
+          {typeof ccda.ENCOUNTERS_SECTION === 'string' ||
+          ccda.ENCOUNTERS_SECTION instanceof String ? (
+            <DisplayCCDARawSection
+              title="Encounters"
+              content={(ccda.ENCOUNTERS_SECTION as string) || ''}
+            />
+          ) : (
+            <DisplayCCDAElementSection
+              title="Encounters"
+              content={(ccda.ENCOUNTERS_SECTION as JSX.Element) || ''}
+            />
+          )}
+        </>
       )}
     </>
   );

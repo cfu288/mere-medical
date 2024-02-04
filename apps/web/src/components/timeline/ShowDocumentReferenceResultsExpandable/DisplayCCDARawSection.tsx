@@ -1,5 +1,8 @@
 import { Disclosure } from '@headlessui/react';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
+import DOMPurify from 'dompurify';
+import { useEffect, useMemo } from 'react';
+import parse from 'html-react-parser';
 
 export function DisplayCCDARawSection({
   title,
@@ -8,6 +11,10 @@ export function DisplayCCDARawSection({
   title: string;
   content: string;
 }) {
+  const sanitizedData = useMemo(() => {
+    return parse(DOMPurify.sanitize(content));
+  }, [content]);
+
   return (
     <Disclosure>
       {({ open }) => (
@@ -23,12 +30,9 @@ export function DisplayCCDARawSection({
             </div>
           </Disclosure.Button>
           <Disclosure.Panel className="m-4 text-sm text-gray-800 ">
-            <p
-              className="p-2 sm:prose prose-sm overflow-x-auto [&_table]:table-auto [&_tr]:border-b [&_caption]:text-center"
-              dangerouslySetInnerHTML={{
-                __html: content || '',
-              }}
-            ></p>
+            <p className="p-2 sm:prose prose-sm overflow-x-auto [&_table]:table-auto [&_tr]:border-b [&_caption]:text-center">
+              {sanitizedData}
+            </p>
           </Disclosure.Panel>
         </>
       )}

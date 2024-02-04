@@ -390,7 +390,7 @@ export function DisplayCCDACareTeamSection({
         <>
           <Disclosure.Button className="mb-1 w-full rounded-md bg-gray-50 p-1 font-bold">
             <div className="flex w-full items-center justify-between text-left">
-              {data.title}
+              {data.code?.codeDisplayName || data.title}
               <ChevronRightIcon
                 className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 ${
                   open ? 'rotate-90 transform' : ''

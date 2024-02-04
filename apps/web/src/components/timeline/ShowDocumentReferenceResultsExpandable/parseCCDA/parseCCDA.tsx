@@ -139,11 +139,30 @@ export function parseCCDA(
         }
         break;
       default:
-        parsedDoc[k] = parseCCDASection(sections, val);
+        const result = parseCCDASection(sections, val);
+        // console.log(result);
+        parsedDoc[k] = result;
         break;
     }
   }
 
+  return parsedDoc;
+}
+
+export function parseCCDARaw(
+  raw: string,
+): Partial<Record<CCDAStructureDefinitionKeys2_1, string>> {
+  const parser = new DOMParser();
+  const xmlDoc = parser.parseFromString(raw, 'text/xml');
+  const sections = xmlDoc.getElementsByTagName('section');
+  const parsedDoc: Partial<Record<CCDAStructureDefinitionKeys2_1, string>> = {};
+
+  for (const [key, val] of Object.entries(CCDAStructureDefinition2_1)) {
+    const k = key as CCDAStructureDefinitionKeys2_1;
+    const result = parseCCDASection(sections, val);
+    // console.log(result);
+    parsedDoc[k] = result;
+  }
   return parsedDoc;
 }
 
@@ -201,22 +220,20 @@ export function parseCCDASection(
 ) {
   const matchingSections = getMatchingSections(sections, id);
 
-  try {
-    const res = [...(matchingSections as unknown as HTMLElement[])];
-    // try and parse <text> elements
-    const text = res
-      ?.map((x) => x.getElementsByTagName('text')?.[0])
-      .flat()
-      .map((x) => (x as any).innerHTML)
-      .join();
+  // try {
+  const res = [...(matchingSections as unknown as HTMLElement[])];
+  // try and parse <text> elements
+  const text = // .flat()
+    res?.map((x) => x.getElementsByTagName('text')?.[0])?.[0]?.innerHTML;
+  // .join();
 
-    return text;
-  } catch (e) {
-    const res = [...(matchingSections as unknown as HTMLElement[])];
+  return text;
+  // } catch (e) {
+  //   const res = [...(matchingSections as unknown as HTMLElement[])];
 
-    return res
-      ?.map((x) => x.innerHTML)
-      .flat()
-      .join();
-  }
+  //   return res
+  //     ?.map((x) => x.innerHTML)
+  //     .flat()
+  //     .join();
+  // }
 }

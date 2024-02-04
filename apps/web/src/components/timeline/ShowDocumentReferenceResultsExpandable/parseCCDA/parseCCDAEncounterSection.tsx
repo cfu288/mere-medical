@@ -8,13 +8,23 @@ import {
 } from '../ShowDocumentReferenceAttachmentExpandable';
 import { getMatchingSections, parseDateString } from './parseCCDA';
 
-function getCodeIdSystemAndDisplayName(component: Element) {
+function getCodeIdSystemAndDisplayName(component: Element, section?: Element) {
   let codeId =
     component?.getElementsByTagName('code')?.[0]?.getAttribute('code') || '';
   let codeSystem =
     component?.getElementsByTagName('code')[0].getAttribute('codeSystem') || '';
   let codeDisplayName: string =
     component?.getElementsByTagName('code')[0].getAttribute('displayName') ||
+    //TODO: if reference is not found, try to find the reference in the section
+    section
+      ?.getElementsByTagName('text')?.[0]
+      ?.querySelector(
+        `[*|ID='${component
+          ?.getElementsByTagName('code')?.[0]
+          ?.getElementsByTagName('reference')?.[0]
+          ?.getAttribute('value')
+          ?.replace('#', '')}']`,
+      )?.textContent ||
     component
       ?.getElementsByTagName('code')[0]
       ?.getElementsByTagName('originalText')?.[0]
@@ -390,7 +400,10 @@ export function parseCCDAEncounterSection(
 
   const entry = section.getElementsByTagName('entry')?.[0];
   const encounterFromEntry = entry?.getElementsByTagName('encounter')?.[0];
-  const codeFromEncounter = getCodeIdSystemAndDisplayName(encounterFromEntry);
+  const codeFromEncounter = getCodeIdSystemAndDisplayName(
+    encounterFromEntry,
+    section,
+  );
 
   const performersFromEncounter =
     getPerformersFromEncounter(encounterFromEntry);
@@ -462,7 +475,7 @@ export function DisplayCCDAEncounterSection({
         <>
           <Disclosure.Button className="mb-1 w-full rounded-md bg-gray-50 p-1 font-bold">
             <div className="flex w-full items-center justify-between text-left">
-              {data.title}
+              {data.code?.codeDisplayName || data.title || 'Encounter'}
               <ChevronRightIcon
                 className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 ${
                   open ? 'rotate-90 transform' : ''
@@ -482,6 +495,24 @@ export function DisplayCCDAEncounterSection({
                       <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                         {data.department}
                       </dd>
+                    </div>
+                  </dl>
+                </div>
+              )}
+              {(data.code?.codeDisplayName ||
+                data.encounterCode?.codeDisplayName) && (
+                // Type
+                <div className="border-t border-gray-200">
+                  <dl>
+                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                      <dt className="text-sm font-medium text-gray-500">
+                        Type:
+                      </dt>
+                      {data.code?.codeDisplayName && (
+                        <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                          {data.encounterCode?.codeDisplayName}
+                        </dd>
+                      )}
                     </div>
                   </dl>
                 </div>
