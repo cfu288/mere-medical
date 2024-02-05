@@ -57,15 +57,15 @@ jobs:
       #   with:
       #     environment: production
 
-      - name: Create Sentry release - API
-        uses: getsentry/action-release@v1
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_RELEASE_TOKEN }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT_API }}
-          SENTRY_URL: https://sentry.meremedical.co/
-        with:
-          environment: production
+      # - name: Create Sentry release - API
+      #   uses: getsentry/action-release@v1
+      #   env:
+      #     SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_RELEASE_TOKEN }}
+      #     SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+      #     SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT_API }}
+      #     SENTRY_URL: https://sentry.meremedical.co/
+      #   with:
+      #     environment: production
 
       # Image is built, now we need to trigger the deploy of the live site
       - uses: actions/setup-node@v4
