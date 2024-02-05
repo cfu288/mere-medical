@@ -62,7 +62,6 @@ module.exports = composePlugins(
             // relative to webpack's output directory
             swDest: 'service-worker.js',
           }),
-          3,
         ],
       });
     }
