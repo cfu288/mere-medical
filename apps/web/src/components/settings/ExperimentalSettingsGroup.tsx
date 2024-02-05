@@ -18,6 +18,19 @@ export function ExperimentalSettingsGroup() {
   const [openApiKey, setOpenApiKey] = useState('');
   const notificationDispatch = useNotificationDispatch();
   const rxdb = useRxDb();
+  const [vectorCount, setVectorCount] = useState(0);
+
+  useEffect(() => {
+    const subscription = rxdb.vector_storage?.count().$.subscribe((c) => {
+      if (c !== undefined) {
+        setVectorCount(c);
+      }
+    });
+
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, [rxdb.vector_storage]);
 
   useEffect(() => {
     setOpenApiKey(experimental__openai_api_key || '');
@@ -119,9 +132,11 @@ export function ExperimentalSettingsGroup() {
             </form>
             {/* clear stored vector */}
             <div className="w-full flex items-center justify-between pt-4">
-              <p className="text-sm text-gray-800">
-                Clear stored vectors (for debugging)
-              </p>
+              <div className="flex flex-col">
+                <p className="text-sm text-gray-800">
+                  Stored vectors: {vectorCount}
+                </p>
+              </div>
               <button
                 // primary color
                 className="relative ml-4 inline-flex flex-shrink-0 cursor-pointer items-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-bold text-white shadow-sm  hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 disabled:bg-gray-700"
@@ -132,7 +147,8 @@ export function ExperimentalSettingsGroup() {
                       'Are you sure you want to clear all stored vectors?',
                     )
                   ) {
-                    await rxdb.vector_storage.remove();
+                    await rxdb.vector_storage?.remove();
+                    setVectorCount(0);
                     notificationDispatch({
                       type: 'set_notification',
                       variant: 'success',
@@ -141,7 +157,7 @@ export function ExperimentalSettingsGroup() {
                   }
                 }}
               >
-                Clear Vectors
+                Clear Stored Vectors
               </button>
             </div>
           </ul>
