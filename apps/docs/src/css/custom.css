@@ -114,3 +114,20 @@
 .slideUpDelay3 {
   animation: slideUp 0.5s ease-out 0.7s 1 forwards;
 }
+
+/* target articles, give prop prose */
+/* article {
+  @apply prose-sm sm:prose;
+} */
+
+/* target id of "post-content" */
+#post-content {
+  @apply prose-sm sm:prose;
+}
+
+/* video margin 0 */
+video {
+  margin: 0;
+  margin-bottom: 0;
+  margin-top: 0;
+}

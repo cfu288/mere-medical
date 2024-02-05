@@ -8,11 +8,6 @@ module.exports = {
   darkMode: ['class', '[data-theme="dark"]'],
   theme: {
     extend: {
-      extend: {
-        spacing: {
-          128: '32rem',
-        },
-      },
       fontFamily: {
         sans: [
           'Avenir',
@@ -23,6 +18,9 @@ module.exports = {
           'source-sans-pro',
           'sans-serif',
         ],
+      },
+      spacing: {
+        128: '32rem',
       },
       colors: {
         primary: {
@@ -41,5 +39,5 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [require('@tailwindcss/typography')],
 };
