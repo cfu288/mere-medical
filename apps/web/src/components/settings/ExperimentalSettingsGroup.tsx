@@ -6,6 +6,7 @@ import {
 import { classNames } from '../../utils/StyleUtils';
 import { useEffect, useState } from 'react';
 import { useNotificationDispatch } from '../providers/NotificationProvider';
+import { useRxDb } from '../providers/RxDbProvider';
 
 export function ExperimentalSettingsGroup() {
   const {
@@ -16,6 +17,7 @@ export function ExperimentalSettingsGroup() {
   const updateLocalConfig = useUpdateLocalConfig();
   const [openApiKey, setOpenApiKey] = useState('');
   const notificationDispatch = useNotificationDispatch();
+  const rxdb = useRxDb();
 
   useEffect(() => {
     setOpenApiKey(experimental__openai_api_key || '');
@@ -115,6 +117,33 @@ export function ExperimentalSettingsGroup() {
                 Save
               </button>
             </form>
+            {/* clear stored vector */}
+            <div className="w-full flex items-center justify-between pt-4">
+              <p className="text-sm text-gray-800">
+                Clear stored vectors (for debugging)
+              </p>
+              <button
+                // primary color
+                className="relative ml-4 inline-flex flex-shrink-0 cursor-pointer items-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-bold text-white shadow-sm  hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 disabled:bg-gray-700"
+                onClick={async () => {
+                  if (
+                    // eslint-disable-next-line no-restricted-globals
+                    confirm(
+                      'Are you sure you want to clear all stored vectors?',
+                    )
+                  ) {
+                    await rxdb.vector_storage.remove();
+                    notificationDispatch({
+                      type: 'set_notification',
+                      variant: 'success',
+                      message: 'Vectors cleared',
+                    });
+                  }
+                }}
+              >
+                Clear Vectors
+              </button>
+            </div>
           </ul>
         </div>
       </div>
