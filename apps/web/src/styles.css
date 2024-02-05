@@ -4,6 +4,21 @@
 
 /* You can add global styles to this file, and also import other style files */
 
+@font-face {
+  font-family: 'Source Sans';
+  src: url('/assets/fonts/SourceSans3-VariableFont_wght.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 100 900;
+}
+
+@font-face {
+  font-family: 'Source Sans';
+  src: url('/assets/fonts/SourceSans3-Italic-VariableFont_wght.ttf')
+    format('truetype');
+  font-style: italic;
+  font-weight: 100 900;
+}
+
 .mobile-full-height {
   @apply: h-full max-w-full;
 }

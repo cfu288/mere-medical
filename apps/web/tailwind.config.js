@@ -38,13 +38,13 @@ module.exports = {
       },
       fontFamily: {
         sans: [
-          'Avenir',
-          'Avenir Next LT Pro',
-          'Montserrat',
-          'Corbel',
-          'URW Gothic',
-          'source-sans-pro',
+          'Source Sans',
+          'system-ui',
+          'Segoe UI',
           'sans-serif',
+          'Apple Color Emoji',
+          'Segoe UI Emoji',
+          'Segoe UI Symbol',
         ],
       },
       colors: {
