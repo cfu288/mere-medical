@@ -3,6 +3,8 @@ import { flattenObject } from '../../../../utils/flattenObject';
 import { DocMeta } from '../providers/VectorStorageProvider';
 import { MAX_CHARS, CHUNK_SIZE, CHUNK_OVERLAP } from '../constants';
 import { IVSChunkMeta } from '@mere/vector-storage';
+import { checkIfXmlIsCCDA } from '../../../timeline/ShowDocumentReferenceResultsExpandable/ShowDocumentReferenceAttachmentExpandable';
+import { parseCCDARaw } from '../../../timeline/ShowDocumentReferenceResultsExpandable/parseCCDA/parseCCDA';
 
 /**
  * For each clinical document, prepare the document for vectorization
@@ -46,14 +48,25 @@ export function prepareClinicalDocumentForVectorization(
       docList,
       metaList,
     );
-  } else if (document.data_record.content_type === 'application/xml') {
-    serializeAndChunkXmlContentForVectorization(
+  } else if (
+    document.data_record.content_type === 'application/xml' &&
+    checkIfXmlIsCCDA(document.data_record.raw as string)
+  ) {
+    serializeCCDADocumentForVectorization(
       document.data_record.raw as string,
       meta,
       docId,
       docList,
       metaList,
     );
+  } else if (document.data_record.content_type === 'application/xml') {
+    serializeAndChunkXmlContentForVectorization({
+      content: document.data_record.raw as string,
+      meta,
+      documentId: docId,
+      chunkedDocumentsList: docList,
+      chunkedMetadataList: metaList,
+    });
   }
 
   return { docList, metaList };
@@ -103,17 +116,25 @@ function serializeAndChunkJSONForVectorization(
  * @param chunkedDocumentsList list that chunks are added to
  * @param chunkedMetadataList list that metadata chunks are added to
  */
-function serializeAndChunkXmlContentForVectorization(
-  content: string,
-  meta: DocMeta,
-  documentId: string,
+function serializeAndChunkXmlContentForVectorization({
+  content,
+  meta,
+  documentId,
+  chunkedDocumentsList,
+  chunkedMetadataList,
+  prependText = '',
+}: {
+  content: string;
+  meta: DocMeta;
+  documentId: string;
   chunkedDocumentsList: Array<{
     id: string;
     text: string;
     chunk?: IVSChunkMeta;
-  }>,
-  chunkedMetadataList: Array<DocMeta>,
-) {
+  }>;
+  chunkedMetadataList: Array<DocMeta>;
+  prependText?: string;
+}) {
   if (content.length > CHUNK_SIZE) {
     for (
       let offset = 0, chunkId = 0;
@@ -126,7 +147,7 @@ function serializeAndChunkXmlContentForVectorization(
       );
       chunkedDocumentsList.push({
         id: `${documentId}_chunk${chunkId}`,
-        text: chunkData,
+        text: prependText + chunkData,
         chunk: {
           offset: offset,
           size: chunkData.length,
@@ -135,7 +156,37 @@ function serializeAndChunkXmlContentForVectorization(
       chunkedMetadataList.push(meta);
     }
   } else {
-    chunkedDocumentsList.push({ id: documentId, text: content });
+    chunkedDocumentsList.push({
+      id: documentId,
+      text: prependText + (content || '').trim(),
+    });
     chunkedMetadataList.push(meta);
   }
+}
+
+function serializeCCDADocumentForVectorization(
+  content: string,
+  meta: DocMeta,
+  documentId: string,
+  chunkedDocumentsList: Array<{
+    id: string;
+    text: string;
+    chunk?: IVSChunkMeta;
+  }>,
+  chunkedMetadataList: Array<DocMeta>,
+) {
+  const parsed = parseCCDARaw(content);
+  // for each section, serialize and chunk
+  Object.entries(parsed).forEach(([sectionType, data]) => {
+    if (data) {
+      serializeAndChunkXmlContentForVectorization({
+        content: data,
+        meta,
+        documentId,
+        chunkedDocumentsList,
+        chunkedMetadataList,
+        prependText: sectionType + '|',
+      });
+    }
+  });
 }
