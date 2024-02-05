@@ -41,10 +41,10 @@ export function AboutMereSettingsGroup() {
       </div>
       {/* Made with love by Chris Fu */}
       <div className="text-sm text-gray-800">
-        Made with{' '}
-        <span role="img" aria-label="love">
+        Made with
+        <span className="px-1 text-red-600" role="img" aria-label="love">
           ❤️
-        </span>{' '}
+        </span>
         by{' '}
         <a
           className="text-primary-500 hover:text-primary-900 hover:underline"

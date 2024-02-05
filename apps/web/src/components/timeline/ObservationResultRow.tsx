@@ -132,8 +132,9 @@ export function ObservationResultRow({
                     }`}
                   >
                     {getValueQuantity(item) !== undefined
-                      ? `  ${getValueQuantity(item)}`
-                      : ''}
+                      ? `${getValueQuantity(item)}`
+                      : getInterpretationText(item) ||
+                        (getValueString(item) && `${getValueString(item)}`)}
                     <span className={`pl-1 inline text-xs font-light`}>
                       {getValueUnit(item)}
                     </span>
@@ -141,8 +142,10 @@ export function ObservationResultRow({
                   <p
                     className={`text-xs font-light ${isOutOfRangeResult(item) ? 'text-red-700' : 'text-primary-700'}`}
                   >
-                    {getInterpretationText(item) ||
-                      (getValueString(item) && `${getValueString(item)}`)}
+                    {getValueQuantity(item) !== undefined
+                      ? getInterpretationText(item) ||
+                        (getValueString(item) && `${getValueString(item)}`)
+                      : ''}
                   </p>
                 </div>
                 {/* Graphing button */}

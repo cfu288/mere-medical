@@ -11,7 +11,7 @@ export function PinnedListCard({
   items: ClinicalDocument<BundleEntry<DiagnosticReport | Observation>>[];
 }) {
   return (
-    <div className="col-span-6 sm:col-span-3 ">
+    <div className="col-span-6">
       <Disclosure defaultOpen={true}>
         {({ open }) => (
           <>
