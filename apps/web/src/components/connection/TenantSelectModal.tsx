@@ -9,10 +9,10 @@ import { DSTU2Endpoint as CernerDSTU2Endpoint } from '@mere/cerner';
 import { DSTU2Endpoint as EpicDSTU2Endpoint } from '@mere/epic';
 import { DSTU2Endpoint as VeradigmDSTU2Endpoint } from '@mere/veradigm';
 
-import VeradigmLogo from '../../img/allscripts-logo.png';
-import CernerLogo from '../../img/cerner-logo.png';
-import EpicLogo from '../../img/mychart-logo.png';
-import OnpatientLogo from '../../img/onpatient-logo-full.webp';
+import VeradigmLogo from '../../assets/img/allscripts-logo.png';
+import CernerLogo from '../../assets/img/cerner-logo.png';
+import EpicLogo from '../../assets/img/mychart-logo.png';
+import OnpatientLogo from '../../assets/img/onpatient-logo-full.webp';
 import { SelectOption } from '../../pages/ConnectionTab';
 import { Routes } from '../../Routes';
 import * as OnPatient from '../../services/OnPatient';
@@ -25,7 +25,7 @@ import {
   SkeletonTenantSelectModalResultItem,
   TenantSelectModelResultItem,
 } from './TenantSelectModelResultItem';
-import VALogo from '../../img/va-logo.png';
+import VALogo from '../../assets/img/va-logo.png';
 
 export type EMRVendor =
   | 'epic'

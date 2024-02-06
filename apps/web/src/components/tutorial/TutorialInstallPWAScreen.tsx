@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { TutorialAction } from './TutorialOverlay';
 import { TutorialContentScreen } from './TutorialContentScreen';
-import install from '../../img/install.png';
+import install from '../../assets/img/install.png';
 
 export function TutorialInstallPWAScreen({
   dispatch,
@@ -36,7 +36,7 @@ export function TutorialInstallPWAScreen({
     },
     isMobileDevice = () => {
       return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
+        navigator.userAgent,
       );
     },
     isUnknownBrowser = () => {

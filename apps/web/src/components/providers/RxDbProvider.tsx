@@ -33,7 +33,7 @@ import { ConnectionDocumentMigrations } from '../../models/connection-document/C
 import { getRxStorageMemory } from 'rxdb/plugins/memory';
 import { AppLoadingSkeleton } from './AppLoadingSkeleton';
 import { CryptedIndexedDBAdapter } from 'sylviejs/storage-adapter/crypted-indexeddb-adapter';
-import logo from '../../img/white-logo.svg';
+import logo from '../../assets/img/white-logo.svg';
 import { useLocalConfig } from './LocalConfigProvider';
 import { SummaryPagePreferencesSchema } from '../../models/summary-page-preferences/SummaryPagePreferences.collection';
 import { SummaryPagePreferencesMigrations } from '../../models/summary-page-preferences/SummaryPagePreferences.migration';

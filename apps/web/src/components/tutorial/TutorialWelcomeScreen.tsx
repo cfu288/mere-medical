@@ -1,7 +1,7 @@
 import React from 'react';
 import { TutorialAction, TutorialState } from './TutorialOverlay';
 import { TutorialContentScreen } from './TutorialContentScreen';
-import logo from '../../img/white-logo.svg';
+import logo from '../../assets/img/white-logo.svg';
 
 export function TutorialWelcomeScreen({
   dispatch,

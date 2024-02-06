@@ -4,11 +4,11 @@ import {
   ConnectionSources,
 } from '../../models/connection-document/ConnectionDocument.type';
 import { useRxDb } from '../providers/RxDbProvider';
-import onpatientLogo from '../../img/onpatient-logo.jpeg';
-import epicLogo from '../../img/MyChartByEpic.png';
-import cernerLogo from '../../img/cerner-logo.png';
-import allscriptsConnectLogo from '../../img/allscripts-logo.png';
-import vaLogo from '../../img/va-logo.png';
+import onpatientLogo from '../../assets/img/onpatient-logo.jpeg';
+import epicLogo from '../../assets/img/MyChartByEpic.png';
+import cernerLogo from '../../assets/img/cerner-logo.png';
+import allscriptsConnectLogo from '../../assets/img/allscripts-logo.png';
+import vaLogo from '../../assets/img/va-logo.png';
 import { differenceInDays, format, parseISO } from 'date-fns';
 import { RxDocument } from 'rxdb';
 import { useNotificationDispatch } from '../providers/NotificationProvider';
@@ -146,10 +146,10 @@ export function ConnectionCard({
               {item.get('source') === 'epic'
                 ? `MyChart - ${item.get('name')}`
                 : item.get('source') === 'cerner'
-                ? `Cerner - ${item.get('name')}`
-                : item.get('source') === 'veradigm'
-                ? `Veradigm - ${item.get('name')}`
-                : item.get('name')}
+                  ? `Cerner - ${item.get('name')}`
+                  : item.get('source') === 'veradigm'
+                    ? `Veradigm - ${item.get('name')}`
+                    : item.get('name')}
             </h3>
           </div>
           {item.get('last_sync_was_error') ? (
@@ -157,7 +157,7 @@ export function ConnectionCard({
               <AbnormalResultIcon />
               <p className="pl-1">
                 {formatErrorLastAttemptTimestampText(
-                  item.get('last_refreshed')
+                  item.get('last_refreshed'),
                 )}{' '}
               </p>
             </div>
@@ -270,7 +270,7 @@ function formatErrorLastAttemptTimestampText(isoDate: string) {
   }
   return Math.abs(differenceInDays(parseISO(isoDate), new Date())) >= 1
     ? ` Unable to sync since ${formatTimestampToDay(
-        isoDate
+        isoDate,
       )} at ${formatTimestampToTime(isoDate)}`
     : ` Unable to sync since ${formatTimestampToTime(isoDate)}`;
 }

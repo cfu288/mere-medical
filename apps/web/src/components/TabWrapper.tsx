@@ -8,7 +8,7 @@ import {
   SparklesIcon,
 } from '@heroicons/react/24/outline';
 
-import logo from '../img/white-logo.svg';
+import logo from '../assets/img/white-logo.svg';
 import { Routes as AppRoutes } from '../Routes';
 import { useUser } from './providers/UserProvider';
 import { TabButton } from './TabButton';

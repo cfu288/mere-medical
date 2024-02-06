@@ -1,6 +1,6 @@
 import React from 'react';
 import logoCol from '../../assets/logo.svg';
-import logo from '../../img/white-logo.svg';
+import logo from '../../assets/img/white-logo.svg';
 import { Transition } from '@headlessui/react';
 import { AppPage } from '../AppPage';
 import { TimelineBanner } from '../timeline/TimelineBanner';

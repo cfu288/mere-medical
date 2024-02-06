@@ -13,7 +13,7 @@ import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.t
 import uuid4 from '../utils/UUIDUtils';
 import { fetchRecordsWithVectorSearch } from './TimelineTab';
 import { usePeriodAnimation } from '../components/hooks/usePeriodAnimation';
-import grainImage from '../img/grain.svg';
+import grainImage from '../assets/img/grain.svg';
 import React from 'react';
 import { MessageBubble } from '../features/mere-ai/components/MessageBubble';
 import { ChatInput } from '../features/mere-ai/components/ChatInput';
