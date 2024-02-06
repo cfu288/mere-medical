@@ -53,35 +53,20 @@ function MereAITab() {
     (messageText: string) => {
       if (!isLoadingAiResponse && vectorStorage) {
         setIsLoadingAiResponse(true);
-        Promise.all([
-          // Attachments can predominate search results
-          // So we do one search without attachments and
-          // one with and then combine the results
-          fetchRecordsWithVectorSearch({
-            db,
-            vectorStorage,
-            query: messageText,
-            numResults: 10,
-            enableSearchAttachments: false,
-            groupByDate: false,
-          }),
-          fetchRecordsWithVectorSearch({
-            db,
-            vectorStorage,
-            query: messageText,
-            numResults: 3,
-            enableSearchAttachments: true,
-            groupByDate: false,
-          }),
-        ])
-          .then(async (mixedResults) => {
+        fetchRecordsWithVectorSearch({
+          db,
+          vectorStorage,
+          query: messageText,
+          numResults: 10,
+          enableSearchAttachments: true,
+          groupByDate: false,
+        })
+          .then(async (result) => {
             const records: ClinicalDocument<BundleEntry<FhirResource>>[] = [
-              ...Object.values(mixedResults[0].records).flat(),
-              ...Object.values(mixedResults[1].records).flat(),
+              ...Object.values(result.records).flat(),
             ];
             const idsOfMostRelatedChunksFromSemanticSearch = [
-              ...mixedResults[0].idsOfMostRelatedChunksFromSemanticSearch,
-              ...mixedResults[1].idsOfMostRelatedChunksFromSemanticSearch,
+              ...result.idsOfMostRelatedChunksFromSemanticSearch,
             ];
             const responseText = await performRAGwithOpenAI({
               query: messageText,
@@ -162,6 +147,8 @@ function MereAITab() {
             background: 'rgb(199 210 254 / 0.4)',
             // @ts-ignore
             '--image-url': `url(${grainImage})`,
+            // @ts-ignore
+            '-webkit-backdrop-filter': 'blur(10px)',
             backdropFilter: 'blur(10px)',
           }}
           className={`absolute top-0 left-0 bg-[backdrop-filter:var(--tw-backdrop-blur)] w-full text-indigo-700 text-xs sm:text-sm font-bold p-1 px-2 bg-opacity-40 text-center`}
@@ -277,16 +264,28 @@ const MessageBubble = memo(function MessageBubble({
             remarkPlugins={[remarkGfm]}
             components={{
               h1: ({ node, ...props }) => (
-                <h1 {...props} className={`-my-1 text-2xl font-semibold`} />
+                <h1
+                  {...props}
+                  className={`-my-1 text-2xl font-semibold ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
+                />
               ),
               h2: ({ node, ...props }) => (
-                <h2 {...props} className={`-my-1 text-1xl font-semibold`} />
+                <h2
+                  {...props}
+                  className={`-my-1 text-1xl font-semibold ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
+                />
               ),
               h3: ({ node, ...props }) => (
-                <h3 {...props} className={`-my-1 text-xl font-semibold`} />
+                <h3
+                  {...props}
+                  className={`-my-1 text-xl font-semibold ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
+                />
               ),
               h4: ({ node, ...props }) => (
-                <h4 {...props} className={`-my-1 text-lg font-semibold`} />
+                <h4
+                  {...props}
+                  className={`-my-1 text-lg font-semibold ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
+                />
               ),
               ol: ({ node, ...props }) => (
                 <ol {...props} className={`-my-1 list-decimal list-inside`} />
@@ -310,7 +309,7 @@ const MessageBubble = memo(function MessageBubble({
               thead: ({ node, ...props }) => (
                 <thead
                   {...props}
-                  className={`uppercase rounded-tr-md rounded-tl-md border-b border-indigo-300`}
+                  className={`uppercase rounded-tr-md rounded-tl-md border-b border-indigo-300 ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
                 />
               ),
               tbody: ({ node, ...props }) => (
@@ -320,7 +319,10 @@ const MessageBubble = memo(function MessageBubble({
                 <tr {...props} className={`-my-1 `} />
               ),
               th: ({ node, ...props }) => (
-                <th {...props} className={`-my-1 p-1`} />
+                <th
+                  {...props}
+                  className={`-my-1 p-1 ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
+                />
               ),
               td: ({ node, ...props }) => (
                 <td {...props} className={`-my-1 p-1`} />
