@@ -83,7 +83,17 @@
     "src/components/providers/vector-provider/providers/VectorGeneratorSyncInitializer.tsx",
     "src/components/providers/vector-provider/constants.ts",
     "src/components/providers/vector-provider/hooks/useVectors.tsx",
-    "src/components/settings/ExperimentalSettingsGroup.tsx"
+    "src/components/settings/ExperimentalSettingsGroup.tsx",
+    "src/features/mere-ai/components/MessageBubble.tsx",
+    "src/features/mere-ai/components/ChatInput.tsx",
+    "src/features/mere-ai/formatters/formatTimestampText.tsx",
+    "src/features/mere-ai/formatters/formatTimestampToDay.tsx",
+    "src/features/mere-ai/formatters/formatTimestampToTime.tsx",
+    "src/features/mere-ai/types/ChatMessage.tsx",
+    "src/features/mere-ai/helpers/generateRandomQuestion.tsx",
+    "src/features/mere-ai/open-ai/prepareDataForOpenAI.tsx",
+    "src/features/mere-ai/open-ai/callOpenAI.tsx",
+    "src/features/mere-ai/open-ai/performRAGwithOpenAI.tsx"
   ],
   "exclude": [
     "jest.config.ts",
