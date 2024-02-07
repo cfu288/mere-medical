@@ -3,6 +3,7 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Head from '@docusaurus/Head';
 import { Dialog } from '@headlessui/react';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import grainImage from '../../static/img/grain.svg';
 
 const footerNavigation = {
   main: [
@@ -62,12 +63,41 @@ const navigation = [
 
 export function NavigationBar({ absolute = true }: { absolute?: boolean }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  const [yScrollPosition, setYScrollPosition] = useState(0);
+
+  const handleScroll = () => {
+    const position = window.scrollY;
+    setYScrollPosition(position);
+  };
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  // calculate opacity based on y scroll. Initially 0, up to 100 on scroll
+  const opacity = Math.min(100, yScrollPosition / 10) / 100;
+  const backgroundColor = `rgba(255, 255, 255, ${opacity})`;
+  // start at 0px, end at 2px
+  const blurPx = `blur(${Math.min(2, yScrollPosition / 50)}px)`;
 
   return (
     <div
-      className={`${
-        absolute ? 'absolute' : ''
-      } left-0 top-0 isolate z-50 w-full`}
+      style={{
+        // @ts-ignore
+        '--image-url': `url(${grainImage})`,
+        // @ts-ignore
+        '-webkit-backdrop-filter': blurPx,
+        backdropFilter: blurPx,
+        backgroundColor,
+      }}
+      className={`
+      ${
+        absolute ? 'fixed' : ''
+      } text-primary-700 left-0 top-0 isolate z-50 float-right w-full p-1 px-2 text-center text-xs font-bold sm:text-sm`}
     >
       <div className="px-6 py-6 lg:px-8">
         <nav
@@ -192,248 +222,250 @@ export default function Home() {
           content="Manage all of your medical records in one place. Mere is a personal health record that syncs your records across hospital systems for you. Open-source, self-hostable, and offline-first"
         />
       </Head>
-      <NavigationBar />
-      <main className="relative overflow-x-hidden overflow-y-hidden bg-white">
-        {/* Hero section */}
-        <div className="flex min-h-screen flex-col items-center justify-center py-8 sm:py-12 lg:relative">
-          <div className="mx-auto max-w-md px-4 sm:max-w-3xl sm:grid-cols-1 sm:px-6 lg:grid lg:max-w-7xl lg:grid-cols-2 lg:gap-24 lg:px-8">
-            {/* Left Hero */}
-            <div>
+      <div className="relative">
+        <NavigationBar />
+        <main className="relative overflow-x-hidden overflow-y-hidden bg-white">
+          {/* Hero section */}
+          <div className="flex min-h-screen flex-col items-center justify-center py-8 sm:py-12 lg:relative">
+            <div className="mx-auto max-w-md px-4 sm:max-w-3xl sm:grid-cols-1 sm:px-6 lg:grid lg:max-w-7xl lg:grid-cols-2 lg:gap-24 lg:px-8">
+              {/* Left Hero */}
               <div>
-                <img
-                  className="slideUp hidden h-11 w-auto lg:block"
-                  src="/img/logo.svg"
-                  alt="logo"
-                />
-              </div>
-              <div className="mt-24 sm:mt-12">
-                <div className="mt-6 sm:max-w-xl">
-                  <h1 className="slideUp text-primary-900 text-5xl font-bold tracking-tight sm:text-5xl">
-                    Your Whole Medical Story.
-                  </h1>
-                  <h1 className="slideUp text-primary-900 text-5xl font-bold tracking-tight sm:text-5xl">
-                    One Place.
-                  </h1>
-                  <p className="slideUpDelay1 mt-6 text-xl leading-relaxed text-gray-600 opacity-0">
-                    Mere Medical is a personal health record that helps you
-                    organize your medical records across doctors. Free,
-                    privacy-focused, and open-source.
-                  </p>
+                <div>
+                  <img
+                    className="slideUp hidden h-11 w-auto lg:block"
+                    src="/img/logo.svg"
+                    alt="logo"
+                  />
                 </div>
-                <div className="mt-5 max-w-md sm:flex sm:justify-start md:mt-8">
-                  <div className="slideUpDelay2 rounded-md opacity-0 shadow">
-                    <a
-                      href="https://demo.meremedical.co/timeline"
-                      className="bg-primary-700 hover:bg-primary-600 flex w-full items-center justify-center rounded-md border border-transparent px-8 py-3 text-base font-medium text-white hover:text-white md:px-10 md:py-4 md:text-lg"
-                      data-umami-event="see-demo"
-                    >
-                      See Demo
-                    </a>
-                  </div>
-                  <div className="slideUpDelay3 mt-3 rounded-md opacity-0 shadow sm:ml-3 sm:mt-0">
-                    <a
-                      href="https://app.meremedical.co/timeline"
-                      className="text-primary-700 hover:text-primary-600 flex w-full items-center justify-center rounded-md border border-transparent bg-white px-8 py-3 text-base font-medium hover:bg-gray-50 md:px-10 md:py-4 md:text-lg"
-                      data-umami-event="try-the-beta"
-                    >
-                      Try the Beta
-                    </a>
-                  </div>
-                </div>
-                <div className="fadeInDelay1 mt-24 opacity-0">
-                  <h2 className="text-sm font-normal leading-8 text-gray-700">
-                    Sync data from popular patient portals
-                  </h2>
-                  <div className="mx-auto mt-10 grid max-w-lg grid-cols-4 items-center gap-x-8 gap-y-10 sm:grid-cols-6 sm:gap-x-10 lg:mx-0 lg:grid-cols-6">
-                    <img
-                      className="col-span-2 max-h-12 w-full object-contain grayscale lg:col-span-2"
-                      src="/img/MyChartLogo.png"
-                      alt="Epic MyChart Patient Portal"
-                      width={158 * 0.75}
-                      height={48 * 0.75}
-                    />
-                    <img
-                      className="col-span-2 max-h-12 w-full object-contain grayscale lg:col-span-2"
-                      src="/img/CernerHealthLogo.png"
-                      alt="Cerner Health Patient Portal"
-                      width={158 * 0.75}
-                      height={48 * 0.75}
-                      style={{
-                        filter:
-                          'grayscale invert(17%) sepia(60%) saturate(5044%) hue-rotate(182deg) brightness(91%) contrast(101%)',
-                      }}
-                    />
-                    <img
-                      className="col-span-2 max-h-12 w-full object-contain grayscale lg:col-span-2"
-                      src="/img/AllscriptsLogo.png"
-                      alt="Allscripts Connect Patient Portal"
-                      width={158 * 0.75}
-                      height={48 * 0.75}
-                    />
-                    <img
-                      className="col-span-2 max-h-12 w-full object-contain grayscale sm:col-start-2 lg:col-span-2 lg:col-start-2"
-                      src="/img/OnpatientLogo.png"
-                      alt="Onpatient Patient Portal"
-                      width={158 * 0.75}
-                      height={48 * 0.75}
-                    />
-                    <img
-                      className="col-span-2 col-start-2 max-h-12 w-full object-contain grayscale sm:col-start-auto lg:col-span-2"
-                      src="/img/FollowMyHealthLogo.png"
-                      alt="Onpatient Patient Portal"
-                      width={158 * 0.75}
-                      height={48 * 0.75}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Hero */}
-            <div className="lg:rounded-tr-0 lg:left-100 relative mt-24 flex h-80 w-auto overflow-hidden rounded-bl-[80px] rounded-tr-[80px] bg-[#F1F4F9] px-4 sm:h-[32rem] lg:absolute lg:inset-y-0 lg:left-1/2 lg:right-0 lg:mt-0 lg:block lg:h-4/5 lg:w-full lg:overflow-visible lg:px-0 lg:pt-6">
-              <img
-                className="fadeIn m-5 mx-auto  self-center rounded-md opacity-0 sm:max-w-xl lg:absolute lg:-bottom-10 lg:mx-0 lg:mb-0 lg:ml-10 lg:mt-20 lg:h-5/6 lg:w-auto lg:max-w-5xl lg:self-center lg:rounded-2xl lg:p-0"
-                src="/img/timeline-desktop.webp"
-                alt="web timeline screenshot"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Testimonials */}
-        <TestimonialSection />
-
-        {/* Problem section */}
-        <div className="relative py-12">
-          <div className="mx-auto flex max-w-md flex-col-reverse items-center justify-center px-4 sm:max-w-3xl sm:px-6 lg:max-w-7xl lg:flex-row-reverse lg:items-start lg:gap-24 lg:px-8">
-            {/* <div className="flex h-full grow items-center justify-center overflow-hidden lg:order-1 lg:w-full"> */}
-            <img
-              className="mt-12 h-auto max-h-[512px] w-full max-w-[512px] self-center justify-self-center object-cover lg:order-1 lg:mt-0"
-              src="/img/snippets.webp"
-              alt=""
-            />
-            {/* </div> */}
-
-            <div className="mx-auto max-w-md sm:max-w-3xl sm:px-6 lg:px-0">
-              {/* Content area */}
-              <div>
-                <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-                  What’s the Problem?
-                </h2>
-                <div className="mt-6 space-y-6 text-gray-600">
-                  <p className="text-lg leading-relaxed">
-                    Your medical records are yours. So, why is it so hard to
-                    access them?
-                  </p>
-                  <p className="text-lg leading-relaxed">
-                    Today, our medical records are all over the place - saved as
-                    PDF's on a computer, as images on our phones, even in tall
-                    stacks of paper in some filing cabinet. Each doctor's office
-                    and hospital has their own patient portal which never seem
-                    to talk to each other.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Solution section */}
-        <div className="bg-[#006182] py-24">
-          <div className="mx-auto max-w-md px-4 sm:max-w-3xl sm:px-6 lg:max-w-7xl lg:px-8">
-            <div className="lg:grid lg:grid-cols-2 lg:items-center lg:gap-24">
-              <div>
-                <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-                  What’s the Solution?
-                </h2>
-                <p className="mt-6 max-w-3xl text-lg leading-relaxed text-white">
-                  Mere Medical is a personal health record focused on empowering
-                  patients by prioritizing user privacy, control, and
-                  experience.
-                </p>
-                <p className="mt-6 max-w-3xl text-lg leading-relaxed text-white">
-                  With Mere, you can easily manage your own medical records
-                  under one digital roof.
-                </p>
-                <div className="mb-0 mt-8 flex items-center justify-start rounded-md bg-[#8799D040] p-4">
-                  <div className="ml-2 mr-4 flex aspect-square h-[35px] w-[35px] items-center justify-center rounded-full bg-[#7CE8C7]">
-                    <p className="text-primary-900 mb-0 text-lg">1</p>
-                  </div>
-                  <p className=" text-md mb-0 flex h-max max-w-xl items-center justify-center align-bottom font-semibold leading-7 text-white">
-                    Local first - Everything is stored locally on your device
-                  </p>
-                </div>
-                <div className="mt-8 flex items-center justify-start rounded-md bg-[#8799D040] p-4">
-                  <div className="ml-2 mr-4 flex aspect-square h-[35px] w-[35px] items-center justify-center rounded-full bg-[#7CE8C7]">
-                    <p className="text-primary-900 mb-0 text-lg">2</p>
-                  </div>
-                  <p className="text-md mb-0 flex h-max max-w-xl items-center justify-center align-bottom font-semibold leading-7 text-white">
-                    No sign in required - start using without creating an
-                    account
-                  </p>
-                </div>
-                <div className="mt-8 flex items-center justify-start rounded-md bg-[#8799D040] p-4">
-                  <div className="ml-2 mr-4 flex aspect-square h-[35px] w-[35px] items-center justify-center rounded-full bg-[#7CE8C7]">
-                    <p className="text-primary-900 mb-0 text-lg">3</p>
-                  </div>
-                  <p className="text-md mb-0 flex h-max max-w-xl items-center justify-center align-bottom font-semibold leading-7 text-white">
-                    Wrangle your data - multiple data sources, one place
-                  </p>
-                </div>
-              </div>
-
-              {/* Screenshot */}
-              <div className="mt-12 flex aspect-square items-center justify-center overflow-hidden rounded-2xl lg:mt-0">
-                <img
-                  className="h-full max-h-[512px] w-auto max-w-[512px] object-cover"
-                  src="/img/solution.webp"
-                  alt=""
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Features */}
-        <div className="mt-24 bg-white">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="mx-auto max-w-3xl text-center">
-              <h2 className="text-3xl font-extrabold text-gray-900">
-                Our Goals
-              </h2>
-              <p className="mt-4 text-lg text-gray-600">
-                {/* Decentralizing Patient Data */}
-              </p>
-            </div>
-            <dl className="mt-12 space-y-4 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:gap-y-12 sm:space-y-0 lg:grid-cols-3 lg:gap-x-8">
-              {features.map((feature) => (
-                <div
-                  key={feature.name}
-                  className="flex min-h-[250px] flex-col rounded-md border-2 border-solid border-slate-100 p-6"
-                >
-                  <dt className="flex flex-col">
-                    <img
-                      src={feature.img}
-                      className="h-[84px] w-[84px] text-green-600"
-                      aria-hidden="true"
-                    />
-                    <p className="mt-8 text-2xl font-semibold text-gray-900">
-                      {feature.name}
+                <div className="mt-24 sm:mt-12">
+                  <div className="mt-6 sm:max-w-xl">
+                    <h1 className="slideUp text-primary-900 text-5xl font-bold tracking-tight sm:text-5xl">
+                      Your Whole Medical Story.
+                    </h1>
+                    <h1 className="slideUp text-primary-900 text-5xl font-bold tracking-tight sm:text-5xl">
+                      One Place.
+                    </h1>
+                    <p className="slideUpDelay1 mt-6 text-xl leading-relaxed text-gray-600 opacity-0">
+                      Mere Medical is a personal health record that helps you
+                      organize your medical records across doctors. Free,
+                      privacy-focused, and open-source.
                     </p>
-                  </dt>
-                  <dd className="ml-0 mt-4 font-light text-gray-600">
-                    {feature.description}
-                  </dd>
+                  </div>
+                  <div className="mt-5 max-w-md sm:flex sm:justify-start md:mt-8">
+                    <div className="slideUpDelay2 rounded-md opacity-0 shadow">
+                      <a
+                        href="https://demo.meremedical.co/timeline"
+                        className="bg-primary-700 hover:bg-primary-600 flex w-full items-center justify-center rounded-md border border-transparent px-8 py-3 text-base font-medium text-white hover:text-white md:px-10 md:py-4 md:text-lg"
+                        data-umami-event="see-demo"
+                      >
+                        See Demo
+                      </a>
+                    </div>
+                    <div className="slideUpDelay3 mt-3 rounded-md opacity-0 shadow sm:ml-3 sm:mt-0">
+                      <a
+                        href="https://app.meremedical.co/timeline"
+                        className="text-primary-700 hover:text-primary-600 flex w-full items-center justify-center rounded-md border border-transparent bg-white px-8 py-3 text-base font-medium hover:bg-gray-50 md:px-10 md:py-4 md:text-lg"
+                        data-umami-event="try-the-beta"
+                      >
+                        Try the Beta
+                      </a>
+                    </div>
+                  </div>
+                  <div className="fadeInDelay1 mt-24 opacity-0">
+                    <h2 className="text-sm font-normal leading-8 text-gray-700">
+                      Sync data from popular patient portals
+                    </h2>
+                    <div className="mx-auto mt-10 grid max-w-lg grid-cols-4 items-center gap-x-8 gap-y-10 sm:grid-cols-6 sm:gap-x-10 lg:mx-0 lg:grid-cols-6">
+                      <img
+                        className="col-span-2 max-h-12 w-full object-contain grayscale lg:col-span-2"
+                        src="/img/MyChartLogo.png"
+                        alt="Epic MyChart Patient Portal"
+                        width={158 * 0.75}
+                        height={48 * 0.75}
+                      />
+                      <img
+                        className="col-span-2 max-h-12 w-full object-contain grayscale lg:col-span-2"
+                        src="/img/CernerHealthLogo.png"
+                        alt="Cerner Health Patient Portal"
+                        width={158 * 0.75}
+                        height={48 * 0.75}
+                        style={{
+                          filter:
+                            'grayscale invert(17%) sepia(60%) saturate(5044%) hue-rotate(182deg) brightness(91%) contrast(101%)',
+                        }}
+                      />
+                      <img
+                        className="col-span-2 max-h-12 w-full object-contain grayscale lg:col-span-2"
+                        src="/img/AllscriptsLogo.png"
+                        alt="Allscripts Connect Patient Portal"
+                        width={158 * 0.75}
+                        height={48 * 0.75}
+                      />
+                      <img
+                        className="col-span-2 max-h-12 w-full object-contain grayscale sm:col-start-2 lg:col-span-2 lg:col-start-2"
+                        src="/img/OnpatientLogo.png"
+                        alt="Onpatient Patient Portal"
+                        width={158 * 0.75}
+                        height={48 * 0.75}
+                      />
+                      <img
+                        className="col-span-2 col-start-2 max-h-12 w-full object-contain grayscale sm:col-start-auto lg:col-span-2"
+                        src="/img/FollowMyHealthLogo.png"
+                        alt="Onpatient Patient Portal"
+                        width={158 * 0.75}
+                        height={48 * 0.75}
+                      />
+                    </div>
+                  </div>
                 </div>
-              ))}
-            </dl>
-          </div>
-        </div>
+              </div>
 
-        {/* Goals section */}
-        <div className="relative pb-12 sm:pt-12"></div>
-      </main>
-      <Footer />
+              {/* Right Hero */}
+              <div className="lg:rounded-tr-0 lg:left-100 relative mt-24 flex h-80 w-auto overflow-hidden rounded-bl-[80px] rounded-tr-[80px] bg-[#F1F4F9] px-4 sm:h-[32rem] lg:absolute lg:inset-y-0 lg:left-1/2 lg:right-0 lg:mt-0 lg:block lg:h-4/5 lg:w-full lg:overflow-visible lg:px-0 lg:pt-6">
+                <img
+                  className="fadeIn m-5 mx-auto self-center rounded-md opacity-0 sm:max-w-xl lg:absolute lg:-bottom-10 lg:mx-0 lg:mb-0 lg:ml-10 lg:mt-20 lg:h-5/6 lg:w-auto lg:max-w-5xl lg:self-center lg:rounded-2xl lg:p-0"
+                  src="/img/timeline-desktop.webp"
+                  alt="web timeline screenshot"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Testimonials */}
+          <TestimonialSection />
+
+          {/* Problem section */}
+          <div className="relative py-12">
+            <div className="mx-auto flex max-w-md flex-col-reverse items-center justify-center px-4 sm:max-w-3xl sm:px-6 lg:max-w-7xl lg:flex-row-reverse lg:items-start lg:gap-24 lg:px-8">
+              {/* <div className="flex h-full grow items-center justify-center overflow-hidden lg:order-1 lg:w-full"> */}
+              <img
+                className="mt-12 h-auto max-h-[512px] w-full max-w-[512px] self-center justify-self-center object-cover lg:order-1 lg:mt-0"
+                src="/img/snippets.webp"
+                alt=""
+              />
+              {/* </div> */}
+
+              <div className="mx-auto max-w-md sm:max-w-3xl sm:px-6 lg:px-0">
+                {/* Content area */}
+                <div>
+                  <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+                    What’s the Problem?
+                  </h2>
+                  <div className="mt-6 space-y-6 text-gray-600">
+                    <p className="text-lg leading-relaxed">
+                      Your medical records are yours. So, why is it so hard to
+                      access them?
+                    </p>
+                    <p className="text-lg leading-relaxed">
+                      Today, our medical records are all over the place - saved
+                      as PDF's on a computer, as images on our phones, even in
+                      tall stacks of paper in some filing cabinet. Each doctor's
+                      office and hospital has their own patient portal which
+                      never seem to talk to each other.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Solution section */}
+          <div className="bg-[#006182] py-24">
+            <div className="mx-auto max-w-md px-4 sm:max-w-3xl sm:px-6 lg:max-w-7xl lg:px-8">
+              <div className="lg:grid lg:grid-cols-2 lg:items-center lg:gap-24">
+                <div>
+                  <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+                    What’s the Solution?
+                  </h2>
+                  <p className="mt-6 max-w-3xl text-lg leading-relaxed text-white">
+                    Mere Medical is a personal health record focused on
+                    empowering patients by prioritizing user privacy, control,
+                    and experience.
+                  </p>
+                  <p className="mt-6 max-w-3xl text-lg leading-relaxed text-white">
+                    With Mere, you can easily manage your own medical records
+                    under one digital roof.
+                  </p>
+                  <div className="mb-0 mt-8 flex items-center justify-start rounded-md bg-[#8799D040] p-4">
+                    <div className="ml-2 mr-4 flex aspect-square h-[35px] w-[35px] items-center justify-center rounded-full bg-[#7CE8C7]">
+                      <p className="text-primary-900 mb-0 text-lg">1</p>
+                    </div>
+                    <p className=" text-md mb-0 flex h-max max-w-xl items-center justify-center align-bottom font-semibold leading-7 text-white">
+                      Local first - Everything is stored locally on your device
+                    </p>
+                  </div>
+                  <div className="mt-8 flex items-center justify-start rounded-md bg-[#8799D040] p-4">
+                    <div className="ml-2 mr-4 flex aspect-square h-[35px] w-[35px] items-center justify-center rounded-full bg-[#7CE8C7]">
+                      <p className="text-primary-900 mb-0 text-lg">2</p>
+                    </div>
+                    <p className="text-md mb-0 flex h-max max-w-xl items-center justify-center align-bottom font-semibold leading-7 text-white">
+                      No sign in required - start using without creating an
+                      account
+                    </p>
+                  </div>
+                  <div className="mt-8 flex items-center justify-start rounded-md bg-[#8799D040] p-4">
+                    <div className="ml-2 mr-4 flex aspect-square h-[35px] w-[35px] items-center justify-center rounded-full bg-[#7CE8C7]">
+                      <p className="text-primary-900 mb-0 text-lg">3</p>
+                    </div>
+                    <p className="text-md mb-0 flex h-max max-w-xl items-center justify-center align-bottom font-semibold leading-7 text-white">
+                      Wrangle your data - multiple data sources, one place
+                    </p>
+                  </div>
+                </div>
+
+                {/* Screenshot */}
+                <div className="mt-12 flex aspect-square items-center justify-center overflow-hidden rounded-2xl lg:mt-0">
+                  <img
+                    className="h-full max-h-[512px] w-auto max-w-[512px] object-cover"
+                    src="/img/solution.webp"
+                    alt=""
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Features */}
+          <div className="mt-24 bg-white">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6">
+              <div className="mx-auto max-w-3xl text-center">
+                <h2 className="text-3xl font-extrabold text-gray-900">
+                  Our Goals
+                </h2>
+                <p className="mt-4 text-lg text-gray-600">
+                  {/* Decentralizing Patient Data */}
+                </p>
+              </div>
+              <dl className="mt-12 space-y-4 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:gap-y-12 sm:space-y-0 lg:grid-cols-3 lg:gap-x-8">
+                {features.map((feature) => (
+                  <div
+                    key={feature.name}
+                    className="flex min-h-[250px] flex-col rounded-md border-2 border-solid border-slate-100 p-6"
+                  >
+                    <dt className="flex flex-col">
+                      <img
+                        src={feature.img}
+                        className="h-[84px] w-[84px] text-green-600"
+                        aria-hidden="true"
+                      />
+                      <p className="mt-8 text-2xl font-semibold text-gray-900">
+                        {feature.name}
+                      </p>
+                    </dt>
+                    <dd className="ml-0 mt-4 font-light text-gray-600">
+                      {feature.description}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </div>
+
+          {/* Goals section */}
+          <div className="relative pb-12 sm:pt-12"></div>
+        </main>
+        <Footer />
+      </div>
     </>
   );
 }
