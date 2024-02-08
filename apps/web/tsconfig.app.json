@@ -93,7 +93,7 @@
     "src/features/mere-ai/helpers/generateRandomQuestion.tsx",
     "src/features/mere-ai/open-ai/prepareDataForOpenAI.tsx",
     "src/features/mere-ai/open-ai/callOpenAI.tsx",
-    "src/features/mere-ai/open-ai/performRAGwithOpenAI.tsx"
+    "src/features/mere-ai/open-ai/performRAGRequestwithOpenAI.tsx"
   ],
   "exclude": [
     "jest.config.ts",

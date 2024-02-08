@@ -76,46 +76,61 @@ export const MessageBubble = memo(function MessageBubble({
               h1: ({ node, ...props }) => (
                 <h1
                   {...props}
-                  className={`-my-1 text-2xl font-semibold ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
+                  className={`-my-2 text-2xl font-semibold ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
                 />
               ),
               h2: ({ node, ...props }) => (
                 <h2
                   {...props}
-                  className={`-my-1 text-1xl font-semibold ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
+                  className={`-my-2 text-1xl font-semibold ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
                 />
               ),
               h3: ({ node, ...props }) => (
                 <h3
                   {...props}
-                  className={`-my-1 text-xl font-semibold ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
+                  className={`-my-2 text-xl font-semibold ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
                 />
               ),
               h4: ({ node, ...props }) => (
                 <h4
                   {...props}
-                  className={`-my-1 text-lg font-semibold ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
+                  className={`-my-2 text-lg font-semibold ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
                 />
               ),
               ol: ({ node, ...props }) => (
-                <ol {...props} className={`-my-1 list-decimal list-inside`} />
+                <ol
+                  {...props}
+                  className={`-my-2 marker:text-indigo-900 list-decimal list-inside ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
+                />
+              ),
+              li: ({ node, ...props }) => (
+                <li
+                  {...props}
+                  className={`-my-2 ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
+                />
               ),
               ul: ({ node, ...props }) => (
-                <ul {...props} className={`-my-1 list-disc list-inside`} />
+                <ul
+                  {...props}
+                  className={`-my-2 marker:text-indigo-900 list-disc list-inside ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
+                />
               ),
-              // p: ({ node, ...props }) => <p {...props} className={``} />,
-              li: ({ node, ...props }) => <li {...props} className={``} />,
+              p: ({ node, ...props }) => (
+                <p
+                  {...props}
+                  className={`-my-2 ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
+                />
+              ),
               table: ({ node, ...props }) => (
                 <div className="mx-auto border border-indigo-300 rounded-md overflow-x-auto overflow-y-hidden w-full max-w-[280px] md:max-w-[24rem]">
-                  <table {...props} className={`-my-1 table-auto rounded-md`}>
+                  <table {...props} className={`-my-2 table-auto rounded-md`}>
                     {props.children || null}
                   </table>
                 </div>
               ),
               pre: ({ node, ...props }) => (
-                <pre {...props} className={`-my-1`} />
+                <pre {...props} className={`-my-2`} />
               ),
-              p: ({ node, ...props }) => <p {...props} className={`-my-1`} />,
               thead: ({ node, ...props }) => (
                 <thead
                   {...props}
@@ -126,16 +141,22 @@ export const MessageBubble = memo(function MessageBubble({
                 <tbody {...props} className={`divide-y divide-indigo-200`} />
               ),
               tr: ({ node, ...props }) => (
-                <tr {...props} className={`-my-1 `} />
+                <tr {...props} className={`-my-2 `} />
               ),
               th: ({ node, ...props }) => (
                 <th
                   {...props}
-                  className={`-my-1 p-1 ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
+                  className={`-my-2 p-1 ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
                 />
               ),
               td: ({ node, ...props }) => (
-                <td {...props} className={`-my-1 p-1`} />
+                <td {...props} className={`-my-2 p-1`} />
+              ),
+              strong: ({ node, ...props }) => (
+                <strong
+                  {...props}
+                  className={`font-semibold ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
+                />
               ),
             }}
           >

@@ -7,15 +7,17 @@ export const callOpenAI = async ({
   messages,
   openAiKey,
   preparedData,
-  streamingCallback,
+  streamingMessageCallback,
   user,
+  functionCall = 'auto',
 }: {
   query: string;
   messages: ChatMessage[];
   openAiKey?: string;
   preparedData: string[];
-  streamingCallback?: (message: string) => void;
+  streamingMessageCallback?: (message: string) => void;
   user: UserDocument;
+  functionCall?: 'auto' | 'none';
 }) => {
   const promptMessages = [
     {
@@ -42,8 +44,8 @@ ${user.gender ? 'Gender:' + user?.gender : ''}`,
     },
     {
       role: 'system',
-      content: `Subset of medical records you found that may help answer the question. Ignore records not relevant to the question.
-Data: ${JSON.stringify(preparedData, null, 2)}`,
+      content: `Subset of medical records you found that may help answer the question. Ignore records not relevant to the question. If records are missing, use the search_medical_records function to find them.
+    Data: ${JSON.stringify(preparedData, null, 2)}`,
     },
   ];
 
@@ -57,6 +59,24 @@ Data: ${JSON.stringify(preparedData, null, 2)}`,
       model: 'gpt-4-turbo-preview',
       // model: 'gpt-3.5-turbo-16k',
       messages: promptMessages,
+      functions: [
+        {
+          name: 'search_medical_records',
+          description:
+            'Query for additional clinical documents for the current patient. Performs best with specific clinical queries like the name of lab results (e.g CBC, Hemoglobin, Alk Phos) or CCDA section names (e.g. ALLERGIES_AND_INTOLERANCES_SECTION). Returns sections of FHIR or CCDA documents.',
+          parameters: {
+            type: 'object',
+            properties: {
+              query: {
+                type: 'string',
+                description: 'The query to search for medical records.',
+              },
+            },
+            required: ['query'],
+          },
+        },
+      ],
+      function_call: functionCall,
       stream: true,
     }),
   });
@@ -64,6 +84,8 @@ Data: ${JSON.stringify(preparedData, null, 2)}`,
   const reader = response.body!.getReader();
   const decoder = new TextDecoder('utf-8');
   let responseText = '';
+  let functionName = '';
+  let functionArgs = '';
 
   try {
     while (true) {
@@ -76,15 +98,29 @@ Data: ${JSON.stringify(preparedData, null, 2)}`,
       const parsedLines = lines
         .map((line) => line.replace(/^data: /, '').trim())
         .filter((line) => line !== '' && line !== '[DONE]')
-        .map((line) => JSON.parse(line));
+        .map((line) => {
+          return JSON.parse(line);
+        });
       for (const parsedLine of parsedLines) {
         const { choices } = parsedLine;
-        const { delta } = choices[0];
-        const { content } = delta;
+        const { delta, finish_reason } = choices[0];
+        const { content, function_call } = delta;
+
+        if (function_call) {
+          if (finish_reason === 'function_call') {
+            console.log(
+              `Function call: ${functionName} with arguments: ${functionArgs}`,
+            );
+            break;
+          }
+
+          functionName = functionName + (function_call?.name || '');
+          functionArgs = functionArgs + (function_call?.arguments || '');
+        }
 
         if (content) {
-          if (streamingCallback) {
-            streamingCallback(content);
+          if (streamingMessageCallback) {
+            streamingMessageCallback(content);
           }
           responseText += content;
         }
@@ -96,7 +132,29 @@ Data: ${JSON.stringify(preparedData, null, 2)}`,
     reader.releaseLock();
   }
 
-  console.log(responseText);
+  const res: Partial<{
+    responseText: string;
+    functionCall: {
+      name: string | undefined;
+      args: Record<string, string> | undefined;
+    };
+  }> = {};
+  if (responseText) {
+    res.responseText = responseText;
+  }
+  if (functionName) {
+    try {
+      res.functionCall = {
+        name: functionName,
+        args: JSON.parse(functionArgs),
+      };
+    } catch (e) {
+      res.functionCall = {
+        name: undefined,
+        args: undefined,
+      };
+    }
+  }
 
-  return responseText;
+  return res;
 };

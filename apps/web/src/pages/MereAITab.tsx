@@ -18,7 +18,7 @@ import React from 'react';
 import { MessageBubble } from '../features/mere-ai/components/MessageBubble';
 import { ChatInput } from '../features/mere-ai/components/ChatInput';
 import { ChatMessage } from '../features/mere-ai/types/ChatMessage';
-import { performRAGwithOpenAI } from '../features/mere-ai/open-ai/performRAGwithOpenAI';
+import { performRAGRequestwithOpenAI } from '../features/mere-ai/open-ai/performRAGRequestwithOpenAI';
 
 function MereAITab() {
   const user = useUser(),
@@ -61,15 +61,17 @@ function MereAITab() {
             const idsOfMostRelatedChunksFromSemanticSearch = [
               ...result.idsOfMostRelatedChunksFromSemanticSearch,
             ];
-            const responseText = await performRAGwithOpenAI({
+            const responseText = await performRAGRequestwithOpenAI({
               query: messageText,
               data: records,
               idsOfMostRelatedChunksFromSemanticSearch,
-              streamingCallback: (c: string) => setAiLoadingText((p) => p + c),
+              streamingMessageCallback: (c: string) =>
+                setAiLoadingText((p) => p + c),
               messages: messages,
               openAiKey: experimental__openai_api_key,
               db,
               user,
+              vectorStorage,
             });
             if (responseText) {
               setMessages((e) => [
