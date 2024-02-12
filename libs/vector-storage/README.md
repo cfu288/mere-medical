@@ -71,8 +71,6 @@ Creates a new instance of VectorStorage.
 ```typescript
 interface IVSOptions {
   openAIApiKey: string; // The OpenAI API key used for generating embeddings.
-  maxSizeInMB?: number; // The maximum size of the storage in megabytes. Defaults to 2GB
-  debounceTime?: number; // The debounce time in milliseconds for saving to IndexedDB. Defaults to 0.
   openaiModel?: string; // The OpenAI model used for generating embeddings. Defaults to 'text-embedding-3-large'.
 }
 ```
@@ -132,4 +130,4 @@ Please ensure that your code follows the project's coding style and that all tes
 
 This project is licensed under the MIT License. See the LICENSE file for the full license text.
 
-Copyright (c) Nitai Aharoni. All rights reserved.
+Copyright (c) Christopher Fu. All rights reserved.

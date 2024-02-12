@@ -1,6 +1,7 @@
 import { BaseDocument } from '../BaseDocument';
 
 export interface VectorStorageDocument extends BaseDocument {
+  hash: string; // hash: A hash of the document's text. This is used to quickly check if the document has been changed since it was added to vector storage.
   metadata: {
     [key: string]: any;
   }; // metadata: An object containing additional information about the document. The structure of this object can vary depending on the application.

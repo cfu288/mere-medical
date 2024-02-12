@@ -35,6 +35,12 @@ export class USPSTFRecommendationsGenerator {
   }
 
   public async startSync() {
+    if (!this.enabled) {
+      console.debug(
+        'USPSTFRecommendationsGenerator: not enabled, skipping generation',
+      );
+      return;
+    }
     console.debug('USPSTFRecommendationsGenerator: starting generation');
     if (this.user?.birthday === undefined) {
       return Promise.resolve([]);
@@ -72,7 +78,7 @@ export class USPSTFRecommendationsGenerator {
         );
       },
     });
-
+    console.log('USPSTFRecommendationsGenerator: finished generation');
     return recommendations;
   }
 }

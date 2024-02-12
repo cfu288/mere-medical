@@ -10,6 +10,16 @@ import { constants } from './common/constants';
 import { filterDocuments } from './common/helpers';
 import { RxCollection, RxDatabase } from 'rxdb';
 
+async function digestMessage(message: string) {
+  const msgUint8 = new TextEncoder().encode(message); // encode as (utf-8) Uint8Array
+  const hashBuffer = await crypto.subtle.digest('SHA-1', msgUint8); // hash the message
+  const hashArray = Array.from(new Uint8Array(hashBuffer)); // convert buffer to byte array
+  const hashHex = hashArray
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join(''); // convert bytes to hex string
+  return hashHex;
+}
+
 export class VectorStorage<
   T extends {
     vector_storage: RxCollection<Omit<IVSDocument, 'text'>>;
@@ -53,6 +63,7 @@ export class VectorStorage<
       id: item.id,
       metadata: metadata,
       text: item.text,
+      hash: await digestMessage(item.text),
       chunk: item.chunk || undefined,
       timestamp: Date.now(),
       vector: [],
@@ -73,15 +84,19 @@ export class VectorStorage<
     if (texts.length !== metadatas.length) {
       throw new Error('The lengths of texts and metadata arrays must match.');
     }
-    const docs: Array<IVSDocument> = texts.map((item, index) => ({
-      id: item.id,
-      metadata: metadatas[index],
-      text: item.text,
-      chunk: item.chunk || undefined,
-      timestamp: Date.now(),
-      vector: [],
-      vectorMag: 0,
-    }));
+
+    const docs: Array<IVSDocument> = await Promise.all(
+      texts.map(async (item, index) => ({
+        id: item.id,
+        metadata: metadatas[index],
+        text: item.text,
+        hash: await digestMessage(item.text),
+        chunk: item.chunk || undefined,
+        timestamp: Date.now(),
+        vector: [],
+        vectorMag: 0,
+      })),
+    );
     return await this.addDocuments(docs);
   }
 
@@ -147,10 +162,29 @@ export class VectorStorage<
       await this.initialize();
     }
     // filter out already existing documents by id
-    const existingDocumentIdSet = new Set(this.documents.map((doc) => doc.id));
-    const newDocuments = documents.filter(
-      (doc) => !existingDocumentIdSet.has(doc.id),
+    const existingDocumentIdMap = new Map(
+      this.documents.map((doc) => [doc.id, doc]),
     );
+    const newDocuments = documents.filter((doc) => {
+      if (doc === undefined || doc?.id === undefined) {
+        return false;
+      }
+      const idDoesNotExist = !existingDocumentIdMap.has(doc.id),
+        docExistsButHashIsDifferent =
+          existingDocumentIdMap.has(doc?.id) &&
+          doc.hash !== existingDocumentIdMap.get(doc.id)?.hash,
+        fileNeedsUpdate = idDoesNotExist || docExistsButHashIsDifferent;
+
+      if (docExistsButHashIsDifferent) {
+        debugger;
+      }
+      if (idDoesNotExist) {
+        // debugger;
+      }
+
+      return fileNeedsUpdate;
+    });
+
     // If there are no new documents, return an empty array
     if (newDocuments.length === 0) {
       return [];
@@ -165,8 +199,13 @@ export class VectorStorage<
       doc.model = this.embeddingModel;
       doc.vectorMag = calcVectorMagnitude(doc);
     });
-    // Add new documents to the store
-    this.documents.push(...newDocuments);
+    // Add new documents to the store, remove text field
+    this.documents.push(
+      ...newDocuments.map((doc) => {
+        const { text, ...newDocWithoutText } = doc;
+        return newDocWithoutText;
+      }),
+    );
     // Save to index db storage
     try {
       await this.saveToRxDbStorage();
@@ -245,27 +284,13 @@ export class VectorStorage<
     const totalStart = performance.now();
     try {
       const db = this.rxdb;
-      await db.vector_storage.bulkUpsert(
-        this.documents.map((doc) => {
-          const { text, ...restOfDoc } = doc;
-          return restOfDoc;
-        }),
-      );
+      await db.vector_storage.bulkUpsert(this.documents);
     } catch (error: any) {
       console.error('Failed to save to RxDB:', error.message);
     }
     console.debug(
       `Saving to RxDB took ${(performance.now() - totalStart).toFixed(2)}ms`,
     );
-  }
-}
-
-function requestIdleCallback(fn: () => void, options?: { timeout: number }) {
-  if ('requestIdleCallback' in window) {
-    // if requestIdleCallback is available, use it
-    window.requestIdleCallback(fn, options);
-  } else {
-    setTimeout(fn, 0);
   }
 }
 

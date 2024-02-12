@@ -182,7 +182,7 @@ function serializeCCDADocumentForVectorization(
       serializeAndChunkXmlContentForVectorization({
         content: data,
         meta,
-        documentId,
+        documentId: documentId + sectionType,
         chunkedDocumentsList,
         chunkedMetadataList,
         prependText: sectionType + '|',
