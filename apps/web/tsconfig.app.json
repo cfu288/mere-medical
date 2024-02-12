@@ -93,7 +93,17 @@
     "src/features/mere-ai/helpers/generateRandomQuestion.tsx",
     "src/features/mere-ai/open-ai/prepareDataForOpenAI.tsx",
     "src/features/mere-ai/open-ai/callOpenAI.tsx",
-    "src/features/mere-ai/open-ai/performRAGRequestwithOpenAI.tsx"
+    "src/features/mere-ai/open-ai/performRAGRequestwithOpenAI.tsx",
+    "src/features/preventative-medicine-recommendations/types/USPSTFRecommendation.ts",
+    "src/features/preventative-medicine-recommendations/helpers/hashStringToNumber.tsx",
+    "src/features/preventative-medicine-recommendations/components/RecommendationCard.tsx",
+    "src/features/preventative-medicine-recommendations/components/USPSTFRecommendationsListCard.tsx",
+    "src/features/preventative-medicine-recommendations/open-ai/askOpenAIAboutUSPSTF.tsx",
+    "src/features/preventative-medicine-recommendations/services/USPSTFRecommendationsGenerator.tsx",
+    "src/features/preventative-medicine-recommendations/services/saveRecommendationToDb.tsx",
+    "src/features/preventative-medicine-recommendations/helpers/getRandomColorPair.tsx",
+    "src/features/preventative-medicine-recommendations/constants/color_pairs.tsx",
+    "src/features/preventative-medicine-recommendations/types/ColorPair.tsx"
   ],
   "exclude": [
     "jest.config.ts",

@@ -107,7 +107,6 @@ The IVSDocument interface represents a document object stored in the vector data
 
 ```typescript
 interface IVSDocument {
-  hits?: number; // The number of hits (accesses) for the document. Omit if the value is 0.
   metadata: object; // The metadata associated with the document for filtering.
   text: string; // The text content of the document.
   timestamp: number; // The timestamp indicating when the document was added to the store.

@@ -58,7 +58,7 @@ export function ExperimentalSettingsGroup() {
                     className="text-primary-800 text-lg leading-6"
                     passive
                   >
-                    Enable Mere AI Assistant
+                    Enable Mere Assistant
                   </Switch.Label>
                   <Switch.Description className="pt-2 text-sm text-gray-800">
                     Enable Mere to use OpenAIs models for improved search and

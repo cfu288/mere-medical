@@ -34,7 +34,7 @@ ${user?.birthday ? 'DOB: ' + user?.birthday : ''}
 ${user?.birthday ? 'Age: ' + (differenceInDays(new Date(), parseISO(user?.birthday)) / 365)?.toFixed(1) : ''}
 ${user.gender ? 'Gender:' + user?.gender : ''}`,
     },
-    ...messages.slice(-5).map((m) => ({
+    ...messages.slice(-10).map((m) => ({
       role: m.user === 'AI' ? 'assistant' : 'user',
       content: m.text,
     })),

@@ -43,7 +43,7 @@ export function TabWrapper() {
           {experimental__use_openai_rag && (
             <TabButton
               route={AppRoutes.MereAIAssistant}
-              title="Mere AI Assistant"
+              title="Mere Assistant"
               smallTitle="Assistant"
               icon={<SparklesIcon />}
             />

@@ -288,7 +288,6 @@ function getValue(entry: Element, section: Element) {
       ''
     ).trim();
   }
-  // debugger;
   return valueIfEntryRelationshipCheck;
 }
 
@@ -414,7 +413,6 @@ export function parseCCDAPlanOfTreatmentSection(
     encounterFromEntry,
     section,
   );
-  console.log('planOfTreatment', planOfTreatment);
 
   const encounterData: Partial<CCDAPlanOfTreatmentData> = {
     title,

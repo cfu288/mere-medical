@@ -33,7 +33,7 @@ function MereAITab() {
     [messages, setMessages] = useState<ChatMessage[]>([
       {
         user: 'AI',
-        text: "Hi there! I'm the Mere AI Assistant. Ask me any question about your medical records.",
+        text: "Hi there! I'm the Mere Assistant. Ask me any question about your medical records.",
         timestamp: new Date(),
         id: uuid4(),
       },
@@ -135,7 +135,7 @@ function MereAITab() {
   }, [isLoadingAiResponse, messages.length]);
 
   return (
-    <AppPage banner={<GenericBanner text="Mere AI Assistant" />}>
+    <AppPage banner={<GenericBanner text="Mere Assistant" />}>
       <div className="relative flex flex-col h-full overflow-hidden">
         <div
           style={{

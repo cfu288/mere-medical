@@ -1,0 +1,600 @@
+[
+  {
+    "topic": "Abdominal Aortic Aneurysm: Screening: men aged 65 to 75 years who have ever smoked",
+    "description": "The USPSTF recommends 1-time screening for abdominal aortic aneurysm (AAA) with ultrasonography in men aged 65 to 75 years who have ever smoked.",
+    "appliesTo": "Asymptomatic adults",
+    "howToImplement": "Assess risk. Risk factors for AAA include older age, male sex, smoking, and having a first-degree relative with an AAA. The recommendation varies based on a patient’s sex, age, and smoking history. “Ever smoker” is commonly defined as smoking 100 or more cigarettes. Screen. Abdominal duplex ultrasonography is the standard approach for AAA screening. Screen men aged 65 to 75 years who have ever smoked. Selectively offer screening to men aged 65 to 75 years who have never smoked. Evidence shows that the overall benefit for screening all men in this group is small. To determine whether this service is appropriate, patients and clinicians should consider the patient’s medical history, family history, other risk factors, and personal values. For those who screen positive, treatment of AAA will depend on aneurysm size, the risk of rupture, and the risk of operative mortality.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "December 2019 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/abdominal-aortic-aneurysm-screening",
+    "minAge": 65,
+    "maxAge": 75,
+    "id": "bc8eb168-0a49-4386-a530-f44406cb7611",
+    "searchTerms": ["abdominal duplex ultrasound"]
+  },
+  {
+    "topic": "Anxiety Disorders in Adults: Screening: adults 64 years or younger, including pregnant and postpartum persons",
+    "description": "The USPSTF recommends screening for anxiety disorders in adults, including pregnant and postpartum persons.",
+    "appliesTo": "This recommendation applies to adults (19 years or older), including pregnant and postpartum persons, and older adults (65 years or older) who do not have a diagnosed mental health disorder and are not showing recognized signs or symptoms of anxiety disorders.",
+    "howToImplement": "Selected screening tools widely used in the US include versions of the Generalized Anxiety Disorder (GAD) scale, Edinburgh Postnatal Depression Scale (EPDS) anxiety subscale, Geriatric Anxiety Scale (GAS), and the Geriatric Anxiety Inventory (GAI).  If a screening test result is positive for an anxiety disorder, a confirmatory diagnostic assessment is needed. There is little evidence regarding optimal timing for screening, or screening interval.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "June 2023",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/anxiety-adults-screening",
+    "minAge": 18,
+    "maxAge": 64,
+    "id": "123e4793-4601-4218-8501-875b36f65e0f"
+  },
+  {
+    "topic": "Anxiety in Children and Adolescents: Screening: children and adolescents aged 8 to 18 years",
+    "description": "The USPSTF recommends screening for anxiety in children and adolescents aged 8 to 18 years.",
+    "appliesTo": "This recommendation applies to children and adolescents 18 years or younger who do not have a diagnosed anxiety disorder and who are not showing recognized signs or symptoms of anxiety.",
+    "howToImplement": "Anxiety screening instruments that have been assessed by the USPSTF are heterogeneous. Some screening instruments are designed to assess for a specific anxiety disorder (eg, the Social Phobia and Anxiety Inventory for Children, which screens for social phobia and anxiety disorder), while others are designed to assess several anxiety disorders. Broader screening instruments used to identify children with several different anxiety disorders include the Screen for Child Anxiety Related Disorders (SCARED) (global anxiety and any anxiety disorder) and the Patient Health Questionnaire–Adolescent (GAD and panic disorder). Anxiety screening tools alone are not sufficient to diagnose anxiety. If the screening test is positive for anxiety, a confirmatory diagnostic assessment and follow-up is required.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "October 2022",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/screening-anxiety-children-adolescents",
+    "minAge": 8,
+    "maxAge": 18,
+    "id": "ebea920b-17a6-41d7-905e-ff6294c365b4"
+  },
+  {
+    "topic": "Aspirin Use to Prevent Preeclampsia and Related Morbidity and Mortality: Preventive Medication: pregnant persons at high risk for preeclampsia",
+    "description": "The USPSTF recommends the use of low-dose aspirin (81 mg/day) as preventive medication after 12 weeks of gestation in persons who are at high risk for preeclampsia. See the Practice Considerations section for information on high risk and aspirin dose.",
+    "appliesTo": "Asymptomatic pregnant persons who are at high risk for preeclampsia and have no prior adverse events with low-dose aspirin.",
+    "howToImplement": "Assess Risk. Pregnant persons are at high risk for preeclampsia if they have 1 or more of the following risk factors: History of preeclampsia, Multifetal gestation, Chronic hypertension, Pregestational type 1 or 2 diabetes, Renal disease, Autoimmune disease (ie, systemic lupus erythematosus, antiphospholipid syndrome)",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "September 2021 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/low-dose-aspirin-use-for-the-prevention-of-morbidity-and-mortality-from-preeclampsia-preventive-medication",
+    "id": "5a6e19f5-a0c5-4d3b-86a3-f9013e5f2bd8",
+    "searchTerms": [
+      "hypertension",
+      "systolic",
+      "diastolic",
+      "hCG",
+      "aspirin allergy"
+    ]
+  },
+  {
+    "topic": "Asymptomatic Bacteriuria in Adults: Screening: pregnant persons",
+    "description": "The USPSTF recommends screening for asymptomatic bacteriuria using urine culture in pregnant persons.",
+    "appliesTo": "This applies to adults 18 years and older and pregnant persons of any age without signs and symptoms of a urinary tract infection. It does not apply to persons who have chronic medical or urinary tract conditions or are hospitalized or living in institutions such as nursing homes.",
+    "howToImplement": "Screen pregnant persons for asymptomatic bacteriuria using a midstream, clean-catch urine culture at the first prenatal visit or at 12 to 16 weeks of gestation, whichever is earlier. A urine culture showing >100,000 CFU/mL of a single uropathogen or >10,000 CFU/mL if the pathogen is group B streptococcus indicates treatment.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "September 2019 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/asymptomatic-bacteriuria-in-adults-screening",
+    "id": "b55e6330-6289-4d1b-8e79-43457b1d6c15",
+    "minAge": 18,
+    "searchTerms": ["hCG", "urine culture", "urinalysis"]
+  },
+  {
+    "topic": "BRCA-Related Cancer: Risk Assessment, Genetic Counseling, and Genetic Testing: women with a personal or family history of breast, ovarian, tubal, or peritoneal cancer or an ancestry associated with brca1/2 gene mutation",
+    "description": "The USPSTF recommends that primary care clinicians assess women with a personal or family history of breast, ovarian, tubal, or peritoneal cancer or who have an ancestry associated with breast cancer susceptibility 1 and 2 (BRCA1/2) gene mutations with an appropriate brief familial risk assessment tool. Women with a positive result on the risk assessment tool should receive genetic counseling and, if indicated after counseling, genetic testing.",
+    "appliesTo": "Women with a personal or family history of breast, ovarian, tubal, or peritoneal cancer or who have an ancestry associated with BRCA1/2 gene mutations",
+    "howToImplement": "Assess with an appropriate brief familial risk assessment tool.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "August 2019 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/brca-related-cancer-risk-assessment-genetic-counseling-and-genetic-testing",
+    "id": "ac8837d7-0587-42bf-8dda-82c941bfa1bd"
+  },
+  {
+    "topic": "Breast Cancer: Medication Use to Reduce Risk: women at increased risk for breast cancer aged 35 years or older",
+    "description": "The USPSTF recommends that clinicians offer to prescribe risk-reducing medications, such as tamoxifen, raloxifene, or aromatase inhibitors, to women who are at increased risk for breast cancer and at low risk for adverse medication effects.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "September 2019 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/breast-cancer-medications-for-risk-reduction",
+    "minAge": 35,
+    "id": "a82aff59-1bff-4151-a3df-37fc58f03589"
+  },
+  {
+    "topic": "Breast Cancer: Screening: women aged 50 to 74 years",
+    "description": "The USPSTF recommends biennial screening mammography for women aged 50 to 74 years. <sup>†</sup>",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "January 2016 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/breast-cancer-screening",
+    "minAge": 50,
+    "maxAge": 74,
+    "id": "118363cb-60ca-4f37-aba7-f1b0de3b51bb"
+  },
+  {
+    "topic": "Breastfeeding: Primary Care Interventions: pregnant women, new mothers, and their children",
+    "description": "The USPSTF recommends providing interventions during pregnancy and after birth to support breastfeeding.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "October 2016 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/breastfeeding-primary-care-interventions",
+    "id": "90095fe6-d7db-42aa-b656-022b4821683a"
+  },
+  {
+    "topic": "Cervical Cancer: Screening: women aged 21 to 65 years",
+    "description": "The USPSTF recommends screening for cervical cancer every 3 years with cervical cytology alone in women aged 21 to 29 years. For women aged 30 to 65 years, the USPSTF recommends screening every 3 years with cervical cytology alone, every 5 years with high-risk human papillomavirus (hrHPV) testing alone, or every 5 years with hrHPV testing in combination with cytology (cotesting).See the Clinical Considerations section for the relative benefits and harms of alternative screening strategies for women 21 years or older.",
+    "grade": "A",
+    "releaseDateOfCurrentRecommendation": "August 2018 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/cervical-cancer-screening",
+    "minAge": 21,
+    "maxAge": 65,
+    "id": "de5fbb2b-84f6-4c41-84e8-f853e9e42ca5"
+  },
+  {
+    "topic": "Chlamydia and Gonorrhea: Screening: sexually active women, including pregnant persons",
+    "description": "The USPSTF recommends screening for gonorrhea in all sexually active women 24 years or younger and in women 25 years or older who are at increased risk for infection.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "September 2021 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/chlamydia-and-gonorrhea-screening",
+    "maxAge": 24,
+    "id": "98d9ac2b-3b64-4b69-82c9-1b7c1fc1d5db"
+  },
+  {
+    "topic": "Chlamydia and Gonorrhea: Screening: sexually active women, including pregnant persons",
+    "description": "The USPSTF recommends screening for chlamydia in all sexually active women 24 years or younger and in women 25 years or older who are at increased risk for infection.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "September 2021 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/chlamydia-and-gonorrhea-screening",
+    "maxAge": 24,
+    "id": "96c93431-2510-4555-aac4-b0a7eea30c86"
+  },
+  {
+    "topic": "Colorectal Cancer: Screening: adults aged 45 to 49 years",
+    "description": "The USPSTF recommends screening for colorectal cancer in adults aged 45 to 49 years.See the \"Practice Considerations\" section and Table 1 for details about screening strategies.",
+    "appliesTo": "Adults 45 years and older who do not have signs or symptoms of colorectal cancer and who are at average risk for colorectal cancer (ie, no prior diagnosis of colorectal cancer, adenomatous polyps, or inflammatory bowel disease; no personal diagnosis or family history of known genetic disorders that predispose them to a high lifetime risk of colorectal cancer [such as Lynch syndrome or familial adenomatous polyposis]).",
+    "howToImplement": "Screen all adults aged 45 to 75 years for colorectal cancer. High-sensitivity guaiac fecal occult blood test (HSgFOBT) or fecal immunochemical test (FIT) every year: Stool DNA-FIT every 1 to 3 years, Computed tomography colonography every 5 years, Flexible sigmoidoscopy every 5 years, Flexible sigmoidoscopy every 10 years + annual FIT, Colonoscopy screening every 10 years",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "May 2021 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/colorectal-cancer-screening",
+    "minAge": 45,
+    "maxAge": 49,
+    "id": "82731fbc-03d5-498e-842f-9d0f377dc222",
+    "searchTerms": [
+      "colonoscopy",
+      "sigmoidoscopy",
+      "fecal immunochemical test",
+      "fecal occult blood test",
+      "stool DNA-FIT",
+      "computed tomography colonography"
+    ]
+  },
+  {
+    "topic": "Colorectal Cancer: Screening: adults aged 50 to 75 years",
+    "description": "The USPSTF recommends screening for colorectal cancer in all adults aged 50 to 75 years.See the \"Practice Considerations\" section and Table 1 for details about screening strategies.",
+    "appliesTo": "Adults 45 years and older who do not have signs or symptoms of colorectal cancer and who are at average risk for colorectal cancer (ie, no prior diagnosis of colorectal cancer, adenomatous polyps, or inflammatory bowel disease; no personal diagnosis or family history of known genetic disorders that predispose them to a high lifetime risk of colorectal cancer [such as Lynch syndrome or familial adenomatous polyposis]).",
+    "howToImplement": "Screen all adults aged 45 to 75 years for colorectal cancer. High-sensitivity guaiac fecal occult blood test (HSgFOBT) or fecal immunochemical test (FIT) every year: Stool DNA-FIT every 1 to 3 years, Computed tomography colonography every 5 years, Flexible sigmoidoscopy every 5 years, Flexible sigmoidoscopy every 10 years + annual FIT, Colonoscopy screening every 10 years",
+    "grade": "A",
+    "releaseDateOfCurrentRecommendation": "May 2021 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/colorectal-cancer-screening",
+    "minAge": 50,
+    "maxAge": 75,
+    "id": "f605937a-4986-42a8-a0df-e20719415838",
+    "searchTerms": [
+      "colonoscopy",
+      "sigmoidoscopy",
+      "fecal immunochemical test",
+      "fecal occult blood test",
+      "stool DNA-FIT",
+      "computed tomography colonography"
+    ]
+  },
+  {
+    "topic": "Depression and Suicide Risk in Adults: Screening: adults, including pregnant and postpartum persons, and older adults",
+    "description": "The USPSTF recommends screening for depression in the adult population, including pregnant and postpartum persons, as well as older adults.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "June 2023 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/screening-depression-suicide-risk-adults",
+    "minAge": 18,
+    "id": "fa89993f-d1f8-4360-b68f-6d89869ee91a"
+  },
+  {
+    "topic": "Depression and Suicide Risk in Children and Adolescents: Screening: adolescents aged 12 to 18 years",
+    "description": "The USPSTF recommends screening for major depressive disorder (MDD) in adolescents aged 12 to 18 years.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "October 2022 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/screening-depression-suicide-risk-children-adolescents",
+    "minAge": 12,
+    "maxAge": 18,
+    "id": "2e20c5a0-5254-4868-80af-34d2a9de1960"
+  },
+  {
+    "topic": "Falls Prevention in Community-Dwelling Older Adults: Interventions: adults 65 years or older",
+    "description": "The USPSTF recommends exercise interventions to prevent falls in community-dwelling adults 65 years or older who are at increased risk for falls.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "April 2018 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/falls-prevention-in-older-adults-interventions",
+    "minAge": 65,
+    "id": "eaf89d54-74a8-4d5a-86ff-42066ec6ae5c"
+  },
+  {
+    "topic": "Folic Acid Supplementation to Prevent Neural Tube Defects: Preventive Medication: persons who plan to or could become pregnant",
+    "description": "The USPSTF recommends that all persons planning to or who could become pregnant take a daily supplement containing 0.4 to 0.8 mg (400 to 800 mcg) of folic acid.",
+    "grade": "A",
+    "releaseDateOfCurrentRecommendation": "August 2023 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/folic-acid-for-the-prevention-of-neural-tube-defects-preventive-medication",
+    "id": "a84d48a7-a033-43eb-9d57-c1939bdef7ca"
+  },
+  {
+    "topic": "Gestational Diabetes: Screening: asymptomatic pregnant persons at 24 weeks of gestation or after",
+    "description": "The USPSTF recommends screening for gestational diabetes in asymptomatic pregnant persons at 24 weeks of gestation or after.",
+    "appliesTo": "Pregnant persons who have not been previously diagnosed with type 1 or type 2 diabetes.",
+    "howToImplement": "Screen: If the person is pregnant and is at least 24 weeks of gestation, screen for gestational diabetes by using 1 of several methods: A 2-step process that involves a screening test (oral glucose challenge test) followed by a diagnostic test (oral glucose tolerance test). This is the most common approach in the US. A 1-step process where the diagnostic test (oral glucose tolerance test) is administered to all patients. Fasting plasma glucose measurement. One-time screening should be performed at 24 weeks of gestation or after.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "August 2021 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/gestational-diabetes-screening",
+    "id": "e030b323-a0c9-43f3-b7fc-6620c3d4d8e7"
+  },
+  {
+    "topic": "Healthy Diet and Physical Activity for Cardiovascular Disease Prevention in Adults With Cardiovascular Risk Factors: Behavioral Counseling Interventions: adults with cardiovascular disease risk factors",
+    "description": "The USPSTF recommends offering or referring adults with cardiovascular disease risk factors to behavioral counseling interventions to promote a healthy diet and physical activity.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "November 2020 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/healthy-diet-and-physical-activity-counseling-adults-with-high-risk-of-cvd",
+    "id": "21e13722-7799-4a76-8c3b-e28ed4ce4ba5"
+  },
+  {
+    "topic": "Healthy Weight and Weight Gain In Pregnancy: Behavioral Counseling Interventions: pregnant persons",
+    "description": "The USPSTF recommends that clinicians offer pregnant persons effective behavioral counseling interventions aimed at promoting healthy weight gain and preventing excess gestational weight gain in pregnancy.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "May 2021",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/healthy-weight-and-weight-gain-during-pregnancy-behavioral-counseling-interventions",
+    "id": "1b27a9c7-c4cb-47b4-80e1-3afec764fb69"
+  },
+  {
+    "topic": "Hepatitis B Virus Infection in Adolescents and Adults: Screening: adolescents and adults at increased risk for infection",
+    "description": "The USPSTF recommends screening for hepatitis B virus (HBV) infection in adolescents and adults at increased risk for infection.See the Practice Considerations section for a description of adolescents and adults at increased risk for infection.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "December 2020 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/hepatitis-b-virus-infection-screening",
+    "id": "996e7446-a35c-485f-a063-22579013ed55"
+  },
+  {
+    "topic": "Hepatitis B Virus Infection in Pregnant Women: Screening: pregnant women",
+    "description": "The USPSTF recommends screening for hepatitis B virus (HBV) infection in pregnant women at their first prenatal visit",
+    "grade": "A",
+    "releaseDateOfCurrentRecommendation": "July 2019 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/hepatitis-b-virus-infection-in-pregnant-women-screening",
+    "id": "9c51861a-bd83-4b67-8ae9-3f660bf9b345"
+  },
+  {
+    "topic": "Hepatitis C Virus Infection in Adolescents and Adults: Screening: adults aged 18 to 79 years",
+    "description": "The USPSTF recommends screening for hepatitis C virus (HCV) infection in adults aged 18 to 79 years.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "March 2020 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/hepatitis-c-screening",
+    "minAge": 18,
+    "maxAge": 79,
+    "id": "566e3b6e-7946-4430-a288-8601782f86ad"
+  },
+  {
+    "topic": "Human Immunodeficiency Virus (HIV) Infection: Screening: adolescents and adults aged 15 to 65 years",
+    "description": "The USPSTF recommends that clinicians screen for HIV infection in adolescents and adults aged 15 to 65 years. Younger adolescents and older adults who are at increased risk of infection should also be screened.See the Clinical Considerations section for more information about assessment of risk, screening intervals, and rescreening in pregnancy.",
+    "grade": "A",
+    "releaseDateOfCurrentRecommendation": "June 2019 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/human-immunodeficiency-virus-hiv-infection-screening",
+    "minAge": 15,
+    "maxAge": 65,
+    "id": "9b97d78c-2518-4faa-8b72-d30599c09bb4"
+  },
+  {
+    "topic": "Human Immunodeficiency Virus (HIV) Infection: Screening: pregnant persons",
+    "description": "The USPSTF recommends that clinicians screen for HIV infection in all pregnant persons, including those who present in labor or at delivery whose HIV status is unknown.",
+    "grade": "A",
+    "releaseDateOfCurrentRecommendation": "June 2019 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/human-immunodeficiency-virus-hiv-infection-screening",
+    "id": "7da6d485-f632-41d2-83ee-5fa6bc9bd9d6"
+  },
+  {
+    "topic": "Hypertension in Adults: Screening: adults 18 years or older without known hypertension",
+    "description": "The USPSTF recommends screening for hypertension in adults 18 years or older with office blood pressure measurement (OBPM). The USPSTF recommends obtaining blood pressure measurements outside of the clinical setting for diagnostic confirmation before starting treatment.",
+    "appliesTo": "Adults 18 years or older without known hypertension.",
+    "howToImplement": "Screen: Measure blood pressure with an office blood pressure measurement. Confirm: Take blood pressure measurements outside of the clinical setting to confirm a hypertension diagnosis before starting treatment. Ways to measure blood pressure outside of the clinical setting include: Ambulatory blood pressure monitoring, Home blood pressure monitoring",
+    "grade": "A",
+    "releaseDateOfCurrentRecommendation": "April 2021 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/hypertension-in-adults-screening",
+    "minAge": 18,
+    "id": "94a704ea-edd2-4414-b8de-ea8d6b542b38",
+    "searchTerms": ["systolic", "diastolic", "vital signs"]
+  },
+  {
+    "topic": "Hypertensive Disorders of Pregnancy: Screening: asymptomatic pregnant persons",
+    "description": "The USPSTF recommends screening for hypertensive disorders in pregnant persons with blood pressure measurements throughout pregnancy.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "September 2023 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/hypertensive-disorders-pregnancy-screening",
+    "id": "91e054f6-487b-4ead-95fb-c7c091f0b74f",
+    "searchTerms": ["systolic", "diastolic", "vital signs"]
+  },
+  {
+    "topic": "Intimate Partner Violence, Elder Abuse, and Abuse of Vulnerable Adults: Screening: women of reproductive age",
+    "description": "The USPSTF recommends that clinicians screen for intimate partner violence (IPV) in women of reproductive age and provide or refer women who screen positive to ongoing support services.See the Clinical Considerations section for more information on effective ongoing support services for IPV and for information on IPV in men.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "October 2018 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/intimate-partner-violence-and-abuse-of-elderly-and-vulnerable-adults-screening",
+    "id": "7531e785-b2fb-472c-b37c-1b1fd917c196"
+  },
+  {
+    "topic": "Latent Tuberculosis Infection in Adults: Screening: asymptomatic adults at increased risk of latent tuberculosis infection",
+    "description": "The USPSTF recommends screening for LTBI in populations at increased risk.See the \"Assessment of Risk\" section for additional information on adults at increased risk.",
+    "appliesTo": "This recommendation applies to asymptomatic adults 18 years or older at increased risk for tuberculosis (TB). It does not apply to adults with symptoms of TB or to children and adolescents.",
+    "howToImplement": "Two types of screening tests for LTBI are currently available in the US: the tuberculin skin test (TST) and the interferon-gamma release assay (IGRA). The TST requires trained personnel to administer intradermal purified protein derivative and interpret the response 48 to 72 hours later. The IGRA requires a single venous blood sample that measures the CD4 T-cell response to specific Mycobacterium tuberculosis antigens and laboratory processing within 8 to 30 hours after collection. Testing with IGRA may have advantages over TST for persons who have received a BCG vaccination, as IGRA does not cross-react with the vaccine, and for persons who may be unlikely to return for TST interpretation.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "May 2023 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/latent-tuberculosis-infection-screening",
+    "id": "41bccb4d-1c1c-4803-9bca-c607d808b367",
+    "searchTerms": [
+      "tuberculosis",
+      "purified protein derivative",
+      "interferon-gamma release assay"
+    ]
+  },
+  {
+    "topic": "Lung Cancer: Screening: adults aged 50 to 80 years who have a 20 pack-year smoking history and currently smoke or have quit within the past 15 years",
+    "description": "The USPSTF recommends annual screening for lung cancer with low-dose computed tomography (LDCT) in adults aged 50 to 80 years who have a 20 pack-year smoking history and currently smoke or have quit within the past 15 years. Screening should be discontinued once a person has not smoked for 15 years or develops a health problem that substantially limits life expectancy or the ability or willingness to have curative lung surgery.",
+    "appliesTo": "Adults aged 50 to 80 years who have a 20 pack-year smoking history and currently smoke or have quit within the past 15 years. (See below for definition of pack-year.)",
+    "howToImplement": "Assess risk based on age and pack-year smoking history: Is the person aged 50 to 80 years and have they accumulated 20 pack-years or more of smoking? A pack-year is a way of calculating how much a person has smoked in their lifetime. One pack-year is the equivalent of smoking an average of 20 cigarettes—1 pack—per day for a year. Screen: If the person is aged 50 to 80 years and has a 20 pack-year or more smoking history, engage in shared decision-making about screening. The decision to undertake screening should involve a discussion of its potential benefits, limitations, and harms. If a person decides to be screened, refer them for lung cancer screening with low-dose CT, ideally to a center with experience and expertise in lung cancer screening. If the person currently smokes, they should receive smoking cessation interventions.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "March 2021 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/lung-cancer-screening",
+    "minAge": 50,
+    "maxAge": 80,
+    "id": "2f862ebc-d448-4eac-b1c2-bc0dadfec8f9",
+    "searchTerms": ["computed tomography", "social history"]
+  },
+  {
+    "topic": "Obesity in Children and Adolescents: Screening: children and adolescents 6 years and older ",
+    "description": "The USPSTF recommends that clinicians screen for obesity in children and adolescents 6 years and older and offer or refer them to comprehensive, intensive behavioral interventions to promote improvements in weight status.",
+    "appliesTo": "Children and adolescents 6 y and older",
+    "howToImplement": "BMI measurement, using height and weight, is the recommended screening test for obesity. Obesity is defined as an age- and sex-specific BMI in the 95th percentile or greater.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "June 2017 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/obesity-in-children-and-adolescents-screening",
+    "minAge": 6,
+    "id": "ae05bc6e-2c1b-4462-9a8f-2361fc6d97ab",
+    "searchTerms": ["BMI"]
+  },
+  {
+    "topic": "Ocular Prophylaxis for Gonococcal Ophthalmia Neonatorum: Preventive Medication: newborns",
+    "description": "The USPSTF recommends prophylactic ocular topical medication for all newborns to prevent gonococcal ophthalmia neonatorum.",
+    "appliesTo": "Newborns",
+    "howToImplement": "Erythromycin ophthalmic ointment is the only drug approved by the US Food and Drug Administration for the prophylaxis of gonococcal ophthalmia neonatorum",
+    "grade": "A",
+    "releaseDateOfCurrentRecommendation": "January 2019 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/ocular-prophylaxis-for-gonococcal-ophthalmia-neonatorum-preventive-medication",
+    "id": "2de876a2-68c8-41de-92c3-d15b4b52c1e0"
+  },
+  {
+    "topic": "Osteoporosis to Prevent Fractures: Screening: postmenopausal women younger than 65 years at increased risk of osteoporosis",
+    "description": "The USPSTF recommends screening for osteoporosis with bone measurement testing to prevent osteoporotic fractures in postmenopausal women younger than 65 years who are at increased risk of osteoporosis, as determined by a formal clinical risk assessment tool.See the Clinical Considerations section for information on risk assessment.",
+    "appliesTo": "Postmenopausal women younger than 65 years at increased risk",
+    "howToImplement": "Risk factors for osteoporotic fractures include parental history of hip fracture, smoking, excess alcohol consumption, and low body weight. In addition, menopausal status in women is also an important consideration. For postmenopausal women younger than 65 years who have at least 1 risk factor, a reasonable approach to determine who should be screened with bone measurement testing is to use a clinical risk assessment tool. Several tools are available to assess osteoporosis risk, such as OST, ORAI, OSIRIS, SCORE, and FRAX. The most commonly used test is central dual-energy x-ray absorptiometry (DXA) of the hip and lumbar spine. While several bone measurement tests similarly predict risk of fractures, DXA provides measurement of bone mineral density (BMD), and most treatment guidelines use central DXA to define osteoporosis and the treatment threshold to prevent osteoporotic fractures. Other screening tests include peripheral DXA and quantitative ultrasound (QUS).",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "June 2018 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/osteoporosis-screening",
+    "id": "7b4d96eb-8e5c-417f-aa1d-8f519e252d9d",
+    "searchTerms": [
+      "dual-energy x-ray absorptiometry",
+      "DXA",
+      "bone mineral density",
+      "osteoporosis"
+    ]
+  },
+  {
+    "topic": "Osteoporosis to Prevent Fractures: Screening: women 65 years and older",
+    "description": "The USPSTF recommends screening for osteoporosis with bone measurement testing to prevent osteoporotic fractures in women 65 years and older.",
+    "appliesTo": "Women 65 years and older",
+    "howToImplement": "The most commonly used test is central dual-energy x-ray absorptiometry (DXA) of the hip and lumbar spine. While several bone measurement tests similarly predict risk of fractures, DXA provides measurement of bone mineral density (BMD), and most treatment guidelines use central DXA to define osteoporosis and the treatment threshold to prevent osteoporotic fractures. Other screening tests include peripheral DXA and quantitative ultrasound (QUS).",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "June 2018 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/osteoporosis-screening",
+    "minAge": 65,
+    "id": "be9cdc7b-821b-4550-8aee-68e9f601f6e2",
+    "searchTerms": [
+      "dual-energy x-ray absorptiometry",
+      "DXA",
+      "bone mineral density",
+      "osteoporosis"
+    ]
+  },
+  {
+    "topic": "Perinatal Depression: Preventive Interventions: pregnant and postpartum persons",
+    "description": "The USPSTF recommends that clinicians provide or refer pregnant and postpartum persons who are at increased risk of perinatal depression to counseling interventions.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "February 2019",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/perinatal-depression-preventive-interventions",
+    "id": "6446ff1d-c6b9-421a-b863-c8ed49abe74b"
+  },
+  {
+    "topic": "Prediabetes and Type 2 Diabetes: Screening: asymptomatic adults aged 35 to 70 years who have overweight or obesity",
+    "description": "The USPSTF recommends screening for prediabetes and type 2 diabetes in adults aged 35 to 70 years who have overweight or obesity. Clinicians should offer or refer patients with prediabetes to effective preventive interventions.",
+    "appliesTo": "Nonpregnant adults aged 35 to 70 years who have overweight or obesity and no symptoms of diabetes.",
+    "howToImplement": "Assess risk: Obtain height and weight measurements to determine whether patient has overweight or obesity. Overweight and obesity are defined as a BMI ≥25 and ≥30, respectively. If the patient is aged 35 to 70 years and has overweight or obesity. Consider screening at an earlier age if the patient is from a population with a disproportionately high prevalence of diabetes (American Indian/Alaska Native, Black, Hispanic/Latino, Native Hawaiian/Pacific Islander), and at a lower BMI (≥23) if the patient is Asian American. Screening tests for prediabetes and type 2 diabetes include measurement of fasting plasma glucose or HbA1c level or an oral glucose tolerance test.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "August 2021 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/screening-for-prediabetes-and-type-2-diabetes",
+    "maxAge": 70,
+    "id": "2a665e72-3cc6-4bd6-97aa-81b11d1ca62a",
+    "searchTerms": [
+      "fasting glucose",
+      "hemoglobin A1c",
+      "BMI",
+      "oral glucose tolerance test"
+    ]
+  },
+  {
+    "topic": "Prevention of Acquisition of HIV: Preexposure Prophylaxis: adolescents and adults at increased risk of hiv",
+    "description": "The USPSTF recommends that clinicians prescribe preexposure prophylaxis using effective antiretroviral therapy to persons who are at increased risk of HIV acquisition to decrease the risk of acquiring HIV.See the Practice Considerations section for more information about identification of persons at increased risk and about effective antiretroviral therapy.",
+    "appliesTo": "This recommendation applies to adolescents and adults who do not have HIV and are at increased risk of HIV.",
+    "howToImplement": "Routinely take a sexual and injection drug use history for all patients. Inform all adolescents and adults who are sexually active or who inject drugs that there are ways to help prevent acquisition of HIV. Sexually active adults and adolescents weighing at least 35 kg (77 lb) who have engaged in anal or vaginal sex in the past 6 months and have any of the following: A sexual partner who has HIV (especially if the partner has an unknown or detectable viral load). A bacterial sexually transmitted infection (syphilis, gonorrhea, or chlamydia for men who have sex with men and transgender women; gonorrhea and syphilis for heterosexual women and men) in the past 6 months. A history of inconsistent or no condom use with sex partner(s) whose HIV status is not known; assessing risk in conversation with the patient and considering factors such as number of partners, the specific sexual activities a person engages in, and whether their sex partner or partners are in a group with a higher prevalence of HIV (eg, men who have sex with men or with men and women, transgender women, persons who inject drugs, and persons who engage in transactional sex). Persons who inject drugs and have a drug injecting partner who has HIV or who shares injection equipment.",
+    "grade": "A",
+    "releaseDateOfCurrentRecommendation": "August 2023 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/prevention-of-human-immunodeficiency-virus-hiv-infection-pre-exposure-prophylaxis",
+    "id": "d2fa9abf-7627-4e91-8d50-73da7e6a33c4"
+  },
+  {
+    "topic": "Prevention of Dental Caries in Children Younger Than 5 Years: Screening and Interventions: children younger than 5 years",
+    "description": "The USPSTF recommends that primary care clinicians apply fluoride varnish to the primary teeth of all infants and children starting at the age of primary tooth eruption.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "December 2021 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/prevention-of-dental-caries-in-children-younger-than-age-5-years-screening-and-interventions1",
+    "id": "908442af-3440-4ea3-811c-857f1cd7b58f"
+  },
+  {
+    "topic": "Rh(D) Incompatibility: Screening: pregnant women, during the first pregnancy-related care visit",
+    "description": "The USPSTF strongly recommends Rh(D) blood typing and antibody testing for all pregnant women during their first visit for pregnancy-related care.",
+    "appliesTo": "Pregnant women presenting at the first visit for prenatal care",
+    "howToImplement": "Perform Rh (D) blood typing and antibody testing.",
+    "grade": "A",
+    "releaseDateOfCurrentRecommendation": "February 2004 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/rh-d-incompatibility-screening",
+    "id": "10e71f10-6e89-469d-b0ed-e657d520f2d6"
+  },
+  {
+    "topic": "Rh(D) Incompatibility: Screening: unsensitized rh(d)-negative pregnant women",
+    "description": "The USPSTF recommends repeated Rh(D) antibody testing for all unsensitized Rh(D)-negative women at 24 to 28 weeks' gestation, unless the biological father is known to be Rh(D)-negative.",
+    "appliesTo": "Unsensitized Rh (D)-negative women at 24–28 weeks' gestation",
+    "howToImplement": "Repeat Rh (D) blood typing and antibody testing.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "February 2004 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/rh-d-incompatibility-screening",
+    "id": "e02086d6-0b1b-48d8-9b5b-e82cea33e53a"
+  },
+  {
+    "topic": "Sexually Transmitted Infections: Behavioral Counseling: sexually active adolescents and adults at increased risk",
+    "description": "The USPSTF recommends behavioral counseling for all sexually active adolescents and for adults who are at increased risk for sexually transmitted infections (STIs). See the Practice Considerations section for more information on populations at increased risk for acquiring STIs.",
+    "appliesTo": "All sexually active adolescents and adults at increased risk for STIs",
+    "howToImplement": "Assess whether adolescents are sexually active and, for adults, assess risk for STIs. Factors that put a person at increased risk include: Being diagnosed with an STI within the past year. Not consistently using condoms. Having multiple sex partners or having a partner(s) at high risk for STIs. Belonging to a population that has a high STI prevalence (such as persons seeking STI testing or attending an STI clinic, sexual and gender minorities, persons living with HIV, persons with injection drug use, persons who exchange sex for money or drugs, persons who have recently been in a correctional facility, and some racial/ethnic minority groups)",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "August 2020 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/sexually-transmitted-infections-behavioral-counseling",
+    "id": "063b691d-d48a-4468-a5d0-d355a7cfc5df",
+    "searchTerms": ["STI", "social history"]
+  },
+  {
+    "topic": "Skin Cancer Prevention: Behavioral Counseling: young adults, adolescents, children, and parents of young children",
+    "description": "The USPSTF recommends counseling young adults, adolescents, children, and parents of young children about minimizing exposure to ultraviolet (UV) radiation for persons aged 6 months to 24 years with fair skin types to reduce their risk of skin cancer.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "March 2018 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/skin-cancer-counseling",
+    "minAge": 6,
+    "maxAge": 24,
+    "id": "46266c0c-9db7-495f-a151-26f66f976591"
+  },
+  {
+    "topic": "Statin Use for the Primary Prevention of Cardiovascular Disease in Adults: Preventive Medication: adults aged 40 to 75 years who have 1 or more cardiovascular risk factors and an estimated 10-year cardiovascular disease",
+    "description": "The USPSTF recommends that clinicians prescribe a statin for the primary prevention of CVD for adults aged 40 to 75 years who have 1 or more CVD risk factors (i.e. dyslipidemia, diabetes, hypertension, or smoking) and an estimated 10-year risk of a cardiovascular event of 10% or greater.",
+    "appliesTo": "Adults aged 40 to 75 years",
+    "howToImplement": "In patients who have a cardiovascular risk factor and an estimated 10-year CVD risk of 10% or greater, initiate a moderate-intensity statin after discussing the rationale and provided the patient agrees. In patients who have a cardiovascular risk factor and an estimated 10-year CVD risk of 7.5% to less than 10%, the benefit of starting a statin is smaller, so clinicians should selectively offer a statin, taking patient values and preferences into account.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "August 2022 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/statin-use-in-adults-preventive-medication",
+    "minAge": 40,
+    "maxAge": 75,
+    "id": "92776ba5-c171-455d-a491-c9c22200de3f",
+    "searchTerms": [
+      "cholesterol",
+      "triglyceride",
+      "diastolic",
+      "systolic",
+      "smoking",
+      "dyslipidemia",
+      "diabetes"
+    ]
+  },
+  {
+    "topic": "Syphilis Infection in Nonpregnant Adolescents and Adults: Screening: asymptomatic, nonpregnant adolescents and adults who are at increased risk for syphilis infection",
+    "description": "The USPSTF recommends screening for syphilis infection in persons who are at increased risk for infection.",
+    "appliesTo": "Adolescents and adults who have ever been sexually active and are at increased risk for syphilis infection. It does not apply to pregnant persons, who are discussed in a separate recommendation statement. It does not apply to persons who have signs or symptoms of syphilis.",
+    "howToImplement": "Traditional screening algorithm: Screen with an initial nontreponemal test (eg, Venereal Disease Research Laboratory [VDRL] or rapid plasma reagin [RPR] test). If positive, confirm with a treponemal antibody detection test (eg, T pallidum particle agglutination [TP-PA] test). Reverse sequence algorithm: Screen with an initial automated treponemal test (eg, enzyme-linked or chemiluminescence immunoassay). If positive, confirm with a nontreponemal test.",
+    "grade": "A",
+    "releaseDateOfCurrentRecommendation": "September 2022 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/syphilis-infection-nonpregnant-adults-adolescents-screening",
+    "id": "c62c6a5e-4fc9-48f6-9e62-3780c6b7b8df",
+    "searchTerms": ["RPR", "VDRL", "TPPA", "TP-PA"]
+  },
+  {
+    "topic": "Syphilis Infection in Pregnant Women: Screening: pregnant women",
+    "description": "The USPSTF recommends early screening for syphilis infection in all pregnant women.",
+    "appliesTo": "Pregnant women",
+    "howToImplement": "Traditional screening algorithm: Screen with an initial nontreponemal test (eg, Venereal Disease Research Laboratory [VDRL] or rapid plasma reagin [RPR] test). If positive, confirm with a treponemal antibody detection test (eg, T pallidum particle agglutination [TP-PA] test). Reverse sequence algorithm: Screen with an initial automated treponemal test (eg, enzyme-linked or chemiluminescence immunoassay). If positive, confirm with a nontreponemal test.",
+    "grade": "A",
+    "releaseDateOfCurrentRecommendation": "September 2018 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/syphilis-infection-in-pregnancy-screening",
+    "id": "ced9e64e-a6b0-4162-840f-95f67be0fc53",
+    "searchTerms": ["RPR", "VDRL", "TPPA", "TP-PA"]
+  },
+  {
+    "topic": "Tobacco Smoking Cessation in Adults, Including Pregnant Persons: Interventions: nonpregnant adults",
+    "description": "The USPSTF recommends that clinicians ask all adults about tobacco use, advise them to stop using tobacco, and provide behavioral interventions and US Food and Drug Administration (FDA)--approved pharmacotherapy for cessation to nonpregnant adults who use tobacco.",
+    "appliesTo": "Nonpregnant adults who use tobacco",
+    "howToImplement": "Provide cessation interventions to persons who use tobacco. Provide behavioral counseling and pharmacotherapy for cessation. FDA-approved pharmacotherapy for cessation includes nicotine replacement therapy, bupropion sustained-release, and varenicline",
+    "grade": "A",
+    "releaseDateOfCurrentRecommendation": "January 2021 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/tobacco-use-in-adults-and-pregnant-women-counseling-and-interventions",
+    "id": "5e37240e-3635-422d-927e-6573d810093a",
+    "searchTerms": ["social history"]
+  },
+  {
+    "topic": "Tobacco Smoking Cessation in Adults, Including Pregnant Persons: Interventions: pregnant persons",
+    "description": "The USPSTF recommends that clinicians ask all pregnant persons about tobacco use, advise them to stop using tobacco, and provide behavioral interventions for cessation to pregnant persons who use tobacco.",
+    "appliesTo": "Pregnant persons who use tobacco",
+    "howToImplement": "For pregnant persons who use tobacco, provide behavioral counseling for cessation. Effective behavioral counseling includes cognitive behavioral, motivational, and supportive therapies such as counseling, health education, feedback, financial incentives, and social support",
+    "grade": "A",
+    "releaseDateOfCurrentRecommendation": "January 2021 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/tobacco-use-in-adults-and-pregnant-women-counseling-and-interventions",
+    "id": "008d9986-9411-402a-b8ac-5ce3f00bfc51",
+    "searchTerms": ["social history"]
+  },
+  {
+    "topic": "Tobacco Use in Children and Adolescents: Primary Care Interventions: school-aged children and adolescents who have not started to use tobacco",
+    "description": "The USPSTF recommends that primary care clinicians provide interventions, including education or brief counseling, to prevent initiation of tobacco use among school-aged children and adolescents.",
+    "appliesTo": "School-aged children and adolescents younger than 18 years.",
+    "howToImplement": "Determine if youth are using tobacco. If youth are not using tobacco: Provide behavioral counseling interventions to all youth to prevent tobacco use. Effective behavioral counseling interventions to prevent initiation of tobacco use include face-to-face counseling, telephone counseling, and computer-based and print-based interventions. If youth are using tobacco: The evidence is insufficient to recommend for or against providing interventions to youth for cessation of tobacco use.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "April 2020 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/tobacco-and-nicotine-use-prevention-in-children-and-adolescents-primary-care-interventions",
+    "id": "289b095c-5719-4454-a625-27dbcd5f4d0e",
+    "maxAge": 18,
+    "searchTerms": ["social history"]
+  },
+  {
+    "topic": "Unhealthy Alcohol Use in Adolescents and Adults: Screening and Behavioral Counseling Interventions: adults 18 years or older, including pregnant women",
+    "description": "The USPSTF recommends screening for unhealthy alcohol use in primary care settings in adults 18 years or older, including pregnant women, and providing persons engaged in risky or hazardous drinking with brief behavioral counseling interventions to reduce unhealthy alcohol use.",
+    "howToImplement": "Numerous brief screening instruments can detect unhealthy alcohol use with acceptable sensitivity and specificity in primary care settings. One- to 3-item screening instruments have the best accuracy for assessing unhealthy alcohol use in adults 18 years or older. These instruments include the AUDIT-C and the SASQ.",
+    "appliesTo": "Adults, including pregnant women",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "November 2018 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/unhealthy-alcohol-use-in-adolescents-and-adults-screening-and-behavioral-counseling-interventions",
+    "minAge": 18,
+    "id": "16e33d95-103a-46fc-9112-da7c70daa709",
+    "searchTerms": ["social history"]
+  },
+  {
+    "topic": "Unhealthy Drug Use: Screening: adults age 18 years or older",
+    "description": "The USPSTF recommends screening by asking questions about unhealthy drug use in adults age 18 years or older. Screening should be implemented when services for accurate diagnosis, effective treatment, and appropriate care can be offered or referred.(Screening refers to asking questions about unhealthy drug use, not testing biological specimens.)",
+    "appliesTo": "Adults 18 years or older and adolescents, including those who are pregnant and postpartum.",
+    "howToImplement": " Ask adults about unhealthy drug use. Clinicians can ask the questions or ask their patient to share their answers on a form, computer, or tablet. There are a variety of screening tools available, such as: NIDA Quick Screen, PRO, ASSIST",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "June 2020",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/drug-use-illicit-screening",
+    "minAge": 18,
+    "id": "e5eb4403-bf35-466c-a5fc-473b2f7addc6",
+    "searchTerms": ["social history"]
+  },
+  {
+    "topic": "Vision in Children Ages 6 Months to 5 Years: Screening: children aged 3 to 5 years",
+    "description": "The USPSTF recommends vision screening at least once in all children aged 3 to 5 years to detect amblyopia or its risk factors.",
+    "appliesTo": "Children aged 3 to 5 years.",
+    "howToImplement": "Various screening tests are used in primary care to identify vision abnormalities in children, including: the red reflex test, the cover-uncover test, the corneal light reflex test, visual acuity tests (such as Snellen, Lea Symbols, and HOTV charts), autorefractors and photoscreeners, and stereoacuity tests.",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "September 2017 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/vision-in-children-ages-6-months-to-5-years-screening",
+    "minAge": 3,
+    "maxAge": 5,
+    "id": "dadbd5d4-a027-4bf3-9944-caedd797f7d3"
+  },
+  {
+    "topic": "Weight Loss to Prevent Obesity-Related Morbidity and Mortality in Adults: Behavioral Interventions: adults",
+    "description": "The USPSTF recommends that clinicians offer or refer adults with a body mass index (BMI) of 30 or higher (calculated as weight in kilograms divided by height in meters squared) to intensive, multicomponent behavioral interventions.",
+    "appliesTo": "Adults with a BMI of 30 or higher.",
+    "howToImplement": "Effective intensive behavioral interventions were designed to help participants achieve or maintain a ≥5% weight loss through a combination of dietary changes and increased physical activity. Most interventions lasted for 1 to 2 years, and the majority had ≥12 sessions in the first year. Most behavioral interventions focused on problem solving to identify barriers, self-monitoring of weight, peer support, and relapse prevention. Interventions also provided tools to support weight loss or weight loss maintenance (eg, pedometers, food scales, or exercise videos)",
+    "grade": "B",
+    "releaseDateOfCurrentRecommendation": "September 2018 \\*",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/obesity-in-adults-interventions",
+    "minAge": 18,
+    "id": "8c02e070-49d0-4ad8-af3a-a00594760b01",
+    "searchTerms": ["BMI", "obesity"]
+  }
+]

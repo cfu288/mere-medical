@@ -24,12 +24,9 @@ import { AllergyIntoleranceListCard } from '../components/summary/AllergyIntoler
 import { EmptyRecordsPlaceholder } from '../components/EmptyRecordsPlaceholder';
 import { AppPage } from '../components/AppPage';
 import { useUser } from '../components/providers/UserProvider';
-import { Disclosure } from '@headlessui/react';
-import { ChevronDownIcon } from '@heroicons/react/20/solid';
-import { CardBase } from '../components/connection/CardBase';
-import { TimelineCardSubtitile } from '../components/timeline/TimelineCardSubtitile';
 import { PinnedListCard } from '../components/summary/PinnedListCard';
 import React from 'react';
+import { USPSTFRecommendationsListCard } from '../features/preventative-medicine-recommendations/components/USPSTFRecommendationsListCard';
 
 function fetchMedications(
   db: RxDatabase<DatabaseCollections>,
@@ -380,6 +377,7 @@ function SummaryTab() {
           'sm:mx-0 sm:grid sm:grid-cols-6 sm:pb-6'
         }
       >
+        <USPSTFRecommendationsListCard />
         <PinnedListCard items={pinned} />
         <MedicationsListCard items={meds} />
         <ConditionsListCard items={cond} />

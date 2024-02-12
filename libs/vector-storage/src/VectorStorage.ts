@@ -124,26 +124,6 @@ export class VectorStorage<
       .slice(0, k)
       .map((pair) => ({ ...pair[0], score: pair[1] }));
     console.debug(`Slice took ${(performance.now() - start).toFixed(2)}ms`);
-    start = performance.now();
-    this.updateHitCounters(results);
-    console.debug(
-      `Hit counters update took ${(performance.now() - start).toFixed(2)}ms`,
-    );
-    if (results.length > 0) {
-      // Don't let saving to storage block returning the results
-      requestIdleCallback(
-        async () => {
-          try {
-            await this.saveToRxDbStorage();
-          } catch (e) {
-            console.error(e);
-          }
-        },
-        {
-          timeout: 1000 * 60,
-        },
-      );
-    }
     if (!includeValues) {
       results.forEach((result) => {
         delete result.vector;
@@ -250,12 +230,6 @@ export class VectorStorage<
       similarityScores[i] = [doc, score];
     }
     return similarityScores;
-  }
-
-  private updateHitCounters(results: Array<IVSDocument>): void {
-    results.forEach((doc) => {
-      doc.hits = (doc.hits ?? 0) + 1; // Update hit counter
-    });
   }
 
   private async loadFromRxDbStorage(): Promise<void> {

@@ -83,6 +83,7 @@ export const performRAGRequestwithOpenAI = async ({
           ];
           recentSearches = [
             ...recentSearches,
+            // not displated to user, but used for AI to understand the context
             {
               user: 'AI',
               text: `I've run an additional query ${currentIteration} time(s) and found ${currentDataBatch.length} records using query: ${functionCall?.args?.['query']}. I will now search through them.`,

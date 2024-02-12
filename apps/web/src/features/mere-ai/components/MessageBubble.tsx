@@ -56,7 +56,7 @@ export const MessageBubble = memo(function MessageBubble({
             className={`text-sm font-semibold ${isAiMessage ? 'text-indigo-900' : 'text-gray-900'}`}
           >
             {isAiMessage
-              ? 'Mere AI Assistant'
+              ? 'Mere Assistant'
               : user && user.first_name
                 ? `${user.first_name} ${user.last_name}`
                 : 'You'}

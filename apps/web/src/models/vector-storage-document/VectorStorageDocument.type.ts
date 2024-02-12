@@ -1,7 +1,6 @@
 import { BaseDocument } from '../BaseDocument';
 
 export interface VectorStorageDocument extends BaseDocument {
-  hits?: number; // hits: Optional field that counts the number of times this document has been returned in a similarity search. Omitted if 0.
   metadata: {
     [key: string]: any;
   }; // metadata: An object containing additional information about the document. The structure of this object can vary depending on the application.

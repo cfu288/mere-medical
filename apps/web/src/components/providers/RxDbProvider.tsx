@@ -40,6 +40,7 @@ import { SummaryPagePreferencesMigrations } from '../../models/summary-page-pref
 import { DatabaseCollections } from './DatabaseCollections';
 import { VectorStorageDocumentSchema } from '../../models/vector-storage-document/VectorStorageDocument.collection';
 import { VectorStorageDocumentMigrations } from '../../models/vector-storage-document/VectorStorageDocument.migration';
+import { USPSTFRecommendationDocumentSchema } from '../../models/uspstf-recommendation-document/USPSTFRecommendationDocument.collection';
 
 if (process.env.NODE_ENV === 'development') {
   addRxPlugin(RxDBDevModePlugin);
@@ -78,7 +79,10 @@ export const databaseCollections = {
   },
   vector_storage: {
     schema: VectorStorageDocumentSchema,
-    // migrationStrategies: VectorStorageDocumentMigrations,
+    migrationStrategies: VectorStorageDocumentMigrations,
+  },
+  uspstf_recommendation_documents: {
+    schema: USPSTFRecommendationDocumentSchema,
   },
 };
 
