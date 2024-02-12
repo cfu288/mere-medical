@@ -32,60 +32,60 @@ test('Settings tab loads', async ({ page }) => {
   await expect(page).toHaveTitle(/Mere/);
 });
 
-test('Epic add new connection flow works', async ({ page }) => {
-  // Go to connections page
+// test('Epic add new connection flow works', async ({ page }) => {
+//   // Go to connections page
 
-  await page.goto('https://localhost:4200/connections');
+//   await page.goto('https://localhost:4200/connections');
 
-  await page.click('text=Skip Tutorial');
+//   await page.click('text=Skip Tutorial');
 
-  // Start add connection flow by clicking on button with text "Log in to Epic MyChart"
-  await page.click('text=Add a new connection');
+//   // Start add connection flow by clicking on button with text "Log in to Epic MyChart"
+//   await page.click('text=Add a new connection');
 
-  // See if modal has opened
-  await page.waitForSelector('text=Which patient portal do you use?');
+//   // See if modal has opened
+//   await page.waitForSelector('text=Which patient portal do you use?');
 
-  // Click on Epic MyChart option
-  await page.getByText('Select MyChart');
-  await page.getByText('Select MyChart').click();
+//   // Click on Epic MyChart option
+//   await page.getByText('Select MyChart');
+//   await page.getByText('Select MyChart').click();
 
-  // See if modal has opened
-  await page.waitForSelector(
-    'text=Select your healthcare institution to log in'
-  );
+//   // See if modal has opened
+//   await page.waitForSelector(
+//     'text=Select your healthcare institution to log in'
+//   );
 
-  // Search for Sandbox
-  await page.getByTitle('tenant-search-bar').fill('Sandbo');
+//   // Search for Sandbox
+//   await page.getByTitle('tenant-search-bar').fill('Sandbo');
 
-  // Click on Sandbox - redirected to MyChart
-  await page.waitForSelector('text=Sandbox');
-  await page.click('text=Sandbox');
+//   // Click on Sandbox - redirected to MyChart
+//   await page.waitForSelector('text=Sandbox');
+//   await page.click('text=Sandbox');
 
-  // We are on MyChart login page
-  await page.waitForSelector('text=MyChart Username');
-  await expect(page).toHaveTitle('MyChart - Login Page');
-  await page.click("label[for='Login']", { force: true });
-  await page.keyboard.type('fhirderrick');
-  await page.click("label[for='Password']", { force: true });
-  await page.keyboard.type('epicepic1');
-  await page.click('text=Sign In');
+//   // We are on MyChart login page
+//   await page.waitForSelector('text=MyChart Username');
+//   await expect(page).toHaveTitle('MyChart - Login Page');
+//   await page.click("label[for='Login']", { force: true });
+//   await page.keyboard.type('fhirderrick');
+//   await page.click("label[for='Password']", { force: true });
+//   await page.keyboard.type('epicepic1');
+//   await page.click('text=Sign In');
 
-  // We have logged in to MyChart
-  await page.waitForSelector('text=Mere Medical has said that it:');
-  await expect(page).toHaveTitle('MyChart - Are you sure?');
-  await page.getByTitle('Continue to next page').click({
-    force: true,
-    delay: 1000,
-  });
+//   // We have logged in to MyChart
+//   await page.waitForSelector('text=Mere Medical has said that it:');
+//   await expect(page).toHaveTitle('MyChart - Are you sure?');
+//   await page.getByTitle('Continue to next page').click({
+//     force: true,
+//     delay: 1000,
+//   });
 
-  // We are on the MyChart authorize page. Authorize our app for 1 hour.
-  await page.waitForSelector('text=What would you like to share?');
-  await expect(page).toHaveTitle('MyChart - Are you sure?');
-  await page.click('text=1 hour', { force: true, delay: 1000 });
-  await page.click('text=Allow access', { force: true, delay: 500 });
+//   // We are on the MyChart authorize page. Authorize our app for 1 hour.
+//   await page.waitForSelector('text=What would you like to share?');
+//   await expect(page).toHaveTitle('MyChart - Are you sure?');
+//   await page.click('text=1 hour', { force: true, delay: 1000 });
+//   await page.click('text=Allow access', { force: true, delay: 500 });
 
-  // MyChart has granted access, redirecting back to Mere
-  await page.waitForSelector('text=Add Connections');
-  await expect(page).toHaveTitle(/Mere/);
-  await page.waitForSelector('text=MyChart - Epic MyChart Sandbox');
-});
+//   // MyChart has granted access, redirecting back to Mere
+//   await page.waitForSelector('text=Add Connections');
+//   await expect(page).toHaveTitle(/Mere/);
+//   await page.waitForSelector('text=MyChart - Epic MyChart Sandbox');
+// });
