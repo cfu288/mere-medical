@@ -5,13 +5,13 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { CardBase } from '../connection/CardBase';
 import { ObservationResultRow } from '../timeline/ObservationResultRow';
 
-export function PinnedListCard({
+export function BookmarkedListCard({
   items,
 }: {
   items: ClinicalDocument<BundleEntry<DiagnosticReport | Observation>>[];
 }) {
   return (
-    <div className="col-span-6">
+    <div className="col-span-6 lg:col-span-3">
       <Disclosure defaultOpen={true}>
         {({ open }) => (
           <>

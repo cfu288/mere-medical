@@ -15,10 +15,10 @@ import { fetchRecordsWithVectorSearch } from './TimelineTab';
 import { usePeriodAnimation } from '../components/hooks/usePeriodAnimation';
 import grainImage from '../assets/img/grain.svg';
 import React from 'react';
-import { MessageBubble } from '../features/mere-ai/components/MessageBubble';
-import { ChatInput } from '../features/mere-ai/components/ChatInput';
-import { ChatMessage } from '../features/mere-ai/types/ChatMessage';
-import { performRAGRequestwithOpenAI } from '../features/mere-ai/open-ai/performRAGRequestwithOpenAI';
+import { MessageBubble } from '../features/mere-ai-chat/components/MessageBubble';
+import { ChatInput } from '../features/mere-ai-chat/components/ChatInput';
+import { ChatMessage } from '../features/mere-ai-chat/types/ChatMessage';
+import { performRAGRequestwithOpenAI } from '../features/mere-ai-chat/open-ai/performRAGRequestwithOpenAI';
 
 function MereAITab() {
   const user = useUser(),

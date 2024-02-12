@@ -1,4 +1,4 @@
-import { ColorPair } from 'apps/web/src/features/preventative-medicine-recommendations/types/ColorPair';
+import { ColorPair } from 'apps/web/src/features/mere-ai-recommendations/types/ColorPair';
 
 export const color_pairs: ColorPair[] = [
   {

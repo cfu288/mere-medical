@@ -1,8 +1,23 @@
 import React from 'react';
 import { USPSTFRecommendationDocument } from '../../../models/uspstf-recommendation-document/USPSTFRecommendationDocument.type';
 import { hashStringToNumber } from '../helpers/hashStringToNumber';
-import { color_pairs } from 'apps/web/src/features/preventative-medicine-recommendations/constants/color_pairs';
-import { getRandomColorPair } from 'apps/web/src/features/preventative-medicine-recommendations/helpers/getRandomColorPair';
+import { color_pairs } from '../../../features/mere-ai-recommendations/constants/color_pairs';
+import { getRandomColorPair } from '../../../features/mere-ai-recommendations/helpers/getRandomColorPair';
+
+export const SkeletonRecommendationCard =
+  function SkeletonRecommendationCard() {
+    return (
+      <div className="w-48 h-48 flex-none rounded-lg border bg-gray-200 p-4 shadow-sm animate-pulse">
+        <p className="h-3 mb-2 w-36 rounded-sm bg-gray-500 pb-1 animate-pulse"></p>
+        <p className="h-3 mb-3 w-32 rounded-sm bg-gray-500 pb-1 animate-pulse"></p>
+        <p className="h-3 mb-2 w-30 rounded-sm bg-gray-300 pb-1 animate-pulse"></p>
+        <p className="h-3 mb-2 w-28 rounded-sm bg-gray-300 pb-1 animate-pulse"></p>
+        <p className="h-3 mb-2 w-26 rounded-sm bg-gray-300 pb-1 animate-pulse"></p>
+        <p className="h-3 mb-2 w-22 rounded-sm bg-gray-300 pb-1 animate-pulse"></p>
+        <p className="h-3 mb-2 w-28 rounded-sm bg-gray-300 pb-1 animate-pulse"></p>
+      </div>
+    );
+  };
 
 export const RecommendationCard = function RecommendationCard({
   recommendation,
@@ -20,7 +35,7 @@ export const RecommendationCard = function RecommendationCard({
   return (
     <div
       key={recommendation.id}
-      className={`max-w-48 max-h-48 overflow-y-scroll flex-none rounded-lg border ${colorPair.border} p-4 shadow-sm ${colorPair.bg} ${colorPair.textDark} `}
+      className={`w-48 h-48 overflow-y-scroll flex-none rounded-lg border ${colorPair.border} p-4 shadow-sm ${colorPair.bg} ${colorPair.textDark} `}
     >
       <a
         href={

@@ -5,7 +5,8 @@ import { getUSPSTFRecommendationsByAge } from './getAgeRelatedRecommendations';
 import { UserDocument } from '../../../models/user-document/UserDocument.type';
 import { VectorStorage } from '@mere/vector-storage';
 import { askOpenAIAboutUSPSTF } from '../open-ai/askOpenAIAboutUSPSTF';
-import { saveRecommendationToDb } from 'apps/web/src/features/preventative-medicine-recommendations/services/saveRecommendationToDb';
+import { saveRecommendationToDb } from '../../../features/mere-ai-recommendations/services/saveRecommendationToDb';
+import { USPSTFRecommendationDocument } from '../../../models/uspstf-recommendation-document/USPSTFRecommendationDocument.type';
 
 export class USPSTFRecommendationsGenerator {
   private db: RxDatabase<DatabaseCollections>;
@@ -34,12 +35,12 @@ export class USPSTFRecommendationsGenerator {
     this.openAiKey = openAiKey;
   }
 
-  public async startSync() {
+  public async startSync(): Promise<USPSTFRecommendationDocument[]> {
     if (!this.enabled) {
       console.debug(
         'USPSTFRecommendationsGenerator: not enabled, skipping generation',
       );
-      return;
+      return Promise.resolve([]);
     }
     console.debug('USPSTFRecommendationsGenerator: starting generation');
     if (this.user?.birthday === undefined) {

@@ -34,6 +34,7 @@ import { TimelineTab } from '../pages/TimelineTab';
 import VARedirect from '../pages/VARedirect';
 import VeradigmRedirect from '../pages/VeradigmRedirect';
 import { Routes as AppRoutes } from '../Routes';
+import { RecommendationGeneratorInitializer } from '../features/mere-ai-recommendations/components/RecommendationGeneratorInitializer';
 
 export default function App() {
   useConsoleLogEasterEgg();
@@ -51,11 +52,13 @@ export default function App() {
             <RxDbProvider>
               <VectorProvider>
                 <UserProvider>
-                  <UserPreferencesProvider>
-                    <SyncJobProvider>
-                      <RouterProvider router={router} />
-                    </SyncJobProvider>
-                  </UserPreferencesProvider>
+                  <RecommendationGeneratorInitializer>
+                    <UserPreferencesProvider>
+                      <SyncJobProvider>
+                        <RouterProvider router={router} />
+                      </SyncJobProvider>
+                    </UserPreferencesProvider>
+                  </RecommendationGeneratorInitializer>
                 </UserProvider>
               </VectorProvider>
             </RxDbProvider>

@@ -6,7 +6,7 @@ import { differenceInDays, parseISO } from 'date-fns';
 import { UserDocument } from '../../../models/user-document/UserDocument.type';
 import { fetchRecordsWithVectorSearch } from '../../../pages/TimelineTab';
 import { VectorStorage } from '@mere/vector-storage';
-import { prepareDataForOpenAI } from '../../mere-ai/open-ai/prepareDataForOpenAI';
+import { prepareDataForOpenAI } from '../../mere-ai-chat/open-ai/prepareDataForOpenAI';
 import {
   USPSTFRecommendationDataItem,
   USPSTFRecommendationDocument,

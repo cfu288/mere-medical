@@ -70,24 +70,39 @@ export function ImmunizationListCard({
                   <div className="min-w-0 flex-1">
                     {[...sortItems.entries()].map(([key, item]) => (
                       <div className="py-2" key={item?.[0].id}>
-                        <p className="text-sm font-bold text-gray-900 md:text-base">
-                          {item?.[0].metadata?.display_name}
-                        </p>
-                        <ul className="truncate pl-2 text-sm font-medium text-gray-800">
-                          {item.map((x) => (
-                            <li key={x.id}>
-                              {`• ${
-                                x.metadata?.date
-                                  ? format(
-                                      parseISO(x.metadata.date),
-                                      'MM/dd/yyyy',
-                                    )
-                                  : ''
-                              }
-                    `}
-                            </li>
-                          ))}
-                        </ul>
+                        <Disclosure defaultOpen={false}>
+                          {({ open }) => (
+                            <>
+                              <Disclosure.Button className="w-full">
+                                <p className="text-sm font-bold text-gray-900 md:text-base flex w-full text-left">
+                                  {item?.[0].metadata?.display_name}{' '}
+                                  {!open ? `(${item?.length})` : ''}
+                                  <ChevronDownIcon
+                                    className={`ml-1 h-auto w-4 rounded duration-150 active:scale-95 active:bg-slate-50 ${
+                                      open ? 'rotate-180 transform' : ''
+                                    }`}
+                                  />
+                                </p>
+                              </Disclosure.Button>
+                              <Disclosure.Panel className="">
+                                <ul className="truncate pl-2 text-sm font-medium text-gray-800">
+                                  {item.map((x) => (
+                                    <li key={x.id}>
+                                      {`• ${
+                                        x.metadata?.date
+                                          ? format(
+                                              parseISO(x.metadata.date),
+                                              'MM/dd/yyyy',
+                                            )
+                                          : ''
+                                      }`}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </Disclosure.Panel>
+                            </>
+                          )}
+                        </Disclosure>
                       </div>
                     ))}
                   </div>
