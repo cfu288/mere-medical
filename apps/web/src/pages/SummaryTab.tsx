@@ -502,7 +502,7 @@ function SummaryTab() {
 
   return (
     <AppPage banner={<GenericBanner text="Summary" />}>
-      <div className="mx-auto flex lg:max-w-7xl flex-col gap-x-4 px-4 pb-20 pt-2 lg:px-8 sm:grid sm:grid-cols-6 sm:pb-6">
+      <div className="relative mx-auto flex lg:max-w-7xl flex-col gap-x-4 px-4 lg:px-8 sm:grid sm:grid-cols-6">
         {sortedCards.map((card) => {
           if (!card.is_visible) return null;
           switch (card.type) {
@@ -526,19 +526,6 @@ function SummaryTab() {
               return null;
           }
         })}
-        {/* Floating FAB edit button */}
-        <div className="fixed sm:bottom-4 bottom-20 right-4">
-          <button
-            className="flex transition bg-primary-700 hover:bg-primary-600 hover:scale-105 active:scale-95 text-white font-bold py-2 px-4 rounded-full align-baseline justify-center items-center"
-            onClick={() => {
-              setShowEditModal(true);
-            }}
-          >
-            <p className="hidden md:block">Edit Layout</p>
-            <p className="md:hidden">Edit</p>
-            <PencilSquareIcon className="h-4 w-4 ml-1" />
-          </button>
-        </div>
       </div>
       <Modal open={showEditModal} setOpen={setShowEditModal}>
         <ModalHeader
@@ -621,6 +608,15 @@ function SummaryTab() {
           </div>
         </div>
       </Modal>
+      <button
+        className="w-full flex transition hover:scale-105 active:scale-95 text-gray-800 font-bold py-4 px-4 rounded-full align-baseline justify-center items-center"
+        onClick={() => {
+          setShowEditModal(true);
+        }}
+      >
+        <p>Edit Layout</p>
+        <PencilSquareIcon className="h-4 w-4 ml-1" />
+      </button>
     </AppPage>
   );
 }
