@@ -27,10 +27,16 @@ import { useUser } from '../components/providers/UserProvider';
 import { BookmarkedListCard } from '../components/summary/BookmarkedListCard';
 import React from 'react';
 import { MereRecommendationsListCard } from '../features/mere-ai-recommendations/components/MereRecommendationsListCard';
-import { SummaryPagePreferences } from '../models/summary-page-preferences/SummaryPagePreferences.type';
+import {
+  SummaryPagePreferences,
+  SummaryPagePreferencesCard,
+} from '../models/summary-page-preferences/SummaryPagePreferences.type';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { Modal } from '../components/Modal';
 import { ModalHeader } from '../components/ModalHeader';
+import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
+import { EyeIcon } from '@heroicons/react/24/outline';
+import { EyeSlashIcon } from '@heroicons/react/24/outline';
 
 function fetchMedications(
   db: RxDatabase<DatabaseCollections>,
@@ -179,6 +185,8 @@ enum ActionTypes {
   PENDING,
   COMPLETED,
   ERROR,
+  UPDATE_CARD_ORDER,
+  UPDATE_CARD,
 }
 
 type SummaryState = {
@@ -208,7 +216,12 @@ type SummaryActions =
         pinned: ClinicalDocument<BundleEntry<DiagnosticReport | Observation>>[];
         cards: SummaryPagePreferences['cards']; // Use only the cards property
       };
-    };
+    }
+  | {
+      type: ActionTypes.UPDATE_CARD_ORDER;
+      data: SummaryPagePreferences['cards'];
+    }
+  | { type: ActionTypes.UPDATE_CARD; data: SummaryPagePreferencesCard };
 
 function summaryReducer(state: SummaryState, action: SummaryActions) {
   switch (action.type) {
@@ -244,8 +257,37 @@ function summaryReducer(state: SummaryState, action: SummaryActions) {
         initialized: true,
       };
     }
+    case ActionTypes.UPDATE_CARD_ORDER: {
+      return {
+        ...state,
+        cards: action.data,
+      };
+    }
+    case ActionTypes.UPDATE_CARD: {
+      const newCards = state.cards!.map((card) => {
+        if (card.type === action.data.type) {
+          return action.data;
+        }
+        return card;
+      });
+      return {
+        ...state,
+        cards: newCards,
+      };
+    }
   }
 }
+
+const CardTypeToDisplayMap: Record<SummaryPagePreferencesCard['type'], string> =
+  {
+    recommendations: 'Mere Assistant Recommendations',
+    pinned: 'Bookmarked Items',
+    medications: 'Medications',
+    conditions: 'Conditions',
+    immunizations: 'Immunizations',
+    careplans: 'Care Plans',
+    allergies: 'Allergies and Intolerances',
+  };
 
 const DEFAULT_CARD_ORDER: SummaryPagePreferences['cards'] = [
   {
@@ -297,7 +339,7 @@ function useSummaryData(): [SummaryState, React.Dispatch<SummaryActions>] {
     careplan: [],
     allergy: [],
     pinned: [],
-    cards: [], // Initialize cards as an empty array
+    cards: DEFAULT_CARD_ORDER, // Initialize cards with DEFAULT_CARD_ORDER
     initialized: false,
   });
 
@@ -350,9 +392,7 @@ function useSummaryData(): [SummaryState, React.Dispatch<SummaryActions>] {
           ),
         ),
         fetchSummaryPagePreferences(db, user.id).then((preferences) => {
-          return preferences && preferences.toMutableJSON().cards
-            ? preferences?.toMutableJSON().cards
-            : DEFAULT_CARD_ORDER;
+          return preferences?.toMutableJSON().cards || DEFAULT_CARD_ORDER;
         }),
       ])
         .then(([meds, cond, imm, careplan, allergy, pinned, cards]) => {
@@ -379,8 +419,10 @@ function useSummaryData(): [SummaryState, React.Dispatch<SummaryActions>] {
 }
 
 function SummaryTab() {
-  const [{ meds, cond, imm, careplan, allergy, pinned, cards, initialized }] =
-    useSummaryData();
+  const [
+    { meds, cond, imm, careplan, allergy, pinned, cards, initialized },
+    reducer,
+  ] = useSummaryData();
   const [showEditModal, setShowEditModal] = useState(false);
 
   if (!initialized) {
@@ -425,16 +467,37 @@ function SummaryTab() {
     );
   }
 
+  // Sort cards based on the order specified in the cards state
+  const sortedCards: SummaryPagePreferencesCard[] = cards!.sort(
+    (a, b) => a.order - b.order,
+  );
+
   return (
     <AppPage banner={<GenericBanner text="Summary" />}>
       <div className="mx-auto flex lg:max-w-7xl flex-col gap-x-4 px-4 pb-20 pt-2 lg:px-8 sm:grid sm:grid-cols-6 sm:pb-6">
-        <MereRecommendationsListCard />
-        <BookmarkedListCard items={pinned} />
-        <MedicationsListCard items={meds} />
-        <ConditionsListCard items={cond} />
-        <ImmunizationListCard items={imm} />
-        <CarePlanListCard items={careplan} />
-        <AllergyIntoleranceListCard items={allergy} />
+        {sortedCards.map((card) => {
+          if (!card.is_visible) return null;
+          switch (card.type) {
+            case 'recommendations':
+              return <MereRecommendationsListCard key={card.type} />;
+            case 'pinned':
+              return <BookmarkedListCard key={card.type} items={pinned} />;
+            case 'medications':
+              return <MedicationsListCard key={card.type} items={meds} />;
+            case 'conditions':
+              return <ConditionsListCard key={card.type} items={cond} />;
+            case 'immunizations':
+              return <ImmunizationListCard key={card.type} items={imm} />;
+            case 'careplans':
+              return <CarePlanListCard key={card.type} items={careplan} />;
+            case 'allergies':
+              return (
+                <AllergyIntoleranceListCard key={card.type} items={allergy} />
+              );
+            default:
+              return null;
+          }
+        })}
         {/* Floating FAB edit button */}
         <div className="fixed sm:bottom-4 bottom-20 right-4">
           <button
@@ -451,15 +514,82 @@ function SummaryTab() {
       </div>
       <Modal open={showEditModal} setOpen={setShowEditModal}>
         <ModalHeader
-          title={'Summary Page Layout Settings'}
-          setClose={() => setShowEditModal((x) => !x)}
+          title={'Edit Card Order'}
+          setClose={() => setShowEditModal(false)}
         />
         <div className="p-4">
-          <p className="text-lg font-bold mb-2">Coming Soon</p>
-          <p>
-            This feature is currently under development and will be available
-            soon.
-          </p>
+          <p>Drag and drop the cards to reorder them as you prefer.</p>
+          <div className="my-4">
+            <DragDropContext
+              onDragEnd={(result) => {
+                if (!result.destination) return;
+                const items = Array.from(sortedCards);
+                const [reorderedItem] = items.splice(result.source.index, 1);
+                items.splice(result.destination.index, 0, reorderedItem);
+                //rewrite order property for each item in new order
+                const newOrder: SummaryPagePreferencesCard[] = items.map(
+                  (item, index) => {
+                    item.order = index;
+                    return item;
+                  },
+                );
+                reducer({
+                  type: ActionTypes.UPDATE_CARD_ORDER,
+                  data: newOrder,
+                });
+              }}
+            >
+              <Droppable droppableId="droppableCards">
+                {(provided) => (
+                  <div {...provided.droppableProps} ref={provided.innerRef}>
+                    {sortedCards.map((card) => (
+                      <Draggable
+                        key={card.type}
+                        draggableId={card.type}
+                        index={card.order}
+                      >
+                        {(provided) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            className="flex items-center justify-between p-2 my-1 bg-gray-100 rounded"
+                          >
+                            <span>{CardTypeToDisplayMap[card.type]}</span>
+
+                            <span className="flex justify-center align-middle items-center">
+                              <button
+                                className="mx-2"
+                                onClick={() => {
+                                  reducer({
+                                    type: ActionTypes.UPDATE_CARD,
+                                    data: {
+                                      ...card,
+                                      is_visible: !card.is_visible,
+                                    },
+                                  });
+                                }}
+                              >
+                                {card.is_visible ? (
+                                  <EyeIcon className="h-auto w-4 text-primary-800" />
+                                ) : (
+                                  <EyeSlashIcon className="h-auto w-4 text-gray-600" />
+                                )}
+                              </button>
+                              <p className="h-full text-center align-middle">
+                                :::
+                              </p>
+                            </span>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
+          </div>
         </div>
       </Modal>
     </AppPage>
