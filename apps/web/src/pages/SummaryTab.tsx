@@ -14,7 +14,7 @@ import {
   Observation,
 } from 'fhir/r2';
 import { RxDatabase, RxDocument } from 'rxdb';
-import { useEffect, useReducer, useState } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { MedicationsListCard } from '../components/summary/MedicationsListCard';
 import { SkeletonListCard } from '../components/summary/SkeletonListCard';
 import { ConditionsListCard } from '../components/summary/ConditionsListCard';
@@ -34,9 +34,15 @@ import {
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { Modal } from '../components/Modal';
 import { ModalHeader } from '../components/ModalHeader';
-import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
+import {
+  DragDropContext,
+  Draggable,
+  Droppable,
+  OnDragEndResponder,
+} from 'react-beautiful-dnd';
 import { EyeIcon } from '@heroicons/react/24/outline';
 import { EyeSlashIcon } from '@heroicons/react/24/outline';
+import { useLocalConfig } from '../components/providers/LocalConfigProvider';
 
 function fetchMedications(
   db: RxDatabase<DatabaseCollections>,
@@ -424,6 +430,33 @@ function SummaryTab() {
     reducer,
   ] = useSummaryData();
   const [showEditModal, setShowEditModal] = useState(false);
+  const { experimental__use_openai_rag } = useLocalConfig();
+  // Sort cards based on the order specified in the cards state
+  const sortedCards: SummaryPagePreferencesCard[] = useMemo(
+    () => cards!.sort((a, b) => a.order - b.order),
+    [cards],
+  );
+  const onDragEnd: OnDragEndResponder = useCallback(
+    (result) => {
+      // the only one that is required
+      if (!result.destination) return;
+      const items = Array.from(sortedCards);
+      const [reorderedItem] = items.splice(result.source.index, 1);
+      items.splice(result.destination.index, 0, reorderedItem);
+      //rewrite order property for each item in new order
+      const newOrder: SummaryPagePreferencesCard[] = items.map(
+        (item, index) => {
+          item.order = index;
+          return item;
+        },
+      );
+      reducer({
+        type: ActionTypes.UPDATE_CARD_ORDER,
+        data: newOrder,
+      });
+    },
+    [reducer, sortedCards],
+  );
 
   if (!initialized) {
     return (
@@ -467,11 +500,6 @@ function SummaryTab() {
     );
   }
 
-  // Sort cards based on the order specified in the cards state
-  const sortedCards: SummaryPagePreferencesCard[] = cards!.sort(
-    (a, b) => a.order - b.order,
-  );
-
   return (
     <AppPage banner={<GenericBanner text="Summary" />}>
       <div className="mx-auto flex lg:max-w-7xl flex-col gap-x-4 px-4 pb-20 pt-2 lg:px-8 sm:grid sm:grid-cols-6 sm:pb-6">
@@ -514,76 +542,77 @@ function SummaryTab() {
       </div>
       <Modal open={showEditModal} setOpen={setShowEditModal}>
         <ModalHeader
-          title={'Edit Card Order'}
+          title={'Edit Layout'}
           setClose={() => setShowEditModal(false)}
         />
-        <div className="p-4">
-          <p>Drag and drop the cards to reorder them as you prefer.</p>
+        <div className="p-4 relative">
+          <p className="max-w-lg">
+            Drag and drop the cards to change the order you see them on your
+            summary dashboard.
+          </p>
           <div className="my-4">
-            <DragDropContext
-              onDragEnd={(result) => {
-                if (!result.destination) return;
-                const items = Array.from(sortedCards);
-                const [reorderedItem] = items.splice(result.source.index, 1);
-                items.splice(result.destination.index, 0, reorderedItem);
-                //rewrite order property for each item in new order
-                const newOrder: SummaryPagePreferencesCard[] = items.map(
-                  (item, index) => {
-                    item.order = index;
-                    return item;
-                  },
-                );
-                reducer({
-                  type: ActionTypes.UPDATE_CARD_ORDER,
-                  data: newOrder,
-                });
-              }}
-            >
+            <DragDropContext onDragEnd={onDragEnd}>
               <Droppable droppableId="droppableCards">
                 {(provided) => (
-                  <div {...provided.droppableProps} ref={provided.innerRef}>
-                    {sortedCards.map((card) => (
-                      <Draggable
-                        key={card.type}
-                        draggableId={card.type}
-                        index={card.order}
-                      >
-                        {(provided) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            className="flex items-center justify-between p-2 my-1 bg-gray-100 rounded"
-                          >
-                            <span>{CardTypeToDisplayMap[card.type]}</span>
-
-                            <span className="flex justify-center align-middle items-center">
-                              <button
-                                className="mx-2"
-                                onClick={() => {
-                                  reducer({
-                                    type: ActionTypes.UPDATE_CARD,
-                                    data: {
-                                      ...card,
-                                      is_visible: !card.is_visible,
-                                    },
-                                  });
-                                }}
-                              >
-                                {card.is_visible ? (
-                                  <EyeIcon className="h-auto w-4 text-primary-800" />
-                                ) : (
-                                  <EyeSlashIcon className="h-auto w-4 text-gray-600" />
-                                )}
-                              </button>
-                              <p className="h-full text-center align-middle">
-                                :::
-                              </p>
-                            </span>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
+                  <div
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    className="border inset bg-gray-50 rounded-md p-2 py-6"
+                  >
+                    {sortedCards
+                      .filter((i) => {
+                        if (!experimental__use_openai_rag) {
+                          if (i.type !== 'recommendations') {
+                            return true;
+                          } else {
+                            return false;
+                          }
+                        }
+                        return true;
+                      })
+                      .map((card, index) => (
+                        <Draggable
+                          key={card.type}
+                          draggableId={card.type}
+                          index={index}
+                        >
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              className={`flex justify-between overflow-hidden bg-white px-4 py-4 my-2 shadow sm:rounded-md sm:px-6 ${snapshot.isDragging ? 'border border-primary-400' : ''}`}
+                            >
+                              <div className="flex justify-center align-middle items-center h-full">
+                                {CardTypeToDisplayMap[card.type]}
+                              </div>
+                              <div className="flex justify-center align-middle items-center h-full">
+                                <button
+                                  className="mx-4"
+                                  onClick={() => {
+                                    reducer({
+                                      type: ActionTypes.UPDATE_CARD,
+                                      data: {
+                                        ...card,
+                                        is_visible: !card.is_visible,
+                                      },
+                                    });
+                                  }}
+                                >
+                                  {card.is_visible ? (
+                                    <EyeIcon className="h-auto w-4 text-primary-800" />
+                                  ) : (
+                                    <EyeSlashIcon className="h-auto w-4 text-gray-600" />
+                                  )}
+                                </button>
+                                <p className="h-full text-center align-middle text-xl">
+                                  :::
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
                     {provided.placeholder}
                   </div>
                 )}
