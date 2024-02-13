@@ -244,7 +244,6 @@ export function RxDbProvider(props: RxDbProviderProps) {
   const localConfig = useLocalConfig();
 
   const submitPassword = (password: string) => {
-    console.log(password);
     setInitialized('PROGRESS');
     try {
       initEncryptedRxDb(password)
