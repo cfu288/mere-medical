@@ -15,6 +15,15 @@
     "assert": false
   },
   "private": true,
+  "overrides": {
+    "lokijs": "npm:sylviejs",
+    "dependency": {
+      "lokijs": "npm:sylviejs"
+    },
+    "rxdb": {
+      "lokijs": "npm:sylviejs"
+    }
+  },
   "devDependencies": {
     "@babel/preset-react": "^7.14.5",
     "@babel/preset-typescript": "^7.18.6",

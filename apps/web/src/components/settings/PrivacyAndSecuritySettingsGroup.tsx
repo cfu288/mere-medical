@@ -240,11 +240,17 @@ function PasswordPromptModal({
     // Migrate current RxDB encrypted database to unencrypted database, as seen in RxDBProvider.tsx
     // Export current database
     try {
+      console.debug(
+        'PrivacyAndSecuritySettingsGroup: Migrating from encrypted to unencrypted database',
+      );
       const internalStorageAdapter = (await getStorageAdapter(
         db,
       )) as CryptedIndexedDBAdapter;
       const internalDb = await getInternalLokiStorage(db);
 
+      console.debug(
+        'PrivacyAndSecuritySettingsGroup: Forcing final write of Loki memory to idb',
+      );
       // Force final write of Loki memory to idb
       await new Promise<void>((resolve, reject) =>
         internalDb.saveDatabase((res) => {
@@ -252,12 +258,16 @@ function PasswordPromptModal({
             resolve();
           } else if (res) {
             reject(res);
+            console.error("'PrivacyAndSecuritySettingsGroup: " + res);
           } else {
             resolve();
           }
         }),
       );
 
+      console.debug(
+        'PrivacyAndSecuritySettingsGroup: Exporting current database',
+      );
       const json = await db.exportJSON();
 
       for (const collectionName in json.collections) {
@@ -266,17 +276,28 @@ function PasswordPromptModal({
         }
       }
 
+      console.debug(
+        'PrivacyAndSecuritySettingsGroup: Creating new unencrypted database',
+      );
       // Create new unencrypted database
       const newDb = await initUnencrypedRxDb();
+
+      console.debug(
+        'PrivacyAndSecuritySettingsGroup: Importing data into new unencrypted database',
+      );
       // Import data into new database
       await newDb.importJSON(json);
       // Update local config to use unencrypted database
 
+      console.debug(
+        'PrivacyAndSecuritySettingsGroup: Deleting old encrypted database',
+      );
       await db.remove();
       // We need to fully delete the underlying encrypted loki storage adapter, or we will have issues with re-encrypting the database later
       await (
         internalStorageAdapter as CryptedIndexedDBAdapter
       ).deleteDatabaseAsync('mere_db.db');
+
       updateLocalConfig({
         use_encrypted_database: false,
       });
@@ -352,25 +373,47 @@ function DatabasePasswordModal({
         }
       }
 
-      // // Create new encrypted database
-      const newEnryptedDb = await initEncryptedRxDb(password);
+      try {
+        // // Create new encrypted database
+        console.debug(
+          'PrivacyAndSecuritySettingsGroup: Creating new encrypted database',
+        );
+        const newEnryptedDb = await initEncryptedRxDb(password);
+
+        console.debug(
+          'PrivacyAndSecuritySettingsGroup: Importing data into new encrypted database',
+        );
+        await newEnryptedDb.importJSON(json);
+        console.debug(
+          'PrivacyAndSecuritySettingsGroup: Saving new encrypted database to idb',
+        );
+        const internalDb = await getInternalLokiStorage(newEnryptedDb);
+
+        console.debug(
+          'PrivacyAndSecuritySettingsGroup: Forcing final write of Loki memory to idb',
+        );
+
+        // Force final write of Loki memory to idb after import
+        await new Promise<void>((resolve, reject) =>
+          internalDb.saveDatabase((res) => {
+            console.debug('PrivacyAndSecuritySettingsGroup: Saving: ' + res);
+            if (res?.success === true) {
+              resolve();
+            } else if (res) {
+              reject(res);
+              console.error("'PrivacyAndSecuritySettingsGroup: " + res);
+            } else {
+              resolve();
+            }
+          }),
+        );
+
+        console.debug('PrivacyAndSecuritySettingsGroup: Completed migration');
+      } catch (e) {
+        console.error(e);
+      }
 
       // // Import data into new database
-      await newEnryptedDb.importJSON(json);
-
-      const internalDb = await getInternalLokiStorage(newEnryptedDb);
-      // Force final write of Loki memory to idb after import
-      await new Promise<void>((resolve, reject) =>
-        internalDb.saveDatabase((res) => {
-          if (res?.success === true) {
-            resolve();
-          } else if (res) {
-            reject(res);
-          } else {
-            resolve();
-          }
-        }),
-      );
 
       // Update local config to use encrypted database
       updateLocalConfig({
