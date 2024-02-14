@@ -46,46 +46,32 @@ function MereAITab() {
     (messageText: string) => {
       if (!isLoadingAiResponse && vectorStorage) {
         setIsLoadingAiResponse(true);
-        fetchRecordsWithVectorSearch({
-          db,
-          vectorStorage,
-          query: messageText,
-          numResults: 10,
-          enableSearchAttachments: true,
-          groupByDate: false,
-        })
-          .then(async (result) => {
-            const records: ClinicalDocument<BundleEntry<FhirResource>>[] = [
-              ...Object.values(result.records).flat(),
-            ];
-            const idsOfMostRelatedChunksFromSemanticSearch = [
-              ...result.idsOfMostRelatedChunksFromSemanticSearch,
-            ];
-            const responseText = await performRAGRequestwithOpenAI({
-              query: messageText,
-              data: records,
-              idsOfMostRelatedChunksFromSemanticSearch,
-              streamingMessageCallback: (c: string) =>
-                setAiLoadingText((p) => p + c),
-              messages: messages,
-              openAiKey: experimental__openai_api_key,
-              db,
-              user,
-              vectorStorage,
-            });
-            if (responseText) {
-              setMessages((e) => [
-                ...e,
-                {
-                  user: 'AI',
-                  text: responseText,
-                  timestamp: new Date(),
-                  id: uuid4(),
-                },
-              ]);
-            }
-            setAiLoadingText('');
-          })
+        (async () => {
+          const responseText = await performRAGRequestwithOpenAI({
+            query: messageText,
+            data: [], //records,
+            idsOfMostRelatedChunksFromSemanticSearch: [], //idsOfMostRelatedChunksFromSemanticSearch,
+            streamingMessageCallback: (c: string) =>
+              setAiLoadingText((p) => p + c),
+            messages: messages,
+            openAiKey: experimental__openai_api_key,
+            db,
+            user,
+            vectorStorage,
+          });
+          if (responseText) {
+            setMessages((e) => [
+              ...e,
+              {
+                user: 'AI',
+                text: responseText,
+                timestamp: new Date(),
+                id: uuid4(),
+              },
+            ]);
+          }
+          setAiLoadingText('');
+        })()
           .catch((e) => {
             notificationDispatch({
               message: e,

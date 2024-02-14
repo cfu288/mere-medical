@@ -23,7 +23,7 @@ export const callOpenAI = async ({
     {
       role: 'system',
       content:
-        'You are a medical AI assistant. A patient is asking you a question. Please address the patient directly by name if provided and respond in Markdown format. Use tables when displaying data up to 4 columns. Be concise.',
+        'You are a Physician AI assistant. A patient is asking you a question. Please address the patient directly by name if provided and respond in Markdown format. Use tables when displaying data up to 4 columns. Be concise.',
     },
     {
       role: 'system',
@@ -42,12 +42,15 @@ ${user.gender ? 'Gender:' + user?.gender : ''}`,
       role: 'user',
       content: `The question is: ${query}`,
     },
-    {
-      role: 'system',
-      content: `Subset of medical records you found that may help answer the question. Ignore records not relevant to the question. If records are missing, use the search_medical_records function to find them.
-    Data: ${JSON.stringify(preparedData, null, 2)}`,
-    },
   ];
+
+  if (preparedData.length > 0) {
+    promptMessages.push({
+      role: 'system',
+      content: `Subset of medical records you found that may help answer the question. Ignore records not relevant to the question. If records are missing, use the "search_medical_records" function to find them.
+    Data: ${JSON.stringify(preparedData, null, 2)}`,
+    });
+  }
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -67,12 +70,24 @@ ${user.gender ? 'Gender:' + user?.gender : ''}`,
           parameters: {
             type: 'object',
             properties: {
-              query: {
-                type: 'string',
-                description: 'The query to search for medical records.',
+              // query: {
+              //   type: 'string',
+              //   description:
+              //     'The query to search for medical records. e.g. "CBC"',
+              // },
+              queries: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  description:
+                    'A list of search terms to be executed in parallel. e.g. ["CBC", "CMP", "SOCIAL_HISTORY", "VITAL_SIGNS"]',
+                },
               },
             },
-            required: ['query'],
+            required: [
+              //'query',
+              'queries',
+            ],
           },
         },
       ],
@@ -136,7 +151,13 @@ ${user.gender ? 'Gender:' + user?.gender : ''}`,
     responseText: string;
     functionCall: {
       name: string | undefined;
-      args: Record<string, string> | undefined;
+      args: // | {
+      //     query: string;
+      //   }
+      | {
+            queries: string[];
+          }
+        | undefined;
     };
   }> = {};
   if (responseText) {

@@ -175,13 +175,6 @@ export class VectorStorage<
           doc.hash !== existingDocumentIdMap.get(doc.id)?.hash,
         fileNeedsUpdate = idDoesNotExist || docExistsButHashIsDifferent;
 
-      if (docExistsButHashIsDifferent) {
-        debugger;
-      }
-      if (idDoesNotExist) {
-        // debugger;
-      }
-
       return fileNeedsUpdate;
     });
 
