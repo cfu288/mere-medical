@@ -56,7 +56,7 @@ export function TimelineItem({
     >
       <div className="flex w-1/5 flex-row md:w-1/4">
         {/* Left sided date */}
-        <span className="text-primary-800 flex grow justify-end gap-x-4 whitespace-nowrap pt-5 text-sm font-bold md:text-base">
+        <span className="text-primary-600 flex grow justify-end gap-x-4 whitespace-nowrap pt-5 text-sm font-bold md:text-base">
           <div>{formattedTitleDateString}</div>
           <div className="">•</div>
         </span>

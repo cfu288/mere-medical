@@ -28,7 +28,7 @@ export const ObservationCard = memo(function ObservationCard({
       >
         <div className="min-w-0 flex-1">
           <div className="items-top flex justify-between">
-            <TimelineCardCategoryTitle title="Lab" color="text-sky-700" />
+            <TimelineCardCategoryTitle title="Lab" color="text-sky-600" />
             <OpenableCardIcon />
           </div>
           <TimelineCardTitle>{item.metadata?.display_name}</TimelineCardTitle>

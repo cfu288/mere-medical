@@ -13,7 +13,6 @@ import { MangoQuerySelector, RxDatabase, RxDocument } from 'rxdb';
 import { Transition } from '@headlessui/react';
 import { IVSSimilaritySearchParams, VectorStorage } from '@mere/vector-storage';
 import { useDebounceCallback } from '@react-hook/debounce';
-import { useThrottleCallback } from '@react-hook/throttle';
 
 import { AppPage } from '../components/AppPage';
 import { ButtonLoadingSpinner } from '../components/connection/ButtonLoadingSpinner';

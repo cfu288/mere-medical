@@ -18,7 +18,7 @@ export const ProcedureCard = memo(function ProcedureCard({
   return (
     <CardBase>
       <div className="min-w-0 flex-1">
-        <TimelineCardCategoryTitle title="Procedure" color="text-blue-700" />
+        <TimelineCardCategoryTitle title="Procedure" color="text-blue-600" />
 
         <TimelineCardTitle>{item.metadata?.display_name}</TimelineCardTitle>
         <p className="truncate text-xs font-medium text-gray-800 md:text-sm">

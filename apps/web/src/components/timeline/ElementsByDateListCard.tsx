@@ -199,7 +199,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
   return (
     <CardBase>
       <div className="min-w-0 flex-1 flex-col">
-        <TimelineCardCategoryTitle title={title} color="text-primary-800" />
+        <TimelineCardCategoryTitle title={title} color="text-primary-600" />
         {encounters.length > 0 && (
           <div className="mb-2 ml-2">
             <TimelineCardTitle>Encounters</TimelineCardTitle>
@@ -215,7 +215,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
           <div className="mb-2 ml-2">
             <TimelineCardCategoryTitle
               title={'Documents'}
-              color="text-teal-800"
+              color="text-teal-600"
             />
             <ul className="list-disc list-inside">
               {[...documentReferences, ...documentReferenceAttachments].map(
@@ -235,7 +235,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
           <div className="mb-2 ml-2">
             <TimelineCardCategoryTitle
               title={'Procedures'}
-              color="text-blue-800"
+              color="text-blue-600"
             />
             <ul className="list-disc list-inside">
               {procedures.map((item) => (
@@ -253,7 +253,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
           <div className="mb-2 ml-2">
             <TimelineCardCategoryTitle
               title={'Lab Panels'}
-              color="text-blue-800"
+              color="text-blue-600"
             />
             <ul className="list-disc list-inside">
               {diagnosticReports.map((item) => (
@@ -271,7 +271,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
         )}
         {observations.length > 0 && (
           <div className="mb-2 ml-2">
-            <TimelineCardCategoryTitle title={'Labs'} color="text-sky-800" />
+            <TimelineCardCategoryTitle title={'Labs'} color="text-sky-600" />
             <ul className="list-disc list-inside">
               {observations.map((item) => (
                 <li
@@ -290,7 +290,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
           <div className="mb-2 ml-2">
             <TimelineCardCategoryTitle
               title={'Immunizations'}
-              color="text-purple-800"
+              color="text-purple-600"
             />
             <ul className="list-disc list-inside">
               {immunizations.map((item) => (
@@ -308,7 +308,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
           <div className="mb-2 ml-2">
             <TimelineCardCategoryTitle
               title={'Conditions'}
-              color="text-green-800"
+              color="text-green-600"
             />
             <ul className="list-disc list-inside">
               {conditions.map((item) => (
@@ -326,7 +326,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
           <div className="mb-2 ml-2">
             <TimelineCardCategoryTitle
               title={'Medications'}
-              color="text-fuchsia-800"
+              color="text-fuchsia-600"
             />
             <ul className="list-disc list-inside">
               {medicationStatements.map((item) => (

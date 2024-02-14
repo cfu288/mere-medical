@@ -21,7 +21,7 @@ export const ImmunizationCard = memo(function ImmunizationCard({
       <div className="min-w-0 flex-1">
         <TimelineCardCategoryTitle
           title="Immunization"
-          color="text-purple-700"
+          color="text-purple-600"
         />
 
         <TimelineCardTitle>{item.metadata?.display_name}</TimelineCardTitle>
