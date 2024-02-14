@@ -1,24 +1,43 @@
-import { BundleEntry, FhirResource } from 'fhir/r2';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { AppPage } from '../components/AppPage';
-/* eslint-disable react/jsx-no-useless-fragment */
 import { GenericBanner } from '../components/GenericBanner';
+import { usePeriodAnimation } from '../components/hooks/usePeriodAnimation';
 import { useLocalConfig } from '../components/providers/LocalConfigProvider';
 import { useNotificationDispatch } from '../components/providers/NotificationProvider';
 import { useRxDb } from '../components/providers/RxDbProvider';
 import { useUser } from '../components/providers/UserProvider';
 import { useVectors } from '../components/providers/vector-provider';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
-import uuid4 from '../utils/UUIDUtils';
-import { fetchRecordsWithVectorSearch } from './TimelineTab';
-import { usePeriodAnimation } from '../components/hooks/usePeriodAnimation';
-import grainImage from '../assets/img/grain.svg';
-import React from 'react';
-import { MessageBubble } from '../features/mere-ai-chat/components/MessageBubble';
 import { ChatInput } from '../features/mere-ai-chat/components/ChatInput';
-import { ChatMessage } from '../features/mere-ai-chat/types/ChatMessage';
+import { MessageBubble } from '../features/mere-ai-chat/components/MessageBubble';
 import { performRAGRequestwithOpenAI } from '../features/mere-ai-chat/open-ai/performRAGRequestwithOpenAI';
+import { ChatMessage } from '../features/mere-ai-chat/types/ChatMessage';
+import uuid4 from '../utils/UUIDUtils';
+import { ExperimentalBanner } from '../features/mere-ai-chat/components/ExperimentalBanner';
+
+function useScrollEffect(
+  scrollRef: React.RefObject<HTMLDivElement>,
+  isLoadingAiResponse: boolean,
+) {
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+    if (isLoadingAiResponse && scrollRef.current) {
+      intervalId = setInterval(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTo({
+            top: scrollRef.current.scrollHeight,
+            behavior: 'smooth',
+          });
+        }
+      }, 1000);
+    }
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [isLoadingAiResponse, scrollRef]);
+}
 
 function MereAITab() {
   const user = useUser(),
@@ -38,19 +57,18 @@ function MereAITab() {
         id: uuid4(),
       },
     ]),
+    isAiMessage = (message: ChatMessage) => message.user === 'AI',
     scrollRef = useRef<HTMLDivElement>(null);
 
-  const isAiMessage = (message: ChatMessage) => message.user === 'AI';
-
   const callAskAI = useCallback(
-    (messageText: string) => {
+    async (messageText: string) => {
       if (!isLoadingAiResponse && vectorStorage) {
         setIsLoadingAiResponse(true);
-        (async () => {
+        try {
           const responseText = await performRAGRequestwithOpenAI({
             query: messageText,
-            data: [], //records,
-            idsOfMostRelatedChunksFromSemanticSearch: [], //idsOfMostRelatedChunksFromSemanticSearch,
+            data: [],
+            idsOfMostRelatedChunksFromSemanticSearch: [],
             streamingMessageCallback: (c: string) =>
               setAiLoadingText((p) => p + c),
             messages: messages,
@@ -71,27 +89,25 @@ function MereAITab() {
             ]);
           }
           setAiLoadingText('');
-        })()
-          .catch((e) => {
-            notificationDispatch({
-              message: e,
-              variant: 'error',
-              type: 'set_notification',
-            });
-          })
-          .finally(() => {
-            setIsLoadingAiResponse(false);
-            if (scrollRef.current) {
-              setTimeout(() => {
-                if (scrollRef.current) {
-                  scrollRef.current.scrollTo({
-                    top: scrollRef.current.scrollHeight,
-                    behavior: 'smooth',
-                  });
-                }
-              }, 100);
-            }
+        } catch (e) {
+          notificationDispatch({
+            message: e as unknown as string,
+            variant: 'error',
+            type: 'set_notification',
           });
+        } finally {
+          setIsLoadingAiResponse(false);
+          if (scrollRef.current) {
+            setTimeout(() => {
+              if (scrollRef.current) {
+                scrollRef.current.scrollTo({
+                  top: scrollRef.current.scrollHeight,
+                  behavior: 'smooth',
+                });
+              }
+            }, 100);
+          }
+        }
       }
     },
     [
@@ -105,37 +121,12 @@ function MereAITab() {
     ],
   );
 
-  useEffect(() => {
-    if (messages.length !== 0) {
-      if (scrollRef.current) {
-        setTimeout(() => {
-          if (scrollRef.current) {
-            scrollRef.current.scrollTo({
-              top: scrollRef.current.scrollHeight,
-              behavior: 'smooth',
-            });
-          }
-        }, 100);
-      }
-    }
-  }, [isLoadingAiResponse, messages.length]);
+  useScrollEffect(scrollRef, isLoadingAiResponse);
 
   return (
     <AppPage banner={<GenericBanner text="Mere Assistant" />}>
       <div className="relative flex flex-col h-full overflow-hidden">
-        <div
-          style={{
-            background: 'rgb(199 210 254 / 0.4)',
-            // @ts-ignore
-            '--image-url': `url(${grainImage})`,
-            // @ts-ignore
-            '-webkit-backdrop-filter': 'blur(10px)',
-            backdropFilter: 'blur(10px)',
-          }}
-          className={`absolute top-0 left-0 bg-[backdrop-filter:var(--tw-backdrop-blur)] w-full text-indigo-700 text-xs sm:text-sm font-bold p-1 px-2 bg-opacity-40 text-center`}
-        >
-          Experimental
-        </div>
+        <ExperimentalBanner />
         <div className="grow overflow-y-auto p-4" ref={scrollRef}>
           {messages.map((message, i) => (
             <MessageBubble

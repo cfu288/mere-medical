@@ -1,14 +1,16 @@
 import { BundleEntry, FhirResource } from 'fhir/r2';
 import { RxDatabase } from 'rxdb';
+
+import { VectorStorage } from '@mere/vector-storage';
+
 import { DatabaseCollections } from '../../../components/providers/DatabaseCollections';
 import { ClinicalDocument } from '../../../models/clinical-document/ClinicalDocument.type';
 import { UserDocument } from '../../../models/user-document/UserDocument.type';
-import { ChatMessage } from '../types/ChatMessage';
-import { prepareDataForOpenAI } from './prepareDataForOpenAI';
-import { callOpenAI } from './callOpenAI';
 import { fetchRecordsWithVectorSearch } from '../../../pages/TimelineTab';
-import { VectorStorage } from '@mere/vector-storage';
 import uuid4 from '../../../utils/UUIDUtils';
+import { ChatMessage } from '../types/ChatMessage';
+import { callOpenAI } from './callOpenAI';
+import { prepareDataForOpenAI } from './prepareDataForOpenAI';
 
 export const performRAGRequestwithOpenAI = async ({
   query,
@@ -73,10 +75,8 @@ export const performRAGRequestwithOpenAI = async ({
         }
 
         if (
-          (functionCall?.args as unknown as { queries: string[] })?.queries &&
-          Array.isArray(
-            (functionCall?.args as unknown as { queries: string[] })?.queries,
-          )
+          functionCall?.args?.queries &&
+          Array.isArray(functionCall?.args?.queries)
         ) {
           const searchTerms = (functionCall?.args as { queries: string[] })
             ?.queries;
@@ -104,7 +104,7 @@ export const performRAGRequestwithOpenAI = async ({
             ];
             recentSearches = [
               ...recentSearches,
-              // not displated to user, but used for AI to understand the context
+              // not displayed to user, but used for AI to understand the context
               {
                 user: 'AI',
                 text: `I've run an additional query ${currentIteration} time(s) with search term ${searchTerm} and found ${currentDataBatch.length} records using query: ${searchTerm}. I will now search through them.`,
@@ -115,33 +115,6 @@ export const performRAGRequestwithOpenAI = async ({
             currentIteration++;
           }
         }
-        // else if ((functionCall?.args as { query: string })?.['query']) {
-        //   const result = await fetchRecordsWithVectorSearch({
-        //     db,
-        //     vectorStorage,
-        //     query: (functionCall?.args as unknown as { query: string })?.[
-        //       'query'
-        //     ],
-        //     numResults: 5,
-        //     enableSearchAttachments: true,
-        //     groupByDate: false,
-        //   });
-
-        //   currentDataBatch = [...Object.values(result.records).flat()];
-        //   currentidsOfMostRelatedChunksFromSemanticSearch = [
-        //     ...result.idsOfMostRelatedChunksFromSemanticSearch,
-        //   ];
-        //   recentSearches = [
-        //     ...recentSearches,
-        //     // not displated to user, but used for AI to understand the context
-        //     {
-        //       user: 'AI',
-        //       text: `I've run an additional query ${currentIteration} time(s) and found ${currentDataBatch.length} records using query: ${(functionCall?.args as { query: string })?.['query']}. I will now search through them.`,
-        //       timestamp: new Date(),
-        //       id: uuid4(),
-        //     },
-        //   ];
-        // }
       }
     }
     return Promise.resolve();

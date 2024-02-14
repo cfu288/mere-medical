@@ -104,7 +104,8 @@
     "src/features/mere-ai-recommendations/helpers/getRandomColorPair.tsx",
     "src/features/mere-ai-recommendations/constants/color_pairs.tsx",
     "src/features/mere-ai-recommendations/types/ColorPair.tsx",
-    "./src/features/mere-ai-recommendations/components/RecommendationGeneratorInitializer.tsx"
+    "./src/features/mere-ai-recommendations/components/RecommendationGeneratorInitializer.tsx",
+    "src/features/mere-ai-chat/components/ExperimentalBanner.tsx"
   ],
   "exclude": [
     "jest.config.ts",

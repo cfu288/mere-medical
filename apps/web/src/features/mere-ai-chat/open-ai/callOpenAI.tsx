@@ -23,12 +23,11 @@ export const callOpenAI = async ({
     {
       role: 'system',
       content:
-        'You are a Physician AI assistant. A patient is asking you a question. Please address the patient directly by name if provided and respond in Markdown format. Use tables when displaying data up to 4 columns. Be concise.',
+        'You are a Physician AI assistant. A patient is asking you a question. Please address the patient directly by name if provided and respond in Markdown format. Use tables when displaying data up to 4 columns. Be concise. If records are missing, use the "search_medical_records" function to find them.',
     },
     {
       role: 'system',
-      content: `Demographic information about the patient.
-Today's Date: ${new Date().toISOString()};
+      content: `Demographic information about the patient. Today's Date: ${new Date().toISOString()}
 ${user?.first_name && user?.last_name ? 'Name: ' + (user?.first_name + ' ' + user?.last_name) : ''}
 ${user?.birthday ? 'DOB: ' + user?.birthday : ''}
 ${user?.birthday ? 'Age: ' + (differenceInDays(new Date(), parseISO(user?.birthday)) / 365)?.toFixed(1) : ''}
@@ -47,8 +46,7 @@ ${user.gender ? 'Gender:' + user?.gender : ''}`,
   if (preparedData.length > 0) {
     promptMessages.push({
       role: 'system',
-      content: `Subset of medical records you found that may help answer the question. Ignore records not relevant to the question. If records are missing, use the "search_medical_records" function to find them.
-    Data: ${JSON.stringify(preparedData, null, 2)}`,
+      content: `Results of your medical records query. Ignore records not relevant to the question. Data: ${JSON.stringify(preparedData)}`,
     });
   }
 
@@ -60,7 +58,6 @@ ${user.gender ? 'Gender:' + user?.gender : ''}`,
     },
     body: JSON.stringify({
       model: 'gpt-4-turbo-preview',
-      // model: 'gpt-3.5-turbo-16k',
       messages: promptMessages,
       functions: [
         {
@@ -70,24 +67,16 @@ ${user.gender ? 'Gender:' + user?.gender : ''}`,
           parameters: {
             type: 'object',
             properties: {
-              // query: {
-              //   type: 'string',
-              //   description:
-              //     'The query to search for medical records. e.g. "CBC"',
-              // },
               queries: {
                 type: 'array',
                 items: {
                   type: 'string',
                   description:
-                    'A list of search terms to be executed in parallel. e.g. ["CBC", "CMP", "SOCIAL_HISTORY", "VITAL_SIGNS"]',
+                    'A list of search terms to be executed in parallel. e.g. ["CBC", "CMP", "HBsAg", "SOCIAL_HISTORY", "VITAL_SIGNS"]',
                 },
               },
             },
-            required: [
-              //'query',
-              'queries',
-            ],
+            required: ['queries'],
           },
         },
       ],
@@ -151,10 +140,8 @@ ${user.gender ? 'Gender:' + user?.gender : ''}`,
     responseText: string;
     functionCall: {
       name: string | undefined;
-      args: // | {
-      //     query: string;
-      //   }
-      | {
+      args:
+        | {
             queries: string[];
           }
         | undefined;
