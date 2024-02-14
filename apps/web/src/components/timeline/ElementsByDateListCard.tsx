@@ -342,7 +342,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
         )}
         <button
           type="button"
-          className={`py-2 sm:py-0 text-primary-800 font-medium text-sm md:text-base flex items-center gap-x-1 ring-primary-700 hover:text-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-50 active:bg-slate-50 active:scale-95 active:rounded-md active:duration-150 w-full text-center content-center justify-center rounded-md hover:ring-2 hover:ring-primary-500 hover:ring-opacity-50 hover:rounded-md hover:duration-150 hover:bg-primary-50 transition-all duration-150 ease-in-out ${expanded ? 'outline-none bg-primary-50 ring-2' : ''}`}
+          className={`py-1 my-1 sm:py-0 text-primary-800 font-medium text-sm md:text-base flex items-center gap-x-1 ring-primary-700 hover:text-primary-500 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95 active:rounded-md active:duration-150 w-full text-center content-center justify-center rounded-md hover:ring-2 hover:scale-[101%] active:ring-opacity-50 hover:rounded-md hover:duration-150 transition-all duration-150 ease-in-out ${expanded ? 'outline-none bg-primary-50 ring-2' : ''}`}
           onClick={() => setExpanded(!expanded)}
         >
           {expanded ? 'View Less' : 'View More'}
@@ -359,7 +359,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
           leaveFrom="opacity-100 scale-y-100"
           leaveTo="opacity-0 scale-y-0"
         >
-          <div>
+          <div className="mt-4">
             {encounters.map((item) => (
               <div key={item.id} className="my-2">
                 <EncounterCard
