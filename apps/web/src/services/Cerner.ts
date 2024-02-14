@@ -347,8 +347,8 @@ async function syncDocumentReferences(
       >,
   );
   // for each docref, get attachments and sync them
-  const cdsmap = docRefItems.map(async (item) => {
-    const attachmentUrls = item.data_record.raw.resource?.content.map(
+  const cdsmap = docRefItems.map(async (docRefItem) => {
+    const attachmentUrls = docRefItem.data_record.raw.resource?.content.map(
       (a) => a.attachment.url,
     );
     if (attachmentUrls) {
@@ -360,7 +360,9 @@ async function syncDocumentReferences(
                 $and: [
                   { user_id: connectionDocument.user_id },
                   { 'metadata.id': `${attachmentUrl}` },
-                  { connection_record_id: `${item.connection_record_id}` },
+                  {
+                    connection_record_id: `${docRefItem.connection_record_id}`,
+                  },
                 ],
               },
             })
@@ -387,9 +389,11 @@ async function syncDocumentReferences(
                 metadata: {
                   id: attachmentUrl,
                   date:
-                    item.data_record.raw.resource?.created ||
-                    item.data_record.raw.resource?.context?.period?.start,
-                  display_name: item.data_record.raw.resource?.type?.text,
+                    docRefItem.data_record.raw.resource?.created ||
+                    docRefItem.data_record.raw.resource?.context?.period?.start,
+                  display_name:
+                    docRefItem.data_record.raw.resource?.type?.text ||
+                    docRefItem.metadata?.display_name,
                 },
               };
 

@@ -105,7 +105,8 @@
     "src/features/mere-ai-recommendations/constants/color_pairs.tsx",
     "src/features/mere-ai-recommendations/types/ColorPair.tsx",
     "./src/features/mere-ai-recommendations/components/RecommendationGeneratorInitializer.tsx",
-    "src/features/mere-ai-chat/components/ExperimentalBanner.tsx"
+    "src/features/mere-ai-chat/components/ExperimentalBanner.tsx",
+    "./src/components/timeline/ElementsByDateListCard.tsx"
   ],
   "exclude": [
     "jest.config.ts",

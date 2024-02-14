@@ -160,7 +160,7 @@ function DiagnosticReportCardUnmemo({
             <TimelineCardCategoryTitle
               title={
                 <>
-                  <p className="mr-1">Labs</p>
+                  <p className="mr-1">Lab Panel</p>
                   {status === 'loading' && (
                     <div className="ml-2">
                       <ButtonLoadingSpinner height="h-3" width="w-3" />
@@ -169,7 +169,7 @@ function DiagnosticReportCardUnmemo({
                   {isAbnormalResult && <AbnormalResultIcon />}
                 </>
               }
-              color="text-blue-600"
+              color="text-blue-700"
             />
             <OpenableCardIcon />
           </div>

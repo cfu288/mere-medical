@@ -30,10 +30,7 @@ export const DocumentReferenceCard = memo(function DocumentReferenceCard({
       >
         <div className="min-w-0 flex-1">
           <div className="items-top flex justify-between">
-            <TimelineCardCategoryTitle
-              title="Documents"
-              color="text-teal-600"
-            />
+            <TimelineCardCategoryTitle title="Document" color="text-teal-700" />
             <OpenableCardIcon />
           </div>
           <TimelineCardTitle>{item.metadata?.display_name}</TimelineCardTitle>
@@ -77,7 +74,7 @@ export const DocumentReferenceAttachmentCard = memo(
             <div className="items-top flex justify-between">
               <TimelineCardCategoryTitle
                 title="Documents"
-                color="text-teal-600"
+                color="text-teal-700"
               />
               <OpenableCardIcon />
             </div>

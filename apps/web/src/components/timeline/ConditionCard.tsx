@@ -18,7 +18,7 @@ export const ConditionCard = memo(function ConditionCard({
   return (
     <CardBase>
       <div className="min-w-0 flex-1">
-        <TimelineCardCategoryTitle title="Condition" color="text-green-600" />
+        <TimelineCardCategoryTitle title="Condition" color="text-green-700" />
 
         <TimelineCardTitle>{item.metadata?.display_name}</TimelineCardTitle>
         <p className="truncate text-xs font-medium text-gray-800 md:text-sm">

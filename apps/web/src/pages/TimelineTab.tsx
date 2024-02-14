@@ -1,11 +1,19 @@
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, FhirResource } from 'fhir/r2';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  UIEventHandler,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { MangoQuerySelector, RxDatabase, RxDocument } from 'rxdb';
 
 import { Transition } from '@headlessui/react';
 import { IVSSimilaritySearchParams, VectorStorage } from '@mere/vector-storage';
 import { useDebounceCallback } from '@react-hook/debounce';
+import { useThrottleCallback } from '@react-hook/throttle';
 
 import { AppPage } from '../components/AppPage';
 import { ButtonLoadingSpinner } from '../components/connection/ButtonLoadingSpinner';
@@ -24,6 +32,7 @@ import { TimelineYearHeaderWrapper } from '../components/timeline/TimelineYearHe
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 import { SearchBar } from '../components/timeline/SearchBar';
 import { TimelineSkeleton } from '../components/timeline/TimelineSkeleton';
+import { ArrowUpIcon } from '@heroicons/react/24/outline';
 
 export enum QueryStatus {
   IDLE,
@@ -34,6 +43,17 @@ export enum QueryStatus {
   COMPLETE_HIDE_LOAD_MORE, // Indicates that there are no more results to load using loadNextPage
 }
 
+// scroll to top hook, returns a function that scrolls to the top of the page
+function useScrollToTop(ref?: React.RefObject<HTMLDivElement | undefined>) {
+  return useCallback(() => {
+    ref?.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [ref]);
+}
+
+const onScrollGetYPosition = (element: HTMLElement) => {
+  return element.scrollTop;
+};
+
 export function TimelineTab() {
   const user = useUser(),
     [query, setQuery] = useState(''),
@@ -42,7 +62,17 @@ export function TimelineTab() {
       query,
       experimental__use_openai_rag,
     ),
-    hasNoRecords = query === '' && (!data || Object.entries(data).length === 0);
+    hasNoRecords = query === '' && (!data || Object.entries(data).length === 0),
+    scrollContainer = useRef<HTMLDivElement>(null),
+    scrollToTop = useScrollToTop(scrollContainer),
+    onScroll: UIEventHandler<HTMLDivElement> = useDebounceCallback((e) => {
+      if (e) {
+        setScrollY(
+          onScrollGetYPosition(e.target ? e.target : (e as any).srcElement),
+        );
+      }
+    }, 100),
+    [scrollY, setScrollY] = useState(0);
 
   useScrollToHash();
 
@@ -57,7 +87,11 @@ export function TimelineTab() {
               index={index}
               elements={elements}
             >
-              <TimelineItem dateKey={dateKey} itemList={itemList} />
+              <TimelineItem
+                dateKey={dateKey}
+                itemList={itemList}
+                showIndividualItems={!!query}
+              />
             </TimelineYearHeaderWrapper>
           ))}
           {status !== QueryStatus.COMPLETE_HIDE_LOAD_MORE &&
@@ -68,7 +102,7 @@ export function TimelineTab() {
       ) : (
         []
       ),
-    [data, loadNextPage, status],
+    [data, loadNextPage, query, status],
   );
 
   return (
@@ -121,7 +155,11 @@ export function TimelineTab() {
               status={status}
               loadMore={loadNextPage}
             />
-            <div className="px-auto flex h-full max-h-full w-full justify-center overflow-y-scroll">
+            <div
+              className="px-auto flex h-full max-h-full w-full justify-center overflow-y-scroll relative"
+              ref={scrollContainer}
+              onScroll={onScroll}
+            >
               <div className="h-max w-full max-w-4xl flex-col px-4 pb-20 sm:px-6 sm:pb-6 lg:px-8">
                 <SearchBar query={query} setQuery={setQuery} status={status} />
                 {listItems}
@@ -129,6 +167,16 @@ export function TimelineTab() {
                   <p className="font-xl">{`No records found with query: ${query}`}</p>
                 ) : null}
               </div>
+              <button
+                onClick={scrollToTop}
+                className={`z-40 fixed transition-all duration-200 bottom-24 right-10 md:bottom-4 md:right-8 shadow-blue-500/50 bg-primary shadow-md hover:shadow-lg active:shadow-sm rounded-full p-2 active:scale-95 hover:scale-105 ${
+                  scrollY > 100 ? 'opacity-100' : 'opacity-0'
+                }`}
+              >
+                <span className="text-white">
+                  <ArrowUpIcon className="h-6 w-6" />
+                </span>
+              </button>
             </div>
           </div>
         )}

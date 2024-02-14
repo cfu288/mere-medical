@@ -33,6 +33,9 @@ module.exports = {
       16: '16',
     },
     extend: {
+      transitionProperty: {
+        height: 'height',
+      },
       screens: {
         xs: '480px',
       },

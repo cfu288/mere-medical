@@ -107,7 +107,9 @@ export function mapObservationToClinicalDocument(
     metadata: {
       id: parseId(bundleItem),
       date: bundleItem.resource?.effectiveDateTime || new Date(0).toISOString(),
-      display_name: bundleItem.resource?.code.text,
+      display_name: (bundleItem.resource?.code.text || '')
+        ?.replace(/- final result/gi, '')
+        .replace(/- final/gi, ''),
       loinc_coding:
         bundleItem.resource?.code.coding
           ?.filter(
@@ -137,7 +139,9 @@ export function mapDiagnosticReportToClinicalDocument(
     metadata: {
       id: parseId(bundleItem),
       date: bundleItem.resource?.effectiveDateTime || new Date(0).toISOString(),
-      display_name: bundleItem.resource?.code.text,
+      display_name: (bundleItem.resource?.code.text || '')
+        ?.replace(/- final result/gi, '')
+        .replace(/- final/gi, ''),
     },
   };
   return cd;

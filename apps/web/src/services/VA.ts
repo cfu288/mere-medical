@@ -306,9 +306,6 @@ export async function syncAllRecords(
         patient: patientId,
       },
     ),
-    // syncDocumentReferences(baseUrl, connectionDocument, db, {
-    //   patient: patientId,
-    // }),
     syncFHIRResource<AllergyIntolerance>(
       baseUrl,
       connectionDocument,
@@ -322,104 +319,6 @@ export async function syncAllRecords(
   ]);
 
   return syncJob as unknown as Promise<PromiseSettledResult<void[]>[]>;
-}
-
-async function syncDocumentReferences(
-  baseUrl: string,
-  connectionDocument: VAConnectionDocument,
-  db: RxDatabase<DatabaseCollections>,
-  params: Record<string, string>,
-) {
-  const documentReferenceMapper = (dr: BundleEntry<DocumentReference>) =>
-    DSTU2.mapDocumentReferenceToClinicalDocument(dr, connectionDocument);
-  // Sync document references and return them
-  await syncFHIRResource<DocumentReference>(
-    baseUrl,
-    connectionDocument,
-    db,
-    'DocumentReference',
-    documentReferenceMapper,
-    params,
-  );
-
-  const docs = await db.clinical_documents
-    .find({
-      selector: {
-        user_id: connectionDocument.user_id,
-        'data_record.resource_type': {
-          $eq: 'documentreference',
-        },
-        connection_record_id: `${connectionDocument.id}`,
-      },
-    })
-    .exec();
-
-  // format all the document references
-  const docRefItems = docs.map(
-    (doc: { toMutableJSON: () => unknown }) =>
-      doc.toMutableJSON() as unknown as ClinicalDocument<
-        BundleEntry<DocumentReference>
-      >,
-  );
-  // for each docref, get attachments and sync them
-  const cdsmap = docRefItems.map(async (item) => {
-    const attachmentUrls = item.data_record.raw.resource?.content.map(
-      (a) => a.attachment.url,
-    );
-    if (attachmentUrls) {
-      for (const attachmentUrl of attachmentUrls) {
-        if (attachmentUrl) {
-          const exists = await db.clinical_documents
-            .find({
-              selector: {
-                $and: [
-                  { user_id: connectionDocument.user_id },
-                  { 'metadata.id': `${attachmentUrl}` },
-                  { connection_record_id: `${item.connection_record_id}` },
-                ],
-              },
-            })
-            .exec();
-          if (exists.length === 0) {
-            console.log('Syncing attachment: ' + attachmentUrl);
-            // attachment does not exist, sync it
-            const { contentType, raw } = await fetchAttachmentData(
-              attachmentUrl,
-              connectionDocument,
-            );
-            if (raw && contentType) {
-              // save as ClinicalDocument
-              const cd: CreateClinicalDocument<string | Blob> = {
-                user_id: connectionDocument.user_id,
-                connection_record_id: connectionDocument.id,
-                data_record: {
-                  raw: raw,
-                  format: 'FHIR.DSTU2',
-                  content_type: contentType,
-                  resource_type: 'documentreference_attachment',
-                  version_history: [],
-                },
-                metadata: {
-                  id: attachmentUrl,
-                  date:
-                    item.data_record.raw.resource?.created ||
-                    item.data_record.raw.resource?.context?.period?.start,
-                  display_name: item.data_record.raw.resource?.type?.text,
-                },
-              };
-
-              await db.clinical_documents.insert(
-                cd as unknown as ClinicalDocument,
-              );
-            }
-          } else {
-            console.log('Attachment already synced: ' + attachmentUrl);
-          }
-        }
-      }
-    }
-  });
-  return await Promise.all(cdsmap);
 }
 
 /**
