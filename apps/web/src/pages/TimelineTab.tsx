@@ -119,6 +119,7 @@ export function TimelineTab() {
     >
       <Transition
         show={
+          // true
           !initialized &&
           (status === QueryStatus.IDLE || status === QueryStatus.LOADING)
         }
