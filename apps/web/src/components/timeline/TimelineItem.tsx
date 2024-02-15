@@ -12,7 +12,7 @@ import {
   Observation,
   Procedure,
 } from 'fhir/r2';
-import React from 'react';
+import React, { memo } from 'react';
 
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { ConditionCard } from './ConditionCard';
@@ -28,7 +28,7 @@ import { MedicationCard } from './MedicationCard';
 import { ObservationCard } from './ObservationCard';
 import { ProcedureCard } from './ProcedureCard';
 
-export function TimelineItem({
+export const TimelineItem = memo(function TimelineItem({
   dateKey,
   itemList,
   showIndividualItems = false,
@@ -140,4 +140,4 @@ export function TimelineItem({
       </div>
     </div>
   );
-}
+});

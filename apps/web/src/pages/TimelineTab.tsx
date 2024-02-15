@@ -11,6 +11,7 @@ import {
 import { MangoQuerySelector, RxDatabase, RxDocument } from 'rxdb';
 
 import { Transition } from '@headlessui/react';
+import { ArrowUpIcon } from '@heroicons/react/24/outline';
 import { IVSSimilaritySearchParams, VectorStorage } from '@mere/vector-storage';
 import { useDebounceCallback } from '@react-hook/debounce';
 
@@ -25,13 +26,12 @@ import { useRxDb } from '../components/providers/RxDbProvider';
 import { useUser } from '../components/providers/UserProvider';
 import { useVectors } from '../components/providers/vector-provider';
 import { JumpToPanel } from '../components/timeline/JumpToPanel';
+import { SearchBar } from '../components/timeline/SearchBar';
 import { TimelineBanner } from '../components/timeline/TimelineBanner';
 import { TimelineItem } from '../components/timeline/TimelineItem';
-import { TimelineYearHeaderWrapper } from '../components/timeline/TimelineYearHeaderWrapper';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
-import { SearchBar } from '../components/timeline/SearchBar';
 import { TimelineSkeleton } from '../components/timeline/TimelineSkeleton';
-import { ArrowUpIcon } from '@heroicons/react/24/outline';
+import { TimelineYearHeader } from '../components/timeline/TimelineYearHeader';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 
 export enum QueryStatus {
   IDLE,
@@ -73,26 +73,49 @@ export function TimelineTab() {
     }, 100),
     [scrollY, setScrollY] = useState(0);
 
+  const yearMap = useMemo(() => {
+    const newYearMap: Map<
+      string,
+      Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>
+    > = new Map();
+
+    if (data) {
+      for (const [dateKey, itemList] of Object.entries(data)) {
+        const year = dateKey.split('-')[0];
+        const yearData = newYearMap.get(year);
+        if (yearData) {
+          yearData[dateKey] = itemList;
+        } else {
+          newYearMap.set(year, { [dateKey]: itemList });
+        }
+      }
+    }
+    return newYearMap;
+  }, [data]);
+
   useScrollToHash();
 
   const listItems = useMemo(
     () =>
-      data ? (
+      yearMap ? (
         <>
-          {Object.entries(data).map(([dateKey, itemList], index, elements) => (
-            <TimelineYearHeaderWrapper
-              key={dateKey}
-              dateKey={dateKey}
-              index={index}
-              elements={elements}
-            >
-              <TimelineItem
-                dateKey={dateKey}
-                itemList={itemList}
-                showIndividualItems={!!query}
-              />
-            </TimelineYearHeaderWrapper>
-          ))}
+          {/* new code using yearMap */}
+          {[...yearMap.entries()].map(
+            ([year, dateMap], yearIndex, yearElements) => (
+              <div key={year}>
+                <TimelineYearHeader key={`${year}${yearIndex}`} year={year} />
+                {Object.entries(dateMap).map(([dateKey, itemList]) => (
+                  <div key={dateKey}>
+                    <TimelineItem
+                      dateKey={dateKey}
+                      itemList={itemList}
+                      showIndividualItems={!!query}
+                    />
+                  </div>
+                ))}
+              </div>
+            ),
+          )}
           {status !== QueryStatus.COMPLETE_HIDE_LOAD_MORE &&
             status !== QueryStatus.LOADING && (
               <LoadMoreButton status={status} loadNextPage={loadNextPage} />
@@ -101,7 +124,7 @@ export function TimelineTab() {
       ) : (
         []
       ),
-    [data, loadNextPage, query, status],
+    [loadNextPage, yearMap, query, status],
   );
 
   return (
