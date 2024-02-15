@@ -11,7 +11,7 @@ import {
 import { MangoQuerySelector, RxDatabase, RxDocument } from 'rxdb';
 
 import { Transition } from '@headlessui/react';
-import { ArrowUpIcon } from '@heroicons/react/24/outline';
+import { ArrowUpIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { IVSSimilaritySearchParams, VectorStorage } from '@mere/vector-storage';
 import { useDebounceCallback } from '@react-hook/debounce';
 
@@ -205,7 +205,17 @@ export function TimelineTab() {
                 <SearchBar query={query} setQuery={setQuery} status={status} />
                 {listItems}
                 {(Object.keys(data || {}) || []).length === 0 ? (
-                  <p className="font-xl">{`No records found with query: ${query}`}</p>
+                  <main className="grid min-h-full place-items-center bg-white px-6 py-24 sm:py-32 lg:px-8">
+                    <div className="text-center">
+                      <p className="text-base font-semibold text-primary-600">
+                        <MagnifyingGlassIcon className="h-12 w-12 mx-auto" />
+                      </p>
+                      <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">
+                        No matching records
+                      </h1>
+                      <p className="mt-6 text-lg leading-7 text-gray-700">{`No records found with query: ${query}`}</p>
+                    </div>
+                  </main>
                 ) : null}
               </div>
               <button
