@@ -362,16 +362,6 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
             </button>
           </div>
         </div>
-        {/* <button
-          type="button"
-          className={`py-1 my-1 sm:py-0 text-primary-800 font-medium text-sm md:text-base flex items-center gap-x-1 ring-primary-700 hover:text-primary-500 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95 active:duration-150 w-full text-center content-center justify-center rounded-md hover:ring-2 hover:scale-[101%] hover:duration-150 transition-all ease-in-out ${expanded ? 'outline-none' : ''}`}
-          onClick={() => setExpanded(!expanded)}
-        >
-          {expanded ? 'View Less' : 'View More'}
-          <ChevronDownIcon
-            className={`h-3 w-3 rounded duration-150 active:scale-95 active:bg-slate-50 ${expanded ? 'rotate-180 transform' : ''}`}
-          />
-        </button> */}
         <Transition
           show={expanded}
           enter="transition-all transform duration-150 origin-top"
