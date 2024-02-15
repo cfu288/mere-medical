@@ -65,7 +65,7 @@ export const TimelineMonthDayHeader: React.FC<TimelineMonthDayHeaderProps> = ({
       <div className="flex flex-row py-1">
         <div className="relative flex flex-col">
           <div className="h-0 mt-0 bg-transparent">
-            <div className="px-3 bg-gray-100 border-4 border-gray-300 rounded-full aspect-square flex flex-col justify-center">
+            <div className="px-3 bg-gray-100 border-2 md:border-4 border-gray-300 rounded-full aspect-square flex flex-col justify-center">
               <p className="text-sm font-black text-center">
                 {`${
                   checkIfDefaultDate(dateKey)
@@ -153,12 +153,11 @@ export function TimelineTab() {
           {[...yearMap.entries()].map(
             ([year, dateMap], yearIndex, yearElements) => (
               <div key={year} className="relative">
-                <div className="absolute left-8 top-4 h-[calc(100%-12px)] w-1 bg-gray-300 z-0 rounded-full" />
+                <div className="absolute left-8 top-4 h-[calc(100%-12px)] w-[2px] md:w-1 bg-gray-300 z-0 rounded-full" />
                 <TimelineYearHeader key={`${year}${yearIndex}`} year={year} />
                 {Object.entries(dateMap).map(([dateKey, itemList]) => (
                   <div key={dateKey} className="ml-1">
                     <TimelineMonthDayHeader dateKey={dateKey} />
-
                     <TimelineItem
                       dateKey={dateKey}
                       itemList={itemList}

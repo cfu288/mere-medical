@@ -7,7 +7,7 @@ export function TimelineYearHeader({ year }: { year: string }) {
       <div className="flex flex-row py-1">
         <div className="relative flex flex-col">
           <div className="h-0 mt-0 bg-transparent">
-            <p className="px-2 text-xl font-black bg-gray-100 border-4 border-gray-300 rounded-md text-center">{`${format(
+            <p className="px-2 text-xl font-black bg-gray-100 border-2 md:border-4 border-gray-300 rounded-md text-center">{`${format(
               parseISO(year),
               'yyyy',
             )}`}</p>
