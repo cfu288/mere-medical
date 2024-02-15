@@ -12,7 +12,7 @@ import {
   Observation,
   Procedure,
 } from 'fhir/r2';
-import React, { memo } from 'react';
+import React, { memo, useMemo } from 'react';
 
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { ConditionCard } from './ConditionCard';
@@ -27,6 +27,7 @@ import { ImmunizationCard } from './ImmunizationCard';
 import { MedicationCard } from './MedicationCard';
 import { ObservationCard } from './ObservationCard';
 import { ProcedureCard } from './ProcedureCard';
+import { useConnectionDocs } from '../hooks/useConnectionDoc';
 
 export const TimelineItem = memo(function TimelineItem({
   dateKey,
@@ -52,12 +53,10 @@ export const TimelineItem = memo(function TimelineItem({
     >
       <div className="flex w-1/6 flex-row">{/* Left sided date spacer */}</div>
       {/* Clinical card rendering */}
+
       <div className="flex w-5/6 flex-col gap-y-2">
         {!showIndividualItems ? (
-          <ElementsByDateListCard
-            itemList={itemList}
-            dateString={formattedCardDateString}
-          />
+          <ElementsByDateListCard itemList={itemList} />
         ) : (
           <>
             {itemList.map((item) => (
