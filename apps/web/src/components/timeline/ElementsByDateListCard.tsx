@@ -340,16 +340,38 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
             </ul>
           </div>
         )}
-        <button
+        <div className="relative">
+          <div
+            className="absolute inset-0 flex items-center"
+            aria-hidden="true"
+          >
+            <div className="w-full border-t border-gray-300" />
+          </div>
+          <div className="relative flex justify-center">
+            <button
+              type="button"
+              className="inline-flex items-center gap-x-1.5 rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+              onClick={() => setExpanded(!expanded)}
+            >
+              {expanded ? 'View Less' : 'View More'}
+
+              <ChevronDownIcon
+                className={`-ml-1 -mr-0.5 h-5 w-5 text-gray-400 duration-150 active:scale-95 active:bg-slate-50 ${expanded ? 'rotate-180 transform' : ''}`}
+                aria-hidden="true"
+              />
+            </button>
+          </div>
+        </div>
+        {/* <button
           type="button"
-          className={`py-1 my-1 sm:py-0 text-primary-800 font-medium text-sm md:text-base flex items-center gap-x-1 ring-primary-700 hover:text-primary-500 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95 active:rounded-md active:duration-150 w-full text-center content-center justify-center rounded-md hover:ring-2 hover:scale-[101%] active:ring-opacity-50 hover:rounded-md hover:duration-150 transition-all duration-150 ease-in-out ${expanded ? 'outline-none bg-primary-50 ring-2' : ''}`}
+          className={`py-1 my-1 sm:py-0 text-primary-800 font-medium text-sm md:text-base flex items-center gap-x-1 ring-primary-700 hover:text-primary-500 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95 active:duration-150 w-full text-center content-center justify-center rounded-md hover:ring-2 hover:scale-[101%] hover:duration-150 transition-all ease-in-out ${expanded ? 'outline-none' : ''}`}
           onClick={() => setExpanded(!expanded)}
         >
           {expanded ? 'View Less' : 'View More'}
           <ChevronDownIcon
             className={`h-3 w-3 rounded duration-150 active:scale-95 active:bg-slate-50 ${expanded ? 'rotate-180 transform' : ''}`}
           />
-        </button>
+        </button> */}
         <Transition
           show={expanded}
           enter="transition-all transform duration-150 origin-top"
