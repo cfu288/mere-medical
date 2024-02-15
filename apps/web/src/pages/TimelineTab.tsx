@@ -71,10 +71,8 @@ export function TimelineTab() {
   const user = useUser(),
     [query, setQuery] = useState(''),
     { experimental__use_openai_rag } = useLocalConfig(),
-    { data, status, initialized, loadNextPage } = useRecordQuery(
-      query,
-      experimental__use_openai_rag,
-    ),
+    { data, status, initialized, loadNextPage, showIndividualItems } =
+      useRecordQuery(query, experimental__use_openai_rag),
     hasNoRecords = query === '' && (!data || Object.entries(data).length === 0),
     scrollContainer = useRef<HTMLDivElement>(null),
     scrollToTop = useScrollToTop(scrollContainer),
@@ -129,7 +127,7 @@ export function TimelineTab() {
                     <TimelineItem
                       dateKey={dateKey}
                       itemList={itemList}
-                      showIndividualItems={!!query}
+                      showIndividualItems={showIndividualItems}
                     />
                   </div>
                 ))}
@@ -244,6 +242,7 @@ function useRecordQuery(
   status: QueryStatus;
   initialized: boolean; // Indicates whether the query has run at least once
   loadNextPage: () => void; // Function to load next page of results
+  showIndividualItems: boolean; // Indicates whether to show individual items or group by date
 } {
   const db = useRxDb(),
     { experimental__use_openai_rag } = useLocalConfig(),
@@ -254,6 +253,7 @@ function useRecordQuery(
     [data, setList] =
       useState<Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>>(),
     [currentPage, setCurrentPage] = useState(0),
+    [showIndividualItems, setShowIndividualItems] = useState(false),
     vectorStorage = useVectors(),
     execQuery = useCallback(
       /**
@@ -335,6 +335,11 @@ function useRecordQuery(
           }
 
           setInitialized(true);
+          if (query) {
+            setShowIndividualItems(true);
+          } else {
+            setShowIndividualItems(false);
+          }
         } catch (e) {
           console.error(e);
           setQueryStatus(QueryStatus.ERROR);
@@ -380,7 +385,7 @@ function useRecordQuery(
     debounceExecQuery();
   }, [query, debounceExecQuery, enableAISemanticSearch]);
 
-  return { data, status, initialized, loadNextPage };
+  return { data, status, initialized, loadNextPage, showIndividualItems };
 }
 
 function LoadMoreButton({
