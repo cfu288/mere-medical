@@ -118,7 +118,11 @@ export function TimelineTab() {
             ([year, dateMap], yearIndex, yearElements) => (
               <div key={year} className="relative">
                 <div className="absolute left-8 top-4 h-[calc(100%-12px)] w-[2px] md:w-1 bg-gray-200 z-0 rounded-full" />
-                <TimelineYearHeader key={`${year}${yearIndex}`} year={year} />
+                <TimelineYearHeader
+                  key={`${year}${yearIndex}`}
+                  year={year}
+                  fullDate={Object.entries(dateMap)?.[0]?.[0]}
+                />
                 {Object.entries(dateMap).map(([dateKey, itemList]) => (
                   <div key={dateKey} className="ml-1">
                     <TimelineMonthDayHeader dateKey={dateKey} />
