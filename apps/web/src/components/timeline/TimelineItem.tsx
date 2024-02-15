@@ -39,10 +39,6 @@ export const TimelineItem = memo(function TimelineItem({
 }) {
   const checkIfDefaultDate = (date: string) =>
     differenceInDays(parseISO(date), new Date(0)) < 1;
-  const formattedTitleDateString =
-    !dateKey || checkIfDefaultDate(dateKey)
-      ? 'No date'
-      : format(parseISO(dateKey), 'MMM dd');
   const formattedCardDateString =
     !dateKey || checkIfDefaultDate(dateKey)
       ? ''
@@ -51,18 +47,12 @@ export const TimelineItem = memo(function TimelineItem({
   return (
     <div
       id={format(parseISO(dateKey), 'MMM-dd-yyyy')}
-      className="flex scroll-mt-10 flex-row gap-x-4 px-0 pt-4 md:px-2"
+      className="-mt-16 flex scroll-mt-10 flex-row gap-x-4 px-0 pt-4 md:px-2"
       key={dateKey}
     >
-      <div className="flex w-1/5 flex-row md:w-1/4">
-        {/* Left sided date */}
-        <span className="text-primary-600 flex grow justify-end gap-x-4 whitespace-nowrap pt-5 text-sm font-bold md:text-base">
-          <div>{formattedTitleDateString}</div>
-          <div className="">•</div>
-        </span>
-      </div>
+      <div className="flex w-1/6 flex-row">{/* Left sided date spacer */}</div>
       {/* Clinical card rendering */}
-      <div className="flex w-4/5 flex-col gap-y-2 md:w-3/4">
+      <div className="flex w-5/6 flex-col gap-y-2">
         {!showIndividualItems ? (
           <ElementsByDateListCard
             itemList={itemList}
