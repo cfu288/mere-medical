@@ -193,13 +193,21 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
 
   const title =
     titleFields.length >= 2 && titleFields.length < 3
-      ? `Your ${titleFields.join(' & ')} ${dateString ? `from ${dateString}` : ''}`
-      : `Your ${titleFields.slice(0, -1).join(', ')}${titleFields.length > 1 ? ', and' : ''} ${titleFields.slice(-1)}  ${dateString ? `from ${dateString}` : ''}`;
+      ? `Your ${titleFields.join(' & ')}` // ${dateString ? `from ${dateString}` : ''}`
+      : `Your ${titleFields.slice(0, -1).join(', ')}${titleFields.length > 1 ? ', and' : ''} ${titleFields.slice(-1)}`; //  ${dateString ? `from ${dateString}` : ''}`;
 
   return (
     <CardBase>
       <div className="min-w-0 flex-1 flex-col">
         <TimelineCardCategoryTitle title={title} color="text-primary-600" />
+        <div className="relative mb-2">
+          <div
+            className="absolute inset-0 flex items-center"
+            aria-hidden="true"
+          >
+            <div className="w-full border-t border-gray-300" />
+          </div>
+        </div>
         {encounters.length > 0 && (
           <div className="mb-2 ml-2">
             <TimelineCardTitle>Encounters</TimelineCardTitle>

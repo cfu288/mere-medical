@@ -32,6 +32,7 @@ import { TimelineItem } from '../components/timeline/TimelineItem';
 import { TimelineSkeleton } from '../components/timeline/TimelineSkeleton';
 import { TimelineYearHeader } from '../components/timeline/TimelineYearHeader';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
+import { TimelineMonthDayHeader } from '../components/timeline/TimelineMonthDayHeader';
 
 export enum QueryStatus {
   IDLE,
@@ -53,52 +54,15 @@ const onScrollGetYPosition = (element: HTMLElement) => {
   return element.scrollTop;
 };
 
-interface TimelineMonthDayHeaderProps {
-  dateKey: string;
-}
-
-export const TimelineMonthDayHeader: React.FC<TimelineMonthDayHeaderProps> = ({
-  dateKey,
-}) => {
-  return (
-    <div className="sticky top-16 z-0 flex flex-col bg-transparent mt-4 mb-2 h-10">
-      <div className="flex flex-row py-1">
-        <div className="relative flex flex-col">
-          <div className="h-0 mt-0 bg-transparent">
-            <div className="px-3 bg-gray-100 border-2 md:border-4 border-gray-300 rounded-full aspect-square flex flex-col justify-center">
-              <p className="text-sm font-black text-center">
-                {`${
-                  checkIfDefaultDate(dateKey)
-                    ? ''
-                    : `${formattedTitleDateMonthString(dateKey)}`
-                }
-              `}
-              </p>
-              <p className="text-center text-sm">
-                {`${
-                  checkIfDefaultDate(dateKey)
-                    ? 'No Date'
-                    : `${formattedTitleDateDayString(dateKey)}`
-                }
-              `}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const checkIfDefaultDate = (date: string) =>
+export const checkIfDefaultDate = (date: string) =>
   differenceInDays(parseISO(date), new Date(0)) < 1;
 
-const formattedTitleDateMonthString = (dateKey: string) =>
+export const formattedTitleDateMonthString = (dateKey: string) =>
   !dateKey || checkIfDefaultDate(dateKey)
     ? ''
     : format(parseISO(dateKey), 'MMM');
 
-const formattedTitleDateDayString = (dateKey: string) =>
+export const formattedTitleDateDayString = (dateKey: string) =>
   !dateKey || checkIfDefaultDate(dateKey)
     ? ''
     : format(parseISO(dateKey), 'dd');
@@ -153,7 +117,7 @@ export function TimelineTab() {
           {[...yearMap.entries()].map(
             ([year, dateMap], yearIndex, yearElements) => (
               <div key={year} className="relative">
-                <div className="absolute left-8 top-4 h-[calc(100%-12px)] w-[2px] md:w-1 bg-gray-300 z-0 rounded-full" />
+                <div className="absolute left-8 top-4 h-[calc(100%-12px)] w-[2px] md:w-1 bg-gray-200 z-0 rounded-full" />
                 <TimelineYearHeader key={`${year}${yearIndex}`} year={year} />
                 {Object.entries(dateMap).map(([dateKey, itemList]) => (
                   <div key={dateKey} className="ml-1">
