@@ -192,7 +192,7 @@ export function TimelineTab() {
               </div>
               <button
                 onClick={scrollToTop}
-                className={`z-40 fixed transition-all duration-200 bottom-24 right-10 md:bottom-4 md:right-8 shadow-blue-500/50 bg-primary shadow-md hover:shadow-lg active:shadow-sm rounded-full p-2 active:scale-95 hover:scale-105 ${
+                className={`z-40 fixed transition-all duration-200 bottom-24 right-4 md:bottom-4 md:right-8 shadow-blue-500/50 bg-primary shadow-md hover:shadow-lg active:shadow-sm rounded-full p-2 active:scale-95 hover:scale-105 ${
                   scrollY > 100 ? 'opacity-100' : 'opacity-0'
                 }`}
               >
