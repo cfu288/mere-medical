@@ -1,7 +1,7 @@
 import React, { Fragment, memo } from 'react';
 import { SkeletonTimelineCard } from './SkeletonTimelineCard';
 import { SkeletonTimelineYearHeader } from './SkeletonTimelineYearHeader';
-import { SkeletonSearchBar } from '../hooks/SkeletonSearchBar';
+import { SkeletonSearchBar } from './SkeletonSearchBar';
 import { JumpToPanel } from './JumpToPanel';
 import { SkeletonTimelineMonthDayHeader } from './TimelineMonthDayHeader';
 
@@ -9,7 +9,7 @@ function TimelineSkeletonUnmemoed() {
   return (
     <div className={`relative flex`}>
       <JumpToPanel isLoading={true} />
-      <div className="relative mx-auto flex w-full max-w-4xl flex-col overflow-x-clip px-4 pb-12 sm:px-6 lg:px-8">
+      <div className="h-max w-full max-w-4xl flex-col px-4 pb-20 sm:px-6 sm:pb-6 lg:px-8">
         <SkeletonSearchBar />
         {[...Array(2)].map((_, index) => (
           <div key={index} className="relative">

@@ -31,7 +31,7 @@
     "./src/components/connection/ButtonLoadingSpinner.tsx",
     "./src/components/timeline/SkeletonLoadingText.tsx",
     "src/components/timeline/TimelineSkeleton.tsx",
-    "src/components/hooks/SkeletonSearchBar.tsx",
+    "src/components/timeline/SkeletonSearchBar.tsx",
     "src/components/timeline/SearchBar.tsx",
     "src/components/timeline/SkeletonTimelineYearHeader.tsx",
     "./src/pages/SkeletonJumpToPanel.tsx",
