@@ -12,7 +12,7 @@ import {
   Observation,
   Procedure,
 } from 'fhir/r2';
-import React, { memo, useMemo } from 'react';
+import { memo } from 'react';
 
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { ConditionCard } from './ConditionCard';
@@ -27,7 +27,6 @@ import { ImmunizationCard } from './ImmunizationCard';
 import { MedicationCard } from './MedicationCard';
 import { ObservationCard } from './ObservationCard';
 import { ProcedureCard } from './ProcedureCard';
-import { useConnectionDocs } from '../hooks/useConnectionDoc';
 
 export const TimelineItem = memo(function TimelineItem({
   dateKey,
@@ -38,13 +37,6 @@ export const TimelineItem = memo(function TimelineItem({
   itemList: ClinicalDocument<BundleEntry<FhirResource>>[];
   showIndividualItems?: boolean;
 }) {
-  const checkIfDefaultDate = (date: string) =>
-    differenceInDays(parseISO(date), new Date(0)) < 1;
-  const formattedCardDateString =
-    !dateKey || checkIfDefaultDate(dateKey)
-      ? ''
-      : format(parseISO(dateKey), 'MMMM do, yyyy');
-
   return (
     <div
       id={format(parseISO(dateKey), 'MMM-dd-yyyy')}

@@ -79,7 +79,7 @@ export class USPSTFRecommendationsGenerator {
         );
       },
     });
-    console.log('USPSTFRecommendationsGenerator: finished generation');
+    console.debug('USPSTFRecommendationsGenerator: finished generation');
     return recommendations;
   }
 }

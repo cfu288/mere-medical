@@ -115,6 +115,7 @@ export function TimelineTab() {
           {[...yearMap.entries()].map(
             ([year, dateMap], yearIndex, yearElements) => (
               <div key={year} className="relative">
+                {/* Vertical line */}
                 <div className="absolute left-8 top-4 h-[calc(100%-12px)] w-[2px] md:w-1 bg-gray-200 z-0 rounded-full" />
                 <TimelineYearHeader
                   key={`${year}${yearIndex}`}
@@ -142,7 +143,7 @@ export function TimelineTab() {
       ) : (
         []
       ),
-    [loadNextPage, yearMap, query, status],
+    [yearMap, status, loadNextPage, showIndividualItems],
   );
 
   return (
@@ -160,7 +161,6 @@ export function TimelineTab() {
     >
       <Transition
         show={
-          // true
           !initialized &&
           (status === QueryStatus.IDLE || status === QueryStatus.LOADING)
         }
