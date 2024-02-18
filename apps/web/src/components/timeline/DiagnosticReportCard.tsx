@@ -1,25 +1,26 @@
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
-import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
-import { ShowDiagnosticReportResultsExpandable } from './ShowDiagnosticReportResultsExpandable';
-import { useConnectionDoc } from '../hooks/useConnectionDoc';
-import { CardBase } from '../connection/CardBase';
-import useIntersectionObserver from '../hooks/useIntersectionObserver';
+import { memo, useEffect, useRef, useState } from 'react';
 import { RxDatabase, RxDocument } from 'rxdb';
+
+import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
+import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
+import { UserDocument } from '../../models/user-document/UserDocument.type';
+import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
+import { CardBase } from '../connection/CardBase';
+import { useConnectionDoc } from '../hooks/useConnectionDoc';
+import useIntersectionObserver from '../hooks/useIntersectionObserver';
+import { DatabaseCollections } from '../providers/DatabaseCollections';
 import { useRxDb } from '../providers/RxDbProvider';
 import { useUser } from '../providers/UserProvider';
-import { SkeletonLoadingText } from './SkeletonLoadingText';
-import { TimelineCardTitle } from './TimelineCardTitle';
-import { TimelineCardCategoryTitle } from './TimelineCardCategoryTitle';
-import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
-import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
-import { OpenableCardIcon } from './OpenableCardIcon';
-import { TimelineCardSubtitile } from './TimelineCardSubtitile';
 import { AbnormalResultIcon } from './AbnormalResultIcon';
 import { isOutOfRangeResult } from './fhirpathParsers';
-import { UserDocument } from '../../models/user-document/UserDocument.type';
-import { DatabaseCollections } from '../providers/DatabaseCollections';
+import { OpenableCardIcon } from './OpenableCardIcon';
+import { ShowDiagnosticReportResultsExpandable } from './ShowDiagnosticReportResultsExpandable';
+import { SkeletonLoadingText } from './SkeletonLoadingText';
+import { TimelineCardCategoryTitle } from './TimelineCardCategoryTitle';
+import { TimelineCardSubtitile } from './TimelineCardSubtitile';
+import { TimelineCardTitle } from './TimelineCardTitle';
 
 /**
  * Function that encapsulates the logic of the useRelatedDocuments Hook.

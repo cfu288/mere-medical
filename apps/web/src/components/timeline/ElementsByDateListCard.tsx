@@ -10,11 +10,11 @@ import {
   Observation,
   Procedure,
 } from 'fhir/r2';
-import React, { memo, useMemo } from 'react';
+import React, { memo, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Transition } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
-import { MapPinIcon } from '@heroicons/react/24/outline';
+import { MapPinIcon, UserIcon } from '@heroicons/react/24/outline';
 
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { CardBase } from '../connection/CardBase';
@@ -32,6 +32,108 @@ import { ObservationCard } from './ObservationCard';
 import { ProcedureCard } from './ProcedureCard';
 import { TimelineCardCategoryTitle } from './TimelineCardCategoryTitle';
 import { TimelineCardTitle } from './TimelineCardTitle';
+import { useClinicalDoc } from '../hooks/useClinicalDoc';
+import { CCDAStructureDefinitionKeys2_1 } from './ShowDocumentReferenceResultsExpandable/CCDAStructureDefinitionKeys2_1';
+import useIntersectionObserver from '../hooks/useIntersectionObserver';
+import { checkIfXmlIsCCDA } from './ShowDocumentReferenceResultsExpandable/ShowDocumentReferenceAttachmentExpandable';
+import { parseCCDA } from './ShowDocumentReferenceResultsExpandable/parseCCDA/parseCCDA';
+import parse, { HTMLReactParserOptions, domToReact } from 'html-react-parser';
+import DOMPurify from 'dompurify';
+
+const options: HTMLReactParserOptions = {
+  replace(domNode) {
+    if ((domNode as unknown as Element).tagName === 'content') {
+      return (
+        <p className="whitespace-pre-line">
+          {domToReact(
+            [...((domNode as unknown as Element).children as any)],
+            options,
+          )}
+        </p>
+      );
+    }
+    // else if ((domNode as unknown as Element).tagName === 'br') {
+    //   return <></>;
+    // }
+    return domNode;
+  },
+};
+
+function DocumentListItem({
+  item,
+}: {
+  item: ClinicalDocument<BundleEntry<DocumentReference>>;
+}) {
+  const [ccda, setCCDA] = useState<
+      | Partial<Record<CCDAStructureDefinitionKeys2_1, string | JSX.Element>>
+      | undefined
+    >(undefined),
+    attachmentUrl = item.data_record.raw.resource?.content?.[0].attachment.url,
+    attachment = useClinicalDoc(attachmentUrl),
+    [hasLoadedDocument, setHasLoadedDocument] = useState(false);
+  const ref = useRef<HTMLLIElement>(null);
+  const entry = useIntersectionObserver(ref, {});
+  const isVisible = !!entry?.isIntersecting;
+
+  useEffect(() => {
+    if (isVisible) {
+      if (
+        attachment?.get('data_record.content_type') === 'application/xml' &&
+        checkIfXmlIsCCDA(attachment.get('data_record.raw'))
+      ) {
+        const parsedDoc = parseCCDA(attachment.get('data_record.raw'), true);
+        setHasLoadedDocument(true);
+        setCCDA(parsedDoc);
+      } else {
+        setHasLoadedDocument(true);
+      }
+    }
+  }, [isVisible, attachment]);
+
+  const sanitizedData = useMemo(() => {
+    const data = (ccda?.HISTORY_OF_PRESENT_ILLNESS_SECTION ||
+      ccda?.PROGRESS_NOTE) as string;
+    return parse(DOMPurify.sanitize(data), options);
+  }, [ccda?.HISTORY_OF_PRESENT_ILLNESS_SECTION, ccda?.PROGRESS_NOTE]);
+
+  const hasTextData =
+    ccda?.HISTORY_OF_PRESENT_ILLNESS_SECTION || ccda?.PROGRESS_NOTE;
+
+  return (
+    <>
+      <li className="text-xs font-medium md:text-sm text-gray-900" ref={ref}>
+        {item.metadata?.display_name}
+      </li>
+      {hasLoadedDocument && hasTextData ? (
+        <p className="w-full min-w-full shadow-inner bg-gray-50 rounded-md my-2 max-h-48 overflow-y-auto overflow-x-auto p-2 sm:prose prose-sm prose-neutral [&_table]:table-auto [&_tr]:border-b [&_caption]:text-center">
+          {sanitizedData}
+        </p>
+      ) : null}
+    </>
+  );
+}
+
+function DispayDocumentReferencesOrAttachmentTimelineItem(props: {
+  documentReferences: ClinicalDocument<BundleEntry<FhirResource>>[];
+  documentReferenceAttachments: ClinicalDocument<BundleEntry<FhirResource>>[];
+}) {
+  return (
+    <div className="mb-2 ml-2">
+      <TimelineCardCategoryTitle title={'Documents'} color="text-teal-600" />
+      <ul className="list-disc list-inside">
+        {[
+          ...props.documentReferences,
+          ...props.documentReferenceAttachments,
+        ].map((item) => (
+          <DocumentListItem
+            key={item.id}
+            item={item as ClinicalDocument<BundleEntry<DocumentReference>>}
+          />
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 export const ElementsByDateListCard = memo(function ElementsByDateListCard({
   itemList,
@@ -203,11 +305,6 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
     ],
   );
 
-  const title =
-    titleFields.length >= 2 && titleFields.length < 3
-      ? `Your ${titleFields.join(' & ')}` // ${dateString ? `from ${dateString}` : ''}`
-      : `Your ${titleFields.slice(0, -1).join(', ')}${titleFields.length > 1 ? ', and' : ''} ${titleFields.slice(-1)}`; //  ${dateString ? `from ${dateString}` : ''}`;
-
   const uniqueConnectionIds = useMemo(() => {
     const uniqueDocs = new Set(
       itemList.map((item) => item.connection_record_id),
@@ -215,7 +312,26 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
     return Array.from(uniqueDocs);
   }, [itemList]);
 
+  const uniqueAuthors = useMemo(() => {
+    const uniqueDocs = new Set(
+      itemList
+        .map(
+          (item) =>
+            (item.data_record.raw as BundleEntry<DiagnosticReport>)?.resource
+              ?.performer,
+        )
+        .map((author) => author?.display)
+        .filter(Boolean),
+    );
+    return Array.from(uniqueDocs);
+  }, [itemList]);
+
   const connectionDocs = useConnectionDocs(uniqueConnectionIds);
+
+  const title =
+    titleFields.length >= 2 && titleFields.length < 3
+      ? `Your ${titleFields.join(' & ')}`
+      : `Your ${titleFields.slice(0, -1).join(', ')}${titleFields.length > 1 ? ', and' : ''} ${titleFields.slice(-1)}`;
 
   return (
     <CardBase>
@@ -225,15 +341,26 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
         >
           {title}
         </div>
-        <div className="flex flex-col">
-          {connectionDocs.map((conn) =>
-            conn?.get('name') ? (
-              <p className="mr-1 flex flex-row align-center items-center text-gray-900 text-sm md:text-base">
-                <MapPinIcon className="mr-1 h-4 sm:h-5 w-auto inline-block text-primary-700" />
-                {conn?.get('name')}
-              </p>
-            ) : null,
-          )}
+        <div className="flex sm:flex-row flex-col sm:justify-between">
+          <div className="flex flex-col">
+            {connectionDocs.map((conn) =>
+              conn?.get('name') ? (
+                <p className="mr-1 flex flex-row align-center items-center text-gray-900 text-sm md:text-base">
+                  <MapPinIcon className="mr-1 h-4 sm:h-5 w-auto inline-block text-primary-700" />
+                  {conn?.get('name')}
+                </p>
+              ) : null,
+            )}
+          </div>
+          <div className="flex flex-col">
+            {uniqueAuthors.length > 0 &&
+              uniqueAuthors.map((author) => (
+                <p className="mr-1 flex flex-row align-center items-center text-gray-900 text-sm md:text-base">
+                  <UserIcon className="mr-1 h-4 sm:h-5 w-auto inline-block text-primary-700" />
+                  {author}
+                </p>
+              ))}
+          </div>
         </div>
         <div className="relative h-4">
           <div
@@ -255,24 +382,10 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
         )}
         {(documentReferences.length > 0 ||
           documentReferenceAttachments.length > 0) && (
-          <div className="mb-2 ml-2">
-            <TimelineCardCategoryTitle
-              title={'Documents'}
-              color="text-teal-600"
-            />
-            <ul className="list-disc list-inside">
-              {[...documentReferences, ...documentReferenceAttachments].map(
-                (item) => (
-                  <li
-                    className="text-xs font-medium md:text-sm text-gray-900"
-                    key={item.id}
-                  >
-                    {item.metadata?.display_name}
-                  </li>
-                ),
-              )}
-            </ul>
-          </div>
+          <DispayDocumentReferencesOrAttachmentTimelineItem
+            documentReferences={documentReferences}
+            documentReferenceAttachments={documentReferenceAttachments}
+          />
         )}
         {procedures.length > 0 && (
           <div className="mb-2 ml-2">

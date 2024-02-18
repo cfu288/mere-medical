@@ -107,7 +107,8 @@
     "./src/features/mere-ai-recommendations/components/RecommendationGeneratorInitializer.tsx",
     "src/features/mere-ai-chat/components/ExperimentalBanner.tsx",
     "./src/components/timeline/ElementsByDateListCard.tsx",
-    "src/components/timeline/TimelineMonthDayHeader.tsx"
+    "src/components/timeline/TimelineMonthDayHeader.tsx",
+    "src/components/hooks/useRecordQuery.tsx"
   ],
   "exclude": [
     "jest.config.ts",

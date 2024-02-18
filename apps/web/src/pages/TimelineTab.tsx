@@ -22,9 +22,7 @@ import useIntersectionObserver from '../components/hooks/useIntersectionObserver
 import { useScrollToHash } from '../components/hooks/useScrollToHash';
 import { DatabaseCollections } from '../components/providers/DatabaseCollections';
 import { useLocalConfig } from '../components/providers/LocalConfigProvider';
-import { useRxDb } from '../components/providers/RxDbProvider';
 import { useUser } from '../components/providers/UserProvider';
-import { useVectors } from '../components/providers/vector-provider';
 import { JumpToPanel } from '../components/timeline/JumpToPanel';
 import { SearchBar } from '../components/timeline/SearchBar';
 import { TimelineBanner } from '../components/timeline/TimelineBanner';
@@ -33,6 +31,7 @@ import { TimelineSkeleton } from '../components/timeline/TimelineSkeleton';
 import { TimelineYearHeader } from '../components/timeline/TimelineYearHeader';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 import { TimelineMonthDayHeader } from '../components/timeline/TimelineMonthDayHeader';
+import { useRecordQuery } from '../components/hooks/useRecordQuery';
 
 export enum QueryStatus {
   IDLE,
@@ -42,30 +41,6 @@ export enum QueryStatus {
   ERROR,
   COMPLETE_HIDE_LOAD_MORE, // Indicates that there are no more results to load using loadNextPage
 }
-
-// scroll to top hook, returns a function that scrolls to the top of the page
-function useScrollToTop(ref?: React.RefObject<HTMLDivElement | undefined>) {
-  return useCallback(() => {
-    ref?.current?.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [ref]);
-}
-
-const onScrollGetYPosition = (element: HTMLElement) => {
-  return element.scrollTop;
-};
-
-export const checkIfDefaultDate = (date: string) =>
-  differenceInDays(parseISO(date), new Date(0)) < 1;
-
-export const formattedTitleDateMonthString = (dateKey: string) =>
-  !dateKey || checkIfDefaultDate(dateKey)
-    ? ''
-    : format(parseISO(dateKey), 'MMM');
-
-export const formattedTitleDateDayString = (dateKey: string) =>
-  !dateKey || checkIfDefaultDate(dateKey)
-    ? ''
-    : format(parseISO(dateKey), 'dd');
 
 export function TimelineTab() {
   const user = useUser(),
@@ -236,168 +211,6 @@ export function TimelineTab() {
   );
 }
 
-/**
- * Fetches records from the database and groups them by date
- * @param query Query to execute
- * @param enableAISemanticSearch Enable vector based semantic search
- * @returns
- */
-function useRecordQuery(
-  query: string,
-  enableAISemanticSearch?: boolean,
-): {
-  data:
-    | Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>
-    | undefined; // Data returned by query, grouped records by date
-  status: QueryStatus;
-  initialized: boolean; // Indicates whether the query has run at least once
-  loadNextPage: () => void; // Function to load next page of results
-  showIndividualItems: boolean; // Indicates whether to show individual items or group by date
-} {
-  const db = useRxDb(),
-    { experimental__use_openai_rag } = useLocalConfig(),
-    user = useUser(),
-    hasRun = useRef(false),
-    [status, setQueryStatus] = useState(QueryStatus.IDLE),
-    [initialized, setInitialized] = useState(false),
-    [data, setList] =
-      useState<Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>>(),
-    [currentPage, setCurrentPage] = useState(0),
-    [showIndividualItems, setShowIndividualItems] = useState(false),
-    vectorStorage = useVectors(),
-    execQuery = useCallback(
-      /**
-       *
-       * @param merge Merge results with existing results. If false, results overwrite existing results
-       * @param loadMore Indicate whether this is an inital load or a load more query. Affects visual loading state
-       */
-      async ({ loadMore = false }: { loadMore?: boolean }) => {
-        setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
-
-        try {
-          let isAiSearch = false;
-          if (loadMore) {
-            setQueryStatus(QueryStatus.LOADING_MORE);
-          }
-
-          // Execute query
-          let groupedRecords = await fetchRecords(
-            db,
-            user.id,
-            query,
-            loadMore ? currentPage + 1 : currentPage,
-          );
-
-          if (vectorStorage) {
-            if (experimental__use_openai_rag) {
-              if (enableAISemanticSearch) {
-                if (Object.keys(groupedRecords).length === 0) {
-                  setQueryStatus(QueryStatus.LOADING);
-                  // If no results, try AI search
-                  isAiSearch = true;
-                  groupedRecords = (
-                    await fetchRecordsWithVectorSearch({
-                      db,
-                      vectorStorage,
-                      query,
-                      numResults: 20,
-                      enableSearchAttachments: true,
-                      groupByDate: true,
-                    })
-                  ).records;
-                  setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
-                }
-              }
-            }
-          }
-
-          // If load more, increment page. Otherwise, reset page to 0
-          if (loadMore) {
-            console.debug('TimelineTab: load next page: ', currentPage + 1);
-            setCurrentPage(currentPage + 1);
-          } else {
-            setCurrentPage(0);
-            console.debug('TimelineTab: reset page to 0');
-          }
-
-          // Merge results with existing results or overwrite existing results
-          if (loadMore) {
-            setList({ ...data, ...groupedRecords });
-          } else {
-            setList(groupedRecords);
-          }
-
-          // Set query status.
-          // Complete indicates that there are no more results to load
-          // Success indicates that there are more results to load
-          if (
-            Object.values(groupedRecords).reduce((a, b) => a + b.length, 0) <
-            PAGE_SIZE
-          ) {
-            setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
-          } else {
-            setQueryStatus(QueryStatus.SUCCESS);
-          }
-
-          if (isAiSearch) {
-            // disable paging for AI search
-            setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
-          }
-
-          setInitialized(true);
-          if (query) {
-            setShowIndividualItems(true);
-          } else {
-            setShowIndividualItems(false);
-          }
-        } catch (e) {
-          console.error(e);
-          setQueryStatus(QueryStatus.ERROR);
-        }
-      },
-      [
-        vectorStorage,
-        db,
-        user.id,
-        query,
-        currentPage,
-        experimental__use_openai_rag,
-        enableAISemanticSearch,
-        data,
-      ],
-    ),
-    debounceExecQuery = useDebounceCallback(
-      () => execQuery({ loadMore: false }),
-      experimental__use_openai_rag ? 1000 : 300,
-    ),
-    loadNextPage = useDebounceCallback(
-      () => execQuery({ loadMore: true }),
-      300,
-    );
-
-  useEffect(() => {
-    if (!hasRun.current) {
-      hasRun.current = true;
-      setQueryStatus(QueryStatus.LOADING);
-      execQuery({
-        loadMore: false,
-      });
-    }
-  }, [execQuery, query]);
-
-  useEffect(() => {
-    console.debug(
-      'TimelineTab: query changed or AI toggled: ',
-      query,
-      enableAISemanticSearch,
-    );
-    setQueryStatus(QueryStatus.LOADING);
-    debounceExecQuery();
-  }, [query, debounceExecQuery, enableAISemanticSearch]);
-
-  return { data, status, initialized, loadNextPage, showIndividualItems };
-}
-
 function LoadMoreButton({
   status,
   loadNextPage,
@@ -432,7 +245,31 @@ function LoadMoreButton({
   );
 }
 
-const PAGE_SIZE = 50;
+// scroll to top hook, returns a function that scrolls to the top of the page
+function useScrollToTop(ref?: React.RefObject<HTMLDivElement | undefined>) {
+  return useCallback(() => {
+    ref?.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [ref]);
+}
+
+const onScrollGetYPosition = (element: HTMLElement) => {
+  return element.scrollTop;
+};
+
+export const checkIfDefaultDate = (date: string) =>
+  differenceInDays(parseISO(date), new Date(0)) < 1;
+
+export const formattedTitleDateMonthString = (dateKey: string) =>
+  !dateKey || checkIfDefaultDate(dateKey)
+    ? ''
+    : format(parseISO(dateKey), 'MMM');
+
+export const formattedTitleDateDayString = (dateKey: string) =>
+  !dateKey || checkIfDefaultDate(dateKey)
+    ? ''
+    : format(parseISO(dateKey), 'dd');
+
+export const PAGE_SIZE = 50;
 
 export async function fetchRecordsWithVectorSearch({
   db,
@@ -587,7 +424,7 @@ export async function fetchRecordsWithVectorSearch({
  * @param db
  * @returns
  */
-async function fetchRecords(
+export async function fetchRecords(
   db: RxDatabase<DatabaseCollections>,
   user_id: string,
   query?: string,

@@ -89,26 +89,31 @@ export function parseCCDAHPISection(
             </Disclosure.Button>
             <Disclosure.Panel className="m-1 text-sm text-gray-800">
               <p
-                className="text-md whitespace-wrap max-h-screen overflow-y-scroll p-2 sm:prose prose-sm"
+                className="text-md whitespace-wrap max-h-screen overflow-y-scroll p-2 sm:prose prose-sm w-full min-w-full"
                 dangerouslySetInnerHTML={{
                   __html: extractedNote?.text || 'No note',
                 }}
               />
               {/* horizonal divider */}
               <hr className="my-4" />
-
               <p className="mt-2 mb-4 text-sm font-semibold italic text-gray-900">
                 Note taken at {parseDateString(extractedNote?.datetime || '')}{' '}
                 by {extractedNote?.author || ''}
               </p>
-              <p className="mt-2 text-sm italic text-gray-900">
-                {extractedNote?.address?.streetAddressLine || ''}
-              </p>
-              <p className="m mb-2 text-sm italic text-gray-900">
-                {extractedNote?.address?.city || ''},{' '}
-                {extractedNote?.address?.state || ''}{' '}
-                {extractedNote?.address?.postalCode || ''}
-              </p>
+              {Object.values(extractedNote?.address || {}).some(
+                (elem) => elem !== null && elem !== undefined,
+              ) && (
+                <>
+                  <p className="mt-2 text-sm italic text-gray-900">
+                    {extractedNote?.address?.streetAddressLine || ''}
+                  </p>
+                  <p className="m mb-2 text-sm italic text-gray-900">
+                    {extractedNote?.address?.city || ''},{' '}
+                    {extractedNote?.address?.state || ''}{' '}
+                    {extractedNote?.address?.postalCode || ''}
+                  </p>
+                </>
+              )}
             </Disclosure.Panel>
           </>
         )}
@@ -117,6 +122,7 @@ export function parseCCDAHPISection(
   }
   return null;
 }
+
 function parseAuthorFromEntry(entry: Element): string | null {
   const firstName = entry
     ?.getElementsByTagName('assignedAuthor')?.[0]
