@@ -6,7 +6,9 @@
   "targets": {
     "build": {
       "executor": "@nx/webpack:webpack",
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "defaultConfiguration": "production",
       "options": {
         "compiler": "babel",
@@ -21,7 +23,9 @@
           "apps/web/src/manifest.json",
           "apps/web/src/assets"
         ],
-        "styles": ["apps/web/src/styles.css"],
+        "styles": [
+          "apps/web/src/styles.css"
+        ],
         "scripts": [],
         "webpackConfig": "apps/web/webpack.config.js",
         "postcssConfig": "apps/web/postcss.config.js",
@@ -77,14 +81,20 @@
     },
     "lint": {
       "executor": "@nx/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
-        "lintFilePatterns": ["apps/web/**/*.{ts,tsx,js,jsx}"]
+        "lintFilePatterns": [
+          "apps/web/**/*.{ts,tsx,js,jsx}"
+        ]
       }
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/apps/web"],
+      "outputs": [
+        "{workspaceRoot}/coverage/apps/web"
+      ],
       "options": {
         "jestConfig": "apps/web/jest.config.ts"
       }
