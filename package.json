@@ -1,5 +1,10 @@
 {
   "name": "mere-medical",
+  "description": " A personal health record to aggregate and sync all of your medical records from multiple patient portals in one place. Currently supports thousands of hospitals and clinics and major electronic medical record systems. Self-hosted, privacy-focused, and offline-first.",
+  "author": {
+    "name": "Christopher Fu",
+    "email": "cfu288@meremedical.co"
+  },
   "version": "0.0.0",
   "license": "AGPL-3.0-only",
   "scripts": {
@@ -7,7 +12,8 @@
     "build": "nx build --stats-json",
     "test": "nx test",
     "analyze:web": "webpack-bundle-analyzer dist/apps/web/stats.json",
-    "postinstall": "electron-builder install-app-deps"
+    "postinstall": "electron-builder install-app-deps",
+    "build:desktop": "npx nx build web --baseHref='./' && npx nx build desktop && npx nx run desktop:package"
   },
   "engines": {
     "node": "20.11.0"
@@ -158,6 +164,7 @@
     "rxjs": "^7.5.6",
     "sylviejs": "^0.0.14",
     "tslib": "^2.3.0",
+    "update-electron-app": "^3.0.0",
     "url": "^0.11.0",
     "url-join": "^5.0.0",
     "workbox-background-sync": "^6.5.4",
