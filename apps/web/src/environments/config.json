@@ -7,5 +7,5 @@
   "VA_CLIENT_ID": "0oaqxwxoyuQVVZ7l52p7",
   "IS_DEMO": "disabled",
   "PUBLIC_URL": "https://localhost:4200",
-  "SENTRY_WEB_DSN": "https://bed0dd4532565cd0504163dd767512db@sentry.meremedical.co/3"
+  "SENTRY_WEB_DSN": ""
 }

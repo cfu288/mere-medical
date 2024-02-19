@@ -1,3 +1,5 @@
+import { isElectron } from '../../utils/isElectron';
+
 export function TimelineBanner({
   image,
   text = 'Hello!',
@@ -8,7 +10,18 @@ export function TimelineBanner({
   subtext?: string;
 }) {
   return (
-    <div className="bg-primary flex items-stretch px-4 py-3 sm:py-4">
+    <div className="bg-primary flex flex-col items-stretch px-4 pb-3 sm:pb-4">
+      <div
+        className={`h-3 sm:h-4 w-full  ${isElectron() ? 'active:bg-primary-700 z-20 rounded-full ' : ''}`}
+        alt="drag handle"
+        style={{
+          // @ts-ignore
+          '-webkit-app-region': isElectron() ? 'drag' : 'no-drag',
+        }}
+        onClick={() => {
+          alert('click');
+        }}
+      />
       <div className="flex flex-row items-stretch">
         <div className="flex h-full items-center justify-center pl-2 pr-4">
           <div className="aspect-square h-12 rounded-full border-2 border-solid border-white bg-gray-100 md:hidden">

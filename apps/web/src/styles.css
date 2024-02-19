@@ -41,6 +41,15 @@
   }
 }
 
+/* body {
+  -webkit-app-region: drag;
+} */
+
+button,
+a {
+  -webkit-app-region: no-drag;
+}
+
 .pb-safe {
   padding-bottom: max(
     calc(env(safe-area-inset-bottom, 1.5rem) - 0.75rem),
