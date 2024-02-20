@@ -50,7 +50,6 @@ export function getLoginUrl(
   baseUrl: string,
   authorizeUrl: string,
 ): string & Location {
-  console.log(concatPath(getRedirectUri() || '', Routes.CernerCallback));
   const params = {
     client_id: `${Config.CERNER_CLIENT_ID}`,
     scope: [
@@ -465,7 +464,6 @@ export async function fetchAccessTokenWithCode(
   cernerTokenUrl: string,
 ): Promise<CernerAuthResponse> {
   const defaultUrl = `${cernerTokenUrl}`;
-  console.log(concatPath(getRedirectUri() || '', Routes.CernerCallback));
   const res = await fetch(defaultUrl, {
     method: 'POST',
     headers: {
