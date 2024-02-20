@@ -37,7 +37,7 @@ if (checkIfSentryConfigured()) {
           },
         },
       },
-    })
+    }),
   );
 } else {
   imports.unshift(
@@ -46,17 +46,18 @@ if (checkIfSentryConfigured()) {
         level: 'info',
         transport: { target: 'pino-pretty' },
       },
-    })
+    }),
   );
 }
 
-if (checkIfOnPatientConfigured()) {
+const opConfigured = checkIfOnPatientConfigured();
+if (opConfigured.check) {
   imports.push(
     OnPatientModule.register({
-      clientId: process.env.ONPATIENT_CLIENT_ID,
-      clientSecret: process.env.ONPATIENT_CLIENT_SECRET,
+      clientId: opConfigured.clientId,
+      clientSecret: opConfigured.clientSecret,
       redirectUri: `${process.env.PUBLIC_URL}/api/v1/onpatient/callback`,
-    })
+    }),
   );
 }
 
@@ -68,32 +69,44 @@ export class AppModule {}
 
 // --- Helper functions ---
 
-function checkIfOnPatientConfigured(): boolean {
+function checkIfOnPatientConfigured():
+  | {
+      check: true;
+      clientId: string;
+      clientSecret: string;
+    }
+  | { check: false } {
   const check =
     !!process.env.ONPATIENT_CLIENT_ID && !!process.env.ONPATIENT_CLIENT_SECRET;
   if (!process.env.ONPATIENT_CLIENT_ID) {
     Logger.warn(
-      'ONPATIENT_CLIENT_ID was not provided: OnPatient services will be disabled.'
+      'ONPATIENT_CLIENT_ID was not provided: OnPatient services will be disabled.',
     );
   }
   if (!process.env.ONPATIENT_CLIENT_SECRET) {
     Logger.warn(
-      'ONPATIENT_CLIENT_SECRET was not provided: OnPatient services will be disabled.'
+      'ONPATIENT_CLIENT_SECRET was not provided: OnPatient services will be disabled.',
     );
   }
   if (check) {
     Logger.log(
-      'ONPATIENT_CLIENT_ID and ONPATIENT_CLIENT_SECRET were provided: OnPatient service will be enabled.'
+      'ONPATIENT_CLIENT_ID and ONPATIENT_CLIENT_SECRET were provided: OnPatient service will be enabled.',
     );
+
+    return {
+      check,
+      clientId: process.env.ONPATIENT_CLIENT_ID!,
+      clientSecret: process.env.ONPATIENT_CLIENT_SECRET!,
+    };
   }
 
-  return check;
+  return { check };
 }
 
 function checkIfSentryConfigured(): boolean {
   if (!process.env.SENTRY_DSN) {
     Logger.warn(
-      'SENTRY_DSN was not provided: Sentry logging will be disabled.'
+      'SENTRY_DSN was not provided: Sentry logging will be disabled.',
     );
   } else {
     Logger.log('SENTRY_DSN was provided: Sentry logging will be enabled.');

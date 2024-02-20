@@ -11,7 +11,6 @@ export function BookmarkedListCard({
 }: {
   items: ClinicalDocument<BundleEntry<DiagnosticReport | Observation>>[];
 }) {
-  console.log('test1:', JSON.stringify(items));
   return (
     <div className="col-span-6 lg:col-span-3">
       <Disclosure defaultOpen={true}>

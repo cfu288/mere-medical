@@ -35,6 +35,8 @@ import {
   ClinicalDocument,
   CreateClinicalDocument,
 } from '../models/clinical-document/ClinicalDocument.type';
+import { getRedirectUri } from '../environments';
+import { concatPath } from '../utils/urlUtils';
 
 export enum CernerLocalStorageKeys {
   CERNER_BASE_URL = 'cernerBaseUrl',
@@ -48,6 +50,7 @@ export function getLoginUrl(
   baseUrl: string,
   authorizeUrl: string,
 ): string & Location {
+  console.log(concatPath(getRedirectUri() || '', Routes.CernerCallback));
   const params = {
     client_id: `${Config.CERNER_CLIENT_ID}`,
     scope: [
@@ -74,7 +77,7 @@ export function getLoginUrl(
       'user/Practitioner.read',
       'user/Procedure.read',
     ].join(' '),
-    redirect_uri: `${Config.PUBLIC_URL}${Routes.CernerCallback}`,
+    redirect_uri: concatPath(getRedirectUri() || '', Routes.CernerCallback),
     aud: baseUrl,
     response_type: 'code',
   };
@@ -462,6 +465,7 @@ export async function fetchAccessTokenWithCode(
   cernerTokenUrl: string,
 ): Promise<CernerAuthResponse> {
   const defaultUrl = `${cernerTokenUrl}`;
+  console.log(concatPath(getRedirectUri() || '', Routes.CernerCallback));
   const res = await fetch(defaultUrl, {
     method: 'POST',
     headers: {
@@ -470,7 +474,7 @@ export async function fetchAccessTokenWithCode(
     body: new URLSearchParams({
       grant_type: 'authorization_code',
       client_id: `${Config.CERNER_CLIENT_ID}`,
-      redirect_uri: `${Config.PUBLIC_URL}${Routes.CernerCallback}`,
+      redirect_uri: concatPath(getRedirectUri() || '', Routes.CernerCallback),
       code: code,
     }),
   });

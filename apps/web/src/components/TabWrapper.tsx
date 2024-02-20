@@ -24,11 +24,12 @@ export function TabWrapper() {
       <div className="flex-grow overflow-y-auto">
         <Outlet />
       </div>
-      <div className={`flex-0 md:bg-primary-800 z-20 w-full bg-slate-100 md:relative md:bottom-auto md:top-0 md:h-full md:w-auto ${isElectron() ? 'pt-4' : ''}`}
-          style={{
-            // @ts-ignore
-            "-webkit-app-region": isElectron() ? "drag": "no-drag"
-          }}
+      <div
+        className={`flex-0 md:bg-primary-800 z-20 w-full bg-slate-100 md:relative md:bottom-auto md:top-0 md:h-full md:w-auto ${isElectron() ? 'pt-0 md:pt-4' : ''}`}
+        style={{
+          // @ts-ignore
+          '-webkit-app-region': isElectron() ? 'drag' : 'no-drag',
+        }}
       >
         <div className="pb-safe md:pb-0 mx-auto flex w-full max-w-3xl justify-around md:h-full md:w-64 md:flex-col md:justify-start">
           <img
