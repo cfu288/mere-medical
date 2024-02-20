@@ -7,11 +7,11 @@ export class OnPatientController {
   constructor(private readonly onPatientService: OnPatientService) {}
 
   @Get('callback')
-  async getData(@Res() response: Response, @Query('code') code) {
+  async getData(@Res() response: Response, @Query('code') code: string) {
     try {
       const data = await this.onPatientService.getAuthCode(code);
       response.redirect(
-        `${process.env.PUBLIC_URL}/onpatient/callback?accessToken=${data.access_token}&refreshToken=${data.refresh_token}&expiresIn=${data.expires_in}`
+        `${process.env.PUBLIC_URL}/onpatient/callback?accessToken=${data.access_token}&refreshToken=${data.refresh_token}&expiresIn=${data.expires_in}`,
       );
     } catch (e) {
       Logger.error(e);

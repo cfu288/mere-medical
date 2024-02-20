@@ -3,18 +3,21 @@ import { rendererAppName, rendererAppPort } from './constants';
 import { environment } from '../environments/environment';
 import { join } from 'path';
 import { format } from 'url';
+import * as electron from 'electron';
+import * as path from 'path';
+import { concatPath } from './utils/urlUtils';
 
 export default class App {
   // Keep a global reference of the window object, if you don't, the window will
   // be closed automatically when the JavaScript object is garbage collected.
   static mainWindow: Electron.BrowserWindow;
   static application: Electron.App;
-  static BrowserWindow;
+  static BrowserWindow: typeof BrowserWindow;
 
   public static isDevelopmentMode() {
     const isEnvironmentSet: boolean = 'ELECTRON_IS_DEV' in process.env;
     const getFromEnvironment: boolean =
-      parseInt(process.env.ELECTRON_IS_DEV, 10) === 1;
+      parseInt(process.env.ELECTRON_IS_DEV || '0', 10) === 1;
 
     return isEnvironmentSet ? getFromEnvironment : !environment.production;
   }
@@ -29,6 +32,7 @@ export default class App {
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
+    // @ts-ignore
     App.mainWindow = null;
   }
 
@@ -47,6 +51,29 @@ export default class App {
     if (rendererAppName) {
       App.initMainWindow();
       App.loadMainWindow();
+
+      // Handle the protocol. In this case, we choose to show an Error Box.
+      App.application.on('open-url', (event: any, url: any) => {
+        // trim out the protocol. redirect the app to the url
+        const protocol = url.split('://')[0];
+        const path = url.split('://')[1];
+        if (protocol === 'mere') {
+          App.mainWindow.webContents
+            .loadURL(concatPath(`\//#/`, path))
+            .then(() => {
+              App.mainWindow.show();
+            })
+            .catch((error) => {
+              console.error('open-url error', error);
+            });
+          console.log('open-url', concatPath(`\//#/`, path));
+        } else {
+          electron.dialog.showErrorBox(
+            'Protocol Error',
+            `Protocol "${protocol}" is not supported. Please contact your system administrator.`,
+          );
+        }
+      });
     }
   }
 
@@ -84,18 +111,54 @@ export default class App {
     });
 
     // handle all external redirects in a new browser window
-    // App.mainWindow.webContents.on('will-navigate', App.onRedirect);
-    // App.mainWindow.webContents.on('new-window', (event, url, frameName, disposition, options) => {
-    //     App.onRedirect(event, url);
-    // });
+    App.mainWindow.webContents.on('will-navigate', App.onRedirect);
+    App.mainWindow.webContents.on(
+      // @ts-ignore
+      'new-window',
+      (
+        event: Electron.Event,
+        url: string,
+        frameName: string,
+        disposition: string,
+        options: Electron.BrowserWindowConstructorOptions,
+      ) => {
+        App.onRedirect(event, url);
+      },
+    );
 
     // Emitted when the window is closed.
     App.mainWindow.on('closed', () => {
       // Dereference the window object, usually you would store windows
       // in an array if your app supports multi windows, this is the time
       // when you should delete the corresponding element.
+      // @ts-ignore
       App.mainWindow = null;
     });
+
+    // Set up local relative API calls to redirect to the remote API
+    const session = App.mainWindow.webContents.session;
+    session.webRequest.onBeforeRequest((details, callback) => {
+      if (details.url.indexOf('file://api./') == 0) {
+        //TODO Change to regex & parametrize (optional - set default value)
+        //TODO Test it works with non-GET (should work - using 307 redirect)
+        callback({
+          redirectURL: `https://app.meremedical.co/${details.url.substr(12)}`,
+        }); //TODO Parametrize (mandatory)
+      } else {
+        callback({}); //TODO Test this works
+      }
+    });
+
+    // Handle custom protocol links
+    if (process.defaultApp) {
+      if (process.argv.length >= 2) {
+        App.application.setAsDefaultProtocolClient('mere', process.execPath, [
+          path.resolve(process.argv[1]),
+        ]);
+      }
+    } else {
+      App.application.setAsDefaultProtocolClient('mere');
+    }
   }
 
   private static loadMainWindow() {

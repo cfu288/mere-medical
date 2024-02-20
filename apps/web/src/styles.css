@@ -6,14 +6,15 @@
 
 @font-face {
   font-family: 'Source Sans';
-  src: url('/assets/fonts/SourceSans3-VariableFont_wght.ttf') format('truetype');
+  src: url('./assets/fonts/SourceSans3-VariableFont_wght.ttf')
+    format('truetype');
   font-style: normal;
   font-weight: 100 900;
 }
 
 @font-face {
   font-family: 'Source Sans';
-  src: url('/assets/fonts/SourceSans3-Italic-VariableFont_wght.ttf')
+  src: url('./assets/fonts/SourceSans3-Italic-VariableFont_wght.ttf')
     format('truetype');
   font-style: italic;
   font-weight: 100 900;
