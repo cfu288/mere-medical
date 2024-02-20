@@ -7,6 +7,7 @@ import { CernerModule } from './cerner/cerner.module';
 import { EpicModule } from './epic/epic.module';
 import { VeradigmModule } from './veradigm/veradigm.module';
 import { TenantModule } from './tenant/tenant.module';
+import { VAModule } from './va/va.module';
 import { LoggerModule } from 'nestjs-pino';
 
 const imports: ModuleMetadata['imports'] = [
@@ -16,6 +17,7 @@ const imports: ModuleMetadata['imports'] = [
   EpicModule,
   VeradigmModule,
   TenantModule,
+  VAModule,
 ];
 
 if (checkIfSentryConfigured()) {

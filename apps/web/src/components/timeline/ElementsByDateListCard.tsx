@@ -272,7 +272,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
               );
             }
             return 0;
-          }),
+          }) as ClinicalDocument<BundleEntry<Encounter>>[],
       [itemList],
     );
 
@@ -372,10 +372,18 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
         </div>
         {encounters.length > 0 && (
           <div className="mb-2 ml-2">
-            <TimelineCardTitle>Encounters</TimelineCardTitle>
+            <TimelineCardCategoryTitle
+              title={'Encounters'}
+              color="text-red-500"
+            />
             <ul className="list-disc list-inside">
               {encounters.map((item) => (
-                <li key={item.id}>{item.metadata?.display_name}</li>
+                <li key={item.id} className="">
+                  <p className="capitalize inline-block">{`${item.data_record.raw.resource?.class} -`}</p>
+                  <p className="inline-block ml-1">
+                    {`${item.data_record.raw.resource?.location?.[0].location.display}`}
+                  </p>
+                </li>
               ))}
             </ul>
           </div>
