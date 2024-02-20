@@ -1,5 +1,3 @@
-import { URL } from 'url';
-
 export function getBaseURL(path: string) {
   const url = new URL(path);
   return url.origin;

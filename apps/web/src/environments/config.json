@@ -7,5 +7,6 @@
   "VA_CLIENT_ID": "0oaqxwxoyuQVVZ7l52p7",
   "IS_DEMO": "disabled",
   "PUBLIC_URL": "https://localhost:4200",
+  "REDIRECT_URI": "mere://",
   "SENTRY_WEB_DSN": ""
 }

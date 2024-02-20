@@ -14,7 +14,7 @@ export function GenericBanner({
         alt="drag handle"
         style={{
           // @ts-ignore
-          '-webkit-app-region': isElectron() ? 'drag' : 'no-drag',
+          WebkitAppRegion: isElectron() ? 'drag' : 'no-drag',
         }}
       />
       <div className="flex flex-row items-stretch">

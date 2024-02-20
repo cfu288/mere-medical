@@ -1,11 +1,12 @@
 import '../styles.css';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   createBrowserRouter,
   createHashRouter,
   Navigate,
   RouterProvider,
+  useNavigate,
 } from 'react-router-dom';
 
 import { ErrorBoundary } from '../components/ErrorBoundary';

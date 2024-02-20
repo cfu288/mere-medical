@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { NavigateFunction, useNavigate } from 'react-router-dom';
+import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom';
 import { RxDatabase } from 'rxdb';
 import { AppPage } from '../components/AppPage';
 import { GenericBanner } from '../components/GenericBanner';
@@ -39,11 +39,12 @@ function useEpicDynamicRegistrationLogin() {
     notifyDispatch = useNotificationDispatch(),
     userPreferences = useUserPreferences(),
     navigate = useNavigate(),
-    hasRun = useRef(false);
+    hasRun = useRef(false),
+    { search } = useLocation();
 
   useEffect(() => {
     if (!hasRun.current) {
-      const searchRequest = new URLSearchParams(window.location.search),
+      const searchRequest = new URLSearchParams(search),
         code = searchRequest.get('code'),
         epicBaseUrl = localStorage.getItem(EpicLocalStorageKeys.EPIC_BASE_URL),
         epicTokenUrl = localStorage.getItem(

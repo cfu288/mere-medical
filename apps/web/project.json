@@ -79,6 +79,18 @@
           "sslKey": "./.dev/certs/localhost-key.pem",
           "sslCert": "./.dev/certs/localhost.pem"
         },
+        "development:electron": {
+          "fileReplacements": [
+            {
+              "replace": "apps/web/src/environments/config.json",
+              "with": "apps/web/src/environments/config.electron.json"
+            }
+          ],
+          "buildTarget": "web:build:development",
+          "ssl": true,
+          "sslKey": "./.dev/certs/localhost-key.pem",
+          "sslCert": "./.dev/certs/localhost.pem"
+        },
         "development:nossl": {
           "buildTarget": "web:build:development",
           "ssl": false
