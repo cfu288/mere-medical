@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import uuid4 from '../utils/UUIDUtils';
 import {
   ConnectionDocument,
@@ -27,12 +27,13 @@ const OnPatientRedirect: React.FC = () => {
     user = useUser(),
     db = useRxDb(),
     notifyDispatch = useNotificationDispatch(),
-    hasRun = useRef(false);
+    hasRun = useRef(false),
+    { search } = useLocation();
 
   useEffect(() => {
     if (!hasRun.current) {
       hasRun.current = true;
-      const searchRequest = new URLSearchParams(window.location.search),
+      const searchRequest = new URLSearchParams(search),
         accessToken = searchRequest.get('accessToken'),
         refreshToken = searchRequest.get('refreshToken'),
         expiresIn = searchRequest.get('expiresIn');
@@ -40,7 +41,7 @@ const OnPatientRedirect: React.FC = () => {
       if (accessToken && refreshToken && expiresIn && user.id) {
         getConnectionCardByUrl<ConnectionDocument>(
           'https://onpatient.com',
-          db
+          db,
         ).then((doc) => {
           if (doc) {
             try {

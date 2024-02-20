@@ -9,6 +9,13 @@ declare global {
     }
   }
   var MERE_APP_VERSION: number;
+  interface Window {
+    electron: {
+      getAppVersion: () => Promise<string>;
+      platform: string;
+      onExternalNavigate: (callback: (arg0: any) => void) => void;
+    };
+  }
 }
 
 export {};

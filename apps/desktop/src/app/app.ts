@@ -58,15 +58,13 @@ export default class App {
         const protocol = url.split('://')[0];
         const path = url.split('://')[1];
         if (protocol === 'mere') {
-          App.mainWindow.webContents
-            .loadURL(concatPath(`\//#/`, path))
-            .then(() => {
-              App.mainWindow.show();
-            })
-            .catch((error) => {
-              console.error('open-url error', error);
-            });
-          console.log('open-url', concatPath(`\//#/`, path));
+          if (!App.application.isPackaged) {
+            App.mainWindow.loadURL(
+              concatPath(`http://localhost:${rendererAppPort}`, `\//#/`, path),
+            );
+          } else {
+            App.mainWindow.webContents.send('navigate', path);
+          }
         } else {
           electron.dialog.showErrorBox(
             'Protocol Error',
