@@ -7,6 +7,7 @@ import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 
 import { AppModule } from './app/app.module';
+import { NestApplicationOptions } from '@nestjs/common/interfaces/nest-application-options.interface';
 
 async function bootstrap() {
   const globalPrefix = 'api';
@@ -15,10 +16,10 @@ async function bootstrap() {
   Logger.log(
     `Running in ${
       process.env.NODE_ENV !== 'development' ? 'production' : 'development'
-    } mode`
+    } mode`,
   );
 
-  let httpsOptions = null;
+  let httpsOptions: NestApplicationOptions['httpsOptions'] = {};
   if (ssl) {
     Logger.log(`Enabling development SSL.`);
     const keyPath = '../../../.dev/certs/localhost-key.pem' || '';
@@ -27,6 +28,7 @@ async function bootstrap() {
       key: fs.readFileSync(path.join(__dirname, keyPath)),
       cert: fs.readFileSync(path.join(__dirname, certPath)),
       //TODO: apply this only to proxy routes
+      // @ts-ignore
       bodyParser: false,
     };
   } else {
@@ -45,7 +47,7 @@ async function bootstrap() {
   Logger.log(
     `🚀 Application is running on: http${
       ssl ? 's' : ''
-    }://localhost:${port}/${globalPrefix}`
+    }://localhost:${port}/${globalPrefix}`,
   );
 
   app.useLogger(app.get(PinoLogger));
