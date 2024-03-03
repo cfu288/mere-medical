@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Routes } from '../Routes';
 import {
   VA_BASE_URL,
@@ -19,13 +19,12 @@ const VARedirect: React.FC = () => {
     user = useUser(),
     db = useRxDb(),
     notifyDispatch = useNotificationDispatch(),
-    hasRun = useRef(false),
-    { search } = useLocation();
+    hasRun = useRef(false);
 
   useEffect(() => {
     if (!hasRun.current) {
       hasRun.current = true;
-      const searchRequest = new URLSearchParams(search),
+      const searchRequest = new URLSearchParams(window.location.search),
         code = searchRequest.get('code');
 
       if (code) {

@@ -19,11 +19,11 @@ export class ProxyController {
   async proxy(
     @Res() response: Response,
     @NestRequest() request: Request,
-    @Param() params: any,
+    @Param() params
   ) {
     try {
       Logger.debug(
-        `Proxy request was made with params: ${JSON.stringify(params)}`,
+        `Proxy request was made with params: ${JSON.stringify(params)}`
       );
       this.proxyService.proxyRequest(request, response, params);
     } catch (err) {

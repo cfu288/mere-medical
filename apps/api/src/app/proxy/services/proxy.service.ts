@@ -10,15 +10,11 @@ export class ProxyService {
   private readonly logger = new Logger(ProxyService.name);
 
   constructor(
-    @Inject(HTTP_PROXY) private proxy: server,
-    @Inject(PROXY_MODULE_OPTIONS) private options: ProxyModuleOptions,
+    @Inject(HTTP_PROXY) private proxy: server | any,
+    @Inject(PROXY_MODULE_OPTIONS) private options: ProxyModuleOptions
   ) {}
 
-  async proxyRequest(
-    req: Request,
-    res: Response,
-    @Param() params?: Record<string, string>,
-  ) {
+  async proxyRequest(req: Request, res: Response, @Param() params?) {
     const target = req.query.target as string;
     const target_type = req.query.target_type as string;
     let serviceId = (req.query.serviceId as string).trim();
@@ -49,7 +45,7 @@ export class ProxyService {
       const services = new Map(
         this.options.services
           ? this.options.services.map((service) => [service.id, service])
-          : [],
+          : []
       );
       // Temp workaround for sandbox
       const isSandbox =
@@ -60,7 +56,7 @@ export class ProxyService {
       }
 
       if (services.has(serviceId) || isSandbox) {
-        const service = services.get(serviceId)!;
+        const service = services.get(serviceId);
         this.logger.debug(`Proxying ${req.method} ${req.url} to ${serviceId}`);
         const baseUrl = service.url;
         const authUrl = service.authorize;
@@ -75,7 +71,7 @@ export class ProxyService {
           urlToProxy =
             (baseUrl.replace('/api/FHIR/DSTU2/', '') || '').replace(
               'api/FHIR/DSTU2',
-              '',
+              ''
             ) + '/oauth2/register';
         }
 
@@ -84,7 +80,7 @@ export class ProxyService {
           res,
           target ? concatPath(urlToProxy, prefix, target) : urlToProxy,
           service.forwardToken === false ? null : token,
-          { ...service.config, headers },
+          { ...service.config, headers }
         );
       } else {
         const error = `Could not find serviceId '${serviceId}'`;
@@ -112,7 +108,7 @@ export class ProxyService {
     res: Response,
     target: string,
     token: string,
-    options: server.ServerOptions = {},
+    options: server.ServerOptions = {}
   ) {
     const url = new URL(target);
     req.url = `${url.pathname}${url.search}`;
@@ -132,7 +128,7 @@ export class ProxyService {
       ...(options && options.headers),
     }; // To deep extend headers
 
-    this.proxy.web(req, res, requestOptions, (err: any) => {
+    this.proxy.web(req, res, requestOptions, (err) => {
       if (err.code === 'ECONNRESET') return;
 
       this.logger.error({

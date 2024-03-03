@@ -1,5 +1,3 @@
-import { isElectron } from '../utils/isElectron';
-
 export function GenericBanner({
   text = '',
   uppercase = true,
@@ -8,15 +6,7 @@ export function GenericBanner({
   uppercase?: boolean;
 }) {
   return (
-    <div className={`bg-primary flex flex-col items-stretch px-4 pb-6`}>
-      <div
-        className={`h-6 w-full ${isElectron() ? 'active:bg-primary-700 z-20 rounded-full' : ''}`}
-        alt="drag handle"
-        style={{
-          // @ts-ignore
-          WebkitAppRegion: isElectron() ? 'drag' : 'no-drag',
-        }}
-      />
+    <div className="bg-primary flex items-stretch px-4 py-6 pt-6 ">
       <div className="flex flex-row items-stretch">
         <div className="flex-column align-middle">
           <p

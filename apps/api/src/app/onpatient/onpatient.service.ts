@@ -15,7 +15,7 @@ export class OnPatientService {
 
   constructor(
     @Inject('CONFIG') private options: OnPatientServiceConfig,
-    private readonly httpService: HttpService,
+    private readonly httpService: HttpService
   ) {
     this.envConfig = options;
   }
@@ -24,7 +24,7 @@ export class OnPatientService {
     if (!code) {
       throw new HttpException(
         'Forbidden: no auth code provided in callback url',
-        HttpStatus.FORBIDDEN,
+        HttpStatus.FORBIDDEN
       );
     }
 
@@ -39,27 +39,20 @@ export class OnPatientService {
     const response = await this.httpService.post<OnPatientAuthResponse>(
       'https://onpatient.com/o/token/?' + new URLSearchParams(params),
       null,
-      { method: 'POST' },
+      { method: 'POST' }
     );
 
     const awaitedRes = await response.toPromise();
-    const status = await awaitedRes?.status;
+    const status = await awaitedRes.status;
 
     if (status !== 200) {
       throw new HttpException(
         'Forbidden: unable to get auth token with code',
-        HttpStatus.FORBIDDEN,
+        HttpStatus.FORBIDDEN
       );
     }
 
-    const data = await awaitedRes?.data;
-
-    if (!data) {
-      throw new HttpException(
-        'Forbidden: unable to get auth token with code',
-        HttpStatus.FORBIDDEN,
-      );
-    }
+    const data = await awaitedRes.data;
 
     return data;
   }

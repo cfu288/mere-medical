@@ -30,14 +30,14 @@ jobs:
 
       - name: Build and push
         uses: docker/build-push-action@v5
-        # env:
-        #   SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         with:
           context: .
           push: true
           tags: cfu288/mere-medical:latest,cfu288/mere-medical:${{ env.RELEASE_CALVER_VERSION }}
-          # secrets: |
-          #   SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
+          secrets: |
+            SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Create a GitHub release
         uses: ncipollo/release-action@v1

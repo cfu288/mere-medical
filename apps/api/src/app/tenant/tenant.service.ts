@@ -16,28 +16,28 @@ type UnifiedDSTU2Endpoint = CernerDSTU2Endpoint &
   EpicDSTU2Endpoint &
   VeradigmDSTU2Endpoint & { vendor: 'EPIC' | 'CERNER' | 'VERADIGM' };
 
-const searchItems: UnifiedDSTU2Endpoint[] = ([] as UnifiedDSTU2Endpoint[])
+const searchItems = []
   .concat(
     (EpicDSTU2TenantEndpoints as unknown as UnifiedDSTU2Endpoint[]).map((i) => {
       i.vendor = 'EPIC';
       return i;
-    }),
+    })
   )
   .concat(
     (CernerDSTU2TenantEndpoints as unknown as UnifiedDSTU2Endpoint[]).map(
       (i) => {
         i.vendor = 'CERNER';
         return i;
-      },
-    ),
+      }
+    )
   )
   .concat(
     (VeradigmDSTU2TenantEndpoints as unknown as UnifiedDSTU2Endpoint[]).map(
       (i) => {
         i.vendor = 'VERADIGM';
         return i;
-      },
-    ),
+      }
+    )
   );
 
 @Injectable()
@@ -46,7 +46,7 @@ export class TenantService {
 
   async queryTenants(
     query: string,
-    vendors: string[],
+    vendors: string[]
   ): Promise<UnifiedDSTU2Endpoint[]> {
     return filteredItemsWithQuery(this.items, query, vendors);
   }
@@ -55,7 +55,7 @@ export class TenantService {
 function filteredItemsWithQuery(
   items: UnifiedDSTU2Endpoint[],
   query: string,
-  vendors?: string[] | string,
+  vendors?: string[] | string
 ) {
   if (vendors && vendors.length) {
     items = items.filter((item) => [...vendors].includes(item.vendor));

@@ -35,8 +35,6 @@ import {
   ClinicalDocument,
   CreateClinicalDocument,
 } from '../models/clinical-document/ClinicalDocument.type';
-import { getRedirectUri } from '../environments';
-import { concatPath } from '../utils/urlUtils';
 
 export enum CernerLocalStorageKeys {
   CERNER_BASE_URL = 'cernerBaseUrl',
@@ -76,7 +74,7 @@ export function getLoginUrl(
       'user/Practitioner.read',
       'user/Procedure.read',
     ].join(' '),
-    redirect_uri: concatPath(getRedirectUri() || '', Routes.CernerCallback),
+    redirect_uri: `${Config.PUBLIC_URL}${Routes.CernerCallback}`,
     aud: baseUrl,
     response_type: 'code',
   };
@@ -472,7 +470,7 @@ export async function fetchAccessTokenWithCode(
     body: new URLSearchParams({
       grant_type: 'authorization_code',
       client_id: `${Config.CERNER_CLIENT_ID}`,
-      redirect_uri: concatPath(getRedirectUri() || '', Routes.CernerCallback),
+      redirect_uri: `${Config.PUBLIC_URL}${Routes.CernerCallback}`,
       code: code,
     }),
   });

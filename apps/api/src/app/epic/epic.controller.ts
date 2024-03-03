@@ -17,7 +17,7 @@ export class EpicController {
   async getDSTU2Tenants(
     @NestRequest() request: Request,
     @Res() response: Response,
-    @Query('query') query: string,
+    @Query('query') query
   ) {
     try {
       const data = await this.epicService.queryTenants(query);
@@ -29,7 +29,7 @@ export class EpicController {
   }
 
   @Get('tenants')
-  async getTenants(@Res() response: Response, @Query('query') query: string) {
+  async getTenants(@Res() response: Response, @Query('query') query) {
     try {
       const data = await this.epicService.queryTenants(query);
       response.json(data);

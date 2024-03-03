@@ -1,8 +1,6 @@
 // This optional code is used to register a service worker.
 // register() is not called by default.
 
-import { isElectron } from './utils/isElectron';
-
 // This lets the app load faster on subsequent visits in production, and gives
 // it offline capabilities. However, it also means that developers (and users)
 // will only see deployed updates on subsequent visits to a page, after all the
@@ -18,8 +16,8 @@ const isLocalhost = Boolean(
     window.location.hostname === '[::1]' ||
     // 127.0.0.0/8 are considered localhost for IPv4.
     window.location.hostname.match(
-      /^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/,
-    ),
+      /^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/
+    )
 );
 
 type Config = {
@@ -28,9 +26,6 @@ type Config = {
 };
 
 export function register(config?: Config) {
-  if (isElectron()) {
-    return;
-  }
   if (
     process.env['NODE_ENV'] === 'production' &&
     'serviceWorker' in navigator
@@ -39,7 +34,7 @@ export function register(config?: Config) {
     // The URL constructor is available in all browsers that support SW.
     const publicUrl = new URL(
       process.env['PUBLIC_URL'] || '',
-      window.location.href,
+      window.location.href
     );
     if (publicUrl.origin !== window.location.origin) {
       // Our service worker won't work if PUBLIC_URL is on a different origin
@@ -62,7 +57,7 @@ export function register(config?: Config) {
         navigator.serviceWorker.ready.then(() => {
           console.log(
             'This web app is being served cache-first by a service ' +
-              'worker. To learn more, visit https://cra.link/PWA',
+              'worker. To learn more, visit https://cra.link/PWA'
           );
         });
       } else {
@@ -76,9 +71,6 @@ export function register(config?: Config) {
 }
 
 function registerValidSW(swUrl: string, config?: Config) {
-  if (isElectron()) {
-    return;
-  }
   navigator.serviceWorker
     .register(swUrl)
     .then((registration) => {
@@ -95,7 +87,7 @@ function registerValidSW(swUrl: string, config?: Config) {
               // content until all client tabs are closed.
               console.log(
                 'New content is available and will be used when all ' +
-                  'tabs for this page are closed.',
+                  'tabs for this page are closed.'
               );
               // Write update ready to local storage
               localStorage.setItem('updateReady', 'true');
@@ -149,7 +141,7 @@ function checkValidServiceWorker(swUrl: string, config?: Config) {
     })
     .catch(() => {
       console.log(
-        'No internet connection found. App is running in offline mode.',
+        'No internet connection found. App is running in offline mode.'
       );
     });
 }

@@ -1,6 +1,6 @@
 import { URL } from 'url';
 
-export function getBaseURL(path: string) {
+export function getBaseURL(path) {
   const url = new URL(path);
   return url.origin;
 }
@@ -9,7 +9,7 @@ export function concatPath(...args: string[]) {
   return urlJoin(...args);
 }
 
-export function isAbsolute(path: string) {
+export function isAbsolute(path) {
   return !path.indexOf('/');
 }
 

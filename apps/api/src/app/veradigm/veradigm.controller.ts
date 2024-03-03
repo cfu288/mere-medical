@@ -7,7 +7,7 @@ export class VeradigmController {
   constructor(private readonly veradigmService: VeradigmService) {}
 
   @Get('tenants')
-  async getData(@Res() response: Response, @Query('query') query: string) {
+  async getData(@Res() response: Response, @Query('query') query) {
     try {
       const data = await this.veradigmService.queryTenants(query);
       response.json(data);

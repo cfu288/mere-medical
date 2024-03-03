@@ -9,9 +9,10 @@ export class TenantController {
   @Get('/')
   async getData(
     @Res() response: Response,
-    @Query('query') query: string,
-    @Query('vendor') vendors: string[],
+    @Query('query') query,
+    @Query('vendor') vendors
   ) {
+    console.log('vendors', vendors);
     try {
       const data = await this.tenantService.queryTenants(query, vendors);
       response.json(data);

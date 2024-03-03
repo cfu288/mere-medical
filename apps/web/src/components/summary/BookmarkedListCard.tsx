@@ -4,7 +4,6 @@ import { Disclosure, Transition } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { CardBase } from '../connection/CardBase';
 import { ObservationResultRow } from '../timeline/ObservationResultRow';
-import { BookmarkIcon } from '@heroicons/react/24/outline';
 
 export function BookmarkedListCard({
   items,
@@ -56,16 +55,10 @@ export function BookmarkedListCard({
                         ))}
                       </>
                     ) : (
-                      <div className="mx-4 flex flex-col py-6">
-                        <div className="self-center font-semibold text-gray-700">
-                          Bookmark some labs to see them here
+                      <div className="mx-4 flex flex-col border-b-2 border-solid border-gray-100 py-2">
+                        <div className="self-center font-semibold text-gray-600">
+                          No data available for this report
                         </div>
-                        <p className="self-center text-gray-600">
-                          Bookmarking labs will allow you to quickly access them
-                          here. You can bookmark labs from the timeline by
-                          selecting the{' '}
-                          <BookmarkIcon className="h-4 w-4 inline" /> icon.
-                        </p>
                       </div>
                     )}
                   </div>

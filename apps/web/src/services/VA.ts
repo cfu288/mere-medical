@@ -52,7 +52,7 @@ export async function getLoginUrl(
 ): Promise<string & Location> {
   const params = {
     client_id: `${Config.VA_CLIENT_ID}`,
-    redirect_uri: `${Config.PUBLIC_URL}${'/api/v1/va/app-redirect'}`,
+    redirect_uri: `${Config.PUBLIC_URL}${Routes.VACallback}`,
     response_type: 'code',
     scope: [
       'profile',
