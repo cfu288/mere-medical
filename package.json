@@ -11,7 +11,6 @@
     "start": "nx serve",
     "build": "nx build --stats-json",
     "test": "nx test",
-    "analyze:web": "webpack-bundle-analyzer dist/apps/web/stats.json",
     "postinstall": "electron-builder install-app-deps",
     "build:desktop": "npx nx run web:build:electron --baseHref='./' && npx nx build desktop && npx nx run desktop:package"
   },

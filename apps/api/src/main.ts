@@ -19,7 +19,8 @@ async function bootstrap() {
     } mode`,
   );
 
-  let httpsOptions: NestApplicationOptions['httpsOptions'] = {};
+  let httpsOptions: NestApplicationOptions['httpsOptions'] | undefined =
+    undefined;
   if (ssl) {
     Logger.log(`Enabling development SSL.`);
     const keyPath = '../../../.dev/certs/localhost-key.pem' || '';
@@ -27,9 +28,6 @@ async function bootstrap() {
     httpsOptions = {
       key: fs.readFileSync(path.join(__dirname, keyPath)),
       cert: fs.readFileSync(path.join(__dirname, certPath)),
-      //TODO: apply this only to proxy routes
-      // @ts-ignore
-      bodyParser: false,
     };
   } else {
     Logger.log(`Development SSL certs skipped in production.`);
@@ -37,6 +35,8 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule, {
     httpsOptions,
+    //TODO: apply this only to proxy routes
+    bodyParser: false,
     bufferLogs: true,
     logger: ['error', 'warn', 'log'],
   });
@@ -50,7 +50,7 @@ async function bootstrap() {
     }://localhost:${port}/${globalPrefix}`,
   );
 
-  app.useLogger(app.get(PinoLogger));
+  // app.useLogger(app.get(PinoLogger));
 }
 
 bootstrap();

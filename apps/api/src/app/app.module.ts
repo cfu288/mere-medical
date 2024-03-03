@@ -13,8 +13,9 @@ import { LoggerModule } from 'nestjs-pino';
 const imports: ModuleMetadata['imports'] = [
   StaticModule,
   LoginProxyModule,
-  CernerModule,
   EpicModule,
+  // ?
+  CernerModule,
   VeradigmModule,
   TenantModule,
   VAModule,
