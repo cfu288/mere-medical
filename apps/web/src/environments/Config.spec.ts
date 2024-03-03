@@ -1,6 +1,7 @@
 import Config from './config.json';
 import ProdConfig from './config.prod.json';
 import ElectronConfig from './config.electron.json';
+import { getConfig, getOnPatientConfig, getRedirectUri } from './index';
 
 describe('Development configuration', () => {
   it('IS_DEMO mode should be set to disabled', () => {
@@ -36,5 +37,21 @@ describe('Electron configuration', () => {
     expect(Object.keys(ElectronConfig).length).toBe(
       Object.keys(ProdConfig).length + 1,
     );
+  });
+});
+
+describe('Configuration helpers', () => {
+  it('getConfig() returns valid config', () => {
+    expect(getConfig()).toEqual(Config);
+  });
+
+  it('getOnPatientConfig() returns valid config', () => {
+    expect(getOnPatientConfig()).toEqual({
+      ONPATIENT_CLIENT_ID: Config.ONPATIENT_CLIENT_ID,
+    });
+  });
+
+  it('getRedirectUri() returns valid public URI if REDIRECT_URI is not set', () => {
+    expect(getRedirectUri()).toBe(Config.PUBLIC_URL);
   });
 });

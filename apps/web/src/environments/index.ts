@@ -33,8 +33,6 @@ export const getOnPatientConfig = () => {
 };
 
 export const getRedirectUri = () => {
-  return (
-    Config.parse(Configuration).REDIRECT_URI ||
-    Config.parse(Configuration).PUBLIC_URL
-  );
+  const config = Config.parse(Configuration);
+  return config.REDIRECT_URI || config.PUBLIC_URL;
 };
