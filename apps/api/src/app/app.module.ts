@@ -14,44 +14,20 @@ const imports: ModuleMetadata['imports'] = [
   StaticModule,
   LoginProxyModule,
   EpicModule,
-  // ?
   CernerModule,
   VeradigmModule,
   TenantModule,
   VAModule,
 ];
 
-if (checkIfSentryConfigured()) {
-  imports.unshift(
-    LoggerModule.forRoot({
-      pinoHttp: {
-        level: 'warn',
-        transport: {
-          target: 'pino-sentry-transport',
-          options: {
-            sentry: {
-              dsn: process.env.SENTRY_DSN,
-              // additional options for sentry
-            },
-            withLogRecord: true, // default false - send the log record to sentry as a context.(if its more then 8Kb Sentry will throw an error)
-            tags: ['id'], // sentry tags to add to the event, uses lodash.get to get the value from the log record
-            context: ['hostname'], // sentry context to add to the event, uses lodash.get to get the value from the log record,
-            minLevel: 30, // which level to send to sentry
-          },
-        },
-      },
-    }),
-  );
-} else {
-  imports.unshift(
-    LoggerModule.forRoot({
-      pinoHttp: {
-        level: 'info',
-        transport: { target: 'pino-pretty' },
-      },
-    }),
-  );
-}
+imports.unshift(
+  LoggerModule.forRoot({
+    pinoHttp: {
+      level: 'info',
+      transport: { target: 'pino-pretty' },
+    },
+  }),
+);
 
 const opConfigured = checkIfOnPatientConfigured();
 if (opConfigured.check) {
@@ -104,15 +80,4 @@ function checkIfOnPatientConfigured():
   }
 
   return { check };
-}
-
-function checkIfSentryConfigured(): boolean {
-  if (!process.env.SENTRY_DSN) {
-    Logger.warn(
-      'SENTRY_DSN was not provided: Sentry logging will be disabled.',
-    );
-  } else {
-    Logger.log('SENTRY_DSN was provided: Sentry logging will be enabled.');
-  }
-  return !!process.env.SENTRY_DSN;
 }
