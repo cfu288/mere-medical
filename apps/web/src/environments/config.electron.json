@@ -1,0 +1,12 @@
+{
+  "CERNER_CLIENT_ID": "839e55ba-ceff-4f39-af51-fb374a2f9b18",
+  "EPIC_CLIENT_ID": "cdcffaf2-8ea4-4e3e-857b-0c6920d7c1a7",
+  "EPIC_SANDBOX_CLIENT_ID": "c203e16b-5e77-44bf-bbe1-da9f6c4b3c29",
+  "IS_DEMO": "disabled",
+  "ONPATIENT_CLIENT_ID": "C0cuHRTDRNjhlVwoW2CjZeuj011HgbOo2BWeGx1q",
+  "PUBLIC_URL": "https://app.meremedical.co",
+  "REDIRECT_URI": "mere://",
+  "SENTRY_WEB_DSN": "",
+  "VA_CLIENT_ID": "0oasgh9wc4jthqisi2p7",
+  "VERADIGM_CLIENT_ID": "15c911e0-fe01-4679-bfb0-5630c430e78f"
+}

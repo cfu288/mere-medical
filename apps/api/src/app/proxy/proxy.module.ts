@@ -1,3 +1,4 @@
+// @ts-nocheck
 // import { EpicDSTU2TenantEndpoints } from '@mere/epic';
 import { DynamicModule, Logger, Module, Provider } from '@nestjs/common';
 import { createProxyServer } from 'http-proxy';
@@ -35,7 +36,8 @@ const proxyFactory = {
       cookies = cookies
         .split(';')
         .filter(
-          (cookie) => allowedCookies.indexOf(cookie.split('=')[0].trim()) !== -1
+          (cookie) =>
+            allowedCookies.indexOf(cookie.split('=')[0].trim()) !== -1,
         )
         .join(';');
 
@@ -65,7 +67,7 @@ const proxyFactory = {
     proxy.on('proxyRes', function (proxyRes, req, res) {
       const url = concatPath(
         `${proxyRes['req'].protocol}//${proxyRes['req'].host}`,
-        req.url
+        req.url,
       );
       logger.debug(`Received ${req.method} ${url}`);
     });
@@ -100,7 +102,7 @@ export class ProxyModule {
   }
 
   private static createAsyncProviders(
-    options: ProxyModuleAsyncOptions
+    options: ProxyModuleAsyncOptions,
   ): Provider[] {
     if (options.useExisting || options.useFactory) {
       return [this.createAsyncOptionsProvider(options)];
@@ -115,7 +117,7 @@ export class ProxyModule {
   }
 
   private static createAsyncOptionsProvider(
-    options: ProxyModuleAsyncOptions
+    options: ProxyModuleAsyncOptions,
   ): Provider {
     if (options.useFactory) {
       return {

@@ -1,4 +1,4 @@
-import { Link, Outlet } from 'react-router-dom';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
 
 import {
   Cog6ToothIcon,
@@ -13,17 +13,43 @@ import { Routes as AppRoutes } from '../Routes';
 import { useUser } from './providers/UserProvider';
 import { TabButton } from './TabButton';
 import { useLocalConfig } from './providers/LocalConfigProvider';
+import { isElectron } from '../utils/isElectron';
+import { useEffect, useRef } from 'react';
+import { concatPath } from '../utils/urlUtils';
 
 export function TabWrapper() {
   const user = useUser(),
     { experimental__use_openai_rag } = useLocalConfig();
+
+  const navigate = useNavigate();
+  const hasRun = useRef(false);
+
+  useEffect(() => {
+    console.log('testing');
+
+    if (isElectron() && !hasRun.current) {
+      console.log('testing1');
+      hasRun.current = true;
+
+      window.electron.onExternalNavigate((value: any) => {
+        console.log(value);
+        navigate(value);
+      });
+    }
+  }, [navigate]);
 
   return (
     <div className="mobile-full-height flex flex-col max-w-[100vw] md:flex-row-reverse">
       <div className="flex-grow overflow-y-auto">
         <Outlet />
       </div>
-      <div className="flex-0 md:bg-primary-800 z-20 w-full bg-slate-100 md:relative md:bottom-auto md:top-0 md:h-full md:w-auto">
+      <div
+        className={`flex-0 md:bg-primary-800 z-20 w-full bg-slate-100 md:relative md:bottom-auto md:top-0 md:h-full md:w-auto ${isElectron() ? 'pt-0 md:pt-4' : ''}`}
+        style={{
+          // @ts-ignore
+          WebkitAppRegion: isElectron() ? 'drag' : 'no-drag',
+        }}
+      >
         <div className="pb-safe md:pb-0 mx-auto flex w-full max-w-3xl justify-around md:h-full md:w-64 md:flex-col md:justify-start">
           <img
             src={logo}

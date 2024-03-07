@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import uuid4 from '../utils/UUIDUtils';
 import {
   CreateVeradigmConnectionDocument,
@@ -116,12 +116,13 @@ const VeradigmRedirect: React.FC = () => {
     db = useRxDb(),
     notifyDispatch = useNotificationDispatch(),
     [error, setError] = useState(''),
-    hasRun = useRef(false);
+    hasRun = useRef(false),
+    { search } = useLocation();
 
   useEffect(() => {
     if (!hasRun.current) {
       hasRun.current = true;
-      const searchRequest = new URLSearchParams(window.location.search),
+      const searchRequest = new URLSearchParams(search),
         code = searchRequest.get('code'),
         errorMsg = searchRequest.get('error'),
         errorMsgDescription = searchRequest.get('error_description'),

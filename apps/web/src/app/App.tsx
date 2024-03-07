@@ -1,10 +1,12 @@
 import '../styles.css';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   createBrowserRouter,
+  createHashRouter,
   Navigate,
   RouterProvider,
+  useNavigate,
 } from 'react-router-dom';
 
 import { ErrorBoundary } from '../components/ErrorBoundary';
@@ -35,6 +37,7 @@ import VARedirect from '../pages/VARedirect';
 import VeradigmRedirect from '../pages/VeradigmRedirect';
 import { Routes as AppRoutes } from '../Routes';
 import { RecommendationGeneratorInitializer } from '../features/mere-ai-recommendations/components/RecommendationGeneratorInitializer';
+import { isElectron } from '../utils/isElectron';
 
 export default function App() {
   useConsoleLogEasterEgg();
@@ -69,7 +72,7 @@ export default function App() {
   );
 }
 
-const router = createBrowserRouter([
+const routes = [
   {
     element: <TabWrapper />,
     children: [
@@ -119,4 +122,8 @@ const router = createBrowserRouter([
       },
     ],
   },
-]);
+];
+
+const router = isElectron()
+  ? createHashRouter(routes)
+  : createBrowserRouter(routes);

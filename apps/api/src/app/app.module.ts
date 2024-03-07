@@ -7,56 +7,36 @@ import { CernerModule } from './cerner/cerner.module';
 import { EpicModule } from './epic/epic.module';
 import { VeradigmModule } from './veradigm/veradigm.module';
 import { TenantModule } from './tenant/tenant.module';
+import { VAModule } from './va/va.module';
 import { LoggerModule } from 'nestjs-pino';
 
 const imports: ModuleMetadata['imports'] = [
   StaticModule,
   LoginProxyModule,
-  CernerModule,
   EpicModule,
+  CernerModule,
   VeradigmModule,
   TenantModule,
+  VAModule,
 ];
 
-if (checkIfSentryConfigured()) {
-  imports.unshift(
-    LoggerModule.forRoot({
-      pinoHttp: {
-        level: 'warn',
-        transport: {
-          target: 'pino-sentry-transport',
-          options: {
-            sentry: {
-              dsn: process.env.SENTRY_DSN,
-              // additional options for sentry
-            },
-            withLogRecord: true, // default false - send the log record to sentry as a context.(if its more then 8Kb Sentry will throw an error)
-            tags: ['id'], // sentry tags to add to the event, uses lodash.get to get the value from the log record
-            context: ['hostname'], // sentry context to add to the event, uses lodash.get to get the value from the log record,
-            minLevel: 30, // which level to send to sentry
-          },
-        },
-      },
-    })
-  );
-} else {
-  imports.unshift(
-    LoggerModule.forRoot({
-      pinoHttp: {
-        level: 'info',
-        transport: { target: 'pino-pretty' },
-      },
-    })
-  );
-}
+imports.unshift(
+  LoggerModule.forRoot({
+    pinoHttp: {
+      level: 'info',
+      transport: { target: 'pino-pretty' },
+    },
+  }),
+);
 
-if (checkIfOnPatientConfigured()) {
+const opConfigured = checkIfOnPatientConfigured();
+if (opConfigured.check) {
   imports.push(
     OnPatientModule.register({
-      clientId: process.env.ONPATIENT_CLIENT_ID,
-      clientSecret: process.env.ONPATIENT_CLIENT_SECRET,
+      clientId: opConfigured.clientId,
+      clientSecret: opConfigured.clientSecret,
       redirectUri: `${process.env.PUBLIC_URL}/api/v1/onpatient/callback`,
-    })
+    }),
   );
 }
 
@@ -68,35 +48,36 @@ export class AppModule {}
 
 // --- Helper functions ---
 
-function checkIfOnPatientConfigured(): boolean {
+function checkIfOnPatientConfigured():
+  | {
+      check: true;
+      clientId: string;
+      clientSecret: string;
+    }
+  | { check: false } {
   const check =
     !!process.env.ONPATIENT_CLIENT_ID && !!process.env.ONPATIENT_CLIENT_SECRET;
   if (!process.env.ONPATIENT_CLIENT_ID) {
     Logger.warn(
-      'ONPATIENT_CLIENT_ID was not provided: OnPatient services will be disabled.'
+      'ONPATIENT_CLIENT_ID was not provided: OnPatient services will be disabled.',
     );
   }
   if (!process.env.ONPATIENT_CLIENT_SECRET) {
     Logger.warn(
-      'ONPATIENT_CLIENT_SECRET was not provided: OnPatient services will be disabled.'
+      'ONPATIENT_CLIENT_SECRET was not provided: OnPatient services will be disabled.',
     );
   }
   if (check) {
     Logger.log(
-      'ONPATIENT_CLIENT_ID and ONPATIENT_CLIENT_SECRET were provided: OnPatient service will be enabled.'
+      'ONPATIENT_CLIENT_ID and ONPATIENT_CLIENT_SECRET were provided: OnPatient service will be enabled.',
     );
+
+    return {
+      check,
+      clientId: process.env.ONPATIENT_CLIENT_ID!,
+      clientSecret: process.env.ONPATIENT_CLIENT_SECRET!,
+    };
   }
 
-  return check;
-}
-
-function checkIfSentryConfigured(): boolean {
-  if (!process.env.SENTRY_DSN) {
-    Logger.warn(
-      'SENTRY_DSN was not provided: Sentry logging will be disabled.'
-    );
-  } else {
-    Logger.log('SENTRY_DSN was provided: Sentry logging will be enabled.');
-  }
-  return !!process.env.SENTRY_DSN;
+  return { check };
 }

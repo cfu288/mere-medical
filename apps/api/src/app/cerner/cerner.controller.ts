@@ -7,7 +7,7 @@ export class CernerController {
   constructor(private readonly cernerService: CernerService) {}
 
   @Get('tenants')
-  async getData(@Res() response: Response, @Query('query') query) {
+  async getData(@Res() response: Response, @Query('query') query: string) {
     try {
       const data = await this.cernerService.queryTenants(query);
       response.json(data);

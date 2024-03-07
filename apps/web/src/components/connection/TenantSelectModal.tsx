@@ -26,6 +26,7 @@ import {
   TenantSelectModelResultItem,
 } from './TenantSelectModelResultItem';
 import VALogo from '../../assets/img/va-logo.png';
+import Config from '../../environments/config.json';
 
 export type EMRVendor =
   | 'epic'
@@ -209,9 +210,10 @@ export function TenantSelectModal({
 
     if (state.hasSelectedEmrVendor) {
       fetch(
-        (state.emrVendor !== 'any'
-          ? `/api/v1/${state.emrVendor}/tenants?`
-          : `/api/v1/dstu2/tenants?`) +
+        Config.PUBLIC_URL +
+          (state.emrVendor !== 'any'
+            ? `/api/v1/${state.emrVendor}/tenants?`
+            : `/api/v1/dstu2/tenants?`) +
           new URLSearchParams({ query: state.query }),
         {
           signal: abortController.signal,

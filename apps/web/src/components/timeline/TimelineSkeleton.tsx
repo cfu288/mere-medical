@@ -9,6 +9,7 @@ function TimelineSkeletonUnmemoed() {
   return (
     <div className={`relative flex`}>
       <JumpToPanel isLoading={true} />
+      <div className="px-auto flex h-full max-h-full w-full justify-center overflow-y-scroll relative" >
       <div className="h-max w-full max-w-4xl flex-col px-4 pb-20 sm:px-6 sm:pb-6 lg:px-8">
         <SkeletonSearchBar />
         {[...Array(2)].map((_, index) => (
@@ -52,6 +53,7 @@ function TimelineSkeletonUnmemoed() {
             </div>
           </div>
         ))}
+      </div>
       </div>
     </div>
   );
