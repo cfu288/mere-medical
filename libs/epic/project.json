@@ -15,18 +15,14 @@
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["libs/epic/**/*.ts"]
-      }
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/libs/epic"],
       "options": {
-        "jestConfig": "libs/epic/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "libs/epic/jest.config.ts"
       }
     }
   },
