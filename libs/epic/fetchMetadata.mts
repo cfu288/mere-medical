@@ -51,16 +51,16 @@ import chalk from 'chalk';
 
       const sec_ext = res?.rest?.[0].security.extension?.[0].extension,
         token = sec_ext.filter(
-          (x: { url: string & Location }) => x.url === 'token'
+          (x: { url: string & Location }) => x.url === 'token',
         )?.[0]?.valueUri,
         authorize = sec_ext.filter(
-          (x: { url: string & Location }) => x.url === 'authorize'
+          (x: { url: string & Location }) => x.url === 'authorize',
         )?.[0]?.valueUri,
         introspect = sec_ext.filter(
-          (x: { url: string & Location }) => x.url === 'introspect'
+          (x: { url: string & Location }) => x.url === 'introspect',
         )?.[0]?.valueUri,
         manage = sec_ext.filter(
-          (x: { url: string & Location }) => x.url === 'manage'
+          (x: { url: string & Location }) => x.url === 'manage',
         )?.[0]?.valueUrik;
 
       console.log('- ' + meta_url);
@@ -101,7 +101,7 @@ import chalk from 'chalk';
           `BATCH ${chalk.bgBlue(`${iter}`)}: Processed ${
             successRes.length
           } of ${batch.length} in batch. ` +
-            chalk.red(`${errorsRes.length} error(s) when processing.`)
+            chalk.red(`${errorsRes.length} error(s) when processing.`),
         );
         errors.push(...errorsRes);
       }
@@ -118,14 +118,14 @@ import chalk from 'chalk';
 
       fs.writeFileSync(
         './src/lib/data/DSTU2Endpoints.json',
-        JSON.stringify(results, null, 2)
+        JSON.stringify(results, null, 2),
       );
 
       if (errors.length) {
         console.log(
           chalk.red(
-            `${errors.length} error(s) when processing. Check the errorlog for more details`
-          )
+            `${errors.length} error(s) when processing. Check the errorlog for more details`,
+          ),
         );
         fs.writeFileSync('./errorlog.json', JSON.stringify(errors, null, 2));
       }

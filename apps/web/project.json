@@ -24,8 +24,7 @@
         "styles": ["apps/web/src/styles.css"],
         "scripts": [],
         "webpackConfig": "apps/web/webpack.config.js",
-        "postcssConfig": "apps/web/postcss.config.js",
-        "isolatedConfig": true
+        "postcssConfig": "apps/web/postcss.config.js"
       },
       "configurations": {
         "development": {

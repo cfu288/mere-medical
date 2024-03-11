@@ -5,7 +5,6 @@ const { DefinePlugin } = require('webpack');
 const { merge } = require('webpack-merge');
 const { InjectManifest } = require('workbox-webpack-plugin');
 const path = require('path');
-const { sentryWebpackPlugin } = require('@sentry/webpack-plugin');
 
 const commitHash = require('child_process')
   .execSync('git describe --tag')
@@ -26,22 +25,24 @@ module.exports = composePlugins(
     context.options = context.options || context.buildOptions;
     const baseConfig = nxReactBaseConfig(config);
 
-    const mergeWebpackConfigs = [baseConfig];
-    mergeWebpackConfigs.push({
-      resolve: {
-        fallback: {
-          assert: false,
-          fs: false,
+    const mergeWebpackConfigs = [
+      baseConfig,
+      {
+        resolve: {
+          fallback: {
+            assert: false,
+            fs: false,
+          },
         },
+        devtool: 'source-map', // Source map generation must be turned on
+        plugins: [
+          new DefinePlugin({
+            MERE_APP_VERSION: JSON.stringify(commitHash),
+          }),
+        ],
+        ignoreWarnings: [/Failed to parse source map/],
       },
-      devtool: 'source-map', // Source map generation must be turned on
-      plugins: [
-        new DefinePlugin({
-          MERE_APP_VERSION: JSON.stringify(commitHash),
-        }),
-      ],
-      ignoreWarnings: [/Failed to parse source map/],
-    });
+    ];
 
     // For production we add the service worker
     if (baseConfig.mode === 'production') {
@@ -66,6 +67,6 @@ module.exports = composePlugins(
       });
     }
 
-    return merge(mergeWebpackConfigs);
+    return merge(...mergeWebpackConfigs);
   },
 );
