@@ -85,96 +85,98 @@ export function NavigationBar({ absolute = true }: { absolute?: boolean }) {
   const blurPx = `blur(${Math.min(2, yScrollPosition / 50)}px)`;
 
   return (
-    <div
-      style={{
-        // @ts-ignore
-        '--image-url': `url(${grainImage})`,
-        // @ts-ignore
-        '-webkit-backdrop-filter': blurPx,
-        backdropFilter: blurPx,
-        backgroundColor,
-      }}
-      className={`
+    <>
+      <div
+        style={{
+          // @ts-ignore
+          '--image-url': `url(${grainImage})`,
+          // @ts-ignore
+          '-webkit-backdrop-filter': blurPx,
+          backdropFilter: blurPx,
+          backgroundColor,
+        }}
+        className={`
       ${
         absolute ? 'fixed' : ''
       } text-primary-700 left-0 top-0 isolate z-50 float-right w-full p-1 px-2 text-center text-xs font-bold sm:text-sm`}
-    >
-      <div className="px-6 py-6 lg:px-8">
-        <nav
-          className="flex w-full items-center justify-between"
-          aria-label="Global"
-        >
-          <div className="flex lg:flex-1">
+      >
+        <div className="px-6 py-2 lg:px-8">
+          <nav
+            className="flex w-full items-center justify-between"
+            aria-label="Global"
+          >
+            <div className="flex lg:flex-1">
+              <a href="#" className="-m-1.5 p-1.5">
+                <img
+                  className="block h-10 lg:hidden"
+                  src="/img/logo.svg"
+                  alt=""
+                />
+              </a>
+            </div>
+            <div className="flex lg:hidden">
+              <button
+                type="button"
+                className="-m-2.5 inline-flex items-center justify-center rounded-md border-0 bg-gray-50 p-2.5 text-gray-700 hover:bg-gray-100"
+                onClick={() => setMobileMenuOpen(true)}
+              >
+                <span className="sr-only">Open main menu</span>
+                <Bars3Icon className="h-6 w-6" aria-hidden="true" />
+              </button>
+            </div>
+            <div className="hidden lg:flex lg:gap-x-12">
+              {navigation.map((item) => (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  className="text-sm leading-6 text-gray-700"
+                >
+                  {item.name}
+                </a>
+              ))}
+            </div>
+          </nav>
+        </div>
+      </div>
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-white px-6 py-6 lg:hidden">
+          <div className="flex items-center justify-between">
             <a href="#" className="-m-1.5 p-1.5">
-              <img
-                className="block h-10 lg:hidden"
-                src="/img/logo.svg"
-                alt=""
-              />
+              <img className="h-10 w-auto" src="/img/logo.svg" alt="logo" />
             </a>
-          </div>
-          <div className="flex lg:hidden">
             <button
               type="button"
               className="-m-2.5 inline-flex items-center justify-center rounded-md border-0 bg-gray-50 p-2.5 text-gray-700 hover:bg-gray-100"
-              onClick={() => setMobileMenuOpen(true)}
+              onClick={() => setMobileMenuOpen(false)}
             >
-              <span className="sr-only">Open main menu</span>
-              <Bars3Icon className="h-6 w-6" aria-hidden="true" />
+              <span className="sr-only">Close menu</span>
+              <XMarkIcon className="h-6 w-6" aria-hidden="true" />
             </button>
           </div>
-          <div className="hidden lg:flex lg:gap-x-12">
-            {navigation.map((item) => (
-              <a
-                key={item.name}
-                href={item.href}
-                className="text-sm leading-6 text-gray-700"
-              >
-                {item.name}
-              </a>
-            ))}
-          </div>
-          {mobileMenuOpen && (
-            <div className="fixed inset-0 z-10 overflow-y-auto bg-white px-6 py-6 lg:hidden">
-              <div className="flex items-center justify-between">
-                <a href="#" className="-m-1.5 p-1.5">
-                  <img className="h-10 w-auto" src="/img/logo.svg" alt="logo" />
-                </a>
-                <button
-                  type="button"
-                  className="-m-2.5 inline-flex items-center justify-center rounded-md border-0 bg-gray-50 p-2.5 text-gray-700 hover:bg-gray-100"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <span className="sr-only">Close menu</span>
-                  <XMarkIcon className="h-6 w-6" aria-hidden="true" />
-                </button>
+          <div className="mt-6 flow-root">
+            <div className="-my-6 divide-y divide-gray-500/10">
+              <div className="space-y-2 py-6">
+                {navigation.map((item) => (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-400/10"
+                  >
+                    {item.name}
+                  </a>
+                ))}
               </div>
-              <div className="mt-6 flow-root">
-                <div className="-my-6 divide-y divide-gray-500/10">
-                  <div className="space-y-2 py-6">
-                    {navigation.map((item) => (
-                      <a
-                        key={item.name}
-                        href={item.href}
-                        className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-400/10"
-                      >
-                        {item.name}
-                      </a>
-                    ))}
-                  </div>
-                  <div className="py-6">
-                    <a
-                      href="#"
-                      className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-6 text-gray-900 hover:bg-gray-400/10"
-                    ></a>
-                  </div>
-                </div>
+              <div className="py-6">
+                <a
+                  href="#"
+                  className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-6 text-gray-900 hover:bg-gray-400/10"
+                ></a>
               </div>
             </div>
-          )}
-        </nav>
-      </div>
-    </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
