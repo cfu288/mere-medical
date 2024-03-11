@@ -11,22 +11,16 @@ const commitHash = require('child_process')
   .toString()
   .trim();
 
-// Nx plugins for webpack.
-module.exports = composePlugins(
-  withNx(),
-  withReact(),
-  (config, { options, context }) => {
-    // Note: This was added by an Nx migration.
-    // You should consider inlining the logic into this file.
-    // For more information on webpack config and Nx see:
+function myCustomPlugin() {
+  // `options` and `context` are the target options and
+  // `@nx/webpack:webpack` executor context respectively.
+  // `config` is the Webpack configuration object
+  return async (config, { options, context }) => {
     // https://nx.dev/packages/webpack/documents/webpack-config-setup
-
     // Fix that Nx uses a different attribute when serving the app
     context.options = context.options || context.buildOptions;
-    const baseConfig = nxReactBaseConfig(config);
-
     const mergeWebpackConfigs = [
-      baseConfig,
+      config,
       {
         resolve: {
           fallback: {
@@ -41,32 +35,36 @@ module.exports = composePlugins(
           }),
         ],
         ignoreWarnings: [/Failed to parse source map/],
+        mode: config.mode,
       },
     ];
 
     // For production we add the service worker
-    if (baseConfig.mode === 'production') {
-      mergeWebpackConfigs.push({
-        plugins: [
-          new InjectManifest({
-            swSrc: path.resolve(
-              context.root,
-              'apps',
-              'web',
-              'src',
-              'service-worker.ts',
-            ),
-            dontCacheBustURLsMatching: /\.[0-9a-f]{8}\./,
-            exclude: [/\.map$/, /asset-manifest\.json$/, /LICENSE/],
-            maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-            // this is the output of the plugin,
-            // relative to webpack's output directory
-            swDest: 'service-worker.js',
-          }),
-        ],
-      });
-    }
+    // if (config.mode === 'production') {
+    //   mergeWebpackConfigs.push({
+    //     plugins: [
+    //       new InjectManifest({
+    //         swSrc: path.resolve(
+    //           context.root,
+    //           'apps',
+    //           'web',
+    //           'src',
+    //           'service-worker.ts',
+    //         ),
+    //         dontCacheBustURLsMatching: /\.[0-9a-f]{8}\./,
+    //         exclude: [/\.map$/, /asset-manifest\.json$/, /LICENSE/],
+    //         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+    //         // this is the output of the plugin,
+    //         // relative to webpack's output directory
+    //         swDest: 'service-worker.js',
+    //       }),
+    //     ],
+    //   });
+    // }
 
     return merge(...mergeWebpackConfigs);
-  },
-);
+  };
+}
+
+// Nx plugins for webpack.
+module.exports = composePlugins(withNx(), withReact(), myCustomPlugin());
