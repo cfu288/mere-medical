@@ -27,7 +27,7 @@
     "src/components/timeline/TimelineYearHeaderWrapper.tsx",
     "src/components/connection/EpicSelectModal.tsx",
     "src/components/connection/EpicSelectModelResultItem.tsx",
-    "src/utils/StyleUtils.tsx",
+    "src/utils/StyleUtils.tsxx",
     "src/utils/SearchUtils.tsx",
     "src/components/settings/EditUserModalForm.tsx",
     "src/components/connection/CardBase.tsx",
@@ -80,7 +80,7 @@
     "src/utils/flattenObject.tsx",
     "./src/components/providers/DatabaseCollections.tsx",
     "src/components/providers/vector-provider/providers/VectorStorageProvider.tsx",
-    "src/components/hooks/usePeriodAnimation.tsx",
+    "src/components/hooks/usePeriodAnimation.tsxx",
     "src/components/providers/vector-provider/providers/VectorGeneratorSyncer.tsx",
     "src/components/providers/prepareClinicalDocumentForVectorization.ts",
     "./src/components/providers/vector-provider/VectorProvider.tsx",
@@ -94,7 +94,7 @@
     "src/features/mere-ai-chat/formatters/formatTimestampToDay.tsx",
     "src/features/mere-ai-chat/formatters/formatTimestampToTime.tsx",
     "src/features/mere-ai-chat/types/ChatMessage.tsx",
-    "src/features/mere-ai-chat/helpers/generateRandomQuestion.tsx",
+    "src/features/mere-ai-chat/helpers/generateRandomQuestion.ts",
     "src/features/mere-ai-chat/open-ai/prepareDataForOpenAI.tsx",
     "src/features/mere-ai-chat/open-ai/callOpenAI.tsx",
     "src/features/mere-ai-chat/open-ai/performRAGRequestwithOpenAI.tsx",
@@ -113,7 +113,7 @@
     "./src/components/timeline/ElementsByDateListCard.tsx",
     "src/components/timeline/TimelineMonthDayHeader.tsx",
     "src/components/hooks/useRecordQuery.tsx",
-    "src/utils/isElectron.tsx"
+    "src/utils/isElectron.tsxx"
   ],
   "exclude": [
     "jest.config.ts",
@@ -131,6 +131,8 @@
     "**/*.jsx",
     "**/*.ts",
     "**/*.tsx",
-    "../../webpack.config.js"
+    "../../webpack.config.js",
+    "webpack.config.js",
+    "postcss.config.js"
   ]
 }

@@ -35,7 +35,7 @@ describe('DSTU2', () => {
 
     const res = DSTU2.mapProcedureToClinicalDocument(
       mockDSTU2Procedure,
-      mockConnectionDocument
+      mockConnectionDocument,
     );
 
     expect(res.user_id).toBe('123');

@@ -9,5 +9,7 @@ export interface DSTU2Endpoint {
   authorize: string;
 }
 
+console.log(EpicEndpoints);
+
 export const EpicDSTU2TenantEndpoints: DSTU2Endpoint[] =
   Array.from(EpicEndpoints);

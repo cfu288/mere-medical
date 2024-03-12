@@ -72,7 +72,7 @@ export function SocialHistoryComponentSection({
                                               {r.value}
                                             </td>
                                           </tr>
-                                        )
+                                        ),
                                       )}
                                     </tbody>
                                   </table>

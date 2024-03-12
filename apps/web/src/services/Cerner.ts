@@ -628,6 +628,7 @@ export async function refreshCernerConnectionTokenIfNeeded(
       throw new Error('Error refreshing token  - try logging in again');
     }
   }
+  return Promise.resolve();
 }
 
 export interface CernerAuthResponse {

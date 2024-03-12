@@ -16,7 +16,7 @@ export const DeveloperLogsProvider = (props: any) => {
         window.console,
         (log) => setLogs((currLogs: any[]) => [...currLogs, log]),
         false,
-        200
+        200,
       );
 
       return () => {

@@ -18,7 +18,7 @@ describe('ErrorBoundary', () => {
     const component = render(
       <ErrorBoundary>
         <ThrowError />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
 
     const errorText = await component.findByText('Something went wrong');

@@ -8,5 +8,13 @@
   "skipFiles": [
     "${workspaceFolder}/node_modules/**/*.js",
     "<node_internals>/**/*.js"
+  ],
+  "configurations": [
+    {
+      "type": "chrome",
+      "name": " ws://localhost:9229/c95cc1fe-7c80-440b-be36-bd40cbb755fb",
+      "request": "launch",
+      "url": " ws://localhost:9229/c95cc1fe-7c80-440b-be36-bd40cbb755fb"
+    }
   ]
 }

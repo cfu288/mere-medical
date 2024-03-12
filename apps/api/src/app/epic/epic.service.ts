@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EpicDSTU2TenantEndpoints, DSTU2Endpoint } from '@mere/epic';
 
 @Injectable()
@@ -6,6 +6,7 @@ export class EpicService {
   private readonly items = EpicDSTU2TenantEndpoints;
 
   async queryTenants(query: string): Promise<DSTU2Endpoint[]> {
+    Logger.log(this.items.length);
     return filteredItemsWithQuery(this.items, query);
   }
 }

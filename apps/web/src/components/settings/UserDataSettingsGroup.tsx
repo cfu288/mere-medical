@@ -1,7 +1,6 @@
 import { handleJSONDataImport, useRxDb } from '../providers/RxDbProvider';
 import { DatabaseCollections } from '../providers/DatabaseCollections';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { useNotificationDispatch } from '../providers/NotificationProvider';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';

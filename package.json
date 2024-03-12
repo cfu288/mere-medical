@@ -1,6 +1,6 @@
 {
   "name": "mere-medical",
-  "description": " A personal health record to aggregate and sync all of your medical records from multiple patient portals in one place. Currently supports thousands of hospitals and clinics and major electronic medical record systems. Self-hosted, privacy-focused, and offline-first.",
+  "description": "A personal health record to aggregate and sync all of your medical records from multiple patient portals in one place. Currently supports thousands of hospitals and clinics and major electronic medical record systems. Self-hosted, privacy-focused, and offline-first.",
   "author": {
     "name": "Christopher Fu",
     "email": "cfu288@meremedical.co"
@@ -9,7 +9,7 @@
   "license": "AGPL-3.0-only",
   "scripts": {
     "start": "nx serve",
-    "build": "nx build --stats-json",
+    "build": "nx build",
     "test": "nx test",
     "postinstall": "electron-builder install-app-deps",
     "build:desktop": "npx nx run web:build:electron --baseHref='./' && npx nx build desktop && npx nx run desktop:package"
@@ -37,6 +37,7 @@
     "@nestjs/schematics": "10.1.1",
     "@nestjs/testing": "^10.3.3",
     "@nx/cypress": "17.3.0",
+    "@nx/eslint": "17.3.0",
     "@nx/eslint-plugin": "17.3.0",
     "@nx/jest": "17.3.0",
     "@nx/js": "17.3.0",
@@ -106,8 +107,7 @@
     "webpack": "5.90.3",
     "webpack-bundle-analyzer": "^4.8.0",
     "webpack-merge": "^5.8.0",
-    "workbox-webpack-plugin": "^6.5.4",
-    "@nx/eslint": "17.3.0"
+    "workbox-webpack-plugin": "^6.5.4"
   },
   "dependencies": {
     "@billboard.js/react": "^1.0.0",
@@ -143,14 +143,13 @@
     "nestjs-pino": "^4.0.0",
     "nx-electron": "^17.0.1",
     "pino-http": "^9.0.0",
-    "pino-pretty": "^10.3.1",
     "pino-sentry-transport": "^1.0.5",
     "pwacompat": "^2.0.17",
     "react": "^18.2.0",
     "react-beautiful-dnd": "^13.1.1",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.42.1",
-    "react-image-crop": "^10.1.5",
+    "react-image-crop": "^10.1.8",
     "react-markdown": "^9.0.1",
     "react-router": "^6.21.2",
     "react-router-dom": "6.11.2",

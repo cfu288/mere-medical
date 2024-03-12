@@ -55,8 +55,8 @@ export function ResultComponentSection({
                               v.referenceRangeHigh
                             }${v.unit || ''}`
                           : v.referenceRangeText
-                          ? `Range: ${v.referenceRangeText}`
-                          : ''}
+                            ? `Range: ${v.referenceRangeText}`
+                            : ''}
                       </p>
                     </td>
                     <td

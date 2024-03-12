@@ -22,7 +22,7 @@ export function TenantSelectModelResultItem({
       className={({ active }) =>
         classNames(
           active ? 'bg-gray-100' : '',
-          'mb-2 flex cursor-default select-none rounded-xl p-3'
+          'mb-2 flex cursor-default select-none rounded-xl p-3',
         )
       }
     >
@@ -31,7 +31,7 @@ export function TenantSelectModelResultItem({
           <p
             className={classNames(
               'text-sm font-medium',
-              active ? 'text-gray-900' : 'text-gray-800'
+              active ? 'text-gray-900' : 'text-gray-800',
             )}
           >
             {name}

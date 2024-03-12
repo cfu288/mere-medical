@@ -1,6 +1,5 @@
 const { composePlugins, withNx } = require('@nx/webpack');
 const { withReact } = require('@nx/react');
-const nxReactBaseConfig = require('@nx/react/plugins/webpack');
 const { DefinePlugin } = require('webpack');
 const { merge } = require('webpack-merge');
 const { InjectManifest } = require('workbox-webpack-plugin');
@@ -40,27 +39,27 @@ function myCustomPlugin() {
     ];
 
     // For production we add the service worker
-    // if (config.mode === 'production') {
-    //   mergeWebpackConfigs.push({
-    //     plugins: [
-    //       new InjectManifest({
-    //         swSrc: path.resolve(
-    //           context.root,
-    //           'apps',
-    //           'web',
-    //           'src',
-    //           'service-worker.ts',
-    //         ),
-    //         dontCacheBustURLsMatching: /\.[0-9a-f]{8}\./,
-    //         exclude: [/\.map$/, /asset-manifest\.json$/, /LICENSE/],
-    //         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-    //         // this is the output of the plugin,
-    //         // relative to webpack's output directory
-    //         swDest: 'service-worker.js',
-    //       }),
-    //     ],
-    //   });
-    // }
+    if (config.mode === 'production') {
+      mergeWebpackConfigs.push({
+        plugins: [
+          new InjectManifest({
+            swSrc: path.resolve(
+              context.root,
+              'apps',
+              'web',
+              'src',
+              'service-worker.ts',
+            ),
+            dontCacheBustURLsMatching: /\.[0-9a-f]{8}\./,
+            exclude: [/\.map$/, /asset-manifest\.json$/, /LICENSE/],
+            maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+            // this is the output of the plugin,
+            // relative to webpack's output directory
+            swDest: 'service-worker.js',
+          }),
+        ],
+      });
+    }
 
     return merge(...mergeWebpackConfigs);
   };

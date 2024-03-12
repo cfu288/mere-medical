@@ -22,7 +22,7 @@ export function ShowObservationResultsExpandable({
         if (!a?.fullUrl?.[0]) return 0;
         return a?.fullUrl?.[0]?.localeCompare(b?.fullUrl?.[0] || '') || 0;
       }),
-    [item]
+    [item],
   );
 
   return (

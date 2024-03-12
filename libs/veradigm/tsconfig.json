@@ -8,8 +8,9 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "resolveJsonModule": true,
-    "module": "NodeNext",
-    "target": "ESNext"
+    "esModuleInterop": true,
+    "moduleResolution": "NodeNext",
+    "module": "CommonJS"
   },
   "files": [],
   "include": [],

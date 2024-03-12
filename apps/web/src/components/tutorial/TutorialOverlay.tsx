@@ -29,7 +29,7 @@ export type TutorialAction =
 
 export const tutorialReducer: React.Reducer<TutorialState, TutorialAction> = (
   state: TutorialState,
-  action: TutorialAction
+  action: TutorialAction,
 ) => {
   switch (action.type) {
     case 'initalize_steps': {
@@ -106,16 +106,16 @@ export function TutorialOverlay() {
           .filter((key) =>
             key !== TutorialLocalStorageKeys.INSTALL_PWA
               ? true
-              : !isInstalledPWA() && !isElectron()
+              : !isInstalledPWA() && !isElectron(),
           )
           .filter((key) =>
             key !== TutorialLocalStorageKeys.ENABLE_ANALYTICS
               ? true
               : Config.SENTRY_WEB_DSN &&
                 Config.SENTRY_WEB_DSN.includes('SENTRY_WEB_DSN') === false &&
-                Config.SENTRY_WEB_DSN.trim() !== ''
+                Config.SENTRY_WEB_DSN.trim() !== '',
           ),
-      [tutorialConfig]
+      [tutorialConfig],
     );
   const [state, dispatch] = React.useReducer(tutorialReducer, {
     currentStep: 0,

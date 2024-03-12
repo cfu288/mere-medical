@@ -1,8 +1,7 @@
-import * as compression from 'compression';
+import compression from 'compression';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { Logger as PinoLogger } from 'nestjs-pino';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 
@@ -49,8 +48,6 @@ async function bootstrap() {
       ssl ? 's' : ''
     }://localhost:${port}/${globalPrefix}`,
   );
-
-  // app.useLogger(app.get(PinoLogger));
 }
 
 bootstrap();

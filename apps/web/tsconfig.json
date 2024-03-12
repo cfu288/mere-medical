@@ -3,6 +3,8 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "allowJs": true,
+    "allowImportingTsExtensions": true,
+    "moduleResolution": "node",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
