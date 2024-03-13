@@ -17,8 +17,8 @@ describe('parseCCDASocialHistorySection', () => {
       .readFileSync(
         path.join(
           __dirname,
-          './exampleCCDA/example_social_history_former_smoking_status.xml'
-        )
+          './exampleCCDA/example_social_history_former_smoking_status.xml',
+        ),
       )
       .toString();
     const xmlDoc = parser.parseFromString(xmlFileRaw, 'text/xml');
@@ -48,8 +48,8 @@ describe('parseCCDASocialHistorySection', () => {
       .readFileSync(
         path.join(
           __dirname,
-          './exampleCCDA/example_social_history_sexual_orientation_gender_identity.xml'
-        )
+          './exampleCCDA/example_social_history_sexual_orientation_gender_identity.xml',
+        ),
       )
       .toString();
     const xmlDoc = parser.parseFromString(xmlFileRaw, 'text/xml');
@@ -78,8 +78,8 @@ describe('parseCCDASocialHistorySection', () => {
       .readFileSync(
         path.join(
           __dirname,
-          './exampleCCDA/example_social_history_nested_entry_relationships.xml'
-        )
+          './exampleCCDA/example_social_history_nested_entry_relationships.xml',
+        ),
       )
       .toString();
     const xmlDoc = parser.parseFromString(xmlFileRaw, 'text/xml');
@@ -111,7 +111,7 @@ describe('parseCCDASocialHistorySection', () => {
     expect(results?.data['11331-6'].statusCode).toBe('completed');
     expect(results?.data['11331-6'].datetime).toBe('20230316');
     expect(results?.data['11331-6'].value).toBe(
-      'Current drinker of alcohol (finding)'
+      'Current drinker of alcohol (finding)',
     );
 
     expect(results?.data['8689-2'].title).toBe('History of Social function');
@@ -121,58 +121,58 @@ describe('parseCCDASocialHistorySection', () => {
 
     expect(results?.data['8689-2'].entityRelationships).not.toBeNull();
     expect(results?.data['8689-2'].entityRelationships!['88028-6'].title).toBe(
-      'Tobacco use panel'
+      'Tobacco use panel',
     );
     expect(results?.data['8689-2'].entityRelationships!['88028-6'].value).toBe(
-      'Low Risk'
+      'Low Risk',
     );
 
     expect(
       results?.data['8689-2'].entityRelationships!['88028-6']
-        .entityRelationships!['72166-2'].title
+        .entityRelationships!['72166-2'].title,
     ).toBe('Tobacco smoking status NHIS');
     expect(
       results?.data['8689-2'].entityRelationships!['88028-6']
-        .entityRelationships!['72166-2'].value
+        .entityRelationships!['72166-2'].value,
     ).toBe('Never smoker');
 
     expect(
       results?.data['8689-2'].entityRelationships!['88028-6']
-        .entityRelationships!['88031-0'].title
+        .entityRelationships!['88031-0'].title,
     ).toBe('Smokeless tobacco status');
     expect(
       results?.data['8689-2'].entityRelationships!['88028-6']
-        .entityRelationships!['88031-0'].value
+        .entityRelationships!['88031-0'].value,
     ).toBe('Never used');
 
     expect(
       results?.data['8689-2'].entityRelationships!['88028-6']
-        .entityRelationships!['Passive Exposure'].title
+        .entityRelationships!['Passive Exposure'].title,
     ).toBe('Passive Exposure');
     expect(
       results?.data['8689-2'].entityRelationships!['88028-6']
-        .entityRelationships!['Passive Exposure'].value
+        .entityRelationships!['Passive Exposure'].value,
     ).toBe('Never');
 
     expect(
       results?.data['8689-2'].entityRelationships!['88028-6']
-        .entityRelationships!['Passive Exposure'].title
+        .entityRelationships!['Passive Exposure'].title,
     ).toBe('Passive Exposure');
 
     expect(results?.data['8689-2'].entityRelationships!['55757-9'].title).toBe(
-      'Patient Health Questionnaire 2 item (PHQ-2) [Reported]'
+      'Patient Health Questionnaire 2 item (PHQ-2) [Reported]',
     );
     expect(results?.data['8689-2'].entityRelationships!['55757-9'].value).toBe(
-      'Not at risk'
+      'Not at risk',
     );
 
     expect(
       results?.data['8689-2'].entityRelationships!['55757-9']
-        .entityRelationships!['73831-0'].title
+        .entityRelationships!['73831-0'].title,
     ).toBe('Adolescent depression screening assessment');
     expect(
       results?.data['8689-2'].entityRelationships!['55757-9']
-        .entityRelationships!['73831-0'].value
+        .entityRelationships!['73831-0'].value,
     ).toBe('0');
   });
 });

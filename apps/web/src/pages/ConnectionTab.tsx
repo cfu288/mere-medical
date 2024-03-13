@@ -3,18 +3,30 @@ import { RxDocument } from 'rxdb';
 
 import { AppPage } from '../components/AppPage';
 import { ConnectionCard } from '../components/connection/ConnectionCard';
-import { EMRVendor, TenantSelectModal } from '../components/connection/TenantSelectModal';
+import {
+  EMRVendor,
+  TenantSelectModal,
+} from '../components/connection/TenantSelectModal';
 import { GenericBanner } from '../components/GenericBanner';
 import { useConnectionCards } from '../components/hooks/useConnectionCards';
 import { ConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
-import { CernerLocalStorageKeys, getLoginUrl as getCernerLoginUrl } from '../services/Cerner';
-import { EpicLocalStorageKeys, getLoginUrl as getEpicLoginUrl } from '../services/Epic';
+import {
+  CernerLocalStorageKeys,
+  getLoginUrl as getCernerLoginUrl,
+} from '../services/Cerner';
+import {
+  EpicLocalStorageKeys,
+  getLoginUrl as getEpicLoginUrl,
+} from '../services/Epic';
 import * as OnPatient from '../services/OnPatient';
 import { getLoginUrl as getVaLoginUrl } from '../services/VA';
-import { getLoginUrl as getVeradigmLoginUrl, VeradigmLocalStorageKeys } from '../services/Veradigm';
+import {
+  getLoginUrl as getVeradigmLoginUrl,
+  VeradigmLocalStorageKeys,
+} from '../services/Veradigm';
 
 export async function getLoginUrlBySource(
-  item: RxDocument<ConnectionDocument>
+  item: RxDocument<ConnectionDocument>,
 ): Promise<string & Location> {
   switch (item.get('source')) {
     case 'epic': {
@@ -31,17 +43,17 @@ export async function getLoginUrlBySource(
         baseUrl,
         authUrl,
         item.get('tenant_id') === 'sandbox_epic' ||
-          item.get('tenant_id') === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354'
+          item.get('tenant_id') === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354',
       );
     }
     case 'cerner': {
       return Promise.resolve(
-        getCernerLoginUrl(item.get('location'), item.get('auth_uri'))
+        getCernerLoginUrl(item.get('location'), item.get('auth_uri')),
       );
     }
     case 'veradigm': {
       return Promise.resolve(
-        getVeradigmLoginUrl(item.get('location'), item.get('auth_uri'))
+        getVeradigmLoginUrl(item.get('location'), item.get('auth_uri')),
       );
     }
     case 'onpatient': {
@@ -57,7 +69,7 @@ export async function getLoginUrlBySource(
 }
 
 export function setTenantUrlBySource(
-  item: RxDocument<ConnectionDocument>
+  item: RxDocument<ConnectionDocument>,
 ): void {
   switch (item.get('source')) {
     case 'epic': {
@@ -88,7 +100,7 @@ export function setTenantUrlBySource(
         authUrl,
         tokenUrl,
         item.get('name'),
-        item.get('tenant_id')
+        item.get('tenant_id'),
       );
       break;
     }
@@ -98,7 +110,7 @@ export function setTenantUrlBySource(
         item.get('auth_uri'),
         item.get('token_uri'),
         item.get('name'),
-        item.get('id')
+        item.get('id'),
       );
       break;
     }
@@ -108,7 +120,7 @@ export function setTenantUrlBySource(
         item.get('auth_uri'),
         item.get('token_uri'),
         item.get('name'),
-        item.get('id')
+        item.get('id'),
       );
       break;
     }
@@ -123,7 +135,7 @@ function setTenantEpicUrl(
   a: string & Location,
   t: string & Location,
   name: string,
-  id: string
+  id: string,
 ): void {
   localStorage.setItem(EpicLocalStorageKeys.EPIC_BASE_URL, s);
   localStorage.setItem(EpicLocalStorageKeys.EPIC_AUTH_URL, a);
@@ -137,7 +149,7 @@ function setTenantCernerUrl(
   auth: string & Location,
   token: string & Location,
   name: string,
-  id: string
+  id: string,
 ): void {
   localStorage.setItem(CernerLocalStorageKeys.CERNER_BASE_URL, base);
   localStorage.setItem(CernerLocalStorageKeys.CERNER_AUTH_URL, auth);
@@ -151,7 +163,7 @@ function setTenantVeradigmUrl(
   auth: string & Location,
   token: string & Location,
   name: string,
-  id: string
+  id: string,
 ): void {
   localStorage.setItem(VeradigmLocalStorageKeys.VERADIGM_BASE_URL, base);
   localStorage.setItem(VeradigmLocalStorageKeys.VERADIGM_AUTH_URL, auth);
@@ -170,7 +182,7 @@ const ConnectionTab: React.FC = () => {
         token: string & Location,
         name: string,
         id: string,
-        vendor: EMRVendor
+        vendor: EMRVendor,
       ) => {
         switch (vendor) {
           case 'epic': {
@@ -179,7 +191,7 @@ const ConnectionTab: React.FC = () => {
             window.location = getEpicLoginUrl(
               base,
               auth,
-              id === 'sandbox_epic'
+              id === 'sandbox_epic',
             );
             break;
           }
@@ -197,9 +209,8 @@ const ConnectionTab: React.FC = () => {
           }
         }
       },
-      []
+      [],
     );
-
 
   return (
     <AppPage banner={<GenericBanner text="Add Connections" />}>

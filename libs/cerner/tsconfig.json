@@ -1,5 +1,16 @@
 {
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "resolveJsonModule": true,
+    "lib": ["ES2022", "dom"],
+    "esModuleInterop": true,
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext"
+  },
   "files": [],
   "include": [],
   "references": [
@@ -9,14 +20,5 @@
     {
       "path": "./tsconfig.spec.json"
     }
-  ],
-  "compilerOptions": {
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "resolveJsonModule": true,
-    "lib": ["ES2022", "dom"],
-    "module": "ES2022"
-  }
+  ]
 }

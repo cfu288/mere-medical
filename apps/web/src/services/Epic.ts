@@ -765,6 +765,7 @@ export async function refreshEpicConnectionTokenIfNeeded(
       throw new Error('Error refreshing token  - try logging in again');
     }
   }
+  return Promise.resolve();
 }
 
 export interface EpicAuthResponse {

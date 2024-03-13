@@ -1,4 +1,4 @@
-import * as CernerEndpoints from './data/DSTU2Endpoints.json';
+import CernerEndpoints from './data/DSTU2Endpoints.json';
 
 export interface DSTU2Endpoint {
   id: string;

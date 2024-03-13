@@ -14,7 +14,7 @@ describe('parseCCDAAssesmentSection', () => {
     const parser = new DOMParser();
     const xmlFileRaw = fs
       .readFileSync(
-        path.join(__dirname, './exampleCCDA/example_assessment.xml')
+        path.join(__dirname, './exampleCCDA/example_assessment.xml'),
       )
       .toString();
     const xmlDoc = parser.parseFromString(xmlFileRaw, 'text/xml');

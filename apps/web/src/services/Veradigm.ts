@@ -1,6 +1,6 @@
 import Config from '../environments/config.json';
 import { Routes } from '../Routes';
-import { DSTU2 } from '.';
+import * as DSTU2 from './DSTU2';
 import { VeradigmConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
 import {
   FhirResource,
@@ -13,7 +13,6 @@ import {
   Immunization,
   Condition,
   AllergyIntolerance,
-  Bundle,
   DocumentReference,
 } from 'fhir/r2';
 import { RxDatabase } from 'rxdb';
@@ -341,9 +340,9 @@ async function syncDocumentReferences(
   );
   // for each docref, get attachments and sync them
   const cdsmap = docRefItems.map(async (docRefItem) => {
-    const attachmentUrls = docRefItem.data_record.raw.resource?.content.map(
-      (a) => a.attachment.url,
-    );
+    const attachmentUrls = (
+      docRefItem.data_record.raw as BundleEntry<DocumentReference>
+    ).resource?.content.map((a) => a.attachment.url);
     if (attachmentUrls) {
       for (const attachmentUrl of attachmentUrls) {
         if (attachmentUrl) {

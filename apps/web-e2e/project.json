@@ -17,7 +17,6 @@
         }
       }
     },
-
     "e2e:nodevserver": {
       "executor": "@mands/nx-playwright:playwright-executor",
       "options": {
@@ -41,11 +40,8 @@
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["apps/web-e2e/**/*.{ts,tsx,js,jsx}"]
-      }
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
     }
   },
   "tags": [],

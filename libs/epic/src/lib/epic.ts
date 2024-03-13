@@ -1,4 +1,4 @@
-import * as EpicEndpoints from './data/DSTU2Endpoints.json';
+import EpicEndpoints from './data/DSTU2Endpoints.json';
 
 /* eslint-disable-next-line */
 export interface DSTU2Endpoint {

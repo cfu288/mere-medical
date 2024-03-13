@@ -1,4 +1,4 @@
-import * as VeradigmEndpoints from './data/DSTU2Endpoints.json';
+import VeradigmEndpoints from './data/DSTU2Endpoints.json';
 
 export interface DSTU2Endpoint {
   id: string;

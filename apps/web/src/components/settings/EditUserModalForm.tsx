@@ -1,6 +1,6 @@
 import { Dialog } from '@headlessui/react';
 import { useEffect, useRef, useState, useMemo } from 'react';
-import ReactCrop, { convertToPixelCrop } from 'react-image-crop';
+import ReactCrop, { convertToPixelCrop, PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useRxUserDocument } from '../providers/UserProvider';
@@ -12,7 +12,6 @@ import { RxDocument } from 'rxdb';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
 import { Modal } from '../Modal';
 import { ModalHeader } from '../ModalHeader';
-import { PixelCrop } from 'react-image-crop';
 import { DependencyList } from 'react';
 import { useNotificationDispatch } from '../providers/NotificationProvider';
 
@@ -53,7 +52,7 @@ export function parseDefaultValues(defaultValues?: NewUserFormFields) {
  * @returns the file
  */
 function getFileFromFileList(
-  fileOrFileList: FileList | File | string | undefined
+  fileOrFileList: FileList | File | string | undefined,
 ) {
   let pp: File | string | null;
   if (fileOrFileList === typeof 'string') {
@@ -70,7 +69,7 @@ function getFileFromFileList(
 type ProfilePhotoMetadata = { data: string; content_type: string };
 
 function tryCreateUrlFromFile(
-  pp: ProfilePhotoMetadata | Blob | string
+  pp: ProfilePhotoMetadata | Blob | string,
 ): string {
   if (typeof pp === 'string') {
     return pp;
@@ -87,7 +86,7 @@ function tryCreateUrlFromFile(
  */
 const updateUserInDb = async (
   rawUserDocument: RxDocument<UserDocument>,
-  data: NewUserFormFields
+  data: NewUserFormFields,
 ) => {
   await rawUserDocument.update({
     $set: {
@@ -168,7 +167,7 @@ function ProfileImageModal({
       }
     },
     100,
-    [completedCrop]
+    [completedCrop],
   );
 
   return (
@@ -201,7 +200,7 @@ function ProfileImageModal({
             aspect={1}
             onComplete={(crop) => {
               setCompletedCrop(
-                convertToPixelCrop(crop, crop.width, crop.height)
+                convertToPixelCrop(crop, crop.width, crop.height),
               );
             }}
           >
@@ -545,7 +544,7 @@ export async function canvasPreview(
   canvas: HTMLCanvasElement,
   crop: PixelCrop,
   scale = 1,
-  rotate = 0
+  rotate = 0,
 ) {
   const ctx = canvas.getContext('2d');
 
@@ -596,7 +595,7 @@ export async function canvasPreview(
     0,
     0,
     image.naturalWidth,
-    image.naturalHeight
+    image.naturalHeight,
   );
 
   ctx.restore();
@@ -605,7 +604,7 @@ export async function canvasPreview(
 export function useDebounceEffect(
   fn: () => void,
   waitTime: number,
-  deps?: DependencyList
+  deps?: DependencyList,
 ) {
   useEffect(() => {
     const t = setTimeout(() => {

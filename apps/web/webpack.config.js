@@ -1,50 +1,45 @@
 const { composePlugins, withNx } = require('@nx/webpack');
 const { withReact } = require('@nx/react');
-const nxReactBaseConfig = require('@nx/react/plugins/webpack');
 const { DefinePlugin } = require('webpack');
 const { merge } = require('webpack-merge');
 const { InjectManifest } = require('workbox-webpack-plugin');
 const path = require('path');
-const { sentryWebpackPlugin } = require('@sentry/webpack-plugin');
 
 const commitHash = require('child_process')
   .execSync('git describe --tag')
   .toString()
   .trim();
 
-// Nx plugins for webpack.
-module.exports = composePlugins(
-  withNx(),
-  withReact(),
-  (config, { options, context }) => {
-    // Note: This was added by an Nx migration.
-    // You should consider inlining the logic into this file.
-    // For more information on webpack config and Nx see:
+function myCustomPlugin() {
+  // `options` and `context` are the target options and
+  // `@nx/webpack:webpack` executor context respectively.
+  // `config` is the Webpack configuration object
+  return async (config, { options, context }) => {
     // https://nx.dev/packages/webpack/documents/webpack-config-setup
-
     // Fix that Nx uses a different attribute when serving the app
     context.options = context.options || context.buildOptions;
-    const baseConfig = nxReactBaseConfig(config);
-
-    const mergeWebpackConfigs = [baseConfig];
-    mergeWebpackConfigs.push({
-      resolve: {
-        fallback: {
-          assert: false,
-          fs: false,
+    const mergeWebpackConfigs = [
+      config,
+      {
+        resolve: {
+          fallback: {
+            assert: false,
+            fs: false,
+          },
         },
+        devtool: 'source-map', // Source map generation must be turned on
+        plugins: [
+          new DefinePlugin({
+            MERE_APP_VERSION: JSON.stringify(commitHash),
+          }),
+        ],
+        ignoreWarnings: [/Failed to parse source map/],
+        mode: config.mode,
       },
-      devtool: 'source-map', // Source map generation must be turned on
-      plugins: [
-        new DefinePlugin({
-          MERE_APP_VERSION: JSON.stringify(commitHash),
-        }),
-      ],
-      ignoreWarnings: [/Failed to parse source map/],
-    });
+    ];
 
     // For production we add the service worker
-    if (baseConfig.mode === 'production') {
+    if (config.mode === 'production') {
       mergeWebpackConfigs.push({
         plugins: [
           new InjectManifest({
@@ -66,6 +61,9 @@ module.exports = composePlugins(
       });
     }
 
-    return merge(mergeWebpackConfigs);
-  },
-);
+    return merge(...mergeWebpackConfigs);
+  };
+}
+
+// Nx plugins for webpack.
+module.exports = composePlugins(withNx(), withReact(), myCustomPlugin());

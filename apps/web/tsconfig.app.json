@@ -2,7 +2,11 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
-    "types": ["node"]
+    "types": [
+      "node",
+      "@nx/react/typings/cssmodule.d.ts",
+      "@nx/react/typings/image.d.ts"
+    ]
   },
   "files": [
     "../../node_modules/@nx/react/typings/cssmodule.d.ts",
@@ -90,7 +94,7 @@
     "src/features/mere-ai-chat/formatters/formatTimestampToDay.tsx",
     "src/features/mere-ai-chat/formatters/formatTimestampToTime.tsx",
     "src/features/mere-ai-chat/types/ChatMessage.tsx",
-    "src/features/mere-ai-chat/helpers/generateRandomQuestion.tsx",
+    "src/features/mere-ai-chat/helpers/generateRandomQuestion.ts",
     "src/features/mere-ai-chat/open-ai/prepareDataForOpenAI.tsx",
     "src/features/mere-ai-chat/open-ai/callOpenAI.tsx",
     "src/features/mere-ai-chat/open-ai/performRAGRequestwithOpenAI.tsx",
@@ -127,6 +131,8 @@
     "**/*.jsx",
     "**/*.ts",
     "**/*.tsx",
-    "../../webpack.config.js"
+    "../../webpack.config.js",
+    "webpack.config.js",
+    "postcss.config.js"
   ]
 }

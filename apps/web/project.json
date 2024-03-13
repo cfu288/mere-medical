@@ -24,8 +24,7 @@
         "styles": ["apps/web/src/styles.css"],
         "scripts": [],
         "webpackConfig": "apps/web/webpack.config.js",
-        "postcssConfig": "apps/web/postcss.config.js",
-        "isolatedConfig": true
+        "postcssConfig": "apps/web/postcss.config.js"
       },
       "configurations": {
         "development": {
@@ -102,17 +101,15 @@
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["apps/web/**/*.{ts,tsx,js,jsx}"]
-      }
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/apps/web"],
       "options": {
-        "jestConfig": "apps/web/jest.config.ts"
+        "jestConfig": "apps/web/jest.config.ts",
+        "passWithNoTests": false
       }
     },
     "serve-all": {
