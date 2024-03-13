@@ -1,15 +1,5 @@
 {
   "extends": "../../tsconfig.base.json",
-  "files": [],
-  "include": [],
-  "references": [
-    {
-      "path": "./tsconfig.lib.json"
-    },
-    {
-      "path": "./tsconfig.spec.json"
-    }
-  ],
   "compilerOptions": {
     "forceConsistentCasingInFileNames": true,
     "strict": true,
@@ -20,5 +10,15 @@
     "esModuleInterop": true,
     "moduleResolution": "NodeNext",
     "module": "NodeNext"
-  }
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
 }
