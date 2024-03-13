@@ -60,7 +60,7 @@ export default class App {
         if (protocol === 'mere') {
           if (!App.application.isPackaged) {
             App.mainWindow.loadURL(
-              concatPath(`http://localhost:${rendererAppPort}`, `\//#/`, path),
+              concatPath(`https://localhost:${rendererAppPort}`, `\//#/`, path),
             );
           } else {
             App.mainWindow.webContents.send('navigate', path);
@@ -162,7 +162,7 @@ export default class App {
   private static loadMainWindow() {
     // load the index.html of the app.
     if (!App.application.isPackaged) {
-      App.mainWindow.loadURL(`http://localhost:${rendererAppPort}`);
+      App.mainWindow.loadURL(`https://localhost:${rendererAppPort}`);
     } else {
       App.mainWindow.loadURL(
         format({
