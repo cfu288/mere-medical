@@ -1,6 +1,19 @@
 import * as fs from 'fs';
 import 'dotenv/config';
-import chalk from 'chalk';
+
+class TerminalColor {
+  static readonly BgBlue = '\x1b[44m';
+  static readonly Green = '\x1b[32m';
+  static readonly Red = '\x1b[31m';
+  static readonly Reset = '\x1b[0m';
+
+  static bgBlue = (str: string) =>
+    `${TerminalColor.BgBlue}${str}${TerminalColor.Reset}`;
+  static green = (str: string) =>
+    `${TerminalColor.Green}${str}${TerminalColor.Reset}`;
+  static red = (str: string) =>
+    `${TerminalColor.Red}${str}${TerminalColor.Reset}`;
+}
 
 /**
  * This script is used to fetch the metadata for all of the DSTU2 endpoints listed by Epic.
@@ -137,10 +150,10 @@ import chalk from 'chalk';
 
         results.push(...successRes);
         console.log(
-          `BATCH ${chalk.bgBlue(`${iter}`)}: Processed ${
+          `BATCH ${TerminalColor.bgBlue(`${iter}`)}: Processed ${
             successRes.length
           } of ${batch.length} in batch. ` +
-            chalk.red(`${errorsRes.length} error(s) when processing.`),
+            TerminalColor.red(`${errorsRes.length} error(s) when processing.`),
         );
         errors.push(...errorsRes);
       }
@@ -172,7 +185,7 @@ import chalk from 'chalk';
 
       if (errors.length) {
         console.log(
-          chalk.red(
+          TerminalColor.red(
             `${errors.length} error(s) when processing. Check the errorlog for more details`,
           ),
         );
@@ -181,7 +194,7 @@ import chalk from 'chalk';
     } catch (e) {
       console.error(e);
     }
-    console.log(chalk.green('Done'));
+    console.log(TerminalColor.green('Done'));
   } catch (e) {
     console.error(e);
   }
