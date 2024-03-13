@@ -110,6 +110,7 @@ function useEpicDynamicRegistrationLogin() {
     user,
     navigate,
     userPreferences,
+    search,
   ]);
 
   return [error];
@@ -265,7 +266,6 @@ const handleLogin = async ({
     epicId,
     enableProxy,
   );
-
   await saveConnectionToDb({
     res: jwtAuthResponse,
     epicBaseUrl,

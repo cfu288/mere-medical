@@ -77,7 +77,7 @@ export function setTenantUrlBySource(
       // append /api/FHIR/DSTU2/ to the end of the base url, if it doesn't already exist
       let baseUrl = item.get('location');
       if (
-        !baseUrl.endsWith('/api/FHIR/DSTU2/') ||
+        !baseUrl.endsWith('/api/FHIR/DSTU2/') &&
         !baseUrl.endsWith('/api/FHIR/DSTU2')
       ) {
         baseUrl = baseUrl + '/api/FHIR/DSTU2/';
