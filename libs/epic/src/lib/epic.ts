@@ -1,4 +1,4 @@
-import * as EpicEndpoints from './data/DSTU2Endpoints.json';
+import EpicEndpoints from './data/DSTU2Endpoints.json';
 
 /* eslint-disable-next-line */
 export interface DSTU2Endpoint {
@@ -8,8 +8,6 @@ export interface DSTU2Endpoint {
   token: string;
   authorize: string;
 }
-
-console.log(EpicEndpoints);
 
 export const EpicDSTU2TenantEndpoints: DSTU2Endpoint[] =
   Array.from(EpicEndpoints);

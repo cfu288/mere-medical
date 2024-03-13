@@ -3,7 +3,8 @@
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
     "declaration": true,
-    "types": ["node"]
+    "types": ["node"],
+    "module": "CommonJS"
   },
   "include": ["**/*.ts", "fetchMetadata.mts"],
   "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"]
