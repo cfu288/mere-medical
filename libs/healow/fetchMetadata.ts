@@ -188,7 +188,7 @@ class TerminalColor {
       //   });
 
       fs.writeFileSync(
-        './src/lib/data/DSTU2Endpoints.json',
+        './src/lib/data/R4Endpoints.json',
         JSON.stringify(results, null, 2),
       );
 
