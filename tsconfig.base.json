@@ -23,7 +23,8 @@
       "@mere/search": ["libs/search/src/index.ts"],
       "@mere/vector-storage": ["libs/vector-storage/src/index.ts"],
       "@mere/veradigm": ["libs/veradigm/src/index.ts"],
-      "@mere/web": ["apps/web/src/main.tsx"]
+      "@mere/web": ["apps/web/src/main.tsx"],
+      "@mere/healow": ["libs/healow/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
