@@ -14,7 +14,6 @@ import { DeveloperLogsProvider } from '../components/providers/DeveloperLogsProv
 import { LocalConfigProvider } from '../components/providers/LocalConfigProvider';
 import { NotificationProvider } from '../components/providers/NotificationProvider';
 import { RxDbProvider } from '../components/providers/RxDbProvider';
-import { SentryInitializer } from '../components/providers/SentryInitializer';
 import { SyncJobProvider } from '../components/providers/SyncJobProvider';
 import { TutorialConfigProvider } from '../components/providers/TutorialConfigProvider';
 import { UpdateAppChecker } from '../components/providers/UpdateAppChecker';
@@ -48,7 +47,6 @@ export default function App() {
           <TutorialConfigProvider>
             {Config.IS_DEMO !== 'enabled' && <TutorialOverlay />}
           </TutorialConfigProvider>
-          <SentryInitializer />
           <NotificationProvider>
             <UpdateAppChecker />
             <RxDbProvider>

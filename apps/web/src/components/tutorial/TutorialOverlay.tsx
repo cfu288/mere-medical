@@ -10,7 +10,7 @@ import { TutorialAddConnectionScreen } from './TutorialAddConnectionScreen';
 import { TutorialWelcomeScreen } from './TutorialWelcomeScreen';
 import { TutorialInstallPWAScreen } from './TutorialInstallPWAScreen';
 import { TutorialCompleteScreen } from './TutorialCompleteScreen';
-import { TutorialEnableAnalytics } from './TutorialEnableAnalytics';
+// import { TutorialEnableAnalytics } from './TutorialEnableAnalytics';
 import Config from '../../environments/config.json';
 import { isElectron } from '../../utils/isElectron';
 
@@ -102,19 +102,11 @@ export function TutorialOverlay() {
     updateTutorialConfig = useUpdateTutorialLocalStorage(),
     tutorialSteps = useMemo(
       () =>
-        getTutorialKeysFromLocalStorage(tutorialConfig)
-          .filter((key) =>
-            key !== TutorialLocalStorageKeys.INSTALL_PWA
-              ? true
-              : !isInstalledPWA() && !isElectron(),
-          )
-          .filter((key) =>
-            key !== TutorialLocalStorageKeys.ENABLE_ANALYTICS
-              ? true
-              : Config.SENTRY_WEB_DSN &&
-                Config.SENTRY_WEB_DSN.includes('SENTRY_WEB_DSN') === false &&
-                Config.SENTRY_WEB_DSN.trim() !== '',
-          ),
+        getTutorialKeysFromLocalStorage(tutorialConfig).filter((key) =>
+          key !== TutorialLocalStorageKeys.INSTALL_PWA
+            ? true
+            : !isInstalledPWA() && !isElectron(),
+        ),
       [tutorialConfig],
     );
   const [state, dispatch] = React.useReducer(tutorialReducer, {
@@ -149,6 +141,7 @@ export function TutorialOverlay() {
     <AnimatePresence initial={true}>
       {!tutorialSteps.length || state.isComplete ? null : (
         <motion.div
+          key="tutorial_overlay"
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -179,14 +172,14 @@ export function TutorialOverlay() {
             >
               <TutorialAddConnectionScreen dispatch={dispatch} />
             </TutorialItemWrapper>
-            <TutorialItemWrapper
+            {/* <TutorialItemWrapper
               key={TutorialLocalStorageKeys.ENABLE_ANALYTICS}
               localStorageKey={TutorialLocalStorageKeys.ENABLE_ANALYTICS}
               state={state}
               dispatch={dispatch}
             >
               <TutorialEnableAnalytics dispatch={dispatch} />
-            </TutorialItemWrapper>
+            </TutorialItemWrapper> */}
             <TutorialItemWrapper
               key={TutorialLocalStorageKeys.COMPLETE}
               localStorageKey={TutorialLocalStorageKeys.COMPLETE}
