@@ -12,9 +12,6 @@ import { VAModule } from './va/va.module';
 const imports: ModuleMetadata['imports'] = [
   StaticModule,
   LoginProxyModule,
-  EpicModule,
-  CernerModule,
-  VeradigmModule,
   TenantModule,
   VAModule,
 ];
@@ -28,6 +25,21 @@ if (opConfigured.check) {
       redirectUri: `${process.env.PUBLIC_URL}/api/v1/onpatient/callback`,
     }),
   );
+}
+
+const epicConfigured = checkIfEpicConfigured();
+if (epicConfigured.check) {
+  imports.push(EpicModule);
+}
+
+const cernerConfigured = checkIfCernerIsConfigured();
+if (cernerConfigured.check) {
+  imports.push(CernerModule);
+}
+
+const veradigmConfigured = checkIfVeradigmIsConfigured();
+if (veradigmConfigured.check) {
+  imports.push(VeradigmModule);
 }
 
 @Module({
@@ -66,6 +78,88 @@ function checkIfOnPatientConfigured():
       check,
       clientId: process.env.ONPATIENT_CLIENT_ID!,
       clientSecret: process.env.ONPATIENT_CLIENT_SECRET!,
+    };
+  }
+
+  return { check };
+}
+
+function checkIfEpicConfigured():
+  | {
+      check: true;
+      clientId: string;
+    }
+  | {
+      check: false;
+    } {
+  const check = !!process.env.EPIC_CLIENT_ID;
+  if (!process.env.EPIC_CLIENT_ID) {
+    Logger.warn(
+      'EPIC_CLIENT_ID was not provided: Epic services will be disabled.',
+    );
+  }
+  if (check) {
+    Logger.log('EPIC_CLIENT_ID was provided: Epic service will be enabled.');
+
+    return {
+      check,
+      clientId: process.env.EPIC_CLIENT_ID!,
+    };
+  }
+
+  return { check };
+}
+
+function checkIfCernerIsConfigured():
+  | {
+      check: true;
+      clientId: string;
+    }
+  | {
+      check: false;
+    } {
+  const check = !!process.env.CERNER_CLIENT_ID;
+  if (!process.env.CERNER_CLIENT_ID) {
+    Logger.warn(
+      'CERNER_CLIENT_ID was not provided: Cerner services will be disabled.',
+    );
+  }
+  if (check) {
+    Logger.log(
+      'CERNER_CLIENT_ID was provided: Cerner service will be enabled.',
+    );
+
+    return {
+      check,
+      clientId: process.env.CERNER_CLIENT_ID!,
+    };
+  }
+
+  return { check };
+}
+
+function checkIfVeradigmIsConfigured():
+  | {
+      check: true;
+      clientId: string;
+    }
+  | {
+      check: false;
+    } {
+  const check = !!process.env.VERADIGM_CLIENT_ID;
+  if (!process.env.VERADIGM_CLIENT_ID) {
+    Logger.warn(
+      'VERADIGM_CLIENT_ID was not provided: Veradigm services will be disabled.',
+    );
+  }
+  if (check) {
+    Logger.log(
+      'VERADIGM_CLIENT_ID was provided: Veradigm service will be enabled.',
+    );
+
+    return {
+      check,
+      clientId: process.env.VERADIGM_CLIENT_ID!,
     };
   }
 

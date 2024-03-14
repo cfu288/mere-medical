@@ -373,17 +373,8 @@ export function TenantSelectModal({
               <Combobox>
                 <Combobox.Options
                   static
-                  className="max-h-full scroll-py-3 overflow-y-scroll p-3"
+                  className="max-h-full scroll-py-3 overflow-y-scroll p-3 sm:max-h-96"
                 >
-                  <SkeletonTenantSelectModalResultItem />
-                  <SkeletonTenantSelectModalResultItem />
-                  <SkeletonTenantSelectModalResultItem />
-                  <SkeletonTenantSelectModalResultItem />
-                  <SkeletonTenantSelectModalResultItem />
-                  <SkeletonTenantSelectModalResultItem />
-                  <SkeletonTenantSelectModalResultItem />
-                  <SkeletonTenantSelectModalResultItem />
-                  <SkeletonTenantSelectModalResultItem />
                   <SkeletonTenantSelectModalResultItem />
                   <SkeletonTenantSelectModalResultItem />
                   <SkeletonTenantSelectModalResultItem />
