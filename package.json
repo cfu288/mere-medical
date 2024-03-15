@@ -120,6 +120,7 @@
     "@nestjs/core": "^10.3.3",
     "@nestjs/platform-express": "^10.3.3",
     "@nestjs/serve-static": "^4.0.1",
+    "@nestjs/swagger": "^7.3.0",
     "@nrwl/webpack": "17.3.0",
     "@react-hook/debounce": "^4.0.0",
     "@react-hook/throttle": "^2.2.0",

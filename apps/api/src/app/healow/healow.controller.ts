@@ -1,17 +1,17 @@
 import { Controller, Get, Logger, Query, Res } from '@nestjs/common';
 import { Response } from 'express';
-import { CernerService } from './cerner.service';
+import { HealowService } from './healow.service';
 import { ApiTags } from '@nestjs/swagger';
 
-@Controller('v1/cerner')
-export class CernerController {
-  constructor(private readonly cernerService: CernerService) {}
+@Controller('v1/healow')
+export class HealowController {
+  constructor(private readonly HealowService: HealowService) {}
 
   @ApiTags('tenant')
-  @Get('dstu2/tenants')
+  @Get('r4/tenants')
   async getData(@Res() response: Response, @Query('query') query: string) {
     try {
-      const data = await this.cernerService.queryTenants(query);
+      const data = await this.HealowService.queryR4Tenants(query);
       response.json(data);
     } catch (e) {
       Logger.error(e);

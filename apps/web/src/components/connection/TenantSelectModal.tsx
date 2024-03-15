@@ -5,9 +5,9 @@ import { Link } from 'react-router-dom';
 import { Combobox } from '@headlessui/react';
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid';
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
-import { DSTU2Endpoint as CernerDSTU2Endpoint } from '@mere/cerner';
-import { DSTU2Endpoint as EpicDSTU2Endpoint } from '@mere/epic';
-import { DSTU2Endpoint as VeradigmDSTU2Endpoint } from '@mere/veradigm';
+import { TenantEndpoint as CernerDSTU2Endpoint } from '@mere/cerner';
+import { TenantEndpoint as EpicDSTU2Endpoint } from '@mere/epic';
+import { TenantEndpoint as VeradigmDSTU2Endpoint } from '@mere/veradigm';
 
 import VeradigmLogo from '../../assets/img/allscripts-logo.png';
 import CernerLogo from '../../assets/img/cerner-logo.png';

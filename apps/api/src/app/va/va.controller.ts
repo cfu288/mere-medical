@@ -1,8 +1,10 @@
 import { Controller, Get, Logger, Query, Res } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 
 @Controller('v1/va')
 export class VAController {
+  @ApiTags('app-redirect')
   @Get('app-redirect')
   // https://localhost:4200/api/v1/va/app-redirect
   async redirectToApp(@Res() response: Response, @Query('code') code: string) {

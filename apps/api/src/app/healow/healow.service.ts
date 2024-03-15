@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { EpicDSTU2TenantEndpoints, TenantEndpoint } from '@mere/epic';
+import { HealowR4TenantEndpoints, TenantEndpoint } from '@mere/healow';
 
 @Injectable()
-export class EpicService {
-  private readonly items = EpicDSTU2TenantEndpoints;
+export class HealowService {
+  private readonly items = HealowR4TenantEndpoints;
 
-  async queryTenants(query: string): Promise<TenantEndpoint[]> {
+  async queryR4Tenants(query: string): Promise<TenantEndpoint[]> {
     return filteredItemsWithQuery(this.items, query);
   }
 }

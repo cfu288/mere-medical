@@ -1,40 +1,62 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Injectable } from '@nestjs/common';
-import {
-  CernerDSTU2TenantEndpoints,
-  DSTU2Endpoint as CernerDSTU2Endpoint,
-} from '@mere/cerner';
-import {
-  EpicDSTU2TenantEndpoints,
-  DSTU2Endpoint as EpicDSTU2Endpoint,
-} from '@mere/epic';
-import {
-  VeradigmDSTU2TenantEndpoints,
-  DSTU2Endpoint as VeradigmDSTU2Endpoint,
-} from '@mere/veradigm';
+import { CernerDSTU2TenantEndpoints } from '@mere/cerner';
+import { EpicDSTU2TenantEndpoints } from '@mere/epic';
+import { VeradigmDSTU2TenantEndpoints } from '@mere/veradigm';
+import { HealowR4TenantEndpoints } from '@mere/healow';
 
-type UnifiedDSTU2Endpoint = CernerDSTU2Endpoint &
-  EpicDSTU2Endpoint &
-  VeradigmDSTU2Endpoint & { vendor: 'EPIC' | 'CERNER' | 'VERADIGM' };
+export interface TenantEndpoint {
+  id: string;
+  url: string;
+  name: string;
+  token?: string;
+  authorize?: string;
+}
 
-const searchItems: UnifiedDSTU2Endpoint[] = ([] as UnifiedDSTU2Endpoint[])
+type UnifiedDSTU2TenantEndpoint = TenantEndpoint & {
+  vendor: 'EPIC' | 'CERNER' | 'VERADIGM' | 'HEALOW';
+};
+
+type UnifiedTenantEndpoint = UnifiedDSTU2TenantEndpoint & {
+  version: 'DSTU2' | 'R4';
+};
+
+const searchR4Items: UnifiedTenantEndpoint[] = (
+  [] as UnifiedTenantEndpoint[]
+).concat(
+  (HealowR4TenantEndpoints as unknown as UnifiedTenantEndpoint[]).map((i) => {
+    i.vendor = 'HEALOW';
+    i.version = 'R4';
+    return i;
+  }),
+);
+
+const searchDSTU2Items: UnifiedTenantEndpoint[] = (
+  [] as UnifiedTenantEndpoint[]
+)
   .concat(
-    (EpicDSTU2TenantEndpoints as unknown as UnifiedDSTU2Endpoint[]).map((i) => {
-      i.vendor = 'EPIC';
-      return i;
-    }),
-  )
-  .concat(
-    (CernerDSTU2TenantEndpoints as unknown as UnifiedDSTU2Endpoint[]).map(
+    (EpicDSTU2TenantEndpoints as unknown as UnifiedTenantEndpoint[]).map(
       (i) => {
-        i.vendor = 'CERNER';
+        i.vendor = 'EPIC';
+        i.version = 'DSTU2';
         return i;
       },
     ),
   )
   .concat(
-    (VeradigmDSTU2TenantEndpoints as unknown as UnifiedDSTU2Endpoint[]).map(
+    (CernerDSTU2TenantEndpoints as unknown as UnifiedTenantEndpoint[]).map(
+      (i) => {
+        i.vendor = 'CERNER';
+        i.version = 'DSTU2';
+        return i;
+      },
+    ),
+  )
+  .concat(
+    (VeradigmDSTU2TenantEndpoints as unknown as UnifiedTenantEndpoint[]).map(
       (i) => {
         i.vendor = 'VERADIGM';
+        i.version = 'DSTU2';
         return i;
       },
     ),
@@ -42,18 +64,37 @@ const searchItems: UnifiedDSTU2Endpoint[] = ([] as UnifiedDSTU2Endpoint[])
 
 @Injectable()
 export class TenantService {
-  private readonly items = searchItems;
+  private readonly DSTU2Items = searchDSTU2Items;
+  private readonly R4Items = searchR4Items;
+
+  async queryDSTU2Tenants(
+    query: string,
+    vendors: string[],
+  ): Promise<UnifiedDSTU2TenantEndpoint[]> {
+    return filteredItemsWithQuery(this.DSTU2Items, query, vendors);
+  }
+
+  async queryR4Tenants(
+    query: string,
+    vendors: string[],
+  ): Promise<UnifiedTenantEndpoint[]> {
+    return filteredItemsWithQuery(this.R4Items, query, vendors);
+  }
 
   async queryTenants(
     query: string,
     vendors: string[],
-  ): Promise<UnifiedDSTU2Endpoint[]> {
-    return filteredItemsWithQuery(this.items, query, vendors);
+  ): Promise<UnifiedTenantEndpoint[]> {
+    return filteredItemsWithQuery(
+      this.DSTU2Items.concat(this.R4Items),
+      query,
+      vendors,
+    );
   }
 }
 
 function filteredItemsWithQuery(
-  items: UnifiedDSTU2Endpoint[],
+  items: UnifiedTenantEndpoint[],
   query: string,
   vendors?: string[] | string,
 ) {

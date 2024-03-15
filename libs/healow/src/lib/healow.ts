@@ -1,7 +1,7 @@
-import HealowEndpoints from './data/DSTU2Endpoints.json';
+import HealowEndpoints from './data/R4Endpoints.json';
 
 /* eslint-disable-next-line */
-export interface DSTU2Endpoint {
+export interface TenantEndpoint {
   id: string;
   url: string;
   name: string;
@@ -9,5 +9,5 @@ export interface DSTU2Endpoint {
   authorize: string;
 }
 
-export const HealowDSTU2TenantEndpoints: DSTU2Endpoint[] =
+export const HealowR4TenantEndpoints: TenantEndpoint[] =
   Array.from(HealowEndpoints);

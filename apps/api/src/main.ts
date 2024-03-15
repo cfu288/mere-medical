@@ -2,11 +2,12 @@ import compression from 'compression';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { LogLevel, Logger } from '@nestjs/common';
+import { Logger, LogLevel } from '@nestjs/common';
+import { NestApplicationOptions } from '@nestjs/common/interfaces/nest-application-options.interface';
 import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 import { AppModule } from './app/app.module';
-import { NestApplicationOptions } from '@nestjs/common/interfaces/nest-application-options.interface';
 
 const DEFAULT_PORT = 80;
 const GLOBAL_PREFIX = 'api';
@@ -47,6 +48,18 @@ async function bootstrap() {
   });
   app.setGlobalPrefix(GLOBAL_PREFIX);
   app.use(compression());
+
+  const config = new DocumentBuilder()
+    .setTitle('Mere API')
+    .setDescription(
+      'The API service used to power parts of the Mere client application.',
+    )
+    .addTag('proxy')
+    .addTag('tenant')
+    .addTag('app-redirect')
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup(GLOBAL_PREFIX, app, document);
 
   const port = process.env.PORT || DEFAULT_PORT;
   await app.listen(port);

@@ -8,7 +8,9 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ProxyService } from '../services';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('proxy')
 @Controller('?*/proxy')
 export class ProxyController {
   private readonly logger = new Logger(ProxyController.name);

@@ -10,112 +10,130 @@ export class ProxyService {
   private readonly logger = new Logger(ProxyService.name);
 
   constructor(
-    @Inject(HTTP_PROXY) private proxy: server,
-    @Inject(PROXY_MODULE_OPTIONS) private options: ProxyModuleOptions,
+    @Inject(HTTP_PROXY) private proxyServer: server,
+    @Inject(PROXY_MODULE_OPTIONS) private proxyOptions: ProxyModuleOptions,
   ) {}
 
   async proxyRequest(
-    req: Request,
-    res: Response,
-    @Param() params?: Record<string, string>,
+    request: Request,
+    response: Response,
+    @Param() parameters?: Record<string, string>,
   ) {
-    const target = req.query.target as string;
-    const target_type = req.query.target_type as string;
-    let serviceId = (req.query.serviceId as string).trim();
-    let token = null;
+    const targetEndpoint = request.query.target as string;
+    const targetType = request.query.target_type as string;
+    let serviceIdentifier = (request.query.serviceId as string).trim();
+    let accessToken = null;
 
-    // eslint-disable-next-line no-prototype-builtins
-    if (req.hasOwnProperty('user')) {
-      token = ((req as any).user as any).authTokens.accessToken;
+    if ('user' in request) {
+      accessToken = (request as any).user.authTokens.accessToken;
     }
 
-    const prefix = params ? `${params[0]}` : '';
+    const prefix = parameters ? `${parameters[0]}` : '';
 
-    if (target && !serviceId) {
-      const error = `Cannot make a proxy call without a serviceId`;
-      this.logger.warn({
-        error: new Error(`Cannot make a proxy call without a serviceId`),
-        message: error,
-        timestamp: new Date().toISOString(),
-      });
-      return res.status(500).send({
-        error,
-      });
+    if (targetEndpoint && !serviceIdentifier) {
+      const errorMessage = `Cannot make a proxy call without a serviceId`;
+      this.logWarning(errorMessage);
+      return response.status(500).send({ error: errorMessage });
     }
 
-    const headers = req.headers as { [header: string]: string };
+    const requestHeaders = request.headers as Record<string, string>;
 
-    if (serviceId) {
-      const services = new Map(
-        this.options.services
-          ? this.options.services.map((service) => [service.id, service])
-          : [],
-      );
-      // Temp workaround for sandbox
-      const isSandbox =
-        serviceId === 'sandbox_epic' ||
-        serviceId === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354';
+    if (serviceIdentifier) {
+      const servicesMap = this.createServicesMap();
+      const isSandbox = this.checkIfSandbox(serviceIdentifier);
       if (isSandbox) {
-        serviceId = 'sandbox_epic';
+        serviceIdentifier = 'sandbox_epic';
       }
 
-      if (services.has(serviceId) || isSandbox) {
-        const service = services.get(serviceId)!;
-        this.logger.debug(`Proxying ${req.method} ${req.url} to ${serviceId}`);
-        const baseUrl = service.url;
-        const authUrl = service.authorize;
-        const tokenUrl = service.token;
-        let urlToProxy = baseUrl;
-
-        if (target_type === 'authorize') {
-          urlToProxy = authUrl;
-        } else if (target_type === 'token') {
-          urlToProxy = tokenUrl;
-        } else if (target_type === 'register') {
-          urlToProxy =
-            (baseUrl.replace('/api/FHIR/DSTU2/', '') || '').replace(
-              'api/FHIR/DSTU2',
-              '',
-            ) + '/oauth2/register';
-        }
+      if (servicesMap.has(serviceIdentifier) || isSandbox) {
+        const service = servicesMap.get(serviceIdentifier)!;
+        this.logger.debug(
+          `Proxying ${request.method} ${request.url} to ${serviceIdentifier}`,
+        );
+        const urlToProxy = this.getUrlToProxy(service, targetType);
 
         return this.doProxy(
-          req,
-          res,
-          target ? concatPath(urlToProxy, prefix, target) : urlToProxy,
-          service.forwardToken === false ? null : token,
-          { ...service.config, headers },
+          request,
+          response,
+          targetEndpoint
+            ? concatPath(urlToProxy, prefix, targetEndpoint)
+            : urlToProxy,
+          service.forwardToken === false ? null : accessToken,
+          { ...service.config, headers: requestHeaders },
         );
       } else {
-        const error = `Could not find serviceId '${serviceId}'`;
-        this.logger.warn({
-          message: error,
-          error: new Error(`Could not find serviceId '${serviceId}'`),
-          timestamp: new Date().toISOString(),
-        });
-        return res.status(404).send({
-          error,
-        });
+        const errorMessage = `Could not find serviceId '${serviceIdentifier}'`;
+        this.logWarning(errorMessage);
+        return response.status(404).send({ error: errorMessage });
       }
     }
 
-    res.status(404).send({ error: "Could not find 'target' or 'serviceId'" });
-    this.logger.error({
-      message: "Could not find 'target' or 'serviceId'",
+    const errorMessage = "Could not find 'target' or 'serviceId'";
+    this.logError(errorMessage);
+    return response.status(404).send({ error: errorMessage });
+  }
+
+  private createServicesMap() {
+    return new Map(
+      this.proxyOptions.services
+        ? this.proxyOptions.services.map((service) => [service.id, service])
+        : [],
+    );
+  }
+
+  private checkIfSandbox(serviceId: string) {
+    return (
+      serviceId === 'sandbox_epic' ||
+      serviceId === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354'
+    );
+  }
+
+  private getUrlToProxy(service: any, targetType: string) {
+    let urlToProxy = service.url;
+    if (targetType === 'authorize') {
+      urlToProxy = service.authorize;
+    } else if (targetType === 'token') {
+      urlToProxy = service.token;
+    } else if (targetType === 'register') {
+      urlToProxy = this.getRegisterUrl(service.url);
+    }
+    return urlToProxy;
+  }
+
+  private getRegisterUrl(baseUrl: string) {
+    return (
+      (baseUrl.replace('/api/FHIR/DSTU2/', '') || '').replace(
+        'api/FHIR/DSTU2',
+        '',
+      ) + '/oauth2/register'
+    );
+  }
+
+  private logWarning(message: string) {
+    this.logger.warn({
+      error: new Error(message),
+      message: message,
       timestamp: new Date().toISOString(),
-      error: new Error("Could not find 'target' or 'serviceId'"),
+    });
+  }
+
+  private logError(message: string) {
+    this.logger.error({
+      message: message,
+      timestamp: new Date().toISOString(),
+      error: new Error(message),
     });
   }
 
   private async doProxy(
-    req: Request,
-    res: Response,
+    request: Request,
+    response: Response,
     target: string,
     token: string,
     options: server.ServerOptions = {},
   ) {
     const url = new URL(target);
-    req.url = `${url.pathname}${url.search}`;
+    request.url = `${url.pathname}${url.search}`;
 
     const defaultOptions = {
       target: getBaseURL(target),
@@ -125,27 +143,31 @@ export class ProxyService {
       },
     };
 
-    // Allow http-server options overriding
+    const requestOptions = this.mergeOptions(defaultOptions, options);
+
+    this.proxyServer.web(request, response, requestOptions, (error: any) => {
+      if (error.code === 'ECONNRESET') return;
+
+      this.logger.error({
+        error: error,
+        message: `Error ${error.code} while proxying ${request.method} ${request.url}: ${error.message}`,
+        timestamp: new Date().toISOString(),
+      });
+
+      response.writeHead(500, {
+        'Content-Type': 'text/plain',
+      });
+
+      response.end('An error occurred while proxying the request');
+    });
+  }
+
+  private mergeOptions(defaultOptions: any, options: any) {
     const requestOptions = { ...defaultOptions, ...options };
     requestOptions.headers = {
       ...defaultOptions.headers,
       ...(options && options.headers),
-    }; // To deep extend headers
-
-    this.proxy.web(req, res, requestOptions, (err: any) => {
-      if (err.code === 'ECONNRESET') return;
-
-      this.logger.error({
-        error: err,
-        message: `Error ${err.code} while proxying ${req.method} ${req.url}: ${err.message}`,
-        timestamp: new Date().toISOString(),
-      });
-
-      res.writeHead(500, {
-        'Content-Type': 'text/plain',
-      });
-
-      res.end('An error occurred while proxying the request');
-    });
+    };
+    return requestOptions;
   }
 }
