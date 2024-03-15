@@ -4,6 +4,7 @@ import { CernerDSTU2TenantEndpoints } from '@mere/cerner';
 import { EpicDSTU2TenantEndpoints } from '@mere/epic';
 import { VeradigmDSTU2TenantEndpoints } from '@mere/veradigm';
 import { HealowR4TenantEndpoints } from '@mere/healow';
+import { ApiProperty } from '@nestjs/swagger';
 
 export interface TenantEndpoint {
   id: string;
@@ -13,13 +14,56 @@ export interface TenantEndpoint {
   authorize?: string;
 }
 
-type UnifiedDSTU2TenantEndpoint = TenantEndpoint & {
+interface UnifiedDSTU2TenantEndpoint extends TenantEndpoint {
   vendor: 'EPIC' | 'CERNER' | 'VERADIGM' | 'HEALOW';
-};
+}
 
-type UnifiedTenantEndpoint = UnifiedDSTU2TenantEndpoint & {
-  version: 'DSTU2' | 'R4';
-};
+// Have this be a class so that we can auto-generate the swagger def
+export class UnifiedTenantEndpoint implements UnifiedDSTU2TenantEndpoint {
+  @ApiProperty({
+    required: true,
+    enum: ['EPIC', 'CERNER', 'VERADIGM', 'HEALOW'],
+    type: 'string',
+  })
+  vendor!: 'EPIC' | 'CERNER' | 'VERADIGM' | 'HEALOW';
+
+  @ApiProperty({
+    required: true,
+    type: 'string',
+  })
+  id!: string;
+
+  @ApiProperty({
+    required: true,
+    type: 'string',
+  })
+  url!: string;
+
+  @ApiProperty({
+    required: true,
+    type: 'string',
+  })
+  name!: string;
+
+  @ApiProperty({
+    required: false,
+    type: 'string',
+  })
+  token?: string | undefined;
+
+  @ApiProperty({
+    required: false,
+    type: 'string',
+  })
+  authorize?: string | undefined;
+
+  @ApiProperty({
+    required: false,
+    enum: ['DSTU2', 'R4'],
+    type: 'string',
+  })
+  version!: 'DSTU2' | 'R4';
+}
 
 const searchR4Items: UnifiedTenantEndpoint[] = (
   [] as UnifiedTenantEndpoint[]

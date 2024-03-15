@@ -15,13 +15,19 @@ export class ProxyService {
   ) {}
 
   async proxyRequest(
-    request: Request,
+    request: Request<
+      unknown,
+      unknown,
+      unknown,
+      { target: string; target_type: string; serviceId: string },
+      Record<string, any>
+    >,
     response: Response,
     @Param() parameters?: Record<string, string>,
   ) {
-    const targetEndpoint = request.query.target as string;
-    const targetType = request.query.target_type as string;
-    let serviceIdentifier = (request.query.serviceId as string).trim();
+    const targetEndpoint = request.query.target;
+    const targetType = request.query.target_type;
+    let serviceIdentifier = request.query.serviceId.trim();
     let accessToken = null;
 
     if ('user' in request) {
@@ -95,12 +101,12 @@ export class ProxyService {
     } else if (targetType === 'token') {
       urlToProxy = service.token;
     } else if (targetType === 'register') {
-      urlToProxy = this.getRegisterUrl(service.url);
+      urlToProxy = this.getNormalizedRegisterUrl(service.url);
     }
     return urlToProxy;
   }
 
-  private getRegisterUrl(baseUrl: string) {
+  private getNormalizedRegisterUrl(baseUrl: string) {
     return (
       (baseUrl.replace('/api/FHIR/DSTU2/', '') || '').replace(
         'api/FHIR/DSTU2',
@@ -126,7 +132,13 @@ export class ProxyService {
   }
 
   private async doProxy(
-    request: Request,
+    request: Request<
+      unknown,
+      unknown,
+      unknown,
+      { target: string; target_type: string; serviceId: string },
+      Record<string, any>
+    >,
     response: Response,
     target: string,
     token: string,

@@ -52,11 +52,21 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('Mere API')
     .setDescription(
-      'The API service used to power parts of the Mere client application.',
+      'This is the API service used to power certain aspects of the Mere client application.',
     )
-    .addTag('proxy')
-    .addTag('tenant')
-    .addTag('app-redirect')
+    .addTag(
+      'proxy',
+      'Proxy endpoint used by EPIC connections if the `use_proxy` setting is enabled in the client',
+    )
+    .addTag(
+      'tenant',
+      'Search for available tenants (hospital/clinics/providers) for a given EMR',
+    )
+    .addTag(
+      'app-redirect',
+      "Endpoints used to redirect the user's browser to the appropriate app after authentication",
+    )
+    .addTag('health', 'Health check endpoints')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup(GLOBAL_PREFIX, app, document);
