@@ -143,7 +143,11 @@ function filteredItemsWithQuery(
   vendors?: string[] | string,
 ) {
   if (vendors && vendors.length) {
-    items = items.filter((item) => [...vendors].includes(item.vendor));
+    items = items.filter((item) =>
+      [...vendors]
+        .map((vendor) => vendor.toUpperCase())
+        .includes(item.vendor.toUpperCase()),
+    );
   }
   if (query === '' || query === undefined) {
     return items.sort((x, y) => (x.name > y.name ? 1 : -1)).slice(0, 100);

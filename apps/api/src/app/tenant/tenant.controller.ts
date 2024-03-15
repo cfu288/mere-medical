@@ -1,7 +1,7 @@
 import { Controller, Get, Logger, Query, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { TenantService, UnifiedTenantEndpoint } from './tenant.service';
-import { ApiBody, ApiOkResponse, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 type DSTU2Vendor = 'veradigm' | 'epic' | 'cerner';
 
@@ -10,12 +10,19 @@ type DSTU2Vendor = 'veradigm' | 'epic' | 'cerner';
 export class TenantController {
   constructor(private readonly tenantService: TenantService) {}
 
+  @Get('dstu2/tenants')
+  @ApiQuery({
+    name: 'query',
+    required: false,
+    type: String,
+    description: 'The query string to search for matching tenants',
+  })
   @ApiQuery({
     name: 'vendor',
-    required: true,
+    required: false,
     schema: {
       type: 'string',
-      enum: ['veradigm', 'epic', 'cerner'],
+      enum: ['VERADIGM', 'EPIC', 'CERNER'],
     },
     description: 'Which DSTU2 EMR vendor to query for tenants',
   })
@@ -23,7 +30,6 @@ export class TenantController {
     description: 'The tenants were successfully retrieved',
     type: [UnifiedTenantEndpoint],
   })
-  @Get('dstu2/tenants')
   async getDataDSTU2(
     @Res() response: Response,
     @Query('query') query: string,
@@ -38,12 +44,18 @@ export class TenantController {
     }
   }
 
+  @Get('r4/tenants')
+  @ApiQuery({
+    name: 'query',
+    required: false,
+    type: String,
+    description: 'The query string to search for matching tenants',
+  })
   @ApiQuery({
     name: 'vendor',
-    required: true,
     schema: {
       type: 'string',
-      enum: ['healow'],
+      enum: ['HEALOW'],
     },
     description: 'Which R4 EMR vendor to query for tenants',
   })
@@ -51,7 +63,6 @@ export class TenantController {
     description: 'The tenants were successfully retrieved',
     type: [UnifiedTenantEndpoint],
   })
-  @Get('r4/tenants')
   async getDataR4(
     @Res() response: Response,
     @Query('query') query: string,
@@ -66,9 +77,16 @@ export class TenantController {
     }
   }
 
+  @Get('tenants')
+  @ApiQuery({
+    name: 'query',
+    required: false,
+    type: String,
+    description: 'The query string to search for matching tenants',
+  })
   @ApiQuery({
     name: 'vendor',
-    required: true,
+    required: false,
     schema: {
       type: 'string',
       enum: ['healow', 'veradigm', 'epic', 'cerner'],
@@ -79,7 +97,6 @@ export class TenantController {
     description: 'The tenants were successfully retrieved',
     type: [UnifiedTenantEndpoint],
   })
-  @Get('tenants')
   async getData(
     @Res() response: Response,
     @Query('query') query: string,
