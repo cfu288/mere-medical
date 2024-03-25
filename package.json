@@ -39,7 +39,7 @@
     "@nx/cypress": "17.3.0",
     "@nx/eslint": "17.3.0",
     "@nx/eslint-plugin": "17.3.0",
-    "@nx/jest": "17.3.0",
+    "@nx/jest": "18.1.2",
     "@nx/js": "17.3.0",
     "@nx/nest": "17.3.0",
     "@nx/node": "17.3.0",
