@@ -253,8 +253,9 @@ export default function Home() {
                       On <span className="backgroundSlide2">Your</span> Device.
                     </h1>
                     <p className="slideUpDelay1 mb-2 mt-6 text-xl leading-relaxed text-gray-600 opacity-0">
-                      Mere is a personal health record that aggregates your
-                      medical records from your doctors in one place.
+                      Mere is a personal health record that aggregates and
+                      centralizes your medical records from your doctors all in
+                      one place.
                     </p>
                     <p className="slideUpDelay1 text-xl leading-relaxed text-gray-600 opacity-0">
                       Open-source, privacy-focused, and free.
