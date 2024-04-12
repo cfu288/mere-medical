@@ -242,15 +242,22 @@ export default function Home() {
                 <div className="mt-24 sm:mt-12">
                   <div className="mt-6 sm:max-w-xl">
                     <h1 className="slideUp text-primary-900 text-5xl font-bold tracking-tight sm:text-5xl">
-                      Your Whole Medical Story.
+                      <span className="backgroundSlide">Your</span> Whole
+                      Medical Story.
                     </h1>
                     <h1 className="slideUp text-primary-900 text-5xl font-bold tracking-tight sm:text-5xl">
-                      One Place.
+                      Under <span className="backgroundSlide1">Your</span>{' '}
+                      Control.
                     </h1>
-                    <p className="slideUpDelay1 mt-6 text-xl leading-relaxed text-gray-600 opacity-0">
-                      Mere Medical is a personal health record that helps you
-                      organize your medical records across doctors. Free,
-                      privacy-focused, and open-source.
+                    <h1 className="slideUp text-primary-900 text-5xl font-bold tracking-tight sm:text-5xl">
+                      On <span className="backgroundSlide2">Your</span> Device.
+                    </h1>
+                    <p className="slideUpDelay1 mb-2 mt-6 text-xl leading-relaxed text-gray-600 opacity-0">
+                      Mere is a personal health record that aggregates your
+                      medical records from your doctors in one place.
+                    </p>
+                    <p className="slideUpDelay1 text-xl leading-relaxed text-gray-600 opacity-0">
+                      Open-source, privacy-focused, and free.
                     </p>
                   </div>
                   <div className="mt-5 max-w-md sm:flex sm:justify-start md:mt-8">

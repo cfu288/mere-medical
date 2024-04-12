@@ -104,6 +104,69 @@
   animation: 1s ease-out 1.2s 1 fadeIn forwards;
 }
 
+.backgroundSlide {
+  background: linear-gradient(
+      to right,
+      rgba(100, 200, 200, 0),
+      rgba(100, 200, 200, 0)
+    ),
+    linear-gradient(
+      to right,
+      rgb(9, 56, 78, 0.4),
+      rgb(9, 146, 200, 0.6),
+      #76c9ef
+    );
+  background-size: 100% 0.1em, 0 0.1em;
+  background-position: 100% 100%, 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 400ms;
+  animation: slideUnderscore 1s 1s forwards;
+}
+
+.backgroundSlide1 {
+  background: linear-gradient(
+      to right,
+      rgba(100, 200, 200, 0),
+      rgba(100, 200, 200, 0)
+    ),
+    linear-gradient(
+      to right,
+      rgb(9, 56, 78, 0.4),
+      rgb(9, 146, 200, 0.6),
+      #76c9ef
+    );
+  background-size: 100% 0.1em, 0 0.1em;
+  background-position: 100% 100%, 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 400ms;
+  animation: slideUnderscore 1s 2s forwards;
+}
+
+.backgroundSlide2 {
+  background: linear-gradient(
+      to right,
+      rgba(100, 200, 200, 0),
+      rgba(100, 200, 200, 0)
+    ),
+    linear-gradient(
+      to right,
+      rgb(9, 56, 78, 0.4),
+      rgb(9, 146, 200, 0.6),
+      #76c9ef
+    );
+  background-size: 100% 0.1em, 0 0.1em;
+  background-position: 100% 100%, 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 400ms;
+  animation: slideUnderscore 1s 3s forwards;
+}
+
+@keyframes slideUnderscore {
+  100% {
+    background-size: 0 0.1em, 100% 0.1em;
+  }
+}
+
 @keyframes slideUp {
   0% {
     opacity: 0;
