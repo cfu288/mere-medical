@@ -155,7 +155,14 @@ class TerminalColor {
         batches.push(urls.slice(i, i + batchSize));
       }
 
-      const results = [];
+      const results: {
+        url: string;
+        id: string;
+        name: string;
+        token: string;
+        authorize: string;
+        managingOrganization: string;
+      }[] = [];
       const errors = [];
       for (const [iter, batch] of batches.entries()) {
         const metaPromises = batch.map(fetchMeta);
@@ -177,15 +184,17 @@ class TerminalColor {
         );
         errors.push(...errorsRes);
       }
-      //   // add sandbox
-      //   results.push({
-      //     id: 'sandbox_epic',
-      //     name: 'Epic MyChart Sandbox',
-      //     url: 'https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/DSTU2/',
-      //     token: 'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/token',
-      //     authorize:
-      //       'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/authorize',
-      //   });
+
+      // add sandbox
+      results.push({
+        url: 'https://fhir4.healow.com/fhir/r4/JAFJCD',
+        id: 'JAFJCD',
+        name: 'Healow Sandbox',
+        token: 'https://oauthserver.eclinicalworks.com/oauth/oauth2/token',
+        authorize:
+          'https://oauthserver.eclinicalworks.com/oauth/oauth2/authorize',
+        managingOrganization: 'Organization/JAFJCD',
+      });
 
       fs.writeFileSync(
         './src/lib/data/R4Endpoints.json',
