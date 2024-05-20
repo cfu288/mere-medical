@@ -171,7 +171,7 @@
     "workbox-google-analytics": "^7.0.0",
     "workbox-navigation-preload": "^6.5.4",
     "workbox-precaching": "^7.0.0",
-    "workbox-range-requests": "^6.5.4",
+    "workbox-range-requests": "^7.1.0",
     "workbox-routing": "^7.0.0",
     "workbox-strategies": "^6.5.4",
     "workbox-streams": "^6.5.4",
