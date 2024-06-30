@@ -1,5 +1,7 @@
 import Configuration from './config.json';
 import { z } from 'zod';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import type { ZodError } from 'zod';
 
 const Config = z.object({
   ONPATIENT_CLIENT_ID: z.string().optional(),
@@ -21,6 +23,11 @@ const Config = z.object({
 
 type Config = z.infer<typeof Config>;
 
+/**
+ * Get the configuration object
+ * @returns Config object
+ * @throws {ZodError} Error if the configuration is invalid
+ */
 export const getConfig = (): Config => {
   try {
     return Config.parse(Configuration);
@@ -36,10 +43,20 @@ const OnPatientConfig = z.object({
   ONPATIENT_CLIENT_ID: z.string(),
 });
 
+/**
+ * Get the OnPatient configuration object
+ * @returns OnPatientConfig object
+ * @throws {ZodError} Error if the configuration is invalid
+ */
 export const getOnPatientConfig = () => {
   return OnPatientConfig.parse(Configuration);
 };
 
+/**
+ * Get the configured redirect URI
+ * @returns The configured redirect URI
+ * @throws {ZodError} Error if the configuration is invalid
+ */
 export const getRedirectUri = () => {
   try {
     const config = Config.parse(Configuration);
