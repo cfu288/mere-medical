@@ -11,6 +11,7 @@ const Config = z.object({
   IS_DEMO: z.union([
     z.literal('enabled'),
     z.literal('disabled'),
+    z.literal('$IS_DEMO'), // Can be set to this if value is not set as an environment variable
     z.undefined(),
   ]),
   PUBLIC_URL: z.union([z.string().url().nullish(), z.literal('')]),
