@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { EpicDSTU2TenantEndpoints, DSTU2Endpoint } from '@mere/epic';
+import { EpicDSTU2TenantEndpoints, TenantEndpoint } from '@mere/epic';
 
 @Injectable()
 export class EpicService {
   private readonly items = EpicDSTU2TenantEndpoints;
 
-  async queryTenants(query: string): Promise<DSTU2Endpoint[]> {
+  async queryTenants(query: string): Promise<TenantEndpoint[]> {
     return filteredItemsWithQuery(this.items, query);
   }
 }
 
-function filteredItemsWithQuery(items: DSTU2Endpoint[], query: string) {
+function filteredItemsWithQuery(items: TenantEndpoint[], query: string) {
   if (query === '' || query === undefined) {
     return items.sort((x, y) => (x.name > y.name ? 1 : -1)).slice(0, 100);
   }
