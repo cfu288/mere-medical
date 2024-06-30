@@ -21,7 +21,14 @@ const Config = z.object({
 type Config = z.infer<typeof Config>;
 
 export const getConfig = (): Config => {
-  return Config.parse(Configuration);
+  try {
+    return Config.parse(Configuration);
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      console.log(err.issues);
+    }
+    throw err;
+  }
 };
 
 const OnPatientConfig = z.object({
@@ -33,6 +40,13 @@ export const getOnPatientConfig = () => {
 };
 
 export const getRedirectUri = () => {
-  const config = Config.parse(Configuration);
-  return config.REDIRECT_URI || config.PUBLIC_URL;
+  try {
+    const config = Config.parse(Configuration);
+    return config.REDIRECT_URI || config.PUBLIC_URL;
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      console.log(err.issues);
+    }
+    throw err;
+  }
 };
