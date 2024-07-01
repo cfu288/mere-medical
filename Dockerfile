@@ -30,7 +30,7 @@ RUN npx nx build web:build:production
 
 
 # Package React App and API together
-FROM node:16-alpine3.15
+FROM node:18-alpine
 
 WORKDIR /app
 
