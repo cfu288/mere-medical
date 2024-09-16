@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { CernerDSTU2TenantEndpoints, DSTU2Endpoint } from '@mere/cerner';
+import { CernerDSTU2TenantEndpoints, TenantEndpoint } from '@mere/cerner';
 
 @Injectable()
 export class CernerService {
   private readonly items = CernerDSTU2TenantEndpoints;
 
-  async queryTenants(query: string): Promise<DSTU2Endpoint[]> {
+  async queryTenants(query: string): Promise<TenantEndpoint[]> {
     return filteredItemsWithQuery(this.items, query);
   }
 }
 
-function filteredItemsWithQuery(items: DSTU2Endpoint[], query: string) {
+function filteredItemsWithQuery(items: TenantEndpoint[], query: string) {
   if (query === '' || query === undefined) {
     return items.sort((x, y) => (x.name > y.name ? 1 : -1)).slice(0, 100);
   }

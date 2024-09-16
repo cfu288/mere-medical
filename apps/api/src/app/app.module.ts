@@ -8,12 +8,14 @@ import { EpicModule } from './epic/epic.module';
 import { VeradigmModule } from './veradigm/veradigm.module';
 import { TenantModule } from './tenant/tenant.module';
 import { VAModule } from './va/va.module';
+import { HealowModule } from './healow/healow.module';
 
 const imports: ModuleMetadata['imports'] = [
   StaticModule,
   LoginProxyModule,
   TenantModule,
   VAModule,
+  HealowModule,
 ];
 
 const opConfigured = checkIfOnPatientConfigured();
