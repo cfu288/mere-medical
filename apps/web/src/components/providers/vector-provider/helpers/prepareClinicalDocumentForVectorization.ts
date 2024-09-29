@@ -146,7 +146,7 @@ function serializeAndChunkXmlContentForVectorization({
         Math.min(offset + CHUNK_SIZE, content.length),
       );
       chunkedDocumentsList.push({
-        id: `${documentId}_chunk${chunkId}`,
+        id: `${documentId}_chunk${chunkId}${prependText ? `_${prependText}` : ''}`,
         text: prependText + chunkData,
         chunk: {
           offset: offset,
@@ -182,7 +182,7 @@ function serializeCCDADocumentForVectorization(
       serializeAndChunkXmlContentForVectorization({
         content: data,
         meta,
-        documentId: documentId + sectionType,
+        documentId: documentId,
         chunkedDocumentsList,
         chunkedMetadataList,
         prependText: sectionType + '|',

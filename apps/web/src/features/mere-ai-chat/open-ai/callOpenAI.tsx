@@ -2,6 +2,24 @@ import { differenceInDays, parseISO } from 'date-fns';
 import { UserDocument } from '../../../models/user-document/UserDocument.type';
 import { ChatMessage } from '../types/ChatMessage';
 
+const OPEN_AI_MODEL = 'gpt-4o';
+
+export const getOpenAIModels = async (openAiKey: string) => {
+  const response = await fetch('https://api.openai.com/v1/models', {
+    headers: {
+      Authorization: `Bearer ${openAiKey}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Error fetching models: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return data;
+};
+
 export const callOpenAI = async ({
   query,
   messages,
@@ -57,7 +75,7 @@ ${user.gender ? 'Gender:' + user?.gender : ''}`,
       Authorization: `Bearer ${openAiKey}`,
     },
     body: JSON.stringify({
-      model: 'gpt-4-turbo-preview',
+      model: OPEN_AI_MODEL,
       messages: promptMessages,
       functions: [
         {
