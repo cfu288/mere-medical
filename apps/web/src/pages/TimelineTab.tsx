@@ -61,10 +61,10 @@ export function TimelineTab() {
     [scrollY, setScrollY] = useState(0);
 
   const yearMap = useMemo(() => {
-    const newYearMap: Map<
+    const newYearMap = new Map<
       string,
       Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>
-    > = new Map();
+    >();
 
     if (data) {
       for (const [dateKey, itemList] of Object.entries(data)) {

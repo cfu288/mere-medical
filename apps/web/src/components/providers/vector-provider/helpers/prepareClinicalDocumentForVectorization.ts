@@ -168,12 +168,12 @@ function serializeCCDADocumentForVectorization(
   content: string,
   meta: DocMeta,
   documentId: string,
-  chunkedDocumentsList: Array<{
+  chunkedDocumentsList: {
     id: string;
     text: string;
     chunk?: IVSChunkMeta;
-  }>,
-  chunkedMetadataList: Array<DocMeta>,
+  }[],
+  chunkedMetadataList: DocMeta[],
 ) {
   const parsed = parseCCDARaw(content);
   // for each section, serialize and chunk

@@ -333,8 +333,8 @@ export default function Home() {
               {/* Right Hero */}
               <div className="lg:rounded-tr-0 lg:left-100 relative mt-24 flex h-80 w-auto overflow-hidden rounded-bl-[80px] rounded-tr-[80px] bg-[#F1F4F9] px-4 sm:h-[32rem] lg:absolute lg:inset-y-0 lg:left-1/2 lg:right-0 lg:mt-0 lg:block lg:h-4/5 lg:w-full lg:overflow-visible lg:px-0 lg:pt-6">
                 <img
-                  className="fadeIn m-5 mx-auto self-center rounded-md opacity-0 sm:max-w-xl lg:absolute lg:-bottom-10 lg:mx-0 lg:mb-0 lg:ml-10 lg:mt-20 lg:h-5/6 lg:w-auto lg:max-w-5xl lg:self-center lg:rounded-2xl lg:p-0"
-                  src="/img/timeline-desktop.webp"
+                  className="fadeIn m-5 mx-auto self-center rounded-md opacity-0 sm:max-w-xl lg:absolute lg:-bottom-10 lg:mx-0 lg:mb-0 lg:ml-10 lg:mt-20 lg:h-5/6 lg:w-auto lg:max-w-7xl lg:self-center lg:rounded-2xl lg:p-0"
+                  src="/img/timeline-desktop.png"
                   alt="web timeline screenshot"
                 />
               </div>
@@ -427,7 +427,7 @@ export default function Home() {
                 <div className="mt-12 flex aspect-square items-center justify-center overflow-hidden rounded-2xl lg:mt-0">
                   <img
                     className="h-full max-h-[512px] w-auto max-w-[512px] object-cover"
-                    src="/img/solution.webp"
+                    src="/img/solution.png"
                     alt=""
                   />
                 </div>
