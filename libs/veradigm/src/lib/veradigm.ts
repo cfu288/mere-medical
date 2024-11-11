@@ -1,6 +1,6 @@
 import VeradigmEndpoints from './data/DSTU2Endpoints.json';
 
-export interface DSTU2Endpoint {
+export interface TenantEndpoint {
   id: string;
   url: string;
   name: string;
@@ -8,5 +8,5 @@ export interface DSTU2Endpoint {
   authorize?: string;
 }
 
-export const VeradigmDSTU2TenantEndpoints: DSTU2Endpoint[] =
+export const VeradigmDSTU2TenantEndpoints: TenantEndpoint[] =
   Array.from(VeradigmEndpoints);

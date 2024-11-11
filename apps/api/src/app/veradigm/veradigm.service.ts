@@ -1,23 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import { VeradigmDSTU2TenantEndpoints, DSTU2Endpoint } from '@mere/veradigm';
+import { VeradigmDSTU2TenantEndpoints, TenantEndpoint } from '@mere/veradigm';
 
 @Injectable()
 export class VeradigmService {
   private readonly items = VeradigmDSTU2TenantEndpoints;
 
-  async queryTenants(query: string): Promise<DSTU2Endpoint[]> {
+  async queryTenants(query: string): Promise<TenantEndpoint[]> {
     return filteredItemsWithQuery(this.items, query);
   }
 }
 
-function filteredItemsWithQuery(items: DSTU2Endpoint[], query: string) {
+function filteredItemsWithQuery(items: TenantEndpoint[], query: string) {
   if (query === '' || query === undefined) {
     return items
       .filter(
         (item) =>
           !!item.name?.trim() &&
           !!item.authorize?.trim() &&
-          !!item.token?.trim()
+          !!item.token?.trim(),
       )
       .sort((x, y) => (x.name > y.name ? 1 : -1))
       .slice(0, 100);
@@ -25,7 +25,7 @@ function filteredItemsWithQuery(items: DSTU2Endpoint[], query: string) {
   return items
     .filter(
       (item) =>
-        !!item.name?.trim() && !!item.authorize?.trim() && !!item.token?.trim()
+        !!item.name?.trim() && !!item.authorize?.trim() && !!item.token?.trim(),
     )
     .map((item) => {
       // Match against each token, take highest score
