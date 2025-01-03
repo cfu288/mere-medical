@@ -6,7 +6,7 @@
     "email": "cfu288@meremedical.co"
   },
   "version": "0.0.0",
-  "license": "AGPL-3.0-only",
+  "license": "MIT",
   "scripts": {
     "start": "nx serve",
     "build": "nx build",
