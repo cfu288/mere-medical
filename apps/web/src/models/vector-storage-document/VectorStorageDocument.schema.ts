@@ -1,7 +1,7 @@
 export const vectorStorageSchemaLiteral = {
   title: 'Vector Storage Schema',
   description: "A document that stores an embedding of a document's text.",
-  version: 3,
+  version: 4,
   primaryKey: 'id',
   type: 'object',
   properties: {
@@ -15,9 +15,26 @@ export const vectorStorageSchemaLiteral = {
     },
     metadata: {
       type: 'object',
+      properties: {
+        documentId: {
+          type: 'string',
+          maxLength: 256,
+        },
+        sectionName: {
+          type: 'string',
+          maxLength: 100,
+        },
+        chunkNumber: {
+          type: 'number',
+        },
+        isFullDocument: {
+          type: 'boolean',
+        },
+      },
     },
     timestamp: {
       type: 'number',
+      multipleOf: 1,
     },
     vectorMag: {
       type: 'number',
@@ -31,4 +48,7 @@ export const vectorStorageSchemaLiteral = {
       optional: true,
     },
   },
+  indexes: [
+    'metadata.documentId',
+  ],
 } as const;

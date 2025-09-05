@@ -1,14 +1,13 @@
-import { parseDateString } from './parseCCDA';
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
+import { parseCCDAResultsSection } from './parseCCDAResultsSection';
+
 Object.defineProperty(global.self, 'crypto', {
   value: {
     subtle: crypto.webcrypto.subtle,
   },
 });
-import fs from 'fs';
-import path from 'path';
-import { parseCCDAResultsSection } from './parseCCDAResultsSection';
-import exp from 'constants';
 
 describe('parseCCDAResultsSection', () => {
   it('parses covid result positive section', () => {

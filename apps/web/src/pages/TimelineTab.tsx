@@ -13,6 +13,7 @@ import { MangoQuerySelector, RxDatabase, RxDocument } from 'rxdb';
 import { Transition } from '@headlessui/react';
 import { ArrowUpIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { IVSSimilaritySearchParams, VectorStorage } from '@mere/vector-storage';
+import { SEARCH_CONFIG } from '../features/mere-ai-chat/constants/config';
 import { useDebounceCallback } from '@react-hook/debounce';
 
 import { AppPage } from '../components/AppPage';
@@ -23,6 +24,7 @@ import { useScrollToHash } from '../components/hooks/useScrollToHash';
 import { DatabaseCollections } from '../components/providers/DatabaseCollections';
 import { useLocalConfig } from '../components/providers/LocalConfigProvider';
 import { useUser } from '../components/providers/UserProvider';
+import { useVectorSyncStatus } from '../components/providers/vector-provider/providers/VectorGeneratorSyncInitializer';
 import { JumpToPanel } from '../components/timeline/JumpToPanel';
 import { SearchBar } from '../components/timeline/SearchBar';
 import { TimelineBanner } from '../components/timeline/TimelineBanner';
@@ -46,8 +48,11 @@ export function TimelineTab() {
   const user = useUser(),
     [query, setQuery] = useState(''),
     { experimental__use_openai_rag } = useLocalConfig(),
+    vectorSyncStatus = useVectorSyncStatus(),
+    enableVectorSearch =
+      experimental__use_openai_rag && vectorSyncStatus === 'COMPLETE',
     { data, status, initialized, loadNextPage, showIndividualItems } =
-      useRecordQuery(query, experimental__use_openai_rag),
+      useRecordQuery(query, enableVectorSearch),
     hasNoRecords = query === '' && (!data || Object.entries(data).length === 0),
     scrollContainer = useRef<HTMLDivElement>(null),
     scrollToTop = useScrollToTop(scrollContainer),
@@ -104,6 +109,7 @@ export function TimelineTab() {
                       dateKey={dateKey}
                       itemList={itemList}
                       showIndividualItems={showIndividualItems}
+                      searchQuery={query}
                     />
                   </div>
                 ))}
@@ -245,7 +251,6 @@ function LoadMoreButton({
   );
 }
 
-// scroll to top hook, returns a function that scrolls to the top of the page
 function useScrollToTop(ref?: React.RefObject<HTMLDivElement | undefined>) {
   return useCallback(() => {
     ref?.current?.scrollTo({ top: 0, behavior: 'smooth' });
@@ -316,19 +321,27 @@ export async function fetchRecordsWithVectorSearch({
 
   const results = await vectorStorage.similaritySearch(searchParams);
 
-  // Display the search results
-  const ids = results.similarItems.map((item) => {
-    return item.id;
+  const filteredItems = results.similarItems;
+
+  const ids = filteredItems.map((item) => item.id);
+
+  const docIdToChunks = new Map<string, { id: string; metadata?: any }[]>();
+
+  // Extract document IDs and preserve chunk metadata
+  filteredItems.forEach((item) => {
+    const documentId = item.metadata?.['documentId'];
+    if (documentId) {
+      if (!docIdToChunks.has(documentId)) {
+        docIdToChunks.set(documentId, []);
+      }
+      docIdToChunks.get(documentId)!.push({
+        id: item.id,
+        metadata: item.metadata
+      });
+    }
   });
 
-  // IDs may have '_chunk148000' appended to them. Remove this
-  const cleanedIds = [
-    ...new Set(
-      ids.map((id) => {
-        return id.split('_chunk')[0];
-      }),
-    ),
-  ];
+  const cleanedIds = [...docIdToChunks.keys()];
 
   const docs = await db.clinical_documents
     .find({
@@ -348,41 +361,56 @@ export async function fetchRecordsWithVectorSearch({
   if (!groupByDate) {
     return {
       records: {
-        [new Date(0).toISOString()]: lst.map((item) => item.toMutableJSON()),
+        [new Date(0).toISOString()]: lst.map((item) => {
+          const docId = item.get('id');
+          const mutableDoc = item.toMutableJSON() as ClinicalDocument<
+            BundleEntry<FhirResource>
+          > & { matchedChunks?: { id: string; metadata?: any }[] };
+
+          if (docIdToChunks.has(docId)) {
+            const chunks = docIdToChunks.get(docId);
+            mutableDoc.matchedChunks = chunks;
+          }
+
+          return mutableDoc;
+        }),
       },
       idsOfMostRelatedChunksFromSemanticSearch: ids,
     };
   }
 
-  // Group records by date
   const groupedRecords: Record<
-    string, // date to group by
-    ClinicalDocument<BundleEntry<FhirResource>>[] // documents/cards for date
+    string,
+    ClinicalDocument<BundleEntry<FhirResource>>[]
   > = {};
 
   lst.forEach((item) => {
+    const docId = item.get('id');
+    const mutableDoc = item.toMutableJSON() as ClinicalDocument<
+      BundleEntry<FhirResource>
+    > & { matchedChunks?: { id: string; metadata?: any }[] };
+
+    if (docIdToChunks.has(docId)) {
+      const chunks = docIdToChunks.get(docId);
+      mutableDoc.matchedChunks = chunks;
+    }
+
     if (item.get('metadata')?.date === undefined) {
-      console.warn('Date is undefined for object:');
-      console.log(item.toJSON());
-      // set date to min date
+      console.warn('Date is undefined for object:', item.toJSON());
       const minDate = new Date(0).toISOString();
       if (groupedRecords[minDate]) {
-        groupedRecords[minDate].push(
-          item.toMutableJSON() as ClinicalDocument<BundleEntry<FhirResource>>,
-        );
+        groupedRecords[minDate].push(mutableDoc);
       } else {
-        groupedRecords[minDate] = [item.toMutableJSON()];
+        groupedRecords[minDate] = [mutableDoc];
       }
     } else {
       const date = item.get('metadata')?.date
         ? format(parseISO(item.get('metadata')?.date), 'yyyy-MM-dd')
         : '-1';
       if (groupedRecords[date]) {
-        groupedRecords[date].push(
-          item.toMutableJSON() as ClinicalDocument<BundleEntry<FhirResource>>,
-        );
+        groupedRecords[date].push(mutableDoc);
       } else {
-        groupedRecords[date] = [item.toMutableJSON()];
+        groupedRecords[date] = [mutableDoc];
       }
     }
   });
@@ -469,16 +497,14 @@ export async function fetchRecords(
         ClinicalDocument<BundleEntry<FhirResource>>
       >[];
 
-      // Group records by date
       const groupedRecords: Record<
-        string, // date to group by
-        ClinicalDocument<BundleEntry<FhirResource>>[] // documents/cards for date
+        string,
+        ClinicalDocument<BundleEntry<FhirResource>>[]
       > = {};
 
       lst.forEach((item) => {
         if (item.get('metadata')?.date === undefined) {
-          console.warn('Date is undefined for object:');
-          console.log(item.toJSON());
+          console.warn('Date is undefined for object:', item.toJSON());
         } else {
           const date = item.get('metadata')?.date
             ? format(parseISO(item.get('metadata')?.date), 'yyyy-MM-dd')
@@ -494,8 +520,6 @@ export async function fetchRecords(
           }
         }
       });
-
-      console.debug('TimelineTab: ', groupedRecords);
 
       return groupedRecords;
     });

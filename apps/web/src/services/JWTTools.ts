@@ -20,9 +20,7 @@ export interface JsonWebKeySet {
   keys: JsonWebKeyWKid[];
 }
 
-interface TokenPayload {
-  [key: string]: string | number | boolean | object;
-}
+type TokenPayload = Record<string, string | number | boolean | object>;
 
 /**
  * Takes a JSON payload, signs it, and returns a signed JWT in format {header}.{body}.{signature}
@@ -59,7 +57,7 @@ export async function signJwt(tokenPayload: TokenPayload): Promise<string> {
 
   const signature = await signPayload(messageAsArrayBuffer);
   const base64Signature = base64StringToBase64UrlString(
-    arrayBufferToBase64String(signature)
+    arrayBufferToBase64String(signature),
   );
 
   return `${headerAndPayload}.${base64Signature}`;
@@ -68,14 +66,14 @@ export async function signJwt(tokenPayload: TokenPayload): Promise<string> {
 export async function verifyJwt(jwt: string) {
   const [header, payload, signature] = jwt.split('.');
   const headerAndPayloadAsUint8Array = textStringToBase64UrlArrayBuffer(
-    `${header}.${payload}`
+    `${header}.${payload}`,
   );
   const signatureAsUint8Array = base64UrlStringToArrayBuffer(
-    base64StringToBase64UrlString(signature)
+    base64StringToBase64UrlString(signature),
   );
 
   return await verifyPayload(
     headerAndPayloadAsUint8Array,
-    signatureAsUint8Array
+    signatureAsUint8Array,
   );
 }

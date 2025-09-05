@@ -1,13 +1,12 @@
-import { parseDateString } from './parseCCDA';
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
+import { parseCCDAEncounterSection } from './parseCCDAEncounterSection';
 Object.defineProperty(global.self, 'crypto', {
   value: {
     subtle: crypto.webcrypto.subtle,
   },
 });
-import fs from 'fs';
-import path from 'path';
-import { parseCCDAEncounterSection } from './parseCCDAEncounterSection';
 
 describe('parseCCDAEncounterSection', () => {
   it('parses encounter', () => {

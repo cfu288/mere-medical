@@ -410,7 +410,6 @@ export function parseCCDAEncounterSection(
   const authorsFromEncounter = getAuthorsFromEncounter(encounterFromEntry);
   const participantsFromEncounter =
     getParticipantsFromEncounter(encounterFromEntry);
-  // Parse date, type, department, care team, effective time, location, and diagnosis from the encounter section
   const effectiveTimeElement =
     section.getElementsByTagName('effectiveTime')?.[0];
   const effectiveTime =
@@ -447,11 +446,10 @@ export function parseCCDAEncounterSection(
 
   const encounterData: Partial<CCDAEncounterData> = {
     title,
-    date: effectiveTime, // Assuming the effectiveTime is the date for the encounter
+    date: effectiveTime,
     code,
     encounterCode: codeFromEncounter,
     department,
-    // careTeam, // Parsed care team data
     performer: performersFromEncounter,
     author: authorsFromEncounter,
     participant: participantsFromEncounter,
@@ -804,25 +802,25 @@ export function DisplayCCDAEncounterSection({
 
 export interface CCDAAuthor {
   assignedAuthor: {
-    addr: Array<{
+    addr: {
       streetAddressLine?: string;
       city?: string;
       state?: string;
       postalCode?: string;
       country?: string;
-    }>;
-    telecom: Array<{
+    }[];
+    telecom: {
       value?: string;
-    }>;
+    }[];
     representedOrganization: {
       name?: string;
-      addr: Array<{
+      addr: {
         streetAddressLine?: string;
         city?: string;
         state?: string;
         postalCode?: string;
         country?: string;
-      }>;
+      }[];
     };
   };
 }

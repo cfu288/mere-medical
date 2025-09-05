@@ -11,12 +11,12 @@ import { filterDocuments } from './common/helpers';
 import { RxCollection, RxDatabase } from 'rxdb';
 
 async function digestMessage(message: string) {
-  const msgUint8 = new TextEncoder().encode(message); // encode as (utf-8) Uint8Array
-  const hashBuffer = await crypto.subtle.digest('SHA-1', msgUint8); // hash the message
-  const hashArray = Array.from(new Uint8Array(hashBuffer)); // convert buffer to byte array
+  const msgUint8 = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-1', msgUint8);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
   const hashHex = hashArray
     .map((b) => b.toString(16).padStart(2, '0'))
-    .join(''); // convert bytes to hex string
+    .join('');
   return hashHex;
 }
 
@@ -26,7 +26,7 @@ export class VectorStorage<
   },
 > {
   private rxdb!: RxDatabase<T>;
-  private documents: Array<IVSDocument> = [];
+  private documents: IVSDocument[] = [];
   private readonly embeddingModel: string;
   private readonly openaiApiKey?: string;
   private readonly embedTextsFn: (texts: string[]) => Promise<number[][]>;
@@ -35,9 +35,9 @@ export class VectorStorage<
   constructor(options: IVSOptions<T> = {}) {
     this.embeddingModel =
       options.embeddingModel ?? constants.DEFAULT_OPENAI_EMBEDDING_MODEL;
-    this.embedTextsFn = options.embedTextsFn ?? this.embedTexts; // Use the custom function if provided, else use the default one
+    this.embedTextsFn = options.embedTextsFn ?? this.embedTexts;
     this.openaiApiKey = options.openAIApiKey;
-    this.rxdb! = options.rxdb!;
+    this.rxdb = options.rxdb!;
     if (!this.openaiApiKey && !options.embedTextsFn) {
       console.error(
         'VectorStorage: pass as an option either an OpenAI API key or a custom embedTextsFn function.',
@@ -58,7 +58,6 @@ export class VectorStorage<
     },
     metadata: Record<string, any>,
   ): Promise<IVSDocument> {
-    // Create a document from the text and metadata
     const doc: IVSDocument = {
       id: item.id,
       metadata: metadata,
@@ -80,12 +79,12 @@ export class VectorStorage<
       chunk?: IVSChunkMeta;
     }[],
     metadatas: Record<string, any>[],
-  ): Promise<Array<IVSDocument>> {
+  ): Promise<IVSDocument[]> {
     if (texts.length !== metadatas.length) {
       throw new Error('The lengths of texts and metadata arrays must match.');
     }
 
-    const docs: Array<IVSDocument> = await Promise.all(
+    const docs: IVSDocument[] = await Promise.all(
       texts.map(async (item, index) => ({
         id: item.id,
         metadata: metadatas[index],
@@ -101,7 +100,7 @@ export class VectorStorage<
   }
 
   public async similaritySearch(params: IVSSimilaritySearchParams): Promise<{
-    similarItems: Array<IVSSimilaritySearchItem>;
+    similarItems: IVSSimilaritySearchItem[];
     query: { text: string; embedding: number[] };
   }> {
     console.group('VectorStorage: similaritySearch');
@@ -122,12 +121,11 @@ export class VectorStorage<
     const filteredDocuments = filterDocuments(this.documents, filterOptions);
     console.debug(`Filtering took ${(performance.now() - start).toFixed(2)}ms`);
     start = performance.now();
-    const scoresPairs: Array<[IVSDocument, number]> =
-      this.calculateSimilarityScores(
-        filteredDocuments,
-        queryEmbedding,
-        queryMagnitude,
-      );
+    const scoresPairs: [IVSDocument, number][] = this.calculateSimilarityScores(
+      filteredDocuments,
+      queryEmbedding,
+      queryMagnitude,
+    );
     console.debug(
       `Similarity scores calculation took ${(performance.now() - start).toFixed(2)}ms`,
     );
@@ -155,13 +153,10 @@ export class VectorStorage<
     };
   }
 
-  private async addDocuments(
-    documents: Array<IVSDocument>,
-  ): Promise<Array<IVSDocument>> {
+  private async addDocuments(documents: IVSDocument[]): Promise<IVSDocument[]> {
     if (!this.hasInitialized) {
       await this.initialize();
     }
-    // filter out already existing documents by id
     const existingDocumentIdMap = new Map(
       this.documents.map((doc) => [doc.id, doc]),
     );
@@ -169,16 +164,20 @@ export class VectorStorage<
       if (doc === undefined || doc?.id === undefined) {
         return false;
       }
-      const idDoesNotExist = !existingDocumentIdMap.has(doc.id),
-        docExistsButHashIsDifferent =
-          existingDocumentIdMap.has(doc?.id) &&
-          doc.hash !== existingDocumentIdMap.get(doc.id)?.hash,
-        fileNeedsUpdate = idDoesNotExist || docExistsButHashIsDifferent;
+      const existingDoc = existingDocumentIdMap.get(doc.id);
+      const idDoesNotExist = !existingDoc;
+      const docExistsButHashIsDifferent =
+        existingDoc && doc.hash !== existingDoc.hash;
+      const isAIEnhancement =
+        existingDoc &&
+        doc.metadata?.['hasAISummary'] === true &&
+        !existingDoc.metadata?.['hasAISummary'];
+      const fileNeedsUpdate =
+        idDoesNotExist || docExistsButHashIsDifferent || isAIEnhancement;
 
       return fileNeedsUpdate;
     });
 
-    // If there are no new documents, return an empty array
     if (newDocuments.length === 0) {
       return [];
     }
@@ -186,20 +185,34 @@ export class VectorStorage<
     const newVectors = await this.embedTextsFn(
       newDocuments.map((doc) => doc.text!),
     );
-    // Assign vectors and precompute vector magnitudes for new documents
+
+    if (!newVectors || !Array.isArray(newVectors)) {
+      throw new Error('embedTextsFn must return an array of vectors');
+    }
+
+    if (newVectors.length !== newDocuments.length) {
+      throw new Error('Number of vectors must match number of documents');
+    }
+
     newDocuments.forEach((doc, index) => {
-      doc.vector = newVectors[index];
+      const vector = newVectors[index];
+      if (!vector || !Array.isArray(vector)) {
+        throw new Error(`Invalid vector at index ${index}`);
+      }
+      doc.vector = vector;
       doc.model = this.embeddingModel;
       doc.vectorMag = calcVectorMagnitude(doc);
     });
-    // Add new documents to the store, remove text field
-    this.documents.push(
-      ...newDocuments.map((doc) => {
-        const { text, ...newDocWithoutText } = doc;
-        return newDocWithoutText;
-      }),
-    );
-    // Save to index db storage
+
+    newDocuments.forEach((doc) => {
+      const { text, ...newDocWithoutText } = doc;
+      const existingIndex = this.documents.findIndex((d) => d.id === doc.id);
+      if (existingIndex !== -1) {
+        this.documents[existingIndex] = newDocWithoutText;
+      } else {
+        this.documents.push(newDocWithoutText);
+      }
+    });
     try {
       await this.saveToRxDbStorage();
     } catch (e) {
@@ -242,10 +255,10 @@ export class VectorStorage<
   }
 
   private calculateSimilarityScores(
-    filteredDocuments: Array<IVSDocument>,
+    filteredDocuments: IVSDocument[],
     queryVector: number[],
     queryMagnitude: number,
-  ): Array<[IVSDocument, number]> {
+  ): [IVSDocument, number][] {
     const similarityScores = new Array(filteredDocuments.length);
     for (let i = 0; i < filteredDocuments.length; i++) {
       const doc = filteredDocuments[i];
@@ -258,7 +271,7 @@ export class VectorStorage<
         doc.vectorMag!,
         queryMagnitude,
       );
-      score = normalizeScore(score); // Normalize the score
+      score = normalizeScore(score);
       similarityScores[i] = [doc, score];
     }
     return similarityScores;
@@ -288,7 +301,10 @@ export class VectorStorage<
 }
 
 function calcVectorMagnitude(doc: IVSDocument): number {
-  return Math.sqrt(doc.vector!.reduce((sum, val) => sum + val * val, 0));
+  if (!doc.vector || !Array.isArray(doc.vector) || doc.vector.length === 0) {
+    throw new Error('Cannot calculate magnitude of invalid vector');
+  }
+  return Math.sqrt(doc.vector.reduce((sum, val) => sum + val * val, 0));
 }
 
 function getCosineSimilarityScore(

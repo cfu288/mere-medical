@@ -1,15 +1,15 @@
 import { parseDateString } from './parseCCDA';
 import crypto from 'crypto';
-Object.defineProperty(global.self, 'crypto', {
-  value: {
-    subtle: crypto.webcrypto.subtle,
-  },
-});
 import fs from 'fs';
 import path from 'path';
 import { parseCCDAResultsSection } from './parseCCDAResultsSection';
 import { parseCCDASocialHistorySection } from './parseCCDASocialHistorySection';
 import exp from 'constants';
+Object.defineProperty(global.self, 'crypto', {
+  value: {
+    subtle: crypto.webcrypto.subtle,
+  },
+});
 /**
  * effectiveTime use in C-CDA Entries
 

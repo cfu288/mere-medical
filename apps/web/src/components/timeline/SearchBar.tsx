@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { QueryStatus } from '../../pages/TimelineTab';
 import { useLocalConfig } from '../providers/LocalConfigProvider';
+import { useVectorSyncStatus } from '../providers/vector-provider/providers/VectorGeneratorSyncInitializer';
 
 function LoadingSpinner({ tailwindColor }: { tailwindColor?: string }) {
   return (
@@ -39,13 +40,18 @@ export function SearchBar({
   status: QueryStatus;
 }) {
   const { experimental__use_openai_rag } = useLocalConfig();
-  const placeholder = useMemo(
-    () =>
-      experimental__use_openai_rag
-        ? '✨ Search your records with AI'
-        : 'Search your medical records',
-    [experimental__use_openai_rag],
-  );
+  const vectorSyncStatus = useVectorSyncStatus();
+  const isVectorSearchEnabled =
+    experimental__use_openai_rag && vectorSyncStatus === 'COMPLETE';
+
+  const placeholder = useMemo(() => {
+    if (experimental__use_openai_rag && vectorSyncStatus === 'IN_PROGRESS') {
+      return 'Search your records (AI search preparing...)';
+    }
+    return isVectorSearchEnabled
+      ? '✨ Search your records with AI'
+      : 'Search your medical records';
+  }, [experimental__use_openai_rag, vectorSyncStatus, isVectorSearchEnabled]);
 
   return (
     <div className="mb-1 mt-4 w-full sm:mt-6 flex flex-row">
@@ -67,7 +73,7 @@ export function SearchBar({
             ></path>
           </svg>
         </div>
-        {experimental__use_openai_rag ? (
+        {isVectorSearchEnabled ? (
           <div className="w-full bg-gradient-to-br from-indigo-400 via-purple-300 to-primary-600 p-[3px] background-animate rounded-md">
             <input
               tabIndex={1}

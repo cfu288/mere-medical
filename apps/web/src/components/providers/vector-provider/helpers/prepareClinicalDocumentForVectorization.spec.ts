@@ -1,291 +1,552 @@
-import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
 import { ClinicalDocument } from '../../../../models/clinical-document/ClinicalDocument.type';
 import { prepareClinicalDocumentForVectorization } from './prepareClinicalDocumentForVectorization';
+import { CHUNK_SIZE } from '../constants';
 
-const testDRClinicalDocument: ClinicalDocument<BundleEntry<DiagnosticReport>> =
-  {
-    user_id: 'c3664aed-e146-4f24-b323-37da0f16069d',
-    connection_record_id: '876128fe-21aa-4e14-a7f6-7f0491878356',
-    data_record: {
-      raw: {
-        link: [
-          {
-            relation: 'self',
-            url: 'https://mockhealthrecords.com/FHIR/api/FHIR/DSTU2/DiagnosticReport/MockReportID123',
-          },
-        ],
-        fullUrl:
-          'https://mockhealthrecords.com/FHIR/api/FHIR/DSTU2/DiagnosticReport/MockReportID123',
-        resource: {
-          resourceType: 'DiagnosticReport',
-          id: 'MockReportID123',
-          identifier: [
-            {
-              use: 'official',
-              type: {
-                coding: [
-                  {
-                    system: 'http://hl7.org/fhir/ValueSet/identifier-type',
-                    code: 'PLAC',
-                    display: 'Placer Identifier',
-                  },
-                ],
-                text: 'Placer Identifier',
-              },
-              system: 'urn:oid:1.2.840.114350.1.13.621.2.7.2.798268',
-              value: '98765432',
-            },
-            {
-              use: 'usual',
-              type: {
-                coding: [
-                  {
-                    system: 'http.h1.org/fhir/ValueSet/identifier-type',
-                    code: 'FILL',
-                    display: 'Filler Identifier',
-                  },
-                ],
-                text: 'Filler Identifier',
-              },
-              system:
-                'urn:oid:1.2.840.114350.1.13.621.2.7.3.798268.320:application_id:MOCK-LAB',
-              value: '123456789',
-            },
-            {
-              use: 'usual',
-              type: {
-                coding: [
-                  {
-                    system: 'http://hl7.org/fhir/ValueSet/identifier-type',
-                    code: 'FILL',
-                    display: 'Filler Identifier',
-                  },
-                ],
-                text: 'Filler Identifier',
-              },
-              system: 'urn:oid:1.2.840.114350.1.13.621.2.7.3.798268.800',
-              value: '987654321',
-            },
-          ],
-          status: 'final',
-          category: {
-            coding: [
-              {
-                system: 'urn:oid:1.2.840.114350.1.13.621.2.7.10.798268.30',
-                code: 'Lab',
-                display: 'Lab',
-              },
-            ],
-            text: 'Lab',
-          },
-          code: {
-            text: 'MockLab - BASIC METABOLIC PANEL - Final result',
-          },
-          subject: {
-            display: 'Mock, John',
-            reference:
-              'https://mockhealthrecords.com/FHIR/api/FHIR/DSTU2/Patient/MockPatientID789',
-          },
-          effectiveDateTime: '2023-07-01T08:30:00Z',
-          issued: '2023-07-02T12:45:00Z',
-          performer: {
-            display: 'Dr. Mockington',
-            reference:
-              'https://mockhealthrecords.com/FHIR/api/FHIR/DSTU2/Practitioner/MockPractitionerID456',
-          },
-          result: [
-            {
-              display: 'Component: LC- GLUCOSE',
-              reference:
-                'https://mockhealthrecords.com/FHIR/api/FHIR/DSTU2/Observation/MockObsID1',
-            },
-            {
-              display: 'Component: LC- BUN',
-              reference:
-                'https://mockhealthrecords.com/FHIR/api/FHIR/DSTU2/Observation/MockObsID2',
-            },
-            {
-              display: 'Component: LC- CREATININE',
-              reference:
-                'https://mockhealthrecords.com/FHIR/api/FHIR/DSTU2/Observation/MockObsID3',
-            },
-            {
-              display: 'Component: Mock E-GFR',
-              reference:
-                'https://mockhealthrecords.com/FHIR/api/FHIR/DSTU2/Observation/MockObsID4',
-            },
-            {
-              display: 'Component: LC- BUN/CREAT RATIO',
-              reference:
-                'https://mockhealthrecords.com/FHIR/api/FHIR/DSTU2/Observation/MockObsID5',
-            },
-            {
-              display: 'Component: Mock SODIUM',
-              reference:
-                'https://mockhealthrecords.com/FHIR/api/FHIR/DSTU2/Observation/MockObsID6',
-            },
-            {
-              display: 'Component: LC- POTASSIUM',
-              reference:
-                'https://mockhealthrecords.com/FHIR/api/FHIR/DSTU2/Observation/MockObsID7',
-            },
-            {
-              display: 'Component: LC- CHLORIDE',
-              reference:
-                'https://mockhealthrecords.com/FHIR/api/FHIR/DSTU2/Observation/MockObsID8',
-            },
-            {
-              display: 'Component: LC- CARBON DIOXIDE',
-              reference:
-                'https://mockhealthrecords.com/FHIR/api/FHIR/DSTU2/Observation/MockObsID9',
-            },
-            {
-              display: 'Component: LC- CALCIUM',
-              reference:
-                'https://mockhealthrecords.com/FHIR/api/FHIR/DSTU2/Observation/MockObsID10',
-            },
-          ],
-        },
-        search: { mode: 'match' },
-      },
-      format: 'FHIR.DSTU2',
-      content_type: 'application/json',
-      resource_type: 'diagnosticreport',
-      version_history: [],
-    },
-    metadata: {
-      id: 'https://www.example.com',
-      date: '2023-03-14T16:48:00Z',
-      display_name: 'HEMOGLOBIN A1C - Final result',
-    },
-    id: '876128fe-21aa-4e14-a7f6-7f0491878356|c3664aed-e146-4f24-b323-37da0f16069d|https://www.example.com',
-  };
+// Mock crypto.randomUUID for predictable testing
+const mockUUIDs = [
+  'mock-uuid-1',
+  'mock-uuid-2', 
+  'mock-uuid-3',
+  'mock-uuid-4',
+  'mock-uuid-5',
+  'mock-uuid-6',
+  'mock-uuid-7',
+  'mock-uuid-8',
+  'mock-uuid-9',
+  'mock-uuid-10',
+];
+let uuidIndex = 0;
 
-const textObsClinicalDocument: ClinicalDocument<BundleEntry<Observation>> = {
-  id: '876128fe-21aa-4e14-a7f6-7f0491878356|c3664aed-e146-4f24-b323-37da0f16069d|https://www.example.com',
-  user_id: 'c3664aed-e146-4f24-b323-37da0f16069d',
-  connection_record_id: '876128fe-21aa-4e14-a7f6-7f0491878356',
+beforeEach(() => {
+  uuidIndex = 0;
+  // Mock crypto.randomUUID
+  Object.defineProperty(global, 'crypto', {
+    value: {
+      randomUUID: jest.fn(() => {
+        const uuid = mockUUIDs[uuidIndex % mockUUIDs.length];
+        uuidIndex++;
+        return uuid;
+      }),
+    },
+    writable: true,
+  });
+});
+
+// Real test fixtures extracted from production demo.json
+const realObservationFixture: ClinicalDocument<any> = {
+  id: "3993ce6f-d2d6-4526-840d-4753b7207c88|91a8d8cb-6480-4db4-a628-18a5e44536cd|https://fhir.epic.com/interconnect-fhir-oauth/FHIR/DSTU2/Observation/T2tq0t9mgFFfQ8JWmyGaw7g8g1W3Yj3Zg.bSZtsIVGzoB",
+  user_id: "91a8d8cb-6480-4db4-a628-18a5e44536cd",
+  connection_record_id: "3993ce6f-d2d6-4526-840d-4753b7207c88",
   data_record: {
     raw: {
-      link: [
-        {
-          relation: 'self',
-          url: 'https://fhir.healthcare.org/api/FHIR/DSTU2/Observation/12345ABCDEF',
-        },
-      ],
-      fullUrl:
-        'https://fhir.healthcare.org/api/FHIR/DSTU2/Observation/12345ABCDEF',
+      link: [{
+        relation: "self",
+        url: "https://fhir.epic.com/interconnect-fhir-oauth/FHIR/DSTU2/Observation/T2tq0t9mgFFfQ8JWmyGaw7g8g1W3Yj3Zg.bSZtsIVGzoB"
+      }],
+      fullUrl: "https://fhir.epic.com/interconnect-fhir-oauth/FHIR/DSTU2/Observation/T2tq0t9mgFFfQ8JWmyGaw7g8g1W3Yj3Zg.bSZtsIVGzoB",
       resource: {
-        resourceType: 'Observation',
-        id: '12345ABCDEF',
-        status: 'final',
+        resourceType: "Observation",
+        id: "T2tq0t9mgFFfQ8JWmyGaw7g8g1W3Yj3Zg.bSZtsIVGzoB",
+        status: "final",
         category: {
-          coding: [
-            {
-              system: 'http://hl7.org/fhir/observation-category',
-              code: 'laboratory',
-              display: 'Laboratory',
-            },
-          ],
-          text: 'Laboratory',
+          coding: [{
+            system: "http://hl7.org/fhir/observation-category",
+            code: "laboratory",
+            display: "Laboratory"
+          }],
+          text: "Laboratory"
         },
         code: {
-          coding: [
-            {
-              system: 'http://loinc.org',
-              code: '84295-9',
-              display: 'Glucose level in Blood',
-            },
-          ],
-          text: 'GLUCOSE (LABCORP)',
+          coding: [{
+            system: "http://loinc.org",
+            code: "1975-2",
+            display: "Bilirubin.total [Mass/volume] in Serum or Plasma"
+          }],
+          text: "BR- BILIRUBIN, TOTAL, SERUM"
         },
         subject: {
-          display: 'Doe, John',
-          reference:
-            'https://fhir.healthcare.org/api/FHIR/DSTU2/Patient/67890XYZ',
+          display: "Smith, John",
+          reference: "https://fhir.epic.com/interconnect-fhir-oauth/FHIR/DSTU2/Patient/abe3196c-2f56-43e1-9fb1-cd78b4c3f270"
         },
-        effectiveDateTime: '2023-01-01T07:30:00Z',
-        issued: '2010-01-01T09:00:00Z',
+        effectiveDateTime: "2012-04-12T11:50:26.663Z",
         valueQuantity: {
-          value: 5.6,
-          unit: 'mmol/L',
-          system: 'http://unitsofmeasure.org',
-          code: 'mmol/L',
+          value: 0.7,
+          unit: "mg/dL",
+          system: "http://unitsofmeasure.org",
+          code: "mg/dL"
         },
-        referenceRange: [
-          {
-            low: {
-              value: 3.9,
-              unit: 'mmol/L',
-              system: 'http://unitsofmeasure.org',
-              code: 'mmol/L',
-            },
-            high: {
-              value: 6.1,
-              unit: 'mmol/L',
-              system: 'http://unitsofmeasure.org',
-              code: 'mmol/L',
-            },
-            text: '3.9 - 6.1 mmol/L',
-          },
-        ],
-      },
-      search: { mode: 'match' },
+        referenceRange: [{
+          text: "<1.2"
+        }]
+      }
     },
-    format: 'FHIR.DSTU2',
-    content_type: 'application/json',
-    resource_type: 'observation',
-    version_history: [],
+    format: "FHIR.DSTU2",
+    content_type: "application/json",
+    resource_type: "observation",
+    version_history: []
   },
   metadata: {
-    id: 'https://www.example.com',
-    date: '2023-03-14T16:48:00Z',
-    display_name: 'SODIUM (QUEST)',
-  },
+    id: "https://fhir.epic.com/interconnect-fhir-oauth/FHIR/DSTU2/Observation/T2tq0t9mgFFfQ8JWmyGaw7g8g1W3Yj3Zg.bSZtsIVGzoB",
+    date: "2012-04-12T11:50:26.663Z",
+    display_name: "BR- BILIRUBIN, TOTAL, SERUM",
+    loinc_coding: ["1975-2"]
+  }
 };
 
-describe('VectorStorageProvider', () => {
-  describe('prepareClinicalDocumentForVectorization can serialize DR', () => {
-    it('can serialize a DiagnosticReport correctly', async () => {
-      const result = await prepareClinicalDocumentForVectorization(
-        testDRClinicalDocument,
-      );
+const realConditionFixture: ClinicalDocument<any> = {
+  id: "0f38582a-1773-4e2b-80e3-90fda727cdbd|91a8d8cb-6480-4db4-a628-18a5e44536cd|Condition/47026121",
+  user_id: "91a8d8cb-6480-4db4-a628-18a5e44536cd",
+  connection_record_id: "0f38582a-1773-4e2b-80e3-90fda727cdbd",
+  data_record: {
+    raw: {
+      resource: {
+        category: {
+          text: "Diagnosis",
+          coding: [{
+            code: "diagnosis",
+            system: "http://hl7.org/fhir/condition-category",
+            display: "Diagnosis"
+          }]
+        },
+        code: {
+          text: "Cough, unspecified",
+          coding: [{
+            code: "R05.9",
+            system: "http://hl7.org/fhir/sid/icd-10",
+            display: "Cough, unspecified"
+          }]
+        },
+        patient: {
+          reference: "Patient/1850092"
+        },
+        resourceType: "Condition",
+        dateRecorded: "2021-03-28",
+        verificationStatus: "confirmed",
+        id: "47026121",
+        clinicalStatus: "active"
+      },
+      fullUrl: ["/api/fhir/Condition/47026121"]
+    },
+    format: "FHIR.DSTU2",
+    content_type: "application/json",
+    resource_type: "condition",
+    version_history: []
+  },
+  metadata: {
+    id: "Condition/47026121",
+    date: "2021-03-28",
+    display_name: "Cough, unspecified"
+  }
+};
+
+describe('prepareClinicalDocumentForVectorization', () => {
+  describe('chunk ID generation', () => {
+    it('generates deterministic IDs for JSON documents', () => {
+      const doc: ClinicalDocument<any> = {
+        id: 'test-doc-123',
+        user_id: 'user-456',
+        connection_record_id: 'conn-789',
+        data_record: {
+          raw: { test: 'data' },
+          format: 'FHIR.DSTU2',
+          content_type: 'application/json',
+          resource_type: 'observation',
+          version_history: [],
+        },
+      };
+
+      const result1 = prepareClinicalDocumentForVectorization(doc);
+      const result2 = prepareClinicalDocumentForVectorization(doc);
+      
+      // Same document should always generate the same chunk IDs
+      expect(result1.docList[0].id).toBe(result2.docList[0].id);
+      expect(result1.docList[0].id).toBe('test-doc-123__chunk_0');
+    });
+
+    it('generates deterministic IDs for chunked XML documents', () => {
+      const largeXmlContent = 'x'.repeat(CHUNK_SIZE + 1000);
+      const doc: ClinicalDocument<any> = {
+        id: 'xml-doc-456',
+        user_id: 'user-123',
+        connection_record_id: 'conn-123',
+        data_record: {
+          raw: largeXmlContent,
+          format: 'FHIR.DSTU2',
+          content_type: 'application/xml',
+          resource_type: 'documentreference',
+          version_history: [],
+        },
+      };
+
+      const result = prepareClinicalDocumentForVectorization(doc);
+      
+      // Check that chunk IDs are deterministic and parsable
+      expect(result.docList[0].id).toBe('xml-doc-456__chunk_0');
+      expect(result.docList[1].id).toBe('xml-doc-456__chunk_1');
+      
+      // Running again should produce the same IDs
+      const result2 = prepareClinicalDocumentForVectorization(doc);
+      expect(result.docList[0].id).toBe(result2.docList[0].id);
+      expect(result.docList[1].id).toBe(result2.docList[1].id);
+    });
+  });
+  describe('lab observation serialization', () => {
+    it('flattens FHIR observation extracting only resource fields', () => {
+      const result = prepareClinicalDocumentForVectorization(realObservationFixture);
+      
+      // flattenObject extracts only the resource content, not metadata like link/fullUrl
+      const expectedText = 'Observation|http://loinc.org|1975-2|Bilirubin.total [Mass/volume] in Serum or Plasma|BR- BILIRUBIN, TOTAL, SERUM|2012-04-12T11:50:26.663Z|0.7|mg/dL|http://unitsofmeasure.org|<1.2';
+      
       expect(result.docList).toHaveLength(1);
-      expect(result.docList[0].id).toBe(
-        '876128fe-21aa-4e14-a7f6-7f0491878356|c3664aed-e146-4f24-b323-37da0f16069d|https://www.example.com',
-      );
-      expect(result.docList[0].text).toBe(
-        'DiagnosticReport|MockLab - BASIC METABOLIC PANEL - Final result|2023-07-01T08:30:00Z|2023-07-02T12:45:00Z|Dr. Mockington|https://mockhealthrecords.com/FHIR/api/FHIR/DSTU2/Practitioner/MockPractitionerID456|Component: LC- GLUCOSE|https://mockhealthrecords.com/FHIR/api/FHIR/DSTU2/Observation/MockObsID1|Component: LC- BUN|https://mockhealthrecords.com/FHIR/api/FHIR/DSTU2/Observation/MockObsID2|Component: LC- CREATININE|https://mockhealthrecords.com/FHIR/api/FHIR/DSTU2/Observation/MockObsID3|Component: Mock E-GFR|https://mockhealthrecords.com/FHIR/api/FHIR/DSTU2/Observation/MockObsID4|Component: LC- BUN/CREAT RATIO|https://mockhealthrecords.com/FHIR/api/FHIR/DSTU2/Observation/MockObsID5|Component: Mock SODIUM|https://mockhealthrecords.com/FHIR/api/FHIR/DSTU2/Observation/MockObsID6|Component: LC- POTASSIUM|https://mockhealthrecords.com/FHIR/api/FHIR/DSTU2/Observation/MockObsID7|Component: LC- CHLORIDE|https://mockhealthrecords.com/FHIR/api/FHIR/DSTU2/Observation/MockObsID8|Component: LC- CARBON DIOXIDE|https://mockhealthrecords.com/FHIR/api/FHIR/DSTU2/Observation/MockObsID9|Component: LC- CALCIUM|https://mockhealthrecords.com/FHIR/api/FHIR/DSTU2/Observation/MockObsID10',
-      );
-      expect(result.metaList).toHaveLength(1);
-      expect(result.metaList[0].id).toBe(
-        '876128fe-21aa-4e14-a7f6-7f0491878356|c3664aed-e146-4f24-b323-37da0f16069d|https://www.example.com',
-      );
-      expect(result.metaList[0].document_type).toBe('clinical_document');
-      expect(result.metaList[0].category).toBe('diagnosticreport');
-      expect(result.metaList[0].url).toBe('https://www.example.com');
+      expect(result.docList[0].text).toBe(expectedText);
+      
+      // Verify fields that should be filtered out
+      const text = result.docList[0].text;
+      expect(text).not.toContain('link');
+      expect(text).not.toContain('fullUrl');
+      expect(text).not.toContain('T2tq0t9mgFFfQ8JWmyGaw7g8g1W3Yj3Zg'); // resource.id
+      expect(text).not.toContain('Smith, John'); // subject.display
+      expect(text).not.toContain('Patient'); // subject.reference
+      expect(text).not.toContain('final'); // status
+      expect(text).not.toContain('Laboratory'); // category.text
+      expect(text).not.toContain('laboratory'); // category.coding.code
+      
+      // Verify metadata is preserved separately
+      expect(result.metaList[0]).toEqual({
+        category: 'observation',
+        document_type: 'clinical_document',
+        id: realObservationFixture.id,
+        url: 'https://fhir.epic.com/interconnect-fhir-oauth/FHIR/DSTU2/Observation/T2tq0t9mgFFfQ8JWmyGaw7g8g1W3Yj3Zg.bSZtsIVGzoB',
+        documentId: realObservationFixture.id,
+        user_id: '91a8d8cb-6480-4db4-a628-18a5e44536cd',
+        chunkNumber: 0,
+        isFullDocument: false
+      });
+    });
+
+    it('filters out FHIR wrapper fields while preserving clinical data', () => {
+      const simpleObs: ClinicalDocument<any> = {
+        id: 'test-obs',
+        user_id: 'test-user',
+        connection_record_id: 'test-conn',
+        data_record: {
+          raw: {
+            link: [{ relation: 'self', url: 'http://example.com' }],
+            fullUrl: 'http://example.com/Observation/123',
+            resource: {
+              resourceType: 'Observation',
+              id: 'obs-123',
+              meta: { versionId: '1', lastUpdated: '2024-01-01' },
+              status: 'final',
+              code: { text: 'Glucose' },
+              valueQuantity: { value: 100, unit: 'mg/dL' }
+            }
+          },
+          format: 'FHIR.DSTU2',
+          content_type: 'application/json',
+          resource_type: 'observation',
+          version_history: []
+        }
+      };
+
+      const result = prepareClinicalDocumentForVectorization(simpleObs);
+      const text = result.docList[0].text;
+      
+      // Should include clinical content
+      expect(text).toContain('Observation');
+      expect(text).toContain('Glucose');
+      expect(text).toContain('100');
+      expect(text).toContain('mg/dL');
+      
+      // Should NOT include FHIR metadata/wrapper fields
+      expect(text).not.toContain('link');
+      expect(text).not.toContain('fullUrl');
+      expect(text).not.toContain('http://example.com');
+      expect(text).not.toContain('obs-123');
+      expect(text).not.toContain('versionId');
+      expect(text).not.toContain('lastUpdated');
+      expect(text).not.toContain('final');
     });
   });
 
-  describe('prepareClinicalDocumentForVectorization can serialize Observation', () => {
-    it('can serialize a Observation correctly', async () => {
-      const result = await prepareClinicalDocumentForVectorization(
-        textObsClinicalDocument,
-      );
-      expect(result.docList).toHaveLength(1);
-      expect(result.docList[0].id).toBe(
-        '876128fe-21aa-4e14-a7f6-7f0491878356|c3664aed-e146-4f24-b323-37da0f16069d|https://www.example.com',
-      );
-      expect(result.docList[0].text).toBe(
-        'Observation|http://loinc.org|84295-9|Glucose level in Blood|GLUCOSE (LABCORP)|2023-01-01T07:30:00Z|2010-01-01T09:00:00Z|5.6|mmol/L|http://unitsofmeasure.org|3.9|6.1|3.9 - 6.1 mmol/L',
-      );
-      expect(result.metaList).toHaveLength(1);
-      expect(result.metaList[0].id).toBe(
-        '876128fe-21aa-4e14-a7f6-7f0491878356|c3664aed-e146-4f24-b323-37da0f16069d|https://www.example.com',
-      );
-      expect(result.metaList[0].document_type).toBe('clinical_document');
-      expect(result.metaList[0].category).toBe('observation');
-      expect(result.metaList[0].url).toBe('https://www.example.com');
+  describe('condition serialization', () => {
+    it('flattens FHIR condition with ICD-10 codes', () => {
+      const result = prepareClinicalDocumentForVectorization(realConditionFixture);
+      
+      const expectedText = 'Cough, unspecified|R05.9|http://hl7.org/fhir/sid/icd-10|Patient/1850092|Condition|2021-03-28|confirmed|active';
+      
+      expect(result.docList[0].text).toBe(expectedText);
+      
+      expect(result.metaList[0]).toEqual({
+        category: 'condition',
+        document_type: 'clinical_document',
+        id: realConditionFixture.id,
+        url: 'Condition/47026121',
+        documentId: realConditionFixture.id,
+        user_id: '91a8d8cb-6480-4db4-a628-18a5e44536cd',
+        chunkNumber: 0,
+        isFullDocument: false
+      });
+    });
+
+    it('filters out category field from condition resources', () => {
+      const result = prepareClinicalDocumentForVectorization(realConditionFixture);
+      const text = result.docList[0].text;
+      
+      expect(text).not.toContain('Diagnosis');
+      expect(text).not.toContain('diagnosis');
+      expect(text).not.toContain('http://hl7.org/fhir/condition-category');
+    });
+
+    it('filters out id and status fields from condition resources', () => {
+      const result = prepareClinicalDocumentForVectorization(realConditionFixture);
+      const text = result.docList[0].text;
+      
+      expect(text).not.toContain('47026121');
+      expect(text).not.toContain('/api/fhir/Condition/47026121');
+    });
+
+    it('filters out fullUrl wrapper field', () => {
+      const result = prepareClinicalDocumentForVectorization(realConditionFixture);
+      const text = result.docList[0].text;
+      
+      expect(text).not.toContain('/api/fhir/Condition/47026121');
+      expect(text).not.toContain('fullUrl');
     });
   });
+
+  describe('UUID generation', () => {
+    it('assigns sequential UUIDs to chunks', () => {
+      const doc: ClinicalDocument<any> = {
+        id: 'doc-123',
+        user_id: 'user-456',
+        connection_record_id: 'conn-789',
+        data_record: {
+          raw: { simple: 'data' },
+          format: 'FHIR.DSTU2',
+          content_type: 'application/json',
+          resource_type: 'observation',
+          version_history: [],
+        }
+      };
+
+      const result = prepareClinicalDocumentForVectorization(doc);
+      
+      expect(result.docList[0].id).toBe('doc-123__chunk_0');
+    });
+  });
+
+  describe('FHIR JSON resource flattening', () => {
+    it('extracts key clinical data from nested FHIR structures', () => {
+      const doc: ClinicalDocument<any> = {
+        id: 'doc-json',
+        user_id: 'user-123',
+        connection_record_id: 'conn-123',
+        data_record: {
+          raw: {
+            resourceType: 'Observation',
+            id: 'obs-123',
+            status: 'final',
+            code: {
+              text: 'Blood Pressure',
+              coding: [{
+                system: 'http://loinc.org',
+                code: '55284-4',
+                display: 'Blood pressure systolic and diastolic'
+              }],
+            },
+            component: [{
+              code: {
+                coding: [{
+                  system: 'http://loinc.org',
+                  code: '8480-6',
+                  display: 'Systolic blood pressure'
+                }]
+              },
+              valueQuantity: {
+                value: 120,
+                unit: 'mmHg',
+                system: 'http://unitsofmeasure.org',
+                code: 'mm[Hg]'
+              }
+            }, {
+              code: {
+                coding: [{
+                  system: 'http://loinc.org',
+                  code: '8462-4',
+                  display: 'Diastolic blood pressure'
+                }]
+              },
+              valueQuantity: {
+                value: 80,
+                unit: 'mmHg',
+                system: 'http://unitsofmeasure.org',
+                code: 'mm[Hg]'
+              }
+            }],
+            effectiveDateTime: '2024-01-15T09:30:00Z',
+            issued: '2024-01-15T09:35:00Z',
+          },
+          format: 'FHIR.DSTU2',
+          content_type: 'application/json',
+          resource_type: 'observation',
+          version_history: [],
+        },
+      };
+
+      const result = prepareClinicalDocumentForVectorization(doc);
+
+      expect(result.docList).toHaveLength(1);
+      expect(result.docList[0].text).toContain('Observation');
+      expect(result.docList[0].text).toContain('Blood Pressure');
+      expect(result.docList[0].text).toContain('55284-4'); // LOINC code
+      expect(result.docList[0].text).toContain('120'); // Systolic
+      expect(result.docList[0].text).toContain('80');  // Diastolic
+      expect(result.docList[0].text).toContain('mmHg');
+      
+      expect(result.metaList).toHaveLength(1);
+      expect(result.metaList[0].documentId).toBe('doc-json');
+      expect(result.metaList[0].category).toBe('observation');
+      expect(result.metaList[0].user_id).toBe('user-123');
+    });
+  });
+
+  describe('XML document chunking', () => {
+    it('chunks large XML documents with proper overlap', () => {
+      const largeXmlContent = 'x'.repeat(CHUNK_SIZE + 1000);
+      const doc: ClinicalDocument<any> = {
+        id: 'doc-xml-large',
+        user_id: 'user-123',
+        connection_record_id: 'conn-123',
+        data_record: {
+          raw: largeXmlContent,
+          format: 'FHIR.DSTU2',
+          content_type: 'application/xml',
+          resource_type: 'documentreference',
+          version_history: [],
+        },
+      };
+
+      const result = prepareClinicalDocumentForVectorization(doc);
+
+      // Should create multiple chunks
+      expect(result.docList.length).toBeGreaterThan(1);
+      
+      // Each chunk should have proper metadata
+      result.metaList.forEach((meta, index) => {
+        expect(meta.documentId).toBe('doc-xml-large');
+        expect(meta.chunkNumber).toBe(index);
+        expect(meta.isFullDocument).toBe(false);
+      });
+
+      // Check chunk offsets and sizes
+      result.docList.forEach((doc) => {
+        if (doc.chunk) {
+          expect(doc.chunk.offset).toBeDefined();
+          expect(doc.chunk.size).toBeDefined();
+          expect(doc.chunk.size).toBeGreaterThan(0);
+        }
+      });
+    });
+
+    it('does not chunk small XML documents', () => {
+      const smallXmlContent = '<root>Small XML content</root>';
+      const doc: ClinicalDocument<any> = {
+        id: 'doc-xml-small',
+        user_id: 'user-123',
+        connection_record_id: 'conn-123',
+        data_record: {
+          raw: smallXmlContent,
+          format: 'FHIR.DSTU2',
+          content_type: 'application/xml',
+          resource_type: 'documentreference',
+          version_history: [],
+        },
+      };
+
+      const result = prepareClinicalDocumentForVectorization(doc);
+
+      expect(result.docList).toHaveLength(1);
+      expect(result.docList[0].text).toContain('Small XML content');
+      expect(result.metaList[0].chunkNumber).toBe(0);
+    });
+  });
+
+  describe('metadata handling', () => {
+    it('enriches chunks with proper metadata', () => {
+      const doc: ClinicalDocument<any> = {
+        id: 'doc-metadata',
+        user_id: 'user-456',
+        connection_record_id: 'conn-789',
+        data_record: {
+          raw: { test: 'metadata test' },
+          format: 'FHIR.DSTU2',
+          content_type: 'application/json',
+          resource_type: 'diagnosticreport',
+          version_history: [],
+        },
+        metadata: {
+          id: 'http://example.com/doc',
+          date: '2024-01-15',
+          display_name: 'Metadata Test Doc',
+        },
+      };
+
+      const result = prepareClinicalDocumentForVectorization(doc);
+
+      const meta = result.metaList[0];
+      expect(meta).toMatchObject({
+        category: 'diagnosticreport',
+        document_type: 'clinical_document',
+        id: 'doc-metadata',
+        url: 'http://example.com/doc',
+        documentId: 'doc-metadata',
+        user_id: 'user-456',
+      });
+    });
+
+    it('handles missing metadata gracefully', () => {
+      const doc: ClinicalDocument<any> = {
+        id: 'doc-no-metadata',
+        user_id: 'user-123',
+        connection_record_id: 'conn-123',
+        data_record: {
+          raw: { test: 'no metadata' },
+          format: 'FHIR.DSTU2',
+          content_type: 'application/json',
+          resource_type: 'condition',
+          version_history: [],
+        },
+      };
+
+      const result = prepareClinicalDocumentForVectorization(doc);
+
+      expect(result.metaList[0].url).toBeUndefined();
+      expect(result.metaList[0].documentId).toBe('doc-no-metadata');
+      expect(result.metaList[0].category).toBe('condition');
+    });
+  });
+
+  describe('unsupported content types', () => {
+    it('returns empty arrays for unsupported content types', () => {
+      const doc: ClinicalDocument<any> = {
+        id: 'doc-unsupported',
+        user_id: 'user-123',
+        connection_record_id: 'conn-123',
+        data_record: {
+          raw: 'Plain text content',
+          format: 'FHIR.DSTU2',
+          content_type: 'text/plain',
+          resource_type: 'documentreference',
+          version_history: [],
+        },
+      };
+
+      const result = prepareClinicalDocumentForVectorization(doc);
+
+      expect(result.docList).toHaveLength(0);
+      expect(result.metaList).toHaveLength(0);
+    });
+  });
+
 });

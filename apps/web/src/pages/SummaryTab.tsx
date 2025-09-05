@@ -26,7 +26,7 @@ import { AppPage } from '../components/AppPage';
 import { useUser } from '../components/providers/UserProvider';
 import { BookmarkedListCard } from '../components/summary/BookmarkedListCard';
 import React from 'react';
-import { MereRecommendationsListCard } from '../features/mere-ai-recommendations/components/MereRecommendationsListCard';
+// import { MereRecommendationsListCard } from '../features/mere-ai-recommendations/components/MereRecommendationsListCard';
 import {
   SummaryPagePreferences,
   SummaryPagePreferencesCard,
@@ -299,7 +299,7 @@ const DEFAULT_CARD_ORDER: SummaryPagePreferences['cards'] = [
   {
     type: 'recommendations',
     order: 0,
-    is_visible: true,
+    is_visible: false, // Disabled USPSTF feature
   },
   {
     type: 'pinned',
@@ -430,7 +430,7 @@ function SummaryTab() {
     reducer,
   ] = useSummaryData();
   const [showEditModal, setShowEditModal] = useState(false);
-  const { experimental__use_openai_rag } = useLocalConfig();
+  // const { experimental__use_openai_rag } = useLocalConfig(); // Not needed with USPSTF disabled
   // Sort cards based on the order specified in the cards state
   const sortedCards: SummaryPagePreferencesCard[] = useMemo(
     () => cards!.sort((a, b) => a.order - b.order),
@@ -507,7 +507,7 @@ function SummaryTab() {
           if (!card.is_visible) return null;
           switch (card.type) {
             case 'recommendations':
-              return <MereRecommendationsListCard key={card.type} />;
+              return null; // <MereRecommendationsListCard key={card.type} />;
             case 'pinned':
               return <BookmarkedListCard key={card.type} items={pinned} />;
             case 'medications':
@@ -548,12 +548,9 @@ function SummaryTab() {
                   >
                     {sortedCards
                       .filter((i) => {
-                        if (!experimental__use_openai_rag) {
-                          if (i.type !== 'recommendations') {
-                            return true;
-                          } else {
-                            return false;
-                          }
+                        // Hide recommendations (USPSTF feature disabled)
+                        if (i.type === 'recommendations') {
+                          return false;
                         }
                         return true;
                       })

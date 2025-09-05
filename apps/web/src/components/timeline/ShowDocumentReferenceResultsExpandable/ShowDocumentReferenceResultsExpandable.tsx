@@ -27,10 +27,14 @@ export function ShowDocumentResultsExpandable({
   item,
   expanded,
   setExpanded,
+  matchedChunks,
+  searchQuery,
 }: {
   item: ClinicalDocument<BundleEntry<DocumentReference>>;
   expanded: boolean;
   setExpanded: React.Dispatch<React.SetStateAction<boolean>>;
+  matchedChunks?: { id: string; metadata?: any }[];
+  searchQuery?: string;
 }) {
   const cd = useConnectionDoc(item.connection_record_id),
     [ccda, setCCDA] = useState<
@@ -71,7 +75,10 @@ export function ShowDocumentResultsExpandable({
           >
             <p className="text-md whitespace-wrap overflow-x-scroll p-4 text-gray-900">
               {!hasLoadedDocument && 'Loading...'}
-              <DisplayCCDADocument ccda={ccda} />
+              <DisplayCCDADocument
+                ccda={ccda}
+                matchedChunks={matchedChunks}
+              />
               {hasLoadedDocument && !ccda && (
                 <p>
                   Sorry, looks like we were unable to get the linked document

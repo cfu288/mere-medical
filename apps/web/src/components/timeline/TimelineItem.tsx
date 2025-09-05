@@ -32,10 +32,12 @@ export const TimelineItem = memo(function TimelineItem({
   dateKey,
   itemList,
   showIndividualItems = false,
+  searchQuery,
 }: {
   dateKey: string;
   itemList: ClinicalDocument<BundleEntry<FhirResource>>[];
   showIndividualItems?: boolean;
+  searchQuery?: string;
 }) {
   return (
     <div
@@ -99,6 +101,8 @@ export const TimelineItem = memo(function TimelineItem({
                     item={
                       item as ClinicalDocument<BundleEntry<DocumentReference>>
                     }
+                    matchedChunks={(item as any).matchedChunks}
+                    searchQuery={searchQuery}
                   />
                 )}
                 {item.data_record.resource_type ===
@@ -106,6 +110,8 @@ export const TimelineItem = memo(function TimelineItem({
                   <DocumentReferenceAttachmentCard
                     key={item.id}
                     item={item as unknown as ClinicalDocument<string>}
+                    matchedChunks={(item as any).matchedChunks}
+                    searchQuery={searchQuery}
                   />
                 )}
                 {item.data_record.resource_type === 'encounter' && (

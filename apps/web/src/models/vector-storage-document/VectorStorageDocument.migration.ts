@@ -14,4 +14,11 @@ export const VectorStorageDocumentMigrations: MigrationStrategies = {
     // no change
     return oldDoc;
   },
+  4: function (oldDoc: VectorStorageDocument) {
+    // Added metadata fields for chunk tracking
+    if (!oldDoc.metadata) {
+      oldDoc.metadata = {};
+    }
+    return oldDoc;
+  },
 };

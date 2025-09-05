@@ -30,7 +30,7 @@ export async function getLoginUrlBySource(
 ): Promise<string & Location> {
   switch (item.get('source')) {
     case 'epic': {
-      let baseUrl = item.get('location');
+      const baseUrl = item.get('location');
 
       // to stay backwards compatible with old epic connections
       // append /oauth2/authorize to the end of the auth url, if it doesn't already exist
