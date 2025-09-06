@@ -13,7 +13,6 @@ import {
 
 interface LocalConfig {
   use_encrypted_database: boolean;
-  use_sentry_reporting: boolean;
   developer_mode_enabled?: boolean;
   experimental_features_enabled?: boolean;
   experimental__use_openai_rag?: boolean;
@@ -27,7 +26,6 @@ interface LocalConfig {
 
 const defaultLocalConfig: LocalConfig = {
   use_encrypted_database: false,
-  use_sentry_reporting: false,
   developer_mode_enabled: false,
   experimental_features_enabled: false,
   experimental__use_openai_rag: false,
@@ -36,7 +34,7 @@ const defaultLocalConfig: LocalConfig = {
   experimental__ollama_endpoint: AI_DEFAULTS.OLLAMA.ENDPOINT,
   experimental__ollama_model: AI_DEFAULTS.OLLAMA.MODEL,
   experimental__ollama_embedding_model: AI_DEFAULTS.OLLAMA.EMBEDDING_MODEL,
-  experimental__ollama_rerank_model: 'dengcao/Qwen3-Reranker-8B:Q4_K_M',
+  experimental__ollama_rerank_model: AI_DEFAULTS.OLLAMA.RERANK_MODEL,
 };
 
 function getLocalConfig(): LocalConfig {
