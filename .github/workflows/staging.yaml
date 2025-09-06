@@ -24,6 +24,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up QEMU
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
@@ -35,13 +36,23 @@ jobs:
           username: ${{ env.username }}
           password: ${{ env.PASSWORD }}
 
-      - name: Build and push
+      - name: Build and push (multi-platform for main branch)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v5
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
           tags: cfu288/mere-medical:beta
+
+      - name: Build and push (amd64 only for PRs)
+        if: github.event_name == 'pull_request'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: cfu288/mere-medical:beta-pr-${{ github.event.pull_request.number }}
 
   docs:
     runs-on: ubuntu-latest
