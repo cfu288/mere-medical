@@ -2,11 +2,12 @@ import compression from 'compression';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { LogLevel, Logger } from '@nestjs/common';
+import { Logger, LogLevel } from '@nestjs/common';
+import { NestApplicationOptions } from '@nestjs/common/interfaces/nest-application-options.interface';
 import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 import { AppModule } from './app/app.module';
-import { NestApplicationOptions } from '@nestjs/common/interfaces/nest-application-options.interface';
 
 const DEFAULT_PORT = 80;
 const GLOBAL_PREFIX = 'api';
@@ -47,6 +48,28 @@ async function bootstrap() {
   });
   app.setGlobalPrefix(GLOBAL_PREFIX);
   app.use(compression());
+
+  const config = new DocumentBuilder()
+    .setTitle('Mere API')
+    .setDescription(
+      'This is the API service used to power certain aspects of the Mere client application.',
+    )
+    .addTag(
+      'proxy',
+      'Proxy endpoint used by EPIC connections if the `use_proxy` setting is enabled in the client',
+    )
+    .addTag(
+      'tenant',
+      'Search for available tenants (hospital/clinics/providers) for a given EMR',
+    )
+    .addTag(
+      'app-redirect',
+      "Endpoints used to redirect the user's browser to the appropriate app after authentication",
+    )
+    .addTag('health', 'Health check endpoints')
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup(GLOBAL_PREFIX, app, document);
 
   const port = process.env.PORT || DEFAULT_PORT;
   await app.listen(port);
