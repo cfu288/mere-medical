@@ -1,5 +1,4 @@
 import React, { PropsWithChildren } from 'react';
-import * as Sentry from '@sentry/browser';
 
 export interface ErrorBoundaryState {
   hasError: boolean;
@@ -18,14 +17,11 @@ export class ErrorBoundary extends React.Component<
   }
 
   static getDerivedStateFromError(error: Error | unknown) {
-    // Update state so the next render will show the fallback UI.
     return { hasError: true };
   }
 
   override componentDidCatch(error: Error | unknown, errorInfo: unknown) {
-    // You can also log the error to an error reporting service
     console.error(error, errorInfo);
-    Sentry.captureException(error);
   }
 
   override render() {
@@ -33,7 +29,6 @@ export class ErrorBoundary extends React.Component<
       if (this.state.fallbackUI) {
         return this.state.fallbackUI;
       }
-      // You can render any custom fallback UI
       return (
         <div className="flex h-screen flex-col items-center justify-center">
           <h1 className="text-2xl font-bold">Something went wrong</h1>

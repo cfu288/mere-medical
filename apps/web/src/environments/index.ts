@@ -18,7 +18,6 @@ const Config = z.object({
   ]),
   PUBLIC_URL: z.union([z.string().url().nullish(), z.literal('')]),
   REDIRECT_URI: z.union([z.string().url().nullish(), z.literal('')]),
-  SENTRY_WEB_DSN: z.union([z.string().url().nullish(), z.literal('')]),
 });
 
 type Config = z.infer<typeof Config>;

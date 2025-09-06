@@ -8,6 +8,7 @@ export const AI_DEFAULTS = {
     ENDPOINT: 'http://localhost:11434',
     MODEL: 'gpt-oss:20b',
     EMBEDDING_MODEL: 'mxbai-embed-large',
+    RERANK_MODEL: 'qwen2.5:3b',
   },
 } as const;
 

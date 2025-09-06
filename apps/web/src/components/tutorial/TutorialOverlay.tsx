@@ -10,7 +10,6 @@ import { TutorialAddConnectionScreen } from './TutorialAddConnectionScreen';
 import { TutorialWelcomeScreen } from './TutorialWelcomeScreen';
 import { TutorialInstallPWAScreen } from './TutorialInstallPWAScreen';
 import { TutorialCompleteScreen } from './TutorialCompleteScreen';
-// import { TutorialEnableAnalytics } from './TutorialEnableAnalytics';
 import Config from '../../environments/config.json';
 import { isElectron } from '../../utils/isElectron';
 
