@@ -8,8 +8,16 @@ env:
   PASSWORD: ${{ secrets.registry_password }}
 
 jobs:
-  app:
-    runs-on: ubuntu-latest
+  # Build multi-platform images using matrix strategy with native runners
+  app-multiplatform:
+    strategy:
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            platform: linux/amd64
+          - runner: ubuntu-24.04-arm64
+            platform: linux/arm64
+    runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,9 +26,6 @@ jobs:
 
       - name: Generate CalVer env var
         run: echo "RELEASE_CALVER_VERSION=$(echo $(date '+%Y.%m.%d'))" >> $GITHUB_ENV
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -31,13 +36,63 @@ jobs:
           username: ${{ env.username }}
           password: ${{ env.PASSWORD }}
 
-      - name: Build and push
+      - name: Build and push by platform
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: cfu288/mere-medical:latest,cfu288/mere-medical:${{ env.RELEASE_CALVER_VERSION }}
+          platforms: ${{ matrix.platform }}
+          outputs: type=image,name=cfu288/mere-medical,push-by-digest=true,name-canonical=true,push=true
+
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+          echo "RELEASE_CALVER_VERSION=${{ env.RELEASE_CALVER_VERSION }}" >> /tmp/digests/version.txt
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  # Create manifest list and GitHub release
+  app-manifest:
+    runs-on: ubuntu-latest
+    needs:
+      - app-multiplatform
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - name: Set CalVer from artifact
+        run: |
+          echo "RELEASE_CALVER_VERSION=$(cat /tmp/digests/version.txt | head -n1 | cut -d= -f2)" >> $GITHUB_ENV
+          rm /tmp/digests/version.txt
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.username }}
+          password: ${{ env.PASSWORD }}
+
+      - name: Create manifest list and push
+        working-directory: /tmp/digests
+        run: |
+          docker buildx imagetools create \
+            -t cfu288/mere-medical:latest \
+            -t cfu288/mere-medical:${{ env.RELEASE_CALVER_VERSION }} \
+            $(printf 'cfu288/mere-medical@sha256:%s ' *)
 
       - name: Create a GitHub release
         uses: ncipollo/release-action@v1
