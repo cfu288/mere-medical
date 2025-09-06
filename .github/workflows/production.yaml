@@ -19,6 +19,9 @@ jobs:
       - name: Generate CalVer env var
         run: echo "RELEASE_CALVER_VERSION=$(echo $(date '+%Y.%m.%d'))" >> $GITHUB_ENV
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -30,14 +33,11 @@ jobs:
 
       - name: Build and push
         uses: docker/build-push-action@v5
-        # env:
-        #   SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         with:
           context: .
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: cfu288/mere-medical:latest,cfu288/mere-medical:${{ env.RELEASE_CALVER_VERSION }}
-          # secrets: |
-          #   SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Create a GitHub release
         uses: ncipollo/release-action@v1
@@ -46,26 +46,6 @@ jobs:
           name: Release ${{ env.RELEASE_CALVER_VERSION }}
           makeLatest: true
           allowUpdates: true
-
-      # - name: Create Sentry release - Web
-      #   uses: getsentry/action-release@v1
-      #   env:
-      #     SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_RELEASE_TOKEN }}
-      #     SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-      #     SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-      #     SENTRY_URL: https://sentry.meremedical.co/
-      #   with:
-      #     environment: production
-
-      # - name: Create Sentry release - API
-      #   uses: getsentry/action-release@v1
-      #   env:
-      #     SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_RELEASE_TOKEN }}
-      #     SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-      #     SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT_API }}
-      #     SENTRY_URL: https://sentry.meremedical.co/
-      #   with:
-      #     environment: production
 
   docs:
     runs-on: ubuntu-latest
