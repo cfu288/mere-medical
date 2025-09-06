@@ -53,11 +53,11 @@ export default function App() {
               <VectorProvider>
                 <UserProvider>
                   {/* <RecommendationGeneratorInitializer> */}
-                    <UserPreferencesProvider>
-                      <SyncJobProvider>
-                        <RouterProvider router={router} />
-                      </SyncJobProvider>
-                    </UserPreferencesProvider>
+                  <UserPreferencesProvider>
+                    <SyncJobProvider>
+                      <RouterProvider router={router} />
+                    </SyncJobProvider>
+                  </UserPreferencesProvider>
                   {/* </RecommendationGeneratorInitializer> */}
                 </UserProvider>
               </VectorProvider>

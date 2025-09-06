@@ -28,8 +28,8 @@ export interface AIProviderConfig {
   openAiKey?: string;
   ollamaEndpoint?: string;
   ollamaModel?: string;
-  ollamaRerankModel?: string;  // Optional dedicated reranking model
-  skipReranking?: boolean;  // Skip reranking for models that don't support structured output
+  ollamaRerankModel?: string; // Optional dedicated reranking model
+  skipReranking?: boolean; // Skip reranking for models that don't support structured output
 }
 
 export interface PreparedDataResult {

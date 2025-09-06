@@ -14,7 +14,7 @@
  */
 export const flattenObject = (input: unknown): Record<string, unknown> => {
   const result: Record<string, unknown> = {};
-  
+
   /**
    * Recursively flattens an object or array
    * @param value - Current value being processed
@@ -29,7 +29,7 @@ export const flattenObject = (input: unknown): Record<string, unknown> => {
       result[path] = value;
       return;
     }
-    
+
     // Handle arrays
     if (Array.isArray(value)) {
       if (value.length === 0) {
@@ -44,25 +44,25 @@ export const flattenObject = (input: unknown): Record<string, unknown> => {
       }
       return;
     }
-    
+
     // Handle objects
     const obj = value as Record<string, unknown>;
     const keys = Object.keys(obj);
-    
+
     if (keys.length === 0) {
       // Empty objects are stored as-is
       result[path] = obj;
     } else {
       // Process each property
-      keys.forEach(key => {
+      keys.forEach((key) => {
         const propertyPath = path ? `${path}.${key}` : key;
         processValue(obj[key], propertyPath);
       });
     }
   }
-  
+
   // Start processing from the root
   processValue(input, '');
-  
+
   return result;
 };

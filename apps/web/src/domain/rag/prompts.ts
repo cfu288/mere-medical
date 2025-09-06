@@ -33,10 +33,9 @@ Please provide a helpful response to the patient's question based on these medic
 }
 
 /**
- * Creates the system prompt for reranking based on provider
+ * Creates the system prompt for reranking
  */
 export function createRerankingPrompt(query: string): string {
-  // Unified compact format for both providers - saves tokens
   return `Rate each document's relevance to: "${query}"
 
 You will receive documents labeled as DOCUMENT 1, DOCUMENT 2, etc.

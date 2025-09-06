@@ -29,10 +29,7 @@ export const ChatInput = memo(function ChatInput({
   };
 
   return (
-    <form
-      className="flex-none bg-gray-50"
-      onSubmit={handleSubmit}
-    >
+    <form className="flex-none bg-gray-50" onSubmit={handleSubmit}>
       <div className="flex flex-row items-center p-2 rounded-lg bg-gray-50 justify-center align-middle">
         <input
           id="chat"

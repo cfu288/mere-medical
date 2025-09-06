@@ -28,42 +28,47 @@ export async function rerankDocuments(
   try {
     const systemPrompt = createRerankingPrompt(query);
     const batches = createDocumentBatches(documents, BATCH_SIZE);
-    
+
     let allRankedDocs: RerankingDocument[] = [];
-    
+
     if (batches.length <= MAX_PARALLEL_BATCHES) {
-      const batchPromises = batches.map(batch => 
-        processBatch(batch, systemPrompt, config, documents)
+      const batchPromises = batches.map((batch) =>
+        processBatch(batch, systemPrompt, config, documents),
       );
-      
+
       const batchResults = await Promise.all(batchPromises);
       allRankedDocs = batchResults.flat();
     } else {
       for (const batch of batches) {
-        const batchResult = await processBatch(batch, systemPrompt, config, documents);
+        const batchResult = await processBatch(
+          batch,
+          systemPrompt,
+          config,
+          documents,
+        );
         allRankedDocs.push(...batchResult);
       }
     }
-    
-    const { documents: selectedDocs, threshold } = selectTopDocumentsWithThreshold(
-      allRankedDocs,
-      targetDocuments,
-      relevanceThreshold
-    );
-    
+
+    const { documents: selectedDocs, threshold } =
+      selectTopDocumentsWithThreshold(
+        allRankedDocs,
+        targetDocuments,
+        relevanceThreshold,
+      );
+
     return {
       rerankingApplied: true,
-      documents: selectedDocs.map(doc => ({
+      documents: selectedDocs.map((doc) => ({
         text: doc.text,
         relevanceScore: doc.relevanceScore,
         relevanceReason: doc.relevanceReason,
       })),
     };
-    
   } catch (error) {
     console.error('[Reranking] Error:', error);
     console.log('[Reranking] Returning all documents unmodified due to error');
-    
+
     return {
       rerankingApplied: false,
       documents: documents.map((text) => ({
@@ -79,10 +84,10 @@ async function processBatch(
   batch: { documents: string[]; startIndex: number },
   systemPrompt: string,
   config: AIProviderConfig,
-  allDocuments: string[]
+  allDocuments: string[],
 ): Promise<RerankingDocument[]> {
   const userPrompt = `Evaluate these documents:\n\n${formatDocumentsForPrompt(batch.documents)}`;
-  
+
   const createFallbackDocuments = (reason: string) => {
     console.log(`[Reranking] Using fallback scores: ${reason}`);
     return batch.documents.map((doc, index) => ({
@@ -91,12 +96,16 @@ async function processBatch(
       relevanceReason: `Fallback - ${reason}`,
     }));
   };
-  
-  const attemptReranking = async (isRetry: boolean = false, previousError?: string): Promise<RerankingDocument[]> => {
-    const finalSystemPrompt = isRetry && previousError
-      ? `${systemPrompt}\n\nYour previous response had an error: ${previousError}\nPlease correct it and return the proper format.`
-      : systemPrompt;
-    
+
+  const attemptReranking = async (
+    isRetry: boolean = false,
+    previousError?: string,
+  ): Promise<RerankingDocument[]> => {
+    const finalSystemPrompt =
+      isRetry && previousError
+        ? `${systemPrompt}\n\nYour previous response had an error: ${previousError}\nPlease correct it and return the proper format.`
+        : systemPrompt;
+
     try {
       const response = await callAIProvider({
         ...config,
@@ -106,10 +115,10 @@ async function processBatch(
         expectJson: true,
         useRerankingModel: true,
       });
-      
+
       // Parse the unified map format response {"1": 8, "2": 3, "3": 9, "4": 2, "5": 7}
       let scoreMap: Record<string, number>;
-      
+
       if (typeof response === 'object' && response !== null) {
         scoreMap = response as Record<string, number>;
       } else if (typeof response === 'string') {
@@ -118,7 +127,10 @@ async function processBatch(
         } catch (e) {
           const error = `Invalid JSON format. Expected {"1": score, "2": score, ...}`;
           if (!isRetry) {
-            console.log('[Reranking] Parse error, retrying with feedback:', error);
+            console.log(
+              '[Reranking] Parse error, retrying with feedback:',
+              error,
+            );
             return attemptReranking(true, error);
           }
           throw new Error(error);
@@ -131,41 +143,46 @@ async function processBatch(
         }
         throw new Error(error);
       }
-      
+
       // Validate and convert map to array
       const results: RerankingDocument[] = [];
       const errors: string[] = [];
-      
+
       for (let i = 0; i < batch.documents.length; i++) {
         const docNum = (i + 1).toString();
         const score = scoreMap[docNum];
-        
+
         if (score === undefined || score === null) {
           errors.push(`Missing score for document ${docNum}`);
           continue;
         }
-        
+
         if (typeof score !== 'number' || score < 0 || score > 10) {
-          errors.push(`Invalid score for document ${docNum}: ${score} (must be 0-10)`);
+          errors.push(
+            `Invalid score for document ${docNum}: ${score} (must be 0-10)`,
+          );
           continue;
         }
-        
+
         results.push({
           text: batch.documents[i],
           relevanceScore: score,
           relevanceReason: 'Model score',
         });
       }
-      
+
       if (errors.length > 0) {
         const errorMsg = errors.join('; ');
         if (!isRetry) {
-          console.log('[Reranking] Validation errors, retrying with feedback:', errorMsg);
+          console.log(
+            '[Reranking] Validation errors, retrying with feedback:',
+            errorMsg,
+          );
           return attemptReranking(true, errorMsg);
         }
         throw new Error(errorMsg);
       }
-      
+
       return results;
     } catch (error) {
       if (!isRetry) {
@@ -175,7 +192,7 @@ async function processBatch(
       throw error;
     }
   };
-  
+
   try {
     return await attemptReranking();
   } catch (error) {

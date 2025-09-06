@@ -336,7 +336,7 @@ export async function fetchRecordsWithVectorSearch({
       }
       docIdToChunks.get(documentId)!.push({
         id: item.id,
-        metadata: item.metadata
+        metadata: item.metadata,
       });
     }
   });

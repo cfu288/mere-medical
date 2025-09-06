@@ -82,7 +82,15 @@ export async function searchDocuments(
 }
 
 /**
- * Performs an iterative search, expanding terms if needed
+ * Performs multiple search iterations to find more relevant documents.
+ *
+ * Continues searching until either:
+ * - The document limit is reached
+ * - Maximum iterations are exhausted
+ * - No new documents are found
+ *
+ * Each iteration can optionally expand search terms using the expandTerms callback.
+ * Deduplicates results across iterations to avoid returning the same document multiple times.
  */
 export async function iterativeSearch(
   initialTerms: string[],

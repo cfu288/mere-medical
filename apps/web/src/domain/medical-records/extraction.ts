@@ -1,15 +1,8 @@
-/**
- * Document text extraction operations
- */
-
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { BundleEntry, FhirResource } from 'fhir/r2';
 import { DocumentText } from './types';
 import { prepareClinicalDocumentForVectorization } from '../../components/providers/vector-provider/helpers/prepareClinicalDocumentForVectorization';
 
-/**
- * Extracts text content from a clinical document
- */
 export function extractTextFromDocument(
   doc: ClinicalDocument<BundleEntry<FhirResource>>,
 ): DocumentText[] {
@@ -30,9 +23,6 @@ export function extractTextFromDocument(
   }));
 }
 
-/**
- * Extracts text from multiple documents
- */
 export function extractTextsFromDocuments(
   documents: ClinicalDocument<BundleEntry<FhirResource>>[],
 ): DocumentText[] {

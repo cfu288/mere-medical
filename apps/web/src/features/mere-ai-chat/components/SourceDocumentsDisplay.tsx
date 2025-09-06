@@ -20,15 +20,14 @@ export const SourceDocumentsDisplay = memo(function SourceDocumentsDisplay({
   sourceDocs,
   isCollapsed = false,
 }: SourceDocumentsDisplayProps) {
-  console.log(
-    `[SourceDocumentsDisplay] Rendering with:`,
-    {
-      sourceDocsReceived: sourceDocs?.length || 0,
-      isCollapsed,
-      docTypes: sourceDocs?.map(d => d.data_record?.raw?.resource?.resourceType).slice(0, 5)
-    }
-  );
-  
+  console.log(`[SourceDocumentsDisplay] Rendering with:`, {
+    sourceDocsReceived: sourceDocs?.length || 0,
+    isCollapsed,
+    docTypes: sourceDocs
+      ?.map((d) => d.data_record?.raw?.resource?.resourceType)
+      .slice(0, 5),
+  });
+
   if (!sourceDocs || sourceDocs.length === 0) {
     console.log(`[SourceDocumentsDisplay] No source docs, returning null`);
     return null;
@@ -44,16 +43,18 @@ export const SourceDocumentsDisplay = memo(function SourceDocumentsDisplay({
 
   // Filter out documents without renderable cards
   const renderableDocs = sourceDocs.filter(hasRenderableCard);
-  
+
   console.log(
     `[SourceDocumentsDisplay] Filtered to ${renderableDocs.length} renderable docs from ${sourceDocs.length} total`,
     {
-      renderableTypes: renderableDocs.map(d => d.data_record?.raw?.resource?.resourceType).slice(0, 5),
+      renderableTypes: renderableDocs
+        .map((d) => d.data_record?.raw?.resource?.resourceType)
+        .slice(0, 5),
       nonRenderableTypes: sourceDocs
-        .filter(d => !hasRenderableCard(d))
-        .map(d => d.data_record?.raw?.resource?.resourceType)
-        .slice(0, 5)
-    }
+        .filter((d) => !hasRenderableCard(d))
+        .map((d) => d.data_record?.raw?.resource?.resourceType)
+        .slice(0, 5),
+    },
   );
 
   if (renderableDocs.length === 0) {

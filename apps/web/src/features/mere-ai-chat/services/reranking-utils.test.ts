@@ -1,8 +1,14 @@
-import { selectTopDocumentsWithThreshold, RerankingDocument } from './reranking-utils';
+import {
+  selectTopDocumentsWithThreshold,
+  RerankingDocument,
+} from './reranking-utils';
 
 describe('selectTopDocumentsWithThreshold', () => {
   // Helper to create test documents
-  const createDoc = (score: number, text: string = `doc-${score}`): RerankingDocument => ({
+  const createDoc = (
+    score: number,
+    text: string = `doc-${score}`,
+  ): RerankingDocument => ({
     text,
     relevanceScore: score,
     relevanceReason: `Score ${score}`,
@@ -10,15 +16,10 @@ describe('selectTopDocumentsWithThreshold', () => {
 
   describe('when documents are fewer than target', () => {
     it('should return all documents when fewer than target exist', () => {
-      const docs = [
-        createDoc(8),
-        createDoc(6),
-        createDoc(4),
-        createDoc(2),
-      ];
-      
+      const docs = [createDoc(8), createDoc(6), createDoc(4), createDoc(2)];
+
       const result = selectTopDocumentsWithThreshold(docs, 10, 5);
-      
+
       // Want 10 docs but only have 4 - return all 4 even though one is below threshold
       expect(result.documents).toHaveLength(4);
       expect(result.documents[0].relevanceScore).toBe(8);
@@ -29,15 +30,10 @@ describe('selectTopDocumentsWithThreshold', () => {
     });
 
     it('should return all documents even when all are below threshold', () => {
-      const docs = [
-        createDoc(4),
-        createDoc(3),
-        createDoc(2),
-        createDoc(1),
-      ];
-      
+      const docs = [createDoc(4), createDoc(3), createDoc(2), createDoc(1)];
+
       const result = selectTopDocumentsWithThreshold(docs, 10, 5);
-      
+
       // Want 10, have 4, all below threshold of 5 - still return all 4
       expect(result.documents).toHaveLength(4);
       expect(result.threshold).toBe(1); // Effective threshold is lowest score
@@ -51,9 +47,9 @@ describe('selectTopDocumentsWithThreshold', () => {
         createDoc(2),
         createDoc(1),
       ];
-      
+
       const result = selectTopDocumentsWithThreshold(docs, 3, 5);
-      
+
       // Only 1 doc (score 8) meets threshold of 5, but we need 3 docs
       expect(result.documents).toHaveLength(3);
       expect(result.documents[0].relevanceScore).toBe(8);
@@ -75,9 +71,9 @@ describe('selectTopDocumentsWithThreshold', () => {
         createDoc(4),
         createDoc(3),
       ];
-      
+
       const result = selectTopDocumentsWithThreshold(docs, 3, 5);
-      
+
       expect(result.documents).toHaveLength(3);
       expect(result.documents[0].relevanceScore).toBe(10);
       expect(result.documents[1].relevanceScore).toBe(9);
@@ -94,12 +90,14 @@ describe('selectTopDocumentsWithThreshold', () => {
         createDoc(5),
         createDoc(3),
       ];
-      
+
       const result = selectTopDocumentsWithThreshold(docs, 3, 5);
-      
+
       // Should include all score-8 documents
       expect(result.documents).toHaveLength(4);
-      expect(result.documents.filter(d => d.relevanceScore === 8)).toHaveLength(3);
+      expect(
+        result.documents.filter((d) => d.relevanceScore === 8),
+      ).toHaveLength(3);
       expect(result.threshold).toBe(8);
     });
 
@@ -113,9 +111,9 @@ describe('selectTopDocumentsWithThreshold', () => {
         createDoc(7),
         createDoc(3),
       ];
-      
+
       const result = selectTopDocumentsWithThreshold(docs, 3, 5);
-      
+
       // Too many at score 7 (more than 3 * 1.5 = 4.5), so limit to exactly 3
       expect(result.documents).toHaveLength(3);
       expect(result.documents[0].relevanceScore).toBe(10);
@@ -131,9 +129,9 @@ describe('selectTopDocumentsWithThreshold', () => {
         createDoc(2),
         createDoc(1),
       ];
-      
+
       const result = selectTopDocumentsWithThreshold(docs, 3, 7);
-      
+
       // Threshold is 7 but highest doc is 6 - still return top 3
       expect(result.documents).toHaveLength(3);
       expect(result.documents[0].relevanceScore).toBe(6);
@@ -150,9 +148,9 @@ describe('selectTopDocumentsWithThreshold', () => {
         createDoc(1),
         createDoc(0),
       ];
-      
+
       const result = selectTopDocumentsWithThreshold(docs, 3, 5);
-      
+
       // All docs below threshold of 5 - still return top 3 to meet target
       expect(result.documents).toHaveLength(3);
       expect(result.documents[0].relevanceScore).toBe(4);
@@ -165,16 +163,16 @@ describe('selectTopDocumentsWithThreshold', () => {
   describe('edge cases', () => {
     it('should handle empty input', () => {
       const result = selectTopDocumentsWithThreshold([], 5, 3);
-      
+
       expect(result.documents).toHaveLength(0);
       expect(result.threshold).toBe(3);
     });
 
     it('should handle single document above threshold', () => {
       const docs = [createDoc(8)];
-      
+
       const result = selectTopDocumentsWithThreshold(docs, 5, 5);
-      
+
       expect(result.documents).toHaveLength(1);
       expect(result.documents[0].relevanceScore).toBe(8);
       expect(result.threshold).toBe(8); // Effective threshold
@@ -182,9 +180,9 @@ describe('selectTopDocumentsWithThreshold', () => {
 
     it('should handle single document below threshold', () => {
       const docs = [createDoc(3)];
-      
+
       const result = selectTopDocumentsWithThreshold(docs, 5, 5);
-      
+
       // Return the single document even though below threshold
       expect(result.documents).toHaveLength(1);
       expect(result.documents[0].relevanceScore).toBe(3);
@@ -198,9 +196,9 @@ describe('selectTopDocumentsWithThreshold', () => {
         createDoc(7, 'doc-c'),
         createDoc(7, 'doc-d'),
       ];
-      
+
       const result = selectTopDocumentsWithThreshold(docs, 2, 5);
-      
+
       // When all have same score above threshold and we want 2,
       // we take all at that score (up to 1.5x target = 3)
       // But since we have 4 at score 7 (> 3), limit to exactly 2
@@ -211,15 +209,10 @@ describe('selectTopDocumentsWithThreshold', () => {
     });
 
     it('should handle all documents with same score below threshold', () => {
-      const docs = [
-        createDoc(3),
-        createDoc(3),
-        createDoc(3),
-        createDoc(3),
-      ];
-      
+      const docs = [createDoc(3), createDoc(3), createDoc(3), createDoc(3)];
+
       const result = selectTopDocumentsWithThreshold(docs, 2, 5);
-      
+
       // Return target count even if all below threshold
       expect(result.documents).toHaveLength(2);
       expect(result.documents[0].relevanceScore).toBe(3);
@@ -238,9 +231,9 @@ describe('selectTopDocumentsWithThreshold', () => {
         createDoc(2, 'Vitamin B12'),
         createDoc(1, 'Unrelated test'),
       ];
-      
+
       const result = selectTopDocumentsWithThreshold(docs, 5, 5);
-      
+
       // Should return at least 3 docs (could be more if tied at threshold)
       expect(result.documents.length).toBeGreaterThanOrEqual(3);
       expect(result.documents[0].text).toBe('Hemoglobin test result');
@@ -255,9 +248,9 @@ describe('selectTopDocumentsWithThreshold', () => {
         createDoc(2, 'Possibly relevant'),
         createDoc(1, 'Barely relevant'),
       ];
-      
+
       const result = selectTopDocumentsWithThreshold(docs, 3, 5);
-      
+
       // All scores below threshold of 5 - still return target of 3 docs
       expect(result.documents).toHaveLength(3);
     });

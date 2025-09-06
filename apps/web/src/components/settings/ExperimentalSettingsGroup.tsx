@@ -324,7 +324,8 @@ export function ExperimentalSettingsGroup() {
                       ))}
                     </select>
                     <p className="text-xs text-gray-500 mt-1">
-                      Optional: Specialized model for reranking search results. Select "None" to disable reranking.
+                      Optional: Specialized model for reranking search results.
+                      Select "None" to disable reranking.
                     </p>
                   </div>
 

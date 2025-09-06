@@ -75,10 +75,7 @@ export function ShowDocumentResultsExpandable({
           >
             <p className="text-md whitespace-wrap overflow-x-scroll p-4 text-gray-900">
               {!hasLoadedDocument && 'Loading...'}
-              <DisplayCCDADocument
-                ccda={ccda}
-                matchedChunks={matchedChunks}
-              />
+              <DisplayCCDADocument ccda={ccda} matchedChunks={matchedChunks} />
               {hasLoadedDocument && !ccda && (
                 <p>
                   Sorry, looks like we were unable to get the linked document

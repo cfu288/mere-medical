@@ -112,16 +112,15 @@ function MereAITab() {
             },
           });
           if (result.responseText) {
-            console.log(
-              `[UI] Received RAG result:`,
-              {
-                responseLength: result.responseText.length,
-                sourceDocsReceived: result.sourceDocs.length,
-                sourceDocIds: result.sourceDocs.map((doc) => doc.id).slice(0, 5),
-                sourceDocTypes: result.sourceDocs.map((doc) => doc.data_record?.raw?.resource?.resourceType).slice(0, 5)
-              }
-            );
-            
+            console.log(`[UI] Received RAG result:`, {
+              responseLength: result.responseText.length,
+              sourceDocsReceived: result.sourceDocs.length,
+              sourceDocIds: result.sourceDocs.map((doc) => doc.id).slice(0, 5),
+              sourceDocTypes: result.sourceDocs
+                .map((doc) => doc.data_record?.raw?.resource?.resourceType)
+                .slice(0, 5),
+            });
+
             const newMessage: UIAIMessage = {
               type: 'ai',
               text: result.responseText,
@@ -134,16 +133,13 @@ function MereAITab() {
                 sourceDocs: result.sourceDocs,
               },
             };
-            
-            console.log(
-              `[UI] Created UI message with:`,
-              {
-                sourceDocIdsCount: newMessage.sourceDocIds.length,
-                metadataSourceDocsCount: newMessage.metadata?.sourceDocs?.length,
-                messageId: newMessage.id
-              }
-            );
-            
+
+            console.log(`[UI] Created UI message with:`, {
+              sourceDocIdsCount: newMessage.sourceDocIds.length,
+              metadataSourceDocsCount: newMessage.metadata?.sourceDocs?.length,
+              messageId: newMessage.id,
+            });
+
             setMessages((e) => [...e, newMessage]);
           }
           setAiLoadingText('');

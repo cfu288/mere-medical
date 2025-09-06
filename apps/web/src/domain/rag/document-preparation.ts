@@ -20,9 +20,6 @@ interface PreparationOptions {
   aiConfig?: AIProviderConfig;
 }
 
-/**
- * Prepares documents for RAG context
- */
 export async function prepareDocumentsForContext(
   documents: ClinicalDocument<BundleEntry<FhirResource>>[],
   relevantChunkIds: string[],
@@ -209,9 +206,6 @@ export async function prepareDocumentsForContext(
   };
 }
 
-/**
- * Fetches texts from related documents
- */
 async function fetchRelatedDocumentTexts(
   documents: ClinicalDocument<BundleEntry<FhirResource>>[],
   db: RxDatabase<DatabaseCollections>,

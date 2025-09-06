@@ -11,6 +11,8 @@ export function countRenderableDocuments(
 
   return sourceDocs.filter((doc) => {
     const resourceType = doc.data_record?.raw?.resource?.resourceType;
-    return resourceType && RENDERABLE_RESOURCE_TYPES.includes(resourceType as any);
+    return (
+      resourceType && RENDERABLE_RESOURCE_TYPES.includes(resourceType as any)
+    );
   }).length;
 }

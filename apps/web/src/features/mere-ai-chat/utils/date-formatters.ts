@@ -17,5 +17,7 @@ export function formatTimestampToDay(isoDate: string): string {
 
 export function formatTimestampText(isoDate: string): string {
   const daysDiff = Math.abs(differenceInDays(parseISO(isoDate), new Date()));
-  return daysDiff >= 1 ? formatTimestampToDay(isoDate) : formatTimestampToTime(isoDate);
+  return daysDiff >= 1
+    ? formatTimestampToDay(isoDate)
+    : formatTimestampToTime(isoDate);
 }

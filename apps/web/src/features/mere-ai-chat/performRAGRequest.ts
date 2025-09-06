@@ -61,15 +61,14 @@ export async function performRAGRequest(
     throw result.error;
   }
 
-  console.log(
-    `[RAG Pipeline] performRAGRequest returning to UI:`,
-    {
-      responseLength: result.response.length,
-      sourceDocsCount: result.sources.length,
-      sourceDocTypes: result.sources.map(d => d.data_record?.raw?.resource?.resourceType).slice(0, 5),
-      confidence: 'confidence' in result ? result.confidence : undefined
-    }
-  );
+  console.log(`[RAG Pipeline] performRAGRequest returning to UI:`, {
+    responseLength: result.response.length,
+    sourceDocsCount: result.sources.length,
+    sourceDocTypes: result.sources
+      .map((d) => d.data_record?.raw?.resource?.resourceType)
+      .slice(0, 5),
+    confidence: 'confidence' in result ? result.confidence : undefined,
+  });
 
   return {
     responseText: result.response,

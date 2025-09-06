@@ -160,7 +160,6 @@ export function serializeFHIRDocumentForVectorStorage(
   };
 }
 
-// Legacy wrapper function for backward compatibility
 function serializeAndChunkJSONForVectorization(
   data: any,
   meta: DocMeta,

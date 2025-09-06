@@ -48,7 +48,5 @@ export const vectorStorageSchemaLiteral = {
       optional: true,
     },
   },
-  indexes: [
-    'metadata.documentId',
-  ],
+  indexes: ['metadata.documentId'],
 } as const;

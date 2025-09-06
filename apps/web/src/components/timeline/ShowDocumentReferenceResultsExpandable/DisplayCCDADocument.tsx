@@ -26,7 +26,7 @@ export function DisplayCCDADocument({
     }
 
     const sections = new Set<string>();
-    matchedChunks.forEach(chunk => {
+    matchedChunks.forEach((chunk) => {
       if (chunk.metadata?.sectionName) {
         sections.add(chunk.metadata.sectionName);
       }

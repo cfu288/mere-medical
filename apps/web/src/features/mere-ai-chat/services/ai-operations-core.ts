@@ -1,7 +1,4 @@
-import {
-  AIProviderConfig,
-  AI_DEFAULTS,
-} from '../types';
+import { AIProviderConfig, AI_DEFAULTS } from '../types';
 import { AI_CONFIG } from '../constants/config';
 
 interface AIOperationParams extends AIProviderConfig {
@@ -219,15 +216,13 @@ export async function callAIProvider({
               console.warn(
                 '[Ollama] Could not extract valid JSON from non-streaming response',
               );
-              // Return empty array as fallback for reranking
-              return [];
+              throw new Error(
+                'Failed to parse extracted JSON from Ollama response',
+              );
             }
           }
-          console.warn(
-            '[Ollama] No JSON found in response, returning empty array as fallback',
-          );
-          // Return empty array as fallback for reranking
-          return [];
+          console.warn('[Ollama] No JSON found in response');
+          throw new Error('No valid JSON found in Ollama response');
         }
       }
       return fullResponse;

@@ -54,7 +54,7 @@ export const modelSupportsStructuredOutput = (modelName: string): boolean => {
   // Rerank models all support structured output for reranking
   const rerankModel = OLLAMA_RERANK_MODELS.find((m) => m.value === modelName);
   if (rerankModel) return rerankModel.supportsStructuredOutput;
-  
+
   // All chat models support structured output for general queries
   // (reranking will use dedicated rerank models)
   return true;

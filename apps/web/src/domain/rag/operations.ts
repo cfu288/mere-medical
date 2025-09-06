@@ -1,8 +1,3 @@
-/**
- * Core RAG operations using simple function composition
- */
-
-import { VectorStorage } from '@mere/vector-storage';
 import { DatabaseCollections } from '../../components/providers/DatabaseCollections';
 import { RxDatabase } from 'rxdb';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
@@ -10,13 +5,13 @@ import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocumen
 import { BundleEntry, FhirResource } from 'fhir/r2';
 
 import { ChatMessage } from '../chat/types';
-import { DocumentText, PreparedDocuments } from '../medical-records/types';
+import { PreparedDocuments } from '../medical-records/types';
 import { RAGResult, RAGError, RAGOptions } from './types';
 import { searchDocuments, iterativeSearch } from '../medical-records/search';
-import { extractTextsFromDocuments } from '../medical-records/extraction';
 import { prepareDocumentsForContext } from './document-preparation';
 import { AIProvider } from '../../services/ai/types';
 import { MEDICAL_AI_SYSTEM_PROMPT, buildRAGUserPrompt } from './prompts';
+import { VectorStorage } from '@mere/vector-storage';
 
 export interface RAGContext {
   query: string;
@@ -30,7 +25,13 @@ export interface RAGContext {
 }
 
 /**
- * Common RAG logic shared between streaming and non-streaming versions
+ * Executes the search and document preparation phases of the RAG pipeline.
+ *
+ * 1. Searches for relevant documents using vector similarity and/or iterative search
+ * 2. Prepares found documents by extracting text, applying reranking, and including related documents
+ * 3. Returns prepared documents ready for AI response generation
+ *
+ * Throws RAGError if no relevant documents are found.
  */
 async function performRAGCommon(context: RAGContext): Promise<{
   preparedDocs: PreparedDocuments;
@@ -89,16 +90,18 @@ async function performRAGCommon(context: RAGContext): Promise<{
     );
     console.log(
       `[RAG Pipeline] Source document IDs:`,
-      preparedDocs.sourceDocs.map(d => d.id).slice(0, 5),
-      preparedDocs.sourceDocs.length > 5 ? `... and ${preparedDocs.sourceDocs.length - 5} more` : ''
+      preparedDocs.sourceDocs.map((d) => d.id).slice(0, 5),
+      preparedDocs.sourceDocs.length > 5
+        ? `... and ${preparedDocs.sourceDocs.length - 5} more`
+        : '',
     );
     console.log(
       `[RAG Pipeline] Text chunks preview:`,
-      preparedDocs.texts.slice(0, 3).map(t => ({
+      preparedDocs.texts.slice(0, 3).map((t) => ({
         docId: t.sourceDocId,
         preview: t.text.substring(0, 100) + '...',
-        score: t.metadata?.relevanceScore
-      }))
+        score: t.metadata?.relevanceScore,
+      })),
     );
   } catch (error) {
     console.error('[RAG Pipeline] Error preparing documents:', error);
@@ -112,7 +115,8 @@ async function performRAGCommon(context: RAGContext): Promise<{
 }
 
 /**
- * Main RAG function using simple composition
+ * Executes full RAG pipeline: search → prepare → generate response (non-streaming).
+ * For streaming responses, use performRAGWithStreaming instead.
  */
 export async function performRAG(context: RAGContext): Promise<RAGResult> {
   const { aiProvider, onStatusUpdate } = context;
@@ -130,11 +134,13 @@ export async function performRAG(context: RAGContext): Promise<RAGResult> {
     console.log('[RAG Pipeline] AI response generation complete');
     console.log(
       `[RAG Pipeline] Returning ${preparedDocs.sourceDocs.length} source documents to UI:`,
-      preparedDocs.sourceDocs.map(d => ({
-        id: d.id,
-        type: d.data_record?.raw?.resource?.resourceType,
-        date: d.metadata?.date
-      })).slice(0, 5)
+      preparedDocs.sourceDocs
+        .map((d) => ({
+          id: d.id,
+          type: d.data_record?.raw?.resource?.resourceType,
+          date: d.metadata?.date,
+        }))
+        .slice(0, 5),
     );
 
     return {
@@ -161,7 +167,9 @@ export async function performRAG(context: RAGContext): Promise<RAGResult> {
 }
 
 /**
- * Searches for documents with optional iteration
+ * Searches medical records using vector similarity.
+ * When maxSearchIterations > 1: Performs multiple search rounds to accumulate more results.
+ * Otherwise: Single search pass, returns up to limit documents.
  */
 async function searchForDocuments(
   query: string,
@@ -186,9 +194,6 @@ async function searchForDocuments(
   }
 }
 
-/**
- * Generates a response using the AI provider
- */
 async function generateResponse(
   query: string,
   documents: PreparedDocuments,
@@ -201,9 +206,6 @@ async function generateResponse(
   });
 }
 
-/**
- * Performs RAG with streaming response
- */
 export async function performRAGWithStreaming(
   context: RAGContext & { onChunk: (chunk: string) => void },
 ): Promise<RAGResult> {
@@ -223,11 +225,13 @@ export async function performRAGWithStreaming(
     console.log('[RAG Pipeline] Streaming AI response complete');
     console.log(
       `[RAG Pipeline] Returning ${preparedDocs.sourceDocs.length} source documents to UI (streaming):`,
-      preparedDocs.sourceDocs.map(d => ({
-        id: d.id,
-        type: d.data_record?.raw?.resource?.resourceType,
-        date: d.metadata?.date
-      })).slice(0, 5)
+      preparedDocs.sourceDocs
+        .map((d) => ({
+          id: d.id,
+          type: d.data_record?.raw?.resource?.resourceType,
+          date: d.metadata?.date,
+        }))
+        .slice(0, 5),
     );
 
     return {
@@ -253,9 +257,6 @@ export async function performRAGWithStreaming(
   }
 }
 
-/**
- * Generates a streaming response
- */
 async function generateStreamingResponse(
   query: string,
   documents: PreparedDocuments,
