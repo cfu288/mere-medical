@@ -144,7 +144,6 @@ export function parseCCDA(
           break;
         default:
           const result = parseCCDASection(sections, val);
-          // console.log(result);
           parsedDoc[k] = result;
           break;
       }
@@ -226,7 +225,6 @@ export function parseCCDASection(
 
   try {
     const res = [...(matchingSections as unknown as HTMLElement[])];
-    // try and parse <text> elements
     const text = res?.map((x) => x.getElementsByTagName('text')?.[0])?.[0]
       ?.innerHTML;
 

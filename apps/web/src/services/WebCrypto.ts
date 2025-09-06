@@ -47,7 +47,7 @@ function makeKeys(): Promise<CryptoKeyPair> {
       hash: CryptoConfig.hash,
     },
     CryptoConfig.extractable, //whether the key is extractable (i.e. can be used in exportKey)
-    CryptoConfig.keyUsages
+    CryptoConfig.keyUsages,
   );
 }
 
@@ -64,7 +64,7 @@ function sign(data: Data, key: CryptoKey): Promise<Signature> {
       hash: CryptoConfig.hash,
     },
     key, //from generateKey or importKey above
-    data //ArrayBuffer of data you want to sign
+    data, //ArrayBuffer of data you want to sign
   );
 }
 
@@ -78,7 +78,7 @@ function sign(data: Data, key: CryptoKey): Promise<Signature> {
 function verify(
   data: Data,
   key: CryptoKey,
-  signature: Signature
+  signature: Signature,
 ): Promise<boolean> {
   return window.crypto.subtle.verify(
     {
@@ -87,7 +87,7 @@ function verify(
     },
     key, //from generateKey or importKey above
     signature, //ArrayBuffer of the signature
-    data //ArrayBuffer of the data
+    data, //ArrayBuffer of the data
   );
 }
 
@@ -135,7 +135,7 @@ export async function getPublicKey(): Promise<JsonWebKey> {
           const keys = await getKeysFromDbOrCreate(getKeys, db);
           const publicKey = await window.crypto.subtle.exportKey(
             'jwk',
-            keys.publicKey
+            keys.publicKey,
           );
           resolve(publicKey);
         } catch (e) {
@@ -190,7 +190,7 @@ async function getKeysFromDbOrCreate(
     id: number;
     keys: CryptoKeyPair;
   }>,
-  db: IDBDatabase
+  db: IDBDatabase,
 ): Promise<CryptoKeyPair> {
   let keys = keyRequest.result?.keys;
   if (!keys) {
@@ -198,7 +198,7 @@ async function getKeysFromDbOrCreate(
     keys = await makeKeys();
     if (makeKeys() === undefined) {
       throw new Error(
-        'Could not create keys - Your browser does not support WebCrypto or you are running without SSL enabled.'
+        'Could not create keys - Your browser does not support WebCrypto or you are running without SSL enabled.',
       );
     }
     // Create new transaction to store new keys, as the previous one is closed
@@ -217,7 +217,7 @@ async function getKeysFromDbOrCreate(
  */
 export function verifyPayload(
   data: Data,
-  signature: Signature
+  signature: Signature,
 ): Promise<boolean> {
   return new Promise((resolve, reject) => {
     // Open (or create) the database
@@ -278,7 +278,7 @@ export function base64UrlStringToBase64String(base64UrlString: string): string {
 
   if (padding === 1) {
     throw new Error(
-      'InvalidLengthError: Input base64url string is the wrong length to determine padding'
+      'InvalidLengthError: Input base64url string is the wrong length to determine padding',
     );
   }
   if (padding === 2) {
@@ -296,7 +296,7 @@ export function base64UrlStringToBase64String(base64UrlString: string): string {
  * @returns ArrayBuffer
  */
 export function base64UrlStringToArrayBuffer(
-  base64UrlString: string
+  base64UrlString: string,
 ): ArrayBuffer {
   const base64String = base64UrlStringToBase64String(base64UrlString),
     binaryString = atob(base64String),
@@ -355,7 +355,7 @@ export function textStringToBase64UrlString(data: string): string {
  */
 export function textStringToBase64UrlArrayBuffer(str: string): ArrayBuffer {
   return base64UrlStringToArrayBuffer(
-    base64StringToBase64UrlString(textStringToBase64String(str))
+    base64StringToBase64UrlString(textStringToBase64String(str)),
   );
 }
 

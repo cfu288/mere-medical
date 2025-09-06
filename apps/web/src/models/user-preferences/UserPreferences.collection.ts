@@ -7,7 +7,7 @@ import {
 import { userPreferencesSchemaLiteral } from './UserPreferences.schema';
 
 export const userPreferencesSchemaTyped = toTypedRxJsonSchema(
-  userPreferencesSchemaLiteral
+  userPreferencesSchemaLiteral,
 );
 
 type UserPreferencesDocumentType = ExtractDocumentTypeFromTypedRxJsonSchema<

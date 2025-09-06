@@ -34,7 +34,7 @@ import { TimelineTab } from '../pages/TimelineTab';
 import VARedirect from '../pages/VARedirect';
 import VeradigmRedirect from '../pages/VeradigmRedirect';
 import { Routes as AppRoutes } from '../Routes';
-import { RecommendationGeneratorInitializer } from '../features/mere-ai-recommendations/components/RecommendationGeneratorInitializer';
+// import { RecommendationGeneratorInitializer } from '../features/mere-ai-recommendations/components/RecommendationGeneratorInitializer';
 import { isElectron } from '../utils/isElectron';
 
 export default function App() {
@@ -52,13 +52,13 @@ export default function App() {
             <RxDbProvider>
               <VectorProvider>
                 <UserProvider>
-                  <RecommendationGeneratorInitializer>
-                    <UserPreferencesProvider>
-                      <SyncJobProvider>
-                        <RouterProvider router={router} />
-                      </SyncJobProvider>
-                    </UserPreferencesProvider>
-                  </RecommendationGeneratorInitializer>
+                  {/* <RecommendationGeneratorInitializer> */}
+                  <UserPreferencesProvider>
+                    <SyncJobProvider>
+                      <RouterProvider router={router} />
+                    </SyncJobProvider>
+                  </UserPreferencesProvider>
+                  {/* </RecommendationGeneratorInitializer> */}
                 </UserProvider>
               </VectorProvider>
             </RxDbProvider>

@@ -21,7 +21,7 @@ Mere does not make any money currently. We are open to donations to support host
 
 ## Why is Chris Building Mere Medical for Free?
 
-Chris is a medical student who is passionate about technology and its potential to improve healthcare, and currently the primary maintainer of Mere Medical.
+Chris is a medical ~student~ resident who is passionate about technology and its potential to improve healthcare, and currently the primary maintainer of Mere Medical.
 
 Chris is frustrated with the current offerings available for patients to access their medical records and the lack of autonomy they provide over data ownership and privacy. Chris hopes that by building Mere Medical, he can show by example that it is possible to build a better, more user-friendly, and privacy-focused personal health record that puts the user first.
 
@@ -36,9 +36,9 @@ Chris, while studying medicine full-time, has managed to create a PHR during his
 
 ## Who Owns Mere Medical?
 
-Mere Medical is an open-source project that is owned by the community. Mere Medical is not a company. The project is licensed under the [GNU Affero General Public License](https://www.gnu.org/licenses/agpl-3.0.html) and is free to use and modify.
+Mere Medical is an open-source project that is owned by the community. Mere Medical is not a company. The project is licensed under the [MIT License](https://opensource.org/license/mit) and is free to use and modify.
 
-The primary maintainer is [Christopher Fu](https://cfu288.com), a medical student and ex-software engineer who started the project in 2022.
+The primary maintainer is [Christopher Fu](https://cfu288.com), a medical resident and ex-software engineer who started the project in 2022.
 
 ## Is Mere Medical HIPAA Compliant?
 

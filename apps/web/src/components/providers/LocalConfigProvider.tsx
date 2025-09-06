@@ -6,6 +6,10 @@ import React, {
   useEffect,
   useState,
 } from 'react';
+import {
+  AI_DEFAULTS,
+  DEFAULT_AI_PROVIDER,
+} from '../../features/mere-ai-chat/constants/defaults';
 
 interface LocalConfig {
   use_encrypted_database: boolean;
@@ -14,6 +18,11 @@ interface LocalConfig {
   experimental_features_enabled?: boolean;
   experimental__use_openai_rag?: boolean;
   experimental__openai_api_key?: string;
+  experimental__ai_provider?: 'openai' | 'ollama';
+  experimental__ollama_endpoint?: string;
+  experimental__ollama_model?: string;
+  experimental__ollama_embedding_model?: string;
+  experimental__ollama_rerank_model?: string;
 }
 
 const defaultLocalConfig: LocalConfig = {
@@ -23,22 +32,29 @@ const defaultLocalConfig: LocalConfig = {
   experimental_features_enabled: false,
   experimental__use_openai_rag: false,
   experimental__openai_api_key: '',
+  experimental__ai_provider: DEFAULT_AI_PROVIDER,
+  experimental__ollama_endpoint: AI_DEFAULTS.OLLAMA.ENDPOINT,
+  experimental__ollama_model: AI_DEFAULTS.OLLAMA.MODEL,
+  experimental__ollama_embedding_model: AI_DEFAULTS.OLLAMA.EMBEDDING_MODEL,
+  experimental__ollama_rerank_model: 'dengcao/Qwen3-Reranker-8B:Q4_K_M',
 };
 
-function getLocalConfig(): Partial<LocalConfig> {
-  const config = localStorage.getItem('config');
-  if (config) {
-    return { ...defaultLocalConfig, ...JSON.parse(config) };
-  } else {
-    localStorage.setItem('config', JSON.stringify(defaultLocalConfig));
+function getLocalConfig(): LocalConfig {
+  try {
+    const raw = localStorage.getItem('config');
+    if (!raw) return defaultLocalConfig;
+    const parsed = JSON.parse(raw) as Partial<LocalConfig>;
+    return { ...defaultLocalConfig, ...parsed };
+  } catch {
+    // If there's an error parsing, reset to defaults
+    localStorage.removeItem('config');
     return defaultLocalConfig;
   }
 }
 
 type LocalConfigProviderProps = PropsWithChildren<unknown>;
 
-const LocalConfigContext =
-  React.createContext<Partial<LocalConfig>>(defaultLocalConfig);
+const LocalConfigContext = React.createContext<LocalConfig>(defaultLocalConfig);
 const UpdateLocalConfigContext = React.createContext<
   (config: Partial<LocalConfig>) => void
 >(() => {});
@@ -50,18 +66,12 @@ const UpdateLocalConfigContext = React.createContext<
  * @returns
  */
 export const getLocalConfigValue = (key: keyof LocalConfig) => {
-  const configObject = localStorage.getItem('config');
-  if (configObject) {
-    const config = JSON.parse(configObject);
-    return config[key];
-  }
-  return undefined;
+  const config = getLocalConfig();
+  return config[key];
 };
 
 export function LocalConfigProvider(props: LocalConfigProviderProps) {
-  const [config, setConfig] = useState<Partial<LocalConfig> | undefined>(
-      undefined,
-    ),
+  const [config, setConfig] = useState<LocalConfig | undefined>(undefined),
     hasRun = useRef(false);
 
   const updateLocalConfig = useCallback((config: Partial<LocalConfig>) => {
@@ -75,7 +85,6 @@ export function LocalConfigProvider(props: LocalConfigProviderProps) {
     if (!hasRun.current) {
       hasRun.current = true;
       const config = getLocalConfig();
-      console.debug('LocalConfigProvider:', config);
       setConfig(config);
     }
   }, []);

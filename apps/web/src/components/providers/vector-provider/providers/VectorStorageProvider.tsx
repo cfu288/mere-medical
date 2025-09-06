@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 import { VectorStorage } from '@mere/vector-storage';
 
@@ -6,6 +6,8 @@ import { ClinicalDocumentResourceType } from '../../../../models/clinical-docume
 import { useLocalConfig } from '../../LocalConfigProvider';
 import { useRxDb } from '../../RxDbProvider';
 import { DatabaseCollections } from '../../DatabaseCollections';
+import { createOllamaEmbeddings } from '../../../../features/mere-ai-chat/ollama/ollamaEmbeddings';
+import { AI_DEFAULTS } from '../../../../features/mere-ai-chat/constants/defaults';
 
 export const VectorStorageContext = React.createContext<
   VectorStorage<DatabaseCollections> | undefined
@@ -16,6 +18,12 @@ export type DocMeta = {
   document_type: string;
   id: string;
   url?: string;
+  documentId?: string;
+  sectionName?: string;
+  chunkNumber?: number;
+  isFullDocument?: boolean;
+  user_id?: string;
+  [key: string]: any;
 };
 
 /**
@@ -33,26 +41,64 @@ export function VectorStorageProvider({
     useState<VectorStorage<DatabaseCollections>>();
   const rxdb = useRxDb();
   const localConfig = useLocalConfig();
+  const isInitializingRef = useRef(false);
 
   useEffect(() => {
+    if (!localConfig?.experimental__use_openai_rag || !rxdb) {
+      return;
+    }
+
+    // Prevent multiple initializations
+    if (isInitializingRef.current) {
+      return;
+    }
+
+    const aiProvider = localConfig.experimental__ai_provider || 'ollama';
+    let store: VectorStorage<DatabaseCollections> | null = null;
+
     if (
-      localConfig?.experimental__use_openai_rag &&
-      localConfig?.experimental__openai_api_key &&
-      localConfig?.experimental__openai_api_key.length >= 50
+      aiProvider === 'openai' &&
+      localConfig.experimental__openai_api_key &&
+      localConfig.experimental__openai_api_key.length >= 50
     ) {
-      console.log('Initializing VectorStorage');
-      const store = new VectorStorage<DatabaseCollections>({
-        openAIApiKey: localConfig?.experimental__openai_api_key,
+      store = new VectorStorage<DatabaseCollections>({
+        openAIApiKey: localConfig.experimental__openai_api_key,
         rxdb: rxdb,
       });
-      if (!store.hasInitialized) {
-        store.initialize();
-      }
+    } else if (aiProvider === 'ollama') {
+      const ollamaEndpoint =
+        localConfig.experimental__ollama_endpoint ||
+        AI_DEFAULTS.OLLAMA.ENDPOINT;
+      const ollamaEmbeddingModel =
+        localConfig.experimental__ollama_embedding_model ||
+        AI_DEFAULTS.OLLAMA.EMBEDDING_MODEL;
+
+      store = new VectorStorage<DatabaseCollections>({
+        rxdb: rxdb,
+        embeddingModel: ollamaEmbeddingModel,
+        embedTextsFn: async (texts: string[]) => {
+          return createOllamaEmbeddings(
+            texts,
+            ollamaEndpoint,
+            ollamaEmbeddingModel,
+          );
+        },
+      });
+    }
+
+    if (store && !store.hasInitialized) {
+      isInitializingRef.current = true;
+      store.initialize();
       setVectorStore(store);
+      // Note: If initialize() is async and we need to wait for it,
+      // we would need to handle that with a promise
     }
   }, [
     localConfig?.experimental__openai_api_key,
     localConfig?.experimental__use_openai_rag,
+    localConfig?.experimental__ai_provider,
+    localConfig?.experimental__ollama_endpoint,
+    localConfig?.experimental__ollama_embedding_model,
     rxdb,
   ]);
 

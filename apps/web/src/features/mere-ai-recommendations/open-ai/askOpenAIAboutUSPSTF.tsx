@@ -6,7 +6,7 @@ import { differenceInDays, parseISO } from 'date-fns';
 import { UserDocument } from '../../../models/user-document/UserDocument.type';
 import { fetchRecordsWithVectorSearch } from '../../../pages/TimelineTab';
 import { VectorStorage } from '@mere/vector-storage';
-import { prepareDataForOpenAI } from '../../mere-ai-chat/open-ai/prepareDataForOpenAI';
+import { DocumentPreparer } from '../../mere-ai-chat/services/document-preparer';
 import {
   USPSTFRecommendationDataItem,
   USPSTFRecommendationDocument,
@@ -29,7 +29,6 @@ export const askOpenAIAboutUSPSTF = async ({
   streamingCallback?: (rec: USPSTFRecommendationDocument) => void;
 }): Promise<USPSTFRecommendationDocument[]> => {
   const resArr: USPSTFRecommendationDocument[] = [];
-  // for each recommendation, ask openai if the patient is eligible
   for (const rec of recommendationList) {
     const rawData = await fetchRecordsWithVectorSearch({
       db,
@@ -49,7 +48,6 @@ export const askOpenAIAboutUSPSTF = async ({
 
     if (rec.searchTerms) {
       for (const term of rec.searchTerms) {
-        // if there are search terms, use them to find relevant records
         const searchTermsRawData = await fetchRecordsWithVectorSearch({
           db,
           vectorStorage,
@@ -65,13 +63,32 @@ export const askOpenAIAboutUSPSTF = async ({
       }
     }
 
-    const preparedData = await prepareDataForOpenAI({
-      data: records,
-      db,
-      user,
-      idsOfMostRelatedChunksFromSemanticSearch:
-        idsOfMostRelatedChunksFromSemanticSearch,
+    const preparer = new DocumentPreparer({
+      documents: records,
+      context: {
+        db,
+        user,
+        query: rec.description + rec.appliesTo,
+      },
+      searchMetadata: {
+        relevantChunkIds: idsOfMostRelatedChunksFromSemanticSearch,
+        attachmentContentMap: new Map(),
+      },
+      aiConfig: {
+        aiProvider: 'openai',
+        openAiKey,
+      },
+      options: {
+        enableReranking: false,
+      },
     });
+
+    const preparedResult = await preparer
+      .extractTexts()
+      .then((p) => p.deduplicate())
+      .then((p) => p.build());
+
+    const preparedData = preparedResult.texts;
 
     const promptMessages = [
       {
@@ -101,7 +118,7 @@ export const askOpenAIAboutUSPSTF = async ({
         Authorization: `Bearer ${openAiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4-turbo-preview',
+        model: 'gpt-4-turbo-preview', // TODO: Use configurable model when re-enabling USPSTF feature
         messages: promptMessages,
         response_format: { type: 'json_object' },
       }),

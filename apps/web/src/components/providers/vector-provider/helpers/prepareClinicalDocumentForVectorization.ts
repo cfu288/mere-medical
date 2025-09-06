@@ -7,6 +7,29 @@ import { checkIfXmlIsCCDA } from '../../../timeline/ShowDocumentReferenceResults
 import { parseCCDARaw } from '../../../timeline/ShowDocumentReferenceResultsExpandable/parseCCDA/parseCCDA';
 
 /**
+ * Generate deterministic, parsable chunk IDs based on document ID and chunk metadata.
+ *
+ * We intentionally DO NOT use random UUIDs here because:
+ * 1. The vector storage deduplication relies on consistent IDs across sessions
+ * 2. Random IDs would cause the same chunks to be re-embedded on every app reload
+ * 3. Parsable IDs help with debugging and tracking chunks back to their source
+ *
+ * Format: {documentId}__chunk_{chunkNumber}[__section_{sectionName}]
+ * Example: "doc123__chunk_0__section_MEDICATIONS"
+ */
+function generateChunkId(
+  docId: string,
+  chunkNumber: number,
+  sectionName?: string,
+): string {
+  let chunkId = `${docId}__chunk_${chunkNumber}`;
+  if (sectionName) {
+    chunkId += `__section_${sectionName}`;
+  }
+  return chunkId;
+}
+
+/**
  * For each clinical document, prepare the document for vectorization
  *
  * If a document is JSON, flatten the object, take the values only and
@@ -22,7 +45,6 @@ import { parseCCDARaw } from '../../../timeline/ShowDocumentReferenceResultsExpa
 export function prepareClinicalDocumentForVectorization(
   document: ClinicalDocument<unknown>,
 ) {
-  // need to maintain lists since documents can be chunked into multiple documents
   const docList: {
     id: string;
     text: string;
@@ -30,11 +52,16 @@ export function prepareClinicalDocumentForVectorization(
   }[] = [];
   const metaList: DocMeta[] = Array<DocMeta>();
   const docId = document.id;
-  const meta = {
+
+  // Base metadata that all chunks will share
+  const baseMeta: DocMeta = {
     category: document.data_record.resource_type,
     document_type: 'clinical_document',
     id: docId,
     url: document.metadata?.id,
+    // Add the document ID to metadata for querying
+    documentId: docId,
+    user_id: document.user_id,
   };
 
   if (
@@ -43,8 +70,7 @@ export function prepareClinicalDocumentForVectorization(
   ) {
     serializeAndChunkJSONForVectorization(
       document.data_record.raw,
-      meta,
-      docId,
+      baseMeta,
       docList,
       metaList,
     );
@@ -54,16 +80,14 @@ export function prepareClinicalDocumentForVectorization(
   ) {
     serializeCCDADocumentForVectorization(
       document.data_record.raw as string,
-      meta,
-      docId,
+      baseMeta,
       docList,
       metaList,
     );
   } else if (document.data_record.content_type === 'application/xml') {
     serializeAndChunkXmlContentForVectorization({
       content: document.data_record.raw as string,
-      meta,
-      documentId: docId,
+      meta: baseMeta,
       chunkedDocumentsList: docList,
       chunkedMetadataList: metaList,
     });
@@ -72,10 +96,73 @@ export function prepareClinicalDocumentForVectorization(
   return { docList, metaList };
 }
 
+/**
+ * Serializes a FHIR document for vector storage by:
+ * 1. Removing unnecessary metadata fields
+ * 2. Flattening the nested structure
+ * 3. Extracting unique values and joining with pipe delimiter
+ *
+ * The goal is to create a concise text representation
+ *
+ * @param data - The FHIR document data
+ * @param meta - Document metadata
+ * @returns Object containing serialized text and metadata
+ */
+export function serializeFHIRDocumentForVectorStorage(
+  data: any,
+  meta: DocMeta,
+): {
+  id: string;
+  text: string;
+  metadata: DocMeta;
+} {
+  // Deep clone to avoid mutating original
+  const cleanedDoc: any = JSON.parse(JSON.stringify(data));
+
+  // Remove FHIR wrapper fields
+  delete cleanedDoc.link;
+  delete cleanedDoc.fullUrl;
+  delete cleanedDoc.search;
+
+  // Remove unnecessary resource fields
+  if (cleanedDoc.resource) {
+    delete cleanedDoc.resource.category;
+    delete cleanedDoc.resource.subject;
+    delete cleanedDoc.resource.id;
+    delete cleanedDoc.resource.status;
+    delete cleanedDoc.resource.identifier;
+  }
+
+  // Sort keys for consistent output
+  const sortedDoc = Object.keys(cleanedDoc)
+    .sort()
+    .reduce((obj: any, key: any) => {
+      obj[key] = cleanedDoc[key];
+      return obj;
+    }, {});
+
+  // Flatten nested structure
+  const flattened = flattenObject(sortedDoc);
+
+  // Extract unique values and serialize
+  const serialized = [...new Set(Object.values(flattened))]
+    .join('|')
+    .substring(0, MAX_CHARS);
+
+  return {
+    id: generateChunkId(meta.documentId || meta.id, 0),
+    text: serialized,
+    metadata: {
+      ...meta,
+      chunkNumber: 0,
+      isFullDocument: false,
+    },
+  };
+}
+
 function serializeAndChunkJSONForVectorization(
   data: any,
   meta: DocMeta,
-  docId: string,
   docList: {
     id: string;
     text: string;
@@ -83,28 +170,14 @@ function serializeAndChunkJSONForVectorization(
   }[],
   metaList: DocMeta[],
 ) {
-  const newUnflatObject: any = data;
-  delete newUnflatObject.link;
-  delete newUnflatObject.fullUrl;
-  delete newUnflatObject.search;
-  delete newUnflatObject.resource.category;
-  delete newUnflatObject.resource.subject;
-  delete newUnflatObject.resource.id;
-  delete newUnflatObject.resource.status;
-  delete newUnflatObject.resource.identifier;
-  const newFlatObject = flattenObject(
-    Object.keys(newUnflatObject)
-      .sort()
-      .reduce((obj: any, key: any) => {
-        obj[key] = newUnflatObject[key];
-        return obj;
-      }, {}),
-  );
-  const serialzed = [...new Set(Object.values(newFlatObject))]
-    .join('|')
-    .substring(0, MAX_CHARS);
-  docList.push({ id: docId, text: serialzed });
-  metaList.push(meta);
+  const result = serializeFHIRDocumentForVectorStorage(data, meta);
+
+  docList.push({
+    id: result.id,
+    text: result.text,
+  });
+
+  metaList.push(result.metadata);
 }
 
 /**
@@ -112,80 +185,113 @@ function serializeAndChunkJSONForVectorization(
  *
  * @param content the XML content
  * @param meta the metadata for the document
- * @param documentId the ID of the original document being chunked
  * @param chunkedDocumentsList list that chunks are added to
  * @param chunkedMetadataList list that metadata chunks are added to
+ * @param prependText text to prepend to each chunk
+ * @param sectionName the section name for CCDA documents
+ * @param isFullDocument whether this is the full document
  */
 function serializeAndChunkXmlContentForVectorization({
   content,
   meta,
-  documentId,
   chunkedDocumentsList,
   chunkedMetadataList,
   prependText = '',
+  sectionName,
+  isFullDocument = false,
 }: {
   content: string;
   meta: DocMeta;
-  documentId: string;
-  chunkedDocumentsList: Array<{
+  chunkedDocumentsList: {
     id: string;
     text: string;
     chunk?: IVSChunkMeta;
-  }>;
-  chunkedMetadataList: Array<DocMeta>;
+  }[];
+  chunkedMetadataList: DocMeta[];
   prependText?: string;
+  sectionName?: string;
+  isFullDocument?: boolean;
 }) {
   if (content.length > CHUNK_SIZE) {
     for (
-      let offset = 0, chunkId = 0;
+      let offset = 0, chunkNumber = 0;
       offset < content.length;
-      offset += CHUNK_SIZE - CHUNK_OVERLAP, chunkId++
+      offset += CHUNK_SIZE - CHUNK_OVERLAP, chunkNumber++
     ) {
       const chunkData = content.substring(
         offset,
         Math.min(offset + CHUNK_SIZE, content.length),
       );
       chunkedDocumentsList.push({
-        id: `${documentId}_chunk${chunkId}${prependText ? `_${prependText}` : ''}`,
+        id: generateChunkId(
+          meta.documentId || meta.id,
+          chunkNumber,
+          sectionName,
+        ),
         text: prependText + chunkData,
         chunk: {
           offset: offset,
           size: chunkData.length,
         },
       });
-      chunkedMetadataList.push(meta);
+      chunkedMetadataList.push({
+        ...meta,
+        sectionName: sectionName || undefined,
+        chunkNumber,
+        isFullDocument,
+      });
     }
   } else {
     chunkedDocumentsList.push({
-      id: documentId,
+      id: generateChunkId(meta.documentId || meta.id, 0, sectionName),
       text: prependText + (content || '').trim(),
     });
-    chunkedMetadataList.push(meta);
+    chunkedMetadataList.push({
+      ...meta,
+      sectionName: sectionName || undefined,
+      chunkNumber: 0,
+      isFullDocument,
+    });
   }
 }
 
 function serializeCCDADocumentForVectorization(
   content: string,
   meta: DocMeta,
-  documentId: string,
-  chunkedDocumentsList: {
+  docList: {
     id: string;
     text: string;
     chunk?: IVSChunkMeta;
   }[],
-  chunkedMetadataList: DocMeta[],
+  metaList: DocMeta[],
 ) {
   const parsed = parseCCDARaw(content);
-  // for each section, serialize and chunk
+
+  const allSections = Object.entries(parsed)
+    .filter(([_, data]) => data)
+    .map(([sectionType, data]) => `${sectionType}|${data}`)
+    .join('\n\n');
+
+  if (allSections) {
+    serializeAndChunkXmlContentForVectorization({
+      content: allSections,
+      meta,
+      chunkedDocumentsList: docList,
+      chunkedMetadataList: metaList,
+      prependText: 'FULL_DOCUMENT|',
+      isFullDocument: true,
+    });
+  }
+
   Object.entries(parsed).forEach(([sectionType, data]) => {
     if (data) {
       serializeAndChunkXmlContentForVectorization({
         content: data,
         meta,
-        documentId: documentId,
-        chunkedDocumentsList,
-        chunkedMetadataList,
+        chunkedDocumentsList: docList,
+        chunkedMetadataList: metaList,
         prependText: sectionType + '|',
+        sectionName: sectionType,
       });
     }
   });
