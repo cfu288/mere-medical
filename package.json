@@ -10,7 +10,8 @@
   "scripts": {
     "start": "nx serve",
     "build": "nx build",
-    "test": "nx test"
+    "test": "nx test",
+    "dev": "nx serve-all"
   },
   "engines": {
     "node": "20.11.0"

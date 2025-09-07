@@ -1,5 +1,12 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "parallel": 2,
+  "cli": {
+    "defaultOptions": {
+      "outputStyle": "stream",
+      "parallel": 2
+    }
+  },
   "pluginsConfig": {
     "@nx/js": {
       "analyzeSourceFiles": true
