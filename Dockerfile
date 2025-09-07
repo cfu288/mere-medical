@@ -6,6 +6,8 @@ RUN npm ci
 COPY . /app/
 # Increase Node memory limit for production build
 ENV NODE_OPTIONS="--max-old-space-size=4096"
+# Disable Nx daemon in Docker builds
+ENV NX_DAEMON=false
 RUN npx nx run api:build:production
 
 RUN curl -sf https://gobinaries.com/tj/node-prune | sh
@@ -28,6 +30,8 @@ COPY --from=build-web-base . .
 WORKDIR /app
 # Increase Node memory limit for production build
 ENV NODE_OPTIONS="--max-old-space-size=4096"
+# Disable Nx daemon in Docker builds
+ENV NX_DAEMON=false
 RUN npx nx test web --configuration=ci
 # RUN npx nx run web-e2e:e2e --configuration=ci
 RUN npx nx run web:build:production --verbose
