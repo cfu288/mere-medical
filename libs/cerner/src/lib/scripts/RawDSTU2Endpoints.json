@@ -2,7 +2,7 @@
   "resourceType": "Bundle",
   "id": "millennium-patient-dstu2",
   "type": "collection",
-  "total": 1651,
+  "total": 1653,
   "entry": [
     {
       "resource": {
@@ -12378,7 +12378,7 @@
             "name": "Basel Refai MD",
             "address": [
               {
-                "line": ["1120 Airport Dr Ste 102"],
+                "line": ["815 Lee Street"],
                 "city": "Alexander City",
                 "state": "Alabama",
                 "postalCode": "35010-3444",
@@ -22549,7 +22549,7 @@
           {
             "resourceType": "Organization",
             "id": "OUmST5Nz0TFWN1WTGDQw7-TwaxvLREKn_",
-            "name": "William Ofrichter, DPM",
+            "name": "Edward D. Hutson Jr, DPM",
             "address": [
               {
                 "line": ["2030 Center St"],
@@ -34134,7 +34134,7 @@
             "name": "Basel Refai MD",
             "address": [
               {
-                "line": ["1120 Airport Dr Ste 102"],
+                "line": ["815 Lee Street"],
                 "city": "Alexander City",
                 "state": "Alabama",
                 "postalCode": "35010-3444",
@@ -44446,7 +44446,7 @@
             "name": "Jeff Davis Hospital",
             "address": [
               {
-                "line": ["1215 South Tallahassee St"],
+                "line": ["163 South Tallahassee St"],
                 "city": "Hazlehurst",
                 "state": "Georgia",
                 "postalCode": "31539",
@@ -44568,6 +44568,60 @@
           "id": "#Oc11411f4-01ed-4048-962f-685091adad2f"
         },
         "address": "https://fhir-myrecord.cerner.com/dstu2/c11411f4-01ed-4048-962f-685091adad2f/"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Endpoint",
+        "id": "6045c542-91fb-42f0-88cd-540b035e6ca7",
+        "contained": [
+          {
+            "resourceType": "Organization",
+            "id": "O6045c542-91fb-42f0-88cd-540b035e6ca7",
+            "name": "The Resource Center",
+            "address": [
+              {
+                "line": ["200 Dunham Avenue"],
+                "city": "Jamestown",
+                "state": "New York",
+                "postalCode": "14701-2528",
+                "country": "United States of America"
+              }
+            ]
+          }
+        ],
+        "status": "active",
+        "managingOrganization": {
+          "id": "#O6045c542-91fb-42f0-88cd-540b035e6ca7"
+        },
+        "address": "https://fhir-myrecord.cerner.com/dstu2/6045c542-91fb-42f0-88cd-540b035e6ca7/"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Endpoint",
+        "id": "d4a56ff5-f6ae-4ca3-b326-1973b3579459",
+        "contained": [
+          {
+            "resourceType": "Organization",
+            "id": "Od4a56ff5-f6ae-4ca3-b326-1973b3579459",
+            "name": "Rock County Hospital",
+            "address": [
+              {
+                "line": ["102 E S St"],
+                "city": "Bassett",
+                "state": "Nebraska",
+                "postalCode": "68714",
+                "country": "United States of America"
+              }
+            ]
+          }
+        ],
+        "status": "active",
+        "managingOrganization": {
+          "id": "#Od4a56ff5-f6ae-4ca3-b326-1973b3579459"
+        },
+        "address": "https://fhir-myrecord.cerner.com/dstu2/d4a56ff5-f6ae-4ca3-b326-1973b3579459/"
       }
     }
   ]

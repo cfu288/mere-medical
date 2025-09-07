@@ -2,82 +2,15 @@
   {},
   {},
   {},
-  {
-    "cause": {
-      "library": "SSL routines",
-      "reason": "unsafe legacy renegotiation disabled",
-      "code": "ERR_SSL_UNSAFE_LEGACY_RENEGOTIATION_DISABLED"
-    }
-  },
-  {
-    "cause": {
-      "library": "SSL routines",
-      "reason": "unsafe legacy renegotiation disabled",
-      "code": "ERR_SSL_UNSAFE_LEGACY_RENEGOTIATION_DISABLED"
-    }
-  },
-  {
-    "cause": {
-      "library": "SSL routines",
-      "reason": "unsafe legacy renegotiation disabled",
-      "code": "ERR_SSL_UNSAFE_LEGACY_RENEGOTIATION_DISABLED"
-    }
-  },
-  {
-    "cause": {
-      "library": "SSL routines",
-      "reason": "unsafe legacy renegotiation disabled",
-      "code": "ERR_SSL_UNSAFE_LEGACY_RENEGOTIATION_DISABLED"
-    }
-  },
   {},
-  {
-    "cause": {
-      "errno": -3008,
-      "code": "ENOTFOUND",
-      "syscall": "getaddrinfo",
-      "hostname": "epicproxy.et0946.epichosted.com"
-    }
-  },
-  {
-    "cause": {
-      "name": "ConnectTimeoutError",
-      "code": "UND_ERR_CONNECT_TIMEOUT",
-      "message": "Connect Timeout Error"
-    }
-  },
-  {
-    "cause": {
-      "library": "SSL routines",
-      "reason": "unsafe legacy renegotiation disabled",
-      "code": "ERR_SSL_UNSAFE_LEGACY_RENEGOTIATION_DISABLED"
-    }
-  },
   {},
-  {
-    "cause": {
-      "name": "ConnectTimeoutError",
-      "code": "UND_ERR_CONNECT_TIMEOUT",
-      "message": "Connect Timeout Error"
-    }
-  },
-  {
-    "cause": {
-      "library": "SSL routines",
-      "reason": "unsafe legacy renegotiation disabled",
-      "code": "ERR_SSL_UNSAFE_LEGACY_RENEGOTIATION_DISABLED"
-    }
-  },
-  {
-    "cause": {
-      "code": "UNABLE_TO_VERIFY_LEAF_SIGNATURE"
-    }
-  },
-  {
-    "cause": {
-      "library": "SSL routines",
-      "reason": "unsafe legacy renegotiation disabled",
-      "code": "ERR_SSL_UNSAFE_LEGACY_RENEGOTIATION_DISABLED"
-    }
-  }
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {}
 ]

@@ -5,8 +5,11 @@ import { Response } from 'express';
 export class VAController {
   @Get('app-redirect')
   // https://localhost:4200/api/v1/va/app-redirect
-  async redirectToApp(@Res() response: Response, @Query('code') code: string) {
+  async redirectToApp(@Res() response: Response, @Query('code') code: string, @Query('state') state: string) {
     try {
+      const webAppUrl = process.env.WEB_APP_URL || 'http://localhost:4200';
+      const redirectUrl = `${webAppUrl}/va/callback?code=${code}${state ? `&state=${state}` : ''}`;
+      
       response.send(`<html><head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -16,7 +19,7 @@ export class VAController {
       <title>Redirecting to Mere...</title>
       <script>
           var redirectToApp = function() {
-              window.location.replace("mere://va/callback?code=${code}");
+              window.location.replace("${redirectUrl}");
           };
           window.onload = redirectToApp;
       </script>
@@ -24,7 +27,7 @@ export class VAController {
       <body>
       <main class="container grid-lg">
       <h1>Redirecting to Mere...</h1>
-      <p>If you are not redirected automatically, please <a href="mere://va/callback?code=${code}">click here</a> to try again.</p>
+      <p>If you are not redirected automatically, please <a href="${redirectUrl}">click here</a> to try again.</p>
       </main>
       </body></html>`);
     } catch (e) {

@@ -144,13 +144,7 @@ services:
    or together as a full app:
 
    ```bash
-   npx nx serve-all
-   ```
-
-   Alternatively:
-
-   ```bash
-   npx nx run-many --target=serve --projects=api,web
+   npx nx run-many --target=serve --projects=api,web --output-style=stream
    ```
 
 7. Run e2e tests
