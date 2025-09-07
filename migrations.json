@@ -1,84 +1,109 @@
 {
   "migrations": [
     {
-      "cli": "nx",
-      "version": "19.2.0-beta.2",
-      "description": "Updates the default workspace data directory to .nx/workspace-data",
-      "implementation": "./src/migrations/update-19-2-0/move-workspace-data-directory",
+      "version": "20.0.0-beta.7",
+      "description": "Migration for v20.0.0-beta.7",
+      "implementation": "./src/migrations/update-20-0-0/move-use-daemon-process",
       "package": "nx",
-      "name": "19-2-0-move-graph-cache-directory"
+      "name": "move-use-daemon-process"
     },
     {
-      "cli": "nx",
-      "version": "19.2.2-beta.0",
-      "description": "Updates the nx wrapper.",
-      "implementation": "./src/migrations/update-17-3-0/update-nxw",
-      "package": "nx",
-      "name": "19-2-2-update-nx-wrapper"
-    },
-    {
-      "version": "19.2.4-beta.0",
-      "description": "Set project name in nx.json explicitly",
-      "implementation": "./src/migrations/update-19-2-4/set-project-name",
+      "version": "20.0.1",
+      "description": "Set `useLegacyCache` to true for migrating workspaces",
+      "implementation": "./src/migrations/update-20-0-1/use-legacy-cache",
       "x-repair-skip": true,
       "package": "nx",
-      "name": "19-2-4-set-project-name"
+      "name": "use-legacy-cache"
     },
     {
       "cli": "nx",
-      "version": "19.6.0-beta.4",
-      "description": "Update ciWebServerCommand to use static serve for the application.",
-      "implementation": "./src/migrations/update-19-6-0/update-ci-webserver-for-static-serve",
+      "version": "20.8.0-beta.0",
+      "requires": { "cypress": ">=14.0.0" },
+      "description": "Replaces the `experimentalSkipDomainInjection` configuration option with the new `injectDocumentDomain` configuration option.",
+      "implementation": "./src/migrations/update-20-8-0/set-inject-document-domain",
       "package": "@nx/cypress",
-      "name": "update-19-6-0-update-ci-webserver-for-vite"
+      "name": "set-inject-document-domain"
     },
     {
       "cli": "nx",
-      "version": "19.6.3-beta.0",
-      "description": "Migrate proxy config files to match new format from webpack-dev-server v5.",
-      "implementation": "./src/migrations/update-19-6-3/proxy-config",
-      "package": "@nx/webpack",
-      "name": "update-19-6-3-proxy-config"
+      "version": "20.8.0-beta.0",
+      "requires": { "cypress": ">=14.0.0" },
+      "description": "Removes the `experimentalFetchPolyfill` configuration option.",
+      "implementation": "./src/migrations/update-20-8-0/remove-experimental-fetch-polyfill",
+      "package": "@nx/cypress",
+      "name": "remove-experimental-fetch-polyfill"
     },
     {
       "cli": "nx",
-      "version": "19.6.0-beta.4",
-      "description": "Ensure Module Federation DTS is turned off by default.",
-      "factory": "./src/migrations/update-19-6-0/turn-off-dts-by-default",
+      "version": "20.8.0-beta.0",
+      "requires": { "cypress": ">=14.0.0" },
+      "description": "Replaces the `experimentalJustInTimeCompile` configuration option with the new `justInTimeCompile` configuration option.",
+      "implementation": "./src/migrations/update-20-8-0/replace-experimental-just-in-time-compile",
+      "package": "@nx/cypress",
+      "name": "replace-experimental-just-in-time-compile"
+    },
+    {
+      "cli": "nx",
+      "version": "20.8.0-beta.0",
+      "requires": { "cypress": ">=14.0.0" },
+      "description": "Updates the module specifier for the Component Testing `mount` function.",
+      "implementation": "./src/migrations/update-20-8-0/update-component-testing-mount-imports",
+      "package": "@nx/cypress",
+      "name": "update-component-testing-mount-imports"
+    },
+    {
+      "cli": "nx",
+      "version": "20.0.0-beta.5",
+      "description": "replace getJestProjects with getJestProjectsAsync",
+      "implementation": "./src/migrations/update-20-0-0/replace-getJestProjects-with-getJestProjectsAsync",
+      "package": "@nx/jest",
+      "name": "replace-getJestProjects-with-getJestProjectsAsync"
+    },
+    {
+      "cli": "nx",
+      "version": "20.2.0-beta.2",
+      "description": "Update the ModuleFederationConfig import use @nx/module-federation.",
+      "factory": "./src/migrations/update-20-2-0/migrate-mf-imports-to-new-package",
       "package": "@nx/react",
-      "name": "update-19-6-0-turn-module-federation-dts-off"
+      "name": "update-20-2-0-update-module-federation-config-import"
     },
     {
       "cli": "nx",
-      "version": "19.6.0-beta.4",
-      "description": "Update the server file for Module Federation SSR port value to be the same as the 'serve' target port value.",
-      "factory": "./src/migrations/update-19-6-0/update-ssr-server-port",
+      "version": "20.2.0-beta.2",
+      "description": "Update the withModuleFederation import use @nx/module-federation/webpack.",
+      "factory": "./src/migrations/update-20-2-0/migrate-with-mf-import-to-new-package",
       "package": "@nx/react",
-      "name": "update-module-federation-ssr-server-file"
+      "name": "update-20-2-0-update-with-module-federation-import"
     },
     {
       "cli": "nx",
-      "version": "19.6.1-beta.0",
-      "description": "Ensure Target Defaults are set correctly for Module Federation.",
-      "factory": "./src/migrations/update-19-6-1/ensure-depends-on-for-mf",
+      "version": "20.3.0-beta.2",
+      "description": "If workspace includes Module Federation projects, ensure the new @nx/module-federation package is installed.",
+      "factory": "./src/migrations/update-20-3-0/ensure-nx-module-federation-package",
       "package": "@nx/react",
-      "name": "update-19-6-1-ensure-module-federation-target-defaults"
+      "name": "ensure-nx-module-federation-package"
     },
     {
       "cli": "nx",
-      "version": "19.1.0-beta.6",
-      "description": "Migrate no-extra-semi rules into user config, out of nx extendable configs",
-      "implementation": "./src/migrations/update-19-1-0-migrate-no-extra-semi/migrate-no-extra-semi",
-      "package": "@nx/eslint-plugin",
-      "name": "update-19-1-0-rename-no-extra-semi"
+      "version": "20.4.0-beta.0",
+      "description": "Add NX_MF_DEV_REMOTES to inputs for task hashing when '@nx/webpack:webpack' or '@nx/rspack:rspack' is used for Module Federation.",
+      "factory": "./src/migrations/update-18-0-0/add-mf-env-var-to-target-defaults",
+      "package": "@nx/react",
+      "name": "add-mf-env-var-to-target-defaults"
     },
     {
-      "cli": "nx",
-      "version": "19.6.3-beta.0",
-      "description": "Migrate proxy config files to match new format from webpack-dev-server v5.",
-      "implementation": "./src/migrations/update-19-6-3/proxy-config",
-      "package": "@nrwl/webpack",
-      "name": "update-19-6-3-proxy-config"
+      "version": "20.2.0-beta.5",
+      "description": "Update TypeScript ESLint packages to v8.13.0 if they are already on v8",
+      "implementation": "./src/migrations/update-20-2-0/update-typescript-eslint-v8-13-0",
+      "package": "@nx/eslint",
+      "name": "update-typescript-eslint-v8.13.0"
+    },
+    {
+      "version": "20.3.0-beta.1",
+      "description": "Update ESLint flat config to include .cjs, .mjs, .cts, and .mts files in overrides (if needed)",
+      "implementation": "./src/migrations/update-20-3-0/add-file-extensions-to-overrides",
+      "package": "@nx/eslint",
+      "name": "add-file-extensions-to-overrides"
     }
   ]
 }
