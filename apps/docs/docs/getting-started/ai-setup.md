@@ -7,6 +7,8 @@ description: Set up AI-powered features with OpenAI or Ollama
 
 This guide will walk you through setting up Mere Medical's experimental AI features, including semantic search and the Q&A assistant. You can choose between using OpenAI's cloud services or running models locally with Ollama.
 
+![Mere Assistant Screenshot](../../static/img/mere_assistant.jpeg)
+
 ## Overview
 
 Mere Medical offers optional AI-powered features to enhance your experience:
@@ -181,7 +183,7 @@ Example questions:
 
 If Mere can't connect to Ollama:
 
-1. Verify Ollama is running:
+1. Verify Ollama is running on your machine:
 
 ```bash
 ollama list
@@ -189,8 +191,7 @@ ollama list
 
 2. Check the endpoint URL in your browser:
 
-   - Should be: `http://localhost:11434`
-   - The browser connects directly to Ollama, not through Docker
+   - Should be `http://localhost:11434` by default
 
 3. Test the connection:
 
@@ -198,14 +199,8 @@ ollama list
 curl http://localhost:11434/api/tags
 ```
 
+Alteratively, Mere offers a "Test Connection" button in the settings.
+
 4. Ensure firewall isn't blocking port 11434
 
-5. Check browser console for CORS errors - Ollama should allow browser connections by default
-
-### OpenAI API Errors
-
-Common issues and solutions:
-
-- **Invalid API Key**: Verify your key is correct and has credits
-- **Rate Limiting**: OpenAI has usage limits; wait or upgrade your plan
-- **Network Issues**: Check your internet connection
+5. Check browser console for CORS errors
