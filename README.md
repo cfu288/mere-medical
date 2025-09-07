@@ -35,15 +35,6 @@
   <img src="https://img.shields.io/github/sponsors/cfu288" alt="sponsor">
 </p>
 
-> [!WARNING]  
-> Mere is currently pre-release software: updates may break backwards compatibility.
-
-> [!NOTE]  
-> This project is supported by a single developer who is also a full-time medical resident. If you would like to support this project, please consider [donating](https://github.com/sponsors/cfu288) or help by tackling one of the [issues](https://github.com/cfu288/mere-medical/issues).
-
-> [!NOTE]
-> If Mere doesn't fit your needs, another great open-source PHR is [Fasten Health](https://www.fastenhealth.com/)
-
 ## What is Mere Medical
 
 <div align="center" >
@@ -51,6 +42,15 @@
 </div>
 
 Mere Medical is a self-hosted web app to aggregate and sync all of your medical records from all your doctor and hospital visits in one place. See everything in a timeline view or quickly summarize your records.
+
+> [!NOTE]  
+> ~~Mere is currently pre-release software: updates may break backwards compatibility.~~
+> Mere has been "pre-release software" since 2022. That probably says more about my fear of committing to an official release than a reflection of Mere. Will avoid breaking backwards compatibility where reasonable.
+>
+> This project is supported by a single developer who is also a full-time medical resident. If you would like to support this project, please consider [donating](https://github.com/sponsors/cfu288) to help with hosting costs or help by tackling one of the open [issues](https://github.com/cfu288/mere-medical/issues).
+
+> [!NOTE]
+> If Mere doesn't fit your needs, another great open-source PHR is [Fasten Health](https://www.fastenhealth.com/)
 
 ## Getting Started
 
