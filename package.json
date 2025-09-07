@@ -73,7 +73,7 @@
     "autoprefixer": "10.4.16",
     "babel-jest": "29.4.3",
     "css-loader": "^6.4.0",
-    "cypress": "^13.0.0",
+    "cypress": "^13.6.6",
     "docusaurus": "^1.14.7",
     "eslint": "8.57.1",
     "eslint-config-prettier": "9.1.0",
