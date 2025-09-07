@@ -1,5 +1,3 @@
-import { isElectron } from '../../utils/isElectron';
-
 export function TimelineBanner({
   image,
   text = 'Hello!',
@@ -12,12 +10,7 @@ export function TimelineBanner({
   return (
     <div className={`bg-primary flex flex-col items-stretch px-4 pb-3 sm:pb-4`}>
       <div
-        className={`h-6 sm:h-4 w-full ${isElectron() ? 'active:bg-primary-700 z-20 rounded-full' : ''}`}
-        alt="drag handle"
-        style={{
-          // @ts-ignore
-          WebkitAppRegion: isElectron() ? 'drag' : 'no-drag',
-        }}
+        className="h-6 sm:h-4 w-full"
       />
       <div className="flex flex-row items-stretch">
         <div className="flex h-full items-center justify-center pl-2 pr-4">

@@ -3,7 +3,6 @@ import '../styles.css';
 import React from 'react';
 import {
   createBrowserRouter,
-  createHashRouter,
   Navigate,
   RouterProvider,
 } from 'react-router-dom';
@@ -35,7 +34,6 @@ import VARedirect from '../pages/VARedirect';
 import VeradigmRedirect from '../pages/VeradigmRedirect';
 import { Routes as AppRoutes } from '../Routes';
 // import { RecommendationGeneratorInitializer } from '../features/mere-ai-recommendations/components/RecommendationGeneratorInitializer';
-import { isElectron } from '../utils/isElectron';
 
 export default function App() {
   useConsoleLogEasterEgg();
@@ -121,6 +119,4 @@ const routes = [
   },
 ];
 
-const router = isElectron()
-  ? createHashRouter(routes)
-  : createBrowserRouter(routes);
+const router = createBrowserRouter(routes);

@@ -46,20 +46,6 @@
           "namedChunks": false,
           "extractLicenses": true,
           "vendorChunk": false
-        },
-        "electron": {
-          "fileReplacements": [
-            {
-              "replace": "apps/web/src/environments/config.json",
-              "with": "apps/web/src/environments/config.electron.json"
-            }
-          ],
-          "optimization": true,
-          "outputHashing": "all",
-          "sourceMap": false,
-          "namedChunks": false,
-          "extractLicenses": true,
-          "vendorChunk": false
         }
       }
     },
@@ -73,18 +59,6 @@
       },
       "configurations": {
         "development": {
-          "buildTarget": "web:build:development",
-          "ssl": true,
-          "sslKey": "./.dev/certs/localhost-key.pem",
-          "sslCert": "./.dev/certs/localhost.pem"
-        },
-        "development:electron": {
-          "fileReplacements": [
-            {
-              "replace": "apps/web/src/environments/config.json",
-              "with": "apps/web/src/environments/config.electron.json"
-            }
-          ],
           "buildTarget": "web:build:development",
           "ssl": true,
           "sslKey": "./.dev/certs/localhost-key.pem",
