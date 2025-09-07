@@ -3,27 +3,29 @@ sidebar_position: 5
 description: Set up AI-powered features with OpenAI or Ollama
 ---
 
-# Setting Up AI Features with OpenAI and Ollama
+# AI Features to Help you Explore your Health Data
 
-This guide will walk you through setting up Mere Medical's experimental AI features, including semantic search and the Q&A assistant. You can choose between using OpenAI's cloud services or running models locally with Ollama.
+Mere Medical supports optional AI-powered features to help you explore your health records more naturally:
 
-![Mere Assistant Screenshot](../../static/img/mere_assistant.jpeg)
+1. Semantic Search – finds relevant records even if you don’t use the exact keyword.
 
-## Overview
+2. Mere Assistant (Q&A) – lets you ask questions in plain language and get direct answers.
 
-Mere Medical offers optional AI-powered features to enhance your experience:
+To power these new features, we offer you two ways to "plug in" AI models to Mere. You can select from using either configure Mere to use:
 
-- **Semantic Search**: Find relevant medical records even when your search terms don't exactly match the content
-- **Mere Assistant**: Ask questions about your medical records and get AI-powered answers
-- **Document Reranking** (Optional): Use specialized AI models to improve the relevance of search results
+1. Local models with Ollama (recommended) – runs fully on your computer, private and offline.
+
+2. Cloud providers (e.g., OpenAI) – quick to set up if you already have an API key.
 
 :::warning Privacy Considerations
 
-**OpenAI**: Your medical data will be sent to OpenAI's servers for processing. Use this option only for testing with non-sensitive data. Would only recommend this for non-medical data or testing purposes.
+I would strongly recommend you configure mere to use Ollama, which runs entirely on your local machine. All data processing stays local.
 
-**Ollama**: Runs entirely on your local machine. All data processing stays local, making it the recommended option for real medical records.
+If you choose to use OpenAI as your LLM provider, your medical data will be sent to OpenAI's servers for processing. Use this option only for testing with non-sensitive data. Would only recommend this for non-medical data or testing purposes.
 
 :::
+
+![Mere Assistant Screenshot](../../static/img/mere_assistant.jpeg)
 
 ## Prerequisites
 
@@ -35,184 +37,115 @@ Before enabling AI features, ensure you have:
 
 ## Accessing AI Settings
 
-:::important
-The AI features are experimental and hidden by default. To access them:
+Show the AI settings (they’re hidden by default)
 
-1. Navigate to the **Settings** page in Mere Medical
-2. Scroll to the bottom of the settings page
-3. Enable **"Show experimental features"** if not already enabled
-4. The AI configuration options will now be available under this tab
+1. Open the Settings tab in Mere Medical
 
-:::
+2. Scroll to the bottom
 
-## Option 1: Setting Up with Ollama (Recommended)
+3. Turn on **"Show experimental features"** features
 
-Ollama allows you to run AI models locally, keeping all your data private.
+4. The AI configuration options will now appear under this tab.
 
-### Step 1: Install and Configure Ollama
+## Option 1: Local setup with Ollama (recommended)
 
-1. Install Ollama from [ollama.com](https://ollama.com)
+### Step 1: Install & prepare Ollama
 
-2. Pull the required models:
+1) Install from [ollama.com](https://ollama.com)
+
+2) Pull the models you want:
+
+**Chat models** (choose one):
 
 ```bash
-# For chat functionality (choose one)
 ollama pull gpt-oss:20b
 ollama pull deepseek-r1:14b
-ollama pull qwen2.5:14b-instruct  # Default model
-ollama pull qwen2.5:32b-instruct  # Larger, more capable model
-
-# For embeddings/semantic search (choose one)
-ollama pull mxbai-embed-large  # Default embedding model
-ollama pull nomic-embed-text
-ollama pull dengcao/Qwen3-Embedding-4B:Q4_K_M  # Larger embedding model
-
-# Optional: For improved document reranking (choose one)
-ollama pull qwen2.5:3b  # Smaller, faster reranking model
-ollama pull qwen2.5:7b  # Larger, more accurate reranking model
+ollama pull qwen2.5:14b-instruct   # default
+ollama pull qwen2.5:32b-instruct   # larger
 ```
 
-3. Configure the context window for better performance with longer documents:
+**Embedding models** (choose one):
 
 ```bash
-# For each model you plan to use, set the context window size
+ollama pull mxbai-embed-large      # default
+ollama pull nomic-embed-text
+ollama pull dengcao/Qwen3-Embedding-4B:Q4_K_M   # larger
+```
+
+3) **(Optional) Reranking models** (choose one):
+
+```bash
+ollama pull qwen2.5:3b              # faster
+ollama pull qwen2.5:7b              # more accurate
+```
+
+4) **(Optional) Increase context window** (per model):
+
+```bash
 ollama run gpt-oss:20b
 >>> /set parameter num_ctx 8192
 >>> /bye
+# repeat for each chat model you use
 
-ollama run qwen2.5:14b-instruct
->>> /set parameter num_ctx 8192
->>> /bye
-
-# Repeat for other chat models if using different ones
-ollama run deepseek-r1:14b
->>> /set parameter num_ctx 8192
->>> /bye
-
-# If using qwen2.5:3b for reranking, configure its context window
+# if using reranking:
 ollama run qwen2.5:3b
 >>> /set parameter num_ctx 32768
 >>> /bye
-
-# If using qwen2.5:7b for reranking instead
+# or:
 ollama run qwen2.5:7b
 >>> /set parameter num_ctx 32768
 >>> /bye
 ```
 
-4. Start Ollama (if not already running):
+5) Then start the server:
 
 ```bash
 ollama serve
 ```
 
-### Step 2: Enable Features in Mere Medical
-
-1. Navigate to the Settings tab in Mere Medical
-2. Toggle "Show experimental features"
-3. Enable "Mere Assistant"
-4. Select "Ollama" as your AI provider
-5. Verify the Ollama endpoint (default: `http://localhost:11434`)
-6. Configure your preferred models:
-
-   - **Chat Model**: `gpt-oss:20b`, `qwen2.5:14b-instruct` (default), or `deepseek-r1:14b`
-   - **Embedding Model**: `mxbai-embed-large` (default) or `nomic-embed-text`
-   - **Reranking Model** (Optional): `qwen2.5:3b` (faster) or `qwen2.5:7b` (more accurate) for improved search relevance, or "None" to disable reranking
-
-7. Click "Test Connection" to verify Ollama is accessible from your browser
-
-## Option 2: Setting Up with OpenAI
+## Option 2: OpenAI (testing only)
 
 :::caution Privacy Warning
-
-This option sends your medical data to OpenAI's servers. Only use this for testing with non-sensitive data.
-
+Sends your data to OpenAI; recommended for non-sensitive testing only.
 :::
 
-### Step 1: Obtain an OpenAI API Key
+1) Create an account at [platform.openai.com](https://platform.openai.com) → generate an API key
 
-1. Create an account at [platform.openai.com](https://platform.openai.com)
-2. Navigate to API Keys section
-3. Create a new API key
-4. Copy the key (you won't be able to see it again)
-
-### Step 2: Enable Features in Mere Medical
-
-1. Navigate to the Settings tab
-2. Toggle "Show experimental features"
-3. Enable "Mere Assistant"
-4. Select "OpenAI" as your AI provider
-5. Enter your OpenAI API key
+2) In Mere Settings, enable "Show experimental features" → enable "Mere Assistant" → select "OpenAI" → paste your key
 
 ## Using the AI Features
 
-### Document Reranking (Optional)
-
-Document reranking is an optional feature that uses specialized AI models to improve search result relevance:
-
-- **What it does**: After semantic search finds relevant documents, the reranking model re-scores them based on how well they answer your specific question
-- **When to use it**: Enable reranking when you want the most accurate answers to complex medical questions
-- **Performance trade-off**: Reranking adds processing time but can improve result quality
-- **Default**: Disabled by default (select "None" in the Reranking Model dropdown)
-
-To enable reranking with Ollama:
-
-1. Pull a reranking model:
-   - `ollama pull qwen2.5:3b` (faster, uses less memory)
-   - `ollama pull qwen2.5:7b` (more accurate, uses more memory)
-2. Configure its context window as shown above
-3. Select it in the Settings under "Reranking Model"
-
 ### Semantic Search
 
-Once AI features are enabled and your documents are processed:
+1) Go to the Timeline tab
+2) Use the search bar; semantic search will surface related content
 
-1. Go to the Timeline tab
-2. Use the search bar to find records
-3. Semantic search automatically finds related content
+Try: "high blood sugar", "breathing problems", "heart issues"
 
-Example searches:
+### Mere Assistant (Q&A)
 
-- "high blood sugar" will find diabetes-related records
-- "breathing problems" will find respiratory-related records
-- "heart issues" will find cardiovascular-related records
+1) Open the Mere Assistant tab
+2) Ask about your records
 
-### Mere Assistant
-
-1. Click on the "Mere Assistant" tab
-2. Ask questions about your medical records
-3. The AI will search your records and provide informed answers
-
-Example questions:
-
+Try:
 - "What were my last cholesterol levels?"
-- "Do I have any allergies listed in my records?"
+- "Do I have any allergies listed?"
 - "When was my last physical exam?"
 
-## Troubleshooting
+## Troubleshooting (Ollama)
 
-### Ollama Connection Issues
-
-If Mere can't connect to Ollama:
-
-1. Verify Ollama is running on your machine:
-
+Make sure Ollama is running:
 ```bash
 ollama list
 ```
 
-2. Check the endpoint URL in your browser:
+Check the endpoint in your browser: `http://localhost:11434`
 
-   - Should be `http://localhost:11434` by default
-
-3. Test the connection:
-
+Test the API:
 ```bash
 curl http://localhost:11434/api/tags
 ```
 
-Alteratively, Mere offers a "Test Connection" button in the settings.
+Ensure your firewall isn't blocking port 11434; check browser console for CORS errors.
 
-4. Ensure firewall isn't blocking port 11434
-
-5. Check browser console for CORS errors
+You can also use **Test Connection** in Mere settings.
