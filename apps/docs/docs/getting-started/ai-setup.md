@@ -33,6 +33,18 @@ Before enabling AI features, ensure you have:
 - For OpenAI: An [OpenAI API key](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key)
 - For Ollama: [Ollama](https://ollama.com) installed on your local machine
 
+## Accessing AI Settings
+
+:::important
+The AI features are experimental and hidden by default. To access them:
+
+1. Navigate to the **Settings** page in Mere Medical
+2. Scroll to the bottom of the settings page
+3. Enable **"Show experimental features"** if not already enabled
+4. The AI configuration options will now be available under this tab
+
+:::
+
 ## Option 1: Setting Up with Ollama (Recommended)
 
 Ollama allows you to run AI models locally, keeping all your data private.
