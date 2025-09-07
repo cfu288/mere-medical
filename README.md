@@ -38,7 +38,8 @@
 ## What is Mere Medical
 
 <div align="center" >
-    <img src="./images/multiscreen.webp" width="600" />
+    <img src="./images/desktop_screens.jpg" width="600" />
+    <img src="./images/mobile_screens.jpg" width="600" />
 </div>
 
 Mere Medical is a self-hosted web app to aggregate and sync all of your medical records from all your doctor and hospital visits in one place. See everything in a timeline view or quickly summarize your records.
