@@ -4,7 +4,9 @@ WORKDIR /app
 COPY package*.json /app/
 RUN npm ci 
 COPY . /app/
-RUN npx nx build api:build:production --prod
+# Increase Node memory limit for production build
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+RUN npx nx run api:build:production
 
 RUN curl -sf https://gobinaries.com/tj/node-prune | sh
 RUN npm prune --production
@@ -24,9 +26,11 @@ FROM node:20.11.0 as build-web-stage
 
 COPY --from=build-web-base . .
 WORKDIR /app
+# Increase Node memory limit for production build
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN npx nx test web --configuration=ci
 # RUN npx nx run web-e2e:e2e --configuration=ci
-RUN npx nx build web:build:production
+RUN npx nx run web:build:production --verbose
 
 
 # Package React App and API together

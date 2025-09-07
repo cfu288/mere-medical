@@ -143,6 +143,12 @@ services:
    or together as a full app:
 
    ```bash
+   npx nx serve-all
+   ```
+
+   Alternatively:
+
+   ```bash
    npx nx run-many --target=serve --projects=api,web
    ```
 

@@ -51,3 +51,5 @@ Thumbs.db
 **/test-results
 **/playwright-report
 **/playwright/.cache
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md

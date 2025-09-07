@@ -1,10 +1,9 @@
-{
-  "/api": {
+[
+  {
+    "context": [
+      "/api"
+    ],
     "target": "https://localhost:4201",
     "secure": false
-  },
-  "/desktop-api": {
-    "target": "http://localhost:3000",
-    "secure": false
   }
-}
+]

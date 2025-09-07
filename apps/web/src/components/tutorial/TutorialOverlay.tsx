@@ -11,7 +11,6 @@ import { TutorialWelcomeScreen } from './TutorialWelcomeScreen';
 import { TutorialInstallPWAScreen } from './TutorialInstallPWAScreen';
 import { TutorialCompleteScreen } from './TutorialCompleteScreen';
 import Config from '../../environments/config.json';
-import { isElectron } from '../../utils/isElectron';
 
 export type TutorialState = {
   currentStep: number;
@@ -104,7 +103,7 @@ export function TutorialOverlay() {
         getTutorialKeysFromLocalStorage(tutorialConfig).filter((key) =>
           key !== TutorialLocalStorageKeys.INSTALL_PWA
             ? true
-            : !isInstalledPWA() && !isElectron(),
+            : !isInstalledPWA(),
         ),
       [tutorialConfig],
     );
