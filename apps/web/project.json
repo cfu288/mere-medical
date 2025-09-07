@@ -92,10 +92,10 @@
       "options": {
         "commands": [
           {
-            "command": "nx run api:serve"
+            "command": "nx run api:serve:development"
           },
           {
-            "command": "nx run web:serve"
+            "command": "nx run web:serve:development"
           }
         ],
         "parallel": true,
