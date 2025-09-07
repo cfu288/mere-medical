@@ -5,11 +5,16 @@ import { Response } from 'express';
 export class VAController {
   @Get('app-redirect')
   // https://localhost:4200/api/v1/va/app-redirect
-  async redirectToApp(@Res() response: Response, @Query('code') code: string, @Query('state') state: string) {
+  // We removed the desktop app, so this endpoint just redirects to the web app
+  async redirectToApp(
+    @Res() response: Response,
+    @Query('code') code: string,
+    @Query('state') state: string,
+  ) {
     try {
       const webAppUrl = process.env.WEB_APP_URL || 'http://localhost:4200';
       const redirectUrl = `${webAppUrl}/va/callback?code=${code}${state ? `&state=${state}` : ''}`;
-      
+
       response.send(`<html><head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
