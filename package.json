@@ -57,7 +57,7 @@
     "@testing-library/react": "16.1.0",
     "@types/compression": "^1.7.5",
     "@types/dompurify": "^3.0.5",
-    "@types/fhir": "^0.0.35",
+    "@types/fhir": "^0.0.41",
     "@types/jest": "30.0.0",
     "@types/lodash.merge": "^4.6.9",
     "@types/node": "18.16.9",
