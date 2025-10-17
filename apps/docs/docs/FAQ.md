@@ -21,7 +21,7 @@ Mere does not make any money currently. We are open to donations to support host
 
 ## Why is Chris Building Mere Medical for Free?
 
-Chris is a medical ~student~ resident who is passionate about technology and its potential to improve healthcare, and currently the primary maintainer of Mere Medical.
+Chris is a medical resident who is passionate about technology and its potential to improve healthcare, and currently the primary maintainer of Mere Medical.
 
 Chris is frustrated with the current offerings available for patients to access their medical records and the lack of autonomy they provide over data ownership and privacy. Chris hopes that by building Mere Medical, he can show by example that it is possible to build a better, more user-friendly, and privacy-focused personal health record that puts the user first.
 

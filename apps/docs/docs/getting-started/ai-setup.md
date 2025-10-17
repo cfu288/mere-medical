@@ -19,7 +19,7 @@ To power these new features, we offer you two ways to "plug in" AI models to Mer
 
 :::warning Privacy Considerations
 
-I would strongly recommend you configure mere to use Ollama, which runs entirely on your local machine. All data processing stays local.
+I would strongly recommend you configure Mere to use Ollama, which runs entirely on your local machine. All data processing stays local.
 
 If you choose to use OpenAI as your LLM provider, your medical data will be sent to OpenAI's servers for processing. Use this option only for testing with non-sensitive data. Would only recommend this for non-medical data or testing purposes.
 
@@ -51,9 +51,9 @@ Show the AI settings (they’re hidden by default)
 
 ### Step 1: Install & prepare Ollama
 
-1) Install from [ollama.com](https://ollama.com)
+1. Install from [ollama.com](https://ollama.com)
 
-2) Pull the models you want:
+2. Pull the models you want:
 
 **Chat models** (choose one):
 
@@ -72,14 +72,14 @@ ollama pull nomic-embed-text
 ollama pull dengcao/Qwen3-Embedding-4B:Q4_K_M   # larger
 ```
 
-3) **(Optional) Reranking models** (choose one):
+3. **(Optional) Reranking models** (choose one):
 
 ```bash
 ollama pull qwen2.5:3b              # faster
 ollama pull qwen2.5:7b              # more accurate
 ```
 
-4) **(Optional) Increase context window** (per model):
+4. **(Optional) Increase context window** (per model):
 
 ```bash
 ollama run gpt-oss:20b
@@ -97,7 +97,7 @@ ollama run qwen2.5:7b
 >>> /bye
 ```
 
-5) Then start the server:
+5. Then start the server:
 
 ```bash
 ollama serve
@@ -109,25 +109,26 @@ ollama serve
 Sends your data to OpenAI; recommended for non-sensitive testing only.
 :::
 
-1) Create an account at [platform.openai.com](https://platform.openai.com) → generate an API key
+1. Create an account at [platform.openai.com](https://platform.openai.com) → generate an API key
 
-2) In Mere Settings, enable "Show experimental features" → enable "Mere Assistant" → select "OpenAI" → paste your key
+2. In Mere Settings, enable "Show experimental features" → enable "Mere Assistant" → select "OpenAI" → paste your key
 
 ## Using the AI Features
 
 ### Semantic Search
 
-1) Go to the Timeline tab
-2) Use the search bar; semantic search will surface related content
+1. Go to the Timeline tab
+2. Use the search bar; semantic search will surface related content
 
 Try: "high blood sugar", "breathing problems", "heart issues"
 
 ### Mere Assistant (Q&A)
 
-1) Open the Mere Assistant tab
-2) Ask about your records
+1. Open the Mere Assistant tab
+2. Ask about your records
 
 Try:
+
 - "What were my last cholesterol levels?"
 - "Do I have any allergies listed?"
 - "When was my last physical exam?"
@@ -135,6 +136,7 @@ Try:
 ## Troubleshooting (Ollama)
 
 Make sure Ollama is running:
+
 ```bash
 ollama list
 ```
@@ -142,6 +144,7 @@ ollama list
 Check the endpoint in your browser: `http://localhost:11434`
 
 Test the API:
+
 ```bash
 curl http://localhost:11434/api/tags
 ```

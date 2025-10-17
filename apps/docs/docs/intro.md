@@ -14,7 +14,7 @@ Mere Medical is pre-release software and is currently under active development. 
 
 :::note
 
-This project is supported by a single developer who is also a full-time medical student and soon to be medical resident. If you would like to support this project, please consider [sponsoring](https://github.com/sponsors/cfu288) or [contributing](https://github.com/cfu288/mere-medical) to this project.
+This project is supported by a single developer who is also a full-time medical resident. If you would like to support this project, please consider [sponsoring](https://github.com/sponsors/cfu288) or [contributing](https://github.com/cfu288/mere-medical) to this project.
 
 :::
 
