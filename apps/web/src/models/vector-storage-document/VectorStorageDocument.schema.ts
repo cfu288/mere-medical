@@ -9,6 +9,12 @@ export const vectorStorageSchemaLiteral = {
       type: 'string',
       maxLength: 128,
     },
+    user_id: {
+      type: 'string',
+      maxLength: 128,
+      ref: 'user_documents',
+      description: 'The user that this vector document belongs to',
+    },
     hash: {
       type: 'string',
       maxLength: 128,
@@ -48,5 +54,5 @@ export const vectorStorageSchemaLiteral = {
       optional: true,
     },
   },
-  indexes: ['metadata.documentId'],
+  indexes: ['metadata.documentId', 'user_id'],
 } as const;

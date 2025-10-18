@@ -60,6 +60,7 @@ export class VectorStorage<
   ): Promise<IVSDocument> {
     const doc: IVSDocument = {
       id: item.id,
+      user_id: metadata['user_id'], // Extract user_id to top level
       metadata: metadata,
       text: item.text,
       hash: await digestMessage(item.text),
@@ -87,6 +88,7 @@ export class VectorStorage<
     const docs: IVSDocument[] = await Promise.all(
       texts.map(async (item, index) => ({
         id: item.id,
+        user_id: metadatas[index]['user_id'], // Extract user_id to top level
         metadata: metadatas[index],
         text: item.text,
         hash: await digestMessage(item.text),
