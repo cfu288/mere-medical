@@ -1,6 +1,10 @@
 import * as fs from 'fs';
 import 'dotenv/config';
-import type { Bundle as R4Bundle, Endpoint as R4Endpoint, Organization as R4Organization } from 'fhir/r4';
+import type {
+  Bundle as R4Bundle,
+  Endpoint as R4Endpoint,
+  Organization as R4Organization,
+} from 'fhir/r4';
 import type { Bundle as DSTU2Bundle } from 'fhir/r2';
 
 class TerminalColor {
