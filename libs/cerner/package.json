@@ -3,11 +3,14 @@
   "version": "0.0.1",
   "type": "commonjs",
   "devDependencies": {
+    "@types/fhir": "^0.0.35",
     "@types/node": "^20.10.5",
     "tsx": "^4.7.0"
   },
   "scripts": {
-    "fetch-endpoints": "tsx fetchMetadata.ts --openssl-config=openssl.cnf --no-experimental-fetch"
+    "fetch-endpoints": "npm run fetch-endpoints:dstu2 && npm run fetch-endpoints:r4",
+    "fetch-endpoints:dstu2": "tsx fetchMetadata.ts --openssl-config=openssl.cnf --no-experimental-fetch",
+    "fetch-endpoints:r4": "tsx fetchMetadata.ts --r4 --openssl-config=openssl.cnf --no-experimental-fetch"
   },
   "dependencies": {
     "dotenv": "^16.3.1"
