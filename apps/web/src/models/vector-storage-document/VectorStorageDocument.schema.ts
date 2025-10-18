@@ -1,7 +1,7 @@
 export const vectorStorageSchemaLiteral = {
   title: 'Vector Storage Schema',
   description: "A document that stores an embedding of a document's text.",
-  version: 4,
+  version: 5,
   primaryKey: 'id',
   type: 'object',
   properties: {
