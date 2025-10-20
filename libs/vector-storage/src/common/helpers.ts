@@ -25,6 +25,18 @@ function matchesCriteria(
   document: IVSDocument,
   criteria: IVSFilterCriteria,
 ): boolean {
+  // Check top-level user_id if specified in metadata filter
+  if (criteria.metadata?.['user_id']) {
+    // First check top-level user_id
+    if (document.user_id && document.user_id !== criteria.metadata['user_id']) {
+      return false;
+    }
+    // Fall back to metadata.user_id if top-level is not set
+    if (!document.user_id && document.metadata?.['user_id'] !== criteria.metadata['user_id']) {
+      return false;
+    }
+  }
+
   if (criteria.metadata) {
     for (const key in criteria.metadata) {
       if (document.metadata[key] !== criteria.metadata[key]) {

@@ -37,6 +37,13 @@ export async function searchDocuments(
   const searchResults = await vectorStorage.similaritySearch({
     query: searchQuery,
     k: limit,
+    filterOptions: {
+      include: {
+        metadata: {
+          user_id: user.id, // Filter by current user
+        },
+      },
+    },
   });
 
   console.log(
