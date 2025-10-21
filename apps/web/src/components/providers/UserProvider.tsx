@@ -61,42 +61,122 @@ function createUserIfNone(
   });
 }
 
+async function fetchAllUsers(
+  db: RxDatabase<DatabaseCollections>,
+): Promise<RxDocument<UserDocument>[]> {
+  return db.user_documents.find().exec();
+}
+
+async function switchUser(
+  db: RxDatabase<DatabaseCollections>,
+  userId: string,
+): Promise<void> {
+  const currentUser = await db.user_documents
+    .findOne({
+      selector: { is_selected_user: true },
+    })
+    .exec();
+
+  if (currentUser) {
+    await currentUser.update({
+      $set: { is_selected_user: false },
+    });
+  }
+
+  const newUser = await db.user_documents
+    .findOne({
+      selector: { id: userId },
+    })
+    .exec();
+
+  if (newUser) {
+    await newUser.update({
+      $set: { is_selected_user: true },
+    });
+  }
+}
+
+async function createNewUser(
+  db: RxDatabase<DatabaseCollections>,
+  userData: Partial<UserDocument>,
+): Promise<RxDocument<UserDocument>> {
+  const newUser: UserDocument = {
+    id: uuid4(),
+    is_selected_user: false,
+    is_default_user: false,
+    ...userData,
+  };
+  return db.user_documents.insert(newUser);
+}
+
 type UserProviderProps = PropsWithChildren<unknown>;
+
+type UserManagement = {
+  allUsers: RxDocument<UserDocument>[];
+  switchUser: (userId: string) => Promise<void>;
+  createNewUser: (userData: Partial<UserDocument>) => Promise<RxDocument<UserDocument>>;
+};
 
 const UserContext = React.createContext<UserDocument>(defaultUser);
 const RawUserContext = React.createContext<RxDocument<UserDocument> | null>(
   null,
 );
+const AllUsersContext = React.createContext<RxDocument<UserDocument>[]>([]);
+const UserManagementContext = React.createContext<UserManagement | null>(null);
 
 export function UserProvider(props: UserProviderProps) {
   const db = useRxDb(),
     [user, setUser] = useState<UserDocument | undefined>(undefined),
     [rawUser, setRawUser] = useState<RxDocument<UserDocument> | null>(null),
+    [allUsers, setAllUsers] = useState<RxDocument<UserDocument>[]>([]),
     hasRun = useRef(false);
 
   useEffect(() => {
-    let sub: Subscription | undefined;
+    let userSub: Subscription | undefined;
+    let allUsersSub: Subscription | undefined;
+
     if (!hasRun.current) {
       hasRun.current = true;
       createUserIfNone(db).then(() => {
-        sub = fetchUsers(db, (item) => {
+        // Subscribe to current selected user
+        userSub = fetchUsers(db, (item) => {
           if (item) {
             setUser(item.user);
             setRawUser(item.rawUser);
           }
         });
+
+        // Subscribe to all users
+        allUsersSub = db.user_documents.find().$.subscribe((users) => {
+          setAllUsers(users as RxDocument<UserDocument>[]);
+        });
       });
     }
     return () => {
-      sub?.unsubscribe();
+      userSub?.unsubscribe();
+      allUsersSub?.unsubscribe();
     };
   }, [db]);
+
+  const userManagement: UserManagement = {
+    allUsers,
+    switchUser: async (userId: string) => {
+      await switchUser(db, userId);
+    },
+    createNewUser: async (userData: Partial<UserDocument>) => {
+      return createNewUser(db, userData);
+    },
+  };
 
   if (user) {
     return (
       <UserContext.Provider value={user}>
         <RawUserContext.Provider value={rawUser}>
-          {props.children}
+          <AllUsersContext.Provider value={allUsers}>
+            <UserManagementContext.Provider value={userManagement}>
+              {props.children}
+            </UserManagementContext.Provider>
+          </AllUsersContext.Provider>
         </RawUserContext.Provider>
       </UserContext.Provider>
     );
@@ -120,5 +200,26 @@ export function useUser() {
  */
 export function useRxUserDocument() {
   const context = useContext(RawUserContext);
+  return context;
+}
+
+/**
+ * Gets all users from the context
+ * @returns All user documents
+ */
+export function useAllUsers() {
+  const context = useContext(AllUsersContext);
+  return context;
+}
+
+/**
+ * Gets user management functions
+ * @returns User management functions
+ */
+export function useUserManagement() {
+  const context = useContext(UserManagementContext);
+  if (!context) {
+    throw new Error('useUserManagement must be used within a UserProvider');
+  }
   return context;
 }

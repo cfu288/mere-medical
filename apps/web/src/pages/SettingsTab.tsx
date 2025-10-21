@@ -1,5 +1,5 @@
 import { BundleEntry, Patient } from 'fhir/r2';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { RxDatabase, RxDocument } from 'rxdb';
 
@@ -13,6 +13,9 @@ import { UserCard } from '../components/settings/UserCard';
 import { UserDataSettingsGroup } from '../components/settings/UserDataSettingsGroup';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 import { ExperimentalSettingsGroup } from '../components/settings/ExperimentalSettingsGroup';
+import { UserSwitchModal } from '../components/settings/UserSwitchModal';
+import { UserSwitchDrawer } from '../components/settings/UserSwitchDrawer';
+import { AddUserModal } from '../components/settings/AddUserModal';
 
 export function fetchPatientRecords(
   db: RxDatabase<DatabaseCollections>,
@@ -67,26 +70,24 @@ export function parseGender(
   return item?.data_record.raw.resource?.gender;
 }
 
-export function getFileFromFileList(
-  fileOrFileList: FileList | File | undefined,
-): File | undefined {
-  let pp: File | null;
-  try {
-    if ((fileOrFileList as unknown as FileList).length === 0) {
-      return undefined;
-    }
-    pp = (fileOrFileList as unknown as FileList)?.item(0);
-    if (pp == null) {
-      return undefined;
-    }
-  } catch (e) {
-    pp = fileOrFileList as unknown as File;
-  }
-  return pp;
-}
-
 const SettingsTab: React.FC = () => {
   const { pathname, hash, key } = useLocation();
+  const [showUserSwitcher, setShowUserSwitcher] = useState(false);
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  // Detect screen size - matches Tailwind's sm: breakpoint (640px)
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(min-width: 640px)');
+    const handleChange = () => setIsDesktop(mediaQuery.matches);
+
+    // Set initial value
+    handleChange();
+
+    // Listen for changes
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
 
   useEffect(() => {
     setTimeout(() => {
@@ -105,7 +106,15 @@ const SettingsTab: React.FC = () => {
   return (
     <AppPage banner={<GenericBanner text="Settings" />}>
       <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pt-2 sm:px-6 lg:px-8">
-        <div className="py-6 text-xl font-extrabold">About Me</div>
+        <div className="flex items-center justify-between py-6">
+          <div className="text-xl font-extrabold">About Me</div>
+          <button
+            onClick={() => setShowUserSwitcher(true)}
+            className="text-primary-600 hover:text-primary-700 text-sm font-medium px-3 py-1 rounded-md hover:bg-primary-50 transition-colors"
+          >
+            Switch User
+          </button>
+        </div>
       </div>
       <UserCard />
       <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pb-20 pt-2 sm:px-6 sm:pb-6 lg:px-8">
@@ -115,6 +124,32 @@ const SettingsTab: React.FC = () => {
         <ExperimentalSettingsGroup />
         <DeveloperSettingsGroup />
       </div>
+
+      {isDesktop ? (
+        <UserSwitchModal
+          open={showUserSwitcher}
+          onClose={() => setShowUserSwitcher(false)}
+          onAddNewUser={() => {
+            setShowUserSwitcher(false);
+            setShowAddUserModal(true);
+          }}
+        />
+      ) : (
+        <UserSwitchDrawer
+          open={showUserSwitcher}
+          onClose={() => setShowUserSwitcher(false)}
+          onAddNewUser={() => {
+            setShowUserSwitcher(false);
+            setShowAddUserModal(true);
+          }}
+        />
+      )}
+
+      <AddUserModal
+        open={showAddUserModal}
+        onClose={() => setShowAddUserModal(false)}
+        switchToNewUser={true}
+      />
     </AppPage>
   );
 };
