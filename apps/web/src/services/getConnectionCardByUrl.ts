@@ -5,10 +5,14 @@ import { ConnectionDocument } from '../models/connection-document/ConnectionDocu
 export async function getConnectionCardByUrl<T extends ConnectionDocument>(
   url: string | Location,
   db: RxDatabase<DatabaseCollections>,
+  userId: string,
 ): Promise<RxDocument<T>> {
   return db.connection_documents
     .findOne({
-      selector: { location: url },
+      selector: {
+        location: url,
+        user_id: userId,
+      },
     })
     .exec()
     .then((list) => list as unknown as RxDocument<T>);

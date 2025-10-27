@@ -5,10 +5,17 @@ import { useUserManagement } from '../providers/UserProvider';
 import { useNotificationDispatch } from '../providers/NotificationProvider';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { format } from 'date-fns';
 import { Modal } from '../Modal';
-import { NewUserFormFields, validSchema, parseDefaultValues, ProfileImageModal } from './EditUserModalForm';
-import { getFileFromFileList, tryCreateUrlFromFile } from '../../utils/FileUtils';
+import {
+  NewUserFormFields,
+  validSchema,
+  parseDefaultValues,
+  ProfileImageModal,
+} from './EditUserModalForm';
+import {
+  getFileFromFileList,
+  useObjectUrl,
+} from '../../utils/FileUtils';
 
 interface AddUserModalProps {
   open: boolean;
@@ -17,7 +24,12 @@ interface AddUserModalProps {
   switchToNewUser?: boolean;
 }
 
-export function AddUserModal({ open, onClose, onUserCreated, switchToNewUser = false }: AddUserModalProps) {
+export function AddUserModal({
+  open,
+  onClose,
+  onUserCreated,
+  switchToNewUser = false,
+}: AddUserModalProps) {
   const { createNewUser, switchUser } = useUserManagement();
   const notificationDispatch = useNotificationDispatch();
   const [togglePhotoModal, setTogglePhotoModal] = useState(false);
@@ -35,6 +47,7 @@ export function AddUserModal({ open, onClose, onUserCreated, switchToNewUser = f
   });
 
   const pp = getFileFromFileList(watch('profilePhoto'));
+  const profilePhotoUrl = useObjectUrl(pp);
 
   const submitNewUser: SubmitHandler<NewUserFormFields> = async (data) => {
     try {
@@ -44,13 +57,19 @@ export function AddUserModal({ open, onClose, onUserCreated, switchToNewUser = f
         email: data.email,
         birthday: (data.birthday as Date)?.toISOString(),
         gender: data.gender,
-        profile_picture: pp ? {
-          content_type: 'image/png',
-          data: pp as string,
-        } : undefined,
+        profile_picture: pp
+          ? {
+              content_type: 'image/png',
+              data: pp as string,
+            }
+          : undefined,
       });
 
       const newUserId = newUserDoc.get('id');
+
+      if (!newUserId) {
+        throw new Error('Failed to get new user ID');
+      }
 
       notificationDispatch({
         type: 'set_notification',
@@ -128,7 +147,7 @@ export function AddUserModal({ open, onClose, onUserCreated, switchToNewUser = f
                     autoComplete="given-name"
                     className="focus:border-primary-500 focus:ring-primary-500 block w-full max-w-lg rounded-md border-gray-300 shadow-sm sm:max-w-xs sm:text-sm"
                     {...register('firstName')}
-                    aria-invalid={errors.firstName ? 'true' : 'false'}
+                    aria-invalid={!!errors.firstName}
                   />
                   {errors.firstName?.type === 'required' && (
                     <p className="text-sm text-red-500 sm:max-w-xs">
@@ -151,7 +170,7 @@ export function AddUserModal({ open, onClose, onUserCreated, switchToNewUser = f
                     autoComplete="family-name"
                     className="focus:border-primary-500 focus:ring-primary-500 block w-full max-w-lg rounded-md border-gray-300 shadow-sm sm:max-w-xs sm:text-sm"
                     {...register('lastName')}
-                    aria-invalid={errors.lastName ? 'true' : 'false'}
+                    aria-invalid={!!errors.lastName}
                   />
                   {errors.lastName?.type === 'required' && (
                     <p className="text-sm text-red-500 sm:max-w-xs">
@@ -174,7 +193,7 @@ export function AddUserModal({ open, onClose, onUserCreated, switchToNewUser = f
                     autoComplete="email"
                     className="focus:border-primary-500 focus:ring-primary-500 block w-full max-w-lg rounded-md border-gray-300 shadow-sm sm:max-w-xs sm:text-sm"
                     {...register('email')}
-                    aria-invalid={errors.email ? 'true' : 'false'}
+                    aria-invalid={!!errors.email}
                   />
                   {errors.email?.type === 'required' && (
                     <p className="text-sm text-red-500 sm:max-w-xs">
@@ -199,10 +218,10 @@ export function AddUserModal({ open, onClose, onUserCreated, switchToNewUser = f
                   <input
                     id="date-of-birth"
                     type="date"
-                    autoComplete="date"
+                    autoComplete="bday"
                     className="focus:border-primary-500 focus:ring-primary-500 block w-full max-w-lg rounded-md border-gray-300 shadow-sm sm:max-w-xs sm:text-sm"
                     {...register('birthday')}
-                    aria-invalid={errors.birthday ? 'true' : 'false'}
+                    aria-invalid={!!errors.birthday}
                   />
                   {errors.birthday?.type === 'required' && (
                     <p className="text-sm text-red-500 sm:max-w-xs">
@@ -230,7 +249,7 @@ export function AddUserModal({ open, onClose, onUserCreated, switchToNewUser = f
                     autoComplete="gender"
                     className="focus:border-primary-500 focus:ring-primary-500 block w-full max-w-lg rounded-md border-gray-300 shadow-sm sm:max-w-xs sm:text-sm"
                     {...register('gender')}
-                    aria-invalid={errors.gender ? 'true' : 'false'}
+                    aria-invalid={!!errors.gender}
                   />
                   {errors.gender?.type === 'required' && (
                     <p className="text-sm text-red-500 sm:max-w-xs">
@@ -260,12 +279,13 @@ export function AddUserModal({ open, onClose, onUserCreated, switchToNewUser = f
                       ) : (
                         <img
                           className="h-full w-full text-gray-300"
-                          src={tryCreateUrlFromFile(pp)}
+                          src={profilePhotoUrl}
                           alt="profile"
                         ></img>
                       )}
                     </span>
                     <button
+                      type="button"
                       onClick={(e) => {
                         e.preventDefault();
                         setTogglePhotoModal((x) => !x);

@@ -71,28 +71,35 @@ async function switchUser(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
 ): Promise<void> {
-  const currentUser = await db.user_documents
-    .findOne({
-      selector: { is_selected_user: true },
-    })
-    .exec();
-
-  if (currentUser) {
-    await currentUser.update({
-      $set: { is_selected_user: false },
-    });
-  }
-
   const newUser = await db.user_documents
     .findOne({
       selector: { id: userId },
     })
     .exec();
 
-  if (newUser) {
+  if (!newUser) {
+    throw new Error(`User not found: ${userId}`);
+  }
+
+  try {
+    const currentUser = await db.user_documents
+      .findOne({
+        selector: { is_selected_user: true },
+      })
+      .exec();
+
+    if (currentUser) {
+      await currentUser.update({
+        $set: { is_selected_user: false },
+      });
+    }
+
     await newUser.update({
       $set: { is_selected_user: true },
     });
+  } catch (error) {
+    console.error('Failed to switch user:', error);
+    throw new Error(`Failed to switch to user ${userId}: ${error instanceof Error ? error.message : 'Unknown database error'}`);
   }
 }
 

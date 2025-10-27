@@ -48,6 +48,7 @@ export async function saveConnectionToDb({
   const doc = await getConnectionCardByUrl<VeradigmConnectionDocument>(
     veradigmBaseUrl,
     db,
+    user.id,
   );
   return new Promise((resolve, reject) => {
     if (res.access_token && res.expires_in && res.token_type && user.id) {
@@ -150,6 +151,7 @@ const VeradigmRedirect: React.FC = () => {
         getConnectionCardByUrl<VeradigmConnectionDocument>(
           veradigmUrl,
           db,
+          user.id,
         ).then((doc) => {
           fetchAccessTokenWithCode(code, removeEndSlash(veradigmTokenUrl))
             .then((res) => {

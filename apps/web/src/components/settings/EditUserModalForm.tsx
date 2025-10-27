@@ -14,7 +14,7 @@ import { Modal } from '../Modal';
 import { ModalHeader } from '../ModalHeader';
 import { DependencyList } from 'react';
 import { useNotificationDispatch } from '../providers/NotificationProvider';
-import { getFileFromFileList, tryCreateUrlFromFile } from '../../utils/FileUtils';
+import { getFileFromFileList, useObjectUrl } from '../../utils/FileUtils';
 
 export type NewUserFormFields = {
   birthday?: string | Date;
@@ -115,9 +115,7 @@ export function ProfileImageModal({
   const pp = useMemo(() => {
     return getFileFromFileList(ppWatch || undefined);
   }, [ppWatch]);
-  const ppUrl = useMemo(() => {
-    return tryCreateUrlFromFile(pp === null ? undefined : pp);
-  }, [pp]);
+  const ppUrl = useObjectUrl(pp === null ? undefined : pp);
   const uploadRef = useRef<HTMLInputElement | undefined>();
   const { ref, ...rest } = register('profilePhoto');
 
@@ -253,6 +251,7 @@ export function EditUserForm({
   });
   const [togglePhotoModal, setTogglePhotoModal] = useState(false);
   const pp = getFileFromFileList(watch('profilePhoto') || undefined);
+  const ppUrl = useObjectUrl(pp);
   const submitUser: SubmitHandler<NewUserFormFields> = (data) => {
     if (rawUser) {
       // Apply crop to image here before saving
@@ -457,7 +456,7 @@ export function EditUserForm({
                     ) : (
                       <img
                         className="h-full w-full text-gray-300"
-                        src={tryCreateUrlFromFile(pp)}
+                        src={ppUrl}
                         alt="profile"
                       ></img>
                     )}

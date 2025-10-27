@@ -37,6 +37,7 @@ import {
 } from '../models/clinical-document/ClinicalDocument.type';
 import { getRedirectUri } from '../environments';
 import { concatPath } from '../utils/urlUtils';
+import { getConnectionCardByUrl } from './getConnectionCardByUrl';
 
 export enum CernerLocalStorageKeys {
   CERNER_BASE_URL = 'cernerBaseUrl',
@@ -505,17 +506,6 @@ export async function fetchAccessTokenWithRefreshToken(
   return res.json();
 }
 
-export async function getConnectionCardByUrl<T extends ConnectionDocument>(
-  url: string,
-  db: RxDatabase<DatabaseCollections>,
-): Promise<RxDocument<T>> {
-  return db.connection_documents
-    .findOne({
-      selector: { location: url },
-    })
-    .exec()
-    .then((list) => list as unknown as RxDocument<T>);
-}
 
 export async function saveConnectionToDb({
   res,
@@ -531,6 +521,7 @@ export async function saveConnectionToDb({
   const doc = await getConnectionCardByUrl<CernerConnectionDocument>(
     cernerBaseUrl,
     db,
+    user.id,
   );
   return new Promise((resolve, reject) => {
     if (res?.access_token && res?.expires_in && res?.id_token) {

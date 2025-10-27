@@ -641,7 +641,11 @@ export async function saveConnectionToDb({
   epicId: string;
   user: UserDocument;
 }) {
-  const doc = await getConnectionCardByUrl<EpicConnectionDocument>(epicUrl, db);
+  const doc = await getConnectionCardByUrl<EpicConnectionDocument>(
+    epicUrl,
+    db,
+    user.id,
+  );
   // handle when epicUrl used to only have the base, but now has 'api/FHIR/DSTU2' appended, can remove this in the future
   // added on 12/29/2023
   const docLegacy = await getConnectionCardByUrl<EpicConnectionDocument>(
@@ -650,6 +654,7 @@ export async function saveConnectionToDb({
       '',
     ),
     db,
+    user.id,
   );
   return new Promise((resolve, reject) => {
     if (res?.access_token && res?.expires_in && res?.patient) {

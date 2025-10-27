@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+
 export function getFileFromFileList(
   fileOrFileList: FileList | File | string | undefined,
 ): File | string | undefined {
@@ -25,20 +27,53 @@ type ProfilePhotoMetadata = {
   content_type: string;
 };
 
-export function tryCreateUrlFromFile(
-  pp: ProfilePhotoMetadata | Blob | string | undefined,
+function isProfilePhotoMetadata(value: unknown): value is ProfilePhotoMetadata {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'data' in value &&
+    typeof (value as ProfilePhotoMetadata).data === 'string'
+  );
+}
+
+/**
+ * React hook that safely manages object URLs created from Blobs.
+ * Automatically revokes the URL when the component unmounts or when the input changes.
+ *
+ * @param data - The photo data (ProfilePhotoMetadata, Blob, string, or undefined)
+ * @returns A URL string that can be used in img src attributes
+ */
+export function useObjectUrl(
+  data: ProfilePhotoMetadata | Blob | string | undefined
 ): string {
-  if (!pp) {
-    return '';
-  }
+  const [url, setUrl] = useState<string>('');
 
-  if (typeof pp === 'string') {
-    return pp;
-  }
+  useEffect(() => {
+    let objectUrl: string | null = null;
 
-  if (pp instanceof Blob) {
-    return URL.createObjectURL(pp);
-  }
+    if (!data) {
+      setUrl('');
+      return;
+    }
 
-  return (pp as ProfilePhotoMetadata).data || '';
+    if (typeof data === 'string') {
+      setUrl(data);
+      return;
+    }
+
+    if (data instanceof Blob) {
+      objectUrl = URL.createObjectURL(data);
+      setUrl(objectUrl);
+    } else if (isProfilePhotoMetadata(data)) {
+      setUrl(data.data || '');
+    }
+
+    return () => {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [data]);
+
+  return url;
 }
