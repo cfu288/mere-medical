@@ -33,11 +33,14 @@ export class VectorGeneratorSyncer {
     this.userId = null;
   }
 
-  public async syncNextBatch() {
+  private async syncNextBatch() {
+    if (!this.userId) {
+      console.error('No user selected, cannot sync batch');
+      return;
+    }
+
     if (!this.isDone) {
-      const query = this.userId
-        ? { selector: { user_id: this.userId } }
-        : {};
+      const query = { selector: { user_id: this.userId } };
 
       const documents = await this.db.clinical_documents
         .find(query)
@@ -84,9 +87,7 @@ export class VectorGeneratorSyncer {
     this.userId = user.id;
 
     // Update the count to only include current user's documents
-    const query = this.userId
-      ? { selector: { user_id: this.userId } }
-      : {};
+    const query = { selector: { user_id: this.userId } };
 
     this.totalDocuments = await this.db.clinical_documents
       .count(query)
@@ -105,7 +106,7 @@ export class VectorGeneratorSyncer {
  * @returns
  */
 export async function addBatchToVectorStorage(
-  documents: RxDocument<ClinicalDocument<unknown>, {}>[],
+  documents: RxDocument<ClinicalDocument<unknown>, object>[],
   vectorStorage: VectorStorage<DatabaseCollections>,
 ) {
   // allocate to min length
