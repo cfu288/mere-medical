@@ -12,10 +12,7 @@ import {
   parseDefaultValues,
   ProfileImageModal,
 } from './EditUserModalForm';
-import {
-  getFileFromFileList,
-  useObjectUrl,
-} from '../../utils/FileUtils';
+import { getFileFromFileList, useObjectUrl } from '../../utils/FileUtils';
 
 interface AddUserModalProps {
   open: boolean;

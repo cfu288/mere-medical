@@ -82,9 +82,15 @@ async function switchUser(
   }
 
   try {
+    // Select new user first
+    await newUser.update({
+      $set: { is_selected_user: true },
+    });
+
+    // Then unselect the old one (select first to avoid state with no user)
     const currentUser = await db.user_documents
       .findOne({
-        selector: { is_selected_user: true },
+        selector: { is_selected_user: true, id: { $ne: userId } },
       })
       .exec();
 
@@ -93,13 +99,11 @@ async function switchUser(
         $set: { is_selected_user: false },
       });
     }
-
-    await newUser.update({
-      $set: { is_selected_user: true },
-    });
   } catch (error) {
     console.error('Failed to switch user:', error);
-    throw new Error(`Failed to switch to user ${userId}: ${error instanceof Error ? error.message : 'Unknown database error'}`);
+    throw new Error(
+      `Failed to switch to user ${userId}: ${error instanceof Error ? error.message : 'Unknown database error'}`,
+    );
   }
 }
 
@@ -121,7 +125,9 @@ type UserProviderProps = PropsWithChildren<unknown>;
 type UserManagement = {
   allUsers: RxDocument<UserDocument>[];
   switchUser: (userId: string) => Promise<void>;
-  createNewUser: (userData: Partial<UserDocument>) => Promise<RxDocument<UserDocument>>;
+  createNewUser: (
+    userData: Partial<UserDocument>,
+  ) => Promise<RxDocument<UserDocument>>;
 };
 
 const UserContext = React.createContext<UserDocument>(defaultUser);
