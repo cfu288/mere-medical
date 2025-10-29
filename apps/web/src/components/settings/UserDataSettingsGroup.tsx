@@ -117,6 +117,13 @@ export function UserDataSettingsGroup() {
   const backupFile = watch('backup');
   const formref = useRef<HTMLFormElement>(null);
 
+  const file = getFileFromFileList(backupFile);
+  const importButtonText = !file
+    ? 'Select backup file'
+    : file instanceof File
+      ? file.name
+      : 'File selected';
+
   useEffect(() => {
     if (backupFile) {
       formref.current?.dispatchEvent(new Event('submit', { cancelable: true }));
@@ -195,12 +202,7 @@ export function UserDataSettingsGroup() {
                 className="border-0"
               >
                 <label className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 relative ml-4 inline-flex flex-shrink-0 cursor-pointer items-center rounded-md border border-transparent px-4 py-2 text-sm font-bold  text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2">
-                  {(() => {
-                    const file = getFileFromFileList(backupFile);
-                    if (!file) return 'Select backup file';
-                    if (file instanceof File) return file.name;
-                    return 'File selected';
-                  })()}
+                  {importButtonText}
                   <input
                     type="file"
                     id="profilePhoto"
@@ -216,7 +218,7 @@ export function UserDataSettingsGroup() {
                     <p className="text-red-500">{`${errors.backup?.message}`}</p>
                   )}
                 </label>
-                {getFileFromFileList(backupFile) !== undefined && (
+                {file !== undefined && (
                   <button
                     type="submit"
                     disabled={backupInProgress}
