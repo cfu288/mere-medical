@@ -28,55 +28,6 @@ export type DocMeta = {
 };
 
 /**
- * Resolves vector storage documents that were marked as 'migration_pending'
- * during migration from single-user to multi-user schema.
- * These documents need to be assigned to the existing user.
- */
-async function resolveMigrationPendingDocuments(
-  rxdb: RxDatabase<DatabaseCollections>
-): Promise<void> {
-  try {
-    // First check if there are any migration_pending documents
-    const pendingDocs = await rxdb.vector_storage
-      .find({ selector: { user_id: 'migration_pending' } })
-      .exec();
-
-    if (pendingDocs.length === 0) {
-      return; // Nothing to resolve
-    }
-
-    // Get the selected user (or any user for single-user apps transitioning to multi-user)
-    let user = await rxdb.user_documents
-      .findOne({ selector: { is_selected_user: true } })
-      .exec();
-
-    if (!user) {
-      // If no selected user, try to get any user (for single-user apps)
-      user = await rxdb.user_documents.findOne().exec();
-      if (!user) {
-        console.warn('No user found to resolve migration_pending vector documents');
-        return;
-      }
-    }
-
-    console.log(`Resolving ${pendingDocs.length} migration_pending vector documents to user ${user.id}`);
-
-    // Update all documents to the correct user_id
-    // Using bulk update for better performance
-    const updatePromises = pendingDocs.map(doc =>
-      doc.update({ $set: { user_id: user.id } })
-    );
-
-    await Promise.all(updatePromises);
-
-    console.log('Successfully resolved migration_pending vector documents');
-  } catch (error) {
-    console.error('Error resolving migration_pending documents:', error);
-    // Don't throw - this shouldn't break the app initialization
-  }
-}
-
-/**
  * Initializes a VectorStorage instance and provides it to the children
  * Enables search for documents via vector search
  * @param param0
@@ -92,7 +43,7 @@ export function VectorStorageProvider({
   const rxdb = useRxDb();
   const localConfig = useLocalConfig();
   const isInitializingRef = useRef(false);
-  const hasResolvedMigrationRef = useRef(false);
+  const hasCleanedRef = useRef(false);
 
   useEffect(() => {
     if (!localConfig?.experimental__use_openai_rag || !rxdb) {
@@ -137,19 +88,68 @@ export function VectorStorageProvider({
       });
     }
 
+    const initializeVectorStorage = async () => {
+      if (!store) return;
+
+      try {
+        // Drop entire collection if migration_pending documents exist
+        // This handles the one-time migration from single-user to multi-user
+        if (!hasCleanedRef.current) {
+          try {
+            // Check if any documents have user_id = 'migration_pending'
+            // These were created by migration v5 when user_id was unknown
+            const allDocs = await rxdb.vector_storage.find().exec();
+            const hasMigrationPending = allDocs.some(
+              (doc) => doc.user_id === 'migration_pending',
+            );
+
+            if (hasMigrationPending) {
+              console.log(
+                'Found migration_pending documents, dropping entire vector storage for regeneration',
+              );
+              await rxdb.vector_storage?.remove();
+            }
+
+            // Mark migration check as complete
+            hasCleanedRef.current = true;
+          } catch (checkError: any) {
+            // If we get an index error while checking, it likely means we're mid-migration
+            // In this case, drop the entire collection to be safe
+            if (
+              checkError?.message?.includes('index') &&
+              checkError?.message?.includes('not found')
+            ) {
+              console.log(
+                'Index error detected during migration check, dropping entire vector storage',
+              );
+              await rxdb.vector_storage?.remove();
+              // Mark migration as handled after dropping collection
+              hasCleanedRef.current = true;
+            } else {
+              console.error(
+                'Error checking for migration_pending documents:',
+                checkError,
+              );
+              // Don't mark as complete if we had an unexpected error
+            }
+          }
+        }
+
+        // Initialize the vector storage
+        await store.initialize();
+
+        // Only make it available after ALL initialization is complete
+        // This prevents VectorGeneratorSyncInitializer from starting before we're ready
+        setVectorStore(store);
+      } catch (error) {
+        console.error('Error initializing vector storage:', error);
+        isInitializingRef.current = false;
+      }
+    };
+
     if (store && !store.hasInitialized) {
       isInitializingRef.current = true;
-      store.initialize();
-      setVectorStore(store);
-
-      // Resolve any migration_pending documents after initialization
-      // This handles the transition from single-user to multi-user
-      if (!hasResolvedMigrationRef.current) {
-        hasResolvedMigrationRef.current = true;
-        resolveMigrationPendingDocuments(rxdb).catch(error => {
-          console.error('Failed to resolve migration pending documents:', error);
-        });
-      }
+      initializeVectorStorage();
     }
   }, [
     localConfig?.experimental__openai_api_key,

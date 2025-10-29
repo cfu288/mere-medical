@@ -34,4 +34,10 @@ export const VectorStorageDocumentMigrations: MigrationStrategies = {
     }
     return oldDoc;
   },
+  6: function (oldDoc: VectorStorageDocument) {
+    // Schema change only: user_id field changed from required to optional
+    // This allows migration from v4 documents that lack user_id
+    // No data changes needed
+    return oldDoc;
+  },
 };

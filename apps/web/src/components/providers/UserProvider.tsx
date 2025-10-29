@@ -71,6 +71,8 @@ async function switchUser(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
 ): Promise<void> {
+  console.debug(`UserProvider: Switching to user ${userId}`);
+
   const newUser = await db.user_documents
     .findOne({
       selector: { id: userId },
@@ -99,6 +101,8 @@ async function switchUser(
         $set: { is_selected_user: false },
       });
     }
+
+    console.debug(`UserProvider: Successfully switched to user ${userId}`);
   } catch (error) {
     console.error('Failed to switch user:', error);
     throw new Error(
