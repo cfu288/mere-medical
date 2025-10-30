@@ -265,9 +265,23 @@ export function TenantSelectModal({
                 {ConnectionSources.map((file) => (
                   <li key={file.source} className="relative">
                     {file.href ? (
-                      <a
-                        href={!file.enabled ? Routes.AddConnection : file.href}
-                        className="absolute inset-0 focus:outline-none"
+                      <div
+                        className="cursor-pointer"
+                        onClick={() => {
+                          if (Config.IS_DEMO === 'enabled') {
+                            notifyDispatch({
+                              type: 'set_notification',
+                              message: 'Adding new connections is disabled in demo mode',
+                              variant: 'error',
+                            });
+                            return;
+                          }
+                          if (!file.enabled) {
+                            window.location.href = Routes.AddConnection;
+                          } else if (file.href) {
+                            window.location.href = file.href;
+                          }
+                        }}
                       >
                         <div className="aspect-h-7 aspect-w-10 focus-within:ring-primary-500 bg-primary-700 hover:bg-primary-600 group block w-full overflow-hidden rounded-lg transition-all focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100">
                           {file.source !== '' ? (
@@ -311,12 +325,20 @@ export function TenantSelectModal({
                             )}
                           </>
                         )}
-                      </a>
+                      </div>
                     ) : (
                       <>
                         <div
                           className="aspect-h-7 aspect-w-10 focus-within:ring-primary-500 bg-primary-700 hover:bg-primary-600 group block w-full overflow-hidden rounded-lg transition-all focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100"
                           onClick={() => {
+                            if (Config.IS_DEMO === 'enabled') {
+                              notifyDispatch({
+                                type: 'set_notification',
+                                message: 'Adding new connections is disabled in demo mode',
+                                variant: 'error',
+                              });
+                              return;
+                            }
                             if (file.customHandleClick) {
                               file.customHandleClick();
                             } else {
