@@ -14,6 +14,7 @@ import { Modal } from '../Modal';
 import { ModalHeader } from '../ModalHeader';
 import { DependencyList } from 'react';
 import { useNotificationDispatch } from '../providers/NotificationProvider';
+import { getFileFromFileList, useObjectUrl } from '../../utils/FileUtils';
 
 export type NewUserFormFields = {
   birthday?: string | Date;
@@ -46,38 +47,6 @@ export function parseDefaultValues(defaultValues?: NewUserFormFields) {
   };
 }
 
-/**
- * Given a file or file list, return either the file itself or the first file in the file list
- * @param fileOrFileList
- * @returns the file
- */
-function getFileFromFileList(
-  fileOrFileList: FileList | File | string | undefined,
-) {
-  let pp: File | string | null;
-  if (fileOrFileList === typeof 'string') {
-    return fileOrFileList;
-  }
-  try {
-    pp = (fileOrFileList as unknown as FileList)?.item(0);
-  } catch (e) {
-    pp = fileOrFileList as unknown as File;
-  }
-  return pp;
-}
-
-type ProfilePhotoMetadata = { data: string; content_type: string };
-
-function tryCreateUrlFromFile(
-  pp: ProfilePhotoMetadata | Blob | string,
-): string {
-  if (typeof pp === 'string') {
-    return pp;
-  } else if (pp instanceof Blob) {
-    return URL.createObjectURL(pp as unknown as Blob);
-  }
-  return (pp as unknown as ProfilePhotoMetadata)?.data;
-}
 
 /**
  * Updates the current user with the following data
@@ -105,7 +74,7 @@ const updateUserInDb = async (
       $set: {
         profile_picture: {
           content_type: 'image/png',
-          data: pp,
+          data: pp as string,
         },
       },
     });
@@ -113,7 +82,7 @@ const updateUserInDb = async (
   }
 };
 
-function ProfileImageModal({
+export function ProfileImageModal({
   setTogglePhotoModal,
   togglePhotoModal,
   pp: ppIn,
@@ -144,13 +113,9 @@ function ProfileImageModal({
   const imgRef = useRef<HTMLImageElement>(null);
   const ppWatch = watch('profilePhoto');
   const pp = useMemo(() => {
-    // @ts-ignore
-    return getFileFromFileList(ppWatch);
+    return getFileFromFileList(ppWatch || undefined);
   }, [ppWatch]);
-  const ppUrl = useMemo(() => {
-    // @ts-ignore
-    return tryCreateUrlFromFile(pp);
-  }, [pp]);
+  const ppUrl = useObjectUrl(pp === null ? undefined : pp);
   const uploadRef = useRef<HTMLInputElement | undefined>();
   const { ref, ...rest } = register('profilePhoto');
 
@@ -285,7 +250,8 @@ export function EditUserForm({
     resolver: yupResolver(validSchema),
   });
   const [togglePhotoModal, setTogglePhotoModal] = useState(false);
-  const pp = getFileFromFileList(watch('profilePhoto'));
+  const pp = getFileFromFileList(watch('profilePhoto') || undefined);
+  const ppUrl = useObjectUrl(pp);
   const submitUser: SubmitHandler<NewUserFormFields> = (data) => {
     if (rawUser) {
       // Apply crop to image here before saving
@@ -490,7 +456,7 @@ export function EditUserForm({
                     ) : (
                       <img
                         className="h-full w-full text-gray-300"
-                        src={tryCreateUrlFromFile(pp)}
+                        src={ppUrl}
                         alt="profile"
                       ></img>
                     )}
@@ -529,7 +495,7 @@ export function EditUserForm({
         setPP={(i) => {
           setValue('profilePhoto', i);
         }}
-        pp={pp}
+        pp={pp || null}
         togglePhotoModal={togglePhotoModal}
         setTogglePhotoModal={setTogglePhotoModal}
       ></ProfileImageModal>
@@ -608,13 +574,11 @@ export function useDebounceEffect(
 ) {
   useEffect(() => {
     const t = setTimeout(() => {
-      // @ts-ignore
-      fn.apply(undefined, deps);
+      fn();
     }, waitTime);
 
     return () => {
       clearTimeout(t);
     };
-    // @ts-ignore
   }, deps);
 }

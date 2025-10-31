@@ -18,6 +18,7 @@ export class VectorGeneratorSyncer {
   private isDone: boolean;
   private totalDocuments: number;
   private currentDocumentsProcessed: number;
+  private userId: string | null;
 
   constructor(
     db: RxDatabase<DatabaseCollections>,
@@ -29,12 +30,20 @@ export class VectorGeneratorSyncer {
     this.isDone = false;
     this.totalDocuments = 0;
     this.currentDocumentsProcessed = 0;
+    this.userId = null;
   }
 
-  public async syncNextBatch() {
+  private async syncNextBatch() {
+    if (!this.userId) {
+      console.error('No user selected, cannot sync batch');
+      return;
+    }
+
     if (!this.isDone) {
+      const query = { selector: { user_id: this.userId } };
+
       const documents = await this.db.clinical_documents
-        .find()
+        .find(query)
         .skip(this.page ? this.page * PAGE_SIZE : 0)
         .limit(PAGE_SIZE)
         .exec();
@@ -65,7 +74,25 @@ export class VectorGeneratorSyncer {
    * them to OpenAI for vectorization
    */
   public async startSync() {
-    this.totalDocuments = await this.db.clinical_documents.count().exec();
+    // Get current user
+    const user = await this.db.user_documents
+      .findOne({ selector: { is_selected_user: true } })
+      .exec();
+
+    if (!user) {
+      console.error('No user selected, cannot sync vectors');
+      return;
+    }
+
+    this.userId = user.id;
+
+    // Update the count to only include current user's documents
+    const query = { selector: { user_id: this.userId } };
+
+    this.totalDocuments = await this.db.clinical_documents
+      .count(query)
+      .exec();
+
     while (!this.isDone) {
       await this.syncNextBatch();
     }
@@ -79,7 +106,7 @@ export class VectorGeneratorSyncer {
  * @returns
  */
 export async function addBatchToVectorStorage(
-  documents: RxDocument<ClinicalDocument<unknown>, {}>[],
+  documents: RxDocument<ClinicalDocument<unknown>, object>[],
   vectorStorage: VectorStorage<DatabaseCollections>,
 ) {
   // allocate to min length

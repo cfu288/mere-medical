@@ -77,6 +77,7 @@ export function useRecordQuery(
                       db,
                       vectorStorage,
                       query,
+                      userId: user.id,
                       numResults: 20,
                       enableSearchAttachments: true,
                       groupByDate: true,

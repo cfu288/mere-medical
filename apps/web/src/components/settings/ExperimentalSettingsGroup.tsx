@@ -7,6 +7,7 @@ import { classNames } from '../../utils/StyleUtils';
 import { useEffect, useState } from 'react';
 import { useNotificationDispatch } from '../providers/NotificationProvider';
 import { useRxDb } from '../providers/RxDbProvider';
+import { useUser } from '../providers/UserProvider';
 import { testOllamaConnection } from '../../features/mere-ai-chat/ollama/ollamaEmbeddings';
 import {
   AI_DEFAULTS,
@@ -45,19 +46,27 @@ export function ExperimentalSettingsGroup() {
   const [isTestingConnection, setIsTestingConnection] = useState(false);
   const notificationDispatch = useNotificationDispatch();
   const rxdb = useRxDb();
+  const user = useUser();
   const [vectorCount, setVectorCount] = useState(0);
 
   useEffect(() => {
-    const subscription = rxdb.vector_storage?.count().$.subscribe((c) => {
-      if (c !== undefined) {
-        setVectorCount(c);
-      }
-    });
+    if (!user?.id) {
+      setVectorCount(0);
+      return;
+    }
+
+    const subscription = rxdb.vector_storage
+      ?.count({ selector: { user_id: user.id } })
+      .$.subscribe((c) => {
+        if (c !== undefined) {
+          setVectorCount(c);
+        }
+      });
 
     return () => {
       subscription?.unsubscribe();
     };
-  }, [rxdb.vector_storage]);
+  }, [rxdb.vector_storage, user?.id]);
 
   if (!experimental_features_enabled) {
     return null;
@@ -398,7 +407,16 @@ export function ExperimentalSettingsGroup() {
                         'Are you sure you want to clear all stored vectors?',
                       )
                     ) {
-                      await rxdb.vector_storage?.remove();
+                      const userVectors = await rxdb.vector_storage
+                        .find({ selector: { user_id: user.id } })
+                        .exec();
+
+                      const result = await rxdb.vector_storage.bulkRemove(userVectors as any);
+
+                      if (result.error && result.error.length > 0) {
+                        console.error(`Failed to delete ${result.error.length} vector documents`);
+                      }
+
                       setVectorCount(0);
                       notificationDispatch({
                         type: 'set_notification',

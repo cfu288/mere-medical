@@ -21,4 +21,23 @@ export const VectorStorageDocumentMigrations: MigrationStrategies = {
     }
     return oldDoc;
   },
+  5: function (oldDoc: VectorStorageDocument) {
+    // Add top-level user_id field from metadata
+    if (oldDoc.metadata?.['user_id']) {
+      oldDoc.user_id = oldDoc.metadata['user_id'];
+    } else {
+      // Fallback: Since the app is currently single-user, we'll mark these
+      // documents to be updated when the user is known
+      // We can't query the database in migrations, so we use a placeholder
+      // that will be handled by the application
+      oldDoc.user_id = 'migration_pending';
+    }
+    return oldDoc;
+  },
+  6: function (oldDoc: VectorStorageDocument) {
+    // Schema change only: user_id field changed from required to optional
+    // This allows migration from v4 documents that lack user_id
+    // No data changes needed
+    return oldDoc;
+  },
 };

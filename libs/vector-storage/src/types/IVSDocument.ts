@@ -1,5 +1,6 @@
 export interface IVSDocument {
   id: string; // id: A unique identifier for the document. This is usually the document's ID in the database.
+  user_id?: string; // user_id: The user that this vector document belongs to
   hash: string; // hash: A hash of the document's text. This is used to quickly check if the document has been changed since it was added to vector storage.
   metadata: {
     [key: string]: any;

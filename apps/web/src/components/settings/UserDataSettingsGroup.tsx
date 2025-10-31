@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNotificationDispatch } from '../providers/NotificationProvider';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
-import { getFileFromFileList } from '../../pages/SettingsTab';
+import { getFileFromFileList } from '../../utils/FileUtils';
 import { RxDatabase } from 'rxdb';
 import {
   checkIfPersistentStorageAvailable,
@@ -39,8 +39,8 @@ export const handleImport = (
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
     const file = getFileFromFileList(fields.backup);
-    const reader = new FileReader();
-    if (file) {
+    if (file && file instanceof File) {
+      const reader = new FileReader();
       reader.onload = function (event) {
         const jsonData = event.target?.result as string;
         if (jsonData) {
@@ -116,6 +116,13 @@ export function UserDataSettingsGroup() {
   });
   const backupFile = watch('backup');
   const formref = useRef<HTMLFormElement>(null);
+
+  const file = getFileFromFileList(backupFile);
+  const importButtonText = !file
+    ? 'Select backup file'
+    : file instanceof File
+      ? file.name
+      : 'File selected';
 
   useEffect(() => {
     if (backupFile) {
@@ -195,9 +202,7 @@ export function UserDataSettingsGroup() {
                 className="border-0"
               >
                 <label className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 relative ml-4 inline-flex flex-shrink-0 cursor-pointer items-center rounded-md border border-transparent px-4 py-2 text-sm font-bold  text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2">
-                  {getFileFromFileList(backupFile) === undefined
-                    ? 'Select backup file'
-                    : `${getFileFromFileList(backupFile)?.name} `}
+                  {importButtonText}
                   <input
                     type="file"
                     id="profilePhoto"
@@ -213,7 +218,7 @@ export function UserDataSettingsGroup() {
                     <p className="text-red-500">{`${errors.backup?.message}`}</p>
                   )}
                 </label>
-                {getFileFromFileList(backupFile) !== undefined && (
+                {file !== undefined && (
                   <button
                     type="submit"
                     disabled={backupInProgress}

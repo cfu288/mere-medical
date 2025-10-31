@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useRxDb } from '../../RxDbProvider';
+import { useUser } from '../../UserProvider';
 import { VectorGeneratorSyncer } from './VectorGeneratorSyncer';
 import { useVectors } from '..';
 
@@ -32,24 +33,37 @@ export function VectorGeneratorSyncInitializer({
 }) {
   const vectorStorage = useVectors();
   const rxdb = useRxDb();
+  const user = useUser();
   const vsSync = useRef<VectorGeneratorSyncer>();
+  const lastSyncedUserId = useRef<string>();
   const [isDone, setIsDone] = React.useState<VectorSyncStatus>('IDLE');
 
   useEffect(() => {
-    if (vectorStorage && rxdb && !vsSync.current) {
-      vsSync.current = new VectorGeneratorSyncer(rxdb, vectorStorage);
-      setIsDone('IN_PROGRESS');
-      vsSync.current
-        .startSync()
-        .then(() => {
-          setIsDone('COMPLETE');
-        })
-        .catch((e) => {
-          console.error(e);
-          setIsDone('ERROR');
-        });
+    if (vectorStorage && rxdb && user?.id) {
+      if (lastSyncedUserId.current !== user.id) {
+        console.debug(`VectorGeneratorSyncInitializer: User switched from ${lastSyncedUserId.current} to ${user.id}, starting vector sync`);
+
+        if (vsSync.current) {
+          vsSync.current = undefined;
+        }
+
+        vsSync.current = new VectorGeneratorSyncer(rxdb, vectorStorage);
+        setIsDone('IN_PROGRESS');
+        lastSyncedUserId.current = user.id;
+
+        vsSync.current
+          .startSync()
+          .then(() => {
+            setIsDone('COMPLETE');
+          })
+          .catch((e) => {
+            console.error('Vector sync error:', e);
+            setIsDone('ERROR');
+            lastSyncedUserId.current = undefined;
+          });
+      }
     }
-  }, [rxdb, vectorStorage]);
+  }, [rxdb, vectorStorage, user?.id]);
 
   return (
     <VectorSyncStatusContext.Provider value={isDone}>

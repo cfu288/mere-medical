@@ -42,6 +42,7 @@ const OnPatientRedirect: React.FC = () => {
         getConnectionCardByUrl<ConnectionDocument>(
           'https://onpatient.com',
           db,
+          user.id,
         ).then((doc) => {
           if (doc) {
             try {

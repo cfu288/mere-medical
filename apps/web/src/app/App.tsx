@@ -48,8 +48,8 @@ export default function App() {
           <NotificationProvider>
             <UpdateAppChecker />
             <RxDbProvider>
-              <VectorProvider>
-                <UserProvider>
+              <UserProvider>
+                <VectorProvider>
                   {/* <RecommendationGeneratorInitializer> */}
                   <UserPreferencesProvider>
                     <SyncJobProvider>
@@ -57,8 +57,8 @@ export default function App() {
                     </SyncJobProvider>
                   </UserPreferencesProvider>
                   {/* </RecommendationGeneratorInitializer> */}
-                </UserProvider>
-              </VectorProvider>
+                </VectorProvider>
+              </UserProvider>
             </RxDbProvider>
           </NotificationProvider>
         </DeveloperLogsProvider>

@@ -280,6 +280,7 @@ export async function fetchRecordsWithVectorSearch({
   db,
   vectorStorage,
   query,
+  userId,
   numResults = 10,
   enableSearchAttachments = false,
   groupByDate = true,
@@ -287,6 +288,7 @@ export async function fetchRecordsWithVectorSearch({
   db: RxDatabase<DatabaseCollections>;
   vectorStorage: VectorStorage<any>;
   query?: string;
+  userId?: string;
   numResults?: number;
   enableSearchAttachments?: boolean;
   groupByDate?: boolean;
@@ -306,14 +308,31 @@ export async function fetchRecordsWithVectorSearch({
     k: numResults,
   };
 
+  const includeFilter: Record<string, any> = {};
+  if (userId) {
+    includeFilter['user_id'] = userId;
+  }
+
   if (!enableSearchAttachments) {
     searchParams = {
       ...searchParams,
       filterOptions: {
+        include: {
+          metadata: includeFilter,
+        },
         exclude: {
           metadata: {
             category: 'documentreference_attachment',
           },
+        },
+      },
+    };
+  } else if (userId) {
+    searchParams = {
+      ...searchParams,
+      filterOptions: {
+        include: {
+          metadata: includeFilter,
         },
       },
     };

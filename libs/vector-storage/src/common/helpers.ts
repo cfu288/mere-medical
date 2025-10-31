@@ -25,6 +25,16 @@ function matchesCriteria(
   document: IVSDocument,
   criteria: IVSFilterCriteria,
 ): boolean {
+  // Support both locations during migration from metadata.user_id to top-level field
+  if (criteria.metadata?.['user_id']) {
+    if (document.user_id && document.user_id !== criteria.metadata['user_id']) {
+      return false;
+    }
+    if (!document.user_id && document.metadata?.['user_id'] !== criteria.metadata['user_id']) {
+      return false;
+    }
+  }
+
   if (criteria.metadata) {
     for (const key in criteria.metadata) {
       if (document.metadata[key] !== criteria.metadata[key]) {
