@@ -25,13 +25,11 @@ function matchesCriteria(
   document: IVSDocument,
   criteria: IVSFilterCriteria,
 ): boolean {
-  // Check top-level user_id if specified in metadata filter
+  // Support both locations during migration from metadata.user_id to top-level field
   if (criteria.metadata?.['user_id']) {
-    // First check top-level user_id
     if (document.user_id && document.user_id !== criteria.metadata['user_id']) {
       return false;
     }
-    // Fall back to metadata.user_id if top-level is not set
     if (!document.user_id && document.metadata?.['user_id'] !== criteria.metadata['user_id']) {
       return false;
     }

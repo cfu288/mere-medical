@@ -308,7 +308,6 @@ export async function fetchRecordsWithVectorSearch({
     k: numResults,
   };
 
-  // Add user filtering
   const includeFilter: Record<string, any> = {};
   if (userId) {
     includeFilter['user_id'] = userId;

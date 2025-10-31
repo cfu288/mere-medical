@@ -407,13 +407,15 @@ export function ExperimentalSettingsGroup() {
                         'Are you sure you want to clear all stored vectors?',
                       )
                     ) {
-                      // Only remove vectors belonging to the current user
                       const userVectors = await rxdb.vector_storage
                         .find({ selector: { user_id: user.id } })
                         .exec();
 
-                      // Delete each document individually
-                      await Promise.all(userVectors.map(doc => doc.remove()));
+                      const result = await rxdb.vector_storage.bulkRemove(userVectors as any);
+
+                      if (result.error && result.error.length > 0) {
+                        console.error(`Failed to delete ${result.error.length} vector documents`);
+                      }
 
                       setVectorCount(0);
                       notificationDispatch({
