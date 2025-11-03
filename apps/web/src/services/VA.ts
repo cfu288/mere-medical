@@ -5,7 +5,6 @@ import {
   BundleEntry,
   Condition,
   DiagnosticReport,
-  DocumentReference,
   FhirResource,
   Immunization,
   MedicationStatement,
@@ -29,6 +28,7 @@ import {
 import { UserDocument } from '../models/user-document/UserDocument.type';
 import uuid4 from '../utils/UUIDUtils';
 import { DatabaseCollections } from '../components/providers/DatabaseCollections';
+import { getConnectionCardByUrl } from './getConnectionCardByUrl';
 
 export enum VALocalStorageKeys {
   VA_BASE_URL = 'vaBaseUrl',
@@ -414,18 +414,6 @@ export async function fetchAccessTokenWithRefreshToken(
   return res.json();
 }
 
-export async function getConnectionCardByUrl<T extends ConnectionDocument>(
-  url: string,
-  db: RxDatabase<DatabaseCollections>,
-): Promise<RxDocument<T>> {
-  return db.connection_documents
-    .findOne({
-      selector: { location: url },
-    })
-    .exec()
-    .then((list) => list as unknown as RxDocument<T>);
-}
-
 export async function saveConnectionToDb({
   res,
   vaBaseUrl,
@@ -437,7 +425,11 @@ export async function saveConnectionToDb({
   db: RxDatabase<DatabaseCollections>;
   user: UserDocument;
 }) {
-  const doc = await getConnectionCardByUrl<VAConnectionDocument>(vaBaseUrl, db);
+  const doc = await getConnectionCardByUrl<VAConnectionDocument>(
+    vaBaseUrl,
+    db,
+    user.id,
+  );
   return new Promise((resolve, reject) => {
     if (res?.access_token && res?.expires_in && res?.id_token) {
       if (doc) {
