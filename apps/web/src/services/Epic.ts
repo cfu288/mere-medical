@@ -633,9 +633,9 @@ export async function saveConnectionToDb({
   user,
 }: {
   res: EpicAuthResponseWithClientId | EpicAuthResponse;
-  epicBaseUrl: string | Location;
-  epicTokenUrl: string | Location;
-  epicAuthUrl: string | Location;
+  epicBaseUrl: string;
+  epicTokenUrl: string;
+  epicAuthUrl: string;
   epicName: string;
   db: RxDatabase<DatabaseCollections>;
   epicId: string;
@@ -746,7 +746,18 @@ export async function refreshEpicConnectionTokenIfNeeded(
         epicName = connectionDocument.get('name'),
         clientId = connectionDocument.get('client_id'),
         epicId = connectionDocument.get('tenant_id'),
-        user = connectionDocument.get('user_id');
+        userId = connectionDocument.get('user_id');
+
+      // Fetch the actual UserDocument from the database
+      const userDoc = await db.user_documents
+        .findOne({ selector: { id: userId } })
+        .exec();
+
+      if (!userDoc) {
+        throw new Error(`User not found: ${userId}`);
+      }
+
+      const userObject = userDoc.toJSON() as UserDocument;
 
       const access_token_data = await fetchAccessTokenUsingJWT(
         clientId,
@@ -763,7 +774,7 @@ export async function refreshEpicConnectionTokenIfNeeded(
         epicAuthUrl,
         db,
         epicId,
-        user,
+        user: userObject,
       });
     } catch (e) {
       console.error(e);

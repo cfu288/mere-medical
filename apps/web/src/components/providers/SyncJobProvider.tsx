@@ -9,6 +9,7 @@ import {
   VeradigmConnectionDocument,
   VAConnectionDocument,
 } from '../../models/connection-document/ConnectionDocument.type';
+import { UserDocument } from '../../models/user-document/UserDocument.type';
 import { useRxDb } from './RxDbProvider';
 import { DatabaseCollections } from './DatabaseCollections';
 import * as OnPatient from '../../services/OnPatient';
@@ -580,7 +581,18 @@ async function refreshEpicConnectionTokenIfNeeded(
         epicTokenUrl = connectionDocument.get('token_uri'),
         clientId = connectionDocument.get('client_id'),
         epicId = connectionDocument.get('tenant_id'),
-        user = connectionDocument.get('user_id');
+        userId = connectionDocument.get('user_id');
+
+      // Fetch the actual UserDocument from the database
+      const userDoc = await db.user_documents
+        .findOne({ selector: { id: userId } })
+        .exec();
+
+      if (!userDoc) {
+        throw new Error(`User not found: ${userId}`);
+      }
+
+      const userObject = userDoc.toJSON() as UserDocument;
 
       const access_token_data = await Epic.fetchAccessTokenUsingJWT(
         clientId,
@@ -597,7 +609,7 @@ async function refreshEpicConnectionTokenIfNeeded(
         epicName,
         db,
         epicId,
-        user,
+        user: userObject,
       });
     } catch (e) {
       console.error(e);

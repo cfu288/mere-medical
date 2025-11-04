@@ -61,13 +61,13 @@ function createUserIfNone(
   });
 }
 
-async function fetchAllUsers(
+export async function fetchAllUsers(
   db: RxDatabase<DatabaseCollections>,
 ): Promise<RxDocument<UserDocument>[]> {
   return db.user_documents.find().exec();
 }
 
-async function switchUser(
+export async function switchUser(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
 ): Promise<void> {
@@ -111,7 +111,7 @@ async function switchUser(
   }
 }
 
-async function createNewUser(
+export async function createNewUser(
   db: RxDatabase<DatabaseCollections>,
   userData: Partial<UserDocument>,
 ): Promise<RxDocument<UserDocument>> {
