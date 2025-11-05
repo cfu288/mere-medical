@@ -1,128 +1,9 @@
-import React, { useRef, useContext } from 'react';
+import React, { useContext } from 'react';
 import { PropsWithChildren, useEffect, useState } from 'react';
-import { RxDatabase, RxDocument } from 'rxdb';
+import { RxDocument } from 'rxdb';
 import { Subscription } from 'rxjs';
-import uuid4 from '../../utils/UUIDUtils';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
-import { useRxDb } from './RxDbProvider';
-import { DatabaseCollections } from './DatabaseCollections';
-
-const defaultUser: UserDocument = {
-  id: uuid4(),
-  is_selected_user: true,
-  is_default_user: true,
-};
-
-function fetchUsers(
-  db: RxDatabase<DatabaseCollections>,
-  handleChange: (
-    item:
-      | { user: UserDocument; rawUser: RxDocument<UserDocument> | null }
-      | undefined,
-  ) => void,
-) {
-  return db.user_documents
-    .findOne({
-      selector: {
-        is_selected_user: true,
-      },
-    })
-    .$.subscribe(async (item) => {
-      handleChange({
-        user: {
-          ...defaultUser,
-          ...item?.toMutableJSON(),
-        } as UserDocument,
-        rawUser: item as unknown as RxDocument<UserDocument> | null,
-      });
-    });
-}
-
-function createUserIfNone(
-  db: RxDatabase<DatabaseCollections>,
-): Promise<boolean> {
-  return new Promise((resolve, reject) => {
-    db.user_documents
-      .findOne({})
-      .exec()
-      .then((item) => {
-        if (item) {
-          resolve(false);
-        } else {
-          db.user_documents
-            .insert(defaultUser)
-            .then(() => resolve(true))
-            .catch(() => reject(false));
-        }
-      })
-      .catch(() => {
-        reject(false);
-      });
-  });
-}
-
-export async function fetchAllUsers(
-  db: RxDatabase<DatabaseCollections>,
-): Promise<RxDocument<UserDocument>[]> {
-  return db.user_documents.find().exec();
-}
-
-export async function switchUser(
-  db: RxDatabase<DatabaseCollections>,
-  userId: string,
-): Promise<void> {
-  console.debug(`UserProvider: Switching to user ${userId}`);
-
-  const newUser = await db.user_documents
-    .findOne({
-      selector: { id: userId },
-    })
-    .exec();
-
-  if (!newUser) {
-    throw new Error(`User not found: ${userId}`);
-  }
-
-  try {
-    // Select new user first
-    await newUser.update({
-      $set: { is_selected_user: true },
-    });
-
-    // Then unselect the old one (select first to avoid state with no user)
-    const currentUser = await db.user_documents
-      .findOne({
-        selector: { is_selected_user: true, id: { $ne: userId } },
-      })
-      .exec();
-
-    if (currentUser) {
-      await currentUser.update({
-        $set: { is_selected_user: false },
-      });
-    }
-
-    console.debug(`UserProvider: Successfully switched to user ${userId}`);
-  } catch (error) {
-    console.error('Failed to switch user:', error);
-    throw new Error(
-      `Failed to switch to user ${userId}: ${error instanceof Error ? error.message : 'Unknown database error'}`,
-    );
-  }
-}
-
-export async function createNewUser(
-  db: RxDatabase<DatabaseCollections>,
-  userData: Partial<UserDocument>,
-): Promise<RxDocument<UserDocument>> {
-  const newUser: UserDocument = {
-    id: uuid4(),
-    is_selected_user: false,
-    is_default_user: false,
-    ...userData,
-  };
-  return db.user_documents.insert(newUser);
-}
+import { useUserRepository } from '../../repositories';
 
 type UserProviderProps = PropsWithChildren<unknown>;
 
@@ -134,7 +15,7 @@ type UserManagement = {
   ) => Promise<RxDocument<UserDocument>>;
 };
 
-const UserContext = React.createContext<UserDocument>(defaultUser);
+const UserContext = React.createContext<UserDocument | undefined>(undefined);
 const RawUserContext = React.createContext<RxDocument<UserDocument> | null>(
   null,
 );
@@ -142,48 +23,53 @@ const AllUsersContext = React.createContext<RxDocument<UserDocument>[]>([]);
 const UserManagementContext = React.createContext<UserManagement | null>(null);
 
 export function UserProvider(props: UserProviderProps) {
-  const db = useRxDb(),
-    [user, setUser] = useState<UserDocument | undefined>(undefined),
-    [rawUser, setRawUser] = useState<RxDocument<UserDocument> | null>(null),
-    [allUsers, setAllUsers] = useState<RxDocument<UserDocument>[]>([]),
-    hasRun = useRef(false);
+  const userRepo = useUserRepository();
+  const [user, setUser] = useState<UserDocument | undefined>(undefined);
+  const [rawUser, setRawUser] = useState<RxDocument<UserDocument> | null>(null);
+  const [allUsers, setAllUsers] = useState<RxDocument<UserDocument>[]>([]);
 
   useEffect(() => {
+    if (!userRepo) return;
+
     let userSub: Subscription | undefined;
     let allUsersSub: Subscription | undefined;
 
-    if (!hasRun.current) {
-      hasRun.current = true;
-      createUserIfNone(db).then(() => {
-        // Subscribe to current selected user
-        userSub = fetchUsers(db, (item) => {
-          if (item) {
-            setUser(item.user);
-            setRawUser(item.rawUser);
-          }
-        });
-
-        // Subscribe to all users
-        allUsersSub = db.user_documents.find().$.subscribe((users) => {
-          setAllUsers(users as RxDocument<UserDocument>[]);
-        });
+    userRepo.createDefaultUserIfNone().then(() => {
+      userSub = userRepo.watchSelectedUser().subscribe((item) => {
+        if (item) {
+          setUser(item.user);
+          setRawUser(item.rawUser);
+        }
       });
-    }
+
+      allUsersSub = userRepo.watchAllUsersWithDocs().subscribe((users) => {
+        setAllUsers(users);
+      });
+    });
+
     return () => {
       userSub?.unsubscribe();
       allUsersSub?.unsubscribe();
     };
-  }, [db]);
+  }, [userRepo]);
 
-  const userManagement: UserManagement = {
-    allUsers,
-    switchUser: async (userId: string) => {
-      await switchUser(db, userId);
-    },
-    createNewUser: async (userData: Partial<UserDocument>) => {
-      return createNewUser(db, userData);
-    },
-  };
+  const userManagement: UserManagement = React.useMemo(
+    () => ({
+      allUsers,
+      switchUser: async (userId: string) => {
+        if (userRepo) {
+          await userRepo.switchUser(userId);
+        }
+      },
+      createNewUser: async (userData: Partial<UserDocument>) => {
+        if (!userRepo) {
+          throw new Error('UserRepository not initialized');
+        }
+        return userRepo.create(userData);
+      },
+    }),
+    [allUsers, userRepo],
+  );
 
   if (user) {
     return (
@@ -204,16 +90,17 @@ export function UserProvider(props: UserProviderProps) {
 
 /**
  * Gets a parsed user document from the context, not modifiable
- * @returns
  */
 export function useUser() {
   const context = useContext(UserContext);
+  if (context === undefined) {
+    throw new Error('useUser must be used within a UserProvider');
+  }
   return context;
 }
 
 /**
  * Gets the raw user document from the context, modifiable
- * @returns The raw user document from the context, modifiable
  */
 export function useRxUserDocument() {
   const context = useContext(RawUserContext);
@@ -222,7 +109,6 @@ export function useRxUserDocument() {
 
 /**
  * Gets all users from the context
- * @returns All user documents
  */
 export function useAllUsers() {
   const context = useContext(AllUsersContext);
@@ -231,7 +117,6 @@ export function useAllUsers() {
 
 /**
  * Gets user management functions
- * @returns User management functions
  */
 export function useUserManagement() {
   const context = useContext(UserManagementContext);

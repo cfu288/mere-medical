@@ -5,6 +5,7 @@ import { DocMeta } from './VectorStorageProvider';
 import { PAGE_SIZE } from '../constants';
 import { prepareClinicalDocumentForVectorization } from '../helpers/prepareClinicalDocumentForVectorization';
 import { ClinicalDocument } from '../../../../models/clinical-document/ClinicalDocument.type';
+import { findSelectedUser } from '../../../../repositories/UserRepository';
 
 /**
  * Class that handles the process of sending local documents to OpenAI for vectorization.
@@ -75,9 +76,7 @@ export class VectorGeneratorSyncer {
    */
   public async startSync() {
     // Get current user
-    const user = await this.db.user_documents
-      .findOne({ selector: { is_selected_user: true } })
-      .exec();
+    const user = await findSelectedUser(this.db);
 
     if (!user) {
       console.error('No user selected, cannot sync vectors');
@@ -89,9 +88,7 @@ export class VectorGeneratorSyncer {
     // Update the count to only include current user's documents
     const query = { selector: { user_id: this.userId } };
 
-    this.totalDocuments = await this.db.clinical_documents
-      .count(query)
-      .exec();
+    this.totalDocuments = await this.db.clinical_documents.count(query).exec();
 
     while (!this.isDone) {
       await this.syncNextBatch();

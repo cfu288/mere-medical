@@ -28,6 +28,7 @@ import {
 import { Routes } from '../Routes';
 import { DSTU2 } from '.';
 import Config from '../environments/config.json';
+import { createConnection } from '../repositories/ConnectionRepository';
 import { JsonWebKeySet } from './JWTTools';
 import { UserDocument } from '../models/user-document/UserDocument.type';
 import uuid4 from '../utils/UUIDUtils';
@@ -506,7 +507,6 @@ export async function fetchAccessTokenWithRefreshToken(
   return res.json();
 }
 
-
 export async function saveConnectionToDb({
   res,
   cernerBaseUrl,
@@ -570,9 +570,14 @@ export async function saveConnectionToDb({
             'https://authorization.cerner.com/tenants/ec2458f2-1e24-41c8-b71b-0e701af7583d/protocols/oauth2/profiles/smart-v1/token',
         };
         try {
-          db.connection_documents.insert(dbentry).then(() => {
-            resolve(true);
-          });
+          createConnection(db, dbentry as ConnectionDocument)
+            .then(() => {
+              resolve(true);
+            })
+            .catch((e) => {
+              console.error(e);
+              reject(new Error('Error updating connection'));
+            });
         } catch (e) {
           console.error(e);
           reject(new Error('Error updating connection'));

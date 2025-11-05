@@ -50,7 +50,7 @@ addRxPlugin(RxDBMigrationPlugin);
 addRxPlugin(RxDBJsonDumpPlugin);
 addRxPlugin(RxDBQueryBuilderPlugin);
 
-const RxDbContext = React.createContext<
+export const RxDbContext = React.createContext<
   RxDatabase<DatabaseCollections> | undefined
 >(undefined);
 

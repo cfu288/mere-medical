@@ -1,19 +1,22 @@
 import { RxDocument, RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../components/providers/DatabaseCollections';
 import { ConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
+import * as connectionRepo from '../repositories/ConnectionRepository';
 
 export async function getConnectionCardByUrl<T extends ConnectionDocument>(
   url: string,
   db: RxDatabase<DatabaseCollections>,
   userId: string,
-): Promise<RxDocument<T>> {
-  return db.connection_documents
-    .findOne({
-      selector: {
-        location: url,
-        user_id: userId,
-      },
-    })
-    .exec()
-    .then((list) => list as unknown as RxDocument<T>);
+): Promise<RxDocument<T> | null> {
+  const connection = await connectionRepo.findConnectionByUrl(db, userId, url);
+  if (!connection) {
+    return null;
+  }
+
+  const result = await connectionRepo.findConnectionWithDoc(
+    db,
+    userId,
+    connection.id,
+  );
+  return result.rawConnection as unknown as RxDocument<T>;
 }

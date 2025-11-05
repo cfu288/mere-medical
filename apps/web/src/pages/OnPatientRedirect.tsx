@@ -12,6 +12,7 @@ import { AppPage } from '../components/AppPage';
 import { GenericBanner } from '../components/GenericBanner';
 import { useUser } from '../components/providers/UserProvider';
 import { getConnectionCardByUrl } from '../services/getConnectionCardByUrl';
+import { createConnection } from '../repositories/ConnectionRepository';
 
 export interface OnPatientAuthResponse {
   access_token: string;
@@ -94,8 +95,7 @@ const OnPatientRedirect: React.FC = () => {
               refresh_token: refreshToken,
               expires_at: nowInSeconds + parseInt(expiresIn),
             };
-            db.connection_documents
-              .insert(dbentry)
+            createConnection(db, dbentry)
               .then(() => {
                 navigate(Routes.AddConnection);
               })

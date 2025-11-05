@@ -65,16 +65,15 @@ export function ConnectionCard({
     removeDocument = (document: RxDocument<ConnectionDocument>) => {
       setDeleting(true);
       const connectionId = document.get('id');
-      db.clinical_documents
-        .find({
-          selector: {
-            user_id: user.id,
-            connection_record_id: connectionId,
-          },
+      import('../../services/ConnectionService')
+        .then((ConnectionService) => {
+          return ConnectionService.deleteConnectionWithCascade(
+            db,
+            user.id,
+            connectionId,
+          );
         })
-        .remove()
         .then(() => {
-          document.remove();
           setDeleting(false);
           notifyDispatch({
             type: 'set_notification',

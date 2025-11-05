@@ -28,6 +28,7 @@ import {
 import { Routes } from '../Routes';
 import { DSTU2 } from '.';
 import Config from '../environments/config.json';
+import { createConnection } from '../repositories/ConnectionRepository';
 import uuid4 from '../utils/UUIDUtils';
 import { JsonWebKeyWKid, signJwt } from './JWTTools';
 import { getPublicKey, IDBKeyConfig } from './WebCrypto';
@@ -37,6 +38,7 @@ import {
   ClinicalDocument,
   CreateClinicalDocument,
 } from '../models/clinical-document/ClinicalDocument.type';
+import { findUserById } from '../repositories/UserRepository';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
 
 const URLJoin = (...args: string[]) =>
@@ -711,9 +713,14 @@ export async function saveConnectionToDb({
           tenant_id: epicId,
         };
         try {
-          db.connection_documents.insert(dbentry).then(() => {
-            resolve(true);
-          });
+          createConnection(db, dbentry as ConnectionDocument)
+            .then(() => {
+              resolve(true);
+            })
+            .catch((e) => {
+              console.error(e);
+              reject(new Error('Error updating connection'));
+            });
         } catch (e) {
           console.error(e);
           reject(new Error('Error updating connection'));
@@ -749,15 +756,11 @@ export async function refreshEpicConnectionTokenIfNeeded(
         userId = connectionDocument.get('user_id');
 
       // Fetch the actual UserDocument from the database
-      const userDoc = await db.user_documents
-        .findOne({ selector: { id: userId } })
-        .exec();
+      const userObject = await findUserById(db, userId);
 
-      if (!userDoc) {
+      if (!userObject) {
         throw new Error(`User not found: ${userId}`);
       }
-
-      const userObject = userDoc.toJSON() as UserDocument;
 
       const access_token_data = await fetchAccessTokenUsingJWT(
         clientId,

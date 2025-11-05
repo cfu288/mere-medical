@@ -20,6 +20,7 @@ import {
 import { RxDatabase } from 'rxdb';
 import { UserDocument } from '../models/user-document/UserDocument.type';
 import { getConnectionCardByUrl } from '../services/getConnectionCardByUrl';
+import { createConnection } from '../repositories/ConnectionRepository';
 
 function removeEndSlash(url: string) {
   if (url?.endsWith('/')) {
@@ -95,9 +96,14 @@ export async function saveConnectionToDb({
             token_uri,
           };
         try {
-          db.connection_documents.insert(dbentry).then(() => {
-            resolve(true);
-          });
+          createConnection(db, dbentry)
+            .then(() => {
+              resolve(true);
+            })
+            .catch((e) => {
+              console.error(e);
+              reject(new Error('Error updating connection'));
+            });
         } catch (e) {
           console.error(e);
           reject(new Error('Error updating connection'));
@@ -217,8 +223,7 @@ const VeradigmRedirect: React.FC = () => {
                     auth_uri: veradigmAuthUrl,
                     token_uri: veradigmTokenUrl,
                   };
-                  db.connection_documents
-                    .insert(dbentry)
+                  createConnection(db, dbentry as any)
                     .then(() => {
                       navigate(Routes.AddConnection);
                     })
