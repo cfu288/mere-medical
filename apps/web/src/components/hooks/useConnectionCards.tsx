@@ -13,12 +13,13 @@ export function useConnectionCards() {
   const user = useUser();
   const [list, setList] = useState<RxDocument<ConnectionDocument>[]>();
 
+  const userId = user?.id;
   useEffect(() => {
-    if (!connectionRepo || !user?.id) return;
+    if (!connectionRepo || !userId) return;
 
-    const sub = connectionRepo.watchAll(user.id).subscribe(setList);
+    const sub = connectionRepo.watchAll(userId).subscribe(setList);
     return () => sub.unsubscribe();
-  }, [connectionRepo, user?.id]);
+  }, [connectionRepo, userId]);
 
   return list;
 }
