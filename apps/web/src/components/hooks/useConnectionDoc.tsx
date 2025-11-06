@@ -45,14 +45,15 @@ export function useConnectionDocs(ids: string[]) {
   const [conns, setConns] = useState<RxDocument<ConnectionDocument>[]>([]);
   const idsSerialized = JSON.stringify(ids);
 
+  const userId = user?.id;
   useEffect(() => {
     let cancelled = false;
 
     const fetchConns = async () => {
-      if (user?.id && connectionRepository) {
+      if (userId && connectionRepository) {
         try {
           const results = await connectionRepository.findWithDocsByIds(
-            user.id,
+            userId,
             ids,
           );
           if (!cancelled) {
@@ -73,7 +74,7 @@ export function useConnectionDocs(ids: string[]) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connectionRepository, idsSerialized, user?.id]);
+  }, [connectionRepository, idsSerialized, userId]);
 
   return conns;
 }
