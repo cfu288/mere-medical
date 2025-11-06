@@ -3,20 +3,20 @@ import { RxDocument } from 'rxdb';
 import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
 import { useUser } from '../providers/UserProvider';
 import { useConnectionRepository } from '../../repositories/hooks/useConnectionRepository';
-import * as connectionRepo from '../../repositories/ConnectionRepository';
 
 export function useConnectionDoc(id: string) {
   const connectionRepository = useConnectionRepository();
   const user = useUser();
   const [conn, setConn] = useState<RxDocument<ConnectionDocument>>();
 
+  const userId = user?.id;
   useEffect(() => {
     let cancelled = false;
 
     const fetchConn = async () => {
-      if (user?.id && connectionRepository) {
+      if (userId && connectionRepository) {
         try {
-          const result = await connectionRepository.findWithDoc(user.id, id);
+          const result = await connectionRepository.findWithDoc(userId, id);
           if (!cancelled && result.rawConnection) {
             setConn(result.rawConnection);
           }
@@ -34,7 +34,7 @@ export function useConnectionDoc(id: string) {
     return () => {
       cancelled = true;
     };
-  }, [connectionRepository, id, user?.id]);
+  }, [connectionRepository, id, userId]);
 
   return conn;
 }
