@@ -27,6 +27,7 @@ import {
 import React from 'react';
 import { Modal } from '../Modal';
 import { ModalHeader } from '../ModalHeader';
+import { deleteConnectionWithCascade } from '../../services/ConnectionService';
 
 function getImage(logo: ConnectionSources) {
   switch (logo) {
@@ -65,14 +66,8 @@ export function ConnectionCard({
     removeDocument = (document: RxDocument<ConnectionDocument>) => {
       setDeleting(true);
       const connectionId = document.get('id');
-      import('../../services/ConnectionService')
-        .then((ConnectionService) => {
-          return ConnectionService.deleteConnectionWithCascade(
-            db,
-            user.id,
-            connectionId,
-          );
-        })
+
+      deleteConnectionWithCascade(db, user.id, connectionId)
         .then(() => {
           setDeleting(false);
           notifyDispatch({

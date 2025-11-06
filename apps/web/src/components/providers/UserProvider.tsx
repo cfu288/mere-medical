@@ -57,9 +57,10 @@ export function UserProvider(props: UserProviderProps) {
     () => ({
       allUsers,
       switchUser: async (userId: string) => {
-        if (userRepo) {
-          await userRepo.switchUser(userId);
+        if (!userRepo) {
+          throw new Error('UserRepository not initialized');
         }
+        await userRepo.switchUser(userId);
       },
       createNewUser: async (userData: Partial<UserDocument>) => {
         if (!userRepo) {
