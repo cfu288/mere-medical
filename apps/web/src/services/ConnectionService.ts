@@ -22,3 +22,37 @@ export async function deleteConnectionWithCascade(
 
   await connectionRepo.deleteConnection(db, userId, connectionId);
 }
+
+export async function recordSyncSuccess(
+  db: RxDatabase<DatabaseCollections>,
+  userId: string,
+  connectionId: string,
+): Promise<void> {
+  const now = new Date().toISOString();
+  await connectionRepo.updateConnectionTimestamp(db, userId, connectionId, {
+    last_refreshed: now,
+    last_sync_attempt: now,
+    last_sync_was_error: false,
+  });
+}
+
+export async function recordSyncError(
+  db: RxDatabase<DatabaseCollections>,
+  userId: string,
+  connectionId: string,
+): Promise<void> {
+  await connectionRepo.updateConnectionTimestamp(db, userId, connectionId, {
+    last_sync_attempt: new Date().toISOString(),
+    last_sync_was_error: true,
+  });
+}
+
+export async function clearSyncError(
+  db: RxDatabase<DatabaseCollections>,
+  userId: string,
+  connectionId: string,
+): Promise<void> {
+  await connectionRepo.updateConnectionTimestamp(db, userId, connectionId, {
+    last_sync_was_error: false,
+  });
+}

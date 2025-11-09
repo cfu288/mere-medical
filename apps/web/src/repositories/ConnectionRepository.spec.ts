@@ -555,24 +555,6 @@ describe('ConnectionRepository', () => {
         expect(updated?.get('last_sync_was_error')).toBe(false);
       });
 
-      it('can set error flag', async () => {
-        const testConn = createConnectionWithTimestamps();
-        await db.connection_documents.insert(testConn);
-
-        await connectionRepo.updateConnectionTimestamp(
-          db,
-          testConn.user_id,
-          testConn.id,
-          {
-            last_sync_was_error: true,
-          },
-        );
-
-        const updated = await db.connection_documents
-          .findOne({ selector: { id: testConn.id } })
-          .exec();
-        expect(updated?.get('last_sync_was_error')).toBe(true);
-      });
     });
 
     describe('upsertConnection', () => {

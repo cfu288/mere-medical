@@ -25,6 +25,10 @@ import { useConnectionCards } from '../hooks/useConnectionCards';
 import { findUserById } from '../../repositories/UserRepository';
 import { refreshVAConnectionTokenIfNeeded } from '../../services/VA';
 import { upsertConnection } from '../../repositories/ConnectionRepository';
+import {
+  recordSyncSuccess,
+  recordSyncError,
+} from '../../services/ConnectionService';
 
 type SyncJobProviderProps = PropsWithChildren<unknown>;
 
@@ -478,10 +482,11 @@ async function updateConnectionDocumentErrorTimestamps(
   connectionDocument: RxDocument<ConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
 ) {
-  const newCd = connectionDocument.toMutableJSON();
-  newCd.last_sync_attempt = new Date().toISOString();
-  newCd.last_sync_was_error = true;
-  await upsertConnection(db, newCd.user_id, newCd);
+  await recordSyncError(
+    db,
+    connectionDocument.get('user_id'),
+    connectionDocument.get('id'),
+  );
 }
 
 /**
@@ -498,12 +503,11 @@ async function updateConnectionDocumentTimestamps(
   db: RxDatabase<DatabaseCollections>,
 ) {
   const anySuccess = syncJob.some((i) => i.status === 'fulfilled');
+  const userId = connectionDocument.get('user_id');
+  const connectionId = connectionDocument.get('id');
+
   if (anySuccess) {
-    const newCd = connectionDocument.toMutableJSON();
-    newCd.last_refreshed = new Date().toISOString();
-    newCd.last_sync_attempt = new Date().toISOString();
-    newCd.last_sync_was_error = false;
-    await upsertConnection(db, newCd.user_id, newCd);
+    await recordSyncSuccess(db, userId, connectionId);
   } else {
     await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
   }
