@@ -13,6 +13,12 @@ const DEFAULT_PREFERENCES: Omit<UserPreferencesDocument, 'id' | 'user_id'> = {
  * Query Functions
  */
 
+/**
+ * Fetches the user preferences for a specific user.
+ * @param db - The RxDB database instance
+ * @param userId - The user ID to fetch preferences for
+ * @returns The user's preferences or null if not found
+ */
 export async function getUserPreferences(
   db: RxDatabase<DatabaseCollections>,
   userId: string
@@ -24,6 +30,13 @@ export async function getUserPreferences(
   return doc ? doc.toJSON() as UserPreferencesDocument : null;
 }
 
+/**
+ * Fetches the user preferences with fallback to default values.
+ * Useful when you always need a valid preferences object, even if the user has no saved preferences.
+ * @param db - The RxDB database instance
+ * @param userId - The user ID to fetch preferences for
+ * @returns The user's preferences or default preferences if not found
+ */
 export async function getUserPreferencesWithDefaults(
   db: RxDatabase<DatabaseCollections>,
   userId: string
@@ -48,6 +61,12 @@ export async function getUserPreferencesWithDefaults(
  * Reactive Functions
  */
 
+/**
+ * Creates an Observable that emits the user's preferences whenever they change.
+ * @param db - The RxDB database instance
+ * @param userId - The user ID to watch preferences for
+ * @returns An Observable that emits the current preferences or null
+ */
 export function watchUserPreferences(
   db: RxDatabase<DatabaseCollections>,
   userId: string
@@ -61,6 +80,13 @@ export function watchUserPreferences(
  * Command Functions
  */
 
+/**
+ * Updates user preferences, creating a new document if none exists.
+ * Use this for partial updates to any preference fields.
+ * @param db - The RxDB database instance
+ * @param userId - The user ID to update preferences for
+ * @param preferences - Partial preferences object to merge with existing preferences
+ */
 export async function updateUserPreferences(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
@@ -82,6 +108,13 @@ export async function updateUserPreferences(
   }
 }
 
+/**
+ * Ensures that a user preferences document exists for the user.
+ * Creates a new document with default values if none exists.
+ * @param db - The RxDB database instance
+ * @param userId - The user ID to ensure preferences for
+ * @returns True if a new document was created, false if one already existed
+ */
 export async function ensureUserPreferencesExist(
   db: RxDatabase<DatabaseCollections>,
   userId: string

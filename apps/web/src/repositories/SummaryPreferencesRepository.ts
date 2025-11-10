@@ -50,6 +50,12 @@ export const DEFAULT_CARD_ORDER: SummaryPagePreferencesCard[] = [
  * Query Functions
  */
 
+/**
+ * Fetches the summary page preferences for a specific user.
+ * @param db - The RxDB database instance
+ * @param userId - The user ID to fetch preferences for
+ * @returns The user's summary preferences or null if not found
+ */
 export async function getSummaryPreferences(
   db: RxDatabase<DatabaseCollections>,
   userId: string
@@ -61,6 +67,13 @@ export async function getSummaryPreferences(
   return doc ? (doc.toJSON() as SummaryPagePreferences) : null;
 }
 
+/**
+ * Fetches the card preferences for a user with fallback to default card order.
+ * Useful when you always need a valid card configuration, even if the user has no saved preferences.
+ * @param db - The RxDB database instance
+ * @param userId - The user ID to fetch preferences for
+ * @returns The user's card preferences or DEFAULT_CARD_ORDER if not found
+ */
 export async function getCardsWithDefaults(
   db: RxDatabase<DatabaseCollections>,
   userId: string
@@ -73,6 +86,12 @@ export async function getCardsWithDefaults(
  * Reactive Functions
  */
 
+/**
+ * Creates an Observable that emits the user's summary preferences whenever they change.
+ * @param db - The RxDB database instance
+ * @param userId - The user ID to watch preferences for
+ * @returns An Observable that emits the current preferences or null
+ */
 export function watchSummaryPreferences(
   db: RxDatabase<DatabaseCollections>,
   userId: string
@@ -88,6 +107,13 @@ export function watchSummaryPreferences(
  * Command Functions
  */
 
+/**
+ * Ensures that a summary preferences document exists for the user.
+ * Creates a new document with default values if none exists.
+ * @param db - The RxDB database instance
+ * @param userId - The user ID to ensure preferences for
+ * @returns True if a new document was created, false if one already existed
+ */
 export async function ensureSummaryPreferencesExist(
   db: RxDatabase<DatabaseCollections>,
   userId: string
@@ -109,6 +135,13 @@ export async function ensureSummaryPreferencesExist(
   return true;
 }
 
+/**
+ * Updates summary preferences for a user, creating a new document if none exists.
+ * Use this for partial updates to any preference fields.
+ * @param db - The RxDB database instance
+ * @param userId - The user ID to update preferences for
+ * @param preferences - Partial preferences object to merge with existing preferences
+ */
 export async function updateSummaryPreferences(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
@@ -130,6 +163,13 @@ export async function updateSummaryPreferences(
   }
 }
 
+/**
+ * Sets the complete list of pinned labs for a user, creating a document if needed.
+ * Use this when you have the complete list of pinned labs to save.
+ * @param db - The RxDB database instance
+ * @param userId - The user ID to update preferences for
+ * @param pinnedLabs - Complete array of pinned lab IDs to replace existing ones
+ */
 export async function upsertPinnedLabs(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
@@ -150,6 +190,15 @@ export async function upsertPinnedLabs(
   }
 }
 
+/**
+ * Toggles a lab's pinned status for a user.
+ * Adds the lab if not pinned, removes it if already pinned.
+ * Creates a preferences document if none exists.
+ * @param db - The RxDB database instance
+ * @param userId - The user ID to toggle pin for
+ * @param labId - The lab ID to toggle
+ * @returns The new pinned status (true if now pinned, false if unpinned)
+ */
 export async function togglePinnedLab(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
@@ -182,6 +231,15 @@ export async function togglePinnedLab(
   return !isPinned;
 }
 
+/**
+ * Updates the card preferences (order and visibility) for a user.
+ * Creates a new preferences document if none exists.
+ * Use this when updating card preferences from user interactions.
+ * Note: This is functionally identical to upsertCardPreferences.
+ * @param db - The RxDB database instance
+ * @param userId - The user ID to update preferences for
+ * @param cards - Complete array of card preferences to replace existing ones
+ */
 export async function updateCardPreferences(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
@@ -191,15 +249,27 @@ export async function updateCardPreferences(
     .findOne({ selector: { user_id: userId } })
     .exec();
 
-  if (!doc) {
-    throw new Error(
-      'Summary preferences do not exist. Call ensureSummaryPreferencesExist first.'
-    );
+  if (doc) {
+    await doc.update({ $set: { cards } });
+  } else {
+    await db.summary_page_preferences.insert({
+      id: uuid4(),
+      user_id: userId,
+      pinned_labs: [],
+      cards,
+    });
   }
-
-  await doc.update({ $set: { cards } });
 }
 
+/**
+ * Sets the card preferences (order and visibility) for a user.
+ * Creates a new preferences document if none exists.
+ * Use this when you need to ensure card preferences are saved.
+ * Note: This is functionally identical to updateCardPreferences.
+ * @param db - The RxDB database instance
+ * @param userId - The user ID to update preferences for
+ * @param cards - Complete array of card preferences to replace existing ones
+ */
 export async function upsertCardPreferences(
   db: RxDatabase<DatabaseCollections>,
   userId: string,

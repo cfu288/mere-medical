@@ -2,7 +2,6 @@ import React, {
   PropsWithChildren,
   useContext,
   useEffect,
-  useRef,
   useState,
 } from 'react';
 import { RxDocument } from 'rxdb';
@@ -48,46 +47,46 @@ const RawUserPreferencesContext = React.createContext<
 export function UserPreferencesProvider(props: UserPreferencesProviderProps) {
   const db = useRxDb();
   const user = useUser();
-  const [preferences, setPreferences] = useState<UserPreferencesDocument | undefined>(
-    undefined,
-  );
-  // Keep raw document for backwards compatibility - will be removed in future
+  const [preferences, setPreferences] = useState<
+    UserPreferencesDocument | undefined
+  >(undefined);
   const [rawPreferences, setRawPreferences] = useState<
     RxDocument<UserPreferencesDocument> | undefined
   >();
-  const hasRun = useRef(false);
 
   useEffect(() => {
     let sub: Subscription | undefined;
 
-    if (!hasRun.current && db && user) {
-      hasRun.current = true;
-
-      // Ensure preferences exist with defaults
+    if (db && user) {
       UserPreferencesRepo.ensureUserPreferencesExist(db, user.id).then(() => {
-        // Watch for preference changes
         sub = UserPreferencesRepo.watchUserPreferences(db, user.id).subscribe(
           async (prefs) => {
             if (prefs) {
               setPreferences(prefs);
-              // For backwards compatibility, also fetch the raw document
-              // This will be removed when we deprecate RawUserPreferencesContext
               const rawDoc = await db.user_preferences
                 .findOne({ selector: { user_id: user.id } })
                 .exec();
-              setRawPreferences(rawDoc as RxDocument<UserPreferencesDocument> | undefined);
+              setRawPreferences(
+                rawDoc as RxDocument<UserPreferencesDocument> | undefined,
+              );
             } else {
-              // If no preferences exist, use defaults
-              const defaultPrefs = await UserPreferencesRepo.getUserPreferencesWithDefaults(db, user.id);
+              const defaultPrefs =
+                await UserPreferencesRepo.getUserPreferencesWithDefaults(
+                  db,
+                  user.id,
+                );
               setPreferences(defaultPrefs);
               setRawPreferences(undefined);
             }
-          }
+          },
         );
       });
     }
+
     return () => {
       sub?.unsubscribe();
+      setPreferences(undefined);
+      setRawPreferences(undefined);
     };
   }, [db, user]);
 

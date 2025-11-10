@@ -443,14 +443,18 @@ describe('SummaryPreferencesRepository', () => {
         expect(prefs?.cards).toEqual(newCards);
       });
 
-      it('throws error when preferences do not exist', async () => {
+      it('creates preferences when they do not exist', async () => {
         const newCards: SummaryPagePreferencesCard[] = [
           { type: 'pinned', order: 0, is_visible: true },
         ];
 
-        await expect(
-          SummaryPrefsRepo.updateCardPreferences(db, 'user1', newCards)
-        ).rejects.toThrow('Summary preferences do not exist');
+        await SummaryPrefsRepo.updateCardPreferences(db, 'user1', newCards);
+
+        const prefs = await SummaryPrefsRepo.getSummaryPreferences(db, 'user1');
+        expect(prefs).not.toBeNull();
+        expect(prefs?.cards).toEqual(newCards);
+        expect(prefs?.user_id).toBe('user1');
+        expect(prefs?.pinned_labs).toEqual([]);
       });
 
       it('replaces existing cards', async () => {
