@@ -43,6 +43,7 @@ import {
 import { EyeIcon } from '@heroicons/react/24/outline';
 import { EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useLocalConfig } from '../components/providers/LocalConfigProvider';
+import { useSummaryPreferencesRepository, getCardsWithDefaults } from '../repositories';
 
 function fetchMedications(
   db: RxDatabase<DatabaseCollections>,
@@ -144,19 +145,6 @@ function fetchAllergy(db: RxDatabase<DatabaseCollections>, user_id: string) {
 
       return lst;
     });
-}
-
-async function fetchSummaryPagePreferences(
-  db: RxDatabase<DatabaseCollections>,
-  user_id: string,
-) {
-  return db.summary_page_preferences
-    .findOne({
-      selector: {
-        user_id: user_id,
-      },
-    })
-    .exec();
 }
 
 async function fetchPinned(
@@ -397,9 +385,7 @@ function useSummaryData(): [SummaryState, React.Dispatch<SummaryActions>] {
               >,
           ),
         ),
-        fetchSummaryPagePreferences(db, user.id).then((preferences) => {
-          return preferences?.toMutableJSON().cards || DEFAULT_CARD_ORDER;
-        }),
+        getCardsWithDefaults(db, user.id),
       ])
         .then(([meds, cond, imm, careplan, allergy, pinned, cards]) => {
           reducer({
@@ -430,6 +416,8 @@ function SummaryTab() {
     reducer,
   ] = useSummaryData();
   const [showEditModal, setShowEditModal] = useState(false);
+  const user = useUser();
+  const summaryPreferencesRepo = useSummaryPreferencesRepository();
   // const { experimental__use_openai_rag } = useLocalConfig(); // Not needed with USPSTF disabled
   // Sort cards based on the order specified in the cards state
   const sortedCards: SummaryPagePreferencesCard[] = useMemo(
@@ -457,6 +445,12 @@ function SummaryTab() {
     },
     [reducer, sortedCards],
   );
+
+  useEffect(() => {
+    if (summaryPreferencesRepo && user && cards && initialized) {
+      summaryPreferencesRepo.upsertCardPreferences(user.id, cards);
+    }
+  }, [summaryPreferencesRepo, user, cards, initialized]);
 
   if (!initialized) {
     return (

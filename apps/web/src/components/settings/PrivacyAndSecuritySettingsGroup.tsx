@@ -1,5 +1,4 @@
 import { Switch } from '@headlessui/react';
-import uuid4 from '../../utils/UUIDUtils';
 import {
   getInternalLokiStorage,
   getStorageAdapter,
@@ -23,19 +22,21 @@ import { ModalHeader } from '../ModalHeader';
 import { CryptedIndexedDBAdapter } from 'sylviejs/storage-adapter/crypted-indexeddb-adapter';
 import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
 import Config from '../../environments/config.json';
+import { useUserPreferencesRepository } from '../../repositories/hooks/useUserPreferencesRepository';
 
 export function PrivacyAndSecuritySettingsGroup() {
   const db = useRxDb(),
     user = useUser(),
     userPreferences = useUserPreferences(),
     rawUserPreferences = useRawUserPreferences(),
+    userPreferencesRepo = useUserPreferencesRepository(),
     ref = useRef<HTMLDivElement | null>(null),
     localConfig = useLocalConfig(),
     [showPasswordPrompModal, setShowPasswordPromptModal] = useState(false),
     [showDecryptConfirmModal, setShowDecryptConfirmModal] = useState(false);
   const updateLocalConfig = useUpdateLocalConfig();
 
-  if (userPreferences !== undefined && rawUserPreferences !== undefined) {
+  if (userPreferences !== undefined) {
     return (
       <>
         <h1 className="py-6 text-xl font-extrabold">Privacy and Security</h1>
@@ -119,18 +120,10 @@ export function PrivacyAndSecuritySettingsGroup() {
                   </div>
                   <Switch
                     checked={userPreferences.use_proxy}
-                    onChange={() => {
-                      if (rawUserPreferences) {
-                        rawUserPreferences.update({
-                          $set: {
-                            use_proxy: !userPreferences.use_proxy,
-                          },
-                        });
-                      } else {
-                        db.user_preferences.insert({
-                          id: uuid4(),
-                          user_id: user?.id,
-                          use_proxy: true,
+                    onChange={async () => {
+                      if (userPreferencesRepo && user) {
+                        await userPreferencesRepo.updateUserPreferences(user.id, {
+                          use_proxy: !userPreferences.use_proxy,
                         });
                       }
                     }}

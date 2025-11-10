@@ -19,10 +19,10 @@ import { Disclosure } from '@headlessui/react';
 import { ChartBarIcon, TableCellsIcon } from '@heroicons/react/24/outline';
 
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
-import uuid4 from '../../utils/UUIDUtils';
 import { useSummaryPagePreferences } from '../hooks/useSummaryPagePreferences';
 import { useRxDb } from '../providers/RxDbProvider';
 import { useUser } from '../providers/UserProvider';
+import { useSummaryPreferencesRepository } from '../../repositories';
 import {
   getReferenceRangeLow,
   getValueQuantity,
@@ -487,50 +487,25 @@ function useLabPinning(
   item: ClinicalDocument<BundleEntry<Observation>>,
 ): [isPinned: boolean, handleTogglePin: () => void] {
   const user = useUser();
-  const db = useRxDb();
-  const summaryPagePreferencesDoc = useSummaryPagePreferences(user.id);
+  const summaryPreferencesRepo = useSummaryPreferencesRepository();
+  const summaryPagePreferences = useSummaryPagePreferences(user.id);
   const pinnedSet = useMemo(
-    () => new Set(summaryPagePreferencesDoc?.pinned_labs || []),
-    [summaryPagePreferencesDoc?.pinned_labs],
+    () => new Set(summaryPagePreferences?.pinned_labs || []),
+    [summaryPagePreferences?.pinned_labs],
   );
   const [isPinned, setIsPinned] = useState<boolean>(pinnedSet.has(item.id!));
-  const handleTogglePin = useCallback(() => {
-    // if pinned_labs contains id, remove it, otherwise add it
-    const updatedList = pinnedSet.has(item.id!)
-      ? [...pinnedSet].filter((id) => id !== item.id)
-      : [...pinnedSet, item.id];
-    if (summaryPagePreferencesDoc) {
-      summaryPagePreferencesDoc
-        .update({
-          $set: {
-            pinned_labs: updatedList,
-          },
-        })
-        .then(() => {
-          setIsPinned(!isPinned);
-        });
-    } else {
-      db.summary_page_preferences
-        .insert({
-          id: uuid4(),
-          user_id: user.id,
-          pinned_labs: updatedList as string[],
-        })
-        .then(() => {
-          setIsPinned(!isPinned);
-        });
+
+  const handleTogglePin = useCallback(async () => {
+    if (summaryPreferencesRepo && item.id) {
+      const newPinnedState = await summaryPreferencesRepo.togglePinnedLab(
+        user.id,
+        item.id
+      );
+      setIsPinned(newPinnedState);
     }
-  }, [
-    pinnedSet,
-    item.id,
-    summaryPagePreferencesDoc,
-    isPinned,
-    db.summary_page_preferences,
-    user.id,
-  ]);
+  }, [summaryPreferencesRepo, user.id, item.id]);
 
   useEffect(() => {
-    // Update pinned status in current component when preferences doc changes
     setIsPinned(pinnedSet.has(item.id!));
   }, [pinnedSet, item.id]);
 
