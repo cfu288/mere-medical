@@ -21,6 +21,7 @@ import {
 import { Routes } from '../Routes';
 import { DSTU2 } from '.';
 import Config from '../environments/config.json';
+import { createConnection } from '../repositories/ConnectionRepository';
 import {
   ClinicalDocument,
   CreateClinicalDocument,
@@ -477,9 +478,14 @@ export async function saveConnectionToDb({
           token_uri: VA_TOKEN_URL,
         };
         try {
-          db.connection_documents.insert(dbentry).then(() => {
-            resolve(true);
-          });
+          createConnection(db, dbentry as ConnectionDocument)
+            .then(() => {
+              resolve(true);
+            })
+            .catch((e) => {
+              console.error(e);
+              reject(new Error('Error updating connection'));
+            });
         } catch (e) {
           console.error(e);
           reject(new Error('Error updating connection'));

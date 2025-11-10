@@ -9,7 +9,6 @@ import {
   VeradigmConnectionDocument,
   VAConnectionDocument,
 } from '../../models/connection-document/ConnectionDocument.type';
-import { UserDocument } from '../../models/user-document/UserDocument.type';
 import { useRxDb } from './RxDbProvider';
 import { DatabaseCollections } from './DatabaseCollections';
 import * as OnPatient from '../../services/OnPatient';
@@ -23,7 +22,13 @@ import { differenceInDays, parseISO } from 'date-fns';
 import Config from '../../environments/config.json';
 import { useUserPreferences } from './UserPreferencesProvider';
 import { useConnectionCards } from '../hooks/useConnectionCards';
+import { findUserById } from '../../repositories/UserRepository';
 import { refreshVAConnectionTokenIfNeeded } from '../../services/VA';
+import { upsertConnection } from '../../repositories/ConnectionRepository';
+import {
+  recordSyncSuccess,
+  recordSyncError,
+} from '../../services/ConnectionService';
 
 type SyncJobProviderProps = PropsWithChildren<unknown>;
 
@@ -477,10 +482,11 @@ async function updateConnectionDocumentErrorTimestamps(
   connectionDocument: RxDocument<ConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
 ) {
-  const newCd = connectionDocument.toMutableJSON();
-  newCd.last_sync_attempt = new Date().toISOString();
-  newCd.last_sync_was_error = true;
-  await db.connection_documents.upsert(newCd).then(() => {});
+  await recordSyncError(
+    db,
+    connectionDocument.get('user_id'),
+    connectionDocument.get('id'),
+  );
 }
 
 /**
@@ -497,12 +503,11 @@ async function updateConnectionDocumentTimestamps(
   db: RxDatabase<DatabaseCollections>,
 ) {
   const anySuccess = syncJob.some((i) => i.status === 'fulfilled');
+  const userId = connectionDocument.get('user_id');
+  const connectionId = connectionDocument.get('id');
+
   if (anySuccess) {
-    const newCd = connectionDocument.toMutableJSON();
-    newCd.last_refreshed = new Date().toISOString();
-    newCd.last_sync_attempt = new Date().toISOString();
-    newCd.last_sync_was_error = false;
-    await db.connection_documents.upsert(newCd).then(() => {});
+    await recordSyncSuccess(db, userId, connectionId);
   } else {
     await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
   }
@@ -584,15 +589,11 @@ async function refreshEpicConnectionTokenIfNeeded(
         userId = connectionDocument.get('user_id');
 
       // Fetch the actual UserDocument from the database
-      const userDoc = await db.user_documents
-        .findOne({ selector: { id: userId } })
-        .exec();
+      const userObject = await findUserById(db, userId);
 
-      if (!userDoc) {
+      if (!userObject) {
         throw new Error(`User not found: ${userId}`);
       }
-
-      const userObject = userDoc.toJSON() as UserDocument;
 
       const access_token_data = await Epic.fetchAccessTokenUsingJWT(
         clientId,

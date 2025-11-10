@@ -1,30 +1,25 @@
 import { useEffect, useState } from 'react';
 import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
-import { useRxDb } from '../providers/RxDbProvider';
 import { RxDocument } from 'rxdb';
 import { useUser } from '../providers/UserProvider';
+import { useConnectionRepository } from '../../repositories/hooks/useConnectionRepository';
 
 /**
  * Returns a subscription to a list of all the connection cards
  * @returns Array of RxDocument<ConnectionDocument>[]
  */
 export function useConnectionCards() {
-  const db = useRxDb(),
-    user = useUser(),
-    [list, setList] = useState<RxDocument<ConnectionDocument>[]>();
+  const connectionRepo = useConnectionRepository();
+  const user = useUser();
+  const [list, setList] = useState<RxDocument<ConnectionDocument>[]>();
 
+  const userId = user?.id;
   useEffect(() => {
-    const sub = db.connection_documents
-      .find({
-        selector: {
-          user_id: user.id,
-        },
-      })
-      .$.subscribe((list) =>
-        setList(list as unknown as RxDocument<ConnectionDocument>[]),
-      );
+    if (!connectionRepo || !userId) return;
+
+    const sub = connectionRepo.watchAll(userId).subscribe(setList);
     return () => sub.unsubscribe();
-  }, [db.connection_documents, user.id]);
+  }, [connectionRepo, userId]);
 
   return list;
 }

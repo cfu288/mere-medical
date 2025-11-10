@@ -12,6 +12,7 @@ import {
   CernerLocalStorageKeys,
   fetchAccessTokenWithCode,
 } from '../services/Cerner';
+import { createConnection } from '../repositories/ConnectionRepository';
 
 const CernerRedirect: React.FC = () => {
   const navigate = useNavigate(),
@@ -64,8 +65,7 @@ const CernerRedirect: React.FC = () => {
                 auth_uri: cernerAuthUrl,
                 token_uri: cernerTokenUrl,
               };
-              db.connection_documents
-                .insert(dbentry)
+              createConnection(db, dbentry as any)
                 .then(() => {
                   navigate(Routes.AddConnection);
                 })
