@@ -111,7 +111,7 @@ export function SyncJobProvider(props: SyncJobProviderProps) {
 
 /**
  * Wrapping component that initiates a connection sync job for each connection card
- * if they have not been synced in the last day
+ * if they have not been synced in the last week
  */
 function HandleInitalSync({ children }: PropsWithChildren) {
   const sync = useSyncJobContext(),
@@ -172,9 +172,9 @@ function startSyncConnection(
     (item.get('last_refreshed') &&
       Math.abs(
         differenceInDays(parseISO(item.get('last_refreshed')), new Date()),
-      ) >= 1)
+      ) >= 7)
   ) {
-    // Greater than 1 day, consider syncing
+    // Greater than 7 days, consider syncing
     // Was the last sync an error?
     if (item.get('last_sync_was_error')) {
       // If error, check if a sync has been attempted in the past week, skip if so
@@ -218,7 +218,7 @@ function startSyncConnection(
       }
     } else {
       console.log(
-        `Now syncing ${item.get('name')}, last sync was over a day ago`,
+        `Now syncing ${item.get('name')}, last sync was over a week ago`,
       );
       if (!syncJobEntries.has(item.get('id'))) {
         // Add a delay to allow other parts of the app to load before starting sync
@@ -241,7 +241,7 @@ function startSyncConnection(
     console.log(
       `Skipping sync for ${item.get(
         'name',
-      )}, last successful sync was less than a day ago`,
+      )}, last successful sync was less than a week ago`,
     );
   }
 }
