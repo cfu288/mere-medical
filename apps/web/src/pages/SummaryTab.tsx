@@ -421,7 +421,7 @@ function SummaryTab() {
   // const { experimental__use_openai_rag } = useLocalConfig(); // Not needed with USPSTF disabled
   // Sort cards based on the order specified in the cards state
   const sortedCards: SummaryPagePreferencesCard[] = useMemo(
-    () => cards!.sort((a, b) => a.order - b.order),
+    () => [...(cards || [])].sort((a, b) => a.order - b.order),
     [cards],
   );
   const onDragEnd: OnDragEndResponder = useCallback(
@@ -431,12 +431,11 @@ function SummaryTab() {
       const items = Array.from(sortedCards);
       const [reorderedItem] = items.splice(result.source.index, 1);
       items.splice(result.destination.index, 0, reorderedItem);
-      //rewrite order property for each item in new order
       const newOrder: SummaryPagePreferencesCard[] = items.map(
-        (item, index) => {
-          item.order = index;
-          return item;
-        },
+        (item, index) => ({
+          ...item,
+          order: index,
+        })
       );
       reducer({
         type: ActionTypes.UPDATE_CARD_ORDER,
