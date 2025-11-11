@@ -31,6 +31,25 @@ function parseId<T = FhirResource>(bundleItem: BundleEntry<T>) {
     : bundleItem.fullUrl;
 }
 
+/**
+ * Strips HTML/XHTML tags from a string to get plain text.
+ * Used as a fallback when structured plain-text fields are not available.
+ */
+function stripHtmlTags(html: string | undefined): string | undefined {
+  if (!html) return undefined;
+  // Remove all HTML tags and decode HTML entities
+  return html
+    .replace(/<[^>]*>/g, '') // Remove HTML tags
+    .replace(/&nbsp;/gi, ' ') // Replace non-breaking spaces
+    .replace(/&amp;/gi, '&') // Replace ampersands
+    .replace(/&lt;/gi, '<') // Replace less than
+    .replace(/&gt;/gi, '>') // Replace greater than
+    .replace(/&quot;/gi, '"') // Replace quotes
+    .replace(/&#39;/gi, "'") // Replace apostrophes
+    .replace(/\s+/g, ' ') // Normalize whitespace
+    .trim();
+}
+
 export function mapProcedureToClinicalDocument(
   bundleItem: BundleEntry<Procedure>,
   connectionDocument: Pick<ConnectionDocument, 'user_id' | 'id'>,
@@ -262,7 +281,12 @@ export function mapEncounterToClinicalDocument(
     metadata: {
       id: parseId(bundleItem),
       date: bundleItem.resource?.period?.start || new Date(0).toISOString(),
-      display_name: bundleItem.resource?.text?.div,
+      display_name:
+        bundleItem.resource?.type?.[0]?.text ||
+        bundleItem.resource?.class?.display ||
+        stripHtmlTags(bundleItem.resource?.text?.div) ||
+        bundleItem.resource?.id ||
+        '',
     },
   };
   return cd;
@@ -285,7 +309,11 @@ export function mapAllergyIntoleranceToClinicalDocument(
     metadata: {
       id: parseId(bundleItem),
       date: bundleItem.resource?.recordedDate || new Date(0).toISOString(),
-      display_name: bundleItem.resource?.text?.div,
+      display_name:
+        bundleItem.resource?.code?.text ||
+        stripHtmlTags(bundleItem.resource?.text?.div) ||
+        bundleItem.resource?.id ||
+        '',
     },
   };
   return cd;
@@ -308,7 +336,11 @@ export function mapPractitionerToClinicalDocument(
     metadata: {
       id: parseId(bundleItem),
       date: bundleItem.resource?.birthDate || new Date(0).toISOString(),
-      display_name: bundleItem.resource?.text?.div,
+      display_name:
+        bundleItem.resource?.name?.[0]?.text ||
+        stripHtmlTags(bundleItem.resource?.text?.div) ||
+        bundleItem.resource?.id ||
+        '',
     },
   };
   return cd;
