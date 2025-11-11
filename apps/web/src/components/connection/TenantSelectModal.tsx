@@ -31,6 +31,7 @@ import Config from '../../environments/config.json';
 export type EMRVendor =
   | 'epic'
   | 'cerner'
+  | 'cerner_r4'
   | 'veradigm'
   | 'onpatient'
   | 'va'
@@ -73,6 +74,7 @@ type SourceItem = {
   enabled: boolean;
   customHandleClick?: () => void;
   id: number;
+  fhirVersion?: 'DSTU2' | 'R4';
 };
 
 export function TenantSelectModal({
@@ -89,6 +91,7 @@ export function TenantSelectModal({
     name: string,
     id: string,
     vendor: EMRVendor,
+    fhirVersion?: 'DSTU2' | 'R4',
   ) => void;
 }) {
   const userPreferences = useUserPreferences(),
@@ -153,8 +156,10 @@ export function TenantSelectModal({
         title: 'Cerner',
         vendor: 'cerner',
         source: CernerLogo,
+        alt: 'R4 FHIR',
         enabled: true,
         id: 2,
+        fhirVersion: 'R4',
       },
       {
         title: 'Allscripts',
@@ -200,6 +205,15 @@ export function TenantSelectModal({
         enabled: true,
         id: 5,
       },
+      {
+        title: 'Cerner (Legacy)',
+        vendor: 'cerner_r4',
+        source: CernerLogo,
+        alt: 'DSTU2',
+        enabled: true,
+        id: 6,
+        fhirVersion: 'DSTU2',
+      },
     ];
 
     return sources as SourceItem[];
@@ -209,12 +223,17 @@ export function TenantSelectModal({
     const abortController = new AbortController();
 
     if (state.hasSelectedEmrVendor) {
+      const apiPath =
+        state.emrVendor === 'cerner'
+          ? `/api/v1/cerner/r4/tenants?`
+          : state.emrVendor === 'cerner_r4'
+          ? `/api/v1/cerner/tenants?`
+          : state.emrVendor !== 'any'
+          ? `/api/v1/${state.emrVendor}/tenants?`
+          : `/api/v1/dstu2/tenants?`;
+
       fetch(
-        Config.PUBLIC_URL +
-          (state.emrVendor !== 'any'
-            ? `/api/v1/${state.emrVendor}/tenants?`
-            : `/api/v1/dstu2/tenants?`) +
-          new URLSearchParams({ query: state.query }),
+        Config.PUBLIC_URL + apiPath + new URLSearchParams({ query: state.query }),
         {
           signal: abortController.signal,
         },
@@ -414,6 +433,9 @@ export function TenantSelectModal({
               <>
                 <Combobox
                   onChange={(s: SelectOption) => {
+                    const selectedSource = ConnectionSources.find(
+                      (src) => src.vendor === state.emrVendor,
+                    );
                     onClick(
                       s.baseUrl,
                       s.authUrl,
@@ -421,6 +443,7 @@ export function TenantSelectModal({
                       s.name,
                       s.id,
                       state.emrVendor,
+                      selectedSource?.fhirVersion,
                     );
                     setOpen(false);
                   }}

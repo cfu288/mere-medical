@@ -395,10 +395,12 @@ async function fetchMedicalRecords(
     case 'cerner': {
       try {
         await refreshCernerConnectionTokenIfNeeded(connectionDocument, db);
+        const cernerConnection = connectionDocument.toMutableJSON() as unknown as CernerConnectionDocument;
         const syncJob = await Cerner.syncAllRecords(
           baseUrl,
-          connectionDocument.toMutableJSON() as unknown as CernerConnectionDocument,
+          cernerConnection,
           db,
+          cernerConnection.fhir_version ?? 'DSTU2',
         );
         await updateConnectionDocumentTimestamps(
           syncJob,

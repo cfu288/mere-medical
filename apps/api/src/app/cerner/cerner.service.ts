@@ -1,22 +1,34 @@
 import { Injectable } from '@nestjs/common';
-import { CernerDSTU2TenantEndpoints, DSTU2Endpoint } from '@mere/cerner';
+import {
+  CernerDSTU2TenantEndpoints,
+  DSTU2Endpoint,
+  CernerR4TenantEndpoints,
+  R4Endpoint,
+} from '@mere/cerner';
 
 @Injectable()
 export class CernerService {
   private readonly items = CernerDSTU2TenantEndpoints;
+  private readonly r4Items = CernerR4TenantEndpoints;
 
   async queryTenants(query: string): Promise<DSTU2Endpoint[]> {
     return filteredItemsWithQuery(this.items, query);
   }
+
+  async queryR4Tenants(query: string): Promise<R4Endpoint[]> {
+    return filteredItemsWithQuery(this.r4Items, query);
+  }
 }
 
-function filteredItemsWithQuery(items: DSTU2Endpoint[], query: string) {
+function filteredItemsWithQuery<T extends { name: string }>(
+  items: T[],
+  query: string,
+): T[] {
   if (query === '' || query === undefined) {
-    return items.sort((x, y) => (x.name > y.name ? 1 : -1)).slice(0, 100);
+    return items.sort((x, y) => x.name.localeCompare(y.name)).slice(0, 100);
   }
   return items
     .map((item) => {
-      // Match against each token, take highest score
       const vals = item.name
         .split(' ')
         .map((token) => stringSimilarity(token, query));

@@ -37,7 +37,10 @@ const CernerRedirect: React.FC = () => {
         ),
         cernerTokenUrl = localStorage.getItem(
           CernerLocalStorageKeys.CERNER_TOKEN_URL,
-        );
+        ),
+        storedFhirVersion = localStorage.getItem(
+          CernerLocalStorageKeys.FHIR_VERSION,
+        ) as 'DSTU2' | 'R4' | null;
 
       if (code && cernerUrl && cernerName && cernerAuthUrl && cernerTokenUrl) {
         const tokenEndpoint = cernerTokenUrl;
@@ -51,6 +54,9 @@ const CernerRedirect: React.FC = () => {
               user.id
             ) {
               const nowInSeconds = Math.floor(Date.now() / 1000);
+              const fhirVersion =
+                storedFhirVersion ||
+                (cernerUrl.includes('/r4/') ? 'R4' : 'DSTU2');
               const dbentry: Omit<CreateCernerConnectionDocument, 'patient'> = {
                 id: uuid4(),
                 user_id: user.id,
@@ -64,12 +70,15 @@ const CernerRedirect: React.FC = () => {
                 expires_at: nowInSeconds + res.expires_in,
                 auth_uri: cernerAuthUrl,
                 token_uri: cernerTokenUrl,
+                fhir_version: fhirVersion,
               };
               createConnection(db, dbentry as any)
                 .then(() => {
+                  localStorage.removeItem(CernerLocalStorageKeys.FHIR_VERSION);
                   navigate(Routes.AddConnection);
                 })
                 .catch((e: unknown) => {
+                  localStorage.removeItem(CernerLocalStorageKeys.FHIR_VERSION);
                   notifyDispatch({
                     type: 'set_notification',
                     message: `Error adding connection: ${(e as Error).message}`,
