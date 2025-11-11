@@ -22,13 +22,7 @@ import { UserDocument } from '../models/user-document/UserDocument.type';
 import { CreateClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
 
 function parseId<T = FhirResource>(bundleItem: BundleEntry<T>) {
-  const isArrayId =
-    Array.isArray(bundleItem.fullUrl as string | string[]) &&
-    bundleItem.fullUrl &&
-    bundleItem.fullUrl?.length > 0;
-  return isArrayId
-    ? bundleItem.fullUrl?.[0].replace('/api/fhir/', '')
-    : bundleItem.fullUrl;
+  return bundleItem.fullUrl;
 }
 
 /**
@@ -117,9 +111,7 @@ export function mapMedicationRequestToClinicalDocument(
     },
     metadata: {
       id: parseId(bundleItem),
-      date:
-        bundleItem.resource?.authoredOn ||
-        new Date(0).toISOString(),
+      date: bundleItem.resource?.authoredOn || new Date(0).toISOString(),
       display_name:
         bundleItem.resource?.medicationCodeableConcept?.text ||
         bundleItem.resource?.note?.[0]?.text,
