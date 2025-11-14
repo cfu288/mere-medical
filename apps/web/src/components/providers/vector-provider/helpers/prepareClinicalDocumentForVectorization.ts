@@ -66,7 +66,8 @@ export function prepareClinicalDocumentForVectorization(
 
   if (
     document.data_record.content_type === 'application/json' &&
-    document.data_record.format === 'FHIR.DSTU2'
+    (document.data_record.format === 'FHIR.DSTU2' ||
+      document.data_record.format === 'FHIR.R4')
   ) {
     serializeAndChunkJSONForVectorization(
       document.data_record.raw,

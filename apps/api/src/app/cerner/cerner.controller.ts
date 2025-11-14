@@ -16,4 +16,15 @@ export class CernerController {
       response.status(500).send({ message: 'There was an error' });
     }
   }
+
+  @Get('r4/tenants')
+  async getR4Data(@Res() response: Response, @Query('query') query: string) {
+    try {
+      const data = await this.cernerService.queryR4Tenants(query);
+      response.json(data);
+    } catch (e) {
+      Logger.error(e);
+      response.status(500).send({ message: 'There was an error' });
+    }
+  }
 }

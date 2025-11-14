@@ -75,31 +75,36 @@ interface ProcessedEndpoint {
     if (fhirVersion === 'R4') {
       const r4Bundle = data as R4Bundle;
 
-      // For R4, create a map of organizations first
-      const organizations = new Map<string, R4Organization>();
+      // Build a reverse index: endpointId -> Organization using FHIR references
+      const endpointToOrg = new Map<string, R4Organization>();
       r4Bundle?.entry?.forEach((entry) => {
         if (entry.resource?.resourceType === 'Organization') {
           const org = entry.resource as R4Organization;
-          if (org.id) {
-            organizations.set(org.id, org);
-          }
+
+          // Parse endpoint references from this organization
+          org.endpoint?.forEach((ref) => {
+            // Reference format: "Endpoint/-KzIoYV6gk-ILcHOWbsH2m9KsSdDgi12"
+            const endpointId = ref.reference?.replace('Endpoint/', '');
+            if (endpointId) {
+              endpointToOrg.set(endpointId, org);
+            }
+          });
         }
       });
 
-      // Then process endpoints
+      // Process endpoints and look up their organizations
       endpoints =
         r4Bundle?.entry
           ?.filter((entry) => entry.resource?.resourceType === 'Endpoint')
           ?.map((entry) => {
             const endpoint = entry.resource as R4Endpoint;
-            const orgId = endpoint.id?.replace('-', 'O-'); // Organization IDs are prefixed with O-
-            const organization = organizations.get(orgId!);
+            const organization = endpointToOrg.get(endpoint.id!);
 
             return {
               id: endpoint.id || '',
               name: organization?.name || 'Unknown',
               url: endpoint.address || '',
-              managingOrganization: orgId,
+              managingOrganization: organization?.id,
             };
           }) || [];
     } else {

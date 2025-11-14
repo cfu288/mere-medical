@@ -18,6 +18,7 @@ import {
   Patient,
   Procedure,
 } from 'fhir/r2';
+import { MedicationRequest } from 'fhir/r4';
 import { RxDocument, RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../components/providers/DatabaseCollections';
 import {
@@ -26,7 +27,7 @@ import {
   CreateCernerConnectionDocument,
 } from '../models/connection-document/ConnectionDocument.type';
 import { Routes } from '../Routes';
-import { DSTU2 } from '.';
+import { DSTU2, R4 } from '.';
 import Config from '../environments/config.json';
 import { createConnection } from '../repositories/ConnectionRepository';
 import { JsonWebKeySet } from './JWTTools';
@@ -46,6 +47,7 @@ export enum CernerLocalStorageKeys {
   CERNER_TOKEN_URL = 'cernerTokenUrl',
   CERNER_NAME = 'cernerName',
   CERNER_ID = 'cernerId',
+  FHIR_VERSION = 'cernerFhirVersion',
 }
 
 export function getLoginUrl(
@@ -123,19 +125,33 @@ async function getFHIRResource<T extends FhirResource>(
     params,
   )}`;
 
-  const res = await fetch(defaultUrl, {
-    headers: {
-      Authorization: `Bearer ${connectionDocument.access_token}`,
-      Accept: 'application/json+fhir',
-    },
-  })
-    .then((res) => res.json())
-    .then((res: Bundle) => res);
+  let allEntries: BundleEntry<T>[] = [];
+  let nextUrl: string | undefined = defaultUrl;
 
-  if (res.entry) {
-    return res.entry as BundleEntry<T>[];
+  while (nextUrl) {
+    const response = await fetch(nextUrl, {
+      headers: {
+        Authorization: `Bearer ${connectionDocument.access_token}`,
+        Accept: 'application/json+fhir',
+      },
+    });
+    if (!response.ok) {
+      console.error(await response.text());
+      throw new Error('Error getting FHIR resource');
+    }
+    const bundle: Bundle = await response.json();
+
+    if (bundle.entry) {
+      allEntries = allEntries.concat(bundle.entry as BundleEntry<T>[]);
+    }
+
+    const nextLink = bundle.link?.find(
+      (link: { relation?: string; url?: string }) => link.relation === 'next',
+    );
+    nextUrl = nextLink?.url;
   }
-  return [];
+
+  return allEntries;
 }
 
 /**
@@ -181,33 +197,38 @@ async function syncFHIRResource<T extends FhirResource>(
  * @param baseUrl Base url of the FHIR server to sync from
  * @param connectionDocument
  * @param db
- * @param useProxy
+ * @param version FHIR version to use for mapping (defaults to DSTU2 for backward compatibility)
  * @returns A promise of void arrays
  */
 export async function syncAllRecords(
   baseUrl: string,
   connectionDocument: CernerConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
+  version: 'DSTU2' | 'R4' = 'DSTU2',
 ): Promise<PromiseSettledResult<void[]>[]> {
+  const mappers = version === 'R4' ? R4 : DSTU2;
+
   const procMapper = (proc: BundleEntry<Procedure>) =>
-    DSTU2.mapProcedureToClinicalDocument(proc, connectionDocument);
+    mappers.mapProcedureToClinicalDocument(proc as any, connectionDocument);
   const patientMapper = (pt: BundleEntry<Patient>) =>
-    DSTU2.mapPatientToClinicalDocument(pt, connectionDocument);
+    mappers.mapPatientToClinicalDocument(pt as any, connectionDocument);
   const obsMapper = (imm: BundleEntry<Observation>) =>
-    DSTU2.mapObservationToClinicalDocument(imm, connectionDocument);
+    mappers.mapObservationToClinicalDocument(imm as any, connectionDocument);
   const drMapper = (dr: BundleEntry<DiagnosticReport>) =>
-    DSTU2.mapDiagnosticReportToClinicalDocument(dr, connectionDocument);
+    mappers.mapDiagnosticReportToClinicalDocument(dr as any, connectionDocument);
   const medStatementMapper = (dr: BundleEntry<MedicationStatement>) =>
-    DSTU2.mapMedicationStatementToClinicalDocument(dr, connectionDocument);
+    mappers.mapMedicationStatementToClinicalDocument(dr as any, connectionDocument);
+  const medRequestMapper = (dr: BundleEntry<MedicationRequest>) =>
+    version === 'R4' ? R4.mapMedicationRequestToClinicalDocument(dr as any, connectionDocument) : medStatementMapper(dr as any);
   const immMapper = (dr: BundleEntry<Immunization>) =>
-    DSTU2.mapImmunizationToClinicalDocument(dr, connectionDocument);
+    mappers.mapImmunizationToClinicalDocument(dr as any, connectionDocument);
   const conditionMapper = (dr: BundleEntry<Condition>) =>
-    DSTU2.mapConditionToClinicalDocument(dr, connectionDocument);
+    mappers.mapConditionToClinicalDocument(dr as any, connectionDocument);
   const allergyIntoleranceMapper = (a: BundleEntry<AllergyIntolerance>) =>
-    DSTU2.mapAllergyIntoleranceToClinicalDocument(a, connectionDocument);
+    mappers.mapAllergyIntoleranceToClinicalDocument(a as any, connectionDocument);
 
   const encounterMapper = (a: BundleEntry<Encounter>) =>
-    DSTU2.mapEncounterToClinicalDocument(a, connectionDocument);
+    mappers.mapEncounterToClinicalDocument(a as any, connectionDocument);
 
   const patientId = parseIdToken(connectionDocument.id_token)
     .fhirUser.split('/')
@@ -219,7 +240,7 @@ export async function syncAllRecords(
       connectionDocument,
       db,
       'Procedure',
-      procMapper,
+      procMapper as any,
       {
         patient: patientId,
       },
@@ -229,9 +250,9 @@ export async function syncAllRecords(
       connectionDocument,
       db,
       'Patient',
-      patientMapper,
+      patientMapper as any,
       {
-        id: patientId,
+        _id: patientId,
       },
     ),
     syncFHIRResource<Observation>(
@@ -239,7 +260,7 @@ export async function syncAllRecords(
       connectionDocument,
       db,
       'Observation',
-      obsMapper,
+      obsMapper as any,
       {
         patient: patientId,
         category: 'laboratory',
@@ -250,27 +271,38 @@ export async function syncAllRecords(
       connectionDocument,
       db,
       'DiagnosticReport',
-      drMapper,
+      drMapper as any,
       {
         patient: patientId,
       },
     ),
-    syncFHIRResource<MedicationStatement>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'MedicationStatement',
-      medStatementMapper,
-      {
-        patient: patientId,
-      },
-    ),
+    version === 'R4'
+      ? syncFHIRResource<any>(
+          baseUrl,
+          connectionDocument,
+          db,
+          'MedicationRequest',
+          medRequestMapper as any,
+          {
+            patient: patientId,
+          },
+        )
+      : syncFHIRResource<MedicationStatement>(
+          baseUrl,
+          connectionDocument,
+          db,
+          'MedicationStatement',
+          medStatementMapper as any,
+          {
+            patient: patientId,
+          },
+        ),
     syncFHIRResource<Immunization>(
       baseUrl,
       connectionDocument,
       db,
       'Immunization',
-      immMapper,
+      immMapper as any,
       {
         patient: patientId,
       },
@@ -280,20 +312,20 @@ export async function syncAllRecords(
       connectionDocument,
       db,
       'Condition',
-      conditionMapper,
+      conditionMapper as any,
       {
         patient: patientId,
       },
     ),
     syncDocumentReferences(baseUrl, connectionDocument, db, {
       patient: patientId,
-    }),
+    }, version),
     syncFHIRResource<Encounter>(
       baseUrl,
       connectionDocument,
       db,
       'Encounter',
-      encounterMapper,
+      encounterMapper as any,
       {
         patient: patientId,
       },
@@ -303,7 +335,7 @@ export async function syncAllRecords(
       connectionDocument,
       db,
       'AllergyIntolerance',
-      allergyIntoleranceMapper,
+      allergyIntoleranceMapper as any,
       {
         patient: patientId,
       },
@@ -318,16 +350,17 @@ async function syncDocumentReferences(
   connectionDocument: CernerConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   params: Record<string, string>,
+  version: 'DSTU2' | 'R4' = 'DSTU2',
 ) {
+  const mappers = version === 'R4' ? R4 : DSTU2;
   const documentReferenceMapper = (dr: BundleEntry<DocumentReference>) =>
-    DSTU2.mapDocumentReferenceToClinicalDocument(dr, connectionDocument);
-  // Sync document references and return them
+    mappers.mapDocumentReferenceToClinicalDocument(dr as any, connectionDocument);
   await syncFHIRResource<DocumentReference>(
     baseUrl,
     connectionDocument,
     db,
     'DocumentReference',
-    documentReferenceMapper,
+    documentReferenceMapper as any,
     params,
   );
 
@@ -385,7 +418,7 @@ async function syncDocumentReferences(
                 connection_record_id: connectionDocument.id,
                 data_record: {
                   raw: raw,
-                  format: 'FHIR.DSTU2',
+                  format: version === 'R4' ? 'FHIR.R4' : 'FHIR.DSTU2',
                   content_type: contentType,
                   resource_type: 'documentreference_attachment',
                   version_history: [],

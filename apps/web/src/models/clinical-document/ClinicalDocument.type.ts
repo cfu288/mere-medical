@@ -7,6 +7,7 @@ export type ClinicalDocumentResourceType =
   | 'observation'
   | 'diagnosticreport'
   | 'medicationstatement'
+  | 'medicationrequest'
   | 'patient'
   | 'allergyintolerance'
   | 'practitioner'
@@ -21,7 +22,7 @@ export interface ClinicalDocument<T = unknown> {
   user_id: string;
   data_record: {
     raw: T;
-    format: 'FHIR.DSTU2';
+    format: 'FHIR.DSTU2' | 'FHIR.R4';
     content_type: 'application/json' | 'application/xml' | string;
     resource_type: ClinicalDocumentResourceType;
     version_history: T[];

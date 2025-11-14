@@ -44,6 +44,7 @@ type TenantSelectState = {
   query: string;
   items: UnifiedDSTU2Endpoint[];
   emrVendor: EMRVendor;
+  fhirVersion?: 'DSTU2' | 'R4';
   hasSelectedEmrVendor: boolean;
   isLoadingResults: boolean;
 };
@@ -51,7 +52,10 @@ type TenantSelectState = {
 type TenantSelectAction =
   | { type: 'setQuery'; payload: string }
   | { type: 'setItems'; payload: UnifiedDSTU2Endpoint[] }
-  | { type: 'setEmrVendor'; payload: EMRVendor }
+  | {
+      type: 'setEmrVendor';
+      payload: { vendor: EMRVendor; fhirVersion?: 'DSTU2' | 'R4' };
+    }
   | { type: 'goBackToEMRVendorSelect' }
   | { type: 'hasClosedModal' }
   | { type: 'isLoadingResults'; payload: boolean };
@@ -73,6 +77,7 @@ type SourceItem = {
   enabled: boolean;
   customHandleClick?: () => void;
   id: number;
+  fhirVersion?: 'DSTU2' | 'R4';
 };
 
 export function TenantSelectModal({
@@ -89,6 +94,7 @@ export function TenantSelectModal({
     name: string,
     id: string,
     vendor: EMRVendor,
+    fhirVersion?: 'DSTU2' | 'R4',
   ) => void;
 }) {
   const userPreferences = useUserPreferences(),
@@ -107,7 +113,8 @@ export function TenantSelectModal({
         case 'setEmrVendor':
           return {
             ...state,
-            emrVendor: action.payload,
+            emrVendor: action.payload.vendor,
+            fhirVersion: action.payload.fhirVersion,
             hasSelectedEmrVendor: true,
             isLoadingResults: true,
           };
@@ -153,8 +160,10 @@ export function TenantSelectModal({
         title: 'Cerner',
         vendor: 'cerner',
         source: CernerLogo,
+        alt: 'R4 FHIR',
         enabled: true,
         id: 2,
+        fhirVersion: 'R4',
       },
       {
         title: 'Allscripts',
@@ -200,6 +209,15 @@ export function TenantSelectModal({
         enabled: true,
         id: 5,
       },
+      {
+        title: 'Cerner Legacy',
+        vendor: 'cerner',
+        source: CernerLogo,
+        alt: 'DSTU2 (older version)',
+        enabled: true,
+        id: 6,
+        fhirVersion: 'DSTU2',
+      },
     ];
 
     return sources as SourceItem[];
@@ -209,11 +227,18 @@ export function TenantSelectModal({
     const abortController = new AbortController();
 
     if (state.hasSelectedEmrVendor) {
+      const apiPath =
+        state.emrVendor === 'cerner'
+          ? state.fhirVersion === 'R4'
+            ? `/api/v1/cerner/r4/tenants?`
+            : `/api/v1/cerner/tenants?`
+          : state.emrVendor !== 'any'
+            ? `/api/v1/${state.emrVendor}/tenants?`
+            : `/api/v1/dstu2/tenants?`;
+
       fetch(
         Config.PUBLIC_URL +
-          (state.emrVendor !== 'any'
-            ? `/api/v1/${state.emrVendor}/tenants?`
-            : `/api/v1/dstu2/tenants?`) +
+          apiPath +
           new URLSearchParams({ query: state.query }),
         {
           signal: abortController.signal,
@@ -271,7 +296,8 @@ export function TenantSelectModal({
                           if (Config.IS_DEMO === 'enabled') {
                             notifyDispatch({
                               type: 'set_notification',
-                              message: 'Adding new connections is disabled in demo mode',
+                              message:
+                                'Adding new connections is disabled in demo mode',
                               variant: 'error',
                             });
                             return;
@@ -334,7 +360,8 @@ export function TenantSelectModal({
                             if (Config.IS_DEMO === 'enabled') {
                               notifyDispatch({
                                 type: 'set_notification',
-                                message: 'Adding new connections is disabled in demo mode',
+                                message:
+                                  'Adding new connections is disabled in demo mode',
                                 variant: 'error',
                               });
                               return;
@@ -344,7 +371,10 @@ export function TenantSelectModal({
                             } else {
                               dispatch({
                                 type: 'setEmrVendor',
-                                payload: file.vendor,
+                                payload: {
+                                  vendor: file.vendor,
+                                  fhirVersion: file.fhirVersion,
+                                },
                               });
                             }
                           }}
@@ -414,6 +444,9 @@ export function TenantSelectModal({
               <>
                 <Combobox
                   onChange={(s: SelectOption) => {
+                    const selectedSource = ConnectionSources.find(
+                      (src) => src.vendor === state.emrVendor,
+                    );
                     onClick(
                       s.baseUrl,
                       s.authUrl,
@@ -421,6 +454,7 @@ export function TenantSelectModal({
                       s.name,
                       s.id,
                       state.emrVendor,
+                      selectedSource?.fhirVersion,
                     );
                     setOpen(false);
                   }}

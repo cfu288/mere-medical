@@ -111,6 +111,7 @@ export function setTenantUrlBySource(
         item.get('token_uri'),
         item.get('name'),
         item.get('id'),
+        item.get('fhir_version') || 'DSTU2',
       );
       break;
     }
@@ -150,12 +151,14 @@ function setTenantCernerUrl(
   token: string & Location,
   name: string,
   id: string,
+  fhirVersion: 'DSTU2' | 'R4',
 ): void {
   localStorage.setItem(CernerLocalStorageKeys.CERNER_BASE_URL, base);
   localStorage.setItem(CernerLocalStorageKeys.CERNER_AUTH_URL, auth);
   localStorage.setItem(CernerLocalStorageKeys.CERNER_TOKEN_URL, token);
   localStorage.setItem(CernerLocalStorageKeys.CERNER_NAME, name);
   localStorage.setItem(CernerLocalStorageKeys.CERNER_ID, id);
+  localStorage.setItem(CernerLocalStorageKeys.FHIR_VERSION, fhirVersion);
 }
 
 function setTenantVeradigmUrl(
@@ -183,6 +186,7 @@ const ConnectionTab: React.FC = () => {
         name: string,
         id: string,
         vendor: EMRVendor,
+        fhirVersion?: 'DSTU2' | 'R4',
       ) => {
         switch (vendor) {
           case 'epic': {
@@ -196,7 +200,7 @@ const ConnectionTab: React.FC = () => {
             break;
           }
           case 'cerner': {
-            setTenantCernerUrl(base, auth, token, name, id);
+            setTenantCernerUrl(base, auth, token, name, id, fhirVersion || 'DSTU2');
             setOpenSelectModal((x) => !x);
             window.location = getCernerLoginUrl(base, auth);
             break;

@@ -40,20 +40,32 @@ async function getFHIRResource<T extends FhirResource>(
   connectionDocument: ConnectionDocument,
   fhirResourcePathUrl: string,
 ): Promise<BundleEntry<T>[]> {
-  const res = await fetch(`${OnPatientDSTU2Url}/${fhirResourcePathUrl}`, {
-    headers: {
-      Authorization: `Bearer ${connectionDocument.access_token}`,
-    },
-  });
-  if (!res.ok) {
-    console.error(await res.text());
-    throw new Error('Error getting FHIR resource');
+  let allEntries: BundleEntry<T>[] = [];
+  let nextUrl: string | undefined = `${OnPatientDSTU2Url}/${fhirResourcePathUrl}`;
+
+  while (nextUrl) {
+    const response = await fetch(nextUrl, {
+      headers: {
+        Authorization: `Bearer ${connectionDocument.access_token}`,
+      },
+    });
+    if (!response.ok) {
+      console.error(await response.text());
+      throw new Error('Error getting FHIR resource');
+    }
+    const bundle: Bundle = await response.json();
+
+    if (bundle.entry) {
+      allEntries = allEntries.concat(bundle.entry as BundleEntry<T>[]);
+    }
+
+    const nextLink = bundle.link?.find(
+      (link: { relation?: string; url?: string }) => link.relation === 'next',
+    );
+    nextUrl = nextLink?.url;
   }
-  const bundle = await res.json();
-  if (bundle.entry) {
-    return bundle.entry as BundleEntry<T>[];
-  }
-  return [];
+
+  return allEntries;
 }
 
 async function syncFHIRResource<T extends FhirResource>(

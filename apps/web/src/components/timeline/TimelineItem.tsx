@@ -12,6 +12,7 @@ import {
   Observation,
   Procedure,
 } from 'fhir/r2';
+import { MedicationRequest, BundleEntry as R4BundleEntry } from 'fhir/r4';
 import { memo } from 'react';
 
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
@@ -25,6 +26,7 @@ import { ElementsByDateListCard } from './ElementsByDateListCard';
 import { EncounterCard } from './EncounterCard';
 import { ImmunizationCard } from './ImmunizationCard';
 import { MedicationCard } from './MedicationCard';
+import { MedicationRequestCard } from './MedicationRequestCard';
 import { ObservationCard } from './ObservationCard';
 import { ProcedureCard } from './ProcedureCard';
 
@@ -84,6 +86,14 @@ export const TimelineItem = memo(function TimelineItem({
                     key={item.id}
                     item={
                       item as ClinicalDocument<BundleEntry<MedicationStatement>>
+                    }
+                  />
+                )}
+                {item.data_record.resource_type === 'medicationrequest' && (
+                  <MedicationRequestCard
+                    key={item.id}
+                    item={
+                      item as unknown as ClinicalDocument<R4BundleEntry<MedicationRequest>>
                     }
                   />
                 )}
