@@ -21,6 +21,7 @@
       "@mere/epic": ["libs/epic/src/index.ts"],
       "@mere/onpatient": ["libs/onpatient/src/index.ts"],
       "@mere/search": ["libs/search/src/index.ts"],
+      "@mere/shared": ["libs/shared/src/index.ts"],
       "@mere/vector-storage": ["libs/vector-storage/src/index.ts"],
       "@mere/veradigm": ["libs/veradigm/src/index.ts"],
       "@mere/web": ["apps/web/src/main.tsx"]

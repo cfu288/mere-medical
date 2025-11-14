@@ -200,12 +200,6 @@ const ConnectionTab: React.FC = () => {
             break;
           }
           case 'cerner': {
-            setTenantCernerUrl(base, auth, token, name, id, fhirVersion || 'R4');
-            setOpenSelectModal((x) => !x);
-            window.location = getCernerLoginUrl(base, auth);
-            break;
-          }
-          case 'cerner_r4': {
             setTenantCernerUrl(base, auth, token, name, id, fhirVersion || 'DSTU2');
             setOpenSelectModal((x) => !x);
             window.location = getCernerLoginUrl(base, auth);
