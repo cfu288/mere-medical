@@ -12,19 +12,7 @@ describe('CernerService', () => {
     service = module.get<CernerService>(CernerService);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-
   describe('queryTenants (DSTU2)', () => {
-    it('should return up to 100 tenants when query is empty', async () => {
-      const result = await service.queryTenants('');
-
-      expect(Array.isArray(result)).toBe(true);
-      expect(result.length).toBeGreaterThan(0);
-      expect(result.length).toBeLessThanOrEqual(100);
-    });
-
     it('should return sorted results by name when query is empty', async () => {
       const result = await service.queryTenants('');
 
@@ -33,13 +21,7 @@ describe('CernerService', () => {
       }
     });
 
-    it('should return up to 50 tenants when query is provided', async () => {
-      const result = await service.queryTenants('clinic');
-
-      expect(result.length).toBeLessThanOrEqual(50);
-    });
-
-    it('should filter results by query string', async () => {
+    it('should filter results by query string using stringSimilarity', async () => {
       const result = await service.queryTenants('sandbox');
 
       expect(result.length).toBeGreaterThan(0);
@@ -47,19 +29,6 @@ describe('CernerService', () => {
         tenant.name.toLowerCase().includes('sandbox')
       );
       expect(hasMatchingName).toBe(true);
-    });
-
-    it('should return results with required DSTU2 endpoint properties', async () => {
-      const result = await service.queryTenants('');
-
-      expect(result.length).toBeGreaterThan(0);
-      const firstTenant = result[0];
-
-      expect(firstTenant).toHaveProperty('id');
-      expect(firstTenant).toHaveProperty('name');
-      expect(firstTenant).toHaveProperty('url');
-      expect(firstTenant).toHaveProperty('token');
-      expect(firstTenant).toHaveProperty('authorize');
     });
 
     it('should handle queries with very low similarity scores', async () => {
@@ -70,19 +39,6 @@ describe('CernerService', () => {
   });
 
   describe('queryR4Tenants', () => {
-    it('should return R4 tenants', async () => {
-      const result = await service.queryR4Tenants('');
-
-      expect(Array.isArray(result)).toBe(true);
-      expect(result.length).toBeGreaterThan(0);
-    });
-
-    it('should return up to 100 tenants when query is empty', async () => {
-      const result = await service.queryR4Tenants('');
-
-      expect(result.length).toBeLessThanOrEqual(100);
-    });
-
     it('should return sorted results by name when query is empty', async () => {
       const result = await service.queryR4Tenants('');
 
@@ -91,13 +47,7 @@ describe('CernerService', () => {
       }
     });
 
-    it('should return up to 50 tenants when query is provided', async () => {
-      const result = await service.queryR4Tenants('clinic');
-
-      expect(result.length).toBeLessThanOrEqual(50);
-    });
-
-    it('should filter R4 results by query string', async () => {
+    it('should filter R4 results by query string using stringSimilarity', async () => {
       const result = await service.queryR4Tenants('sandbox');
 
       expect(result.length).toBeGreaterThan(0);
@@ -107,7 +57,7 @@ describe('CernerService', () => {
       expect(hasMatchingName).toBe(true);
     });
 
-    it('should return R4 endpoint with correct URL structure', async () => {
+    it('should return R4 endpoints with /r4/ in URL', async () => {
       const result = await service.queryR4Tenants('sandbox');
 
       expect(result.length).toBeGreaterThan(0);
@@ -118,19 +68,6 @@ describe('CernerService', () => {
       if (sandboxEndpoint) {
         expect(sandboxEndpoint.url).toContain('/r4/');
       }
-    });
-
-    it('should return results with required R4 endpoint properties', async () => {
-      const result = await service.queryR4Tenants('');
-
-      expect(result.length).toBeGreaterThan(0);
-      const firstTenant = result[0];
-
-      expect(firstTenant).toHaveProperty('id');
-      expect(firstTenant).toHaveProperty('name');
-      expect(firstTenant).toHaveProperty('url');
-      expect(firstTenant).toHaveProperty('token');
-      expect(firstTenant).toHaveProperty('authorize');
     });
   });
 

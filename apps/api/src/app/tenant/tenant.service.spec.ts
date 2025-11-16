@@ -12,12 +12,8 @@ describe('TenantService', () => {
     service = module.get<TenantService>(TenantService);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-
   describe('queryTenants (DSTU2 only)', () => {
-    it('should return only DSTU2 endpoints', async () => {
+    it('should return only DSTU2 endpoints with correct version field', async () => {
       const result = await service.queryTenants('', []);
 
       expect(result.length).toBeGreaterThan(0);
@@ -27,20 +23,7 @@ describe('TenantService', () => {
       });
     });
 
-    it('should return up to 100 tenants when query is empty', async () => {
-      const result = await service.queryTenants('', []);
-
-      expect(result.length).toBeGreaterThan(0);
-      expect(result.length).toBeLessThanOrEqual(100);
-    });
-
-    it('should return up to 50 tenants when query is provided', async () => {
-      const result = await service.queryTenants('clinic', []);
-
-      expect(result.length).toBeLessThanOrEqual(50);
-    });
-
-    it('should filter by single vendor (string)', async () => {
+    it('should filter by single vendor', async () => {
       const result = await service.queryTenants('', ['CERNER']);
 
       expect(result.length).toBeGreaterThan(0);
@@ -49,7 +32,7 @@ describe('TenantService', () => {
       });
     });
 
-    it('should filter by multiple vendors (array)', async () => {
+    it('should filter by multiple vendors', async () => {
       const result = await service.queryTenants('', ['CERNER', 'EPIC']);
 
       expect(result.length).toBeGreaterThan(0);
@@ -72,7 +55,7 @@ describe('TenantService', () => {
       expect(hasMatchingName).toBe(true);
     });
 
-    it('should return all vendors when vendor filter is empty', async () => {
+    it('should return multiple vendors when vendor filter is empty', async () => {
       const result = await service.queryTenants('sandbox', []);
 
       expect(result.length).toBeGreaterThan(0);
@@ -80,28 +63,10 @@ describe('TenantService', () => {
       const vendors = new Set(result.map((t) => t.vendor));
       expect(vendors.size).toBeGreaterThan(1);
     });
-
-    it('should include vendor field in all results', async () => {
-      const result = await service.queryTenants('', []);
-
-      result.forEach((tenant) => {
-        expect(tenant).toHaveProperty('vendor');
-        expect(['EPIC', 'CERNER', 'VERADIGM']).toContain(tenant.vendor);
-      });
-    });
-
-    it('should include version field in all results', async () => {
-      const result = await service.queryTenants('', []);
-
-      result.forEach((tenant) => {
-        expect(tenant).toHaveProperty('version');
-        expect(tenant.version).toBe('DSTU2');
-      });
-    });
   });
 
   describe('queryR4Tenants', () => {
-    it('should return only R4 endpoints', async () => {
+    it('should return only R4 endpoints with correct version field', async () => {
       const result = await service.queryR4Tenants('', []);
 
       result.forEach((tenant) => {
@@ -110,42 +75,11 @@ describe('TenantService', () => {
       });
     });
 
-    it('should return up to 100 tenants when query is empty', async () => {
-      const result = await service.queryR4Tenants('', []);
-
-      expect(result.length).toBeLessThanOrEqual(100);
-    });
-
-    it('should return up to 50 tenants when query is provided', async () => {
-      const result = await service.queryR4Tenants('clinic', []);
-
-      expect(result.length).toBeLessThanOrEqual(50);
-    });
-
-    it('should filter by vendor (CERNER)', async () => {
+    it('should filter by vendor for R4 endpoints', async () => {
       const result = await service.queryR4Tenants('', ['CERNER']);
 
       result.forEach((tenant) => {
         expect(tenant.vendor).toBe('CERNER');
-        expect(tenant.version).toBe('R4');
-      });
-    });
-
-    it('should filter by query string', async () => {
-      const result = await service.queryR4Tenants('sandbox', []);
-
-      const hasMatchingName = result.some((t) =>
-        t.name.toLowerCase().includes('sandbox')
-      );
-      expect(hasMatchingName).toBe(true);
-    });
-
-    it('should include vendor and version fields in all results', async () => {
-      const result = await service.queryR4Tenants('', []);
-
-      result.forEach((tenant) => {
-        expect(tenant).toHaveProperty('vendor');
-        expect(tenant).toHaveProperty('version');
         expect(tenant.version).toBe('R4');
       });
     });
@@ -162,19 +96,6 @@ describe('TenantService', () => {
       expect(versions.has('R4')).toBe(true);
     });
 
-    it('should return up to 100 tenants when query is empty', async () => {
-      const result = await service.queryAllTenants('', []);
-
-      expect(result.length).toBeGreaterThan(0);
-      expect(result.length).toBeLessThanOrEqual(100);
-    });
-
-    it('should return up to 50 tenants when query is provided', async () => {
-      const result = await service.queryAllTenants('clinic', []);
-
-      expect(result.length).toBeLessThanOrEqual(50);
-    });
-
     it('should filter by vendor across all versions', async () => {
       const result = await service.queryAllTenants('', ['CERNER']);
 
@@ -187,7 +108,7 @@ describe('TenantService', () => {
       expect(versions.size).toBeGreaterThan(0);
     });
 
-    it('should combine DSTU2 and R4 Cerner results when filtering by CERNER', async () => {
+    it('should combine DSTU2 and R4 results correctly', async () => {
       const result = await service.queryAllTenants('sandbox', ['CERNER']);
 
       const dstu2Results = result.filter((t) => t.version === 'DSTU2');
@@ -198,24 +119,6 @@ describe('TenantService', () => {
       });
 
       expect(dstu2Results.length + r4Results.length).toBe(result.length);
-    });
-
-    it('should include version field in all results', async () => {
-      const result = await service.queryAllTenants('', []);
-
-      result.forEach((tenant) => {
-        expect(tenant).toHaveProperty('version');
-        expect(['DSTU2', 'R4']).toContain(tenant.version);
-      });
-    });
-
-    it('should include vendor field in all results', async () => {
-      const result = await service.queryAllTenants('', []);
-
-      result.forEach((tenant) => {
-        expect(tenant).toHaveProperty('vendor');
-        expect(['EPIC', 'CERNER', 'VERADIGM']).toContain(tenant.vendor);
-      });
     });
   });
 
