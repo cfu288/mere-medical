@@ -403,7 +403,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
             />
             <ul className="list-disc list-inside">
               {encounters.map((item) => (
-                <li key={item.id} className="">
+                <li key={item.id} className="text-xs font-medium md:text-sm text-gray-900">
                   <p className="capitalize inline-block">{`${getEncounterClass(item)} -`}</p>
                   <p className="inline-block ml-1">
                     {`${getEncounterLocation(item)}`}

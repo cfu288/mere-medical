@@ -60,25 +60,25 @@ export function getLoginUrl(
       'fhirUser',
       'offline_access',
       'openid',
-      'user/AllergyIntolerance.read',
-      'user/Appointment.read',
-      'user/Binary.read',
-      'user/CarePlan.read',
-      'user/CareTeam.read',
-      'user/Condition.read',
-      'user/DiagnosticReport.read',
-      'user/DocumentReference.read',
-      'user/Device.read',
-      'user/Encounter.read',
-      'user/Goal.read',
-      'user/Immunization.read',
-      'user/MedicationAdministration.read',
-      'user/MedicationRequest.read',
-      'user/MedicationStatement.read',
-      'user/Observation.read',
-      'user/Patient.read',
-      'user/Practitioner.read',
-      'user/Procedure.read',
+      'patient/AllergyIntolerance.read',
+      'patient/Appointment.read',
+      'patient/Binary.read',
+      'patient/CarePlan.read',
+      'patient/CareTeam.read',
+      'patient/Condition.read',
+      'patient/DiagnosticReport.read',
+      'patient/DocumentReference.read',
+      'patient/Device.read',
+      'patient/Encounter.read',
+      'patient/Goal.read',
+      'patient/Immunization.read',
+      'patient/MedicationAdministration.read',
+      'patient/MedicationRequest.read',
+      'patient/MedicationStatement.read',
+      'patient/Observation.read',
+      'patient/Patient.read',
+      'patient/Practitioner.read',
+      'patient/Procedure.read',
     ].join(' '),
     redirect_uri: concatPath(getRedirectUri() || '', Routes.CernerCallback),
     aud: baseUrl,
@@ -215,17 +215,28 @@ export async function syncAllRecords(
   const obsMapper = (imm: BundleEntry<Observation>) =>
     mappers.mapObservationToClinicalDocument(imm as any, connectionDocument);
   const drMapper = (dr: BundleEntry<DiagnosticReport>) =>
-    mappers.mapDiagnosticReportToClinicalDocument(dr as any, connectionDocument);
+    mappers.mapDiagnosticReportToClinicalDocument(
+      dr as any,
+      connectionDocument,
+    );
   const medStatementMapper = (dr: BundleEntry<MedicationStatement>) =>
-    mappers.mapMedicationStatementToClinicalDocument(dr as any, connectionDocument);
+    mappers.mapMedicationStatementToClinicalDocument(
+      dr as any,
+      connectionDocument,
+    );
   const medRequestMapper = (dr: BundleEntry<MedicationRequest>) =>
-    version === 'R4' ? R4.mapMedicationRequestToClinicalDocument(dr as any, connectionDocument) : medStatementMapper(dr as any);
+    version === 'R4'
+      ? R4.mapMedicationRequestToClinicalDocument(dr as any, connectionDocument)
+      : medStatementMapper(dr as any);
   const immMapper = (dr: BundleEntry<Immunization>) =>
     mappers.mapImmunizationToClinicalDocument(dr as any, connectionDocument);
   const conditionMapper = (dr: BundleEntry<Condition>) =>
     mappers.mapConditionToClinicalDocument(dr as any, connectionDocument);
   const allergyIntoleranceMapper = (a: BundleEntry<AllergyIntolerance>) =>
-    mappers.mapAllergyIntoleranceToClinicalDocument(a as any, connectionDocument);
+    mappers.mapAllergyIntoleranceToClinicalDocument(
+      a as any,
+      connectionDocument,
+    );
 
   const encounterMapper = (a: BundleEntry<Encounter>) =>
     mappers.mapEncounterToClinicalDocument(a as any, connectionDocument);
@@ -317,9 +328,15 @@ export async function syncAllRecords(
         patient: patientId,
       },
     ),
-    syncDocumentReferences(baseUrl, connectionDocument, db, {
-      patient: patientId,
-    }, version),
+    syncDocumentReferences(
+      baseUrl,
+      connectionDocument,
+      db,
+      {
+        patient: patientId,
+      },
+      version,
+    ),
     syncFHIRResource<Encounter>(
       baseUrl,
       connectionDocument,
@@ -354,7 +371,10 @@ async function syncDocumentReferences(
 ) {
   const mappers = version === 'R4' ? R4 : DSTU2;
   const documentReferenceMapper = (dr: BundleEntry<DocumentReference>) =>
-    mappers.mapDocumentReferenceToClinicalDocument(dr as any, connectionDocument);
+    mappers.mapDocumentReferenceToClinicalDocument(
+      dr as any,
+      connectionDocument,
+    );
   await syncFHIRResource<DocumentReference>(
     baseUrl,
     connectionDocument,
