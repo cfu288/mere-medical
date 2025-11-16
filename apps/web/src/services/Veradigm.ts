@@ -59,7 +59,13 @@ export function getLoginUrl(
 ): string & Location {
   const params = {
     client_id: `${Config.VERADIGM_CLIENT_ID}`,
-    scope: ['launch/patient', 'openid', 'profile', 'user/*.read'].join(' '),
+    scope: [
+      'launch/patient',
+      'openid',
+      'profile',
+      'user/*.read',
+      'patient/*.read',
+    ].join(' '),
     redirect_uri: `${Config.PUBLIC_URL}${Routes.VeradigmCallback}`,
     aud: baseUrl,
     response_type: 'code',

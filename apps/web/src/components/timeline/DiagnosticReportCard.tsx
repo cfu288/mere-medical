@@ -48,11 +48,9 @@ export async function getRelatedDocuments({
   const listToQuery: string[] = [];
   const isDrResult = item.data_record.raw.resource?.result;
   if (isDrResult) {
-    const baseUrl = item.data_record.raw.fullUrl?.split('/').slice(0, -2).join('/');
     const resolvedReferences = resolveObservationReferences({
       references: isDrResult.filter((r) => r.reference) as Array<{ reference: string }>,
-      baseUrl,
-      fallbackBaseUrl: conn?.location as string | undefined,
+      baseUrl: conn?.location as string | undefined,
     });
     listToQuery.push(...resolvedReferences);
   }
