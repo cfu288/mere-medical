@@ -76,7 +76,7 @@ export const DocumentReferenceAttachmentCard = memo(
     matchedChunks,
     searchQuery,
   }: {
-    item: ClinicalDocument<string>;
+    item: ClinicalDocument<string | Blob>;
     matchedChunks?: { id: string; metadata?: any }[];
     searchQuery?: string;
   }) {

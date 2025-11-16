@@ -28,7 +28,7 @@ export function ShowDocumentResultsAttachmentExpandable({
   matchedChunks,
   searchQuery,
 }: {
-  item: ClinicalDocument<string>; // XML string content
+  item: ClinicalDocument<string | Blob>; // Can be XML string or PDF Blob
   expanded: boolean;
   setExpanded: React.Dispatch<React.SetStateAction<boolean>>;
   matchedChunks?: { id: string; metadata?: any }[];
@@ -39,21 +39,50 @@ export function ShowDocumentResultsAttachmentExpandable({
       | Partial<Record<CCDAStructureDefinitionKeys2_1, string | JSX.Element>>
       | undefined
     >(undefined),
-    [hasLoadedDocument, setHasLoadedDocument] = useState(false);
+    [hasLoadedDocument, setHasLoadedDocument] = useState(false),
+    [pdfUrl, setPdfUrl] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (expanded) {
       if (
         item.data_record.content_type === 'application/xml' &&
+        typeof item.data_record.raw === 'string' &&
         checkIfXmlIsCCDA(item.data_record.raw)
       ) {
         const parsedDoc = parseCCDA(item.data_record.raw);
         setHasLoadedDocument(true);
         setCCDA(parsedDoc);
+      } else if (
+        item.data_record.content_type === 'application/pdf' &&
+        typeof item.data_record.raw === 'string'
+      ) {
+        try {
+          const base64 = item.data_record.raw;
+          const byteCharacters = atob(base64);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray], { type: 'application/pdf' });
+          const url = URL.createObjectURL(blob);
+          setPdfUrl(url);
+          setHasLoadedDocument(true);
+        } catch (error) {
+          console.error('[ShowDocumentResultsAttachmentExpandable] Error converting base64 to Blob:', error);
+          setHasLoadedDocument(true);
+        }
       } else {
         setHasLoadedDocument(true);
       }
     }
+
+    // Cleanup blob URL on unmount
+    return () => {
+      if (pdfUrl) {
+        URL.revokeObjectURL(pdfUrl);
+      }
+    };
   }, [expanded, cd, item.data_record.content_type, item.data_record.raw]);
 
   return (
@@ -63,21 +92,40 @@ export function ShowDocumentResultsAttachmentExpandable({
           title={item.metadata?.display_name || ''}
           setClose={() => setExpanded(false)}
         />
-        <div className="max-h-full  scroll-py-3 p-3">
+        <div className="max-h-full scroll-py-3 p-3">
           <div
             className={`${
               expanded ? '' : 'hidden'
             } rounded-lg border border-solid border-gray-200`}
           >
-            <p className="text-md whitespace-wrap overflow-x-scroll p-4 text-gray-900">
-              {!hasLoadedDocument && 'Loading...'}
-              <DisplayCCDADocument ccda={ccda} matchedChunks={matchedChunks} />
-              {hasLoadedDocument && !ccda && (
-                <p>
-                  Sorry, looks like we were unable to get the linked document
-                </p>
-              )}
-            </p>
+            {!hasLoadedDocument && (
+              <p className="text-md p-4 text-gray-900">Loading...</p>
+            )}
+
+            {/* Display CCDA Document */}
+            {ccda && (
+              <div className="text-md whitespace-wrap overflow-x-scroll p-4 text-gray-900">
+                <DisplayCCDADocument ccda={ccda} matchedChunks={matchedChunks} />
+              </div>
+            )}
+
+            {/* Display PDF Document */}
+            {pdfUrl && (
+              <div className="h-[600px] w-full p-4">
+                <iframe
+                  src={pdfUrl}
+                  className="h-full w-full border-0"
+                  title={item.metadata?.display_name || 'PDF Document'}
+                />
+              </div>
+            )}
+
+            {/* Error message when document can't be displayed */}
+            {hasLoadedDocument && !ccda && !pdfUrl && (
+              <p className="text-md p-4 text-gray-900">
+                Sorry, looks like we were unable to get the linked document
+              </p>
+            )}
           </div>
         </div>
       </div>

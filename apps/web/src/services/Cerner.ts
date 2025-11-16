@@ -30,6 +30,7 @@ import { Routes } from '../Routes';
 import { DSTU2, R4 } from '.';
 import Config from '../environments/config.json';
 import { createConnection } from '../repositories/ConnectionRepository';
+import { findUserById } from '../repositories/UserRepository';
 import { JsonWebKeySet } from './JWTTools';
 import { UserDocument } from '../models/user-document/UserDocument.type';
 import uuid4 from '../utils/UUIDUtils';
@@ -479,9 +480,14 @@ async function fetchAttachmentData(
   cd: CernerConnectionDocument,
 ): Promise<{ contentType: string | null; raw: string | Blob | undefined }> {
   try {
+    // Binary resources require 'application/fhir+json' per Oracle documentation
+    const isBinaryResource = url.includes('/Binary/');
+    const acceptHeader = isBinaryResource ? 'application/fhir+json' : '*/*';
+
     const res = await fetch(url, {
       headers: {
         Authorization: `Bearer ${cd.access_token}`,
+        Accept: acceptHeader,
       },
     });
     if (!res.ok) {
@@ -491,12 +497,24 @@ async function fetchAttachmentData(
     }
     const contentType = res.headers.get('Content-Type');
     let raw = undefined;
-    if (contentType === 'application/xml') {
-      raw = await res.text();
-    }
 
-    if (contentType === 'application/pdf') {
-      raw = await res.blob();
+    if (contentType?.includes('application/fhir+json') || contentType?.includes('application/json+fhir')) {
+      const binaryResource = await res.json();
+      if (binaryResource.data) {
+        const actualContentType = binaryResource.contentType || 'application/octet-stream';
+
+        if (actualContentType === 'application/pdf') {
+          raw = binaryResource.data;
+        } else if (actualContentType === 'application/xml' || actualContentType.includes('text')) {
+          raw = atob(binaryResource.data);
+        } else {
+          raw = binaryResource.data;
+        }
+
+        return { contentType: actualContentType, raw };
+      }
+    } else if (contentType === 'application/xml') {
+      raw = await res.text();
     }
 
     return { contentType, raw };
@@ -577,23 +595,29 @@ export async function saveConnectionToDb({
     user.id,
   );
   return new Promise((resolve, reject) => {
-    if (res?.access_token && res?.expires_in && res?.id_token) {
+    // For token refresh, id_token might not be present
+    if (res?.access_token && res?.expires_in) {
       if (doc) {
         // If we already have a connection card for this URL, update it
         try {
           const nowInSeconds = Math.floor(Date.now() / 1000);
+          const updateData: any = {
+            access_token: res.access_token,
+            expires_at: nowInSeconds + res.expires_in,
+            scope: res.scope,
+            last_sync_was_error: false,
+          };
+
+          // Only update id_token if it's present (not present in refresh responses)
+          if (res.id_token) {
+            updateData.id_token = res.id_token;
+          }
+
           doc
             .update({
-              $set: {
-                access_token: res.access_token,
-                expires_at: nowInSeconds + res.expires_in,
-                scope: res.scope,
-                last_sync_was_error: false,
-              },
+              $set: updateData,
             })
             .then(() => {
-              console.log('Updated connection card');
-              console.log(doc.toJSON());
               resolve(true);
             })
             .catch((e) => {
@@ -605,6 +629,14 @@ export async function saveConnectionToDb({
           reject(new Error('Error updating connection'));
         }
       } else {
+        // This should only happen during initial authentication, not refresh
+        if (!res.id_token) {
+          // If we don't have an id_token and no existing doc, this is likely a refresh token
+          // response but the connection doc is missing, which shouldn't happen
+          reject(new Error('Connection document not found during token refresh'));
+          return;
+        }
+
         const nowInSeconds = Math.floor(Date.now() / 1000);
         // Otherwise, create a new connection card
         const dbentry: Omit<CreateCernerConnectionDocument, 'refresh_token'> = {
@@ -659,7 +691,14 @@ export async function refreshCernerConnectionTokenIfNeeded(
       const baseUrl = connectionDocument.get('location'),
         refreshToken = connectionDocument.get('refresh_token'),
         tokenUri = connectionDocument.get('token_uri'),
-        user = connectionDocument.get('user_id');
+        userId = connectionDocument.get('user_id');
+
+      // Fetch the actual UserDocument from the database
+      const userObject = await findUserById(db, userId);
+
+      if (!userObject) {
+        throw new Error(`User not found: ${userId}`);
+      }
 
       const access_token_data = await fetchAccessTokenWithRefreshToken(
         refreshToken,
@@ -670,7 +709,7 @@ export async function refreshCernerConnectionTokenIfNeeded(
         res: access_token_data,
         cernerBaseUrl: baseUrl,
         db,
-        user,
+        user: userObject,
       });
     } catch (e) {
       console.error(e);
@@ -682,16 +721,19 @@ export async function refreshCernerConnectionTokenIfNeeded(
 
 export interface CernerAuthResponse {
   access_token: string;
-  id_token: string;
+  id_token?: string;  // Optional for refresh token responses
   expires_in: number;
-  patient: string;
-  refresh_token: string;
+  patient?: string;    // Optional for refresh token responses
+  refresh_token?: string;  // Optional for refresh token responses (not returned on refresh)
   scope: string;
   token_type: string;
 }
 
 export interface CernerAuthResponseWithClientId extends CernerAuthResponse {
   client_id: string;
+  id_token: string;  // Required for initial auth
+  patient: string;   // Required for initial auth
+  refresh_token: string;  // Required for initial auth
 }
 
 export interface CernerDynamicRegistrationResponse {
