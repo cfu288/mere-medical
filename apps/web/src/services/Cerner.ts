@@ -471,16 +471,23 @@ async function syncDocumentReferences(
 
 /**
  * Fetch attachment data from the FHIR server
+ *
+ * We use 'application/fhir+json' Accept header for all Binary resources,
+ * which returns a JSON wrapper with base64-encoded data. Oracle recommends using the
+ * actual contentType from DocumentReference.content.attachment.contentType instead,
+ * which would return raw binary data directly. However, this would require passing
+ * the contentType to this function. Consider refactoring in the future.
+ *
+ * @see https://docs.oracle.com/en/industries/health/millennium-platform-apis/mfrap/op-binary-id-get.html
  * @param url URL of the attachment
- * @param cd
- * @returns
+ * @param cd Connection document
+ * @returns Object containing contentType and raw data (as base64 string for PDFs)
  */
 async function fetchAttachmentData(
   url: string,
   cd: CernerConnectionDocument,
 ): Promise<{ contentType: string | null; raw: string | Blob | undefined }> {
   try {
-    // Binary resources require 'application/fhir+json' per Oracle documentation
     const isBinaryResource = url.includes('/Binary/');
     const acceptHeader = isBinaryResource ? 'application/fhir+json' : '*/*';
 
@@ -498,14 +505,21 @@ async function fetchAttachmentData(
     const contentType = res.headers.get('Content-Type');
     let raw = undefined;
 
-    if (contentType?.includes('application/fhir+json') || contentType?.includes('application/json+fhir')) {
+    if (
+      contentType?.includes('application/fhir+json') ||
+      contentType?.includes('application/json+fhir')
+    ) {
       const binaryResource = await res.json();
       if (binaryResource.data) {
-        const actualContentType = binaryResource.contentType || 'application/octet-stream';
+        const actualContentType =
+          binaryResource.contentType || 'application/octet-stream';
 
         if (actualContentType === 'application/pdf') {
           raw = binaryResource.data;
-        } else if (actualContentType === 'application/xml' || actualContentType.includes('text')) {
+        } else if (
+          actualContentType === 'application/xml' ||
+          actualContentType.includes('text')
+        ) {
           raw = atob(binaryResource.data);
         } else {
           raw = binaryResource.data;
@@ -633,7 +647,9 @@ export async function saveConnectionToDb({
         if (!res.id_token) {
           // If we don't have an id_token and no existing doc, this is likely a refresh token
           // response but the connection doc is missing, which shouldn't happen
-          reject(new Error('Connection document not found during token refresh'));
+          reject(
+            new Error('Connection document not found during token refresh'),
+          );
           return;
         }
 
@@ -721,19 +737,19 @@ export async function refreshCernerConnectionTokenIfNeeded(
 
 export interface CernerAuthResponse {
   access_token: string;
-  id_token?: string;  // Optional for refresh token responses
+  id_token?: string; // Optional for refresh token responses
   expires_in: number;
-  patient?: string;    // Optional for refresh token responses
-  refresh_token?: string;  // Optional for refresh token responses (not returned on refresh)
+  patient?: string; // Optional for refresh token responses
+  refresh_token?: string; // Optional for refresh token responses (not returned on refresh)
   scope: string;
   token_type: string;
 }
 
 export interface CernerAuthResponseWithClientId extends CernerAuthResponse {
   client_id: string;
-  id_token: string;  // Required for initial auth
-  patient: string;   // Required for initial auth
-  refresh_token: string;  // Required for initial auth
+  id_token: string; // Required for initial auth
+  patient: string; // Required for initial auth
+  refresh_token: string; // Required for initial auth
 }
 
 export interface CernerDynamicRegistrationResponse {

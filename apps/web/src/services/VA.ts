@@ -516,6 +516,10 @@ export async function refreshVAConnectionTokenIfNeeded(
         tokenUri = connectionDocument.get('token_uri'),
         user = connectionDocument.get('user_id');
 
+      // TODO: Fix user_id string being passed instead of UserDocument object
+      // Same issue as fixed in Cerner - needs to fetch UserDocument from DB
+      // using findUserById(db, user_id) before passing to saveConnectionToDb
+
       const access_token_data = await fetchAccessTokenWithRefreshToken(
         refreshToken,
         tokenUri,
