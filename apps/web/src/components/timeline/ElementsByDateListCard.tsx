@@ -123,19 +123,25 @@ function DispayDocumentReferencesOrAttachmentTimelineItem(props: {
   documentReferences: ClinicalDocument<BundleEntry<FhirResource>>[];
   documentReferenceAttachments: ClinicalDocument<BundleEntry<FhirResource>>[];
 }) {
+  const docsToDisplay = [
+    ...props.documentReferences,
+    ...props.documentReferenceAttachments,
+  ];
   return (
     <div className="mb-2 ml-2">
       <TimelineCardCategoryTitle title={'Documents'} color="text-teal-600" />
       <ul className="list-disc list-inside">
-        {[
-          ...props.documentReferences,
-          ...props.documentReferenceAttachments,
-        ].map((item) => (
+        {docsToDisplay.slice(0, 5).map((item) => (
           <DocumentListItem
             key={item.id}
             item={item as ClinicalDocument<BundleEntry<DocumentReference>>}
           />
         ))}
+        <p className="text-xs font-medium md:text-sm text-gray-900">
+          {docsToDisplay.length > 5
+            ? `... and ${docsToDisplay.length - 5} more`
+            : null}
+        </p>
       </ul>
     </div>
   );
@@ -403,7 +409,10 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
             />
             <ul className="list-disc list-inside">
               {encounters.map((item) => (
-                <li key={item.id} className="text-xs font-medium md:text-sm text-gray-900">
+                <li
+                  key={item.id}
+                  className="text-xs font-medium md:text-sm text-gray-900"
+                >
                   <p className="capitalize inline-block">{`${getEncounterClass(item)} -`}</p>
                   <p className="inline-block ml-1">
                     {`${getEncounterLocation(item)}`}
@@ -445,7 +454,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
               color="text-blue-600"
             />
             <ul className="list-disc list-inside">
-              {diagnosticReports.map((item) => (
+              {diagnosticReports.slice(0, 5).map((item) => (
                 <li
                   className="text-xs font-medium md:text-sm text-gray-900"
                   key={item.id}
@@ -455,6 +464,11 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
                     .replace(/- final/gi, '')}
                 </li>
               ))}
+              <p className="text-xs font-medium md:text-sm text-gray-900">
+                {diagnosticReports.length > 5
+                  ? `... and ${diagnosticReports.length - 5} more`
+                  : null}
+              </p>
             </ul>
           </div>
         )}
@@ -462,7 +476,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
           <div className="mb-2 ml-2">
             <TimelineCardCategoryTitle title={'Labs'} color="text-sky-600" />
             <ul className="list-disc list-inside">
-              {observations.map((item) => (
+              {observations.slice(0, 5).map((item) => (
                 <li
                   className="text-xs font-medium md:text-sm text-gray-900"
                   key={item.id}
@@ -472,6 +486,11 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
                     .replace(/- final/gi, '')}
                 </li>
               ))}
+              <p className="text-xs font-medium md:text-sm text-gray-900">
+                {observations.length > 5
+                  ? `... and ${observations.length - 5} more`
+                  : null}
+              </p>
             </ul>
           </div>
         )}
