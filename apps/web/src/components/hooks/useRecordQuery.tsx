@@ -104,6 +104,7 @@ export function useRecordQuery(
           } else {
             setList(groupedRecords);
           }
+          console.debug(groupedRecords);
 
           // Set query status.
           // Complete indicates that there are no more results to load

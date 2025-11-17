@@ -8,6 +8,10 @@ import { CardBase } from '../connection/CardBase';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
 import { TimelineCardCategoryTitle } from './TimelineCardCategoryTitle';
 import { TimelineCardSubtitile } from './TimelineCardSubtitile';
+import {
+  getEncounterClass,
+  getEncounterLocation,
+} from '../../utils/fhirAccessHelpers';
 
 export const EncounterCard = memo(function EncounterCard({
   item,
@@ -25,10 +29,8 @@ export const EncounterCard = memo(function EncounterCard({
         <TimelineCardTitle>
           {
             <>
-              <p className="capitalize">{`${item.data_record.raw.resource?.class} - `}</p>
-              <p>
-                {`${item.data_record.raw.resource?.location?.[0].location.display}`}
-              </p>
+              <p className="capitalize">{`${getEncounterClass(item)} - `}</p>
+              <p>{`${getEncounterLocation(item)}`}</p>
             </>
           }
         </TimelineCardTitle>

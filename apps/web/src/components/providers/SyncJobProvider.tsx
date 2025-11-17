@@ -395,10 +395,12 @@ async function fetchMedicalRecords(
     case 'cerner': {
       try {
         await refreshCernerConnectionTokenIfNeeded(connectionDocument, db);
+        const cernerConnection = connectionDocument.toMutableJSON() as unknown as CernerConnectionDocument;
         const syncJob = await Cerner.syncAllRecords(
           baseUrl,
-          connectionDocument.toMutableJSON() as unknown as CernerConnectionDocument,
+          cernerConnection,
           db,
+          cernerConnection.fhir_version ?? 'DSTU2',
         );
         await updateConnectionDocumentTimestamps(
           syncJob,
@@ -537,7 +539,14 @@ async function refreshCernerConnectionTokenIfNeeded(
       const baseUrl = connectionDocument.get('location'),
         refreshToken = connectionDocument.get('refresh_token'),
         tokenUri = connectionDocument.get('token_uri'),
-        user = connectionDocument.get('user_id');
+        userId = connectionDocument.get('user_id');
+
+      // Fetch the actual UserDocument from the database
+      const userObject = await findUserById(db, userId);
+
+      if (!userObject) {
+        throw new Error(`User not found: ${userId}`);
+      }
 
       const access_token_data = await Cerner.fetchAccessTokenWithRefreshToken(
         refreshToken,
@@ -548,7 +557,7 @@ async function refreshCernerConnectionTokenIfNeeded(
         res: access_token_data,
         cernerBaseUrl: baseUrl,
         db,
-        user,
+        user: userObject,
       });
     } catch (e) {
       console.error(e);

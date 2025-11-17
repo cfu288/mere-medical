@@ -8,6 +8,7 @@ import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
 import { Modal } from '../Modal';
 import { ModalHeader } from '../ModalHeader';
 import { ObservationResultRow } from './ObservationResultRow';
+import { getDiagnosticReportPerformer } from '../../utils/fhirAccessHelpers';
 
 export function ShowDiagnosticReportResultsExpandable({
   item,
@@ -37,9 +38,7 @@ export function ShowDiagnosticReportResultsExpandable({
                 {format(parseISO(item.metadata?.date || ''), 'LLLL do yyyy')}
               </div>
               <div className="text-sm font-light">
-                {Array.isArray(item.data_record.raw.resource?.performer)
-                  ? item.data_record.raw.resource?.performer?.[0].display
-                  : item.data_record.raw.resource?.performer?.display}
+                {getDiagnosticReportPerformer(item)}
               </div>
             </div>
           }

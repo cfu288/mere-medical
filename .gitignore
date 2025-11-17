@@ -9,6 +9,8 @@
 
 .nx/
 
+.local/
+
 # compiled output
 /dist
 /tmp

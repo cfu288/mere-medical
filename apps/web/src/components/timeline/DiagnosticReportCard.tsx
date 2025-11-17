@@ -21,6 +21,7 @@ import { SkeletonLoadingText } from './SkeletonLoadingText';
 import { TimelineCardCategoryTitle } from './TimelineCardCategoryTitle';
 import { TimelineCardSubtitile } from './TimelineCardSubtitile';
 import { TimelineCardTitle } from './TimelineCardTitle';
+import { resolveObservationReferences } from '../../utils/fhirReferenceResolver';
 
 /**
  * Function that encapsulates the logic of the useRelatedDocuments Hook.
@@ -46,12 +47,12 @@ export async function getRelatedDocuments({
 > {
   const listToQuery: string[] = [];
   const isDrResult = item.data_record.raw.resource?.result;
-  const allScripts = conn?.source === 'veradigm';
   if (isDrResult) {
-    const references = allScripts
-      ? new Set(isDrResult.map((item) => `${conn.location}${item.reference}`))
-      : new Set(isDrResult.map((item) => `${item.reference}`));
-    listToQuery.push(...references);
+    const resolvedReferences = resolveObservationReferences({
+      references: isDrResult.filter((r) => r.reference) as Array<{ reference: string }>,
+      baseUrl: conn?.location as string | undefined,
+    });
+    listToQuery.push(...resolvedReferences);
   }
 
   const docs = await db.clinical_documents

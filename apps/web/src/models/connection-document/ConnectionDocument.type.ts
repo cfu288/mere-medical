@@ -31,9 +31,10 @@ export interface EpicConnectionDocument extends ConnectionDocument {
 }
 
 export interface CernerConnectionDocument extends ConnectionDocument {
-  id_token: string; // An OAuth ID token
-  auth_uri: string | Location; // the OAuth authorization url
-  token_uri: string | Location; // the OAuth token url
+  id_token: string;
+  auth_uri: string | Location;
+  token_uri: string | Location;
+  fhir_version?: 'DSTU2' | 'R4';
 }
 
 export interface VAConnectionDocument extends ConnectionDocument {

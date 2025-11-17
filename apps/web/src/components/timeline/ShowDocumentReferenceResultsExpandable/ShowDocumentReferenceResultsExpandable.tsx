@@ -41,23 +41,52 @@ export function ShowDocumentResultsExpandable({
       | Partial<Record<CCDAStructureDefinitionKeys2_1, string | JSX.Element>>
       | undefined
     >(undefined),
-    attachmentUrl = item.data_record.raw.resource?.content?.[0].attachment.url,
+    attachmentUrl = item.data_record.raw.resource?.content?.[0]?.attachment?.url,
     attachment = useClinicalDoc(attachmentUrl),
-    [hasLoadedDocument, setHasLoadedDocument] = useState(false);
+    [hasLoadedDocument, setHasLoadedDocument] = useState(false),
+    [pdfUrl, setPdfUrl] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (expanded) {
-      if (
-        attachment?.get('data_record.content_type') === 'application/xml' &&
+      if (!attachment) {
+        setHasLoadedDocument(true);
+      } else if (
+        attachment.get('data_record.content_type') === 'application/xml' &&
         checkIfXmlIsCCDA(attachment.get('data_record.raw'))
       ) {
         const parsedDoc = parseCCDA(attachment.get('data_record.raw'));
         setHasLoadedDocument(true);
         setCCDA(parsedDoc);
+      } else if (
+        attachment.get('data_record.content_type') === 'application/pdf' &&
+        typeof attachment.get('data_record.raw') === 'string'
+      ) {
+        try {
+          const base64 = attachment.get('data_record.raw');
+          const byteCharacters = atob(base64);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray], { type: 'application/pdf' });
+          const url = URL.createObjectURL(blob);
+          setPdfUrl(url);
+          setHasLoadedDocument(true);
+        } catch (error) {
+          console.error('[ShowDocumentResultsExpandable] Error converting base64 to Blob:', error);
+          setHasLoadedDocument(true);
+        }
       } else {
         setHasLoadedDocument(true);
       }
     }
+
+    return () => {
+      if (pdfUrl) {
+        URL.revokeObjectURL(pdfUrl);
+      }
+    };
   }, [expanded, cd, attachment]);
 
   return (
@@ -73,15 +102,34 @@ export function ShowDocumentResultsExpandable({
               expanded ? '' : 'hidden'
             } rounded-lg border border-solid border-gray-200`}
           >
-            <p className="text-md whitespace-wrap overflow-x-scroll p-4 text-gray-900">
-              {!hasLoadedDocument && 'Loading...'}
-              <DisplayCCDADocument ccda={ccda} matchedChunks={matchedChunks} />
-              {hasLoadedDocument && !ccda && (
-                <p>
-                  Sorry, looks like we were unable to get the linked document
-                </p>
-              )}
-            </p>
+            {!hasLoadedDocument && (
+              <p className="text-md p-4 text-gray-900">Loading...</p>
+            )}
+
+            {/* Display CCDA Document */}
+            {ccda && (
+              <div className="text-md whitespace-wrap overflow-x-scroll p-4 text-gray-900">
+                <DisplayCCDADocument ccda={ccda} matchedChunks={matchedChunks} />
+              </div>
+            )}
+
+            {/* Display PDF Document */}
+            {pdfUrl && (
+              <div className="h-[600px] w-full p-4">
+                <iframe
+                  src={pdfUrl}
+                  className="h-full w-full border-0"
+                  title={item.metadata?.display_name || 'PDF Document'}
+                />
+              </div>
+            )}
+
+            {/* Error message when document can't be displayed */}
+            {hasLoadedDocument && !ccda && !pdfUrl && (
+              <p className="text-md p-4 text-gray-900">
+                Sorry, looks like we were unable to get the linked document
+              </p>
+            )}
           </div>
         </div>
       </div>

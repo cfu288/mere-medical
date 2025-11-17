@@ -114,19 +114,33 @@ async function getFHIRResource<T extends FhirResource>(
     )}&target_type=base`,
   );
 
-  const res = await fetch(useProxy ? proxyUrl : defaultUrl, {
-    headers: {
-      Authorization: `Bearer ${connectionDocument.access_token}`,
-      Accept: 'application/fhir+json',
-    },
-  })
-    .then((res) => res.json())
-    .then((res: Bundle) => res);
+  let allEntries: BundleEntry<T>[] = [];
+  let nextUrl: string | undefined = useProxy ? proxyUrl : defaultUrl;
 
-  if (res.entry) {
-    return res.entry as BundleEntry<T>[];
+  while (nextUrl) {
+    const response = await fetch(nextUrl, {
+      headers: {
+        Authorization: `Bearer ${connectionDocument.access_token}`,
+        Accept: 'application/fhir+json',
+      },
+    });
+    if (!response.ok) {
+      console.error(await response.text());
+      throw new Error('Error getting FHIR resource');
+    }
+    const bundle: Bundle = await response.json();
+
+    if (bundle.entry) {
+      allEntries = allEntries.concat(bundle.entry as BundleEntry<T>[]);
+    }
+
+    const nextLink = bundle.link?.find(
+      (link: { relation?: string; url?: string }) => link.relation === 'next',
+    );
+    nextUrl = nextLink?.url;
   }
-  return [];
+
+  return allEntries;
 }
 
 /**

@@ -18,6 +18,7 @@ import {
   Patient,
   Procedure,
 } from 'fhir/r2';
+import { MedicationRequest } from 'fhir/r4';
 import { RxDocument, RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../components/providers/DatabaseCollections';
 import {
@@ -26,9 +27,10 @@ import {
   CreateCernerConnectionDocument,
 } from '../models/connection-document/ConnectionDocument.type';
 import { Routes } from '../Routes';
-import { DSTU2 } from '.';
+import { DSTU2, R4 } from '.';
 import Config from '../environments/config.json';
 import { createConnection } from '../repositories/ConnectionRepository';
+import { findUserById } from '../repositories/UserRepository';
 import { JsonWebKeySet } from './JWTTools';
 import { UserDocument } from '../models/user-document/UserDocument.type';
 import uuid4 from '../utils/UUIDUtils';
@@ -46,6 +48,7 @@ export enum CernerLocalStorageKeys {
   CERNER_TOKEN_URL = 'cernerTokenUrl',
   CERNER_NAME = 'cernerName',
   CERNER_ID = 'cernerId',
+  FHIR_VERSION = 'cernerFhirVersion',
 }
 
 export function getLoginUrl(
@@ -58,25 +61,25 @@ export function getLoginUrl(
       'fhirUser',
       'offline_access',
       'openid',
-      'user/AllergyIntolerance.read',
-      'user/Appointment.read',
-      'user/Binary.read',
-      'user/CarePlan.read',
-      'user/CareTeam.read',
-      'user/Condition.read',
-      'user/DiagnosticReport.read',
-      'user/DocumentReference.read',
-      'user/Device.read',
-      'user/Encounter.read',
-      'user/Goal.read',
-      'user/Immunization.read',
-      'user/MedicationAdministration.read',
-      'user/MedicationRequest.read',
-      'user/MedicationStatement.read',
-      'user/Observation.read',
-      'user/Patient.read',
-      'user/Practitioner.read',
-      'user/Procedure.read',
+      'patient/AllergyIntolerance.read',
+      'patient/Appointment.read',
+      'patient/Binary.read',
+      'patient/CarePlan.read',
+      'patient/CareTeam.read',
+      'patient/Condition.read',
+      'patient/DiagnosticReport.read',
+      'patient/DocumentReference.read',
+      'patient/Device.read',
+      'patient/Encounter.read',
+      'patient/Goal.read',
+      'patient/Immunization.read',
+      'patient/MedicationAdministration.read',
+      'patient/MedicationRequest.read',
+      'patient/MedicationStatement.read',
+      'patient/Observation.read',
+      'patient/Patient.read',
+      'patient/Practitioner.read',
+      'patient/Procedure.read',
     ].join(' '),
     redirect_uri: concatPath(getRedirectUri() || '', Routes.CernerCallback),
     aud: baseUrl,
@@ -123,19 +126,33 @@ async function getFHIRResource<T extends FhirResource>(
     params,
   )}`;
 
-  const res = await fetch(defaultUrl, {
-    headers: {
-      Authorization: `Bearer ${connectionDocument.access_token}`,
-      Accept: 'application/json+fhir',
-    },
-  })
-    .then((res) => res.json())
-    .then((res: Bundle) => res);
+  let allEntries: BundleEntry<T>[] = [];
+  let nextUrl: string | undefined = defaultUrl;
 
-  if (res.entry) {
-    return res.entry as BundleEntry<T>[];
+  while (nextUrl) {
+    const response = await fetch(nextUrl, {
+      headers: {
+        Authorization: `Bearer ${connectionDocument.access_token}`,
+        Accept: 'application/json+fhir',
+      },
+    });
+    if (!response.ok) {
+      console.error(await response.text());
+      throw new Error('Error getting FHIR resource');
+    }
+    const bundle: Bundle = await response.json();
+
+    if (bundle.entry) {
+      allEntries = allEntries.concat(bundle.entry as BundleEntry<T>[]);
+    }
+
+    const nextLink = bundle.link?.find(
+      (link: { relation?: string; url?: string }) => link.relation === 'next',
+    );
+    nextUrl = nextLink?.url;
   }
-  return [];
+
+  return allEntries;
 }
 
 /**
@@ -181,33 +198,49 @@ async function syncFHIRResource<T extends FhirResource>(
  * @param baseUrl Base url of the FHIR server to sync from
  * @param connectionDocument
  * @param db
- * @param useProxy
+ * @param version FHIR version to use for mapping (defaults to DSTU2 for backward compatibility)
  * @returns A promise of void arrays
  */
 export async function syncAllRecords(
   baseUrl: string,
   connectionDocument: CernerConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
+  version: 'DSTU2' | 'R4' = 'DSTU2',
 ): Promise<PromiseSettledResult<void[]>[]> {
+  const mappers = version === 'R4' ? R4 : DSTU2;
+
   const procMapper = (proc: BundleEntry<Procedure>) =>
-    DSTU2.mapProcedureToClinicalDocument(proc, connectionDocument);
+    mappers.mapProcedureToClinicalDocument(proc as any, connectionDocument);
   const patientMapper = (pt: BundleEntry<Patient>) =>
-    DSTU2.mapPatientToClinicalDocument(pt, connectionDocument);
+    mappers.mapPatientToClinicalDocument(pt as any, connectionDocument);
   const obsMapper = (imm: BundleEntry<Observation>) =>
-    DSTU2.mapObservationToClinicalDocument(imm, connectionDocument);
+    mappers.mapObservationToClinicalDocument(imm as any, connectionDocument);
   const drMapper = (dr: BundleEntry<DiagnosticReport>) =>
-    DSTU2.mapDiagnosticReportToClinicalDocument(dr, connectionDocument);
+    mappers.mapDiagnosticReportToClinicalDocument(
+      dr as any,
+      connectionDocument,
+    );
   const medStatementMapper = (dr: BundleEntry<MedicationStatement>) =>
-    DSTU2.mapMedicationStatementToClinicalDocument(dr, connectionDocument);
+    mappers.mapMedicationStatementToClinicalDocument(
+      dr as any,
+      connectionDocument,
+    );
+  const medRequestMapper = (dr: BundleEntry<MedicationRequest>) =>
+    version === 'R4'
+      ? R4.mapMedicationRequestToClinicalDocument(dr as any, connectionDocument)
+      : medStatementMapper(dr as any);
   const immMapper = (dr: BundleEntry<Immunization>) =>
-    DSTU2.mapImmunizationToClinicalDocument(dr, connectionDocument);
+    mappers.mapImmunizationToClinicalDocument(dr as any, connectionDocument);
   const conditionMapper = (dr: BundleEntry<Condition>) =>
-    DSTU2.mapConditionToClinicalDocument(dr, connectionDocument);
+    mappers.mapConditionToClinicalDocument(dr as any, connectionDocument);
   const allergyIntoleranceMapper = (a: BundleEntry<AllergyIntolerance>) =>
-    DSTU2.mapAllergyIntoleranceToClinicalDocument(a, connectionDocument);
+    mappers.mapAllergyIntoleranceToClinicalDocument(
+      a as any,
+      connectionDocument,
+    );
 
   const encounterMapper = (a: BundleEntry<Encounter>) =>
-    DSTU2.mapEncounterToClinicalDocument(a, connectionDocument);
+    mappers.mapEncounterToClinicalDocument(a as any, connectionDocument);
 
   const patientId = parseIdToken(connectionDocument.id_token)
     .fhirUser.split('/')
@@ -219,7 +252,7 @@ export async function syncAllRecords(
       connectionDocument,
       db,
       'Procedure',
-      procMapper,
+      procMapper as any,
       {
         patient: patientId,
       },
@@ -229,9 +262,9 @@ export async function syncAllRecords(
       connectionDocument,
       db,
       'Patient',
-      patientMapper,
+      patientMapper as any,
       {
-        id: patientId,
+        _id: patientId,
       },
     ),
     syncFHIRResource<Observation>(
@@ -239,7 +272,7 @@ export async function syncAllRecords(
       connectionDocument,
       db,
       'Observation',
-      obsMapper,
+      obsMapper as any,
       {
         patient: patientId,
         category: 'laboratory',
@@ -250,27 +283,38 @@ export async function syncAllRecords(
       connectionDocument,
       db,
       'DiagnosticReport',
-      drMapper,
+      drMapper as any,
       {
         patient: patientId,
       },
     ),
-    syncFHIRResource<MedicationStatement>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'MedicationStatement',
-      medStatementMapper,
-      {
-        patient: patientId,
-      },
-    ),
+    version === 'R4'
+      ? syncFHIRResource<any>(
+          baseUrl,
+          connectionDocument,
+          db,
+          'MedicationRequest',
+          medRequestMapper as any,
+          {
+            patient: patientId,
+          },
+        )
+      : syncFHIRResource<MedicationStatement>(
+          baseUrl,
+          connectionDocument,
+          db,
+          'MedicationStatement',
+          medStatementMapper as any,
+          {
+            patient: patientId,
+          },
+        ),
     syncFHIRResource<Immunization>(
       baseUrl,
       connectionDocument,
       db,
       'Immunization',
-      immMapper,
+      immMapper as any,
       {
         patient: patientId,
       },
@@ -280,20 +324,26 @@ export async function syncAllRecords(
       connectionDocument,
       db,
       'Condition',
-      conditionMapper,
+      conditionMapper as any,
       {
         patient: patientId,
       },
     ),
-    syncDocumentReferences(baseUrl, connectionDocument, db, {
-      patient: patientId,
-    }),
+    syncDocumentReferences(
+      baseUrl,
+      connectionDocument,
+      db,
+      {
+        patient: patientId,
+      },
+      version,
+    ),
     syncFHIRResource<Encounter>(
       baseUrl,
       connectionDocument,
       db,
       'Encounter',
-      encounterMapper,
+      encounterMapper as any,
       {
         patient: patientId,
       },
@@ -303,7 +353,7 @@ export async function syncAllRecords(
       connectionDocument,
       db,
       'AllergyIntolerance',
-      allergyIntoleranceMapper,
+      allergyIntoleranceMapper as any,
       {
         patient: patientId,
       },
@@ -318,16 +368,20 @@ async function syncDocumentReferences(
   connectionDocument: CernerConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   params: Record<string, string>,
+  version: 'DSTU2' | 'R4' = 'DSTU2',
 ) {
+  const mappers = version === 'R4' ? R4 : DSTU2;
   const documentReferenceMapper = (dr: BundleEntry<DocumentReference>) =>
-    DSTU2.mapDocumentReferenceToClinicalDocument(dr, connectionDocument);
-  // Sync document references and return them
+    mappers.mapDocumentReferenceToClinicalDocument(
+      dr as any,
+      connectionDocument,
+    );
   await syncFHIRResource<DocumentReference>(
     baseUrl,
     connectionDocument,
     db,
     'DocumentReference',
-    documentReferenceMapper,
+    documentReferenceMapper as any,
     params,
   );
 
@@ -385,7 +439,7 @@ async function syncDocumentReferences(
                 connection_record_id: connectionDocument.id,
                 data_record: {
                   raw: raw,
-                  format: 'FHIR.DSTU2',
+                  format: version === 'R4' ? 'FHIR.R4' : 'FHIR.DSTU2',
                   content_type: contentType,
                   resource_type: 'documentreference_attachment',
                   version_history: [],
@@ -417,18 +471,30 @@ async function syncDocumentReferences(
 
 /**
  * Fetch attachment data from the FHIR server
+ *
+ * We use 'application/fhir+json' Accept header for all Binary resources,
+ * which returns a JSON wrapper with base64-encoded data. Oracle recommends using the
+ * actual contentType from DocumentReference.content.attachment.contentType instead,
+ * which would return raw binary data directly. However, this would require passing
+ * the contentType to this function. Consider refactoring in the future.
+ *
+ * @see https://docs.oracle.com/en/industries/health/millennium-platform-apis/mfrap/op-binary-id-get.html
  * @param url URL of the attachment
- * @param cd
- * @returns
+ * @param cd Connection document
+ * @returns Object containing contentType and raw data (as base64 string for PDFs)
  */
 async function fetchAttachmentData(
   url: string,
   cd: CernerConnectionDocument,
 ): Promise<{ contentType: string | null; raw: string | Blob | undefined }> {
   try {
+    const isBinaryResource = url.includes('/Binary/');
+    const acceptHeader = isBinaryResource ? 'application/fhir+json' : '*/*';
+
     const res = await fetch(url, {
       headers: {
         Authorization: `Bearer ${cd.access_token}`,
+        Accept: acceptHeader,
       },
     });
     if (!res.ok) {
@@ -438,12 +504,31 @@ async function fetchAttachmentData(
     }
     const contentType = res.headers.get('Content-Type');
     let raw = undefined;
-    if (contentType === 'application/xml') {
-      raw = await res.text();
-    }
 
-    if (contentType === 'application/pdf') {
-      raw = await res.blob();
+    if (
+      contentType?.includes('application/fhir+json') ||
+      contentType?.includes('application/json+fhir')
+    ) {
+      const binaryResource = await res.json();
+      if (binaryResource.data) {
+        const actualContentType =
+          binaryResource.contentType || 'application/octet-stream';
+
+        if (actualContentType === 'application/pdf') {
+          raw = binaryResource.data;
+        } else if (
+          actualContentType === 'application/xml' ||
+          actualContentType.includes('text')
+        ) {
+          raw = atob(binaryResource.data);
+        } else {
+          raw = binaryResource.data;
+        }
+
+        return { contentType: actualContentType, raw };
+      }
+    } else if (contentType === 'application/xml') {
+      raw = await res.text();
     }
 
     return { contentType, raw };
@@ -524,23 +609,29 @@ export async function saveConnectionToDb({
     user.id,
   );
   return new Promise((resolve, reject) => {
-    if (res?.access_token && res?.expires_in && res?.id_token) {
+    // For token refresh, id_token might not be present
+    if (res?.access_token && res?.expires_in) {
       if (doc) {
         // If we already have a connection card for this URL, update it
         try {
           const nowInSeconds = Math.floor(Date.now() / 1000);
+          const updateData: any = {
+            access_token: res.access_token,
+            expires_at: nowInSeconds + res.expires_in,
+            scope: res.scope,
+            last_sync_was_error: false,
+          };
+
+          // Only update id_token if it's present (not present in refresh responses)
+          if (res.id_token) {
+            updateData.id_token = res.id_token;
+          }
+
           doc
             .update({
-              $set: {
-                access_token: res.access_token,
-                expires_at: nowInSeconds + res.expires_in,
-                scope: res.scope,
-                last_sync_was_error: false,
-              },
+              $set: updateData,
             })
             .then(() => {
-              console.log('Updated connection card');
-              console.log(doc.toJSON());
               resolve(true);
             })
             .catch((e) => {
@@ -552,6 +643,16 @@ export async function saveConnectionToDb({
           reject(new Error('Error updating connection'));
         }
       } else {
+        // This should only happen during initial authentication, not refresh
+        if (!res.id_token) {
+          // If we don't have an id_token and no existing doc, this is likely a refresh token
+          // response but the connection doc is missing, which shouldn't happen
+          reject(
+            new Error('Connection document not found during token refresh'),
+          );
+          return;
+        }
+
         const nowInSeconds = Math.floor(Date.now() / 1000);
         // Otherwise, create a new connection card
         const dbentry: Omit<CreateCernerConnectionDocument, 'refresh_token'> = {
@@ -606,7 +707,14 @@ export async function refreshCernerConnectionTokenIfNeeded(
       const baseUrl = connectionDocument.get('location'),
         refreshToken = connectionDocument.get('refresh_token'),
         tokenUri = connectionDocument.get('token_uri'),
-        user = connectionDocument.get('user_id');
+        userId = connectionDocument.get('user_id');
+
+      // Fetch the actual UserDocument from the database
+      const userObject = await findUserById(db, userId);
+
+      if (!userObject) {
+        throw new Error(`User not found: ${userId}`);
+      }
 
       const access_token_data = await fetchAccessTokenWithRefreshToken(
         refreshToken,
@@ -617,7 +725,7 @@ export async function refreshCernerConnectionTokenIfNeeded(
         res: access_token_data,
         cernerBaseUrl: baseUrl,
         db,
-        user,
+        user: userObject,
       });
     } catch (e) {
       console.error(e);
@@ -629,16 +737,19 @@ export async function refreshCernerConnectionTokenIfNeeded(
 
 export interface CernerAuthResponse {
   access_token: string;
-  id_token: string;
+  id_token?: string; // Optional for refresh token responses
   expires_in: number;
-  patient: string;
-  refresh_token: string;
+  patient?: string; // Optional for refresh token responses
+  refresh_token?: string; // Optional for refresh token responses (not returned on refresh)
   scope: string;
   token_type: string;
 }
 
 export interface CernerAuthResponseWithClientId extends CernerAuthResponse {
   client_id: string;
+  id_token: string; // Required for initial auth
+  patient: string; // Required for initial auth
+  refresh_token: string; // Required for initial auth
 }
 
 export interface CernerDynamicRegistrationResponse {
