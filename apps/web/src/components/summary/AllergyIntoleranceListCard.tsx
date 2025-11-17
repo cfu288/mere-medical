@@ -12,7 +12,7 @@ function getAllergyText(
 ) {
   return fhirpath.evaluate(
     item.data_record.raw.resource,
-    'substance.text',
+    '(substance.text | code.text)',
   )?.[0];
 }
 
