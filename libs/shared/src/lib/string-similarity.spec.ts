@@ -95,26 +95,51 @@ describe('stringSimilarity', () => {
   });
 
   describe('n-gram size parameter', () => {
-    it('should use default gram size of 2', () => {
-      const result = stringSimilarity('test', 'testing');
-      expect(result).toBeGreaterThan(0);
+    it('should use default gram size of 2 when not specified', () => {
+      const withDefault = stringSimilarity('test', 'testing');
+      const withExplicit = stringSimilarity('test', 'testing', 2);
+
+      expect(withDefault).toBe(withExplicit);
+      expect(withDefault).toBeCloseTo(0.615, 2);
     });
 
-    it('should accept custom gram size', () => {
+    it('should accept custom gram size and produce correct scores', () => {
       const gramSize2 = stringSimilarity('test', 'testing', 2);
       const gramSize3 = stringSimilarity('test', 'testing', 3);
 
-      expect(gramSize2).toBeGreaterThan(0);
-      expect(gramSize3).toBeGreaterThan(0);
+      expect(gramSize2).toBeCloseTo(0.615, 2);
+      expect(gramSize3).toBeCloseTo(0.533, 2);
     });
 
-    it('should produce different results for different gram sizes', () => {
+    it('should produce different scores for different gram sizes', () => {
       const gramSize1 = stringSimilarity('hello', 'hallo', 1);
       const gramSize2 = stringSimilarity('hello', 'hallo', 2);
       const gramSize3 = stringSimilarity('hello', 'hallo', 3);
 
-      expect(gramSize1).not.toBe(gramSize2);
-      expect(gramSize2).not.toBe(gramSize3);
+      expect(gramSize1).toBe(0.8);
+      expect(gramSize2).toBeCloseTo(0.667, 2);
+      expect(gramSize3).toBeCloseTo(0.571, 2);
+    });
+
+    it('should handle gram size 1 (character-level comparison)', () => {
+      const result = stringSimilarity('abc', 'aabbcc', 1);
+
+      expect(result).toBeCloseTo(0.667, 2);
+    });
+
+    it('should produce score of 1.0 for identical strings regardless of gram size', () => {
+      expect(stringSimilarity('hello', 'hello', 1)).toBe(1.0);
+      expect(stringSimilarity('hello', 'hello', 2)).toBe(1.0);
+      expect(stringSimilarity('hello', 'hello', 3)).toBe(1.0);
+      expect(stringSimilarity('test', 'test', 4)).toBe(1.0);
+    });
+
+    it('should count duplicate n-grams (multiset behavior)', () => {
+      const result1 = stringSimilarity('AA', 'AAAA', 1);
+      const result2 = stringSimilarity('AA', 'AAAA', 2);
+
+      expect(result1).toBeCloseTo(0.667, 2);
+      expect(result2).toBe(0.75);
     });
   });
 

@@ -29,18 +29,17 @@ function parseId<T = FhirResource>(bundleItem: BundleEntry<T>) {
  * Strips HTML/XHTML tags from a string to get plain text.
  * Used as a fallback when structured plain-text fields are not available.
  */
-function stripHtmlTags(html: string | undefined): string | undefined {
+export function stripHtmlTags(html: string | undefined): string | undefined {
   if (!html) return undefined;
-  // Remove all HTML tags and decode HTML entities
   return html
-    .replace(/<[^>]*>/g, '') // Remove HTML tags
-    .replace(/&nbsp;/gi, ' ') // Replace non-breaking spaces
-    .replace(/&amp;/gi, '&') // Replace ampersands
-    .replace(/&lt;/gi, '<') // Replace less than
-    .replace(/&gt;/gi, '>') // Replace greater than
-    .replace(/&quot;/gi, '"') // Replace quotes
-    .replace(/&#39;/gi, "'") // Replace apostrophes
-    .replace(/\s+/g, ' ') // Normalize whitespace
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/\s+/g, ' ')
     .trim();
 }
 

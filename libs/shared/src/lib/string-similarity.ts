@@ -1,30 +1,36 @@
 /**
- * Compares the similarity between two strings using an n-gram comparison method.
- * The grams default to length 2.
+ * Compares the similarity between two strings using the Sørensen-Dice coefficient
+ * with n-gram comparison. Uses multiset approach where duplicate n-grams are counted.
  * @param str1 The first string to compare.
  * @param str2 The second string to compare.
- * @param gramSize The size of the grams. Defaults to length 2.
+ * @param gramSize The size of the n-grams. Defaults to 2 (bigrams).
+ * @returns A number between 0 and 1, where 1 means identical strings.
  */
 export function stringSimilarity(str1: string, str2: string, gramSize = 2) {
   if (!str1?.length || !str2?.length) {
     return 0.0;
   }
 
-  const s1 = str1.length < str2.length ? str1 : str2;
-  const s2 = str1.length < str2.length ? str2 : str1;
+  const pairs1 = getNGrams(str1, gramSize);
+  const pairs2 = getNGrams(str2, gramSize);
 
-  const pairs1 = getNGrams(s1, gramSize);
-  const pairs2 = getNGrams(s2, gramSize);
-  const set = new Set<string>(pairs1);
+  const freq1 = new Map<string, number>();
+  const freq2 = new Map<string, number>();
 
-  const total = pairs2.length;
-  let hits = 0;
-  for (const item of pairs2) {
-    if (set.delete(item)) {
-      hits++;
-    }
+  for (const gram of pairs1) {
+    freq1.set(gram, (freq1.get(gram) || 0) + 1);
   }
-  return hits / total;
+  for (const gram of pairs2) {
+    freq2.set(gram, (freq2.get(gram) || 0) + 1);
+  }
+
+  let intersection = 0;
+  for (const [gram, count1] of freq1) {
+    const count2 = freq2.get(gram) || 0;
+    intersection += Math.min(count1, count2);
+  }
+
+  return (2 * intersection) / (pairs1.length + pairs2.length);
 }
 
 function getNGrams(s: string, len: number) {
