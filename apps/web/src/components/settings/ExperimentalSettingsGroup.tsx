@@ -407,22 +407,41 @@ export function ExperimentalSettingsGroup() {
                         'Are you sure you want to clear all stored vectors?',
                       )
                     ) {
-                      const userVectors = await rxdb.vector_storage
-                        .find({ selector: { user_id: user.id } })
-                        .exec();
+                      try {
+                        const userVectors = await rxdb.vector_storage
+                          .find({ selector: { user_id: user.id } })
+                          .exec();
 
-                      const result = await rxdb.vector_storage.bulkRemove(userVectors as any);
+                        const validDocs = userVectors.filter(
+                          (doc) => doc.id && typeof doc.id === 'string' && doc.id.length > 0
+                        );
 
-                      if (result.error && result.error.length > 0) {
-                        console.error(`Failed to delete ${result.error.length} vector documents`);
+                        const invalidCount = userVectors.length - validDocs.length;
+
+                        if (invalidCount > 0) {
+                          console.warn(`Found ${invalidCount} documents with invalid IDs, skipping them`);
+                        }
+
+                        if (validDocs.length > 0) {
+                          await rxdb.vector_storage.bulkRemove(
+                            validDocs.map((doc) => doc.id)
+                          );
+                        }
+
+                        setVectorCount(0);
+                        notificationDispatch({
+                          type: 'set_notification',
+                          variant: 'success',
+                          message: 'Vectors cleared',
+                        });
+                      } catch (error) {
+                        console.error('Error clearing vectors:', error);
+                        notificationDispatch({
+                          type: 'set_notification',
+                          variant: 'error',
+                          message: 'Failed to clear vectors',
+                        });
                       }
-
-                      setVectorCount(0);
-                      notificationDispatch({
-                        type: 'set_notification',
-                        variant: 'success',
-                        message: 'Vectors cleared',
-                      });
                     }
                   }}
                 >

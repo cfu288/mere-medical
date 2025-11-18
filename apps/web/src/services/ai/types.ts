@@ -1,4 +1,5 @@
 import { AIProviderConfig } from '../../features/mere-ai-chat/types';
+import { ChatMessage } from '../../domain/chat/types';
 
 export interface AIProvider {
   name: string;
@@ -30,6 +31,7 @@ export interface AIProvider {
 export interface CompletionParams {
   systemPrompt?: string;
   userPrompt: string;
+  messages?: ChatMessage[];
   temperature?: number;
   maxTokens?: number;
   model?: string;

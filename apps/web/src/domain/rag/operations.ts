@@ -128,6 +128,7 @@ export async function performRAG(context: RAGContext): Promise<RAGResult> {
     console.log('[RAG Pipeline] Generating AI response');
     const response = await generateResponse(
       context.query,
+      context.messages,
       preparedDocs,
       aiProvider,
     );
@@ -196,12 +197,14 @@ async function searchForDocuments(
 
 async function generateResponse(
   query: string,
+  messages: ChatMessage[],
   documents: PreparedDocuments,
   aiProvider: AIProvider,
 ): Promise<string> {
   return await aiProvider.complete({
     systemPrompt: MEDICAL_AI_SYSTEM_PROMPT,
     userPrompt: buildRAGUserPrompt(query, documents),
+    messages,
     temperature: 0.3,
   });
 }
@@ -218,6 +221,7 @@ export async function performRAGWithStreaming(
     console.log('[RAG Pipeline] Starting streaming AI response generation');
     const response = await generateStreamingResponse(
       context.query,
+      context.messages,
       preparedDocs,
       aiProvider,
       onChunk,
@@ -259,6 +263,7 @@ export async function performRAGWithStreaming(
 
 async function generateStreamingResponse(
   query: string,
+  messages: ChatMessage[],
   documents: PreparedDocuments,
   aiProvider: AIProvider,
   onChunk: (chunk: string) => void,
@@ -267,6 +272,7 @@ async function generateStreamingResponse(
     {
       systemPrompt: MEDICAL_AI_SYSTEM_PROMPT,
       userPrompt: buildRAGUserPrompt(query, documents),
+      messages,
       temperature: 0.3,
     },
     onChunk,

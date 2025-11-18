@@ -3,15 +3,29 @@
  */
 
 import { CompletionParams } from './types';
+import {
+  ChatMessage,
+  isUserMessage,
+  isAIMessage,
+} from '../../domain/chat/types';
 
 export interface AIMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
 }
 
-/**
- * Builds messages array from completion parameters
- */
+const MAX_MESSAGE_PAIRS = 5;
+
+function convertChatMessageToAIMessage(msg: ChatMessage): AIMessage | null {
+  if (isUserMessage(msg)) {
+    return { role: 'user', content: msg.text };
+  }
+  if (isAIMessage(msg)) {
+    return { role: 'assistant', content: msg.text };
+  }
+  return null;
+}
+
 export function buildMessages(params: CompletionParams): AIMessage[] {
   const messages: AIMessage[] = [];
 
@@ -20,6 +34,17 @@ export function buildMessages(params: CompletionParams): AIMessage[] {
       role: 'system',
       content: params.systemPrompt,
     });
+  }
+
+  if (params.messages && params.messages.length > 0) {
+    const recentMessages = params.messages.slice(-MAX_MESSAGE_PAIRS * 2);
+
+    for (const msg of recentMessages) {
+      const converted = convertChatMessageToAIMessage(msg);
+      if (converted) {
+        messages.push(converted);
+      }
+    }
   }
 
   messages.push({
