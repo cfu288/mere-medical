@@ -56,3 +56,17 @@ connected to a third party, they will not be addressed in this document.
 ```
 
 With that said, Mere Medical is designed to be secure and private, and we take data transparency, privacy, and security very seriously, offering features like on-device encryption at rest and the ability to self-host. You can see our [Privacy Policy](/privacy-policy) for more information.
+
+## Self-Hosting Troubleshooting
+
+### I get "Unable to search for healthcare systems" when self-hosting. What's wrong?
+
+This typically means your `PUBLIC_URL` environment variable isn't configured correctly. Open browser DevTools (F12) → Network tab and check the failed request URL. If you see `/$PUBLIC_URL/api/...`, the variable isn't being injected. Make sure `PUBLIC_URL` includes the protocol (e.g., `https://yourdomain.com` not just `yourdomain.com`). See the [Docker troubleshooting guide](./getting-started/docker#troubleshooting) for more details.
+
+### I updated my .env file but changes aren't taking effect. Why?
+
+Environment variables are injected when the Docker container first starts. Restarting the container won't pick up changes - you need to remove and recreate it: `docker compose down && docker compose rm && docker compose up`. After recreating, do a hard refresh in your browser (`Ctrl+F5`) to clear cached files.
+
+### The app works in one browser but not another. What should I try?
+
+Some browsers (particularly Brave) aggressively cache the application. Try a hard refresh (`Ctrl+F5`), clearing your browser cache, or using a different browser like Firefox.

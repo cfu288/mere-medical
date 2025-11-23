@@ -47,6 +47,7 @@ services:
       - EPIC_SANDBOX_CLIENT_ID=${EPIC_SANDBOX_CLIENT_ID}
       - CERNER_CLIENT_ID=${CERNER_CLIENT_ID}
       - VERADIGM_CLIENT_ID=${VERADIGM_CLIENT_ID}
+      - VA_CLIENT_ID=${VA_CLIENT_ID}
       - PUBLIC_URL=https://meremedical.local
 ```
 
@@ -107,6 +108,7 @@ ONPATIENT_CLIENT_SECRET=
 EPIC_CLIENT_ID=
 CERNER_CLIENT_ID=
 VERADIGM_CLIENT_ID=
+VA_CLIENT_ID=
 ```
 
 `cd` into the directory of the `docker-compose.yaml` , and then run
@@ -130,6 +132,7 @@ docker run -p 4200:80 -i -t \
   -e EPIC_SANDBOX_CLIENT_ID=<ID_HERE> \
   -e CERNER_CLIENT_ID=<ID_HERE> \
   -e VERADIGM_CLIENT_ID=<ID_HERE> \
+  -e VA_CLIENT_ID=<ID_HERE> \
   -e PUBLIC_URL=https://localhost:4200 \
   cfu288/mere-medical:latest
 ```
@@ -149,6 +152,7 @@ docker run -p 4200:80 \
   -e EPIC_SANDBOX_CLIENT_ID=<ID_HERE> \
   -e CERNER_CLIENT_ID=<ID_HERE> \
   -e VERADIGM_CLIENT_ID=<ID_HERE> \
+  -e VA_CLIENT_ID=<ID_HERE> \
   -e PUBLIC_URL=https://localhost:4200 \
   cfu288/mere-medical:latest
 ```
@@ -176,6 +180,7 @@ services:
       - EPIC_SANDBOX_CLIENT_ID=${EPIC_SANDBOX_CLIENT_ID}
       - CERNER_CLIENT_ID=${CERNER_CLIENT_ID}
       - VERADIGM_CLIENT_ID=${VERADIGM_CLIENT_ID}
+      - VA_CLIENT_ID=${VA_CLIENT_ID}
       - PUBLIC_URL=${PUBLIC_URL}
 ```
 
@@ -188,3 +193,30 @@ to start Mere Medical as a background process.
 Then open [http://localhost:4200](http://localhost:4200) in a browser to see Mere Medical running!
 
 Note that this will not set up SSL for you, which is needed for some patient portal syncing/authentication flows. If you are running this on a server with reverse proxy already set up, it is recommended to have your reverse proxy handle SSL and forward requests to Mere Medical. If you are running this on your local machine and need local SSL set up, [follow the instructions here](/docs/getting-started/docker#setting-up-with-docker-compose--local-ssl-with-mkcert--nginx).
+
+## Environment Variables Reference
+
+| Variable | Required | Description | Example |
+|----------|----------|-------------|---------|
+| `PUBLIC_URL` | Yes | Full URL where Mere Medical is accessible. **Must include protocol** (`https://` or `http://`). | `https://app.meremedical.co` |
+| `ONPATIENT_CLIENT_ID` | No | Client ID for OnPatient/DrChrono | See [OnPatient setup](./onpatient-setup) |
+| `ONPATIENT_CLIENT_SECRET` | No | Client secret for OnPatient/DrChrono | See [OnPatient setup](./onpatient-setup) |
+| `EPIC_CLIENT_ID` | No | Client ID for Epic MyChart production | See [Epic setup](./epic-setup) |
+| `EPIC_SANDBOX_CLIENT_ID` | No | Client ID for Epic MyChart sandbox | See [Epic setup](./epic-setup) |
+| `CERNER_CLIENT_ID` | No | Client ID for Cerner Health | See [Cerner setup](./cerner-setup) |
+| `VERADIGM_CLIENT_ID` | No | Client ID for Veradigm | |
+| `VA_CLIENT_ID` | No | Client ID for VA (Veterans Affairs). **Note: Only works with VA sandbox, not production access at this time.** | |
+
+## Troubleshooting
+
+### "Unable to search for healthcare systems"
+
+This error means `PUBLIC_URL` is not configured correctly. Check browser DevTools Network tab - if you see `/$PUBLIC_URL/api/...` in request URLs, the variable isn't being injected.
+
+**Common fixes:**
+- Ensure `PUBLIC_URL` includes protocol: `https://yourdomain.com` (not `yourdomain.com`)
+- Check for typos in variable name (`PUBLIC_URL` not `PUBLIC_ULR`)
+- After changing `.env`, recreate the container: `docker compose down && docker compose rm && docker compose up`
+- Clear browser cache with `Ctrl+F5` or try a different browser (Brave has known caching issues)
+
+**Note:** Environment variables are injected only when the container first starts. Restarting won't pick up changes - you must remove and recreate the container.

@@ -74,6 +74,7 @@ services:
       - EPIC_SANDBOX_CLIENT_ID=${EPIC_SANDBOX_CLIENT_ID}
       - CERNER_CLIENT_ID=${CERNER_CLIENT_ID}
       - VERADIGM_CLIENT_ID=${VERADIGM_CLIENT_ID}
+      - VA_CLIENT_ID=${VA_CLIENT_ID}
       - PUBLIC_URL=${PUBLIC_URL}
 ```
 
@@ -159,15 +160,29 @@ services:
    docker build -t mere-medical .
    docker run -p 4200:80 -i -t \
      --name mere-medical \
-     -e ONPATIENT_CLIENT_ID=<> \
-     -e ONPATIENT_CLIENT_SECRET=<> \
-     -e EPIC_CLIENT_ID=<> \
-     -e EPIC_SANDBOX_CLIENT_ID=<> \
-     -e CERNER_CLIENT_ID=<> \
+     -e ONPATIENT_CLIENT_ID=<ID_HERE> \
+     -e ONPATIENT_CLIENT_SECRET=<ID_HERE> \
+     -e EPIC_CLIENT_ID=<ID_HERE> \
+     -e EPIC_SANDBOX_CLIENT_ID=<ID_HERE> \
+     -e CERNER_CLIENT_ID=<ID_HERE> \
      -e VERADIGM_CLIENT_ID=<ID_HERE> \
+     -e VA_CLIENT_ID=<ID_HERE> \
      -e PUBLIC_URL=https://localhost:4200 \
      mere-medical:latest
    ```
+
+   Note the following environment variables can be provided:
+
+| Variable                  | Required | Description                                                                                     | Example                                  |
+| ------------------------- | -------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `PUBLIC_URL`              | Yes      | Full URL where Mere Medical is accessible. **Must include protocol** (`https://` or `http://`). | `https://app.meremedical.co`             |
+| `ONPATIENT_CLIENT_ID`     | No       | Client ID for OnPatient/DrChrono                                                                | See [OnPatient setup](./onpatient-setup) |
+| `ONPATIENT_CLIENT_SECRET` | No       | Client secret for OnPatient/DrChrono                                                            | See [OnPatient setup](./onpatient-setup) |
+| `EPIC_CLIENT_ID`          | No       | Client ID for Epic MyChart production                                                           | See [Epic setup](./epic-setup)           |
+| `EPIC_SANDBOX_CLIENT_ID`  | No       | Client ID for Epic MyChart sandbox                                                              | See [Epic setup](./epic-setup)           |
+| `CERNER_CLIENT_ID`        | No       | Client ID for Cerner Health                                                                     | See [Cerner setup](./cerner-setup)       |
+| `VERADIGM_CLIENT_ID`      | No       | Client ID for Veradigm                                                                          |                                          |
+| `VA_CLIENT_ID`            | No       | Client ID for VA (Veterans Affairs). **Note: Only works with VA sandbox, not production access at this time.** |                                          |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
