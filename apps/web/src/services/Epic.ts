@@ -97,15 +97,11 @@ export function getEpicClientId(
   if (isSandbox) {
     if (version === 'R4') {
       return (
-        Config.EPIC_SANDBOX_CLIENT_ID_R4 ||
-        Config.EPIC_SANDBOX_CLIENT_ID ||
-        ''
+        Config.EPIC_SANDBOX_CLIENT_ID_R4 || Config.EPIC_SANDBOX_CLIENT_ID || ''
       );
     }
     return (
-      Config.EPIC_SANDBOX_CLIENT_ID_DSTU2 ||
-      Config.EPIC_SANDBOX_CLIENT_ID ||
-      ''
+      Config.EPIC_SANDBOX_CLIENT_ID_DSTU2 || Config.EPIC_SANDBOX_CLIENT_ID || ''
     );
   }
 
@@ -339,7 +335,10 @@ export async function syncAllRecords(
   const obsMapper = (imm: BundleEntry<Observation>) =>
     mappers.mapObservationToClinicalDocument(imm as any, connectionDocument);
   const drMapper = (dr: BundleEntry<DiagnosticReport>) =>
-    mappers.mapDiagnosticReportToClinicalDocument(dr as any, connectionDocument);
+    mappers.mapDiagnosticReportToClinicalDocument(
+      dr as any,
+      connectionDocument,
+    );
   const medStatementMapper = (dr: BundleEntry<MedicationStatement>) =>
     mappers.mapMedicationStatementToClinicalDocument(
       dr as any,
@@ -354,7 +353,10 @@ export async function syncAllRecords(
   const conditionMapper = (dr: BundleEntry<Condition>) =>
     mappers.mapConditionToClinicalDocument(dr as any, connectionDocument);
   const allergyIntoleranceMapper = (a: BundleEntry<AllergyIntolerance>) =>
-    mappers.mapAllergyIntoleranceToClinicalDocument(a as any, connectionDocument);
+    mappers.mapAllergyIntoleranceToClinicalDocument(
+      a as any,
+      connectionDocument,
+    );
   const carePlanMapper = (dr: BundleEntry<CarePlan>) =>
     mappers.mapCarePlanToClinicalDocument(dr as any, connectionDocument);
   const medDispenseMapper = (md: BundleEntry<MedicationDispense>) =>
@@ -760,11 +762,14 @@ async function syncDocumentReferences(
                 cd as unknown as ClinicalDocument,
               );
             } else {
-              console.warn('[syncDocumentReferences] Skipping attachment save - missing raw or contentType:', {
-                attachmentUrl,
-                hasRaw: !!raw,
-                contentType,
-              });
+              console.warn(
+                '[syncDocumentReferences] Skipping attachment save - missing raw or contentType:',
+                {
+                  attachmentUrl,
+                  hasRaw: !!raw,
+                  contentType,
+                },
+              );
             }
           }
         }
@@ -788,7 +793,8 @@ async function fetchAttachmentData(
 ): Promise<{ contentType: string | null; raw: string | undefined }> {
   try {
     const epicId = connectionDocument.tenant_id;
-    const isRelativeUrl = !url.startsWith('http://') && !url.startsWith('https://');
+    const isRelativeUrl =
+      !url.startsWith('http://') && !url.startsWith('https://');
     const fullUrl = isRelativeUrl ? concatPath(baseUrl, url) : url;
     const defaultUrl = fullUrl;
     const proxyUrlExtension = fullUrl.replace(baseUrl, '');
@@ -813,17 +819,31 @@ async function fetchAttachmentData(
     const contentType = res.headers.get('Content-Type');
     let raw = undefined;
 
-    if (contentType?.includes('text/') || contentType?.includes('application/xml')) {
+    if (
+      contentType?.includes('text/') ||
+      contentType?.includes('application/xml')
+    ) {
       raw = await res.text();
-    } else if (contentType?.includes('application/pdf') || contentType?.includes('image/')) {
+    } else if (
+      contentType?.includes('application/pdf') ||
+      contentType?.includes('image/')
+    ) {
       const blob = await res.blob();
-      const arrayBuffer = await blob.arrayBuffer();
-      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-      raw = base64;
+      const reader = new FileReader();
+      raw = await new Promise<string>((resolve, reject) => {
+        reader.onloadend = () => {
+          const dataUrl = reader.result as string;
+          resolve(dataUrl.split(',')[1]); // Extract base64 part
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
     } else if (contentType) {
       raw = await res.text();
     } else {
-      console.warn('[fetchAttachmentData] No Content-Type header, attempting text download');
+      console.warn(
+        '[fetchAttachmentData] No Content-Type header, attempting text download',
+      );
       raw = await res.text();
     }
 
