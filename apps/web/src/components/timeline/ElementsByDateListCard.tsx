@@ -10,11 +10,18 @@ import {
   Observation,
   Procedure,
 } from 'fhir/r2';
-import { MedicationRequest, BundleEntry as R4BundleEntry } from 'fhir/r4';
+import {
+  MedicationRequest,
+  BundleEntry as R4BundleEntry,
+  Coverage,
+} from 'fhir/r4';
 import React, { memo, useEffect, useMemo, useRef, useState } from 'react';
 import {
   getEncounterClass,
   getEncounterLocation,
+  getDiagnosticReportPerformer,
+  getObservationPerformer,
+  getProcedurePerformer,
 } from '../../utils/fhirAccessHelpers';
 
 import { Transition } from '@headlessui/react';
@@ -25,6 +32,7 @@ import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocumen
 import { CardBase } from '../connection/CardBase';
 import { useConnectionDocs } from '../hooks/useConnectionDoc';
 import { ConditionCard } from './ConditionCard';
+import { CoverageCard } from './CoverageCard';
 import { DiagnosticReportCard } from './DiagnosticReportCard';
 import {
   DocumentReferenceAttachmentCard,
@@ -302,6 +310,20 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
             return 0;
           }) as ClinicalDocument<BundleEntry<Encounter>>[],
       [itemList],
+    ),
+    coverages = useMemo(
+      () =>
+        itemList
+          .filter((item) => item.data_record.resource_type === 'coverage')
+          .sort((a, b) => {
+            if (a.metadata?.display_name && b.metadata?.display_name) {
+              return a.metadata.display_name.localeCompare(
+                b.metadata.display_name,
+              );
+            }
+            return 0;
+          }) as ClinicalDocument<R4BundleEntry<Coverage>>[],
+      [itemList],
     );
 
   const [expanded, setExpanded] = React.useState(false);
@@ -321,6 +343,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
           ? 'Documents'
           : '',
         encounters.length > 0 ? 'Encounters' : '',
+        coverages.length > 0 ? 'Coverage' : '',
       ].filter(Boolean),
     [
       conditions.length,
@@ -333,6 +356,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
       medicationRequests.length,
       observations.length,
       procedures.length,
+      coverages.length,
     ],
   );
 
@@ -344,17 +368,21 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
   }, [itemList]);
 
   const uniqueAuthors = useMemo(() => {
-    const uniqueDocs = new Set(
-      itemList
-        .map(
-          (item) =>
-            (item.data_record.raw as BundleEntry<DiagnosticReport>)?.resource
-              ?.performer,
-        )
-        .map((author) => author?.display)
-        .filter(Boolean),
-    );
-    return Array.from(uniqueDocs);
+    const performers = itemList
+      .map((item) => {
+        switch (item.data_record.resource_type) {
+          case 'diagnosticreport':
+            return getDiagnosticReportPerformer(item);
+          case 'observation':
+            return getObservationPerformer(item);
+          case 'procedure':
+            return getProcedurePerformer(item);
+          default:
+            return undefined;
+        }
+      })
+      .filter(Boolean);
+    return Array.from(new Set(performers));
   }, [itemList]);
 
   const connectionDocs = useConnectionDocs(uniqueConnectionIds);
@@ -556,6 +584,24 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
             </ul>
           </div>
         )}
+        {coverages.length > 0 && (
+          <div className="mb-2 ml-2">
+            <TimelineCardCategoryTitle
+              title={'Coverage'}
+              color="text-amber-600"
+            />
+            <ul className="list-disc list-inside">
+              {coverages.map((item) => (
+                <li
+                  className="text-xs font-medium md:text-sm text-gray-900"
+                  key={item.id}
+                >
+                  {item.metadata?.display_name}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="relative">
           <div
             className="absolute inset-0 flex items-center"
@@ -673,6 +719,14 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
                       R4BundleEntry<MedicationRequest>
                     >
                   }
+                />
+              </div>
+            ))}
+            {coverages.map((item) => (
+              <div key={item.id} className="my-2">
+                <CoverageCard
+                  key={item.id}
+                  item={item}
                 />
               </div>
             ))}

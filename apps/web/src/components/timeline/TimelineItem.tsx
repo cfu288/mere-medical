@@ -12,11 +12,16 @@ import {
   Observation,
   Procedure,
 } from 'fhir/r2';
-import { MedicationRequest, BundleEntry as R4BundleEntry } from 'fhir/r4';
+import {
+  MedicationRequest,
+  BundleEntry as R4BundleEntry,
+  Coverage,
+} from 'fhir/r4';
 import { memo } from 'react';
 
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { ConditionCard } from './ConditionCard';
+import { CoverageCard } from './CoverageCard';
 import { DiagnosticReportCard } from './DiagnosticReportCard';
 import {
   DocumentReferenceAttachmentCard,
@@ -128,6 +133,12 @@ export const TimelineItem = memo(function TimelineItem({
                   <EncounterCard
                     key={item.id}
                     item={item as ClinicalDocument<BundleEntry<Encounter>>}
+                  />
+                )}
+                {item.data_record.resource_type === 'coverage' && (
+                  <CoverageCard
+                    key={item.id}
+                    item={item as ClinicalDocument<R4BundleEntry<Coverage>>}
                   />
                 )}
               </div>
