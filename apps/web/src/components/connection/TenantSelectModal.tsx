@@ -152,7 +152,7 @@ export function TenantSelectModal({
         title: 'MyChart',
         vendor: 'epic',
         source: EpicLogo,
-        alt: 'R4 FHIR',
+        alt: 'Epic',
         enabled: true,
         id: 1,
         fhirVersion: 'R4',
@@ -161,7 +161,6 @@ export function TenantSelectModal({
         title: 'Cerner',
         vendor: 'cerner',
         source: CernerLogo,
-        alt: 'R4 FHIR',
         enabled: true,
         id: 2,
         fhirVersion: 'R4',
@@ -214,7 +213,6 @@ export function TenantSelectModal({
         title: 'Cerner Legacy',
         vendor: 'cerner',
         source: CernerLogo,
-        alt: 'DSTU2 (older version)',
         enabled: true,
         id: 6,
         fhirVersion: 'DSTU2',
@@ -223,7 +221,7 @@ export function TenantSelectModal({
         title: 'MyChart Legacy',
         vendor: 'epic',
         source: EpicLogo,
-        alt: 'DSTU2 (older version)',
+        alt: 'Epic',
         enabled: true,
         id: 8,
         fhirVersion: 'DSTU2',
@@ -346,11 +344,12 @@ export function TenantSelectModal({
                           {file.title}
                         </p>
                         {!file.enabled ? (
-                          <p className="pointer-events-none block text-sm font-medium text-gray-700">
+                          <p className="pointer-events-auto relative z-10 block text-sm font-medium text-gray-700">
                             To enable, go to{' '}
                             <Link
                               className="text-primary hover:text-primary-500 w-full text-center underline"
                               to={`${Routes.Settings}#use_proxy`}
+                              onClick={(e) => e.stopPropagation()}
                             >
                               the settings page
                             </Link>{' '}

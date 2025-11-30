@@ -367,7 +367,7 @@ export async function fetchRecordsWithVectorSearch({
       selector: {
         id: { $in: cleanedIds },
         'data_record.resource_type': {
-          $nin: ['patient', 'careplan', 'allergyintolerance'],
+          $nin: ['patient', 'careplan', 'allergyintolerance', 'provenance'],
         },
       },
     })
@@ -487,6 +487,7 @@ export async function fetchRecords(
         'careplan',
         'allergyintolerance',
         'documentreference_attachment',
+        'provenance',
       ],
     },
     'metadata.date': { $nin: [null, undefined, ''] },
@@ -497,6 +498,7 @@ export async function fetchRecords(
       'careplan',
       'allergyintolerance',
       'documentreference_attachment',
+      'provenance',
     ];
     selector = {
       ...selector,

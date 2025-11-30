@@ -48,6 +48,7 @@ import { DSTU2, R4 } from '.';
 import Config from '../environments/config.json';
 import { createConnection } from '../repositories/ConnectionRepository';
 import uuid4 from '../utils/UUIDUtils';
+import { concatPath } from '../utils/urlUtils';
 import { JsonWebKeyWKid, signJwt } from './JWTTools';
 import { getPublicKey, IDBKeyConfig } from './WebCrypto';
 import { JsonWebKeySet } from '../services/JWTTools';
@@ -536,6 +537,7 @@ export async function syncAllRecords(
         patient: connectionDocument.patient,
       },
       useProxy,
+      fhirVersion,
     ),
     ...(fhirVersion === 'DSTU2'
       ? [
@@ -666,16 +668,19 @@ async function syncDocumentReferences(
   db: RxDatabase<DatabaseCollections>,
   params: Record<string, string>,
   useProxy = false,
+  fhirVersion: 'DSTU2' | 'R4' = 'DSTU2',
 ) {
   const documentReferenceMapper = (dr: BundleEntry<DocumentReference>) =>
-    DSTU2.mapDocumentReferenceToClinicalDocument(dr, connectionDocument);
+    fhirVersion === 'R4'
+      ? R4.mapDocumentReferenceToClinicalDocument(dr as any, connectionDocument)
+      : DSTU2.mapDocumentReferenceToClinicalDocument(dr, connectionDocument);
   // Sync document references and return them
-  await syncFHIRResource<DocumentReference>(
+  await syncFHIRResource<any>(
     baseUrl,
     connectionDocument,
     db,
     'DocumentReference',
-    documentReferenceMapper,
+    documentReferenceMapper as any,
     params,
     useProxy,
   );
@@ -721,7 +726,6 @@ async function syncDocumentReferences(
             })
             .exec();
           if (exists.length === 0) {
-            console.log('Syncing attachment: ' + attachmentUrl);
             // attachment does not exist, sync it
             const { contentType, raw } = await fetchAttachmentData(
               baseUrl,
@@ -736,7 +740,7 @@ async function syncDocumentReferences(
                 connection_record_id: connectionDocument.id,
                 data_record: {
                   raw: raw,
-                  format: 'FHIR.DSTU2',
+                  format: fhirVersion === 'R4' ? 'FHIR.R4' : 'FHIR.DSTU2',
                   content_type: contentType,
                   resource_type: 'documentreference_attachment',
                   version_history: [],
@@ -755,9 +759,13 @@ async function syncDocumentReferences(
               await db.clinical_documents.insert(
                 cd as unknown as ClinicalDocument,
               );
+            } else {
+              console.warn('[syncDocumentReferences] Skipping attachment save - missing raw or contentType:', {
+                attachmentUrl,
+                hasRaw: !!raw,
+                contentType,
+              });
             }
-          } else {
-            console.log('Attachment already synced: ' + attachmentUrl);
           }
         }
       }
@@ -780,27 +788,48 @@ async function fetchAttachmentData(
 ): Promise<{ contentType: string | null; raw: string | undefined }> {
   try {
     const epicId = connectionDocument.tenant_id;
-    const defaultUrl = url;
-    const proxyUrlExtension = url.replace(baseUrl, '');
+    const isRelativeUrl = !url.startsWith('http://') && !url.startsWith('https://');
+    const fullUrl = isRelativeUrl ? concatPath(baseUrl, url) : url;
+    const defaultUrl = fullUrl;
+    const proxyUrlExtension = fullUrl.replace(baseUrl, '');
     const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${epicId}&target=${`${encodeURIComponent(proxyUrlExtension)}&target_type=base`}`;
-    const res = await fetch(useProxy ? proxyUrl : defaultUrl, {
+    const fetchUrl = useProxy ? proxyUrl : defaultUrl;
+    const res = await fetch(fetchUrl, {
       headers: {
         Authorization: `Bearer ${connectionDocument.access_token}`,
       },
     });
+
     if (!res.ok) {
+      console.error('[fetchAttachmentData] Fetch failed:', {
+        status: res.status,
+        statusText: res.statusText,
+        url: fetchUrl,
+      });
       throw new Error(
         'Could not get document as the user is unauthorized. Try logging in again.',
       );
     }
     const contentType = res.headers.get('Content-Type');
     let raw = undefined;
-    if (contentType === 'application/xml') {
+
+    if (contentType?.includes('text/') || contentType?.includes('application/xml')) {
+      raw = await res.text();
+    } else if (contentType?.includes('application/pdf') || contentType?.includes('image/')) {
+      const blob = await res.blob();
+      const arrayBuffer = await blob.arrayBuffer();
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+      raw = base64;
+    } else if (contentType) {
+      raw = await res.text();
+    } else {
+      console.warn('[fetchAttachmentData] No Content-Type header, attempting text download');
       raw = await res.text();
     }
 
     return { contentType, raw };
   } catch (e) {
+    console.error('[fetchAttachmentData] Exception:', e);
     throw new Error(
       'Could not get document as the user is unauthorized. Try logging in again.',
     );

@@ -100,7 +100,15 @@ export function useRecordQuery(
 
           // Merge results with existing results or overwrite existing results
           if (loadMore) {
-            setList({ ...data, ...groupedRecords });
+            const merged = { ...data };
+            for (const [dateKey, records] of Object.entries(groupedRecords)) {
+              if (merged[dateKey]) {
+                merged[dateKey] = [...merged[dateKey], ...records];
+              } else {
+                merged[dateKey] = records;
+              }
+            }
+            setList(merged);
           } else {
             setList(groupedRecords);
           }
