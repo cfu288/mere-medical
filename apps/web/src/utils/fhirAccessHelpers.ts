@@ -89,3 +89,37 @@ export function getProcedurePerformer(
       return undefined;
   }
 }
+
+export function getEncounterPatient(
+  document: ClinicalDocument,
+): string | undefined {
+  switch (document.data_record.format) {
+    case 'FHIR.R4': {
+      const resource = (document.data_record.raw as R4BundleEntry<R4Encounter>)?.resource;
+      return resource?.subject?.display;
+    }
+    case 'FHIR.DSTU2': {
+      const resource = (document.data_record.raw as DSTU2BundleEntry<DSTU2Encounter>)?.resource;
+      return resource?.patient?.display;
+    }
+    default:
+      return undefined;
+  }
+}
+
+export function getEncounterIndication(
+  document: ClinicalDocument,
+): Array<{ display?: string; reference?: string }> {
+  switch (document.data_record.format) {
+    case 'FHIR.R4': {
+      const resource = (document.data_record.raw as R4BundleEntry<R4Encounter>)?.resource;
+      return resource?.reasonReference || [];
+    }
+    case 'FHIR.DSTU2': {
+      const resource = (document.data_record.raw as DSTU2BundleEntry<DSTU2Encounter>)?.resource;
+      return resource?.indication || [];
+    }
+    default:
+      return [];
+  }
+}

@@ -1,8 +1,9 @@
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, Encounter } from 'fhir/r2';
+import { BundleEntry as R4BundleEntry, Encounter as R4Encounter } from 'fhir/r4';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { TimelineCardTitle } from './TimelineCardTitle';
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
 import { CardBase } from '../connection/CardBase';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
@@ -12,39 +13,55 @@ import {
   getEncounterClass,
   getEncounterLocation,
 } from '../../utils/fhirAccessHelpers';
+import { OpenableCardIcon } from './OpenableCardIcon';
+import { ShowEncounterDetailsExpandable } from './ShowEncounterDetailsExpandable';
 
 export const EncounterCard = memo(function EncounterCard({
   item,
 }: {
-  item: ClinicalDocument<BundleEntry<Encounter>>;
+  item: ClinicalDocument<BundleEntry<Encounter> | R4BundleEntry<R4Encounter>>;
 }) {
   const conn = useConnectionDoc(item.connection_record_id);
+  const [expanded, setExpanded] = useState(false);
 
   return (
-    <CardBase>
-      <div className="min-w-0 flex-1">
-        <div className="items-top flex justify-between">
-          <TimelineCardCategoryTitle title="Encounter" color="text-red-500" />
-        </div>
-        <TimelineCardTitle>
-          {
-            <>
-              <p className="capitalize">{`${getEncounterClass(item)} - `}</p>
-              <p>{`${getEncounterLocation(item)}`}</p>
-            </>
-          }
-        </TimelineCardTitle>
-        <TimelineCardSubtitile variant="dark">
-          {item.metadata?.date ? format(parseISO(item.metadata.date), 'p') : ''}
-        </TimelineCardSubtitile>
-        {conn?.get('name') ? (
-          <TimelineCardSubtitile variant="light">
-            {conn?.get('name')}
+    <>
+      <CardBase
+        isFocusable
+        onClick={() => {
+          setExpanded((x) => !x);
+        }}
+      >
+        <div className="min-w-0 flex-1">
+          <div className="items-top flex justify-between">
+            <TimelineCardCategoryTitle title="Encounter" color="text-red-500" />
+            <OpenableCardIcon />
+          </div>
+          <TimelineCardTitle>
+            {
+              <>
+                <p className="capitalize">{`${getEncounterClass(item)} - `}</p>
+                <p>{`${getEncounterLocation(item)}`}</p>
+              </>
+            }
+          </TimelineCardTitle>
+          <TimelineCardSubtitile variant="dark">
+            {item.metadata?.date ? format(parseISO(item.metadata.date), 'p') : ''}
           </TimelineCardSubtitile>
-        ) : (
-          <SkeletonLoadingText />
-        )}
-      </div>
-    </CardBase>
+          {conn?.get('name') ? (
+            <TimelineCardSubtitile variant="light">
+              {conn?.get('name')}
+            </TimelineCardSubtitile>
+          ) : (
+            <SkeletonLoadingText />
+          )}
+        </div>
+      </CardBase>
+      <ShowEncounterDetailsExpandable
+        item={item}
+        expanded={expanded}
+        setExpanded={setExpanded}
+      />
+    </>
   );
 });
