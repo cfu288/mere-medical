@@ -56,7 +56,7 @@ const CernerRedirect: React.FC = () => {
               const nowInSeconds = Math.floor(Date.now() / 1000);
               const fhirVersion =
                 storedFhirVersion ||
-                (cernerUrl.includes('/r4/') ? 'R4' : 'DSTU2');
+                (cernerUrl.toUpperCase().includes('/R4') ? 'R4' : 'DSTU2');
               const dbentry: Omit<CreateCernerConnectionDocument, 'patient'> = {
                 id: uuid4(),
                 user_id: user.id,

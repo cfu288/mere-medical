@@ -6,7 +6,11 @@ import type { ZodError } from 'zod';
 const Config = z.object({
   ONPATIENT_CLIENT_ID: z.string().optional(),
   EPIC_CLIENT_ID: z.string().optional(),
+  EPIC_CLIENT_ID_DSTU2: z.string().optional(),
+  EPIC_CLIENT_ID_R4: z.string().optional(),
   EPIC_SANDBOX_CLIENT_ID: z.string().optional(),
+  EPIC_SANDBOX_CLIENT_ID_DSTU2: z.string().optional(),
+  EPIC_SANDBOX_CLIENT_ID_R4: z.string().optional(),
   CERNER_CLIENT_ID: z.string().optional(),
   VERADIGM_CLIENT_ID: z.string().optional(),
   VA_CLIENT_ID: z.string().optional(),

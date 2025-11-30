@@ -8,13 +8,26 @@ import {
   Observation,
   MedicationStatement,
   MedicationRequest,
+  MedicationDispense,
   Patient,
   AllergyIntolerance,
   Practitioner,
+  PractitionerRole,
   DocumentReference,
   CarePlan,
+  CareTeam,
   FhirResource,
   Encounter,
+  Goal,
+  ServiceRequest,
+  Coverage,
+  Device,
+  Media,
+  Specimen,
+  Provenance,
+  RelatedPerson,
+  Location,
+  Organization,
 } from 'fhir/r4';
 import { ConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
 import uuid4 from '../utils/UUIDUtils';
@@ -88,6 +101,7 @@ export function mapMedicationStatementToClinicalDocument(
         new Date(0).toISOString(),
       display_name:
         bundleItem.resource?.medicationCodeableConcept?.text ||
+        bundleItem.resource?.medicationReference?.display ||
         bundleItem.resource?.note?.[0]?.text,
     },
   };
@@ -113,6 +127,7 @@ export function mapMedicationRequestToClinicalDocument(
       date: bundleItem.resource?.authoredOn || new Date(0).toISOString(),
       display_name:
         bundleItem.resource?.medicationCodeableConcept?.text ||
+        bundleItem.resource?.medicationReference?.display ||
         bundleItem.resource?.note?.[0]?.text,
     },
   };
@@ -378,6 +393,386 @@ export function mapCarePlanToClinicalDocument(
       id: parseId(bundleItem),
       date: bundleItem.resource?.period?.start || new Date(0).toISOString(),
       display_name: bundleItem.resource?.description,
+    },
+  };
+  return cd;
+}
+
+export function mapMedicationDispenseToClinicalDocument(
+  bundleItem: BundleEntry<MedicationDispense>,
+  connectionDocument: ConnectionDocument,
+) {
+  const cd: CreateClinicalDocument<BundleEntry<MedicationDispense>> = {
+    user_id: connectionDocument.user_id,
+    connection_record_id: connectionDocument.id,
+    data_record: {
+      raw: bundleItem,
+      format: 'FHIR.R4',
+      content_type: 'application/json',
+      resource_type: 'medicationdispense',
+      version_history: [],
+    },
+    metadata: {
+      id: parseId(bundleItem),
+      date:
+        bundleItem.resource?.whenHandedOver ||
+        bundleItem.resource?.whenPrepared ||
+        new Date(0).toISOString(),
+      display_name:
+        bundleItem.resource?.medicationCodeableConcept?.text ||
+        stripHtmlTags(bundleItem.resource?.text?.div) ||
+        bundleItem.resource?.id ||
+        '',
+    },
+  };
+  return cd;
+}
+
+export function mapServiceRequestToClinicalDocument(
+  bundleItem: BundleEntry<ServiceRequest>,
+  connectionDocument: ConnectionDocument,
+) {
+  const cd: CreateClinicalDocument<BundleEntry<ServiceRequest>> = {
+    user_id: connectionDocument.user_id,
+    connection_record_id: connectionDocument.id,
+    data_record: {
+      raw: bundleItem,
+      format: 'FHIR.R4',
+      content_type: 'application/json',
+      resource_type: 'servicerequest',
+      version_history: [],
+    },
+    metadata: {
+      id: parseId(bundleItem),
+      date:
+        bundleItem.resource?.authoredOn ||
+        bundleItem.resource?.occurrenceDateTime ||
+        bundleItem.resource?.occurrencePeriod?.start ||
+        new Date(0).toISOString(),
+      display_name:
+        bundleItem.resource?.code?.text ||
+        stripHtmlTags(bundleItem.resource?.text?.div) ||
+        bundleItem.resource?.id ||
+        '',
+    },
+  };
+  return cd;
+}
+
+export function mapGoalToClinicalDocument(
+  bundleItem: BundleEntry<Goal>,
+  connectionDocument: ConnectionDocument,
+) {
+  const cd: CreateClinicalDocument<BundleEntry<Goal>> = {
+    user_id: connectionDocument.user_id,
+    connection_record_id: connectionDocument.id,
+    data_record: {
+      raw: bundleItem,
+      format: 'FHIR.R4',
+      content_type: 'application/json',
+      resource_type: 'goal',
+      version_history: [],
+    },
+    metadata: {
+      id: parseId(bundleItem),
+      date:
+        bundleItem.resource?.startDate ||
+        bundleItem.resource?.statusDate ||
+        new Date(0).toISOString(),
+      display_name:
+        bundleItem.resource?.description?.text ||
+        stripHtmlTags(bundleItem.resource?.text?.div) ||
+        bundleItem.resource?.id ||
+        '',
+    },
+  };
+  return cd;
+}
+
+export function mapCareTeamToClinicalDocument(
+  bundleItem: BundleEntry<CareTeam>,
+  connectionDocument: ConnectionDocument,
+) {
+  const cd: CreateClinicalDocument<BundleEntry<CareTeam>> = {
+    user_id: connectionDocument.user_id,
+    connection_record_id: connectionDocument.id,
+    data_record: {
+      raw: bundleItem,
+      format: 'FHIR.R4',
+      content_type: 'application/json',
+      resource_type: 'careteam',
+      version_history: [],
+    },
+    metadata: {
+      id: parseId(bundleItem),
+      date: bundleItem.resource?.period?.start || new Date(0).toISOString(),
+      display_name:
+        bundleItem.resource?.name ||
+        stripHtmlTags(bundleItem.resource?.text?.div) ||
+        bundleItem.resource?.id ||
+        '',
+    },
+  };
+  return cd;
+}
+
+export function mapCoverageToClinicalDocument(
+  bundleItem: BundleEntry<Coverage>,
+  connectionDocument: ConnectionDocument,
+) {
+  const cd: CreateClinicalDocument<BundleEntry<Coverage>> = {
+    user_id: connectionDocument.user_id,
+    connection_record_id: connectionDocument.id,
+    data_record: {
+      raw: bundleItem,
+      format: 'FHIR.R4',
+      content_type: 'application/json',
+      resource_type: 'coverage',
+      version_history: [],
+    },
+    metadata: {
+      id: parseId(bundleItem),
+      date: bundleItem.resource?.period?.start || new Date(0).toISOString(),
+      display_name:
+        bundleItem.resource?.type?.text ||
+        stripHtmlTags(bundleItem.resource?.text?.div) ||
+        bundleItem.resource?.id ||
+        '',
+    },
+  };
+  return cd;
+}
+
+export function mapDeviceToClinicalDocument(
+  bundleItem: BundleEntry<Device>,
+  connectionDocument: ConnectionDocument,
+) {
+  const cd: CreateClinicalDocument<BundleEntry<Device>> = {
+    user_id: connectionDocument.user_id,
+    connection_record_id: connectionDocument.id,
+    data_record: {
+      raw: bundleItem,
+      format: 'FHIR.R4',
+      content_type: 'application/json',
+      resource_type: 'device',
+      version_history: [],
+    },
+    metadata: {
+      id: parseId(bundleItem),
+      date:
+        bundleItem.resource?.manufactureDate ||
+        bundleItem.resource?.expirationDate ||
+        new Date(0).toISOString(),
+      display_name:
+        bundleItem.resource?.deviceName?.[0]?.name ||
+        bundleItem.resource?.type?.text ||
+        stripHtmlTags(bundleItem.resource?.text?.div) ||
+        bundleItem.resource?.id ||
+        '',
+    },
+  };
+  return cd;
+}
+
+export function mapMediaToClinicalDocument(
+  bundleItem: BundleEntry<Media>,
+  connectionDocument: ConnectionDocument,
+) {
+  const cd: CreateClinicalDocument<BundleEntry<Media>> = {
+    user_id: connectionDocument.user_id,
+    connection_record_id: connectionDocument.id,
+    data_record: {
+      raw: bundleItem,
+      format: 'FHIR.R4',
+      content_type: 'application/json',
+      resource_type: 'media',
+      version_history: [],
+    },
+    metadata: {
+      id: parseId(bundleItem),
+      date:
+        bundleItem.resource?.createdDateTime ||
+        bundleItem.resource?.createdPeriod?.start ||
+        new Date(0).toISOString(),
+      display_name:
+        bundleItem.resource?.type?.text ||
+        stripHtmlTags(bundleItem.resource?.text?.div) ||
+        bundleItem.resource?.id ||
+        '',
+    },
+  };
+  return cd;
+}
+
+export function mapSpecimenToClinicalDocument(
+  bundleItem: BundleEntry<Specimen>,
+  connectionDocument: ConnectionDocument,
+) {
+  const cd: CreateClinicalDocument<BundleEntry<Specimen>> = {
+    user_id: connectionDocument.user_id,
+    connection_record_id: connectionDocument.id,
+    data_record: {
+      raw: bundleItem,
+      format: 'FHIR.R4',
+      content_type: 'application/json',
+      resource_type: 'specimen',
+      version_history: [],
+    },
+    metadata: {
+      id: parseId(bundleItem),
+      date:
+        bundleItem.resource?.receivedTime ||
+        bundleItem.resource?.collection?.collectedDateTime ||
+        bundleItem.resource?.collection?.collectedPeriod?.start ||
+        new Date(0).toISOString(),
+      display_name:
+        bundleItem.resource?.type?.text ||
+        stripHtmlTags(bundleItem.resource?.text?.div) ||
+        bundleItem.resource?.id ||
+        '',
+    },
+  };
+  return cd;
+}
+
+export function mapProvenanceToClinicalDocument(
+  bundleItem: BundleEntry<Provenance>,
+  connectionDocument: ConnectionDocument,
+) {
+  const cd: CreateClinicalDocument<BundleEntry<Provenance>> = {
+    user_id: connectionDocument.user_id,
+    connection_record_id: connectionDocument.id,
+    data_record: {
+      raw: bundleItem,
+      format: 'FHIR.R4',
+      content_type: 'application/json',
+      resource_type: 'provenance',
+      version_history: [],
+    },
+    metadata: {
+      id: parseId(bundleItem),
+      date:
+        bundleItem.resource?.recorded ||
+        bundleItem.resource?.occurredDateTime ||
+        bundleItem.resource?.occurredPeriod?.start ||
+        new Date(0).toISOString(),
+      display_name:
+        bundleItem.resource?.reason?.[0]?.text ||
+        bundleItem.resource?.activity?.text ||
+        stripHtmlTags(bundleItem.resource?.text?.div) ||
+        bundleItem.resource?.id ||
+        '',
+    },
+  };
+  return cd;
+}
+
+export function mapRelatedPersonToClinicalDocument(
+  bundleItem: BundleEntry<RelatedPerson>,
+  connectionDocument: ConnectionDocument,
+) {
+  const cd: CreateClinicalDocument<BundleEntry<RelatedPerson>> = {
+    user_id: connectionDocument.user_id,
+    connection_record_id: connectionDocument.id,
+    data_record: {
+      raw: bundleItem,
+      format: 'FHIR.R4',
+      content_type: 'application/json',
+      resource_type: 'relatedperson',
+      version_history: [],
+    },
+    metadata: {
+      id: parseId(bundleItem),
+      date:
+        bundleItem.resource?.period?.start ||
+        bundleItem.resource?.birthDate ||
+        new Date(0).toISOString(),
+      display_name:
+        bundleItem.resource?.name?.[0]?.text ||
+        stripHtmlTags(bundleItem.resource?.text?.div) ||
+        bundleItem.resource?.id ||
+        '',
+    },
+  };
+  return cd;
+}
+
+export function mapLocationToClinicalDocument(
+  bundleItem: BundleEntry<Location>,
+  connectionDocument: ConnectionDocument,
+) {
+  const cd: CreateClinicalDocument<BundleEntry<Location>> = {
+    user_id: connectionDocument.user_id,
+    connection_record_id: connectionDocument.id,
+    data_record: {
+      raw: bundleItem,
+      format: 'FHIR.R4',
+      content_type: 'application/json',
+      resource_type: 'location',
+      version_history: [],
+    },
+    metadata: {
+      id: parseId(bundleItem),
+      date: new Date(0).toISOString(),
+      display_name:
+        bundleItem.resource?.name ||
+        stripHtmlTags(bundleItem.resource?.text?.div) ||
+        bundleItem.resource?.id ||
+        '',
+    },
+  };
+  return cd;
+}
+
+export function mapOrganizationToClinicalDocument(
+  bundleItem: BundleEntry<Organization>,
+  connectionDocument: ConnectionDocument,
+) {
+  const cd: CreateClinicalDocument<BundleEntry<Organization>> = {
+    user_id: connectionDocument.user_id,
+    connection_record_id: connectionDocument.id,
+    data_record: {
+      raw: bundleItem,
+      format: 'FHIR.R4',
+      content_type: 'application/json',
+      resource_type: 'organization',
+      version_history: [],
+    },
+    metadata: {
+      id: parseId(bundleItem),
+      date: new Date(0).toISOString(),
+      display_name:
+        bundleItem.resource?.name ||
+        stripHtmlTags(bundleItem.resource?.text?.div) ||
+        bundleItem.resource?.id ||
+        '',
+    },
+  };
+  return cd;
+}
+
+export function mapPractitionerRoleToClinicalDocument(
+  bundleItem: BundleEntry<PractitionerRole>,
+  connectionDocument: ConnectionDocument,
+) {
+  const cd: CreateClinicalDocument<BundleEntry<PractitionerRole>> = {
+    user_id: connectionDocument.user_id,
+    connection_record_id: connectionDocument.id,
+    data_record: {
+      raw: bundleItem,
+      format: 'FHIR.R4',
+      content_type: 'application/json',
+      resource_type: 'practitionerrole',
+      version_history: [],
+    },
+    metadata: {
+      id: parseId(bundleItem),
+      date: bundleItem.resource?.period?.start || new Date(0).toISOString(),
+      display_name:
+        bundleItem.resource?.code?.[0]?.text ||
+        stripHtmlTags(bundleItem.resource?.text?.div) ||
+        bundleItem.resource?.id ||
+        '',
     },
   };
   return cd;

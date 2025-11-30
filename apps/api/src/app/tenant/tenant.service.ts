@@ -8,6 +8,8 @@ import {
 import {
   EpicDSTU2TenantEndpoints,
   DSTU2Endpoint as EpicDSTU2Endpoint,
+  EpicR4TenantEndpoints,
+  R4Endpoint as EpicR4Endpoint,
 } from '@mere/epic';
 import {
   VeradigmDSTU2TenantEndpoints,
@@ -58,13 +60,21 @@ const searchDSTU2Items: UnifiedTenantEndpoint[] = (
 
 const searchR4Items: UnifiedTenantEndpoint[] = (
   [] as UnifiedTenantEndpoint[]
-).concat(
-  (CernerR4TenantEndpoints as unknown as UnifiedTenantEndpoint[]).map((i) => {
-    i.vendor = 'CERNER';
-    i.version = 'R4';
-    return i;
-  }),
-);
+)
+  .concat(
+    (EpicR4TenantEndpoints as unknown as UnifiedTenantEndpoint[]).map((i) => {
+      i.vendor = 'EPIC';
+      i.version = 'R4';
+      return i;
+    }),
+  )
+  .concat(
+    (CernerR4TenantEndpoints as unknown as UnifiedTenantEndpoint[]).map((i) => {
+      i.vendor = 'CERNER';
+      i.version = 'R4';
+      return i;
+    }),
+  );
 
 @Injectable()
 export class TenantService {

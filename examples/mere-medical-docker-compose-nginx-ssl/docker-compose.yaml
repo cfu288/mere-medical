@@ -16,8 +16,13 @@ services:
     environment:
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
       - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
+      # Epic MyChart - R4 (recommended)
+      - EPIC_CLIENT_ID_R4=${EPIC_CLIENT_ID_R4}
+      - EPIC_SANDBOX_CLIENT_ID_R4=${EPIC_SANDBOX_CLIENT_ID_R4}
+      # Epic MyChart - Legacy DSTU2 (for backwards compatibility)
       - EPIC_CLIENT_ID=${EPIC_CLIENT_ID}
       - EPIC_SANDBOX_CLIENT_ID=${EPIC_SANDBOX_CLIENT_ID}
+      # Cerner Health (supports both R4 and DSTU2)
       - CERNER_CLIENT_ID=${CERNER_CLIENT_ID}
       - VERADIGM_CLIENT_ID=${VERADIGM_CLIENT_ID}
       - PUBLIC_URL=https://meremedical.local

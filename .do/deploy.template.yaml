@@ -11,13 +11,23 @@ spec:
           scope: RUN_TIME
         - key: ONPATIENT_CLIENT_SECRET
           scope: RUN_TIME
+        - key: EPIC_CLIENT_ID_R4
+          scope: RUN_TIME
+        - key: EPIC_SANDBOX_CLIENT_ID_R4
+          scope: RUN_TIME
         - key: EPIC_CLIENT_ID
           scope: RUN_TIME
+        - key: EPIC_CLIENT_ID_DSTU2
+          scope: RUN_TIME
         - key: EPIC_SANDBOX_CLIENT_ID
+          scope: RUN_TIME
+        - key: EPIC_SANDBOX_CLIENT_ID_DSTU2
           scope: RUN_TIME
         - key: CERNER_CLIENT_ID
           scope: RUN_TIME
         - key: VERADIGM_CLIENT_ID
+          scope: RUN_TIME
+        - key: VA_CLIENT_ID
           scope: RUN_TIME
         - key: PUBLIC_URL
           value: ${APP_URL}

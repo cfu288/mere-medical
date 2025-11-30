@@ -15,8 +15,14 @@ You'll now need to set the redirect URI to redirect to Mere Medical. By default 
 
 You can leave the rest blank and click `Next`.
 
-Under product family, select `Millennium`. Under select products, check `Ignite APIs for Millennium: FHIR DSTU 2, All`. Click `Next`.
+Under product family, select `Millennium`. Under select products, check `Ignite APIs for Millennium: FHIR R4, All`. Click `Next`.
 
 On the next page, check off every box under `Patient Product APIs` and `User Product APIs`. Agree to the terms of use and click `Submit`.
 
 At this point, you should be able to see your client id.
+
+# Troubleshooting
+
+## Using Legacy DSTU2 Version
+
+These instructions use FHIR R4, which is the current standard and provides access to more health data types. If you have an existing DSTU2 integration that you need to maintain, you can select `Ignite APIs for Millennium: FHIR DSTU 2, All` instead of the R4 version in step 18.

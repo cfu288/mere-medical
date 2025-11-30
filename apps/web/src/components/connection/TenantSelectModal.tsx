@@ -152,9 +152,10 @@ export function TenantSelectModal({
         title: 'MyChart',
         vendor: 'epic',
         source: EpicLogo,
-        alt: 'Epic',
+        alt: 'R4 FHIR',
         enabled: true,
         id: 1,
+        fhirVersion: 'R4',
       },
       {
         title: 'Cerner',
@@ -218,6 +219,15 @@ export function TenantSelectModal({
         id: 6,
         fhirVersion: 'DSTU2',
       },
+      {
+        title: 'MyChart Legacy',
+        vendor: 'epic',
+        source: EpicLogo,
+        alt: 'DSTU2 (older version)',
+        enabled: true,
+        id: 8,
+        fhirVersion: 'DSTU2',
+      },
     ];
 
     return sources as SourceItem[];
@@ -232,9 +242,13 @@ export function TenantSelectModal({
           ? state.fhirVersion === 'R4'
             ? `/api/v1/cerner/r4/tenants?`
             : `/api/v1/cerner/tenants?`
-          : state.emrVendor !== 'any'
-            ? `/api/v1/${state.emrVendor}/tenants?`
-            : `/api/v1/dstu2/tenants?`;
+          : state.emrVendor === 'epic'
+            ? state.fhirVersion === 'R4'
+              ? `/api/v1/epic/r4/tenants?`
+              : `/api/v1/epic/tenants?`
+            : state.emrVendor !== 'any'
+              ? `/api/v1/${state.emrVendor}/tenants?`
+              : `/api/v1/dstu2/tenants?`;
 
       fetch(
         Config.PUBLIC_URL +

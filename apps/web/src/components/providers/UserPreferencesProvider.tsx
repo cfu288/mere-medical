@@ -17,7 +17,7 @@ import { useUser } from './UserProvider';
 function createDefaultPreferences(
   user_id: string,
 ): Partial<UserPreferencesDocument> {
-  return { use_proxy: true, user_id, id: uuid4() };
+  return { use_proxy: false, user_id, id: uuid4() };
 }
 
 /**

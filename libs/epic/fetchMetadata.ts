@@ -15,15 +15,26 @@ class TerminalColor {
     `${TerminalColor.Red}${str}${TerminalColor.Reset}`;
 }
 
-/**
- * This script is used to fetch the metadata for all of the DSTU2 endpoints listed by Epic.
- */
 (async () => {
   try {
-    console.log('Starting DSTU2 Endpoint Metadata Fetcher for EPIC');
-    console.log(`Using URL: ${process.env.DSTU2_ENDPOINTS_URL}`);
+    const args = process.argv.slice(2);
+    const fhirVersion = args.includes('--r4') ? 'R4' : 'DSTU2';
 
-    const data = await fetch(process.env.DSTU2_ENDPOINTS_URL as string, {
+    console.log(`Starting ${fhirVersion} Endpoint Metadata Fetcher for EPIC`);
+
+    const endpointsUrl =
+      fhirVersion === 'R4'
+        ? process.env.R4_ENDPOINTS_URL
+        : process.env.DSTU2_ENDPOINTS_URL;
+
+    if (!endpointsUrl) {
+      throw new Error(
+        `${fhirVersion}_ENDPOINTS_URL is not defined in environment variables`,
+      );
+    }
+    console.log(`Using URL: ${endpointsUrl}`);
+
+    const data = await fetch(endpointsUrl, {
       headers: {
         Accept: 'application/json+fhir',
       },
@@ -119,28 +130,44 @@ class TerminalColor {
         errors.push(...errorsRes);
       }
 
-      // add sandbox
-      results.push({
-        id: 'sandbox_epic',
-        name: 'Epic MyChart Sandbox',
-        url: 'https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/DSTU2/',
-        token: 'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/token',
-        authorize:
-          'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/authorize',
-      });
+      if (fhirVersion === 'R4') {
+        results.push({
+          id: 'sandbox_epic_r4',
+          name: 'Epic MyChart Sandbox (R4)',
+          url: 'https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4/',
+          token: 'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/token',
+          authorize:
+            'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/authorize',
+        });
+      } else {
+        results.push({
+          id: 'sandbox_epic',
+          name: 'Epic MyChart Sandbox',
+          url: 'https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/DSTU2/',
+          token: 'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/token',
+          authorize:
+            'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/authorize',
+        });
+      }
 
-      fs.writeFileSync(
-        './src/lib/data/DSTU2Endpoints.json',
-        JSON.stringify(results, null, 2),
-      );
+      const outputPath =
+        fhirVersion === 'R4'
+          ? './src/lib/data/R4Endpoints.json'
+          : './src/lib/data/DSTU2Endpoints.json';
+
+      fs.writeFileSync(outputPath, JSON.stringify(results, null, 2));
 
       if (errors.length) {
+        const errorLogPath =
+          fhirVersion === 'R4'
+            ? './errorlog-r4.json'
+            : './errorlog-dstu2.json';
         console.log(
           TerminalColor.red(
             `${errors.length} error(s) when processing. Check the errorlog for more details`,
           ),
         );
-        fs.writeFileSync('./errorlog.json', JSON.stringify(errors, null, 2));
+        fs.writeFileSync(errorLogPath, JSON.stringify(errors, null, 2));
       }
     } catch (e) {
       console.error(e);

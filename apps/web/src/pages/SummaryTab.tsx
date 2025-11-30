@@ -52,7 +52,9 @@ function fetchMedications(
     .find({
       selector: {
         user_id: user_id,
-        'data_record.resource_type': 'medicationstatement',
+        'data_record.resource_type': {
+          $in: ['medicationstatement', 'medicationrequest'],
+        },
         'metadata.date': { $nin: [null, undefined, ''] },
       },
       sort: [{ 'metadata.date': 'desc' }],

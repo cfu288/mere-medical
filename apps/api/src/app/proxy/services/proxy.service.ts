@@ -51,10 +51,8 @@ export class ProxyService {
           ? this.options.services.map((service) => [service.id, service])
           : [],
       );
-      // Temp workaround for sandbox
       const isSandbox =
-        serviceId === 'sandbox_epic' ||
-        serviceId === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354';
+        serviceId === 'sandbox_epic' || serviceId === 'sandbox_epic_r4';
       if (isSandbox) {
         serviceId = 'sandbox_epic';
       }
@@ -73,10 +71,11 @@ export class ProxyService {
           urlToProxy = tokenUrl;
         } else if (target_type === 'register') {
           urlToProxy =
-            (baseUrl.replace('/api/FHIR/DSTU2/', '') || '').replace(
-              'api/FHIR/DSTU2',
-              '',
-            ) + '/oauth2/register';
+            baseUrl
+              .replace('/api/FHIR/DSTU2/', '')
+              .replace('/api/FHIR/DSTU2', '')
+              .replace('/api/FHIR/R4/', '')
+              .replace('/api/FHIR/R4', '') + '/oauth2/register';
         }
 
         return this.doProxy(

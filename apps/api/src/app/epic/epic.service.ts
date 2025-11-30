@@ -1,17 +1,30 @@
 import { Injectable } from '@nestjs/common';
-import { EpicDSTU2TenantEndpoints, DSTU2Endpoint } from '@mere/epic';
+import {
+  EpicDSTU2TenantEndpoints,
+  DSTU2Endpoint,
+  EpicR4TenantEndpoints,
+  R4Endpoint,
+} from '@mere/epic';
 import { stringSimilarity } from '@mere/shared';
 
 @Injectable()
 export class EpicService {
   private readonly items = EpicDSTU2TenantEndpoints;
+  private readonly r4Items = EpicR4TenantEndpoints;
 
   async queryTenants(query: string): Promise<DSTU2Endpoint[]> {
     return filteredItemsWithQuery(this.items, query);
   }
+
+  async queryR4Tenants(query: string): Promise<R4Endpoint[]> {
+    return filteredItemsWithQuery(this.r4Items, query);
+  }
 }
 
-function filteredItemsWithQuery(items: DSTU2Endpoint[], query: string) {
+function filteredItemsWithQuery<T extends { name: string }>(
+  items: T[],
+  query: string,
+): T[] {
   if (query === '' || query === undefined) {
     return items.sort((x, y) => x.name.localeCompare(y.name)).slice(0, 100);
   }
