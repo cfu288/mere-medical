@@ -2,7 +2,7 @@
 import 'billboard.js/dist/billboard.css';
 
 import bb, { areaLineRange, ChartOptions } from 'billboard.js';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { BundleEntry, Observation } from 'fhir/r2';
 import React, {
   Fragment,
@@ -19,6 +19,7 @@ import { Disclosure } from '@headlessui/react';
 import { ChartBarIcon, TableCellsIcon } from '@heroicons/react/24/outline';
 
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
+import { safeFormatDate } from '../../utils/dateFormatters';
 import uuid4 from '../../utils/UUIDUtils';
 import { useSummaryPagePreferences } from '../hooks/useSummaryPagePreferences';
 import { useRxDb } from '../providers/RxDbProvider';
@@ -228,10 +229,7 @@ export function ObservationResultRow({
                         <Fragment key={`rl-${rl.id}`}>
                           <div className="col-span-3 self-center pl-4 text-xs font-bold text-gray-600">
                             <p className="">
-                              {format(
-                                parseISO(rl.metadata?.date || ''),
-                                'MM/dd/yyyy',
-                              )}
+                              {safeFormatDate(rl.metadata?.date, 'MM/dd/yyyy')}
                             </p>
                             <p className="text-xs font-light text-gray-600">
                               {getReferenceRangeString(rl)
@@ -330,7 +328,7 @@ function HistoricalRelatedLabsChart({
       [
         'x',
         ...relatedLabs.map((rl) =>
-          format(parseISO(rl.metadata?.date || ''), 'yyyy-MM-dd'),
+          safeFormatDate(rl.metadata?.date, 'yyyy-MM-dd'),
         ),
       ],
     ],

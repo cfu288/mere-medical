@@ -1,7 +1,7 @@
-import { format, parseISO } from 'date-fns';
 import { BundleEntry, CareTeam } from 'fhir/r4';
 import React from 'react';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
+import { formatFullDate } from '../../utils/dateFormatters';
 import { Modal } from '../Modal';
 import { ModalHeader } from '../ModalHeader';
 
@@ -17,15 +17,6 @@ export function ShowCareTeamDetailsExpandable({
   const toggleOpen = () => setExpanded((x) => !x);
   const careTeam = item.data_record.raw.resource;
 
-  const formatDate = (date?: string) => {
-    if (!date) return 'N/A';
-    try {
-      return format(parseISO(date), 'LLLL do yyyy');
-    } catch {
-      return date;
-    }
-  };
-
   return (
     <Modal open={expanded} setOpen={setExpanded}>
       <div className="flex flex-col">
@@ -35,8 +26,8 @@ export function ShowCareTeamDetailsExpandable({
             <div className="flex flex-col">
               {careTeam?.period?.start && (
                 <div className="text-sm font-light">
-                  {formatDate(careTeam.period.start)}
-                  {careTeam.period.end && ` - ${formatDate(careTeam.period.end)}`}
+                  {formatFullDate(careTeam.period.start)}
+                  {careTeam.period.end && ` - ${formatFullDate(careTeam.period.end)}`}
                 </div>
               )}
             </div>
@@ -84,8 +75,8 @@ export function ShowCareTeamDetailsExpandable({
                         )}
                         {participant.period && (
                           <div className="text-gray-500 text-xs">
-                            {formatDate(participant.period.start)}
-                            {participant.period.end && ` - ${formatDate(participant.period.end)}`}
+                            {formatFullDate(participant.period.start)}
+                            {participant.period.end && ` - ${formatFullDate(participant.period.end)}`}
                           </div>
                         )}
                       </div>

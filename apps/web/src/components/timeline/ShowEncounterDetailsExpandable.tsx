@@ -1,11 +1,11 @@
-import { format, parseISO } from 'date-fns';
 import { BundleEntry, Encounter } from 'fhir/r2';
 import { BundleEntry as R4BundleEntry, Encounter as R4Encounter } from 'fhir/r4';
 import React, { useMemo } from 'react';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
+import { formatFullDateWithTime } from '../../utils/dateFormatters';
+import { getEncounterClass, getEncounterLocation, getEncounterPatient, getEncounterIndication } from '../../utils/fhirAccessHelpers';
 import { Modal } from '../Modal';
 import { ModalHeader } from '../ModalHeader';
-import { getEncounterClass, getEncounterLocation, getEncounterPatient, getEncounterIndication } from '../../utils/fhirAccessHelpers';
 
 export function ShowEncounterDetailsExpandable({
   item,
@@ -54,15 +54,6 @@ export function ShowEncounterDetailsExpandable({
     });
   }, [encounter?.participant]);
 
-  const formatDateTime = (date?: string) => {
-    if (!date) return 'N/A';
-    try {
-      return format(parseISO(date), 'LLLL do yyyy \'at\' h:mm a');
-    } catch {
-      return date;
-    }
-  };
-
   return (
     <Modal open={expanded} setOpen={setExpanded}>
       <div className="flex flex-col">
@@ -72,8 +63,8 @@ export function ShowEncounterDetailsExpandable({
             <div className="flex flex-col">
               {encounter?.period?.start && (
                 <div className="text-sm font-light">
-                  {formatDateTime(encounter.period.start)}
-                  {encounter.period.end && ` - ${formatDateTime(encounter.period.end)}`}
+                  {formatFullDateWithTime(encounter.period.start)}
+                  {encounter.period.end && ` - ${formatFullDateWithTime(encounter.period.end)}`}
                 </div>
               )}
             </div>
@@ -159,11 +150,11 @@ export function ShowEncounterDetailsExpandable({
                     Time Period
                   </div>
                   <div className="col-span-2 text-sm text-gray-900">
-                    {formatDateTime(encounter.period.start)}
+                    {formatFullDateWithTime(encounter.period.start)}
                     {encounter.period.end && (
                       <>
                         <br />
-                        to {formatDateTime(encounter.period.end)}
+                        to {formatFullDateWithTime(encounter.period.end)}
                       </>
                     )}
                   </div>

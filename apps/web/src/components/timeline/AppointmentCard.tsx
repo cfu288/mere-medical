@@ -1,5 +1,5 @@
-import { format, parseISO } from 'date-fns';
 import { BundleEntry, Appointment } from 'fhir/r4';
+import { formatDateAndTime } from '../../utils/dateFormatters';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
@@ -34,7 +34,7 @@ export const AppointmentCard = memo(function AppointmentCard({
 
           <TimelineCardTitle>{item.metadata?.display_name}</TimelineCardTitle>
           <p className="truncate text-xs font-medium text-gray-800 md:text-sm">
-            {item.metadata?.date ? format(parseISO(item.metadata.date), 'PPp') : ''}
+            {formatDateAndTime(item.metadata?.date)}
           </p>
           {conn?.get('name') ? (
             <p className="truncate text-xs font-medium text-gray-700 md:text-sm">

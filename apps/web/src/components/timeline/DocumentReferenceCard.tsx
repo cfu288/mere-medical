@@ -1,5 +1,5 @@
-import { format, parseISO } from 'date-fns';
 import { BundleEntry, DocumentReference } from 'fhir/r2';
+import { formatTime } from '../../utils/dateFormatters';
 import { memo, useState } from 'react';
 
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
@@ -46,9 +46,7 @@ export const DocumentReferenceCard = memo(function DocumentReferenceCard({
           </div>
           <TimelineCardTitle>{item.metadata?.display_name}</TimelineCardTitle>
           <p className="truncate text-xs font-medium text-gray-800 md:text-sm">
-            {item.metadata?.date
-              ? format(parseISO(item.metadata.date), 'p')
-              : ''}
+            {formatTime(item.metadata?.date)}
           </p>
           {conn?.get('name') ? (
             <p className="truncate text-xs font-medium text-gray-700 md:text-sm">
@@ -101,9 +99,7 @@ export const DocumentReferenceAttachmentCard = memo(
             </div>
             <TimelineCardTitle>{item.metadata?.display_name}</TimelineCardTitle>
             <p className="truncate text-xs font-medium text-gray-800 md:text-sm">
-              {item.metadata?.date
-                ? format(parseISO(item.metadata.date), 'p')
-                : ''}
+              {formatTime(item.metadata?.date)}
             </p>
             {conn?.get('name') ? (
               <p className="truncate text-xs font-medium text-gray-700 md:text-sm">

@@ -1,5 +1,5 @@
-import { format, parseISO } from 'date-fns';
 import { BundleEntry, Encounter } from 'fhir/r2';
+import { formatTime } from '../../utils/dateFormatters';
 import { BundleEntry as R4BundleEntry, Encounter as R4Encounter } from 'fhir/r4';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { TimelineCardTitle } from './TimelineCardTitle';
@@ -46,7 +46,7 @@ export const EncounterCard = memo(function EncounterCard({
             }
           </TimelineCardTitle>
           <TimelineCardSubtitile variant="dark">
-            {item.metadata?.date ? format(parseISO(item.metadata.date), 'p') : ''}
+            {formatTime(item.metadata?.date)}
           </TimelineCardSubtitile>
           {conn?.get('name') ? (
             <TimelineCardSubtitile variant="light">

@@ -1,5 +1,5 @@
-import { format, parseISO } from 'date-fns';
 import { BundleEntry, Immunization } from 'fhir/r2';
+import { formatTime } from '../../utils/dateFormatters';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
@@ -26,7 +26,7 @@ export const ImmunizationCard = memo(function ImmunizationCard({
 
         <TimelineCardTitle>{item.metadata?.display_name}</TimelineCardTitle>
         <p className="truncate text-xs font-medium text-gray-800 md:text-sm">
-          {item.metadata?.date ? format(parseISO(item.metadata.date), 'p') : ''}
+          {formatTime(item.metadata?.date)}
         </p>
         {conn?.get('name') ? (
           <TimelineCardSubtitile variant="light">

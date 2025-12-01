@@ -1,7 +1,7 @@
-import { format, parseISO } from 'date-fns';
 import { BundleEntry as R4BundleEntry, Coverage } from 'fhir/r4';
 import React from 'react';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
+import { formatFullDate } from '../../utils/dateFormatters';
 import { Modal } from '../Modal';
 import { ModalHeader } from '../ModalHeader';
 
@@ -17,15 +17,6 @@ export function ShowCoverageDetailsExpandable({
   const toggleOpen = () => setExpanded((x) => !x);
   const coverage = item.data_record.raw.resource;
 
-  const formatDate = (date?: string) => {
-    if (!date) return 'N/A';
-    try {
-      return format(parseISO(date), 'LLLL do yyyy');
-    } catch {
-      return date;
-    }
-  };
-
   return (
     <Modal open={expanded} setOpen={setExpanded}>
       <div className="flex flex-col">
@@ -35,8 +26,8 @@ export function ShowCoverageDetailsExpandable({
             <div className="flex flex-col">
               {coverage?.period?.start && (
                 <div className="text-sm font-light">
-                  {formatDate(coverage.period.start)}
-                  {coverage.period.end && ` - ${formatDate(coverage.period.end)}`}
+                  {formatFullDate(coverage.period.start)}
+                  {coverage.period.end && ` - ${formatFullDate(coverage.period.end)}`}
                 </div>
               )}
             </div>
@@ -93,11 +84,11 @@ export function ShowCoverageDetailsExpandable({
                     Coverage Period
                   </div>
                   <div className="col-span-2 text-sm text-gray-900">
-                    {formatDate(coverage.period.start)}
+                    {formatFullDate(coverage.period.start)}
                     {coverage.period.end && (
                       <>
                         <br />
-                        to {formatDate(coverage.period.end)}
+                        to {formatFullDate(coverage.period.end)}
                       </>
                     )}
                   </div>

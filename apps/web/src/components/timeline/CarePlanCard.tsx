@@ -1,5 +1,5 @@
-import { format, parseISO } from 'date-fns';
 import { BundleEntry, CarePlan } from 'fhir/r4';
+import { formatTime } from '../../utils/dateFormatters';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { useConnectionDoc } from '../hooks/useConnectionDoc';
 import { SkeletonLoadingText } from './SkeletonLoadingText';
@@ -35,7 +35,7 @@ export const CarePlanCard = memo(function CarePlanCard({
 
           <TimelineCardTitle>{item.metadata?.display_name || carePlan?.title}</TimelineCardTitle>
           <p className="truncate text-xs font-medium text-gray-800 md:text-sm">
-            {item.metadata?.date ? format(parseISO(item.metadata.date), 'p') : ''}
+            {formatTime(item.metadata?.date)}
           </p>
           {carePlan?.status && (
             <p className="truncate text-xs font-medium text-gray-600 md:text-sm capitalize">

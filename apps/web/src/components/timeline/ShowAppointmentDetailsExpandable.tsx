@@ -1,7 +1,7 @@
-import { format, parseISO } from 'date-fns';
 import { BundleEntry, Appointment } from 'fhir/r4';
 import React from 'react';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
+import { formatFullDateWithTime } from '../../utils/dateFormatters';
 import { Modal } from '../Modal';
 import { ModalHeader } from '../ModalHeader';
 
@@ -17,15 +17,6 @@ export function ShowAppointmentDetailsExpandable({
   const toggleOpen = () => setExpanded((x) => !x);
   const appointment = item.data_record.raw.resource;
 
-  const formatDateTime = (date?: string) => {
-    if (!date) return 'N/A';
-    try {
-      return format(parseISO(date), 'LLLL do yyyy \'at\' h:mm a');
-    } catch {
-      return date;
-    }
-  };
-
   return (
     <Modal open={expanded} setOpen={setExpanded}>
       <div className="flex flex-col">
@@ -35,7 +26,7 @@ export function ShowAppointmentDetailsExpandable({
             <div className="flex flex-col">
               {appointment?.start && (
                 <div className="text-sm font-light">
-                  {formatDateTime(appointment.start)}
+                  {formatFullDateWithTime(appointment.start)}
                 </div>
               )}
             </div>
@@ -89,7 +80,7 @@ export function ShowAppointmentDetailsExpandable({
                 <div className="grid grid-cols-3 gap-2">
                   <div className="text-sm font-semibold text-gray-700">Start</div>
                   <div className="col-span-2 text-sm text-gray-900">
-                    {formatDateTime(appointment.start)}
+                    {formatFullDateWithTime(appointment.start)}
                   </div>
                 </div>
               )}
@@ -98,7 +89,7 @@ export function ShowAppointmentDetailsExpandable({
                 <div className="grid grid-cols-3 gap-2">
                   <div className="text-sm font-semibold text-gray-700">End</div>
                   <div className="col-span-2 text-sm text-gray-900">
-                    {formatDateTime(appointment.end)}
+                    {formatFullDateWithTime(appointment.end)}
                   </div>
                 </div>
               )}

@@ -1,14 +1,14 @@
 /* eslint-disable react/jsx-no-useless-fragment */
-import { format, parseISO } from 'date-fns';
 import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
 import React from 'react';
 
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
+import { formatFullDate } from '../../utils/dateFormatters';
+import { getDiagnosticReportPerformer } from '../../utils/fhirAccessHelpers';
 import { ButtonLoadingSpinner } from '../connection/ButtonLoadingSpinner';
 import { Modal } from '../Modal';
 import { ModalHeader } from '../ModalHeader';
 import { ObservationResultRow } from './ObservationResultRow';
-import { getDiagnosticReportPerformer } from '../../utils/fhirAccessHelpers';
 
 export function ShowDiagnosticReportResultsExpandable({
   item,
@@ -35,7 +35,7 @@ export function ShowDiagnosticReportResultsExpandable({
           subtitle={
             <div className="flex flex-col">
               <div className="text-sm font-light">
-                {format(parseISO(item.metadata?.date || ''), 'LLLL do yyyy')}
+                {formatFullDate(item.metadata?.date)}
               </div>
               <div className="text-sm font-light">
                 {getDiagnosticReportPerformer(item)}

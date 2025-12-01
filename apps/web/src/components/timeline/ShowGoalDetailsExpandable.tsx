@@ -1,7 +1,7 @@
-import { format, parseISO } from 'date-fns';
 import { BundleEntry, Goal } from 'fhir/r4';
 import React from 'react';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
+import { formatFullDate } from '../../utils/dateFormatters';
 import { Modal } from '../Modal';
 import { ModalHeader } from '../ModalHeader';
 
@@ -17,15 +17,6 @@ export function ShowGoalDetailsExpandable({
   const toggleOpen = () => setExpanded((x) => !x);
   const goal = item.data_record.raw.resource;
 
-  const formatDate = (date?: string) => {
-    if (!date) return 'N/A';
-    try {
-      return format(parseISO(date), 'LLLL do yyyy');
-    } catch {
-      return date;
-    }
-  };
-
   return (
     <Modal open={expanded} setOpen={setExpanded}>
       <div className="flex flex-col">
@@ -35,7 +26,7 @@ export function ShowGoalDetailsExpandable({
             <div className="flex flex-col">
               {goal?.startDate && (
                 <div className="text-sm font-light">
-                  Started: {formatDate(goal.startDate)}
+                  Started: {formatFullDate(goal.startDate)}
                 </div>
               )}
             </div>
@@ -107,7 +98,7 @@ export function ShowGoalDetailsExpandable({
                           <div>Detail: {target.detailString}</div>
                         )}
                         {target.dueDate && (
-                          <div className="text-gray-600">Due: {formatDate(target.dueDate)}</div>
+                          <div className="text-gray-600">Due: {formatFullDate(target.dueDate)}</div>
                         )}
                       </div>
                     ))}
@@ -119,7 +110,7 @@ export function ShowGoalDetailsExpandable({
                 <div className="grid grid-cols-3 gap-2">
                   <div className="text-sm font-semibold text-gray-700">Status Date</div>
                   <div className="col-span-2 text-sm text-gray-900">
-                    {formatDate(goal.statusDate)}
+                    {formatFullDate(goal.statusDate)}
                   </div>
                 </div>
               )}
