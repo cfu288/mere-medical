@@ -10,177 +10,150 @@ import {
   QueryStatus,
   fetchRecords,
   fetchRecordsWithVectorSearch,
+  fetchRecordsUntilCompleteDays,
+  mergeRecordsByDate,
   PAGE_SIZE,
 } from '../../pages/TimelineTab';
 
-/**
- * Fetches records from the database and groups them by date
- * @param query Query to execute
- * @param enableAISemanticSearch Enable vector based semantic search
- * @returns
- */
+type RecordsByDate = Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>;
+
 export function useRecordQuery(
   query: string,
   enableAISemanticSearch?: boolean,
+  minCompleteDays: number = 3,
 ): {
-  data:
-    | Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>
-    | undefined; // Data returned by query, grouped records by date
+  data: RecordsByDate | undefined;
   status: QueryStatus;
-  initialized: boolean; // Indicates whether the query has run at least once
-  loadNextPage: () => void; // Function to load next page of results
-  showIndividualItems: boolean; // Indicates whether to show individual items or group by date
+  initialized: boolean;
+  loadNextPage: () => void;
+  showIndividualItems: boolean;
 } {
-  const db = useRxDb(),
-    { experimental__use_openai_rag } = useLocalConfig(),
-    user = useUser(),
-    hasRun = useRef(false),
-    [status, setQueryStatus] = useState(QueryStatus.IDLE),
-    [initialized, setInitialized] = useState(false),
-    [data, setList] =
-      useState<Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>>(),
-    [currentPage, setCurrentPage] = useState(0),
-    [showIndividualItems, setShowIndividualItems] = useState(false),
-    vectorStorage = useVectors(),
-    execQuery = useCallback(
-      /**
-       *
-       * @param merge Merge results with existing results. If false, results overwrite existing results
-       * @param loadMore Indicate whether this is an inital load or a load more query. Affects visual loading state
-       */
-      async ({ loadMore = false }: { loadMore?: boolean }) => {
-        setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
+  const db = useRxDb();
+  const { experimental__use_openai_rag } = useLocalConfig();
+  const user = useUser();
+  const vectorStorage = useVectors();
 
-        try {
-          let isAiSearch = false;
-          if (loadMore) {
-            setQueryStatus(QueryStatus.LOADING_MORE);
-          }
+  const [status, setQueryStatus] = useState(QueryStatus.IDLE);
+  const [initialized, setInitialized] = useState(false);
+  const [data, setData] = useState<RecordsByDate>();
+  const [currentPage, setCurrentPage] = useState(0);
+  const [groupedOffset, setGroupedOffset] = useState(0);
 
-          // Execute query
-          let groupedRecords = await fetchRecords(
+  const showIndividualItems = !!query;
+
+  const execQuery = useCallback(
+    async ({ loadMore = false }: { loadMore?: boolean }) => {
+      setQueryStatus(loadMore ? QueryStatus.LOADING_MORE : QueryStatus.LOADING);
+
+      try {
+        if (!query) {
+          const offset = loadMore ? groupedOffset : 0;
+          console.debug('useRecordQuery: grouped view, offset:', offset, 'loadMore:', loadMore);
+
+          const result = await fetchRecordsUntilCompleteDays(
             db,
             user.id,
-            query,
-            loadMore ? currentPage + 1 : currentPage,
+            minCompleteDays,
+            offset,
           );
 
-          if (vectorStorage) {
-            if (experimental__use_openai_rag) {
-              if (enableAISemanticSearch) {
-                if (Object.keys(groupedRecords).length === 0) {
-                  setQueryStatus(QueryStatus.LOADING);
-                  // If no results, try AI search
-                  isAiSearch = true;
-                  groupedRecords = (
-                    await fetchRecordsWithVectorSearch({
-                      db,
-                      vectorStorage,
-                      query,
-                      userId: user.id,
-                      numResults: 20,
-                      enableSearchAttachments: true,
-                      groupByDate: true,
-                    })
-                  ).records;
-                  setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
-                }
-              }
-            }
-          }
+          console.debug('useRecordQuery: grouped result', {
+            days: Object.keys(result.records).length,
+            hasMore: result.hasMore,
+            lastOffset: result.lastOffset,
+          });
 
-          // If load more, increment page. Otherwise, reset page to 0
-          if (loadMore) {
-            console.debug('TimelineTab: load next page: ', currentPage + 1);
-            setCurrentPage(currentPage + 1);
-          } else {
-            setCurrentPage(0);
-            console.debug('TimelineTab: reset page to 0');
-          }
+          setData((prev) =>
+            loadMore ? mergeRecordsByDate(prev, result.records) : result.records,
+          );
+          setGroupedOffset(result.lastOffset);
+          setQueryStatus(
+            result.hasMore ? QueryStatus.SUCCESS : QueryStatus.COMPLETE_HIDE_LOAD_MORE,
+          );
+        } else {
+          const page = loadMore ? currentPage + 1 : 0;
+          let groupedRecords = await fetchRecords(db, user.id, query, page);
 
-          // Merge results with existing results or overwrite existing results
-          if (loadMore) {
-            const merged = { ...data };
-            for (const [dateKey, records] of Object.entries(groupedRecords)) {
-              if (merged[dateKey]) {
-                merged[dateKey] = [...merged[dateKey], ...records];
-              } else {
-                merged[dateKey] = records;
-              }
-            }
-            setList(merged);
-          } else {
-            setList(groupedRecords);
-          }
-          console.debug(groupedRecords);
-
-          // Set query status.
-          // Complete indicates that there are no more results to load
-          // Success indicates that there are more results to load
           if (
-            Object.values(groupedRecords).reduce((a, b) => a + b.length, 0) <
-            PAGE_SIZE
+            vectorStorage &&
+            experimental__use_openai_rag &&
+            enableAISemanticSearch &&
+            Object.keys(groupedRecords).length === 0
           ) {
+            setQueryStatus(QueryStatus.LOADING);
+            groupedRecords = (
+              await fetchRecordsWithVectorSearch({
+                db,
+                vectorStorage,
+                query,
+                userId: user.id,
+                numResults: 20,
+                enableSearchAttachments: true,
+                groupByDate: true,
+              })
+            ).records;
+            setData(groupedRecords);
             setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
-          } else {
-            setQueryStatus(QueryStatus.SUCCESS);
+            setInitialized(true);
+            return;
           }
 
-          if (isAiSearch) {
-            // disable paging for AI search
-            setQueryStatus(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
+          if (loadMore) {
+            console.debug('useRecordQuery: load next page:', page);
+            setCurrentPage(page);
+            setData((prev) => mergeRecordsByDate(prev, groupedRecords));
+          } else {
+            console.debug('useRecordQuery: reset page to 0');
+            setCurrentPage(0);
+            setData(groupedRecords);
           }
 
-          setInitialized(true);
-          if (query) {
-            setShowIndividualItems(true);
-          } else {
-            setShowIndividualItems(false);
-          }
-        } catch (e) {
-          console.error(e);
-          setQueryStatus(QueryStatus.ERROR);
+          console.debug('useRecordQuery: groupedRecords', groupedRecords);
+
+          const recordCount = Object.values(groupedRecords).reduce(
+            (a, b) => a + b.length,
+            0,
+          );
+          setQueryStatus(
+            recordCount < PAGE_SIZE
+              ? QueryStatus.COMPLETE_HIDE_LOAD_MORE
+              : QueryStatus.SUCCESS,
+          );
         }
-      },
-      [
-        vectorStorage,
-        db,
-        user.id,
-        query,
-        currentPage,
-        experimental__use_openai_rag,
-        enableAISemanticSearch,
-        data,
-      ],
-    ),
-    debounceExecQuery = useDebounceCallback(
-      () => execQuery({ loadMore: false }),
-      experimental__use_openai_rag ? 1000 : 300,
-    ),
-    loadNextPage = useDebounceCallback(
-      () => execQuery({ loadMore: true }),
-      300,
-    );
 
-  useEffect(() => {
-    if (!hasRun.current) {
-      hasRun.current = true;
-      setQueryStatus(QueryStatus.LOADING);
-      execQuery({
-        loadMore: false,
-      });
-    }
-  }, [execQuery, query]);
-
-  useEffect(() => {
-    console.debug(
-      'TimelineTab: query changed or AI toggled: ',
+        setInitialized(true);
+      } catch (e) {
+        console.error(e);
+        setQueryStatus(QueryStatus.ERROR);
+      }
+    },
+    [
+      db,
+      user.id,
       query,
+      currentPage,
+      groupedOffset,
+      minCompleteDays,
+      vectorStorage,
+      experimental__use_openai_rag,
       enableAISemanticSearch,
-    );
+    ],
+  );
+
+  const execQueryRef = useRef(execQuery);
+  execQueryRef.current = execQuery;
+
+  const loadNextPage = useDebounceCallback(
+    () => execQueryRef.current({ loadMore: true }),
+    300,
+  );
+
+  useEffect(() => {
     setQueryStatus(QueryStatus.LOADING);
-    debounceExecQuery();
-  }, [query, debounceExecQuery, enableAISemanticSearch]);
+    setGroupedOffset(0);
+    setCurrentPage(0);
+    execQueryRef.current({ loadMore: false });
+  }, [query, enableAISemanticSearch]);
 
   return { data, status, initialized, loadNextPage, showIndividualItems };
 }

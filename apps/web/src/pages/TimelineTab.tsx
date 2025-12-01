@@ -547,3 +547,150 @@ export async function fetchRecords(
 
   return gr;
 }
+
+export async function fetchRawRecords(
+  db: RxDatabase<DatabaseCollections>,
+  user_id: string,
+  offset: number,
+  limit: number,
+): Promise<ClinicalDocument<BundleEntry<FhirResource>>[]> {
+  const selector: MangoQuerySelector<ClinicalDocument<unknown>> = {
+    user_id: user_id,
+    'data_record.resource_type': {
+      $nin: [
+        'patient',
+        'careplan',
+        'allergyintolerance',
+        'documentreference_attachment',
+        'provenance',
+      ],
+    },
+    'metadata.date': { $nin: [null, undefined, ''] },
+  };
+
+  const docs = await db.clinical_documents
+    .find({
+      selector,
+      sort: [{ 'metadata.date': 'desc' }],
+    })
+    .skip(offset)
+    .limit(limit)
+    .exec();
+
+  return docs.map((doc) => doc.toMutableJSON() as ClinicalDocument<BundleEntry<FhirResource>>);
+}
+
+export function getRecordDateKey(record: ClinicalDocument<BundleEntry<FhirResource>>): string {
+  if (!record.metadata?.date) {
+    return new Date(0).toISOString().split('T')[0];
+  }
+  return format(parseISO(record.metadata.date), 'yyyy-MM-dd');
+}
+
+export function groupRecordsByDate(
+  records: ClinicalDocument<BundleEntry<FhirResource>>[],
+): Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]> {
+  const grouped: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]> = {};
+
+  for (const record of records) {
+    const dateKey = getRecordDateKey(record);
+    if (grouped[dateKey]) {
+      grouped[dateKey].push(record);
+    } else {
+      grouped[dateKey] = [record];
+    }
+  }
+
+  return grouped;
+}
+
+export function mergeRecordsByDate(
+  existing: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]> | undefined,
+  incoming: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>,
+): Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]> {
+  if (!existing) return incoming;
+  const merged = { ...existing };
+  for (const [dateKey, records] of Object.entries(incoming)) {
+    merged[dateKey] = merged[dateKey]
+      ? [...merged[dateKey], ...records]
+      : records;
+  }
+  return merged;
+}
+
+export async function fetchRecordsUntilCompleteDays(
+  db: RxDatabase<DatabaseCollections>,
+  user_id: string,
+  minDays: number = 3,
+  existingOffset: number = 0,
+): Promise<{
+  records: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>;
+  hasMore: boolean;
+  lastOffset: number;
+}> {
+  let offset = existingOffset;
+  const allRecords: ClinicalDocument<BundleEntry<FhirResource>>[] = [];
+  const uniqueDates = new Set<string>();
+  let hasMore = true;
+
+  while (true) {
+    const batch = await fetchRawRecords(db, user_id, offset, PAGE_SIZE);
+
+    if (batch.length === 0) {
+      hasMore = false;
+      break;
+    }
+
+    allRecords.push(...batch);
+    offset += batch.length;
+
+    for (const record of batch) {
+      uniqueDates.add(getRecordDateKey(record));
+    }
+
+    if (batch.length < PAGE_SIZE) {
+      hasMore = false;
+      break;
+    }
+
+    if (uniqueDates.size >= minDays) {
+      const checkBatch = await fetchRawRecords(db, user_id, offset, 1);
+      if (checkBatch.length === 0) {
+        hasMore = false;
+        break;
+      }
+
+      const nextDate = getRecordDateKey(checkBatch[0]);
+      const sortedDates = [...uniqueDates].sort();
+      const oldestDate = sortedDates[0];
+
+      if (nextDate !== oldestDate) {
+        break;
+      }
+    }
+  }
+
+  const grouped = groupRecordsByDate(allRecords);
+  const sortedDates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+
+  if (sortedDates.length > minDays) {
+    const datesToKeep = new Set(sortedDates.slice(0, minDays));
+    const truncated: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]> = {};
+    let keptCount = 0;
+
+    for (const date of sortedDates) {
+      if (datesToKeep.has(date)) {
+        truncated[date] = grouped[date];
+        keptCount += grouped[date].length;
+      }
+    }
+
+    return {
+      records: truncated,
+      hasMore: true,
+      lastOffset: existingOffset + keptCount,
+    };
+  }
+
+  return { records: grouped, hasMore, lastOffset: offset };
+}
