@@ -2,7 +2,7 @@
 import { memo, useEffect, useMemo, useReducer, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { Combobox } from '@headlessui/react';
+import { Combobox, Disclosure } from '@headlessui/react';
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid';
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import { DSTU2Endpoint as CernerDSTU2Endpoint } from '@mere/cerner';
@@ -231,6 +231,16 @@ export function TenantSelectModal({
     return sources as SourceItem[];
   }, [userPreferences?.use_proxy, vaUrl]);
 
+  const mainSources = useMemo(
+    () => ConnectionSources.filter((s) => s.fhirVersion !== 'DSTU2'),
+    [ConnectionSources],
+  );
+
+  const legacySources = useMemo(
+    () => ConnectionSources.filter((s) => s.fhirVersion === 'DSTU2'),
+    [ConnectionSources],
+  );
+
   useEffect(() => {
     const abortController = new AbortController();
 
@@ -295,11 +305,11 @@ export function TenantSelectModal({
               title={'Which patient portal do you use?'}
               setClose={() => setOpen((x) => !x)}
             />
-            <div className="flex h-full max-h-full scroll-py-3 flex-col items-center justify-center overflow-y-scroll pt-8 sm:pt-0">
+            <div className="flex h-full max-h-full scroll-py-3 flex-col items-center overflow-y-scroll pt-8 sm:pt-0">
               <ul
                 className="grid w-full grid-cols-2 gap-x-4 gap-y-8 px-4 py-8 sm:grid-cols-3 sm:gap-x-8 sm:px-4 sm:py-12" // lg:grid-cols-4 xl:gap-x-8"
               >
-                {ConnectionSources.map((file) => (
+                {mainSources.map((file) => (
                   <li key={file.source} className="relative">
                     {file.href ? (
                       <div
@@ -423,6 +433,72 @@ export function TenantSelectModal({
                   </li>
                 ))}
               </ul>
+              <Disclosure as="div" className="w-full">
+                {({ open }) => (
+                  <>
+                    <Disclosure.Button className="flex w-full items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">
+                      <span>Legacy Connections</span>
+                      <svg
+                        className={`h-4 w-4 ${open ? 'rotate-180' : ''}`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </Disclosure.Button>
+                    <Disclosure.Panel>
+                      <ul className="grid w-full grid-cols-2 gap-x-4 gap-y-8 px-4 pb-8 sm:grid-cols-3 sm:gap-x-8 sm:px-4">
+                        {legacySources.map((file) => (
+                          <li key={file.source} className="relative">
+                            <div
+                              className="aspect-h-7 aspect-w-10 focus-within:ring-primary-500 bg-primary-700 hover:bg-primary-600 group block w-full overflow-hidden rounded-lg transition-all focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100"
+                              onClick={() => {
+                                if (Config.IS_DEMO === 'enabled') {
+                                  notifyDispatch({
+                                    type: 'set_notification',
+                                    message:
+                                      'Adding new connections is disabled in demo mode',
+                                    variant: 'error',
+                                  });
+                                  return;
+                                }
+                                dispatch({
+                                  type: 'setEmrVendor',
+                                  payload: {
+                                    vendor: file.vendor,
+                                    fhirVersion: file.fhirVersion,
+                                  },
+                                });
+                              }}
+                            >
+                              <img
+                                src={file.source}
+                                alt={file.title}
+                                className="pointer-events-none object-cover group-hover:opacity-75"
+                              />
+                              <button
+                                type="button"
+                                className="absolute inset-0 focus:outline-none"
+                              >
+                                <span className="sr-only">{`Select ${file.title}`}</span>
+                              </button>
+                            </div>
+                            <p className="pointer-events-none mt-2 block truncate text-sm font-medium text-gray-900">
+                              {file.title}
+                            </p>
+                            {file.alt && (
+                              <p className="pointer-events-none block text-sm font-medium text-gray-700">
+                                {file.alt}
+                              </p>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </Disclosure.Panel>
+                  </>
+                )}
+              </Disclosure>
             </div>
           </>
         ) : (
