@@ -52,7 +52,10 @@ function useEpicDynamicRegistrationLogin() {
         ),
         epicAuthUrl = localStorage.getItem(EpicLocalStorageKeys.EPIC_AUTH_URL),
         epicName = localStorage.getItem(EpicLocalStorageKeys.EPIC_NAME),
-        epicId = localStorage.getItem(EpicLocalStorageKeys.EPIC_ID);
+        epicId = localStorage.getItem(EpicLocalStorageKeys.EPIC_ID),
+        storedFhirVersion = localStorage.getItem(
+          EpicLocalStorageKeys.FHIR_VERSION,
+        ) as 'DSTU2' | 'R4' | null;
 
       if (
         code &&
@@ -65,6 +68,9 @@ function useEpicDynamicRegistrationLogin() {
         user
       ) {
         hasRun.current = true;
+        const fhirVersion =
+          storedFhirVersion ||
+          (epicBaseUrl.toUpperCase().includes('/R4') ? 'R4' : 'DSTU2');
         handleLogin({
           code,
           epicBaseUrl,
@@ -76,6 +82,7 @@ function useEpicDynamicRegistrationLogin() {
           navigate,
           user,
           enableProxy: userPreferences?.use_proxy,
+          fhirVersion,
         })
           .then()
           .catch((e) => {
@@ -201,6 +208,7 @@ const handleLogin = async ({
   navigate,
   user,
   enableProxy = false,
+  fhirVersion = 'DSTU2',
 }: {
   code: string;
   epicBaseUrl: string;
@@ -212,6 +220,7 @@ const handleLogin = async ({
   navigate: NavigateFunction;
   user: UserDocument;
   enableProxy?: boolean;
+  fhirVersion?: 'DSTU2' | 'R4';
 }) => {
   let dynamicRegResponse: EpicDynamicRegistrationResponse;
 
@@ -222,6 +231,7 @@ const handleLogin = async ({
     epicName,
     epicId,
     enableProxy,
+    fhirVersion,
   );
 
   // Attempt dynamic registration
@@ -232,6 +242,7 @@ const handleLogin = async ({
       epicName,
       epicId,
       useProxy: enableProxy,
+      version: fhirVersion,
     });
   } catch (e) {
     // Failed, save current access token without dynamic registration
@@ -246,7 +257,9 @@ const handleLogin = async ({
         db,
         epicId,
         user,
+        fhirVersion,
       });
+      localStorage.removeItem(EpicLocalStorageKeys.FHIR_VERSION);
       return Promise.reject(
         new DynamicRegistrationError(
           'This MyChart instance does not support dynamic client registration, which means we cannot automatically fetch your records in the future. We will still try to pull your records once, but you will need to sign in again to pull them again in the future.',
@@ -275,6 +288,8 @@ const handleLogin = async ({
     db,
     epicId,
     user,
+    fhirVersion,
   });
+  localStorage.removeItem(EpicLocalStorageKeys.FHIR_VERSION);
   return await redirectToConnectionsTab(navigate);
 };

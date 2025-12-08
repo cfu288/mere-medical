@@ -1,5 +1,5 @@
-import { format, parseISO } from 'date-fns';
 import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
+import { formatTime } from '../../utils/dateFormatters';
 import { memo, useEffect, useRef, useState } from 'react';
 import { RxDatabase, RxDocument } from 'rxdb';
 
@@ -181,9 +181,7 @@ function DiagnosticReportCardUnmemo({
               .replace(/- final/gi, '')}
           </TimelineCardTitle>
           <TimelineCardSubtitile variant="dark">
-            {item.metadata?.date
-              ? format(parseISO(item.metadata.date), 'p')
-              : ''}
+            {formatTime(item.metadata?.date)}
           </TimelineCardSubtitile>
           {conn?.get('name') ? (
             <TimelineCardSubtitile variant="light">

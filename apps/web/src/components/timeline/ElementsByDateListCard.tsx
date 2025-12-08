@@ -10,11 +10,23 @@ import {
   Observation,
   Procedure,
 } from 'fhir/r2';
-import { MedicationRequest, BundleEntry as R4BundleEntry } from 'fhir/r4';
+import {
+  MedicationRequest,
+  BundleEntry as R4BundleEntry,
+  Coverage,
+  CarePlan,
+  CareTeam,
+  Goal,
+  Appointment,
+  Specimen,
+} from 'fhir/r4';
 import React, { memo, useEffect, useMemo, useRef, useState } from 'react';
 import {
   getEncounterClass,
   getEncounterLocation,
+  getDiagnosticReportPerformer,
+  getObservationPerformer,
+  getProcedurePerformer,
 } from '../../utils/fhirAccessHelpers';
 
 import { Transition } from '@headlessui/react';
@@ -24,18 +36,24 @@ import { MapPinIcon, UserIcon } from '@heroicons/react/24/outline';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { CardBase } from '../connection/CardBase';
 import { useConnectionDocs } from '../hooks/useConnectionDoc';
+import { AppointmentCard } from './AppointmentCard';
+import { CarePlanCard } from './CarePlanCard';
+import { CareTeamCard } from './CareTeamCard';
 import { ConditionCard } from './ConditionCard';
+import { CoverageCard } from './CoverageCard';
 import { DiagnosticReportCard } from './DiagnosticReportCard';
 import {
   DocumentReferenceAttachmentCard,
   DocumentReferenceCard,
 } from './DocumentReferenceCard';
 import { EncounterCard } from './EncounterCard';
+import { GoalCard } from './GoalCard';
 import { ImmunizationCard } from './ImmunizationCard';
 import { MedicationCard } from './MedicationCard';
 import { MedicationRequestCard } from './MedicationRequestCard';
 import { ObservationCard } from './ObservationCard';
 import { ProcedureCard } from './ProcedureCard';
+import { SpecimenCard } from './SpecimenCard';
 import { TimelineCardCategoryTitle } from './TimelineCardCategoryTitle';
 import { TimelineCardTitle } from './TimelineCardTitle';
 import { useClinicalDoc } from '../hooks/useClinicalDoc';
@@ -302,6 +320,90 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
             return 0;
           }) as ClinicalDocument<BundleEntry<Encounter>>[],
       [itemList],
+    ),
+    coverages = useMemo(
+      () =>
+        itemList
+          .filter((item) => item.data_record.resource_type === 'coverage')
+          .sort((a, b) => {
+            if (a.metadata?.display_name && b.metadata?.display_name) {
+              return a.metadata.display_name.localeCompare(
+                b.metadata.display_name,
+              );
+            }
+            return 0;
+          }) as ClinicalDocument<R4BundleEntry<Coverage>>[],
+      [itemList],
+    ),
+    carePlans = useMemo(
+      () =>
+        itemList
+          .filter((item) => item.data_record.resource_type === 'careplan')
+          .sort((a, b) => {
+            if (a.metadata?.display_name && b.metadata?.display_name) {
+              return a.metadata.display_name.localeCompare(
+                b.metadata.display_name,
+              );
+            }
+            return 0;
+          }) as ClinicalDocument<R4BundleEntry<CarePlan>>[],
+      [itemList],
+    ),
+    careTeams = useMemo(
+      () =>
+        itemList
+          .filter((item) => item.data_record.resource_type === 'careteam')
+          .sort((a, b) => {
+            if (a.metadata?.display_name && b.metadata?.display_name) {
+              return a.metadata.display_name.localeCompare(
+                b.metadata.display_name,
+              );
+            }
+            return 0;
+          }) as ClinicalDocument<R4BundleEntry<CareTeam>>[],
+      [itemList],
+    ),
+    goals = useMemo(
+      () =>
+        itemList
+          .filter((item) => item.data_record.resource_type === 'goal')
+          .sort((a, b) => {
+            if (a.metadata?.display_name && b.metadata?.display_name) {
+              return a.metadata.display_name.localeCompare(
+                b.metadata.display_name,
+              );
+            }
+            return 0;
+          }) as ClinicalDocument<R4BundleEntry<Goal>>[],
+      [itemList],
+    ),
+    appointments = useMemo(
+      () =>
+        itemList
+          .filter((item) => item.data_record.resource_type === 'appointment')
+          .sort((a, b) => {
+            if (a.metadata?.display_name && b.metadata?.display_name) {
+              return a.metadata.display_name.localeCompare(
+                b.metadata.display_name,
+              );
+            }
+            return 0;
+          }) as ClinicalDocument<R4BundleEntry<Appointment>>[],
+      [itemList],
+    ),
+    specimens = useMemo(
+      () =>
+        itemList
+          .filter((item) => item.data_record.resource_type === 'specimen')
+          .sort((a, b) => {
+            if (a.metadata?.display_name && b.metadata?.display_name) {
+              return a.metadata.display_name.localeCompare(
+                b.metadata.display_name,
+              );
+            }
+            return 0;
+          }) as ClinicalDocument<R4BundleEntry<Specimen>>[],
+      [itemList],
     );
 
   const [expanded, setExpanded] = React.useState(false);
@@ -321,6 +423,12 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
           ? 'Documents'
           : '',
         encounters.length > 0 ? 'Encounters' : '',
+        coverages.length > 0 ? 'Coverage' : '',
+        carePlans.length > 0 ? 'Care Plans' : '',
+        careTeams.length > 0 ? 'Care Teams' : '',
+        goals.length > 0 ? 'Goals' : '',
+        appointments.length > 0 ? 'Appointments' : '',
+        specimens.length > 0 ? 'Specimens' : '',
       ].filter(Boolean),
     [
       conditions.length,
@@ -333,6 +441,12 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
       medicationRequests.length,
       observations.length,
       procedures.length,
+      coverages.length,
+      carePlans.length,
+      careTeams.length,
+      goals.length,
+      appointments.length,
+      specimens.length,
     ],
   );
 
@@ -344,17 +458,21 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
   }, [itemList]);
 
   const uniqueAuthors = useMemo(() => {
-    const uniqueDocs = new Set(
-      itemList
-        .map(
-          (item) =>
-            (item.data_record.raw as BundleEntry<DiagnosticReport>)?.resource
-              ?.performer,
-        )
-        .map((author) => author?.display)
-        .filter(Boolean),
-    );
-    return Array.from(uniqueDocs);
+    const performers = itemList
+      .map((item) => {
+        switch (item.data_record.resource_type) {
+          case 'diagnosticreport':
+            return getDiagnosticReportPerformer(item);
+          case 'observation':
+            return getObservationPerformer(item);
+          case 'procedure':
+            return getProcedurePerformer(item);
+          default:
+            return undefined;
+        }
+      })
+      .filter(Boolean);
+    return Array.from(new Set(performers));
   }, [itemList]);
 
   const connectionDocs = useConnectionDocs(uniqueConnectionIds);
@@ -556,6 +674,114 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
             </ul>
           </div>
         )}
+        {coverages.length > 0 && (
+          <div className="mb-2 ml-2">
+            <TimelineCardCategoryTitle
+              title={'Coverage'}
+              color="text-amber-600"
+            />
+            <ul className="list-disc list-inside">
+              {coverages.map((item) => (
+                <li
+                  className="text-xs font-medium md:text-sm text-gray-900"
+                  key={item.id}
+                >
+                  {item.metadata?.display_name}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {carePlans.length > 0 && (
+          <div className="mb-2 ml-2">
+            <TimelineCardCategoryTitle
+              title={'Care Plans'}
+              color="text-indigo-600"
+            />
+            <ul className="list-disc list-inside">
+              {carePlans.map((item) => (
+                <li
+                  className="text-xs font-medium md:text-sm text-gray-900"
+                  key={item.id}
+                >
+                  {item.metadata?.display_name}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {careTeams.length > 0 && (
+          <div className="mb-2 ml-2">
+            <TimelineCardCategoryTitle
+              title={'Care Teams'}
+              color="text-cyan-600"
+            />
+            <ul className="list-disc list-inside">
+              {careTeams.map((item) => (
+                <li
+                  className="text-xs font-medium md:text-sm text-gray-900"
+                  key={item.id}
+                >
+                  {item.metadata?.display_name}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {goals.length > 0 && (
+          <div className="mb-2 ml-2">
+            <TimelineCardCategoryTitle
+              title={'Goals'}
+              color="text-emerald-600"
+            />
+            <ul className="list-disc list-inside">
+              {goals.map((item) => (
+                <li
+                  className="text-xs font-medium md:text-sm text-gray-900"
+                  key={item.id}
+                >
+                  {item.metadata?.display_name}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {appointments.length > 0 && (
+          <div className="mb-2 ml-2">
+            <TimelineCardCategoryTitle
+              title={'Appointments'}
+              color="text-violet-600"
+            />
+            <ul className="list-disc list-inside">
+              {appointments.map((item) => (
+                <li
+                  className="text-xs font-medium md:text-sm text-gray-900"
+                  key={item.id}
+                >
+                  {item.metadata?.display_name}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {specimens.length > 0 && (
+          <div className="mb-2 ml-2">
+            <TimelineCardCategoryTitle
+              title={'Specimens'}
+              color="text-orange-600"
+            />
+            <ul className="list-disc list-inside">
+              {specimens.map((item) => (
+                <li
+                  className="text-xs font-medium md:text-sm text-gray-900"
+                  key={item.id}
+                >
+                  {item.metadata?.display_name}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="relative">
           <div
             className="absolute inset-0 flex items-center"
@@ -673,6 +899,54 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
                       R4BundleEntry<MedicationRequest>
                     >
                   }
+                />
+              </div>
+            ))}
+            {coverages.map((item) => (
+              <div key={item.id} className="my-2">
+                <CoverageCard
+                  key={item.id}
+                  item={item}
+                />
+              </div>
+            ))}
+            {carePlans.map((item) => (
+              <div key={item.id} className="my-2">
+                <CarePlanCard
+                  key={item.id}
+                  item={item}
+                />
+              </div>
+            ))}
+            {careTeams.map((item) => (
+              <div key={item.id} className="my-2">
+                <CareTeamCard
+                  key={item.id}
+                  item={item}
+                />
+              </div>
+            ))}
+            {goals.map((item) => (
+              <div key={item.id} className="my-2">
+                <GoalCard
+                  key={item.id}
+                  item={item}
+                />
+              </div>
+            ))}
+            {appointments.map((item) => (
+              <div key={item.id} className="my-2">
+                <AppointmentCard
+                  key={item.id}
+                  item={item}
+                />
+              </div>
+            ))}
+            {specimens.map((item) => (
+              <div key={item.id} className="my-2">
+                <SpecimenCard
+                  key={item.id}
+                  item={item}
                 />
               </div>
             ))}

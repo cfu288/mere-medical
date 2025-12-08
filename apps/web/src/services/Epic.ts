@@ -3,6 +3,7 @@
  */
 
 /* eslint-disable no-inner-declarations */
+import { isEpicSandbox } from './EpicUtils';
 import {
   AllergyIntolerance,
   Bundle,
@@ -18,6 +19,23 @@ import {
   Patient,
   Procedure,
 } from 'fhir/r2';
+import {
+  MedicationRequest,
+  MedicationDispense,
+  ServiceRequest,
+  Goal,
+  CareTeam,
+  Coverage,
+  Device,
+  Media,
+  Specimen,
+  Provenance,
+  RelatedPerson,
+  Location as FhirLocation,
+  Organization,
+  PractitionerRole,
+  Encounter,
+} from 'fhir/r4';
 import { RxDocument, RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../components/providers/DatabaseCollections';
 import {
@@ -26,10 +44,11 @@ import {
   EpicConnectionDocument,
 } from '../models/connection-document/ConnectionDocument.type';
 import { Routes } from '../Routes';
-import { DSTU2 } from '.';
+import { DSTU2, R4 } from '.';
 import Config from '../environments/config.json';
 import { createConnection } from '../repositories/ConnectionRepository';
 import uuid4 from '../utils/UUIDUtils';
+import { concatPath } from '../utils/urlUtils';
 import { JsonWebKeyWKid, signJwt } from './JWTTools';
 import { getPublicKey, IDBKeyConfig } from './WebCrypto';
 import { JsonWebKeySet } from '../services/JWTTools';
@@ -61,18 +80,48 @@ export function isDSTU2Url(url: string) {
   return url.includes('/api/FHIR/DSTU2');
 }
 
+export function getR4Url(baseUrl: string) {
+  return isR4Url(baseUrl)
+    ? new URL(baseUrl).toString()
+    : new URL('/api/FHIR/R4/', baseUrl).toString();
+}
+
+export function isR4Url(url: string) {
+  return url.includes('/api/FHIR/R4');
+}
+
+export function getEpicClientId(
+  version: 'DSTU2' | 'R4',
+  isSandbox: boolean,
+): string {
+  if (isSandbox) {
+    if (version === 'R4') {
+      return (
+        Config.EPIC_SANDBOX_CLIENT_ID_R4 || Config.EPIC_SANDBOX_CLIENT_ID || ''
+      );
+    }
+    return (
+      Config.EPIC_SANDBOX_CLIENT_ID_DSTU2 || Config.EPIC_SANDBOX_CLIENT_ID || ''
+    );
+  }
+
+  if (version === 'R4') {
+    return Config.EPIC_CLIENT_ID_R4 || Config.EPIC_CLIENT_ID || '';
+  }
+  return Config.EPIC_CLIENT_ID_DSTU2 || Config.EPIC_CLIENT_ID || '';
+}
+
 export function getLoginUrl(
   baseUrl: string,
   authorizeUrl: string,
   isSandbox = false,
+  version: 'DSTU2' | 'R4' = 'DSTU2',
 ): string & Location {
   const params = {
-    client_id: `${
-      isSandbox ? Config.EPIC_SANDBOX_CLIENT_ID : Config.EPIC_CLIENT_ID
-    }`,
+    client_id: getEpicClientId(version, isSandbox),
     scope: 'openid fhirUser',
     redirect_uri: `${Config.PUBLIC_URL}${Routes.EpicCallback}`,
-    aud: getDSTU2Url(baseUrl),
+    aud: version === 'R4' ? getR4Url(baseUrl) : getDSTU2Url(baseUrl),
     response_type: 'code',
   };
 
@@ -88,29 +137,43 @@ export enum EpicLocalStorageKeys {
   EPIC_ID = 'epicId',
   EPIC_AUTH_URL = 'epicAuthUrl',
   EPIC_TOKEN_URL = 'epicTokenUrl',
+  FHIR_VERSION = 'epicFhirVersion',
 }
 
 async function getFHIRResource<T extends FhirResource>(
   baseUrl: string,
   connectionDocument: EpicConnectionDocument,
   fhirResourceUrl: string,
-  params?: Record<string, string>,
+  params?: Record<string, string | string[]>,
   useProxy = false,
 ): Promise<BundleEntry<T>[]> {
   const epicId = connectionDocument.tenant_id;
+  const fhirVersion = connectionDocument.fhir_version || 'DSTU2';
+  const fhirUrl =
+    fhirVersion === 'R4' ? getR4Url(baseUrl) : getDSTU2Url(baseUrl);
+
+  const searchParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        value.forEach((v) => searchParams.append(key, v));
+      } else {
+        searchParams.append(key, value);
+      }
+    });
+  }
+
   const defaultUrl = `${URLJoin(
-    getDSTU2Url(baseUrl),
+    fhirUrl,
     fhirResourceUrl,
-    `?${new URLSearchParams(params)}`,
+    `?${searchParams.toString()}`,
   )}`;
   const proxyUrl = URLJoin(
     Config.PUBLIC_URL,
     '/api/proxy',
-    `?serviceId=${
-      epicId === Config.EPIC_SANDBOX_CLIENT_ID ? 'sandbox_epic' : epicId
-    }`,
+    `?serviceId=${epicId}`,
     `&target=${encodeURIComponent(
-      `${fhirResourceUrl}?${new URLSearchParams(params)}`,
+      `${fhirResourceUrl}?${searchParams.toString()}`,
     )}&target_type=base`,
   );
 
@@ -159,7 +222,7 @@ async function syncFHIRResource<T extends FhirResource>(
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
   mapper: (proc: BundleEntry<T>) => CreateClinicalDocument<BundleEntry<T>>,
-  params: Record<string, string>,
+  params: Record<string, string | string[]>,
   useProxy = false,
 ) {
   const resc = await getFHIRResource<T>(
@@ -183,6 +246,71 @@ async function syncFHIRResource<T extends FhirResource>(
   return cdsmap;
 }
 
+async function processIncludedResources(
+  entries: BundleEntry<any>[],
+  mappers: Record<
+    string,
+    (entry: BundleEntry<any>) => CreateClinicalDocument<BundleEntry<any>>
+  >,
+  db: RxDatabase<DatabaseCollections>,
+  excludeResourceTypes: string[] = [],
+): Promise<void> {
+  const resourceTypeGroups = new Map<string, BundleEntry<any>[]>();
+
+  for (const entry of entries) {
+    const resourceType = entry.resource?.resourceType;
+    if (resourceType && !excludeResourceTypes.includes(resourceType)) {
+      if (!resourceTypeGroups.has(resourceType)) {
+        resourceTypeGroups.set(resourceType, []);
+      }
+      resourceTypeGroups.get(resourceType)!.push(entry);
+    }
+  }
+
+  for (const [resourceType, groupedEntries] of resourceTypeGroups.entries()) {
+    const mapper = mappers[resourceType];
+    if (mapper) {
+      const cds = groupedEntries.map(mapper);
+      await db.clinical_documents.bulkUpsert(
+        cds as unknown as ClinicalDocument[],
+      );
+    }
+  }
+}
+
+async function syncFHIRResourceWithIncludes<T extends FhirResource>(
+  baseUrl: string,
+  connectionDocument: EpicConnectionDocument,
+  db: RxDatabase<DatabaseCollections>,
+  fhirResourceUrl: string,
+  mapper: (proc: BundleEntry<T>) => CreateClinicalDocument<BundleEntry<T>>,
+  params: Record<string, string | string[]>,
+  includeMappers: Record<
+    string,
+    (entry: BundleEntry<any>) => CreateClinicalDocument<BundleEntry<any>>
+  >,
+  useProxy = false,
+) {
+  const resc = await getFHIRResource<T>(
+    baseUrl,
+    connectionDocument,
+    fhirResourceUrl,
+    params,
+    useProxy,
+  );
+
+  const cds = resc
+    .filter(
+      (i) =>
+        i.resource?.resourceType.toLowerCase() ===
+        fhirResourceUrl.toLowerCase(),
+    )
+    .map(mapper);
+  await db.clinical_documents.bulkUpsert(cds as unknown as ClinicalDocument[]);
+
+  await processIncludedResources(resc, includeMappers, db, [fhirResourceUrl]);
+}
+
 /**
  * Sync all records from the FHIR server to the local database
  * @param baseUrl Base url of the FHIR server to sync from
@@ -197,24 +325,78 @@ export async function syncAllRecords(
   db: RxDatabase<DatabaseCollections>,
   useProxy = false,
 ): Promise<PromiseSettledResult<void[]>[]> {
+  const fhirVersion = connectionDocument.fhir_version || 'DSTU2';
+  const mappers = fhirVersion === 'R4' ? R4 : DSTU2;
+
   const procMapper = (proc: BundleEntry<Procedure>) =>
-    DSTU2.mapProcedureToClinicalDocument(proc, connectionDocument);
+    mappers.mapProcedureToClinicalDocument(proc as any, connectionDocument);
   const patientMapper = (pt: BundleEntry<Patient>) =>
-    DSTU2.mapPatientToClinicalDocument(pt, connectionDocument);
+    mappers.mapPatientToClinicalDocument(pt as any, connectionDocument);
   const obsMapper = (imm: BundleEntry<Observation>) =>
-    DSTU2.mapObservationToClinicalDocument(imm, connectionDocument);
+    mappers.mapObservationToClinicalDocument(imm as any, connectionDocument);
   const drMapper = (dr: BundleEntry<DiagnosticReport>) =>
-    DSTU2.mapDiagnosticReportToClinicalDocument(dr, connectionDocument);
+    mappers.mapDiagnosticReportToClinicalDocument(
+      dr as any,
+      connectionDocument,
+    );
   const medStatementMapper = (dr: BundleEntry<MedicationStatement>) =>
-    DSTU2.mapMedicationStatementToClinicalDocument(dr, connectionDocument);
+    mappers.mapMedicationStatementToClinicalDocument(
+      dr as any,
+      connectionDocument,
+    );
+  const medRequestMapper = (mr: BundleEntry<MedicationRequest>) =>
+    fhirVersion === 'R4'
+      ? R4.mapMedicationRequestToClinicalDocument(mr as any, connectionDocument)
+      : medStatementMapper(mr as any);
   const immMapper = (dr: BundleEntry<Immunization>) =>
-    DSTU2.mapImmunizationToClinicalDocument(dr, connectionDocument);
+    mappers.mapImmunizationToClinicalDocument(dr as any, connectionDocument);
   const conditionMapper = (dr: BundleEntry<Condition>) =>
-    DSTU2.mapConditionToClinicalDocument(dr, connectionDocument);
+    mappers.mapConditionToClinicalDocument(dr as any, connectionDocument);
   const allergyIntoleranceMapper = (a: BundleEntry<AllergyIntolerance>) =>
-    DSTU2.mapAllergyIntoleranceToClinicalDocument(a, connectionDocument);
+    mappers.mapAllergyIntoleranceToClinicalDocument(
+      a as any,
+      connectionDocument,
+    );
   const carePlanMapper = (dr: BundleEntry<CarePlan>) =>
-    DSTU2.mapCarePlanToClinicalDocument(dr, connectionDocument);
+    mappers.mapCarePlanToClinicalDocument(dr as any, connectionDocument);
+  const medDispenseMapper = (md: BundleEntry<MedicationDispense>) =>
+    R4.mapMedicationDispenseToClinicalDocument(md as any, connectionDocument);
+  const serviceRequestMapper = (sr: BundleEntry<ServiceRequest>) =>
+    R4.mapServiceRequestToClinicalDocument(sr as any, connectionDocument);
+  const goalMapper = (g: BundleEntry<Goal>) =>
+    R4.mapGoalToClinicalDocument(g as any, connectionDocument);
+  const careTeamMapper = (ct: BundleEntry<CareTeam>) =>
+    R4.mapCareTeamToClinicalDocument(ct as any, connectionDocument);
+  const coverageMapper = (c: BundleEntry<Coverage>) =>
+    R4.mapCoverageToClinicalDocument(c as any, connectionDocument);
+  const deviceMapper = (d: BundleEntry<Device>) =>
+    R4.mapDeviceToClinicalDocument(d as any, connectionDocument);
+  const encounterMapper = (e: BundleEntry<Encounter>) =>
+    R4.mapEncounterToClinicalDocument(e as any, connectionDocument);
+  const mediaMapper = (m: BundleEntry<Media>) =>
+    R4.mapMediaToClinicalDocument(m as any, connectionDocument);
+  const specimenMapper = (s: BundleEntry<Specimen>) =>
+    R4.mapSpecimenToClinicalDocument(s as any, connectionDocument);
+  const provenanceMapper = (p: BundleEntry<Provenance>) =>
+    R4.mapProvenanceToClinicalDocument(p as any, connectionDocument);
+  const relatedPersonMapper = (rp: BundleEntry<RelatedPerson>) =>
+    R4.mapRelatedPersonToClinicalDocument(rp as any, connectionDocument);
+  const locationMapper = (l: BundleEntry<FhirLocation>) =>
+    R4.mapLocationToClinicalDocument(l as any, connectionDocument);
+  const organizationMapper = (o: BundleEntry<Organization>) =>
+    R4.mapOrganizationToClinicalDocument(o as any, connectionDocument);
+  const practitionerRoleMapper = (pr: BundleEntry<PractitionerRole>) =>
+    R4.mapPractitionerRoleToClinicalDocument(pr as any, connectionDocument);
+
+  const includeMappers: Record<string, (entry: BundleEntry<any>) => any> = {
+    Specimen: specimenMapper,
+    Provenance: provenanceMapper,
+    Location: locationMapper,
+    Organization: organizationMapper,
+    PractitionerRole: practitionerRoleMapper,
+    RelatedPerson: relatedPersonMapper,
+    Media: mediaMapper,
+  };
 
   const syncJob = await Promise.allSettled([
     syncFHIRResource<Procedure>(
@@ -222,7 +404,7 @@ export async function syncAllRecords(
       connectionDocument,
       db,
       'Procedure',
-      procMapper,
+      procMapper as any,
       {
         patient: connectionDocument.patient,
       },
@@ -233,52 +415,95 @@ export async function syncAllRecords(
       connectionDocument,
       db,
       'Patient',
-      patientMapper,
+      patientMapper as any,
       {
         id: connectionDocument.patient,
       },
       useProxy,
     ),
-    syncFHIRResource<Observation>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'Observation',
-      obsMapper,
-      {
-        patient: connectionDocument.patient,
-        category: 'laboratory',
-      },
-      useProxy,
-    ),
-    syncFHIRResource<DiagnosticReport>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'DiagnosticReport',
-      drMapper,
-      {
-        patient: connectionDocument.patient,
-      },
-      useProxy,
-    ),
-    syncFHIRResource<MedicationStatement>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'MedicationStatement',
-      medStatementMapper,
-      {
-        patient: connectionDocument.patient,
-      },
-      useProxy,
-    ),
+    fhirVersion === 'R4'
+      ? syncFHIRResourceWithIncludes<Observation>(
+          baseUrl,
+          connectionDocument,
+          db,
+          'Observation',
+          obsMapper as any,
+          {
+            patient: connectionDocument.patient,
+            category: 'laboratory',
+            _include: ['Observation:specimen', 'Observation:derived-from'],
+            _revinclude: 'Provenance:target',
+          },
+          includeMappers,
+          useProxy,
+        )
+      : syncFHIRResource<Observation>(
+          baseUrl,
+          connectionDocument,
+          db,
+          'Observation',
+          obsMapper as any,
+          {
+            patient: connectionDocument.patient,
+            category: 'laboratory',
+          },
+          useProxy,
+        ),
+    fhirVersion === 'R4'
+      ? syncFHIRResourceWithIncludes<DiagnosticReport>(
+          baseUrl,
+          connectionDocument,
+          db,
+          'DiagnosticReport',
+          drMapper as any,
+          {
+            patient: connectionDocument.patient,
+            _include: ['DiagnosticReport:specimen', 'DiagnosticReport:media'],
+            _revinclude: 'Provenance:target',
+          },
+          includeMappers,
+          useProxy,
+        )
+      : syncFHIRResource<DiagnosticReport>(
+          baseUrl,
+          connectionDocument,
+          db,
+          'DiagnosticReport',
+          drMapper as any,
+          {
+            patient: connectionDocument.patient,
+          },
+          useProxy,
+        ),
+    fhirVersion === 'R4'
+      ? syncFHIRResource<any>(
+          baseUrl,
+          connectionDocument,
+          db,
+          'MedicationRequest',
+          medRequestMapper as any,
+          {
+            patient: connectionDocument.patient,
+          },
+          useProxy,
+        )
+      : syncFHIRResource<MedicationStatement>(
+          baseUrl,
+          connectionDocument,
+          db,
+          'MedicationStatement',
+          medStatementMapper as any,
+          {
+            patient: connectionDocument.patient,
+          },
+          useProxy,
+        ),
     syncFHIRResource<Immunization>(
       baseUrl,
       connectionDocument,
       db,
       'Immunization',
-      immMapper,
+      immMapper as any,
       {
         patient: connectionDocument.patient,
       },
@@ -289,7 +514,18 @@ export async function syncAllRecords(
       connectionDocument,
       db,
       'Condition',
-      conditionMapper,
+      conditionMapper as any,
+      {
+        patient: connectionDocument.patient,
+      },
+      useProxy,
+    ),
+    syncFHIRResource<AllergyIntolerance>(
+      baseUrl,
+      connectionDocument,
+      db,
+      'AllergyIntolerance',
+      allergyIntoleranceMapper as any,
       {
         patient: connectionDocument.patient,
       },
@@ -303,29 +539,126 @@ export async function syncAllRecords(
         patient: connectionDocument.patient,
       },
       useProxy,
+      fhirVersion,
     ),
-    syncFHIRResource<CarePlan>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'CarePlan',
-      carePlanMapper,
-      {
-        patient: connectionDocument.patient,
-      },
-      useProxy,
-    ),
-    syncFHIRResource<AllergyIntolerance>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'AllergyIntolerance',
-      allergyIntoleranceMapper,
-      {
-        patient: connectionDocument.patient,
-      },
-      useProxy,
-    ),
+    ...(fhirVersion === 'DSTU2'
+      ? [
+          syncFHIRResource<CarePlan>(
+            baseUrl,
+            connectionDocument,
+            db,
+            'CarePlan',
+            carePlanMapper as any,
+            {
+              patient: connectionDocument.patient,
+            },
+            useProxy,
+          ),
+        ]
+      : []),
+    ...(fhirVersion === 'R4'
+      ? [
+          syncFHIRResourceWithIncludes<any>(
+            baseUrl,
+            connectionDocument,
+            db,
+            'MedicationDispense',
+            medDispenseMapper as any,
+            {
+              patient: connectionDocument.patient,
+              _revinclude: 'Provenance:target',
+            },
+            includeMappers,
+            useProxy,
+          ),
+          syncFHIRResourceWithIncludes<any>(
+            baseUrl,
+            connectionDocument,
+            db,
+            'ServiceRequest',
+            serviceRequestMapper as any,
+            {
+              patient: connectionDocument.patient,
+              _include: 'ServiceRequest:specimen',
+              _revinclude: 'Provenance:target',
+            },
+            includeMappers,
+            useProxy,
+          ),
+          syncFHIRResourceWithIncludes<any>(
+            baseUrl,
+            connectionDocument,
+            db,
+            'Goal',
+            goalMapper as any,
+            {
+              patient: connectionDocument.patient,
+              _revinclude: 'Provenance:target',
+            },
+            includeMappers,
+            useProxy,
+          ),
+          syncFHIRResourceWithIncludes<any>(
+            baseUrl,
+            connectionDocument,
+            db,
+            'CareTeam',
+            careTeamMapper as any,
+            {
+              patient: connectionDocument.patient,
+              _include: 'CareTeam:participant',
+              _revinclude: 'Provenance:target',
+            },
+            includeMappers,
+            useProxy,
+          ),
+          syncFHIRResourceWithIncludes<any>(
+            baseUrl,
+            connectionDocument,
+            db,
+            'Coverage',
+            coverageMapper as any,
+            {
+              patient: connectionDocument.patient,
+              _include: 'Coverage:payor',
+              _revinclude: 'Provenance:target',
+            },
+            includeMappers,
+            useProxy,
+          ),
+          syncFHIRResourceWithIncludes<any>(
+            baseUrl,
+            connectionDocument,
+            db,
+            'Device',
+            deviceMapper as any,
+            {
+              patient: connectionDocument.patient,
+              _revinclude: 'Provenance:target',
+            },
+            includeMappers,
+            useProxy,
+          ),
+          syncFHIRResourceWithIncludes<any>(
+            baseUrl,
+            connectionDocument,
+            db,
+            'Encounter',
+            encounterMapper as any,
+            {
+              patient: connectionDocument.patient,
+              _include: [
+                'Encounter:location',
+                'Encounter:service-provider',
+                'Encounter:practitioner',
+              ],
+              _revinclude: 'Provenance:target',
+            },
+            includeMappers,
+            useProxy,
+          ),
+        ]
+      : []),
   ]);
 
   return syncJob as unknown as Promise<PromiseSettledResult<void[]>[]>;
@@ -337,16 +670,19 @@ async function syncDocumentReferences(
   db: RxDatabase<DatabaseCollections>,
   params: Record<string, string>,
   useProxy = false,
+  fhirVersion: 'DSTU2' | 'R4' = 'DSTU2',
 ) {
   const documentReferenceMapper = (dr: BundleEntry<DocumentReference>) =>
-    DSTU2.mapDocumentReferenceToClinicalDocument(dr, connectionDocument);
+    fhirVersion === 'R4'
+      ? R4.mapDocumentReferenceToClinicalDocument(dr as any, connectionDocument)
+      : DSTU2.mapDocumentReferenceToClinicalDocument(dr, connectionDocument);
   // Sync document references and return them
-  await syncFHIRResource<DocumentReference>(
+  await syncFHIRResource<any>(
     baseUrl,
     connectionDocument,
     db,
     'DocumentReference',
-    documentReferenceMapper,
+    documentReferenceMapper as any,
     params,
     useProxy,
   );
@@ -392,7 +728,6 @@ async function syncDocumentReferences(
             })
             .exec();
           if (exists.length === 0) {
-            console.log('Syncing attachment: ' + attachmentUrl);
             // attachment does not exist, sync it
             const { contentType, raw } = await fetchAttachmentData(
               baseUrl,
@@ -407,7 +742,7 @@ async function syncDocumentReferences(
                 connection_record_id: connectionDocument.id,
                 data_record: {
                   raw: raw,
-                  format: 'FHIR.DSTU2',
+                  format: fhirVersion === 'R4' ? 'FHIR.R4' : 'FHIR.DSTU2',
                   content_type: contentType,
                   resource_type: 'documentreference_attachment',
                   version_history: [],
@@ -426,9 +761,16 @@ async function syncDocumentReferences(
               await db.clinical_documents.insert(
                 cd as unknown as ClinicalDocument,
               );
+            } else {
+              console.warn(
+                '[syncDocumentReferences] Skipping attachment save - missing raw or contentType:',
+                {
+                  attachmentUrl,
+                  hasRaw: !!raw,
+                  contentType,
+                },
+              );
             }
-          } else {
-            console.log('Attachment already synced: ' + attachmentUrl);
           }
         }
       }
@@ -451,32 +793,63 @@ async function fetchAttachmentData(
 ): Promise<{ contentType: string | null; raw: string | undefined }> {
   try {
     const epicId = connectionDocument.tenant_id;
-    const defaultUrl = url;
-    const proxyUrlExtension = url.replace(baseUrl, '');
-    const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${
-      epicId === 'sandbox_epic' ||
-      epicId === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354'
-        ? Config.EPIC_SANDBOX_CLIENT_ID
-        : epicId
-    }&target=${`${encodeURIComponent(proxyUrlExtension)}&target_type=base`}`;
-    const res = await fetch(useProxy ? proxyUrl : defaultUrl, {
+    const isRelativeUrl =
+      !url.startsWith('http://') && !url.startsWith('https://');
+    const fullUrl = isRelativeUrl ? concatPath(baseUrl, url) : url;
+    const defaultUrl = fullUrl;
+    const proxyUrlExtension = fullUrl.replace(baseUrl, '');
+    const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${epicId}&target=${`${encodeURIComponent(proxyUrlExtension)}&target_type=base`}`;
+    const fetchUrl = useProxy ? proxyUrl : defaultUrl;
+    const res = await fetch(fetchUrl, {
       headers: {
         Authorization: `Bearer ${connectionDocument.access_token}`,
       },
     });
+
     if (!res.ok) {
+      console.error('[fetchAttachmentData] Fetch failed:', {
+        status: res.status,
+        statusText: res.statusText,
+        url: fetchUrl,
+      });
       throw new Error(
         'Could not get document as the user is unauthorized. Try logging in again.',
       );
     }
     const contentType = res.headers.get('Content-Type');
     let raw = undefined;
-    if (contentType === 'application/xml') {
+
+    if (
+      contentType?.includes('text/') ||
+      contentType?.includes('application/xml')
+    ) {
+      raw = await res.text();
+    } else if (
+      contentType?.includes('application/pdf') ||
+      contentType?.includes('image/')
+    ) {
+      const blob = await res.blob();
+      const reader = new FileReader();
+      raw = await new Promise<string>((resolve, reject) => {
+        reader.onloadend = () => {
+          const dataUrl = reader.result as string;
+          resolve(dataUrl.split(',')[1]); // Extract base64 part
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } else if (contentType) {
+      raw = await res.text();
+    } else {
+      console.warn(
+        '[fetchAttachmentData] No Content-Type header, attempting text download',
+      );
       raw = await res.text();
     }
 
     return { contentType, raw };
   } catch (e) {
+    console.error('[fetchAttachmentData] Exception:', e);
     throw new Error(
       'Could not get document as the user is unauthorized. Try logging in again.',
     );
@@ -496,6 +869,7 @@ export async function fetchAccessTokenWithCode(
   epicName: string,
   epicId?: string,
   useProxy = false,
+  version: 'DSTU2' | 'R4' = 'DSTU2',
 ): Promise<EpicAuthResponse> {
   const defaultUrl = epicTokenUrl;
   const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${`
@@ -503,14 +877,10 @@ export async function fetchAccessTokenWithCode(
   const headers = {
     'Content-Type': 'application/x-www-form-urlencoded',
   };
+  const isSandbox = isEpicSandbox(epicId);
   const body = new URLSearchParams({
     grant_type: 'authorization_code',
-    client_id: `${
-      epicId === 'sandbox_epic' ||
-      epicId === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354'
-        ? Config.EPIC_SANDBOX_CLIENT_ID
-        : Config.EPIC_CLIENT_ID
-    }`,
+    client_id: getEpicClientId(version, isSandbox),
     redirect_uri: `${Config.PUBLIC_URL}${Routes.EpicCallback}`,
     code: code,
   });
@@ -532,25 +902,28 @@ export async function registerDynamicClient({
   epicName,
   epicId,
   useProxy = false,
+  version = 'DSTU2',
 }: {
   res: EpicAuthResponse;
   epicBaseUrl: string;
   epicName: string;
   epicId?: string;
   useProxy?: boolean;
+  version?: 'DSTU2' | 'R4';
 }): Promise<EpicDynamicRegistrationResponse> {
-  const baseUrlWithoutDSTU2 = epicBaseUrl.replace('/api/FHIR/DSTU2', '');
-  const defaultUrl = `${baseUrlWithoutDSTU2}/oauth2/register`;
+  const baseUrl = epicBaseUrl
+    .replace('/api/FHIR/DSTU2/', '')
+    .replace('/api/FHIR/DSTU2', '')
+    .replace('/api/FHIR/R4/', '')
+    .replace('/api/FHIR/R4', '');
+  const defaultUrl = URLJoin(baseUrl, '/oauth2/register');
   const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${epicId}&target_type=register`;
 
   const jsonWebKeySet = await getPublicKey();
   const validJWKS = jsonWebKeySet as JsonWebKeyWKid;
+  const isSandbox = isEpicSandbox(epicId);
   const request: EpicDynamicRegistrationRequest = {
-    software_id:
-      epicId === 'sandbox_epic' ||
-      epicId === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354'
-        ? Config.EPIC_SANDBOX_CLIENT_ID
-        : Config.EPIC_CLIENT_ID,
+    software_id: getEpicClientId(version, isSandbox),
     jwks: {
       keys: [
         {
@@ -647,6 +1020,7 @@ export async function saveConnectionToDb({
   db,
   epicId,
   user,
+  fhirVersion = 'DSTU2',
 }: {
   res: EpicAuthResponseWithClientId | EpicAuthResponse;
   epicBaseUrl: string;
@@ -656,6 +1030,7 @@ export async function saveConnectionToDb({
   db: RxDatabase<DatabaseCollections>;
   epicId: string;
   user: UserDocument;
+  fhirVersion?: 'DSTU2' | 'R4';
 }) {
   const doc = await getConnectionCardByUrl<EpicConnectionDocument>(
     epicUrl,
@@ -693,6 +1068,7 @@ export async function saveConnectionToDb({
                 scope: res.scope,
                 patient: res.patient,
                 tenant_id: epicId,
+                fhir_version: fhirVersion,
                 last_sync_was_error: false,
               },
             })
@@ -725,6 +1101,7 @@ export async function saveConnectionToDb({
           patient: res.patient,
           client_id: (res as EpicAuthResponseWithClientId)?.client_id,
           tenant_id: epicId,
+          fhir_version: fhirVersion,
         };
         try {
           createConnection(db, dbentry as ConnectionDocument)

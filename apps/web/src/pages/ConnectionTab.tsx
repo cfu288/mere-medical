@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { RxDocument } from 'rxdb';
 
+import { isEpicSandbox } from '../services/EpicUtils';
 import { AppPage } from '../components/AppPage';
 import { ConnectionCard } from '../components/connection/ConnectionCard';
 import {
@@ -42,8 +43,8 @@ export async function getLoginUrlBySource(
       return getEpicLoginUrl(
         baseUrl,
         authUrl,
-        item.get('tenant_id') === 'sandbox_epic' ||
-          item.get('tenant_id') === '7c3b7890-360d-4a60-9ae1-ca7d10d5b354',
+        isEpicSandbox(item.get('tenant_id')),
+        item.get('fhir_version') || 'DSTU2',
       );
     }
     case 'cerner': {
@@ -73,18 +74,19 @@ export function setTenantUrlBySource(
 ): void {
   switch (item.get('source')) {
     case 'epic': {
-      // to stay backwards compatible with old epic connections
-      // append /api/FHIR/DSTU2/ to the end of the base url, if it doesn't already exist
       let baseUrl = item.get('location');
-      if (
-        !baseUrl.endsWith('/api/FHIR/DSTU2/') &&
-        !baseUrl.endsWith('/api/FHIR/DSTU2')
-      ) {
-        baseUrl = baseUrl + '/api/FHIR/DSTU2/';
+      const fhirVersion = item.get('fhir_version') || 'DSTU2';
+
+      if (fhirVersion === 'R4') {
+        if (!baseUrl.includes('/api/FHIR/R4')) {
+          baseUrl = baseUrl + '/api/FHIR/R4/';
+        }
+      } else {
+        if (!baseUrl.includes('/api/FHIR/DSTU2')) {
+          baseUrl = baseUrl + '/api/FHIR/DSTU2/';
+        }
       }
 
-      // to stay backwards compatible with old epic connections
-      // append /oauth2/authorize to the end of the auth url, if it doesn't already exist
       let authUrl = item.get('auth_uri');
       if (authUrl === undefined) {
         authUrl = baseUrl + '/oauth2/authorize';
@@ -101,6 +103,7 @@ export function setTenantUrlBySource(
         tokenUrl,
         item.get('name'),
         item.get('tenant_id'),
+        fhirVersion,
       );
       break;
     }
@@ -137,12 +140,14 @@ function setTenantEpicUrl(
   t: string & Location,
   name: string,
   id: string,
+  fhirVersion: 'DSTU2' | 'R4',
 ): void {
   localStorage.setItem(EpicLocalStorageKeys.EPIC_BASE_URL, s);
   localStorage.setItem(EpicLocalStorageKeys.EPIC_AUTH_URL, a);
   localStorage.setItem(EpicLocalStorageKeys.EPIC_TOKEN_URL, t);
   localStorage.setItem(EpicLocalStorageKeys.EPIC_NAME, name);
   localStorage.setItem(EpicLocalStorageKeys.EPIC_ID, id);
+  localStorage.setItem(EpicLocalStorageKeys.FHIR_VERSION, fhirVersion);
 }
 
 function setTenantCernerUrl(
@@ -190,12 +195,13 @@ const ConnectionTab: React.FC = () => {
       ) => {
         switch (vendor) {
           case 'epic': {
-            setTenantEpicUrl(base, auth, token, name, id);
+            setTenantEpicUrl(base, auth, token, name, id, fhirVersion || 'DSTU2');
             setOpenSelectModal((x) => !x);
             window.location = getEpicLoginUrl(
               base,
               auth,
-              id === 'sandbox_epic',
+              isEpicSandbox(id),
+              fhirVersion || 'DSTU2',
             );
             break;
           }

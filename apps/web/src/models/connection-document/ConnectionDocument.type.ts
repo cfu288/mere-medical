@@ -28,6 +28,7 @@ export interface EpicConnectionDocument extends ConnectionDocument {
   patient: string; // A patient identifier
   auth_uri: string | Location; // the OAuth authorization url
   token_uri: string | Location; // the OAuth token url
+  fhir_version?: 'DSTU2' | 'R4';
 }
 
 export interface CernerConnectionDocument extends ConnectionDocument {

@@ -1,16 +1,87 @@
 [
+  {
+    "cause": {
+      "name": "ConnectTimeoutError",
+      "code": "UND_ERR_CONNECT_TIMEOUT",
+      "message": "Connect Timeout Error"
+    }
+  },
+  {
+    "cause": {
+      "name": "ConnectTimeoutError",
+      "code": "UND_ERR_CONNECT_TIMEOUT",
+      "message": "Connect Timeout Error"
+    }
+  },
+  {
+    "cause": {
+      "code": "DEPTH_ZERO_SELF_SIGNED_CERT"
+    }
+  },
+  {
+    "cause": {
+      "code": "DEPTH_ZERO_SELF_SIGNED_CERT"
+    }
+  },
+  {
+    "cause": {
+      "code": "DEPTH_ZERO_SELF_SIGNED_CERT"
+    }
+  },
+  {
+    "cause": {
+      "code": "UNABLE_TO_VERIFY_LEAF_SIGNATURE"
+    }
+  },
+  {},
+  {
+    "cause": {
+      "errno": -3008,
+      "code": "ENOTFOUND",
+      "syscall": "getaddrinfo",
+      "hostname": "esoap.mihs.org"
+    }
+  },
+  {
+    "cause": {
+      "errno": -54,
+      "code": "ECONNRESET",
+      "syscall": "read"
+    }
+  },
+  {
+    "cause": {
+      "code": "ECONNREFUSED"
+    }
+  },
   {},
   {},
   {},
-  {},
-  {},
-  {},
-  {},
-  {},
-  {},
-  {},
-  {},
-  {},
-  {},
-  {}
+  {
+    "cause": {
+      "errno": -54,
+      "code": "ECONNRESET",
+      "syscall": "read"
+    }
+  },
+  {
+    "cause": {
+      "library": "SSL routines",
+      "reason": "tlsv1 unrecognized name",
+      "code": "ERR_SSL_TLSV1_UNRECOGNIZED_NAME"
+    }
+  },
+  {
+    "cause": {
+      "code": "CERT_HAS_EXPIRED"
+    }
+  },
+  {
+    "cause": {
+      "errno": -3008,
+      "code": "ENOTFOUND",
+      "syscall": "getaddrinfo",
+      "hostname": "fhir.archildrens.org"
+    }
+  }
 ]

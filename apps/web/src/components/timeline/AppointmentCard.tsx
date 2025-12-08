@@ -1,19 +1,19 @@
-import { BundleEntry, Observation } from 'fhir/r2';
-import { formatTime } from '../../utils/dateFormatters';
+import { BundleEntry, Appointment } from 'fhir/r4';
+import { formatDateAndTime } from '../../utils/dateFormatters';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
+import { useConnectionDoc } from '../hooks/useConnectionDoc';
+import { SkeletonLoadingText } from './SkeletonLoadingText';
+import { CardBase } from '../connection/CardBase';
 import { TimelineCardTitle } from './TimelineCardTitle';
 import { memo, useState } from 'react';
-import { useConnectionDoc } from '../hooks/useConnectionDoc';
-import { CardBase } from '../connection/CardBase';
-import { SkeletonLoadingText } from './SkeletonLoadingText';
-import { ShowDiagnosticReportResultsExpandable } from './ShowDiagnosticReportResultsExpandable';
 import { TimelineCardCategoryTitle } from './TimelineCardCategoryTitle';
 import { OpenableCardIcon } from './OpenableCardIcon';
+import { ShowAppointmentDetailsExpandable } from './ShowAppointmentDetailsExpandable';
 
-export const ObservationCard = memo(function ObservationCard({
+export const AppointmentCard = memo(function AppointmentCard({
   item,
 }: {
-  item: ClinicalDocument<BundleEntry<Observation>>;
+  item: ClinicalDocument<BundleEntry<Appointment>>;
 }) {
   const conn = useConnectionDoc(item.connection_record_id);
   const [expanded, setExpanded] = useState(false);
@@ -28,12 +28,13 @@ export const ObservationCard = memo(function ObservationCard({
       >
         <div className="min-w-0 flex-1">
           <div className="items-top flex justify-between">
-            <TimelineCardCategoryTitle title="Lab" color="text-sky-600" />
+            <TimelineCardCategoryTitle title="Appointment" color="text-violet-600" />
             <OpenableCardIcon />
           </div>
+
           <TimelineCardTitle>{item.metadata?.display_name}</TimelineCardTitle>
           <p className="truncate text-xs font-medium text-gray-800 md:text-sm">
-            {formatTime(item.metadata?.date)}
+            {formatDateAndTime(item.metadata?.date)}
           </p>
           {conn?.get('name') ? (
             <p className="truncate text-xs font-medium text-gray-700 md:text-sm">
@@ -44,8 +45,7 @@ export const ObservationCard = memo(function ObservationCard({
           )}
         </div>
       </CardBase>
-      <ShowDiagnosticReportResultsExpandable
-        docs={[item]}
+      <ShowAppointmentDetailsExpandable
         item={item}
         expanded={expanded}
         setExpanded={setExpanded}

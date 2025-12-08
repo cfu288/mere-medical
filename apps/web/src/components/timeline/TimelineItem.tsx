@@ -12,11 +12,24 @@ import {
   Observation,
   Procedure,
 } from 'fhir/r2';
-import { MedicationRequest, BundleEntry as R4BundleEntry } from 'fhir/r4';
+import {
+  MedicationRequest,
+  BundleEntry as R4BundleEntry,
+  Coverage,
+  CarePlan,
+  CareTeam,
+  Goal,
+  Appointment,
+  Specimen,
+} from 'fhir/r4';
 import { memo } from 'react';
 
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
+import { AppointmentCard } from './AppointmentCard';
+import { CarePlanCard } from './CarePlanCard';
+import { CareTeamCard } from './CareTeamCard';
 import { ConditionCard } from './ConditionCard';
+import { CoverageCard } from './CoverageCard';
 import { DiagnosticReportCard } from './DiagnosticReportCard';
 import {
   DocumentReferenceAttachmentCard,
@@ -24,11 +37,13 @@ import {
 } from './DocumentReferenceCard';
 import { ElementsByDateListCard } from './ElementsByDateListCard';
 import { EncounterCard } from './EncounterCard';
+import { GoalCard } from './GoalCard';
 import { ImmunizationCard } from './ImmunizationCard';
 import { MedicationCard } from './MedicationCard';
 import { MedicationRequestCard } from './MedicationRequestCard';
 import { ObservationCard } from './ObservationCard';
 import { ProcedureCard } from './ProcedureCard';
+import { SpecimenCard } from './SpecimenCard';
 
 export const TimelineItem = memo(function TimelineItem({
   dateKey,
@@ -128,6 +143,42 @@ export const TimelineItem = memo(function TimelineItem({
                   <EncounterCard
                     key={item.id}
                     item={item as ClinicalDocument<BundleEntry<Encounter>>}
+                  />
+                )}
+                {item.data_record.resource_type === 'coverage' && (
+                  <CoverageCard
+                    key={item.id}
+                    item={item as ClinicalDocument<R4BundleEntry<Coverage>>}
+                  />
+                )}
+                {item.data_record.resource_type === 'careplan' && (
+                  <CarePlanCard
+                    key={item.id}
+                    item={item as ClinicalDocument<R4BundleEntry<CarePlan>>}
+                  />
+                )}
+                {item.data_record.resource_type === 'careteam' && (
+                  <CareTeamCard
+                    key={item.id}
+                    item={item as ClinicalDocument<R4BundleEntry<CareTeam>>}
+                  />
+                )}
+                {item.data_record.resource_type === 'goal' && (
+                  <GoalCard
+                    key={item.id}
+                    item={item as ClinicalDocument<R4BundleEntry<Goal>>}
+                  />
+                )}
+                {item.data_record.resource_type === 'appointment' && (
+                  <AppointmentCard
+                    key={item.id}
+                    item={item as ClinicalDocument<R4BundleEntry<Appointment>>}
+                  />
+                )}
+                {item.data_record.resource_type === 'specimen' && (
+                  <SpecimenCard
+                    key={item.id}
+                    item={item as ClinicalDocument<R4BundleEntry<Specimen>>}
                   />
                 )}
               </div>

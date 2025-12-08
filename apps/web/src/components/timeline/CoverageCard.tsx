@@ -1,19 +1,19 @@
-import { BundleEntry, Observation } from 'fhir/r2';
+import { BundleEntry, Coverage } from 'fhir/r4';
 import { formatTime } from '../../utils/dateFormatters';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
+import { useConnectionDoc } from '../hooks/useConnectionDoc';
+import { SkeletonLoadingText } from './SkeletonLoadingText';
+import { CardBase } from '../connection/CardBase';
 import { TimelineCardTitle } from './TimelineCardTitle';
 import { memo, useState } from 'react';
-import { useConnectionDoc } from '../hooks/useConnectionDoc';
-import { CardBase } from '../connection/CardBase';
-import { SkeletonLoadingText } from './SkeletonLoadingText';
-import { ShowDiagnosticReportResultsExpandable } from './ShowDiagnosticReportResultsExpandable';
 import { TimelineCardCategoryTitle } from './TimelineCardCategoryTitle';
 import { OpenableCardIcon } from './OpenableCardIcon';
+import { ShowCoverageDetailsExpandable } from './ShowCoverageDetailsExpandable';
 
-export const ObservationCard = memo(function ObservationCard({
+export const CoverageCard = memo(function CoverageCard({
   item,
 }: {
-  item: ClinicalDocument<BundleEntry<Observation>>;
+  item: ClinicalDocument<BundleEntry<Coverage>>;
 }) {
   const conn = useConnectionDoc(item.connection_record_id);
   const [expanded, setExpanded] = useState(false);
@@ -28,9 +28,10 @@ export const ObservationCard = memo(function ObservationCard({
       >
         <div className="min-w-0 flex-1">
           <div className="items-top flex justify-between">
-            <TimelineCardCategoryTitle title="Lab" color="text-sky-600" />
+            <TimelineCardCategoryTitle title="Coverage" color="text-amber-600" />
             <OpenableCardIcon />
           </div>
+
           <TimelineCardTitle>{item.metadata?.display_name}</TimelineCardTitle>
           <p className="truncate text-xs font-medium text-gray-800 md:text-sm">
             {formatTime(item.metadata?.date)}
@@ -44,8 +45,7 @@ export const ObservationCard = memo(function ObservationCard({
           )}
         </div>
       </CardBase>
-      <ShowDiagnosticReportResultsExpandable
-        docs={[item]}
+      <ShowCoverageDetailsExpandable
         item={item}
         expanded={expanded}
         setExpanded={setExpanded}

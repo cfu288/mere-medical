@@ -1,5 +1,7 @@
 import { BundleEntry, DocumentReference } from 'fhir/r2';
 import { useEffect, useState } from 'react';
+import DOMPurify from 'dompurify';
+import parse from 'html-react-parser';
 import { ClinicalDocument } from '../../../models/clinical-document/ClinicalDocument.type';
 import { Modal } from '../../Modal';
 import { ModalHeader } from '../../ModalHeader';
@@ -44,21 +46,23 @@ export function ShowDocumentResultsExpandable({
     attachmentUrl = item.data_record.raw.resource?.content?.[0]?.attachment?.url,
     attachment = useClinicalDoc(attachmentUrl),
     [hasLoadedDocument, setHasLoadedDocument] = useState(false),
-    [pdfUrl, setPdfUrl] = useState<string | undefined>(undefined);
+    [pdfUrl, setPdfUrl] = useState<string | undefined>(undefined),
+    [html, setHtml] = useState<string | JSX.Element | JSX.Element[] | undefined>(undefined);
 
   useEffect(() => {
     if (expanded) {
       if (!attachment) {
+        console.error('[ShowDocumentResultsExpandable] No attachment found in DB for URL:', attachmentUrl);
         setHasLoadedDocument(true);
       } else if (
-        attachment.get('data_record.content_type') === 'application/xml' &&
+        attachment.get('data_record.content_type')?.includes('application/xml') &&
         checkIfXmlIsCCDA(attachment.get('data_record.raw'))
       ) {
         const parsedDoc = parseCCDA(attachment.get('data_record.raw'));
         setHasLoadedDocument(true);
         setCCDA(parsedDoc);
       } else if (
-        attachment.get('data_record.content_type') === 'application/pdf' &&
+        attachment.get('data_record.content_type')?.includes('application/pdf') &&
         typeof attachment.get('data_record.raw') === 'string'
       ) {
         try {
@@ -77,7 +81,20 @@ export function ShowDocumentResultsExpandable({
           console.error('[ShowDocumentResultsExpandable] Error converting base64 to Blob:', error);
           setHasLoadedDocument(true);
         }
+      } else if (
+        attachment.get('data_record.content_type')?.includes('text/html') &&
+        typeof attachment.get('data_record.raw') === 'string'
+      ) {
+        const sanitizedData = parse(DOMPurify.sanitize(attachment.get('data_record.raw')));
+        setHtml(sanitizedData);
+        setHasLoadedDocument(true);
       } else {
+        console.error('[ShowDocumentResultsExpandable] Attachment exists but cannot be displayed:', {
+          contentType: attachment.get('data_record.content_type'),
+          hasRaw: !!attachment.get('data_record.raw'),
+          rawType: typeof attachment.get('data_record.raw'),
+          rawValue: attachment.get('data_record.raw'),
+        });
         setHasLoadedDocument(true);
       }
     }
@@ -124,8 +141,15 @@ export function ShowDocumentResultsExpandable({
               </div>
             )}
 
+            {/* Display HTML Document */}
+            {html && (
+              <div className="prose prose-sm overflow-x-auto p-4">
+                {html}
+              </div>
+            )}
+
             {/* Error message when document can't be displayed */}
-            {hasLoadedDocument && !ccda && !pdfUrl && (
+            {hasLoadedDocument && !ccda && !pdfUrl && !html && (
               <p className="text-md p-4 text-gray-900">
                 Sorry, looks like we were unable to get the linked document
               </p>

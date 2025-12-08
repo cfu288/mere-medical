@@ -130,7 +130,7 @@ export function PrivacyAndSecuritySettingsGroup() {
                         db.user_preferences.insert({
                           id: uuid4(),
                           user_id: user?.id,
-                          use_proxy: true,
+                          use_proxy: false,
                         });
                       }
                     }}
