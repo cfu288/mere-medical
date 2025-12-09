@@ -12,7 +12,7 @@
     "build": "nx build",
     "test": "nx test",
     "dev": "nx serve-all",
-    "prepare": "husky && git config blame.ignoreRevsFile .git-blame-ignore-revs"
+    "prepare": "[ -d .git ] && husky && git config blame.ignoreRevsFile .git-blame-ignore-revs || true"
   },
   "engines": {
     "node": "20.11.0"
