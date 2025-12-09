@@ -904,50 +904,32 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
             ))}
             {coverages.map((item) => (
               <div key={item.id} className="my-2">
-                <CoverageCard
-                  key={item.id}
-                  item={item}
-                />
+                <CoverageCard key={item.id} item={item} />
               </div>
             ))}
             {carePlans.map((item) => (
               <div key={item.id} className="my-2">
-                <CarePlanCard
-                  key={item.id}
-                  item={item}
-                />
+                <CarePlanCard key={item.id} item={item} />
               </div>
             ))}
             {careTeams.map((item) => (
               <div key={item.id} className="my-2">
-                <CareTeamCard
-                  key={item.id}
-                  item={item}
-                />
+                <CareTeamCard key={item.id} item={item} />
               </div>
             ))}
             {goals.map((item) => (
               <div key={item.id} className="my-2">
-                <GoalCard
-                  key={item.id}
-                  item={item}
-                />
+                <GoalCard key={item.id} item={item} />
               </div>
             ))}
             {appointments.map((item) => (
               <div key={item.id} className="my-2">
-                <AppointmentCard
-                  key={item.id}
-                  item={item}
-                />
+                <AppointmentCard key={item.id} item={item} />
               </div>
             ))}
             {specimens.map((item) => (
               <div key={item.id} className="my-2">
-                <SpecimenCard
-                  key={item.id}
-                  item={item}
-                />
+                <SpecimenCard key={item.id} item={item} />
               </div>
             ))}
           </div>

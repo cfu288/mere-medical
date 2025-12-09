@@ -577,10 +577,14 @@ export async function fetchRawRecords(
     .limit(limit)
     .exec();
 
-  return docs.map((doc) => doc.toMutableJSON() as ClinicalDocument<BundleEntry<FhirResource>>);
+  return docs.map(
+    (doc) => doc.toMutableJSON() as ClinicalDocument<BundleEntry<FhirResource>>,
+  );
 }
 
-export function getRecordDateKey(record: ClinicalDocument<BundleEntry<FhirResource>>): string {
+export function getRecordDateKey(
+  record: ClinicalDocument<BundleEntry<FhirResource>>,
+): string {
   if (!record.metadata?.date) {
     return new Date(0).toISOString().split('T')[0];
   }
@@ -590,7 +594,8 @@ export function getRecordDateKey(record: ClinicalDocument<BundleEntry<FhirResour
 export function groupRecordsByDate(
   records: ClinicalDocument<BundleEntry<FhirResource>>[],
 ): Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]> {
-  const grouped: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]> = {};
+  const grouped: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]> =
+    {};
 
   for (const record of records) {
     const dateKey = getRecordDateKey(record);
@@ -605,7 +610,9 @@ export function groupRecordsByDate(
 }
 
 export function mergeRecordsByDate(
-  existing: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]> | undefined,
+  existing:
+    | Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>
+    | undefined,
   incoming: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>,
 ): Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]> {
   if (!existing) return incoming;
@@ -675,7 +682,10 @@ export async function fetchRecordsUntilCompleteDays(
 
   if (sortedDates.length > minDays) {
     const datesToKeep = new Set(sortedDates.slice(0, minDays));
-    const truncated: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]> = {};
+    const truncated: Record<
+      string,
+      ClinicalDocument<BundleEntry<FhirResource>>[]
+    > = {};
     let keptCount = 0;
 
     for (const date of sortedDates) {

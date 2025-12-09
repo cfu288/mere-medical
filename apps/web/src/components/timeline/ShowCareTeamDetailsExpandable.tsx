@@ -27,7 +27,8 @@ export function ShowCareTeamDetailsExpandable({
               {careTeam?.period?.start && (
                 <div className="text-sm font-light">
                   {formatFullDate(careTeam.period.start)}
-                  {careTeam.period.end && ` - ${formatFullDate(careTeam.period.end)}`}
+                  {careTeam.period.end &&
+                    ` - ${formatFullDate(careTeam.period.end)}`}
                 </div>
               )}
             </div>
@@ -39,7 +40,9 @@ export function ShowCareTeamDetailsExpandable({
             <div className="space-y-4">
               {careTeam?.status && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Status</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    Status
+                  </div>
                   <div className="col-span-2 text-sm text-gray-900 capitalize">
                     {careTeam.status}
                   </div>
@@ -48,7 +51,9 @@ export function ShowCareTeamDetailsExpandable({
 
               {careTeam?.category && careTeam.category.length > 0 && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Category</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    Category
+                  </div>
                   <div className="col-span-2 space-y-1">
                     {careTeam.category.map((cat, index) => (
                       <div key={index} className="text-sm text-gray-900">
@@ -61,22 +66,34 @@ export function ShowCareTeamDetailsExpandable({
 
               {careTeam?.participant && careTeam.participant.length > 0 && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Participants</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    Participants
+                  </div>
                   <div className="col-span-2 space-y-2">
                     {careTeam.participant.map((participant, index) => (
-                      <div key={index} className="text-sm text-gray-900 border-l-2 border-cyan-300 pl-2">
+                      <div
+                        key={index}
+                        className="text-sm text-gray-900 border-l-2 border-cyan-300 pl-2"
+                      >
                         <div className="font-medium">
-                          {participant.member?.display || participant.member?.reference || `Participant ${index + 1}`}
+                          {participant.member?.display ||
+                            participant.member?.reference ||
+                            `Participant ${index + 1}`}
                         </div>
                         {participant.role && participant.role.length > 0 && (
                           <div className="text-gray-600">
-                            Role: {participant.role.map(r => r.text || r.coding?.[0]?.display).filter(Boolean).join(', ')}
+                            Role:{' '}
+                            {participant.role
+                              .map((r) => r.text || r.coding?.[0]?.display)
+                              .filter(Boolean)
+                              .join(', ')}
                           </div>
                         )}
                         {participant.period && (
                           <div className="text-gray-500 text-xs">
                             {formatFullDate(participant.period.start)}
-                            {participant.period.end && ` - ${formatFullDate(participant.period.end)}`}
+                            {participant.period.end &&
+                              ` - ${formatFullDate(participant.period.end)}`}
                           </div>
                         )}
                       </div>
@@ -87,7 +104,9 @@ export function ShowCareTeamDetailsExpandable({
 
               {careTeam?.reasonCode && careTeam.reasonCode.length > 0 && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Reason</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    Reason
+                  </div>
                   <div className="col-span-2 space-y-1">
                     {careTeam.reasonCode.map((reason, index) => (
                       <div key={index} className="text-sm text-gray-900">
@@ -98,18 +117,21 @@ export function ShowCareTeamDetailsExpandable({
                 </div>
               )}
 
-              {careTeam?.managingOrganization && careTeam.managingOrganization.length > 0 && (
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Organization</div>
-                  <div className="col-span-2 space-y-1">
-                    {careTeam.managingOrganization.map((org, index) => (
-                      <div key={index} className="text-sm text-gray-900">
-                        {org.display || org.reference || 'N/A'}
-                      </div>
-                    ))}
+              {careTeam?.managingOrganization &&
+                careTeam.managingOrganization.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="text-sm font-semibold text-gray-700">
+                      Organization
+                    </div>
+                    <div className="col-span-2 space-y-1">
+                      {careTeam.managingOrganization.map((org, index) => (
+                        <div key={index} className="text-sm text-gray-900">
+                          {org.display || org.reference || 'N/A'}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
           </div>
         </div>

@@ -395,7 +395,8 @@ async function fetchMedicalRecords(
     case 'cerner': {
       try {
         await refreshCernerConnectionTokenIfNeeded(connectionDocument, db);
-        const cernerConnection = connectionDocument.toMutableJSON() as unknown as CernerConnectionDocument;
+        const cernerConnection =
+          connectionDocument.toMutableJSON() as unknown as CernerConnectionDocument;
         const syncJob = await Cerner.syncAllRecords(
           baseUrl,
           cernerConnection,

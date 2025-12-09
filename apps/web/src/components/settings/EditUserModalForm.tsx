@@ -47,7 +47,6 @@ export function parseDefaultValues(defaultValues?: NewUserFormFields) {
   };
 }
 
-
 /**
  * Updates the current user with the following data
  * @param rawUserDocument user document to update

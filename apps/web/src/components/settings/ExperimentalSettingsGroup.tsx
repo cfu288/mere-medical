@@ -413,18 +413,24 @@ export function ExperimentalSettingsGroup() {
                           .exec();
 
                         const validDocs = userVectors.filter(
-                          (doc) => doc.id && typeof doc.id === 'string' && doc.id.length > 0
+                          (doc) =>
+                            doc.id &&
+                            typeof doc.id === 'string' &&
+                            doc.id.length > 0,
                         );
 
-                        const invalidCount = userVectors.length - validDocs.length;
+                        const invalidCount =
+                          userVectors.length - validDocs.length;
 
                         if (invalidCount > 0) {
-                          console.warn(`Found ${invalidCount} documents with invalid IDs, skipping them`);
+                          console.warn(
+                            `Found ${invalidCount} documents with invalid IDs, skipping them`,
+                          );
                         }
 
                         if (validDocs.length > 0) {
                           await rxdb.vector_storage.bulkRemove(
-                            validDocs.map((doc) => doc.id)
+                            validDocs.map((doc) => doc.id),
                           );
                         }
 

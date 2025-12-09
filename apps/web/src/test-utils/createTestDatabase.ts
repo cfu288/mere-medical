@@ -1,8 +1,4 @@
-import {
-  addRxPlugin,
-  createRxDatabase,
-  RxDatabase,
-} from 'rxdb';
+import { addRxPlugin, createRxDatabase, RxDatabase } from 'rxdb';
 import { RxDBUpdatePlugin } from 'rxdb/plugins/update';
 import { RxDBMigrationPlugin } from 'rxdb/plugins/migration';
 import { RxDBJsonDumpPlugin } from 'rxdb/plugins/json-dump';
@@ -21,7 +17,9 @@ addRxPlugin(RxDBQueryBuilderPlugin);
  * Creates an in-memory RxDB database for testing purposes.
  * Each test gets a unique database instance that runs entirely in memory.
  */
-export async function createTestDatabase(): Promise<RxDatabase<DatabaseCollections>> {
+export async function createTestDatabase(): Promise<
+  RxDatabase<DatabaseCollections>
+> {
   // Create a unique database name for each test to ensure isolation
   const dbName = `test-db-${Date.now()}-${Math.random().toString(36).substring(7)}`;
 
@@ -43,7 +41,7 @@ export async function createTestDatabase(): Promise<RxDatabase<DatabaseCollectio
  */
 export async function seedTestDatabase(
   db: RxDatabase<DatabaseCollections>,
-  data?: any
+  data?: any,
 ): Promise<void> {
   if (data) {
     await db.importJSON(data);
@@ -59,7 +57,7 @@ export async function seedTestDatabase(
  * Should be called in afterEach() to prevent memory leaks.
  */
 export async function cleanupTestDatabase(
-  db: RxDatabase<DatabaseCollections>
+  db: RxDatabase<DatabaseCollections>,
 ): Promise<void> {
   await db.destroy();
 }

@@ -7,11 +7,17 @@ import {
   useUser,
   useRxUserDocument,
   useAllUsers,
-  useUserManagement
+  useUserManagement,
 } from './UserProvider';
 import { TestProviders } from '../../test-utils/TestProviders';
-import { createTestDatabase, cleanupTestDatabase } from '../../test-utils/createTestDatabase';
-import { createTestUser, createMultipleTestUsers } from '../../test-utils/userTestData';
+import {
+  createTestDatabase,
+  cleanupTestDatabase,
+} from '../../test-utils/createTestDatabase';
+import {
+  createTestUser,
+  createMultipleTestUsers,
+} from '../../test-utils/userTestData';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
 
 describe('UserProvider', () => {
@@ -33,7 +39,9 @@ describe('UserProvider', () => {
           <div>
             <span data-testid="user-id">{user.id}</span>
             <span data-testid="is-default">{String(user.is_default_user)}</span>
-            <span data-testid="is-selected">{String(user.is_selected_user)}</span>
+            <span data-testid="is-selected">
+              {String(user.is_selected_user)}
+            </span>
           </div>
         );
       };
@@ -43,7 +51,7 @@ describe('UserProvider', () => {
           <UserProvider>
             <TestComponent />
           </UserProvider>
-        </TestProviders>
+        </TestProviders>,
       );
 
       await waitFor(async () => {
@@ -73,7 +81,7 @@ describe('UserProvider', () => {
           <UserProvider>
             <TestComponent />
           </UserProvider>
-        </TestProviders>
+        </TestProviders>,
       );
 
       await waitFor(() => {
@@ -92,7 +100,7 @@ describe('UserProvider', () => {
         is_selected_user: true,
         first_name: 'John',
         last_name: 'Doe',
-        email: 'john@example.com'
+        email: 'john@example.com',
       });
       await db.user_documents.insert(testUser);
 
@@ -111,7 +119,7 @@ describe('UserProvider', () => {
           <UserProvider>
             <TestComponent />
           </UserProvider>
-        </TestProviders>
+        </TestProviders>,
       );
 
       await waitFor(() => {
@@ -130,7 +138,9 @@ describe('UserProvider', () => {
           <div>
             <span data-testid="has-rxdoc">{String(rawUser !== null)}</span>
             {rawUser && (
-              <span data-testid="can-update">{String(typeof rawUser.update === 'function')}</span>
+              <span data-testid="can-update">
+                {String(typeof rawUser.update === 'function')}
+              </span>
             )}
           </div>
         );
@@ -141,7 +151,7 @@ describe('UserProvider', () => {
           <UserProvider>
             <TestComponent />
           </UserProvider>
-        </TestProviders>
+        </TestProviders>,
       );
 
       await waitFor(() => {
@@ -160,7 +170,7 @@ describe('UserProvider', () => {
         const allUsers = useAllUsers();
         // Sort users by first_name for consistent test results
         const sortedUsers = [...allUsers].sort((a, b) =>
-          a.get('first_name').localeCompare(b.get('first_name'))
+          a.get('first_name').localeCompare(b.get('first_name')),
         );
         return (
           <div>
@@ -179,7 +189,7 @@ describe('UserProvider', () => {
           <UserProvider>
             <TestComponent />
           </UserProvider>
-        </TestProviders>
+        </TestProviders>,
       );
 
       await waitFor(() => {
@@ -224,7 +234,7 @@ describe('UserProvider', () => {
           <UserProvider>
             <TestComponent />
           </UserProvider>
-        </TestProviders>
+        </TestProviders>,
       );
 
       await waitFor(() => {
@@ -262,7 +272,7 @@ describe('UserProvider', () => {
                 await createNewUser({
                   first_name: 'New',
                   last_name: 'User',
-                  email: 'new@example.com'
+                  email: 'new@example.com',
                 });
               }}
             >
@@ -277,7 +287,7 @@ describe('UserProvider', () => {
           <UserProvider>
             <TestComponent />
           </UserProvider>
-        </TestProviders>
+        </TestProviders>,
       );
 
       // Wait for default user creation
@@ -298,7 +308,9 @@ describe('UserProvider', () => {
       const allUsers = await db.user_documents.find().exec();
       expect(allUsers).toHaveLength(2);
 
-      const newUser = allUsers.find(u => u.get('email') === 'new@example.com');
+      const newUser = allUsers.find(
+        (u) => u.get('email') === 'new@example.com',
+      );
       expect(newUser).toBeTruthy();
       expect(newUser?.get('first_name')).toBe('New');
       expect(newUser?.get('last_name')).toBe('User');
@@ -310,7 +322,7 @@ describe('UserProvider', () => {
     it('updates when user data changes', async () => {
       const testUser = createTestUser({
         is_selected_user: true,
-        first_name: 'Initial'
+        first_name: 'Initial',
       });
       await db.user_documents.insert(testUser);
 
@@ -326,7 +338,7 @@ describe('UserProvider', () => {
               onClick={async () => {
                 if (rawUser) {
                   await rawUser.update({
-                    $set: { first_name: 'Updated' }
+                    $set: { first_name: 'Updated' },
                   });
                 }
               }}
@@ -342,7 +354,7 @@ describe('UserProvider', () => {
           <UserProvider>
             <TestComponent />
           </UserProvider>
-        </TestProviders>
+        </TestProviders>,
       );
 
       await waitFor(() => {
@@ -370,7 +382,7 @@ describe('UserProvider', () => {
           <UserProvider>
             <TestComponent />
           </UserProvider>
-        </TestProviders>
+        </TestProviders>,
       );
 
       await waitFor(() => {
@@ -404,7 +416,9 @@ describe('UserProvider', () => {
       console.error = jest.fn();
 
       const { getByTestId } = render(<TestComponent />);
-      expect(getByTestId('error').textContent).toContain('useUser must be used within a UserProvider');
+      expect(getByTestId('error').textContent).toContain(
+        'useUser must be used within a UserProvider',
+      );
 
       console.error = originalError;
     });

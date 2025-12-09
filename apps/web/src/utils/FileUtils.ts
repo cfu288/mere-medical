@@ -44,7 +44,7 @@ function isProfilePhotoMetadata(value: unknown): value is ProfilePhotoMetadata {
  * @returns A URL string that can be used in img src attributes
  */
 export function useObjectUrl(
-  data: ProfilePhotoMetadata | Blob | string | undefined
+  data: ProfilePhotoMetadata | Blob | string | undefined,
 ): string {
   const [url, setUrl] = useState<string>('');
 

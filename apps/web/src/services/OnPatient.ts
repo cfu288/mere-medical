@@ -41,7 +41,8 @@ async function getFHIRResource<T extends FhirResource>(
   fhirResourcePathUrl: string,
 ): Promise<BundleEntry<T>[]> {
   let allEntries: BundleEntry<T>[] = [];
-  let nextUrl: string | undefined = `${OnPatientDSTU2Url}/${fhirResourcePathUrl}`;
+  let nextUrl: string | undefined =
+    `${OnPatientDSTU2Url}/${fhirResourcePathUrl}`;
 
   while (nextUrl) {
     const response = await fetch(nextUrl, {

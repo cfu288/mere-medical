@@ -554,7 +554,6 @@ describe('ConnectionRepository', () => {
         expect(updated?.get('last_refreshed')).toBe(now);
         expect(updated?.get('last_sync_was_error')).toBe(false);
       });
-
     });
 
     describe('upsertConnection', () => {

@@ -43,26 +43,36 @@ export function ShowDocumentResultsExpandable({
       | Partial<Record<CCDAStructureDefinitionKeys2_1, string | JSX.Element>>
       | undefined
     >(undefined),
-    attachmentUrl = item.data_record.raw.resource?.content?.[0]?.attachment?.url,
+    attachmentUrl =
+      item.data_record.raw.resource?.content?.[0]?.attachment?.url,
     attachment = useClinicalDoc(attachmentUrl),
     [hasLoadedDocument, setHasLoadedDocument] = useState(false),
     [pdfUrl, setPdfUrl] = useState<string | undefined>(undefined),
-    [html, setHtml] = useState<string | JSX.Element | JSX.Element[] | undefined>(undefined);
+    [html, setHtml] = useState<
+      string | JSX.Element | JSX.Element[] | undefined
+    >(undefined);
 
   useEffect(() => {
     if (expanded) {
       if (!attachment) {
-        console.error('[ShowDocumentResultsExpandable] No attachment found in DB for URL:', attachmentUrl);
+        console.error(
+          '[ShowDocumentResultsExpandable] No attachment found in DB for URL:',
+          attachmentUrl,
+        );
         setHasLoadedDocument(true);
       } else if (
-        attachment.get('data_record.content_type')?.includes('application/xml') &&
+        attachment
+          .get('data_record.content_type')
+          ?.includes('application/xml') &&
         checkIfXmlIsCCDA(attachment.get('data_record.raw'))
       ) {
         const parsedDoc = parseCCDA(attachment.get('data_record.raw'));
         setHasLoadedDocument(true);
         setCCDA(parsedDoc);
       } else if (
-        attachment.get('data_record.content_type')?.includes('application/pdf') &&
+        attachment
+          .get('data_record.content_type')
+          ?.includes('application/pdf') &&
         typeof attachment.get('data_record.raw') === 'string'
       ) {
         try {
@@ -78,23 +88,31 @@ export function ShowDocumentResultsExpandable({
           setPdfUrl(url);
           setHasLoadedDocument(true);
         } catch (error) {
-          console.error('[ShowDocumentResultsExpandable] Error converting base64 to Blob:', error);
+          console.error(
+            '[ShowDocumentResultsExpandable] Error converting base64 to Blob:',
+            error,
+          );
           setHasLoadedDocument(true);
         }
       } else if (
         attachment.get('data_record.content_type')?.includes('text/html') &&
         typeof attachment.get('data_record.raw') === 'string'
       ) {
-        const sanitizedData = parse(DOMPurify.sanitize(attachment.get('data_record.raw')));
+        const sanitizedData = parse(
+          DOMPurify.sanitize(attachment.get('data_record.raw')),
+        );
         setHtml(sanitizedData);
         setHasLoadedDocument(true);
       } else {
-        console.error('[ShowDocumentResultsExpandable] Attachment exists but cannot be displayed:', {
-          contentType: attachment.get('data_record.content_type'),
-          hasRaw: !!attachment.get('data_record.raw'),
-          rawType: typeof attachment.get('data_record.raw'),
-          rawValue: attachment.get('data_record.raw'),
-        });
+        console.error(
+          '[ShowDocumentResultsExpandable] Attachment exists but cannot be displayed:',
+          {
+            contentType: attachment.get('data_record.content_type'),
+            hasRaw: !!attachment.get('data_record.raw'),
+            rawType: typeof attachment.get('data_record.raw'),
+            rawValue: attachment.get('data_record.raw'),
+          },
+        );
         setHasLoadedDocument(true);
       }
     }
@@ -126,7 +144,10 @@ export function ShowDocumentResultsExpandable({
             {/* Display CCDA Document */}
             {ccda && (
               <div className="text-md whitespace-wrap overflow-x-scroll p-4 text-gray-900">
-                <DisplayCCDADocument ccda={ccda} matchedChunks={matchedChunks} />
+                <DisplayCCDADocument
+                  ccda={ccda}
+                  matchedChunks={matchedChunks}
+                />
               </div>
             )}
 
@@ -143,9 +164,7 @@ export function ShowDocumentResultsExpandable({
 
             {/* Display HTML Document */}
             {html && (
-              <div className="prose prose-sm overflow-x-auto p-4">
-                {html}
-              </div>
+              <div className="prose prose-sm overflow-x-auto p-4">{html}</div>
             )}
 
             {/* Error message when document can't be displayed */}

@@ -58,9 +58,7 @@ const searchDSTU2Items: UnifiedTenantEndpoint[] = (
     ),
   );
 
-const searchR4Items: UnifiedTenantEndpoint[] = (
-  [] as UnifiedTenantEndpoint[]
-)
+const searchR4Items: UnifiedTenantEndpoint[] = ([] as UnifiedTenantEndpoint[])
   .concat(
     (EpicR4TenantEndpoints as unknown as UnifiedTenantEndpoint[]).map((i) => {
       i.vendor = 'EPIC';

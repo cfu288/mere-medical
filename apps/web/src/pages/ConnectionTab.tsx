@@ -195,7 +195,14 @@ const ConnectionTab: React.FC = () => {
       ) => {
         switch (vendor) {
           case 'epic': {
-            setTenantEpicUrl(base, auth, token, name, id, fhirVersion || 'DSTU2');
+            setTenantEpicUrl(
+              base,
+              auth,
+              token,
+              name,
+              id,
+              fhirVersion || 'DSTU2',
+            );
             setOpenSelectModal((x) => !x);
             window.location = getEpicLoginUrl(
               base,
@@ -206,7 +213,14 @@ const ConnectionTab: React.FC = () => {
             break;
           }
           case 'cerner': {
-            setTenantCernerUrl(base, auth, token, name, id, fhirVersion || 'DSTU2');
+            setTenantCernerUrl(
+              base,
+              auth,
+              token,
+              name,
+              id,
+              fhirVersion || 'DSTU2',
+            );
             setOpenSelectModal((x) => !x);
             window.location = getCernerLoginUrl(base, auth);
             break;

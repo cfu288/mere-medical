@@ -17,7 +17,9 @@ describe('CernerService', () => {
       const result = await service.queryTenants('');
 
       for (let i = 1; i < result.length; i++) {
-        expect(result[i - 1].name.localeCompare(result[i].name)).toBeLessThanOrEqual(0);
+        expect(
+          result[i - 1].name.localeCompare(result[i].name),
+        ).toBeLessThanOrEqual(0);
       }
     });
 
@@ -26,7 +28,7 @@ describe('CernerService', () => {
 
       expect(result.length).toBeGreaterThan(0);
       const hasMatchingName = result.some((tenant) =>
-        tenant.name.toLowerCase().includes('sandbox')
+        tenant.name.toLowerCase().includes('sandbox'),
       );
       expect(hasMatchingName).toBe(true);
     });
@@ -43,7 +45,9 @@ describe('CernerService', () => {
       const result = await service.queryR4Tenants('');
 
       for (let i = 1; i < result.length; i++) {
-        expect(result[i - 1].name.localeCompare(result[i].name)).toBeLessThanOrEqual(0);
+        expect(
+          result[i - 1].name.localeCompare(result[i].name),
+        ).toBeLessThanOrEqual(0);
       }
     });
 
@@ -52,7 +56,7 @@ describe('CernerService', () => {
 
       expect(result.length).toBeGreaterThan(0);
       const hasMatchingName = result.some((tenant) =>
-        tenant.name.toLowerCase().includes('sandbox')
+        tenant.name.toLowerCase().includes('sandbox'),
       );
       expect(hasMatchingName).toBe(true);
     });
@@ -62,7 +66,7 @@ describe('CernerService', () => {
 
       expect(result.length).toBeGreaterThan(0);
       const sandboxEndpoint = result.find((t) =>
-        t.name.toLowerCase().includes('sandbox')
+        t.name.toLowerCase().includes('sandbox'),
       );
 
       if (sandboxEndpoint) {

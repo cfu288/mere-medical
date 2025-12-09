@@ -4,7 +4,10 @@ describe('resolveObservationReferences', () => {
   describe('absolute URLs (Epic/Cerner R4 format)', () => {
     it('should return absolute URLs unchanged', () => {
       const references = [
-        { reference: 'https://fhir-ehr-code.cerner.com/r4/tenant-id/Observation/123' },
+        {
+          reference:
+            'https://fhir-ehr-code.cerner.com/r4/tenant-id/Observation/123',
+        },
         { reference: 'https://fhir.epic.com/api/FHIR/R4/Observation/456' },
       ];
 
@@ -53,13 +56,12 @@ describe('resolveObservationReferences', () => {
     });
 
     it('should handle baseUrl with trailing slash', () => {
-      const references = [
-        { reference: 'Observation/789' },
-      ];
+      const references = [{ reference: 'Observation/789' }];
 
       const result = resolveObservationReferences({
         references,
-        baseUrl: 'https://fhir-ehr-code.cerner.com/r4/ec2458f2-1e24-41c8-b71b-0e701af7583d/',
+        baseUrl:
+          'https://fhir-ehr-code.cerner.com/r4/ec2458f2-1e24-41c8-b71b-0e701af7583d/',
       });
 
       expect(result).toEqual([
@@ -68,9 +70,7 @@ describe('resolveObservationReferences', () => {
     });
 
     it('should handle baseUrl without trailing slash', () => {
-      const references = [
-        { reference: 'Observation/ABC' },
-      ];
+      const references = [{ reference: 'Observation/ABC' }];
 
       const result = resolveObservationReferences({
         references,
@@ -83,26 +83,27 @@ describe('resolveObservationReferences', () => {
     });
 
     it('should return relative URLs unchanged when baseUrl is missing', () => {
-      const references = [
-        { reference: 'Observation/123' },
-      ];
+      const references = [{ reference: 'Observation/123' }];
 
       const result = resolveObservationReferences({
         references,
       });
 
-      expect(result).toEqual([
-        'Observation/123',
-      ]);
+      expect(result).toEqual(['Observation/123']);
     });
   });
 
   describe('mixed scenarios', () => {
     it('should handle mix of absolute and relative URLs', () => {
       const references = [
-        { reference: 'https://fhir.epic.com/api/FHIR/R4/Observation/absolute1' },
+        {
+          reference: 'https://fhir.epic.com/api/FHIR/R4/Observation/absolute1',
+        },
         { reference: 'Observation/relative1' },
-        { reference: 'https://fhir-ehr-code.cerner.com/r4/tenant/Observation/absolute2' },
+        {
+          reference:
+            'https://fhir-ehr-code.cerner.com/r4/tenant/Observation/absolute2',
+        },
         { reference: 'Observation/relative2' },
       ];
 
@@ -157,9 +158,7 @@ describe('resolveObservationReferences', () => {
         baseUrl: 'http://example.com/fhir/',
       });
 
-      expect(result).toEqual([
-        'https://secure.fhir.com/r4/Observation/secure',
-      ]);
+      expect(result).toEqual(['https://secure.fhir.com/r4/Observation/secure']);
     });
 
     it('should handle http protocol in absolute URLs', () => {
@@ -172,21 +171,18 @@ describe('resolveObservationReferences', () => {
         baseUrl: 'https://example.com/fhir/',
       });
 
-      expect(result).toEqual([
-        'http://local.fhir.com/r4/Observation/local',
-      ]);
+      expect(result).toEqual(['http://local.fhir.com/r4/Observation/local']);
     });
   });
 
   describe('real-world vendor examples', () => {
     it('should handle Cerner R4 sandbox format', () => {
-      const references = [
-        { reference: 'Observation/M197198438' },
-      ];
+      const references = [{ reference: 'Observation/M197198438' }];
 
       const result = resolveObservationReferences({
         references,
-        baseUrl: 'https://fhir-ehr-code.cerner.com/r4/ec2458f2-1e24-41c8-b71b-0e701af7583d/',
+        baseUrl:
+          'https://fhir-ehr-code.cerner.com/r4/ec2458f2-1e24-41c8-b71b-0e701af7583d/',
       });
 
       expect(result).toEqual([
@@ -196,7 +192,10 @@ describe('resolveObservationReferences', () => {
 
     it('should handle Epic interconnect format', () => {
       const references = [
-        { reference: 'https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4/Observation/eXYZ123' },
+        {
+          reference:
+            'https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4/Observation/eXYZ123',
+        },
       ];
 
       const result = resolveObservationReferences({

@@ -18,7 +18,7 @@ function filteredItemsWithQuery(items: DSTU2Endpoint[], query: string) {
         (item) =>
           !!item.name?.trim() &&
           !!item.authorize?.trim() &&
-          !!item.token?.trim()
+          !!item.token?.trim(),
       )
       .sort((x, y) => x.name.localeCompare(y.name))
       .slice(0, 100);
@@ -26,7 +26,7 @@ function filteredItemsWithQuery(items: DSTU2Endpoint[], query: string) {
   return items
     .filter(
       (item) =>
-        !!item.name?.trim() && !!item.authorize?.trim() && !!item.token?.trim()
+        !!item.name?.trim() && !!item.authorize?.trim() && !!item.token?.trim(),
     )
     .map((item) => {
       const vals = item.name
