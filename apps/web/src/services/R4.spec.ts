@@ -14,14 +14,14 @@ describe('R4', () => {
       });
 
       it('should remove self-closing tags', () => {
-        expect(R4.stripHtmlTags('Line one<br/>Line two')).toBe('Line one Line two');
+        expect(R4.stripHtmlTags('Line one<br/>Line two')).toBe(
+          'Line one Line two',
+        );
       });
 
       it('should remove multiple different tags', () => {
         expect(
-          R4.stripHtmlTags(
-            '<h1>Title</h1><p>Paragraph</p><span>Span</span>',
-          ),
+          R4.stripHtmlTags('<h1>Title</h1><p>Paragraph</p><span>Span</span>'),
         ).toBe('Title Paragraph Span');
       });
 
@@ -59,8 +59,8 @@ describe('R4', () => {
       });
 
       it('should decode &#39; to apostrophe', () => {
-        expect(R4.stripHtmlTags("It&#39;s working")).toBe("It's working");
-        expect(R4.stripHtmlTags("It&#39;s working")).toBe("It's working");
+        expect(R4.stripHtmlTags('It&#39;s working')).toBe("It's working");
+        expect(R4.stripHtmlTags('It&#39;s working')).toBe("It's working");
       });
 
       it('should decode multiple entities in one string', () => {

@@ -46,9 +46,7 @@ export function UserListItem({ user, isSelected, onClick }: UserListItemProps) {
           {getUserDisplayName(user)}
         </p>
         {user.get('email') && (
-          <p className="text-sm text-gray-500">
-            {user.get('email')}
-          </p>
+          <p className="text-sm text-gray-500">{user.get('email')}</p>
         )}
       </div>
       {isSelected ? (

@@ -213,7 +213,9 @@ describe('useRecordQuery helper functions', () => {
       const records = await fetchRawRecords(db, userId, 0, 10);
 
       expect(records).toHaveLength(2);
-      expect(records.every((r) => r.data_record.resource_type === 'observation')).toBe(true);
+      expect(
+        records.every((r) => r.data_record.resource_type === 'observation'),
+      ).toBe(true);
     });
   });
 });
@@ -262,7 +264,10 @@ describe('fetchRecordsUntilCompleteDays', () => {
     const dayCount = Object.keys(result.records).length;
     expect(dayCount).toBe(2);
     expect(result.hasMore).toBe(false);
-    const totalRecords = Object.values(result.records).reduce((sum, arr) => sum + arr.length, 0);
+    const totalRecords = Object.values(result.records).reduce(
+      (sum, arr) => sum + arr.length,
+      0,
+    );
     expect(totalRecords).toBe(20);
   });
 
@@ -278,9 +283,14 @@ describe('fetchRecordsUntilCompleteDays', () => {
     const result = await fetchRecordsUntilCompleteDays(db, userId, 3, 0);
 
     for (const [dateKey, records] of Object.entries(result.records)) {
-      const expectedCount = dateKey === '2024-01-15' ? 30 :
-                           dateKey === '2024-01-14' ? 30 :
-                           dateKey === '2024-01-13' ? 30 : 30;
+      const expectedCount =
+        dateKey === '2024-01-15'
+          ? 30
+          : dateKey === '2024-01-14'
+            ? 30
+            : dateKey === '2024-01-13'
+              ? 30
+              : 30;
       expect(records.length).toBe(expectedCount);
     }
   });
@@ -296,7 +306,10 @@ describe('fetchRecordsUntilCompleteDays', () => {
 
     const result = await fetchRecordsUntilCompleteDays(db, userId, 3, 0);
 
-    const totalRecords = Object.values(result.records).reduce((sum, arr) => sum + arr.length, 0);
+    const totalRecords = Object.values(result.records).reduce(
+      (sum, arr) => sum + arr.length,
+      0,
+    );
     expect(result.lastOffset).toBe(totalRecords);
   });
 
@@ -312,7 +325,12 @@ describe('fetchRecordsUntilCompleteDays', () => {
     await db.clinical_documents.bulkInsert(docs);
 
     const firstLoad = await fetchRecordsUntilCompleteDays(db, userId, 3, 0);
-    const secondLoad = await fetchRecordsUntilCompleteDays(db, userId, 3, firstLoad.lastOffset);
+    const secondLoad = await fetchRecordsUntilCompleteDays(
+      db,
+      userId,
+      3,
+      firstLoad.lastOffset,
+    );
 
     const firstDates = Object.keys(firstLoad.records);
     const secondDates = Object.keys(secondLoad.records);

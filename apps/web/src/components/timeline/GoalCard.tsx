@@ -48,7 +48,9 @@ export const GoalCard = memo(function GoalCard({
             {formatTime(item.metadata?.date)}
           </p>
           {goal?.lifecycleStatus && (
-            <p className={`truncate text-xs font-medium md:text-sm capitalize ${statusColorMap[goal.lifecycleStatus] || 'text-gray-600'}`}>
+            <p
+              className={`truncate text-xs font-medium md:text-sm capitalize ${statusColorMap[goal.lifecycleStatus] || 'text-gray-600'}`}
+            >
               {goal.lifecycleStatus.replace('-', ' ')}
             </p>
           )}

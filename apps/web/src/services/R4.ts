@@ -856,9 +856,10 @@ export function mapFamilyMemberHistoryToClinicalDocument(
 ) {
   const relationshipText = bundleItem.resource?.relationship?.text;
   const conditionText = bundleItem.resource?.condition?.[0]?.code?.text;
-  const displayName = relationshipText && conditionText
-    ? `${relationshipText}: ${conditionText}`
-    : relationshipText || conditionText;
+  const displayName =
+    relationshipText && conditionText
+      ? `${relationshipText}: ${conditionText}`
+      : relationshipText || conditionText;
 
   const cd: CreateClinicalDocument<BundleEntry<FamilyMemberHistory>> = {
     user_id: connectionDocument.user_id,
@@ -1068,7 +1069,8 @@ export function mapScheduleToClinicalDocument(
     metadata: {
       id: parseId(bundleItem),
       date:
-        bundleItem.resource?.planningHorizon?.start || new Date(0).toISOString(),
+        bundleItem.resource?.planningHorizon?.start ||
+        new Date(0).toISOString(),
       display_name:
         bundleItem.resource?.serviceType?.[0]?.text ||
         bundleItem.resource?.comment ||
@@ -1086,9 +1088,10 @@ export function mapSlotToClinicalDocument(
 ) {
   const serviceType = bundleItem.resource?.serviceType?.[0]?.text;
   const status = bundleItem.resource?.status;
-  const displayName = serviceType && status
-    ? `${serviceType} (${status})`
-    : serviceType || status;
+  const displayName =
+    serviceType && status
+      ? `${serviceType} (${status})`
+      : serviceType || status;
 
   const cd: CreateClinicalDocument<BundleEntry<Slot>> = {
     user_id: connectionDocument.user_id,

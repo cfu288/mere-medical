@@ -15,7 +15,10 @@ import {
   PAGE_SIZE,
 } from '../../pages/TimelineTab';
 
-type RecordsByDate = Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>;
+type RecordsByDate = Record<
+  string,
+  ClinicalDocument<BundleEntry<FhirResource>>[]
+>;
 
 export function useRecordQuery(
   query: string,
@@ -48,7 +51,12 @@ export function useRecordQuery(
       try {
         if (!query) {
           const offset = loadMore ? groupedOffset : 0;
-          console.debug('useRecordQuery: grouped view, offset:', offset, 'loadMore:', loadMore);
+          console.debug(
+            'useRecordQuery: grouped view, offset:',
+            offset,
+            'loadMore:',
+            loadMore,
+          );
 
           const result = await fetchRecordsUntilCompleteDays(
             db,
@@ -64,11 +72,15 @@ export function useRecordQuery(
           });
 
           setData((prev) =>
-            loadMore ? mergeRecordsByDate(prev, result.records) : result.records,
+            loadMore
+              ? mergeRecordsByDate(prev, result.records)
+              : result.records,
           );
           setGroupedOffset(result.lastOffset);
           setQueryStatus(
-            result.hasMore ? QueryStatus.SUCCESS : QueryStatus.COMPLETE_HIDE_LOAD_MORE,
+            result.hasMore
+              ? QueryStatus.SUCCESS
+              : QueryStatus.COMPLETE_HIDE_LOAD_MORE,
           );
         } else {
           const page = loadMore ? currentPage + 1 : 0;

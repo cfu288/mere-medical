@@ -108,7 +108,9 @@ export const TimelineItem = memo(function TimelineItem({
                   <MedicationRequestCard
                     key={item.id}
                     item={
-                      item as unknown as ClinicalDocument<R4BundleEntry<MedicationRequest>>
+                      item as unknown as ClinicalDocument<
+                        R4BundleEntry<MedicationRequest>
+                      >
                     }
                   />
                 )}

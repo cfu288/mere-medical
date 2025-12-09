@@ -50,7 +50,7 @@ describe('TenantService', () => {
       });
 
       const hasMatchingName = result.some((t) =>
-        t.name.toLowerCase().includes('sandbox')
+        t.name.toLowerCase().includes('sandbox'),
       );
       expect(hasMatchingName).toBe(true);
     });

@@ -41,7 +41,9 @@ export function VectorGeneratorSyncInitializer({
   useEffect(() => {
     if (vectorStorage && rxdb && user?.id) {
       if (lastSyncedUserId.current !== user.id) {
-        console.debug(`VectorGeneratorSyncInitializer: User switched from ${lastSyncedUserId.current} to ${user.id}, starting vector sync`);
+        console.debug(
+          `VectorGeneratorSyncInitializer: User switched from ${lastSyncedUserId.current} to ${user.id}, starting vector sync`,
+        );
 
         if (vsSync.current) {
           vsSync.current = undefined;

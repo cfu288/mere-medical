@@ -69,7 +69,10 @@ export function ShowDocumentResultsAttachmentExpandable({
           setPdfUrl(url);
           setHasLoadedDocument(true);
         } catch (error) {
-          console.error('[ShowDocumentResultsAttachmentExpandable] Error converting base64 to Blob:', error);
+          console.error(
+            '[ShowDocumentResultsAttachmentExpandable] Error converting base64 to Blob:',
+            error,
+          );
           setHasLoadedDocument(true);
         }
       } else {
@@ -105,7 +108,10 @@ export function ShowDocumentResultsAttachmentExpandable({
             {/* Display CCDA Document */}
             {ccda && (
               <div className="text-md whitespace-wrap overflow-x-scroll p-4 text-gray-900">
-                <DisplayCCDADocument ccda={ccda} matchedChunks={matchedChunks} />
+                <DisplayCCDADocument
+                  ccda={ccda}
+                  matchedChunks={matchedChunks}
+                />
               </div>
             )}
 

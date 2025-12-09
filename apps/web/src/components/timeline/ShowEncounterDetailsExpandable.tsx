@@ -1,9 +1,17 @@
 import { BundleEntry, Encounter } from 'fhir/r2';
-import { BundleEntry as R4BundleEntry, Encounter as R4Encounter } from 'fhir/r4';
+import {
+  BundleEntry as R4BundleEntry,
+  Encounter as R4Encounter,
+} from 'fhir/r4';
 import React, { useMemo } from 'react';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { formatFullDateWithTime } from '../../utils/dateFormatters';
-import { getEncounterClass, getEncounterLocation, getEncounterPatient, getEncounterIndication } from '../../utils/fhirAccessHelpers';
+import {
+  getEncounterClass,
+  getEncounterLocation,
+  getEncounterPatient,
+  getEncounterIndication,
+} from '../../utils/fhirAccessHelpers';
 import { Modal } from '../Modal';
 import { ModalHeader } from '../ModalHeader';
 
@@ -64,7 +72,8 @@ export function ShowEncounterDetailsExpandable({
               {encounter?.period?.start && (
                 <div className="text-sm font-light">
                   {formatFullDateWithTime(encounter.period.start)}
-                  {encounter.period.end && ` - ${formatFullDateWithTime(encounter.period.end)}`}
+                  {encounter.period.end &&
+                    ` - ${formatFullDateWithTime(encounter.period.end)}`}
                 </div>
               )}
             </div>
@@ -76,7 +85,9 @@ export function ShowEncounterDetailsExpandable({
             <div className="space-y-4">
               {encounter?.status && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Status</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    Status
+                  </div>
                   <div className="col-span-2 text-sm text-gray-900 capitalize">
                     {encounter.status}
                   </div>
@@ -85,7 +96,9 @@ export function ShowEncounterDetailsExpandable({
 
               {getEncounterClassDisplay() && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Class</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    Class
+                  </div>
                   <div className="col-span-2 text-sm text-gray-900 capitalize">
                     {getEncounterClassDisplay()}
                   </div>
@@ -94,7 +107,9 @@ export function ShowEncounterDetailsExpandable({
 
               {encounter?.type && encounter.type.length > 0 && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Type</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    Type
+                  </div>
                   <div className="col-span-2 space-y-1">
                     {encounter.type.map((type, index) => (
                       <div key={index} className="text-sm text-gray-900">
@@ -107,7 +122,9 @@ export function ShowEncounterDetailsExpandable({
 
               {encounter?.priority?.text && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Priority</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    Priority
+                  </div>
                   <div className="col-span-2 text-sm text-gray-900">
                     {encounter.priority.text}
                   </div>
@@ -116,7 +133,9 @@ export function ShowEncounterDetailsExpandable({
 
               {getEncounterPatient(item) && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Patient</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    Patient
+                  </div>
                   <div className="col-span-2 text-sm text-gray-900">
                     {getEncounterPatient(item)}
                   </div>
@@ -131,7 +150,9 @@ export function ShowEncounterDetailsExpandable({
                   <div className="col-span-2 space-y-1">
                     {uniqueParticipants.map((p, index) => (
                       <div key={index} className="text-sm text-gray-900">
-                        {p.individual?.display || p.individual?.reference || 'Unknown'}
+                        {p.individual?.display ||
+                          p.individual?.reference ||
+                          'Unknown'}
                         {p.type && p.type.length > 0 && (
                           <span className="text-gray-600">
                             {' '}
@@ -163,16 +184,21 @@ export function ShowEncounterDetailsExpandable({
 
               {encounter?.length?.value !== undefined && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Length</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    Length
+                  </div>
                   <div className="col-span-2 text-sm text-gray-900">
-                    {encounter.length.value} {encounter.length.unit || 'minutes'}
+                    {encounter.length.value}{' '}
+                    {encounter.length.unit || 'minutes'}
                   </div>
                 </div>
               )}
 
               {getReasonCodes().length > 0 && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Reason</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    Reason
+                  </div>
                   <div className="col-span-2 space-y-1">
                     {getReasonCodes().map((reason, index) => (
                       <div key={index} className="text-sm text-gray-900">
@@ -212,7 +238,9 @@ export function ShowEncounterDetailsExpandable({
                     )}
                     {encounter.hospitalization.dischargeDisposition?.text && (
                       <div>
-                        <span className="font-medium">Discharge Disposition: </span>
+                        <span className="font-medium">
+                          Discharge Disposition:{' '}
+                        </span>
                         {encounter.hospitalization.dischargeDisposition.text}
                       </div>
                     )}
@@ -228,7 +256,9 @@ export function ShowEncounterDetailsExpandable({
                   <div className="col-span-2 space-y-1">
                     {encounter.location.map((loc, index) => (
                       <div key={index} className="text-sm text-gray-900">
-                        {loc.location?.display || loc.location?.reference || 'N/A'}
+                        {loc.location?.display ||
+                          loc.location?.reference ||
+                          'N/A'}
                         {loc.status && (
                           <span className="text-gray-600"> ({loc.status})</span>
                         )}

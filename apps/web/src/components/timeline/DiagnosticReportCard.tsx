@@ -49,7 +49,9 @@ export async function getRelatedDocuments({
   const isDrResult = item.data_record.raw.resource?.result;
   if (isDrResult) {
     const resolvedReferences = resolveObservationReferences({
-      references: isDrResult.filter((r) => r.reference) as Array<{ reference: string }>,
+      references: isDrResult.filter((r) => r.reference) as Array<{
+        reference: string;
+      }>,
       baseUrl: conn?.location as string | undefined,
     });
     listToQuery.push(...resolvedReferences);

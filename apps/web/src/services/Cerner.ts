@@ -489,7 +489,11 @@ export async function syncAllRecords(
             connectionDocument,
             db,
             'CareTeam',
-            ((item: any) => R4.mapCareTeamToClinicalDocument(item, connectionDocument)) as any,
+            ((item: any) =>
+              R4.mapCareTeamToClinicalDocument(
+                item,
+                connectionDocument,
+              )) as any,
             { patient: patientId },
           ),
           syncFHIRResource(
@@ -497,7 +501,8 @@ export async function syncAllRecords(
             connectionDocument,
             db,
             'Goal',
-            ((item: any) => R4.mapGoalToClinicalDocument(item, connectionDocument)) as any,
+            ((item: any) =>
+              R4.mapGoalToClinicalDocument(item, connectionDocument)) as any,
             { patient: patientId },
           ),
           syncFHIRResource(
@@ -505,7 +510,11 @@ export async function syncAllRecords(
             connectionDocument,
             db,
             'Coverage',
-            ((item: any) => R4.mapCoverageToClinicalDocument(item, connectionDocument)) as any,
+            ((item: any) =>
+              R4.mapCoverageToClinicalDocument(
+                item,
+                connectionDocument,
+              )) as any,
             { patient: patientId },
           ),
           syncFHIRResource(
@@ -513,7 +522,8 @@ export async function syncAllRecords(
             connectionDocument,
             db,
             'Device',
-            ((item: any) => R4.mapDeviceToClinicalDocument(item, connectionDocument)) as any,
+            ((item: any) =>
+              R4.mapDeviceToClinicalDocument(item, connectionDocument)) as any,
             { patient: patientId },
           ),
           syncFHIRResource(
@@ -521,7 +531,11 @@ export async function syncAllRecords(
             connectionDocument,
             db,
             'ServiceRequest',
-            ((item: any) => R4.mapServiceRequestToClinicalDocument(item, connectionDocument)) as any,
+            ((item: any) =>
+              R4.mapServiceRequestToClinicalDocument(
+                item,
+                connectionDocument,
+              )) as any,
             { patient: patientId },
           ),
           syncFHIRResource(
@@ -529,7 +543,11 @@ export async function syncAllRecords(
             connectionDocument,
             db,
             'MedicationDispense',
-            ((item: any) => R4.mapMedicationDispenseToClinicalDocument(item, connectionDocument)) as any,
+            ((item: any) =>
+              R4.mapMedicationDispenseToClinicalDocument(
+                item,
+                connectionDocument,
+              )) as any,
             { patient: patientId },
           ),
           syncFHIRResource(
@@ -537,7 +555,11 @@ export async function syncAllRecords(
             connectionDocument,
             db,
             'MedicationAdministration',
-            ((item: any) => R4.mapMedicationAdministrationToClinicalDocument(item, connectionDocument)) as any,
+            ((item: any) =>
+              R4.mapMedicationAdministrationToClinicalDocument(
+                item,
+                connectionDocument,
+              )) as any,
             { patient: patientId },
           ),
           syncFHIRResource(
@@ -545,7 +567,11 @@ export async function syncAllRecords(
             connectionDocument,
             db,
             'Appointment',
-            ((item: any) => R4.mapAppointmentToClinicalDocument(item, connectionDocument)) as any,
+            ((item: any) =>
+              R4.mapAppointmentToClinicalDocument(
+                item,
+                connectionDocument,
+              )) as any,
             { patient: patientId, date: 'ge1900-01-01T00:00:00Z' },
           ),
           syncFHIRResource(
@@ -553,7 +579,11 @@ export async function syncAllRecords(
             connectionDocument,
             db,
             'FamilyMemberHistory',
-            ((item: any) => R4.mapFamilyMemberHistoryToClinicalDocument(item, connectionDocument)) as any,
+            ((item: any) =>
+              R4.mapFamilyMemberHistoryToClinicalDocument(
+                item,
+                connectionDocument,
+              )) as any,
             { patient: patientId },
           ),
           syncFHIRResource(
@@ -561,7 +591,8 @@ export async function syncAllRecords(
             connectionDocument,
             db,
             'Consent',
-            ((item: any) => R4.mapConsentToClinicalDocument(item, connectionDocument)) as any,
+            ((item: any) =>
+              R4.mapConsentToClinicalDocument(item, connectionDocument)) as any,
             { patient: patientId },
           ),
           syncFHIRResource(
@@ -569,7 +600,11 @@ export async function syncAllRecords(
             connectionDocument,
             db,
             'NutritionOrder',
-            ((item: any) => R4.mapNutritionOrderToClinicalDocument(item, connectionDocument)) as any,
+            ((item: any) =>
+              R4.mapNutritionOrderToClinicalDocument(
+                item,
+                connectionDocument,
+              )) as any,
             { patient: patientId },
           ),
           syncFHIRResource(
@@ -577,7 +612,11 @@ export async function syncAllRecords(
             connectionDocument,
             db,
             'QuestionnaireResponse',
-            ((item: any) => R4.mapQuestionnaireResponseToClinicalDocument(item, connectionDocument)) as any,
+            ((item: any) =>
+              R4.mapQuestionnaireResponseToClinicalDocument(
+                item,
+                connectionDocument,
+              )) as any,
             { patient: patientId },
           ),
         ]

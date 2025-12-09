@@ -11,7 +11,8 @@
     "start": "nx serve",
     "build": "nx build",
     "test": "nx test",
-    "dev": "nx serve-all"
+    "dev": "nx serve-all",
+    "prepare": "[ -d .git ] && husky && git config blame.ignoreRevsFile .git-blame-ignore-revs || true"
   },
   "engines": {
     "node": "20.11.0"
@@ -20,6 +21,14 @@
     "assert": false
   },
   "private": true,
+  "lint-staged": {
+    "apps/web/**/*.{ts,tsx,js,jsx,json,css,md}": [
+      "prettier --write"
+    ],
+    "apps/api/**/*.{ts,js,json,md}": [
+      "prettier --write"
+    ]
+  },
   "overrides": {
     "lokijs": "npm:sylviejs",
     "dependency": {
@@ -83,11 +92,13 @@
     "eslint-plugin-react": "7.31.11",
     "eslint-plugin-react-hooks": "5.0.0",
     "exitzero": "^1.0.1",
+    "husky": "^9.1.7",
     "jest": "30.0.5",
     "jest-environment-jsdom": "30.0.5",
     "jest-environment-node": "^29.4.1",
     "jest-util": "30.0.5",
     "jsonc-eslint-parser": "^2.1.0",
+    "lint-staged": "^16.2.7",
     "nx": "21.4.1",
     "postcss": "8.4.38",
     "prettier": "^3.2.5",

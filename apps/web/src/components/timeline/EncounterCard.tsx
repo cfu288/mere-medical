@@ -1,6 +1,9 @@
 import { BundleEntry, Encounter } from 'fhir/r2';
 import { formatTime } from '../../utils/dateFormatters';
-import { BundleEntry as R4BundleEntry, Encounter as R4Encounter } from 'fhir/r4';
+import {
+  BundleEntry as R4BundleEntry,
+  Encounter as R4Encounter,
+} from 'fhir/r4';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { TimelineCardTitle } from './TimelineCardTitle';
 import { memo, useState } from 'react';

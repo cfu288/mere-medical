@@ -31,11 +31,16 @@ export const CareTeamCard = memo(function CareTeamCard({
       >
         <div className="min-w-0 flex-1">
           <div className="items-top flex justify-between">
-            <TimelineCardCategoryTitle title="Care Team" color="text-cyan-600" />
+            <TimelineCardCategoryTitle
+              title="Care Team"
+              color="text-cyan-600"
+            />
             <OpenableCardIcon />
           </div>
 
-          <TimelineCardTitle>{item.metadata?.display_name || careTeam?.name}</TimelineCardTitle>
+          <TimelineCardTitle>
+            {item.metadata?.display_name || careTeam?.name}
+          </TimelineCardTitle>
           <p className="truncate text-xs font-medium text-gray-800 md:text-sm">
             {formatTime(item.metadata?.date)}
           </p>

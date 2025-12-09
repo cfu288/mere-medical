@@ -28,7 +28,10 @@ export const AppointmentCard = memo(function AppointmentCard({
       >
         <div className="min-w-0 flex-1">
           <div className="items-top flex justify-between">
-            <TimelineCardCategoryTitle title="Appointment" color="text-violet-600" />
+            <TimelineCardCategoryTitle
+              title="Appointment"
+              color="text-violet-600"
+            />
             <OpenableCardIcon />
           </div>
 

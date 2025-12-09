@@ -27,7 +27,8 @@ export function ShowCoverageDetailsExpandable({
               {coverage?.period?.start && (
                 <div className="text-sm font-light">
                   {formatFullDate(coverage.period.start)}
-                  {coverage.period.end && ` - ${formatFullDate(coverage.period.end)}`}
+                  {coverage.period.end &&
+                    ` - ${formatFullDate(coverage.period.end)}`}
                 </div>
               )}
             </div>
@@ -39,7 +40,9 @@ export function ShowCoverageDetailsExpandable({
             <div className="space-y-4">
               {coverage?.status && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Status</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    Status
+                  </div>
                   <div className="col-span-2 text-sm text-gray-900 capitalize">
                     {coverage.status}
                   </div>
@@ -48,7 +51,9 @@ export function ShowCoverageDetailsExpandable({
 
               {coverage?.type?.text && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Type</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    Type
+                  </div>
                   <div className="col-span-2 text-sm text-gray-900">
                     {coverage.type.text}
                   </div>
@@ -68,7 +73,9 @@ export function ShowCoverageDetailsExpandable({
 
               {coverage?.payor && coverage.payor.length > 0 && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Payor</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    Payor
+                  </div>
                   <div className="col-span-2 text-sm text-gray-900">
                     {coverage.payor
                       .map((p) => p.display || p.reference)
@@ -127,7 +134,9 @@ export function ShowCoverageDetailsExpandable({
 
               {coverage?.network && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Network</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    Network
+                  </div>
                   <div className="col-span-2 text-sm text-gray-900">
                     {coverage.network}
                   </div>
@@ -136,7 +145,9 @@ export function ShowCoverageDetailsExpandable({
 
               {coverage?.order !== undefined && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Order</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    Order
+                  </div>
                   <div className="col-span-2 text-sm text-gray-900">
                     {coverage.order}
                   </div>

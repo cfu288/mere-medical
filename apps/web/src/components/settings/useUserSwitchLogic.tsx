@@ -1,5 +1,9 @@
 import { useState, useCallback } from 'react';
-import { useUser, useAllUsers, useUserManagement } from '../providers/UserProvider';
+import {
+  useUser,
+  useAllUsers,
+  useUserManagement,
+} from '../providers/UserProvider';
 import { useNotificationDispatch } from '../providers/NotificationProvider';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
 import { RxDocument } from 'rxdb';

@@ -38,7 +38,9 @@ export function ShowGoalDetailsExpandable({
             <div className="space-y-4">
               {goal?.lifecycleStatus && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Status</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    Status
+                  </div>
                   <div className="col-span-2 text-sm text-gray-900 capitalize">
                     {goal.lifecycleStatus.replace('-', ' ')}
                   </div>
@@ -47,16 +49,21 @@ export function ShowGoalDetailsExpandable({
 
               {goal?.achievementStatus?.text && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Achievement</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    Achievement
+                  </div>
                   <div className="col-span-2 text-sm text-gray-900">
-                    {goal.achievementStatus.text || goal.achievementStatus.coding?.[0]?.display}
+                    {goal.achievementStatus.text ||
+                      goal.achievementStatus.coding?.[0]?.display}
                   </div>
                 </div>
               )}
 
               {goal?.priority?.text && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Priority</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    Priority
+                  </div>
                   <div className="col-span-2 text-sm text-gray-900">
                     {goal.priority.text || goal.priority.coding?.[0]?.display}
                   </div>
@@ -65,7 +72,9 @@ export function ShowGoalDetailsExpandable({
 
               {goal?.description?.text && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Description</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    Description
+                  </div>
                   <div className="col-span-2 text-sm text-gray-900">
                     {goal.description.text}
                   </div>
@@ -74,7 +83,9 @@ export function ShowGoalDetailsExpandable({
 
               {goal?.category && goal.category.length > 0 && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Category</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    Category
+                  </div>
                   <div className="col-span-2 space-y-1">
                     {goal.category.map((cat, index) => (
                       <div key={index} className="text-sm text-gray-900">
@@ -87,10 +98,15 @@ export function ShowGoalDetailsExpandable({
 
               {goal?.target && goal.target.length > 0 && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Target</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    Target
+                  </div>
                   <div className="col-span-2 space-y-2">
                     {goal.target.map((target, index) => (
-                      <div key={index} className="text-sm text-gray-900 border-l-2 border-emerald-300 pl-2">
+                      <div
+                        key={index}
+                        className="text-sm text-gray-900 border-l-2 border-emerald-300 pl-2"
+                      >
                         {target.measure?.text && (
                           <div>Measure: {target.measure.text}</div>
                         )}
@@ -98,7 +114,9 @@ export function ShowGoalDetailsExpandable({
                           <div>Detail: {target.detailString}</div>
                         )}
                         {target.dueDate && (
-                          <div className="text-gray-600">Due: {formatFullDate(target.dueDate)}</div>
+                          <div className="text-gray-600">
+                            Due: {formatFullDate(target.dueDate)}
+                          </div>
                         )}
                       </div>
                     ))}
@@ -108,7 +126,9 @@ export function ShowGoalDetailsExpandable({
 
               {goal?.statusDate && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Status Date</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    Status Date
+                  </div>
                   <div className="col-span-2 text-sm text-gray-900">
                     {formatFullDate(goal.statusDate)}
                   </div>
@@ -117,7 +137,9 @@ export function ShowGoalDetailsExpandable({
 
               {goal?.statusReason && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Status Reason</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    Status Reason
+                  </div>
                   <div className="col-span-2 text-sm text-gray-900">
                     {goal.statusReason}
                   </div>
@@ -126,7 +148,9 @@ export function ShowGoalDetailsExpandable({
 
               {goal?.expressedBy?.display && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Expressed By</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    Expressed By
+                  </div>
                   <div className="col-span-2 text-sm text-gray-900">
                     {goal.expressedBy.display}
                   </div>
@@ -135,7 +159,9 @@ export function ShowGoalDetailsExpandable({
 
               {goal?.note && goal.note.length > 0 && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">Notes</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    Notes
+                  </div>
                   <div className="col-span-2 space-y-1">
                     {goal.note.map((note, index) => (
                       <div key={index} className="text-sm text-gray-900">
