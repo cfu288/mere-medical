@@ -593,9 +593,6 @@ export function TenantSelectModal({
               <>
                 <Combobox
                   onChange={(s: SelectOption) => {
-                    const selectedSource = ConnectionSources.find(
-                      (src) => src.vendor === state.emrVendor,
-                    );
                     onClick(
                       s.baseUrl,
                       s.authUrl,
@@ -603,7 +600,7 @@ export function TenantSelectModal({
                       s.name,
                       s.id,
                       state.emrVendor,
-                      selectedSource?.fhirVersion,
+                      state.fhirVersion,
                     );
                     setOpen(false);
                   }}
