@@ -1,8 +1,8 @@
 import { AIProvider, CompletionParams } from './types';
 import { readStream, parseOllamaChunk } from './stream-utils';
 import { buildMessages } from './message-utils';
-import { AIProviderConfig } from '../../features/mere-ai-chat/types';
-import { modelSupportsStructuredOutput } from '../../features/mere-ai-chat/constants/defaults';
+import { AIProviderConfig } from '../../features/ai-chat/types';
+import { modelSupportsStructuredOutput } from '../../features/ai-chat/constants/defaults';
 
 export class OllamaProvider implements AIProvider {
   name = 'Ollama';

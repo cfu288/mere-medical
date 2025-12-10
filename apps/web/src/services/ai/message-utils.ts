@@ -7,7 +7,7 @@ import {
   ChatMessage,
   isUserMessage,
   isAIMessage,
-} from '../../domain/chat/types';
+} from '../../features/ai-chat/domain/chat-types';
 
 export interface AIMessage {
   role: 'system' | 'user' | 'assistant';

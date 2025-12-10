@@ -5,7 +5,7 @@ import {
   VAConnectionDocument,
   VeradigmConnectionDocument,
 } from '../models/connection-document/ConnectionDocument.type';
-import uuid4 from '../utils/UUIDUtils';
+import uuid4 from '../shared/utils/UUIDUtils';
 
 export function createTestConnection(
   overrides?: Partial<ConnectionDocument>,

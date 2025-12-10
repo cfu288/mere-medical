@@ -1,7 +1,7 @@
 import { RxDatabase, RxDocument } from 'rxdb';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { DatabaseCollections } from '../components/providers/DatabaseCollections';
+import { DatabaseCollections } from '../app/providers/DatabaseCollections';
 import { ConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
 
 export async function findConnectionById(

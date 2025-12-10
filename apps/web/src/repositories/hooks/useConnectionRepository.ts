@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useRxDb } from '../../components/providers/RxDbProvider';
+import { useRxDb } from '../../app/providers/RxDbProvider';
 import * as connectionRepo from '../ConnectionRepository';
 import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
 

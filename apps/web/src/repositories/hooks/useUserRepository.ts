@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useRxDb } from '../../components/providers/RxDbProvider';
+import { useRxDb } from '../../app/providers/RxDbProvider';
 import * as userRepo from '../UserRepository';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
 import { RxDocument } from 'rxdb';

@@ -7,33 +7,33 @@ import {
   RouterProvider,
 } from 'react-router-dom';
 
-import { ErrorBoundary } from '../components/ErrorBoundary';
-import { useConsoleLogEasterEgg } from '../components/hooks/useConsoleLogEasterEgg';
-import { DeveloperLogsProvider } from '../components/providers/DeveloperLogsProvider';
-import { LocalConfigProvider } from '../components/providers/LocalConfigProvider';
-import { NotificationProvider } from '../components/providers/NotificationProvider';
-import { RxDbProvider } from '../components/providers/RxDbProvider';
-import { SyncJobProvider } from '../components/providers/SyncJobProvider';
-import { TutorialConfigProvider } from '../components/providers/TutorialConfigProvider';
-import { UpdateAppChecker } from '../components/providers/UpdateAppChecker';
-import { UserPreferencesProvider } from '../components/providers/UserPreferencesProvider';
-import { UserProvider } from '../components/providers/UserProvider';
-import VectorProvider from '../components/providers/vector-provider';
-import { TabWrapper } from '../components/TabWrapper';
-import { TutorialOverlay } from '../components/tutorial/TutorialOverlay';
+import { ErrorBoundary } from '../shared/components/ErrorBoundary';
+import { useConsoleLogEasterEgg } from '../shared/hooks/useConsoleLogEasterEgg';
+import { DeveloperLogsProvider } from '../app/providers/DeveloperLogsProvider';
+import { LocalConfigProvider } from '../app/providers/LocalConfigProvider';
+import { NotificationProvider } from '../app/providers/NotificationProvider';
+import { RxDbProvider } from '../app/providers/RxDbProvider';
+import { SyncJobProvider } from '../features/sync/SyncJobProvider';
+import { TutorialConfigProvider } from '../features/tutorial/TutorialConfigProvider';
+import { UpdateAppChecker } from '../app/providers/UpdateAppChecker';
+import { UserPreferencesProvider } from '../app/providers/UserPreferencesProvider';
+import { UserProvider } from '../app/providers/UserProvider';
+import VectorProvider from '../features/vectors';
+import { TabWrapper } from '../shared/components/TabWrapper';
+import { TutorialOverlay } from '../features/tutorial/TutorialOverlay';
 import Config from '../environments/config.json';
-import CernerRedirect from '../pages/CernerRedirect';
-import ConnectionTab from '../pages/ConnectionTab';
-import EpicRedirect from '../pages/EpicRedirect';
-import MereAITab from '../pages/MereAITab';
-import OnPatientRedirect from '../pages/OnPatientRedirect';
-import SettingsTab from '../pages/SettingsTab';
-import SummaryTab from '../pages/SummaryTab';
-import { TimelineTab } from '../pages/TimelineTab';
-import VARedirect from '../pages/VARedirect';
-import VeradigmRedirect from '../pages/VeradigmRedirect';
+import CernerRedirect from '../features/connections/oauth-callbacks/CernerRedirect';
+import ConnectionTab from '../features/connections/ConnectionTab';
+import EpicRedirect from '../features/connections/oauth-callbacks/EpicRedirect';
+import MereAITab from '../features/ai-chat/MereAITab';
+import OnPatientRedirect from '../features/connections/oauth-callbacks/OnPatientRedirect';
+import SettingsTab from '../features/settings/SettingsTab';
+import SummaryTab from '../features/summary/SummaryTab';
+import { TimelineTab } from '../features/timeline/TimelineTab';
+import VARedirect from '../features/connections/oauth-callbacks/VARedirect';
+import VeradigmRedirect from '../features/connections/oauth-callbacks/VeradigmRedirect';
 import { Routes as AppRoutes } from '../Routes';
-// import { RecommendationGeneratorInitializer } from '../features/mere-ai-recommendations/components/RecommendationGeneratorInitializer';
+// import { RecommendationGeneratorInitializer } from '../features/ai-recommendations/components/RecommendationGeneratorInitializer';
 
 export default function App() {
   useConsoleLogEasterEgg();

@@ -1,5 +1,5 @@
 import { RxDatabase } from 'rxdb';
-import { DatabaseCollections } from '../components/providers/DatabaseCollections';
+import { DatabaseCollections } from '../app/providers/DatabaseCollections';
 import {
   createTestDatabase,
   seedTestDatabase,

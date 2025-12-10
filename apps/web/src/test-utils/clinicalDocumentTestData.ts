@@ -1,6 +1,6 @@
 import { BundleEntry, FhirResource } from 'fhir/r2';
 import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
-import uuid4 from '../utils/UUIDUtils';
+import uuid4 from '../shared/utils/UUIDUtils';
 
 export function createTestClinicalDocument(
   overrides?: Partial<ClinicalDocument<BundleEntry<FhirResource>>>,

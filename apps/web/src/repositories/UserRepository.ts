@@ -1,9 +1,9 @@
 import { RxDatabase, RxDocument } from 'rxdb';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { DatabaseCollections } from '../components/providers/DatabaseCollections';
+import { DatabaseCollections } from '../app/providers/DatabaseCollections';
 import { UserDocument } from '../models/user-document/UserDocument.type';
-import uuid4 from '../utils/UUIDUtils';
+import uuid4 from '../shared/utils/UUIDUtils';
 
 const defaultUser: UserDocument = {
   id: uuid4(),
