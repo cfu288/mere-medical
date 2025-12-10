@@ -1,7 +1,7 @@
 import { useLocalConfig } from '../../../app/providers/LocalConfigProvider';
 import { useDeveloperLogs } from '../../../app/providers/DeveloperLogsProvider';
 import { Console } from 'console-feed';
-import { useConfig } from '../../../environments';
+import { useConfig } from '../../../app/providers/AppConfigProvider';
 
 function isConfigured(value: string | undefined): boolean {
   return !!value && !value.startsWith('$');
@@ -29,6 +29,7 @@ export function DeveloperSettingsGroup() {
     { name: 'VERADIGM_CLIENT_ID', value: config.VERADIGM_CLIENT_ID },
     { name: 'VA_CLIENT_ID', value: config.VA_CLIENT_ID },
     { name: 'ONPATIENT_CLIENT_ID', value: config.ONPATIENT_CLIENT_ID },
+    { name: 'HEALOW_CLIENT_ID', value: config.HEALOW_CLIENT_ID },
   ];
 
   if (!localConfig.developer_mode_enabled) {

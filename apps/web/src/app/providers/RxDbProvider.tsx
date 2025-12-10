@@ -88,6 +88,7 @@ export const databaseCollections = {
     schema: InstanceConfigDocumentSchema,
     migrationStrategies: {
       1: (oldDoc: Record<string, unknown>) => oldDoc,
+      2: (oldDoc: Record<string, unknown>) => oldDoc,
     },
   },
 };
