@@ -84,27 +84,33 @@ function checkIfOnPatientConfigured():
   return { check };
 }
 
-function checkIfEpicConfigured():
-  | {
-      check: true;
-      clientId: string;
-    }
-  | {
-      check: false;
-    } {
-  const check = !!process.env.EPIC_CLIENT_ID;
-  if (!process.env.EPIC_CLIENT_ID) {
-    Logger.warn(
-      'EPIC_CLIENT_ID was not provided: Epic services will be disabled.',
-    );
-  }
-  if (check) {
-    Logger.log('EPIC_CLIENT_ID was provided: Epic service will be enabled.');
+function checkIfEpicConfigured(): { check: boolean } {
+  const hasDstu2 =
+    !!process.env.EPIC_CLIENT_ID_DSTU2 || !!process.env.EPIC_CLIENT_ID;
+  const hasR4 = !!process.env.EPIC_CLIENT_ID_R4 || !!process.env.EPIC_CLIENT_ID;
+  const check = hasDstu2 || hasR4;
 
-    return {
-      check,
-      clientId: process.env.EPIC_CLIENT_ID!,
-    };
+  if (!check) {
+    Logger.warn(
+      'No Epic client IDs provided (EPIC_CLIENT_ID, EPIC_CLIENT_ID_DSTU2, or EPIC_CLIENT_ID_R4): Epic services will be disabled.',
+    );
+  } else {
+    if (hasDstu2) {
+      Logger.log(
+        'Epic DSTU2 client ID configured: Epic DSTU2 service enabled.',
+      );
+    } else {
+      Logger.warn(
+        'No Epic DSTU2 client ID (EPIC_CLIENT_ID_DSTU2 or EPIC_CLIENT_ID): Epic DSTU2 service disabled.',
+      );
+    }
+    if (hasR4) {
+      Logger.log('Epic R4 client ID configured: Epic R4 service enabled.');
+    } else {
+      Logger.warn(
+        'No Epic R4 client ID (EPIC_CLIENT_ID_R4 or EPIC_CLIENT_ID): Epic R4 service disabled.',
+      );
+    }
   }
 
   return { check };

@@ -75,10 +75,24 @@ type SourceItem = {
   alt?: string;
   href?: string;
   enabled: boolean;
+  disabledMessage?: string;
   customHandleClick?: () => void;
   id: number;
   fhirVersion?: 'DSTU2' | 'R4';
 };
+
+function isConfigured(value: string | undefined): boolean {
+  return !!value && !value.startsWith('$');
+}
+
+const epicR4Enabled =
+  isConfigured(Config.EPIC_CLIENT_ID_R4) || isConfigured(Config.EPIC_CLIENT_ID);
+const epicDstu2Enabled =
+  isConfigured(Config.EPIC_CLIENT_ID_DSTU2) ||
+  isConfigured(Config.EPIC_CLIENT_ID);
+const cernerEnabled = isConfigured(Config.CERNER_CLIENT_ID);
+const veradigmEnabled = isConfigured(Config.VERADIGM_CLIENT_ID);
+const vaEnabled = isConfigured(Config.VA_CLIENT_ID);
 
 export function TenantSelectModal({
   open,
@@ -153,7 +167,8 @@ export function TenantSelectModal({
         vendor: 'epic',
         source: EpicLogo,
         alt: 'Epic',
-        enabled: true,
+        enabled: epicR4Enabled,
+        disabledMessage: 'Provide EPIC_CLIENT_ID_R4 env var to enable',
         id: 1,
         fhirVersion: 'R4',
       },
@@ -161,7 +176,8 @@ export function TenantSelectModal({
         title: 'Cerner',
         vendor: 'cerner',
         source: CernerLogo,
-        enabled: true,
+        enabled: cernerEnabled,
+        disabledMessage: 'Provide CERNER_CLIENT_ID env var to enable',
         id: 2,
         fhirVersion: 'R4',
       },
@@ -170,7 +186,8 @@ export function TenantSelectModal({
         vendor: 'veradigm',
         source: VeradigmLogo,
         alt: 'Veradigm',
-        enabled: true,
+        enabled: veradigmEnabled,
+        disabledMessage: 'Provide VERADIGM_CLIENT_ID env var to enable',
         id: 3,
       },
       !userPreferences?.use_proxy
@@ -198,7 +215,8 @@ export function TenantSelectModal({
         source: VALogo,
         alt: 'Sandbox Only',
         href: vaUrl,
-        enabled: true,
+        enabled: vaEnabled,
+        disabledMessage: 'Provide VA_CLIENT_ID env var to enable',
         id: 4,
       },
       {
@@ -213,7 +231,8 @@ export function TenantSelectModal({
         title: 'Cerner Legacy',
         vendor: 'cerner',
         source: CernerLogo,
-        enabled: true,
+        enabled: cernerEnabled,
+        disabledMessage: 'Provide CERNER_CLIENT_ID env var to enable',
         id: 6,
         fhirVersion: 'DSTU2',
       },
@@ -222,7 +241,8 @@ export function TenantSelectModal({
         vendor: 'epic',
         source: EpicLogo,
         alt: 'Epic',
-        enabled: true,
+        enabled: epicDstu2Enabled,
+        disabledMessage: 'Provide EPIC_CLIENT_ID_DSTU2 env var to enable',
         id: 8,
         fhirVersion: 'DSTU2',
       },
@@ -313,8 +333,11 @@ export function TenantSelectModal({
                   <li key={file.source} className="relative">
                     {file.href ? (
                       <div
-                        className="cursor-pointer"
+                        className={
+                          file.enabled ? 'cursor-pointer' : 'cursor-not-allowed'
+                        }
                         onClick={() => {
+                          if (!file.enabled) return;
                           if (Config.IS_DEMO === 'enabled') {
                             notifyDispatch({
                               type: 'set_notification',
@@ -324,19 +347,23 @@ export function TenantSelectModal({
                             });
                             return;
                           }
-                          if (!file.enabled) {
-                            window.location.href = Routes.AddConnection;
-                          } else if (file.href) {
+                          if (file.href) {
                             window.location.href = file.href;
                           }
                         }}
                       >
-                        <div className="aspect-h-7 aspect-w-10 focus-within:ring-primary-500 bg-primary-700 hover:bg-primary-600 group block w-full overflow-hidden rounded-lg transition-all focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100">
+                        <div
+                          className={`aspect-h-7 aspect-w-10 focus-within:ring-primary-500 group block w-full overflow-hidden rounded-lg transition-all focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 ${
+                            file.enabled
+                              ? 'bg-primary-700 hover:bg-primary-600'
+                              : 'bg-gray-400'
+                          }`}
+                        >
                           {file.source !== '' ? (
                             <img
                               src={file.source}
                               alt={file.title}
-                              className="pointer-events-none object-cover group-hover:opacity-75"
+                              className={`pointer-events-none object-cover ${file.enabled ? 'group-hover:opacity-75' : 'opacity-50'}`}
                             />
                           ) : (
                             <div className="text-primary-100 pointer-events-none flex items-center justify-center text-3xl font-bold">
@@ -354,17 +381,23 @@ export function TenantSelectModal({
                           {file.title}
                         </p>
                         {!file.enabled ? (
-                          <p className="pointer-events-auto relative z-10 block text-sm font-medium text-gray-700">
-                            To enable, go to{' '}
-                            <Link
-                              className="text-primary hover:text-primary-500 w-full text-center underline"
-                              to={`${Routes.Settings}#use_proxy`}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              the settings page
-                            </Link>{' '}
-                            and enable the <code>use proxy</code> setting.
-                          </p>
+                          file.disabledMessage ? (
+                            <p className="block text-sm font-medium text-gray-500">
+                              {file.disabledMessage}
+                            </p>
+                          ) : (
+                            <p className="pointer-events-auto relative z-10 block text-sm font-medium text-gray-700">
+                              To enable, go to{' '}
+                              <Link
+                                className="text-primary hover:text-primary-500 w-full text-center underline"
+                                to={`${Routes.Settings}#use_proxy`}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                the settings page
+                              </Link>{' '}
+                              and enable the <code>use proxy</code> setting.
+                            </p>
+                          )
                         ) : (
                           <>
                             {file.alt && (
@@ -378,8 +411,13 @@ export function TenantSelectModal({
                     ) : (
                       <>
                         <div
-                          className="aspect-h-7 aspect-w-10 focus-within:ring-primary-500 bg-primary-700 hover:bg-primary-600 group block w-full overflow-hidden rounded-lg transition-all focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100"
+                          className={`aspect-h-7 aspect-w-10 focus-within:ring-primary-500 group block w-full overflow-hidden rounded-lg transition-all focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 ${
+                            file.enabled
+                              ? 'bg-primary-700 hover:bg-primary-600 cursor-pointer'
+                              : 'bg-gray-400 cursor-not-allowed'
+                          }`}
                           onClick={() => {
+                            if (!file.enabled) return;
                             if (Config.IS_DEMO === 'enabled') {
                               notifyDispatch({
                                 type: 'set_notification',
@@ -406,7 +444,7 @@ export function TenantSelectModal({
                             <img
                               src={file.source}
                               alt={file.title}
-                              className="pointer-events-none object-cover group-hover:opacity-75"
+                              className={`pointer-events-none object-cover ${file.enabled ? 'group-hover:opacity-75' : 'opacity-50'}`}
                             />
                           ) : (
                             <div className="text-primary-100 pointer-events-none flex items-center justify-center text-3xl font-bold">
@@ -423,10 +461,16 @@ export function TenantSelectModal({
                         <p className="pointer-events-none mt-2 block truncate text-sm font-medium text-gray-900">
                           {file.title}
                         </p>
-                        {file.alt && (
-                          <p className="pointer-events-none block text-sm font-medium text-gray-700">
-                            {file.alt}
+                        {!file.enabled && file.disabledMessage ? (
+                          <p className="block text-sm font-medium text-gray-500">
+                            {file.disabledMessage}
                           </p>
+                        ) : (
+                          file.alt && (
+                            <p className="pointer-events-none block text-sm font-medium text-gray-700">
+                              {file.alt}
+                            </p>
+                          )
                         )}
                       </>
                     )}
@@ -444,7 +488,12 @@ export function TenantSelectModal({
                         viewBox="0 0 24 24"
                         stroke="currentColor"
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
                       </svg>
                     </Disclosure.Button>
                     <Disclosure.Panel>
@@ -452,8 +501,13 @@ export function TenantSelectModal({
                         {legacySources.map((file) => (
                           <li key={file.source} className="relative">
                             <div
-                              className="aspect-h-7 aspect-w-10 focus-within:ring-primary-500 bg-primary-700 hover:bg-primary-600 group block w-full overflow-hidden rounded-lg transition-all focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100"
+                              className={`aspect-h-7 aspect-w-10 focus-within:ring-primary-500 group block w-full overflow-hidden rounded-lg transition-all focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 ${
+                                file.enabled
+                                  ? 'bg-primary-700 hover:bg-primary-600 cursor-pointer'
+                                  : 'bg-gray-400 cursor-not-allowed'
+                              }`}
                               onClick={() => {
+                                if (!file.enabled) return;
                                 if (Config.IS_DEMO === 'enabled') {
                                   notifyDispatch({
                                     type: 'set_notification',
@@ -475,7 +529,7 @@ export function TenantSelectModal({
                               <img
                                 src={file.source}
                                 alt={file.title}
-                                className="pointer-events-none object-cover group-hover:opacity-75"
+                                className={`pointer-events-none object-cover ${file.enabled ? 'group-hover:opacity-75' : 'opacity-50'}`}
                               />
                               <button
                                 type="button"
@@ -487,10 +541,16 @@ export function TenantSelectModal({
                             <p className="pointer-events-none mt-2 block truncate text-sm font-medium text-gray-900">
                               {file.title}
                             </p>
-                            {file.alt && (
-                              <p className="pointer-events-none block text-sm font-medium text-gray-700">
-                                {file.alt}
+                            {!file.enabled && file.disabledMessage ? (
+                              <p className="block text-sm font-medium text-gray-500">
+                                {file.disabledMessage}
                               </p>
+                            ) : (
+                              file.alt && (
+                                <p className="pointer-events-none block text-sm font-medium text-gray-700">
+                                  {file.alt}
+                                </p>
+                              )
                             )}
                           </li>
                         ))}
