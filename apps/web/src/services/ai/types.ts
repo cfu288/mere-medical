@@ -1,5 +1,5 @@
-import { AIProviderConfig } from '../../features/mere-ai-chat/types';
-import { ChatMessage } from '../../domain/chat/types';
+import { AIProviderConfig } from '../../features/ai-chat/types';
+import { ChatMessage } from '../../features/ai-chat/domain/chat-types';
 
 export interface AIProvider {
   name: string;

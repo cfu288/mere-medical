@@ -1,8 +1,8 @@
 import { AIProvider, CompletionParams } from './types';
 import { readStream, parseOpenAIChunk } from './stream-utils';
 import { buildMessages } from './message-utils';
-import { AI_DEFAULTS } from '../../features/mere-ai-chat/constants/defaults';
-import { AIProviderConfig } from '../../features/mere-ai-chat/types';
+import { AI_DEFAULTS } from '../../features/ai-chat/constants/defaults';
+import { AIProviderConfig } from '../../features/ai-chat/types';
 
 export class OpenAIProvider implements AIProvider {
   name = 'OpenAI';

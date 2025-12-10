@@ -4,8 +4,8 @@ import { RxDBMigrationPlugin } from 'rxdb/plugins/migration';
 import { RxDBJsonDumpPlugin } from 'rxdb/plugins/json-dump';
 import { RxDBQueryBuilderPlugin } from 'rxdb/plugins/query-builder';
 import { getRxStorageMemory } from 'rxdb/plugins/memory';
-import { DatabaseCollections } from '../components/providers/DatabaseCollections';
-import { databaseCollections } from '../components/providers/RxDbProvider';
+import { DatabaseCollections } from '../app/providers/DatabaseCollections';
+import { databaseCollections } from '../app/providers/RxDbProvider';
 
 // Add required plugins for testing
 addRxPlugin(RxDBUpdatePlugin);

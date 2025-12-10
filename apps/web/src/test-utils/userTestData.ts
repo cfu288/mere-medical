@@ -1,5 +1,5 @@
 import { UserDocument } from '../models/user-document/UserDocument.type';
-import uuid4 from '../utils/UUIDUtils';
+import uuid4 from '../shared/utils/UUIDUtils';
 
 /**
  * Creates a test user with default values.

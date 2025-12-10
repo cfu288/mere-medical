@@ -1,7 +1,7 @@
 import React, { PropsWithChildren } from 'react';
 import { RxDatabase } from 'rxdb';
-import { DatabaseCollections } from '../components/providers/DatabaseCollections';
-import { RxDbContext } from '../components/providers/RxDbProvider';
+import { DatabaseCollections } from '../app/providers/DatabaseCollections';
+import { RxDbContext } from '../app/providers/RxDbProvider';
 
 interface TestProvidersProps extends PropsWithChildren {
   db: RxDatabase<DatabaseCollections>;
