@@ -442,6 +442,45 @@ export async function removeUpload(
 
 ---
 
+## Update: ClinicalDocumentRepository
+
+Add `findByIds` to the existing `ClinicalDocumentRepository` for user-scoped lookup of linked clinical documents:
+
+```typescript
+// Update apps/web/src/repositories/ClinicalDocumentRepository.ts
+
+import { RxDatabase } from 'rxdb';
+import { DatabaseCollections } from '../app/providers/DatabaseCollections';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
+
+// ... existing deleteDocumentsByConnectionId function ...
+
+/**
+ * Find clinical documents by IDs, scoped to user.
+ * Used by useLinkedClinicalDocs to fetch linked documents.
+ */
+export async function findByIds(
+  db: RxDatabase<DatabaseCollections>,
+  userId: string,
+  ids: string[],
+): Promise<ClinicalDocument[]> {
+  if (!ids.length) return [];
+
+  const docs = await db.clinical_documents
+    .find({
+      selector: {
+        user_id: userId,
+        id: { $in: ids },
+      },
+    })
+    .exec();
+
+  return docs.map((doc) => doc.toJSON() as ClinicalDocument);
+}
+```
+
+---
+
 ## Query Hooks
 
 Hooks use the repository for all data access.
@@ -453,7 +492,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRxDb } from '../../../app/providers/RxDbProvider';
 import { useUser } from '../../../app/providers/UserProvider';
 import { UserUploadedDocument } from '../../../models/user-uploaded-document/UserUploadedDocument.type';
+import { ClinicalDocument } from '../../../models/clinical-document/ClinicalDocument.type';
 import * as uploadRepo from '../../../repositories/UserUploadedDocumentRepository';
+import * as clinicalDocRepo from '../../../repositories/ClinicalDocumentRepository';
 
 type UploadsByDate = Record<string, UserUploadedDocument[]>;
 
@@ -544,14 +585,15 @@ export function useLinkedUploads(clinicalDocId: string | undefined): {
 
 /**
  * Get clinical documents linked FROM an uploaded document.
- * Note: Uses clinical_documents collection directly (not part of upload repository).
+ * Uses ClinicalDocumentRepository for user-scoped access.
  */
 export function useLinkedClinicalDocs(uploadedDoc: UserUploadedDocument | undefined): {
-  clinicalDocs: any[]; // ClinicalDocument type
+  clinicalDocs: ClinicalDocument[];
   status: UploadQueryStatus;
 } {
   const db = useRxDb();
-  const [clinicalDocs, setClinicalDocs] = useState<any[]>([]);
+  const user = useUser();
+  const [clinicalDocs, setClinicalDocs] = useState<ClinicalDocument[]>([]);
   const [status, setStatus] = useState<UploadQueryStatus>('idle');
 
   useEffect(() => {
@@ -563,16 +605,12 @@ export function useLinkedClinicalDocs(uploadedDoc: UserUploadedDocument | undefi
     const fetchLinked = async () => {
       setStatus('loading');
       try {
-        // Direct query on clinical_documents (outside upload repository scope)
-        const docs = await db.clinical_documents
-          .find({
-            selector: {
-              id: { $in: uploadedDoc.linked_clinical_document_ids },
-            },
-          })
-          .exec();
-
-        setClinicalDocs(docs.map((d) => d.toJSON()));
+        const docs = await clinicalDocRepo.findByIds(
+          db,
+          user.id,
+          uploadedDoc.linked_clinical_document_ids
+        );
+        setClinicalDocs(docs);
         setStatus('success');
       } catch (error) {
         console.error('Failed to fetch linked clinical docs:', error);
@@ -581,7 +619,7 @@ export function useLinkedClinicalDocs(uploadedDoc: UserUploadedDocument | undefi
     };
 
     fetchLinked();
-  }, [db, uploadedDoc?.linked_clinical_document_ids]);
+  }, [db, user.id, uploadedDoc?.linked_clinical_document_ids]);
 
   return { clinicalDocs, status };
 }
@@ -606,6 +644,136 @@ function ClinicalDocDetail({ docId }: { docId: string }) {
 function UploadDetail({ upload }: { upload: UserUploadedDocument }) {
   const { clinicalDocs, status } = useLinkedClinicalDocs(upload);
   // clinicalDocs is ClinicalDocument[] this upload links to
+}
+```
+
+---
+
+## Timeline Integration
+
+The main timeline in `TimelineTab.tsx` must be updated to fetch from both `clinical_documents` and `user_uploaded_documents`, merge by date, and render appropriately.
+
+### Unified Timeline Item Type
+
+```typescript
+// apps/web/src/features/timeline/types/TimelineItem.ts
+
+import { ClinicalDocument } from '../../../models/clinical-document/ClinicalDocument.type';
+import { UserUploadedDocument } from '../../../models/user-uploaded-document/UserUploadedDocument.type';
+
+export type TimelineItemSource = 'clinical' | 'uploaded';
+
+export type TimelineItem =
+  | { source: 'clinical'; document: ClinicalDocument }
+  | { source: 'uploaded'; document: UserUploadedDocument };
+
+// Helper to get date for sorting
+export function getTimelineItemDate(item: TimelineItem): string {
+  return item.document.metadata?.date || '';
+}
+
+// Helper to check source type
+export function isUploadedDocument(item: TimelineItem): item is { source: 'uploaded'; document: UserUploadedDocument } {
+  return item.source === 'uploaded';
+}
+```
+
+### Merged Timeline Query
+
+```typescript
+// apps/web/src/features/timeline/hooks/useTimelineRecords.ts (new or update existing)
+
+import * as uploadRepo from '../../../repositories/UserUploadedDocumentRepository';
+
+export async function fetchMergedTimelineRecords(
+  db: RxDatabase<DatabaseCollections>,
+  userId: string,
+  options: { page: number; pageSize: number }
+): Promise<TimelineItem[]> {
+  // Fetch from both collections in parallel
+  const [clinicalDocs, uploadedDocs] = await Promise.all([
+    db.clinical_documents
+      .find({
+        selector: {
+          user_id: userId,
+          'data_record.resource_type': {
+            $nin: ['patient', 'careplan', 'allergyintolerance', 'documentreference_attachment', 'provenance'],
+          },
+          'metadata.date': { $nin: [null, undefined, ''] },
+        },
+        sort: [{ 'metadata.date': 'desc' }],
+      })
+      .exec(),
+    uploadRepo.findAllUploads(db, userId),
+  ]);
+
+  // Wrap in discriminated union
+  const clinicalItems: TimelineItem[] = clinicalDocs.map((doc) => ({
+    source: 'clinical' as const,
+    document: doc.toJSON() as ClinicalDocument,
+  }));
+
+  const uploadedItems: TimelineItem[] = uploadedDocs.map((doc) => ({
+    source: 'uploaded' as const,
+    document: doc,
+  }));
+
+  // Merge and sort by date descending
+  const merged = [...clinicalItems, ...uploadedItems].sort((a, b) => {
+    const dateA = getTimelineItemDate(a);
+    const dateB = getTimelineItemDate(b);
+    return dateB.localeCompare(dateA);
+  });
+
+  // Paginate
+  const start = options.page * options.pageSize;
+  return merged.slice(start, start + options.pageSize);
+}
+```
+
+### TimelineItem Rendering Update
+
+```typescript
+// Update apps/web/src/features/timeline/components/layout/TimelineItem.tsx
+
+import { isUploadedDocument, TimelineItem } from '../../types/TimelineItem';
+import { UserUploadedDocumentCard } from '../cards/UserUploadedDocumentCard';
+
+// In the render logic, add case for uploaded documents:
+function renderTimelineItem(item: TimelineItem) {
+  if (isUploadedDocument(item)) {
+    return <UserUploadedDocumentCard document={item.document} />;
+  }
+
+  // Existing switch on data_record.resource_type for clinical documents
+  const clinicalDoc = item.document;
+  switch (clinicalDoc.data_record.resource_type) {
+    case 'immunization':
+      return <ImmunizationCard item={clinicalDoc} />;
+    // ... other cases
+  }
+}
+```
+
+### Date Grouping
+
+The existing `groupRecordsByDate` utility can be reused with the unified type:
+
+```typescript
+function groupTimelineByDate(items: TimelineItem[]): Record<string, TimelineItem[]> {
+  const grouped: Record<string, TimelineItem[]> = {};
+
+  for (const item of items) {
+    const date = getTimelineItemDate(item);
+    const dateKey = date ? date.split('T')[0] : '1970-01-01';
+
+    if (!grouped[dateKey]) {
+      grouped[dateKey] = [];
+    }
+    grouped[dateKey].push(item);
+  }
+
+  return grouped;
 }
 ```
 
@@ -719,7 +887,7 @@ export async function listOPFSFiles(): Promise<string[]> {
 
 ## Upload Service
 
-Orchestrates storage + repository. Uses `uuid4()` from `UUIDUtils.ts`.
+Orchestrates storage + repository. Injects `StorageAdapter` for testability. Uses `uuid4()` from `UUIDUtils.ts`.
 
 ```typescript
 // apps/web/src/features/upload/services/uploadService.ts
@@ -728,7 +896,7 @@ import { RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../../../app/providers/DatabaseCollections';
 import { UserUploadedDocument } from '../../../models/user-uploaded-document/UserUploadedDocument.type';
 import uuid4 from '../../../shared/utils/UUIDUtils';
-import { checkOPFSSupport, saveFileToOPFS, deleteFileFromOPFS } from './opfsStorage';
+import { StorageAdapter } from './storageAdapter';
 import * as uploadRepo from '../../../repositories/UserUploadedDocumentRepository';
 
 const SUPPORTED_TYPES = ['application/pdf'];
@@ -745,20 +913,13 @@ export class UploadError extends Error {
 
 export async function uploadDocument(
   db: RxDatabase<DatabaseCollections>,
+  storage: StorageAdapter,
   file: File,
   userId: string,
   displayName: string,
   documentDate: string
 ): Promise<UserUploadedDocument> {
-  // 1. Check browser support
-  if (!checkOPFSSupport()) {
-    throw new UploadError(
-      'Your browser does not support file uploads. Please use Chrome 86+, Edge 86+, Safari 15.2+, or Firefox 111+.',
-      'UNSUPPORTED_BROWSER'
-    );
-  }
-
-  // 2. Validate file type
+  // 1. Validate file type
   if (!SUPPORTED_TYPES.includes(file.type)) {
     throw new UploadError(
       `File type "${file.type}" is not supported. Please upload a PDF file.`,
@@ -766,14 +927,14 @@ export async function uploadDocument(
     );
   }
 
-  // 3. Generate ID and save to OPFS
+  // 2. Generate ID and save to storage
   const id = uuid4();
   let opfsPath: string | null = null;
 
   try {
-    opfsPath = await saveFileToOPFS(file, id);
+    opfsPath = await storage.save(file, id);
 
-    // 4. Create metadata record via repository
+    // 3. Create metadata record via repository
     const doc = await uploadRepo.insertUpload(db, {
       id,
       user_id: userId,
@@ -792,9 +953,9 @@ export async function uploadDocument(
 
     return doc.toJSON() as UserUploadedDocument;
   } catch (error) {
-    // Cleanup OPFS if repository insert failed
+    // Cleanup storage if repository insert failed
     if (opfsPath) {
-      await deleteFileFromOPFS(opfsPath);
+      await storage.delete(opfsPath);
     }
     throw new UploadError('Failed to save document. Please try again.', 'STORAGE_ERROR');
   }
@@ -802,6 +963,7 @@ export async function uploadDocument(
 
 export async function deleteUploadedDocument(
   db: RxDatabase<DatabaseCollections>,
+  storage: StorageAdapter,
   userId: string,
   documentId: string
 ): Promise<void> {
@@ -809,7 +971,7 @@ export async function deleteUploadedDocument(
   const opfsPath = await uploadRepo.removeUpload(db, userId, documentId);
 
   if (opfsPath) {
-    await deleteFileFromOPFS(opfsPath);
+    await storage.delete(opfsPath);
   }
 }
 ```
@@ -1173,7 +1335,8 @@ import { useRxDb } from '../../../app/providers/RxDbProvider';
 import { useNotificationDispatch } from '../../../app/providers/NotificationProvider';
 import { useUser } from '../../../app/providers/UserProvider';
 import { getFileFromFileList } from '../../../shared/utils/FileUtils';
-import { uploadDocument, UploadError } from '../services/uploadDocument';
+import { uploadDocument, UploadError } from '../services/uploadService';
+import { createOPFSAdapter } from '../services/storageAdapter';
 import { uploadValidationSchema, UploadFormFields } from './uploadValidation';
 import { ButtonLoadingSpinner } from '../../connections/components/ButtonLoadingSpinner';
 
@@ -1188,6 +1351,7 @@ export function UploadDocumentModal({ open, onClose, onSuccess }: UploadDocument
   const user = useUser();
   const notifyDispatch = useNotificationDispatch();
   const [isUploading, setIsUploading] = useState(false);
+  const storage = createOPFSAdapter();
 
   const {
     register,
@@ -1209,6 +1373,7 @@ export function UploadDocumentModal({ open, onClose, onSuccess }: UploadDocument
     try {
       await uploadDocument(
         db,
+        storage,
         file,
         user.id,
         data.displayName,
@@ -1342,40 +1507,133 @@ export function UploadDocumentModal({ open, onClose, onSuccess }: UploadDocument
 
 ---
 
+## UI Components (To Be Implemented)
+
+The following components are required to complete the feature. Implementation details are deferred but requirements and data dependencies are specified.
+
+### 1. UserUploadedDocumentCard
+
+**Location**: `apps/web/src/features/timeline/components/cards/UserUploadedDocumentCard.tsx`
+
+**Purpose**: Display an uploaded document in the timeline (collapsed and expanded views).
+
+**Requirements**:
+- Display `metadata.display_name` as the title
+- Display `metadata.date` formatted consistently with other timeline cards
+- Show file type icon (PDF icon initially)
+- Show `data_record.file_name` as secondary info
+- "View" button to open the PDF viewer
+- "Delete" button with confirmation dialog
+- Visual indicator if document has links to clinical records
+
+**Data Requirements**:
+- Input: `UserUploadedDocument`
+- Actions: `deleteUploadedDocument(db, storage, userId, documentId)`
+
+### 2. ShowUserUploadedDocumentExpandable
+
+**Location**: `apps/web/src/features/timeline/components/expandables/ShowUserUploadedDocumentExpandable.tsx`
+
+**Purpose**: Full-screen view of an uploaded document with PDF viewer and link management.
+
+**Requirements**:
+- Embed PDF viewer (use existing PDF rendering if available, or `<iframe>` with blob URL)
+- Display document metadata (name, date, upload date)
+- "Manage Links" section showing linked clinical documents
+- Button to open `LinkDocumentModal` for adding/removing links
+- Delete button with confirmation
+
+**Data Requirements**:
+- Input: `UserUploadedDocument`
+- Hooks: `useLinkedClinicalDocs(uploadedDoc)` for linked clinical documents
+- Actions: `deleteUploadedDocument`, storage adapter for reading file
+
+### 3. LinkDocumentModal
+
+**Location**: `apps/web/src/features/timeline/components/LinkDocumentModal.tsx`
+
+**Purpose**: Search and select clinical documents to link to an uploaded document.
+
+**Requirements**:
+- Search input with debounced query
+- Display search results as selectable list
+- Show currently linked documents with remove option
+- "Save" commits link changes, "Cancel" discards
+- Search should query clinical documents by `metadata.display_name` or `data_record.resource_type`
+
+**Data Requirements**:
+- Input: `UserUploadedDocument` (to show current links)
+- Search: Query `clinical_documents` filtered by `user_id` and search term
+- Actions: `uploadRepo.addLink()`, `uploadRepo.removeLink()`
+
+### 4. Timeline Integration Point
+
+**Location**: Modify `apps/web/src/features/timeline/components/layout/TimelineItem.tsx`
+
+**Requirements**:
+- Add case for user uploaded documents in the item renderer
+- Discriminate by checking for `opfs_path` in `data_record` or add explicit type field
+- Route to `UserUploadedDocumentCard` for rendering
+
+**Data Requirements**:
+- Timeline must fetch from both `clinical_documents` and `user_uploaded_documents`
+- Merge and sort by `metadata.date` before rendering
+
+---
+
 ## Orphan Cleanup
 
-Run on app initialization to clean up orphaned OPFS files.
+Run on app initialization to clean up orphaned OPFS files. Injects `StorageAdapter` for testability.
 
 ```typescript
 // apps/web/src/features/upload/services/cleanupOrphans.ts
 
 import { RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../../../app/providers/DatabaseCollections';
-import { checkOPFSSupport, initOPFS } from './opfsStorage';
+import { StorageAdapter } from './storageAdapter';
 
 export async function cleanupOrphanedFiles(
-  db: RxDatabase<DatabaseCollections>
+  db: RxDatabase<DatabaseCollections>,
+  storage: StorageAdapter
 ): Promise<void> {
-  if (!checkOPFSSupport()) return;
+  if (!storage.isSupported()) return;
 
   try {
-    const uploadsDir = await initOPFS();
+    const storedFiles = await storage.list();
     const dbDocs = await db.user_uploaded_documents?.find().exec() || [];
     const dbPaths = new Set(dbDocs.map((d) => d.data_record.opfs_path));
 
-    for await (const entry of uploadsDir.values()) {
-      if (entry.kind === 'file') {
-        const opfsPath = `/uploads/${entry.name}`;
-        if (!dbPaths.has(opfsPath)) {
-          console.warn(`Cleaning up orphaned file: ${opfsPath}`);
-          await uploadsDir.removeEntry(entry.name);
-        }
+    for (const filePath of storedFiles) {
+      if (!dbPaths.has(filePath)) {
+        console.warn(`Cleaning up orphaned file: ${filePath}`);
+        await storage.delete(filePath);
       }
     }
   } catch (error) {
     console.error('Error during orphan cleanup:', error);
   }
 }
+```
+
+### Initialization Hook
+
+Call `cleanupOrphanedFiles` in `RxDbProvider` after database is ready:
+
+```typescript
+// Update apps/web/src/app/providers/RxDbProvider.tsx
+
+import { cleanupOrphanedFiles } from '../../features/upload/services/cleanupOrphans';
+import { createOPFSAdapter } from '../../features/upload/services/storageAdapter';
+
+// Inside the provider, after database initialization:
+useEffect(() => {
+  if (db) {
+    // Run orphan cleanup on app start (fire-and-forget, non-blocking)
+    cleanupOrphanedFiles(db, createOPFSAdapter()).catch((err) => {
+      console.error('Orphan cleanup failed:', err);
+    });
+  }
+}, [db]);
 ```
 
 ---
@@ -1402,7 +1660,8 @@ apps/web/src/
 │       └── UserUploadedDocument.migration.ts
 │
 ├── repositories/
-│   ├── UserUploadedDocumentRepository.ts   # All DB access (query, command, reactive)
+│   ├── ClinicalDocumentRepository.ts      # (modified - add findByIds)
+│   ├── UserUploadedDocumentRepository.ts  # All upload DB access
 │   └── UserUploadedDocumentRepository.spec.ts
 │
 ├── features/
@@ -1414,6 +1673,7 @@ apps/web/src/
 │   │   │   └── useUserUploadedDocuments.tsx  # Uses repository
 │   │   └── services/
 │   │       ├── opfsStorage.ts
+│   │       ├── storageAdapter.ts      # Interface + OPFS/Memory adapters
 │   │       ├── uploadService.ts       # Orchestrates storage + repository
 │   │       ├── exportService.ts       # ZIP export
 │   │       ├── importService.ts       # ZIP/JSON import
@@ -1423,21 +1683,26 @@ apps/web/src/
 │   │   └── UserDataSettingsGroup.tsx  (modified for export/import)
 │   │
 │   └── timeline/
+│       ├── types/
+│       │   └── TimelineItem.ts        # Unified timeline item type
+│       ├── hooks/
+│       │   └── useTimelineRecords.ts  # (new or modified - merged query)
 │       ├── components/
 │       │   ├── cards/
 │       │   │   └── UserUploadedDocumentCard.tsx
 │       │   ├── expandables/
 │       │   │   └── ShowUserUploadedDocumentExpandable.tsx
 │       │   ├── layout/
-│       │   │   └── TimelineItem.tsx  (modified)
+│       │   │   └── TimelineItem.tsx   # (modified - add uploaded doc case)
 │       │   └── LinkDocumentModal.tsx
+│       └── TimelineTab.tsx            # (modified - use merged query)
 │
 ├── test-utils/
 │   └── uploadTestData.ts              # Test factories
 │
 └── app/providers/
-    ├── RxDbProvider.tsx               (modified for collection registration)
-    └── DatabaseCollections.ts         (modified)
+    ├── RxDbProvider.tsx               # (modified - register collection + orphan cleanup)
+    └── DatabaseCollections.ts         # (modified - add collection type)
 ```
 
 ---
@@ -1453,15 +1718,32 @@ Inject storage to make upload/cleanup services testable without OPFS:
 ```typescript
 // apps/web/src/features/upload/services/storageAdapter.ts
 
+import {
+  checkOPFSSupport,
+  saveFileToOPFS,
+  readFileFromOPFS,
+  deleteFileFromOPFS,
+  listOPFSFiles,
+} from './opfsStorage';
+
 export interface StorageAdapter {
   save(file: File, id: string): Promise<string>;
   read(path: string): Promise<File | null>;
   delete(path: string): Promise<void>;
   list(): Promise<string[]>;
+  isSupported(): boolean;
 }
 
 // Production: OPFS implementation
-export function createOPFSAdapter(): StorageAdapter { /* ... */ }
+export function createOPFSAdapter(): StorageAdapter {
+  return {
+    save: saveFileToOPFS,
+    read: readFileFromOPFS,
+    delete: deleteFileFromOPFS,
+    list: listOPFSFiles,
+    isSupported: checkOPFSSupport,
+  };
+}
 
 // Test: In-memory implementation
 export function createMemoryAdapter(): StorageAdapter {
@@ -1475,6 +1757,7 @@ export function createMemoryAdapter(): StorageAdapter {
     async read(path) { return files.get(path) || null; },
     async delete(path) { files.delete(path); },
     async list() { return Array.from(files.keys()); },
+    isSupported() { return true; },
   };
 }
 ```
@@ -1825,6 +2108,36 @@ describe('uploadValidationSchema', () => {
 ```typescript
 // apps/web/src/features/upload/services/exportImport.spec.ts
 
+import { BlobWriter, ZipWriter, BlobReader, ZipReader, TextReader } from '@zip.js/zip.js';
+
+// Helper to create test ZIP files using zip.js
+async function createTestZip(
+  files: Record<string, string | Blob>
+): Promise<Blob> {
+  const blobWriter = new BlobWriter('application/zip');
+  const zipWriter = new ZipWriter(blobWriter);
+
+  for (const [name, content] of Object.entries(files)) {
+    if (typeof content === 'string') {
+      await zipWriter.add(name, new TextReader(content));
+    } else {
+      await zipWriter.add(name, new BlobReader(content));
+    }
+  }
+
+  await zipWriter.close();
+  return blobWriter.getData();
+}
+
+// Helper to read ZIP contents for assertions
+async function readZipEntries(blob: Blob): Promise<string[]> {
+  const zipReader = new ZipReader(new BlobReader(blob));
+  const entries = await zipReader.getEntries();
+  const names = entries.map((e) => e.filename);
+  await zipReader.close();
+  return names;
+}
+
 describe('exportAsZip', () => {
   let db: RxDatabase<DatabaseCollections>;
   let storage: StorageAdapter;
@@ -1842,9 +2155,9 @@ describe('exportAsZip', () => {
 
     const blob = await exportAsZip(db, storage);
 
-    const zip = await JSZip.loadAsync(blob);
-    expect(zip.file('database.json')).toBeTruthy();
-    expect(zip.folder('uploads')).toBeTruthy();
+    const entries = await readZipEntries(blob);
+    expect(entries).toContain('database.json');
+    expect(entries.some((e) => e.startsWith('uploads/'))).toBe(true);
   });
 });
 
@@ -1863,19 +2176,19 @@ describe('importBackup', () => {
   });
 
   it('imports v2 ZIP format with uploads', async () => {
-    // Create a valid ZIP in memory
-    const zip = new JSZip();
-    zip.file('database.json', JSON.stringify({
-      collections: {
-        user_uploaded_documents: [{
-          id: 'upload-1',
-          user_id: 'u1',
-          data_record: { opfs_path: '/uploads/upload-1.pdf' },
-        }],
-      },
-    }));
-    zip.folder('uploads')?.file('upload-1.pdf', '%PDF-1.4 content');
-    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    // Create a valid ZIP in memory using zip.js
+    const zipBlob = await createTestZip({
+      'database.json': JSON.stringify({
+        collections: {
+          user_uploaded_documents: [{
+            id: 'upload-1',
+            user_id: 'u1',
+            data_record: { opfs_path: '/uploads/upload-1.pdf' },
+          }],
+        },
+      }),
+      'uploads/upload-1.pdf': '%PDF-1.4 content',
+    });
     const file = new File([zipBlob], 'backup.zip', { type: 'application/zip' });
 
     const db = await createTestDatabase();
@@ -1893,9 +2206,7 @@ describe('importBackup', () => {
   });
 
   it('rejects invalid ZIP without database.json', async () => {
-    const zip = new JSZip();
-    zip.file('random.txt', 'not a database');
-    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const zipBlob = await createTestZip({ 'random.txt': 'not a database' });
     const file = new File([zipBlob], 'bad.zip', { type: 'application/zip' });
 
     const db = await createTestDatabase();
