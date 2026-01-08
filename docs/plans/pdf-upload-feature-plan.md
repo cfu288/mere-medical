@@ -232,6 +232,213 @@ export type DatabaseCollections = {
 
 ---
 
+## Query Patterns and Performance
+
+### Expected Query Patterns
+
+| Query | Use Case | Index Used | Performance |
+|-------|----------|------------|-------------|
+| Get user's uploads sorted by date | Timeline display | `user_id`, `metadata.date` | ✅ Good |
+| Filter by content type | Show only PDFs/DICOMs | `data_record.content_type` | ✅ Good |
+| Get linked clinical docs FROM upload | View upload detail | Direct ID lookup | ✅ Good |
+| Get uploads linked TO clinical doc | View clinical doc detail | **None (full scan)** | ⚠️ O(n) |
+
+### Reverse Lookup Performance Trade-off
+
+The query "find uploads linked to a clinical document" requires a full collection scan because RxDB doesn't support array indexes (removed in v12). This is acceptable because:
+
+1. **Expected volume**: Most users will have < 100 uploaded documents
+2. **Query frequency**: Only triggered when viewing a clinical document detail
+3. **Alternative complexity**: Maintaining bidirectional links requires manual sync
+
+**If performance becomes an issue**, consider adding `linked_uploaded_document_ids[]` to `clinical_documents` schema (requires migration + sync logic).
+
+---
+
+## Query Hook: `useUserUploadedDocuments`
+
+Encapsulates all query patterns following the existing `useRecordQuery` pattern.
+
+```typescript
+// apps/web/src/features/upload/hooks/useUserUploadedDocuments.tsx
+
+import { useCallback, useEffect, useState } from 'react';
+import { RxDocument } from 'rxdb';
+import { useRxDb } from '../../../app/providers/RxDbProvider';
+import { useUser } from '../../../app/providers/UserProvider';
+import { UserUploadedDocument } from '../../../models/user-uploaded-document/UserUploadedDocument.type';
+
+type UploadsByDate = Record<string, UserUploadedDocument[]>;
+
+export type UploadQueryStatus = 'idle' | 'loading' | 'success' | 'error';
+
+/**
+ * Hook for querying user uploaded documents.
+ * Follows the same pattern as useRecordQuery for clinical documents.
+ */
+export function useUserUploadedDocuments(): {
+  data: UploadsByDate;
+  status: UploadQueryStatus;
+  refetch: () => void;
+} {
+  const db = useRxDb();
+  const user = useUser();
+  const [data, setData] = useState<UploadsByDate>({});
+  const [status, setStatus] = useState<UploadQueryStatus>('idle');
+
+  const fetchUploads = useCallback(async () => {
+    setStatus('loading');
+    try {
+      const docs = await db.user_uploaded_documents
+        .find({
+          selector: { user_id: user.id },
+          sort: [{ 'metadata.date': 'desc' }],
+        })
+        .exec();
+
+      // Group by date (same pattern as clinical documents)
+      const grouped: UploadsByDate = {};
+      for (const doc of docs) {
+        const dateKey = doc.metadata.date
+          ? doc.metadata.date.split('T')[0]
+          : new Date(0).toISOString().split('T')[0];
+
+        if (!grouped[dateKey]) {
+          grouped[dateKey] = [];
+        }
+        grouped[dateKey].push(doc.toJSON() as UserUploadedDocument);
+      }
+
+      setData(grouped);
+      setStatus('success');
+    } catch (error) {
+      console.error('Failed to fetch uploads:', error);
+      setStatus('error');
+    }
+  }, [db, user.id]);
+
+  useEffect(() => {
+    fetchUploads();
+  }, [fetchUploads]);
+
+  return { data, status, refetch: fetchUploads };
+}
+
+/**
+ * Get uploads linked to a specific clinical document.
+ * Note: Performs full collection scan (no array index in RxDB).
+ */
+export function useLinkedUploads(clinicalDocId: string | undefined): {
+  uploads: UserUploadedDocument[];
+  status: UploadQueryStatus;
+} {
+  const db = useRxDb();
+  const user = useUser();
+  const [uploads, setUploads] = useState<UserUploadedDocument[]>([]);
+  const [status, setStatus] = useState<UploadQueryStatus>('idle');
+
+  useEffect(() => {
+    if (!clinicalDocId) {
+      setUploads([]);
+      return;
+    }
+
+    const fetchLinked = async () => {
+      setStatus('loading');
+      try {
+        // Full scan - filter in memory (RxDB doesn't support array indexes)
+        const allUploads = await db.user_uploaded_documents
+          .find({ selector: { user_id: user.id } })
+          .exec();
+
+        const linked = allUploads
+          .filter((doc) =>
+            doc.linked_clinical_document_ids?.includes(clinicalDocId)
+          )
+          .map((doc) => doc.toJSON() as UserUploadedDocument);
+
+        setUploads(linked);
+        setStatus('success');
+      } catch (error) {
+        console.error('Failed to fetch linked uploads:', error);
+        setStatus('error');
+      }
+    };
+
+    fetchLinked();
+  }, [db, user.id, clinicalDocId]);
+
+  return { uploads, status };
+}
+
+/**
+ * Get clinical documents linked FROM an uploaded document.
+ * Direct ID lookup - efficient.
+ */
+export function useLinkedClinicalDocs(uploadedDoc: UserUploadedDocument | undefined): {
+  clinicalDocs: any[]; // ClinicalDocument type
+  status: UploadQueryStatus;
+} {
+  const db = useRxDb();
+  const [clinicalDocs, setClinicalDocs] = useState<any[]>([]);
+  const [status, setStatus] = useState<UploadQueryStatus>('idle');
+
+  useEffect(() => {
+    if (!uploadedDoc?.linked_clinical_document_ids?.length) {
+      setClinicalDocs([]);
+      return;
+    }
+
+    const fetchLinked = async () => {
+      setStatus('loading');
+      try {
+        const docs = await db.clinical_documents
+          .find({
+            selector: {
+              id: { $in: uploadedDoc.linked_clinical_document_ids },
+            },
+          })
+          .exec();
+
+        setClinicalDocs(docs.map((d) => d.toJSON()));
+        setStatus('success');
+      } catch (error) {
+        console.error('Failed to fetch linked clinical docs:', error);
+        setStatus('error');
+      }
+    };
+
+    fetchLinked();
+  }, [db, uploadedDoc?.linked_clinical_document_ids]);
+
+  return { clinicalDocs, status };
+}
+```
+
+### Hook Usage Examples
+
+```typescript
+// Timeline: show all uploads grouped by date
+function UploadTimeline() {
+  const { data, status } = useUserUploadedDocuments();
+  // data is Record<string, UserUploadedDocument[]> grouped by date
+}
+
+// Clinical document detail: show linked uploads
+function ClinicalDocDetail({ docId }: { docId: string }) {
+  const { uploads, status } = useLinkedUploads(docId);
+  // uploads is UserUploadedDocument[] linked to this clinical doc
+}
+
+// Upload detail: show linked clinical documents
+function UploadDetail({ upload }: { upload: UserUploadedDocument }) {
+  const { clinicalDocs, status } = useLinkedClinicalDocs(upload);
+  // clinicalDocs is ClinicalDocument[] this upload links to
+}
+```
+
+---
+
 ## OPFS Service
 
 ```typescript
