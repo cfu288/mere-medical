@@ -64,10 +64,12 @@ export const UserUploadedDocumentSchemaLiteral = {
   properties: {
     id: {
       type: 'string',
+      maxLength: 128,
       description: 'Unique identifier (UUID)',
     },
     user_id: {
       type: 'string',
+      maxLength: 128,
       ref: 'user_documents',
       description: 'The user who uploaded this document',
     },
@@ -81,6 +83,7 @@ export const UserUploadedDocumentSchemaLiteral = {
     },
     content_type: {
       type: 'string',
+      maxLength: 128,
       description: 'MIME type (application/pdf, application/dicom, etc.)',
     },
     opfs_path: {
@@ -95,6 +98,7 @@ export const UserUploadedDocumentSchemaLiteral = {
     document_date: {
       type: 'string',
       format: 'date-time',
+      maxLength: 128,
       description: 'User-specified effective date',
     },
     display_name: {
@@ -118,7 +122,7 @@ export const UserUploadedDocumentSchemaLiteral = {
     'document_date',
     'display_name',
   ],
-  indexes: ['user_id', 'document_date'],
+  indexes: ['user_id', 'document_date', 'content_type'],
 } as const;
 
 export const UserUploadedDocumentSchema: RxJsonSchema<UserUploadedDocument> =
