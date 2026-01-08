@@ -435,140 +435,240 @@ export async function deleteUploadedDocument(
 
 ## Export/Import Integration
 
-Extend existing export/import in `UserDataSettingsGroup.tsx` and `RxDbProvider.tsx`.
+### New Dependency
 
-### Helper Functions
+Add JSZip for client-side ZIP handling:
+```bash
+npm install jszip
+npm install -D @types/jszip
+```
+
+### Export Format
+
+**v1 (existing)**: `mere_export_2024-01-15.json` - RxDB JSON only
+
+**v2 (new)**: `mere_export_2024-01-15.zip` containing:
+```
+mere_export_2024-01-15.zip
+├── database.json          # RxDB export (same format as v1)
+└── uploads/
+    ├── {uuid1}.pdf
+    ├── {uuid2}.pdf
+    └── ...
+```
+
+### Import Compatibility
+
+| File Type | Format | Supported |
+|-----------|--------|-----------|
+| `.json` | v1 (RxDB only) | Yes |
+| `.zip` | v2 (RxDB + OPFS files) | Yes |
+
+### Export Service
 
 ```typescript
-// apps/web/src/features/upload/services/exportHelpers.ts
+// apps/web/src/features/upload/services/exportService.ts
 
-import { readFileFromOPFS, saveFileToOPFS, checkOPFSSupport } from './opfsStorage';
-
-/**
- * Convert File to base64 data URL
- */
-export function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
+import JSZip from 'jszip';
+import { RxDatabase } from 'rxdb';
+import { DatabaseCollections } from '../../../app/providers/DatabaseCollections';
+import { readFileFromOPFS } from './opfsStorage';
 
 /**
- * Convert base64 data URL to File
+ * Export database and uploaded files as a ZIP
  */
-export function base64ToFile(base64: string, fileName: string, contentType: string): File {
-  const arr = base64.split(',');
-  const bstr = atob(arr[1]);
-  let n = bstr.length;
-  const u8arr = new Uint8Array(n);
-  while (n--) {
-    u8arr[n] = bstr.charCodeAt(n);
+export async function exportAsZip(
+  db: RxDatabase<DatabaseCollections>
+): Promise<Blob> {
+  const zip = new JSZip();
+
+  // 1. Export RxDB data as JSON
+  const dbExport = await db.exportJSON();
+  zip.file('database.json', JSON.stringify(dbExport, null, 2));
+
+  // 2. Add OPFS files to uploads/ folder
+  const uploads = await db.user_uploaded_documents?.find().exec() || [];
+  const uploadsFolder = zip.folder('uploads');
+
+  for (const upload of uploads) {
+    const file = await readFileFromOPFS(upload.opfs_path);
+    if (file && uploadsFolder) {
+      // Get filename from opfs_path (e.g., "/uploads/uuid.pdf" -> "uuid.pdf")
+      const fileName = upload.opfs_path.split('/').pop() || `${upload.id}.pdf`;
+      uploadsFolder.file(fileName, file);
+    }
   }
-  return new File([u8arr], fileName, { type: contentType });
+
+  // 3. Generate ZIP blob
+  return zip.generateAsync({ type: 'blob' });
 }
 ```
 
-### Updated Export in UserDataSettingsGroup.tsx
+### Import Service
+
+```typescript
+// apps/web/src/features/upload/services/importService.ts
+
+import JSZip from 'jszip';
+import { RxDatabase } from 'rxdb';
+import { DatabaseCollections } from '../../../app/providers/DatabaseCollections';
+import { databaseCollections } from '../../../app/providers/RxDbProvider';
+import { saveFileToOPFS, checkOPFSSupport } from './opfsStorage';
+
+/**
+ * Detect import file type and route to appropriate handler
+ */
+export async function importBackup(
+  file: File,
+  db: RxDatabase<DatabaseCollections>
+): Promise<string> {
+  if (file.name.endsWith('.zip') || file.type === 'application/zip') {
+    return importFromZip(file, db);
+  } else {
+    // v1 JSON import - use existing logic
+    const jsonString = await file.text();
+    return importFromJSON(jsonString, db);
+  }
+}
+
+/**
+ * Import from v2 ZIP format
+ */
+async function importFromZip(
+  file: File,
+  db: RxDatabase<DatabaseCollections>
+): Promise<string> {
+  const zip = await JSZip.loadAsync(file);
+
+  // 1. Extract and parse database.json
+  const dbFile = zip.file('database.json');
+  if (!dbFile) {
+    throw new Error('Invalid backup: missing database.json');
+  }
+  const dbJsonString = await dbFile.async('string');
+  const dbData = JSON.parse(dbJsonString);
+
+  // 2. Import RxDB data
+  await Promise.all(Object.values(db.collections).map((col) => col?.remove()));
+  await db.addCollections<DatabaseCollections>(databaseCollections);
+
+  const importResult = await db.importJSON(dbData);
+  // ... handle errors from importResult ...
+
+  // 3. Restore OPFS files
+  if (checkOPFSSupport()) {
+    const uploadDocs = await db.user_uploaded_documents?.find().exec() || [];
+    const uploadsFolder = zip.folder('uploads');
+
+    if (uploadsFolder) {
+      for (const doc of uploadDocs) {
+        // Get filename from opfs_path
+        const fileName = doc.opfs_path.split('/').pop();
+        if (!fileName) continue;
+
+        const zipFile = uploadsFolder.file(fileName);
+        if (zipFile) {
+          const blob = await zipFile.async('blob');
+          const restoredFile = new File([blob], doc.file_name, { type: doc.content_type });
+          await saveFileToOPFS(restoredFile, doc.id);
+        }
+      }
+    }
+  }
+
+  return `Successfully imported backup with ${uploadDocs?.length || 0} uploaded files`;
+}
+
+/**
+ * Import from v1 JSON format (backward compatible)
+ */
+async function importFromJSON(
+  jsonString: string,
+  db: RxDatabase<DatabaseCollections>
+): Promise<string> {
+  const dbData = JSON.parse(jsonString);
+
+  await Promise.all(Object.values(db.collections).map((col) => col?.remove()));
+  await db.addCollections<DatabaseCollections>(databaseCollections);
+
+  const importResult = await db.importJSON(dbData);
+  // ... handle errors from importResult ...
+
+  return 'Successfully imported backup';
+}
+```
+
+### Updated UserDataSettingsGroup.tsx
 
 ```typescript
 // Modify apps/web/src/features/settings/components/UserDataSettingsGroup.tsx
 
-import { readFileFromOPFS } from '../../upload/services/opfsStorage';
-import { fileToBase64 } from '../../upload/services/exportHelpers';
+import { exportAsZip } from '../../upload/services/exportService';
+import { importBackup } from '../../upload/services/importService';
 
+// Export handler
 export const exportData = async (
   db: RxDatabase<DatabaseCollections>,
   setFileDownloadLink: (blob: string) => void,
 ) => {
-  // 1. Export RxDB data
-  const dbExport = await db.exportJSON();
-
-  // 2. Get uploaded document metadata and files
+  // Check if user has uploaded documents
   const uploads = await db.user_uploaded_documents?.find().exec() || [];
-  const uploadedFiles: { id: string; data: string }[] = [];
 
-  for (const upload of uploads) {
-    const file = await readFileFromOPFS(upload.opfs_path);
-    if (file) {
-      const base64 = await fileToBase64(file);
-      uploadedFiles.push({ id: upload.id, data: base64 });
-    }
+  if (uploads.length > 0) {
+    // v2: Export as ZIP with uploaded files
+    const zipBlob = await exportAsZip(db);
+    const blobUrl = URL.createObjectURL(zipBlob);
+    setFileDownloadLink(blobUrl);
+    return blobUrl;
+  } else {
+    // v1: Export as JSON only (no uploaded files)
+    const dbExport = await db.exportJSON();
+    const jsonData = JSON.stringify(dbExport);
+    const blobUrl = URL.createObjectURL(
+      new Blob([jsonData], { type: 'application/json' }),
+    );
+    setFileDownloadLink(blobUrl);
+    return blobUrl;
+  }
+};
+
+// Import handler - update handleImport to use importBackup
+export const handleImport = async (
+  fields: ImportFields,
+  db: RxDatabase<DatabaseCollections>,
+): Promise<string> => {
+  const file = getFileFromFileList(fields.backup);
+  if (!file || !(file instanceof File)) {
+    throw new Error('Unable to parse file from file list');
   }
 
-  // 3. Create combined export with version marker
-  const fullExport = {
-    version: 2,
-    database: dbExport,
-    uploadedFiles,
-  };
-
-  const jsonData = JSON.stringify(fullExport);
-  const blobUrl = URL.createObjectURL(
-    new Blob([jsonData], { type: 'application/json' }),
-  );
-  setFileDownloadLink(blobUrl);
-  return blobUrl;
+  return importBackup(file, db);
 };
 ```
 
-### Updated Import in RxDbProvider.tsx
+### Updated File Input
 
-```typescript
-// Modify apps/web/src/app/providers/RxDbProvider.tsx
+Update the import file input to accept both JSON and ZIP:
 
-import { saveFileToOPFS, checkOPFSSupport } from '../../features/upload/services/opfsStorage';
-import { base64ToFile } from '../../features/upload/services/exportHelpers';
+```tsx
+<input
+  type="file"
+  accept="application/json,.json,application/zip,.zip"
+  // ...
+/>
+```
 
-export function handleJSONDataImport(
-  jsonString: string,
-  db: RxDatabase<DatabaseCollections>,
-): Promise<string> {
-  return new Promise((resolve, reject) => {
-    if (!jsonString) {
-      reject(Error('No data provided'));
-      return;
-    }
+### Download Filename
 
-    const data = JSON.parse(jsonString);
+Update download link to use appropriate extension:
 
-    // Check export format version
-    const isNewFormat = data.version === 2 && data.database && Array.isArray(data.uploadedFiles);
-    const dbData = isNewFormat ? data.database : data;
-    const uploadedFiles: { id: string; data: string }[] = isNewFormat ? data.uploadedFiles : [];
-
-    Promise.all(
-      Object.values(db.collections).map((col) => col?.remove()),
-    ).then(async () => {
-      await db.addCollections<DatabaseCollections>(databaseCollections);
-
-      try {
-        const res = await db.importJSON(dbData);
-        // ... existing error/success handling ...
-
-        // Restore OPFS files if present
-        if (uploadedFiles.length > 0 && checkOPFSSupport()) {
-          const uploadDocs = await db.user_uploaded_documents?.find().exec() || [];
-          const docMap = new Map(uploadDocs.map(d => [d.id, d]));
-
-          for (const fileData of uploadedFiles) {
-            const doc = docMap.get(fileData.id);
-            if (doc && fileData.data) {
-              const file = base64ToFile(fileData.data, doc.file_name, doc.content_type);
-              await saveFileToOPFS(file, doc.id);
-            }
-          }
-        }
-
-        resolve(`${Object.keys(success).length} documents were successfully imported`);
-      } catch (e) {
-        reject(Error('There was an error importing your data: ' + (e as Error).message));
-      }
-    });
-  });
-}
+```tsx
+<a
+  download={`mere_export_${new Date().toISOString()}${hasUploads ? '.zip' : '.json'}`}
+  href={fileDownloadLink}
+>
+  Download
+</a>
 ```
 
 ---
@@ -915,11 +1015,12 @@ apps/web/src/
 │   │       ├── opfsStorage.ts
 │   │       ├── uploadDocument.ts
 │   │       ├── linkDocument.ts
-│   │       ├── exportHelpers.ts
+│   │       ├── exportService.ts       # ZIP export
+│   │       ├── importService.ts       # ZIP/JSON import
 │   │       └── cleanupOrphans.ts
 │   │
 │   ├── settings/components/
-│   │   └── UserDataSettingsGroup.tsx  (modified for export)
+│   │   └── UserDataSettingsGroup.tsx  (modified for export/import)
 │   │
 │   └── timeline/
 │       ├── components/
