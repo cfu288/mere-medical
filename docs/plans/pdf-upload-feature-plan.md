@@ -2,11 +2,22 @@
 
 ## Overview
 
-This plan addresses [Issue #221](https://github.com/cfu288/mere-medical/issues/221) - adding manual data input capability, specifically the ability to upload PDF documents and associate them with medical records.
+This plan addresses [Issue #221](https://github.com/cfu288/mere-medical/issues/221) - adding manual data input capability, specifically the ability to upload PDF documents and optionally link them to existing medical records.
 
 ## Problem Statement
 
 Users who have medical records from providers not covered by supported integrations (Epic, Cerner, Veradigm, etc.) need a way to manually upload documents like PDFs of lab results, imaging reports, or historical medical records.
+
+## Requirements
+
+1. Users can upload PDF documents
+2. At upload, user provides: **display name** and **effective date** (document date)
+3. Uploaded PDFs appear as **independent items** on the timeline, sorted by effective date
+4. From existing timeline cards, users can **link uploaded documents** via search
+5. One clinical document can link to multiple uploaded documents
+6. One uploaded document can be linked from multiple clinical documents
+
+---
 
 ## Architecture Considerations
 
@@ -15,18 +26,17 @@ Users who have medical records from providers not covered by supported integrati
 - **Offline-First**: All data stored client-side in IndexedDB via RxDB
 - **No Backend Database**: The NestJS backend only handles OAuth flows and proxying
 - **Encryption**: Data can be optionally encrypted using a user-provided password (SylvieJS)
-- **Existing Pattern**: PDFs from FHIR servers are already stored as base64 strings in `clinical_documents` collection with `resource_type: 'documentreference_attachment'`
+- **Existing Pattern**: PDFs from FHIR servers are stored as base64 strings in `clinical_documents` with `resource_type: 'documentreference_attachment'`
 
-### Design Decision: Reuse vs New Collection
+### Design Decision: New Collection
 
-**Recommended Approach**: Create a **new `user_uploaded_documents` collection** rather than reusing `clinical_documents`.
+Create a **new `user_uploaded_documents` collection** rather than reusing `clinical_documents`.
 
 **Rationale**:
 1. `clinical_documents` requires a `connection_record_id` (foreign key to a FHIR connection) which user uploads don't have
 2. The primary key is composite: `connection_record_id|user_id|metadata.id` - not suitable for user uploads
 3. Separating user-uploaded content from synced FHIR data maintains data integrity
-4. Easier to manage, filter, and potentially delete user uploads separately
-5. Future features (like linking uploads to existing records) are cleaner with a separate collection
+4. Cleaner data management and querying
 
 ---
 
@@ -57,7 +67,7 @@ export const userUploadedDocumentSchemaLiteral = {
       type: 'string',
       format: 'uuid',
       maxLength: 128,
-      ref: 'user_documents',  // Foreign key to user_documents
+      ref: 'user_documents',
       description: 'The user who uploaded this document',
     },
     file_name: {
@@ -88,42 +98,19 @@ export const userUploadedDocumentSchemaLiteral = {
       type: 'string',
       format: 'date-time',
       maxLength: 128,
-      description: 'User-specified date of the document (e.g., date of lab results)',
+      description: 'User-specified effective date of the document',
     },
     display_name: {
       type: 'string',
       maxLength: 255,
-      description: 'User-friendly name for the document',
-    },
-    description: {
-      type: 'string',
-      description: 'Optional user-provided description',
-    },
-    category: {
-      type: 'string',
-      maxLength: 64,
-      description: 'Document category (lab_result, imaging, visit_summary, immunization, other)',
-    },
-    tags: {
-      type: 'array',
-      items: { type: 'string' },
-      description: 'User-defined tags for organization',
-    },
-    linked_clinical_documents: {
-      type: 'array',
-      items: {
-        type: 'string',
-        ref: 'clinical_documents',  // Foreign key array to clinical_documents
-      },
-      description: 'Optional links to related clinical documents',
+      description: 'User-provided name for the document',
     },
   },
-  required: ['id', 'user_id', 'file_name', 'content_type', 'data', 'upload_date'],
+  required: ['id', 'user_id', 'file_name', 'content_type', 'data', 'upload_date', 'document_date', 'display_name'],
   indexes: [
     'user_id',
     'document_date',
     'upload_date',
-    'category',
   ],
 } as const;
 ```
@@ -133,15 +120,6 @@ export const userUploadedDocumentSchemaLiteral = {
 ```typescript
 // apps/web/src/models/user-uploaded-document/UserUploadedDocument.type.ts
 
-export type UserUploadedDocumentCategory =
-  | 'lab_result'
-  | 'imaging'
-  | 'visit_summary'
-  | 'immunization'
-  | 'medication'
-  | 'insurance'
-  | 'other';
-
 export interface UserUploadedDocument {
   id: string;
   user_id: string;
@@ -150,15 +128,89 @@ export interface UserUploadedDocument {
   content_type: string;
   data: string;  // Base64-encoded
   upload_date: string;
-  document_date?: string;
-  display_name?: string;
-  description?: string;
-  category?: UserUploadedDocumentCategory;
-  tags?: string[];
-  linked_clinical_documents?: string[];
+  document_date: string;
+  display_name: string;
 }
 
 export type CreateUserUploadedDocument = Omit<UserUploadedDocument, 'id'>;
+```
+
+---
+
+## Linking Strategy: Junction Collection
+
+To support many-to-many linking between clinical documents and uploaded documents, create a **junction collection**.
+
+### New Collection: `clinical_document_links`
+
+```typescript
+// apps/web/src/models/clinical-document-link/ClinicalDocumentLink.schema.ts
+
+export const clinicalDocumentLinkSchemaLiteral = {
+  title: 'Clinical Document Link Schema',
+  name: 'clinical_document_links',
+  description: 'Links between clinical documents and user-uploaded documents',
+  version: 0,
+  primaryKey: {
+    key: 'id',
+    fields: ['clinical_document_id', 'uploaded_document_id'],
+    separator: '|',
+  },
+  type: 'object',
+  properties: {
+    id: {
+      type: 'string',
+      maxLength: 256,
+      description: 'Composite key: clinical_document_id|uploaded_document_id',
+    },
+    clinical_document_id: {
+      type: 'string',
+      maxLength: 128,
+      ref: 'clinical_documents',
+      description: 'The clinical document being linked from',
+    },
+    uploaded_document_id: {
+      type: 'string',
+      format: 'uuid',
+      maxLength: 128,
+      ref: 'user_uploaded_documents',
+      description: 'The uploaded document being linked to',
+    },
+    user_id: {
+      type: 'string',
+      format: 'uuid',
+      maxLength: 128,
+      ref: 'user_documents',
+      description: 'The user who created this link',
+    },
+    created_at: {
+      type: 'string',
+      format: 'date-time',
+      maxLength: 128,
+      description: 'When the link was created',
+    },
+  },
+  required: ['id', 'clinical_document_id', 'uploaded_document_id', 'user_id', 'created_at'],
+  indexes: [
+    'clinical_document_id',
+    'uploaded_document_id',
+    'user_id',
+  ],
+} as const;
+```
+
+#### TypeScript Interface
+
+```typescript
+// apps/web/src/models/clinical-document-link/ClinicalDocumentLink.type.ts
+
+export interface ClinicalDocumentLink {
+  id: string;  // Composite: clinical_document_id|uploaded_document_id
+  clinical_document_id: string;
+  uploaded_document_id: string;
+  user_id: string;
+  created_at: string;
+}
 ```
 
 ---
@@ -171,59 +223,164 @@ export type CreateUserUploadedDocument = Omit<UserUploadedDocument, 'id'>;
 ┌─────────────────────┐
 │   user_documents    │
 │─────────────────────│
-│ id (PK)             │◄──────────────────────────────────────┐
-│ first_name          │                                       │
-│ last_name           │                                       │
-│ ...                 │                                       │
-└─────────────────────┘                                       │
-         ▲                                                    │
-         │ ref: user_documents                                │
-         │                                                    │
-┌─────────────────────────┐     ┌─────────────────────────────┤
-│ user_uploaded_documents │     │                             │
-│─────────────────────────│     │                             │
-│ id (PK, UUID)           │     │                             │
-│ user_id (FK) ───────────┼─────┘                             │
-│ file_name               │                                   │
-│ content_type            │                                   │
-│ data (base64)           │                                   │
-│ document_date           │                                   │
-│ linked_clinical_docs[]──┼────┐                              │
-└─────────────────────────┘    │                              │
-                               │ ref: clinical_documents      │
-                               ▼                              │
-                  ┌─────────────────────────┐                 │
-                  │   clinical_documents    │                 │
-                  │─────────────────────────│                 │
-                  │ id (PK, composite)      │                 │
-                  │ user_id (FK) ───────────┼─────────────────┘
+│ id (PK)             │◄─────────────────────────────────┐
+│ first_name          │                                  │
+│ last_name           │                                  │
+│ ...                 │                                  │
+└─────────────────────┘                                  │
+         ▲                                               │
+         │                                               │
+         │ user_id (FK)                                  │ user_id (FK)
+         │                                               │
+┌────────┴────────────────┐                              │
+│ user_uploaded_documents │                              │
+│─────────────────────────│                              │
+│ id (PK, UUID)           │◄──────────┐                  │
+│ user_id (FK)            │           │                  │
+│ file_name               │           │                  │
+│ content_type            │           │ uploaded_        │
+│ data (base64)           │           │ document_id      │
+│ document_date           │           │                  │
+│ display_name            │           │                  │
+└─────────────────────────┘           │                  │
+                                      │                  │
+                    ┌─────────────────┴──────────────────┤
+                    │  clinical_document_links           │
+                    │────────────────────────────────────│
+                    │ id (PK, composite)                 │
+                    │ clinical_document_id (FK) ─────────┼──┐
+                    │ uploaded_document_id (FK)          │  │
+                    │ user_id (FK) ──────────────────────┘  │
+                    │ created_at                            │
+                    └───────────────────────────────────────┤
+                                                            │
+                               ┌────────────────────────────┘
+                               │ clinical_document_id (FK)
+                               ▼
+                  ┌─────────────────────────┐
+                  │   clinical_documents    │
+                  │─────────────────────────│
+                  │ id (PK, composite)      │
+                  │ user_id (FK)            │
                   │ connection_record_id    │
                   │ data_record             │
                   │ metadata                │
                   └─────────────────────────┘
 ```
 
-### Key Relationships
+### Relationship Summary
 
-| Collection | Field | References | Relationship Type |
-|------------|-------|------------|-------------------|
+| From | Field | To | Type |
+|------|-------|-----|------|
 | `user_uploaded_documents` | `user_id` | `user_documents.id` | Many-to-One |
-| `user_uploaded_documents` | `linked_clinical_documents[]` | `clinical_documents.id` | Many-to-Many |
+| `clinical_document_links` | `clinical_document_id` | `clinical_documents.id` | Many-to-One |
+| `clinical_document_links` | `uploaded_document_id` | `user_uploaded_documents.id` | Many-to-One |
+| `clinical_document_links` | `user_id` | `user_documents.id` | Many-to-One |
 
-### RxDB Foreign Key Implementation
+### Many-to-Many via Junction
 
-RxDB uses the `ref` property in schema definitions to establish relationships:
+- One **clinical document** can link to **many uploaded documents** (via multiple rows in `clinical_document_links`)
+- One **uploaded document** can be linked from **many clinical documents** (via multiple rows in `clinical_document_links`)
 
-```typescript
-// In schema - establishes the relationship
-user_id: {
-  type: 'string',
-  ref: 'user_documents',  // References user_documents collection
-},
+---
 
-// Usage - populate the relationship
-const uploadedDoc = await db.user_uploaded_documents.findOne(docId).exec();
-const user = await uploadedDoc.populate('user_id');  // Fetches related user
+## User Workflows
+
+### Workflow 1: Upload a PDF
+
+```
+User clicks "Upload" button in Timeline
+    │
+    ▼
+Upload modal opens
+    │
+    ├── User selects PDF file
+    ├── User enters display name (required)
+    └── User selects effective date (required)
+    │
+    ▼
+User clicks "Upload"
+    │
+    ▼
+Document saved to user_uploaded_documents
+    │
+    ▼
+Document appears on timeline at effective date
+```
+
+### Workflow 2: Link Uploaded Document to Clinical Card
+
+```
+User views a clinical card (e.g., Lab Results)
+    │
+    ▼
+User clicks "Link Document" action
+    │
+    ▼
+Search modal opens showing user's uploaded documents
+    │
+    ├── User searches by display name
+    └── User selects one or more documents
+    │
+    ▼
+User clicks "Link"
+    │
+    ▼
+Rows created in clinical_document_links
+    │
+    ▼
+Clinical card now shows linked documents
+```
+
+### Workflow 3: View Linked Documents
+
+```
+User expands a clinical card
+    │
+    ▼
+Card shows "Linked Documents" section
+    │
+    ├── Lists all linked uploaded documents
+    └── Each shows: display name, date, thumbnail/icon
+    │
+    ▼
+User can click to view, or unlink
+```
+
+---
+
+## Timeline Display
+
+### Default View: Independent Items
+
+Uploaded documents appear as **standalone cards** on the timeline, sorted by `document_date`:
+
+```
+Timeline:
+├── Jan 20 - [Upload] Blood Work Scan          ← Uploaded PDF
+├── Jan 15 - Lab Results (from Epic)           ← Clinical document
+├── Jan 15 - [Upload] Lab Report Addendum      ← Uploaded PDF
+├── Jan 10 - Immunization (from Cerner)        ← Clinical document
+```
+
+### Expanded Clinical Card: Shows Links
+
+When a clinical card is expanded, it shows any linked uploaded documents:
+
+```
+┌─────────────────────────────────────────┐
+│ Lab Results - Jan 15                    │
+│ Source: Epic MyChart                    │
+│                                         │
+│ [Lab result details...]                 │
+│                                         │
+│ ─────────────────────────────────────── │
+│ 📎 Linked Documents:                    │
+│   • Lab Report Addendum (Jan 15)  [×]   │
+│   • Doctor Notes Scan (Jan 14)    [×]   │
+│                                         │
+│ [+ Link Document]                       │
+└─────────────────────────────────────────┘
 ```
 
 ---
@@ -232,20 +389,19 @@ const user = await uploadedDoc.populate('user_id');  // Fetches related user
 
 ### File Size Limits
 
-| Constraint | Recommendation |
-|------------|----------------|
-| Per-file limit | 50 MB maximum |
-| Total storage | Monitor IndexedDB quota (typically 50GB+ on desktop) |
-| Warning threshold | Show warning when storage usage > 80% |
+| Constraint | Value |
+|------------|-------|
+| Per-file limit | 50 MB |
+| Warning threshold | Show warning when storage > 80% |
 
 ### Why Base64 in RxDB?
 
-1. **Consistency**: Matches existing pattern for `documentreference_attachment` PDFs
-2. **Encryption**: Base64 strings work seamlessly with SylvieJS encryption
-3. **Backup/Export**: JSON export includes all data without binary handling
-4. **Simplicity**: No need for separate OPFS or file system API handling
+1. **Consistency**: Matches existing pattern for `documentreference_attachment`
+2. **Encryption**: Works seamlessly with SylvieJS encryption
+3. **Backup/Export**: JSON export includes all data
+4. **Simplicity**: No separate file system handling
 
-### Storage Size Impact
+### Storage Overhead
 
 Base64 encoding increases file size by ~33%. A 10MB PDF becomes ~13.3MB in storage.
 
@@ -255,26 +411,38 @@ Base64 encoding increases file size by ~33%. A 10MB PDF becomes ~13.3MB in stora
 
 ### Phase 1: Data Layer
 
-#### Step 1.1: Create Model Files
+#### Step 1.1: Create UserUploadedDocument Model
 
-Create the following files in `apps/web/src/models/user-uploaded-document/`:
+Create files in `apps/web/src/models/user-uploaded-document/`:
+- `UserUploadedDocument.schema.ts`
+- `UserUploadedDocument.type.ts`
+- `UserUploadedDocument.collection.ts`
+- `UserUploadedDocument.migration.ts`
 
-- `UserUploadedDocument.schema.ts` - Schema definition
-- `UserUploadedDocument.type.ts` - TypeScript interfaces
-- `UserUploadedDocument.collection.ts` - RxDB collection export
-- `UserUploadedDocument.migration.ts` - Migration strategies (empty for v0)
+#### Step 1.2: Create ClinicalDocumentLink Model
 
-#### Step 1.2: Register Collection
+Create files in `apps/web/src/models/clinical-document-link/`:
+- `ClinicalDocumentLink.schema.ts`
+- `ClinicalDocumentLink.type.ts`
+- `ClinicalDocumentLink.collection.ts`
+- `ClinicalDocumentLink.migration.ts`
+
+#### Step 1.3: Register Collections
 
 Update `apps/web/src/app/providers/RxDbProvider.tsx`:
 
 ```typescript
 import { UserUploadedDocumentSchema } from '../../models/user-uploaded-document/UserUploadedDocument.collection';
+import { ClinicalDocumentLinkSchema } from '../../models/clinical-document-link/ClinicalDocumentLink.collection';
 
 export const databaseCollections = {
   // ... existing collections
   user_uploaded_documents: {
     schema: UserUploadedDocumentSchema,
+    migrationStrategies: {},
+  },
+  clinical_document_links: {
+    schema: ClinicalDocumentLinkSchema,
     migrationStrategies: {},
   },
 };
@@ -284,28 +452,25 @@ Update `apps/web/src/app/providers/DatabaseCollections.ts`:
 
 ```typescript
 import { UserUploadedDocumentCollection } from '../../models/user-uploaded-document/UserUploadedDocument.collection';
+import { ClinicalDocumentLinkCollection } from '../../models/clinical-document-link/ClinicalDocumentLink.collection';
 
 export type DatabaseCollections = {
   // ... existing collections
   user_uploaded_documents: UserUploadedDocumentCollection;
+  clinical_document_links: ClinicalDocumentLinkCollection;
 };
 ```
 
 ### Phase 2: Upload Feature
 
-#### Step 2.1: Create Upload Modal Component
+#### Step 2.1: Create Upload Modal
 
 Create `apps/web/src/features/upload/components/UploadDocumentModal.tsx`:
-
-- File input (accept: `.pdf,.jpg,.jpeg,.png`)
-- Display name input
-- Document date picker
-- Category dropdown
-- Optional description textarea
-- Optional tags input
-- Upload progress indicator
-- File size validation
-- Preview for images
+- File input (accept: `.pdf`)
+- Display name input (required)
+- Document date picker (required)
+- File size validation (< 50MB)
+- Upload button
 
 #### Step 2.2: Create Upload Service
 
@@ -316,13 +481,8 @@ export async function uploadDocument(
   db: RxDatabase<DatabaseCollections>,
   file: File,
   userId: string,
-  metadata: {
-    displayName?: string;
-    documentDate?: string;
-    category?: UserUploadedDocumentCategory;
-    description?: string;
-    tags?: string[];
-  }
+  displayName: string,
+  documentDate: string
 ): Promise<UserUploadedDocument> {
   // 1. Validate file size (< 50MB)
   // 2. Read file as base64 using FileReader
@@ -335,61 +495,96 @@ export async function uploadDocument(
 
 ### Phase 3: Timeline Integration
 
-#### Step 3.1: Update Timeline Query
+#### Step 3.1: Query Hook for Uploaded Documents
 
-Modify `apps/web/src/features/timeline/hooks/` to also query `user_uploaded_documents`:
+Create `apps/web/src/features/timeline/hooks/useUserUploadedDocuments.ts`:
+- Query `user_uploaded_documents` for current user
+- Return documents sorted by `document_date`
 
-- Create hook: `useUserUploadedDocuments.ts`
-- Merge results with clinical documents for unified timeline display
-- Sort by `document_date` (or `upload_date` if not provided)
+#### Step 3.2: Merge with Timeline
 
-#### Step 3.2: Create Upload Card Component
+Update timeline query logic to:
+- Fetch both `clinical_documents` and `user_uploaded_documents`
+- Merge and sort by date
+- Distinguish uploaded docs with a flag or wrapper type
+
+#### Step 3.3: Create Upload Card Component
 
 Create `apps/web/src/features/timeline/components/cards/UserUploadedDocumentCard.tsx`:
+- PDF icon
+- Display name
+- Effective date
+- Visual indicator that it's user-uploaded (e.g., "Uploaded" badge)
+- Click to expand/view
 
-- Thumbnail preview for images
-- PDF icon for PDFs
-- Display name, date, category badge
-- Click to expand/view document
-
-#### Step 3.3: Create Expandable Viewer
+#### Step 3.4: Create Expandable Viewer
 
 Create `apps/web/src/features/timeline/components/expandables/ShowUserUploadedDocumentExpandable.tsx`:
-
-- Full PDF viewer (iframe-based, matching existing pattern)
-- Full image viewer
-- Download button
-- Edit metadata button
+- PDF viewer (iframe-based)
+- Display metadata (name, date, file size)
+- Edit button (rename, change date)
 - Delete button with confirmation
+- Download button
 
-#### Step 3.4: Update TimelineItem
+#### Step 3.5: Update TimelineItem
 
-Add handling for user uploads in `apps/web/src/features/timeline/components/layout/TimelineItem.tsx`:
+Update `apps/web/src/features/timeline/components/layout/TimelineItem.tsx` to render `UserUploadedDocumentCard` for uploaded documents.
+
+### Phase 4: Linking Feature
+
+#### Step 4.1: Link Document Modal
+
+Create `apps/web/src/features/timeline/components/LinkDocumentModal.tsx`:
+- Search input to filter uploaded documents by display name
+- List of matching uploaded documents
+- Checkbox selection for multiple links
+- "Link" button to create links
+
+#### Step 4.2: Link Service
+
+Create `apps/web/src/features/timeline/services/linkDocument.ts`:
 
 ```typescript
-{item.data_record?.resource_type === 'user_uploaded' && (
-  <UserUploadedDocumentCard
-    key={item.id}
-    item={item as UserUploadedDocument}
-  />
-)}
+export async function linkDocument(
+  db: RxDatabase<DatabaseCollections>,
+  clinicalDocumentId: string,
+  uploadedDocumentId: string,
+  userId: string
+): Promise<ClinicalDocumentLink> {
+  // Create row in clinical_document_links
+}
+
+export async function unlinkDocument(
+  db: RxDatabase<DatabaseCollections>,
+  clinicalDocumentId: string,
+  uploadedDocumentId: string
+): Promise<void> {
+  // Delete row from clinical_document_links
+}
+
+export async function getLinkedDocuments(
+  db: RxDatabase<DatabaseCollections>,
+  clinicalDocumentId: string
+): Promise<UserUploadedDocument[]> {
+  // Query clinical_document_links for this clinical doc
+  // Fetch corresponding uploaded documents
+}
 ```
 
-### Phase 4: UI Entry Points
+#### Step 4.3: Add Link UI to Clinical Cards
 
-#### Step 4.1: Add Upload Button to Timeline
+Update existing clinical card expandables to:
+- Show "Linked Documents" section
+- Display linked uploaded docs with unlink button
+- Add "Link Document" button that opens LinkDocumentModal
 
-Add floating action button or header button in Timeline view:
-- Location: Top-right of timeline or in the filter bar
-- Icon: Upload/Plus icon
-- Action: Opens UploadDocumentModal
+### Phase 5: UI Entry Points
 
-#### Step 4.2: Add to Settings (Optional)
+#### Step 5.1: Upload Button in Timeline
 
-Consider adding a section in Settings to:
-- View all uploaded documents
-- Manage storage usage
-- Bulk delete uploads
+Add upload button to Timeline header/toolbar:
+- Icon: Upload or Plus icon
+- Opens UploadDocumentModal
 
 ---
 
@@ -398,18 +593,22 @@ Consider adding a section in Settings to:
 ```
 apps/web/src/
 ├── models/
-│   └── user-uploaded-document/
-│       ├── UserUploadedDocument.schema.ts
-│       ├── UserUploadedDocument.type.ts
-│       ├── UserUploadedDocument.collection.ts
-│       └── UserUploadedDocument.migration.ts
+│   ├── user-uploaded-document/
+│   │   ├── UserUploadedDocument.schema.ts
+│   │   ├── UserUploadedDocument.type.ts
+│   │   ├── UserUploadedDocument.collection.ts
+│   │   └── UserUploadedDocument.migration.ts
+│   │
+│   └── clinical-document-link/
+│       ├── ClinicalDocumentLink.schema.ts
+│       ├── ClinicalDocumentLink.type.ts
+│       ├── ClinicalDocumentLink.collection.ts
+│       └── ClinicalDocumentLink.migration.ts
 │
 ├── features/
-│   ├── upload/                          # New feature module
+│   ├── upload/
 │   │   ├── components/
-│   │   │   ├── UploadDocumentModal.tsx
-│   │   │   ├── FileDropzone.tsx
-│   │   │   └── UploadProgress.tsx
+│   │   │   └── UploadDocumentModal.tsx
 │   │   ├── hooks/
 │   │   │   └── useUploadDocument.ts
 │   │   └── services/
@@ -418,41 +617,31 @@ apps/web/src/
 │   └── timeline/
 │       ├── components/
 │       │   ├── cards/
-│       │   │   └── UserUploadedDocumentCard.tsx  # New
+│       │   │   └── UserUploadedDocumentCard.tsx
 │       │   ├── expandables/
-│       │   │   └── ShowUserUploadedDocumentExpandable.tsx  # New
-│       │   └── layout/
-│       │       └── TimelineItem.tsx              # Modified
-│       └── hooks/
-│           └── useUserUploadedDocuments.ts       # New
+│       │   │   └── ShowUserUploadedDocumentExpandable.tsx
+│       │   ├── layout/
+│       │   │   └── TimelineItem.tsx  (modified)
+│       │   └── LinkDocumentModal.tsx
+│       ├── hooks/
+│       │   └── useUserUploadedDocuments.ts
+│       └── services/
+│           └── linkDocument.ts
 │
 └── app/
     └── providers/
-        ├── RxDbProvider.tsx             # Modified
-        └── DatabaseCollections.ts       # Modified
+        ├── RxDbProvider.tsx      (modified)
+        └── DatabaseCollections.ts (modified)
 ```
 
 ---
 
-## API Summary
+## No Backend Changes Required
 
-### No Backend Changes Required
-
-The PDF upload feature is entirely client-side:
+The feature is entirely client-side:
 - Files stored in browser IndexedDB
 - No server-side storage needed
-- Follows existing offline-first architecture
-- Data automatically included in backup/export functionality
-
----
-
-## Future Enhancements (Out of Scope)
-
-1. **Link to Existing Records**: UI to associate uploaded PDFs with existing clinical documents
-2. **OCR/Text Extraction**: Extract text from PDFs for search indexing
-3. **Vector Embeddings**: Integrate with `vector_storage` for AI-powered search
-4. **Manual FHIR Entry**: Form-based entry of structured data (immunizations, labs, etc.)
-5. **Cloud Sync**: Optional backend sync for cross-device access
+- Data automatically included in backup/export
 
 ---
 
@@ -462,26 +651,32 @@ The PDF upload feature is entirely client-side:
 - Schema validation
 - File size validation
 - Base64 encoding/decoding
-- Document CRUD operations
+- Link/unlink operations
+- Composite key generation for links
 
 ### Integration Tests
 - Upload flow end-to-end
 - Timeline display with mixed document types
-- Backup/restore with uploaded documents
-- Encrypted database with uploads
+- Link creation and display
+- Backup/restore with uploaded documents and links
 
 ### E2E Tests (Playwright)
-- Upload a PDF and verify display
-- Edit document metadata
-- Delete document
-- Filter timeline by uploaded documents
+- Upload a PDF with display name and date
+- Verify PDF appears on timeline at correct date
+- Link uploaded document from clinical card
+- View linked documents on clinical card
+- Unlink document
+- Delete uploaded document
 
 ---
 
 ## Success Metrics
 
-- Users can upload PDF/image files up to 50MB
-- Uploaded documents appear in timeline chronologically
+- Users can upload PDF files up to 50MB
+- Upload requires display name and effective date
+- Uploaded documents appear on timeline at effective date
+- Users can link uploaded docs to clinical cards via search
+- Linked documents display on clinical card when expanded
 - Documents persist across browser sessions
-- Documents are included in backup exports
-- Documents work with encrypted database mode
+- Documents included in backup exports
+- Works with encrypted database mode
