@@ -47,6 +47,17 @@ Store links as an **embedded array** on `user_uploaded_documents`.
 
 ## Data Model
 
+### Schema Design: Aligned with `clinical_documents`
+
+The schema follows the same nested structure as `clinical_documents` for consistency:
+- `metadata` object for user-facing display fields (`date`, `display_name`)
+- `data_record` object for file/content information (`content_type`, file details)
+
+This alignment makes it easier to:
+1. Display both document types uniformly on the timeline
+2. Reuse existing timeline components and date formatters
+3. Query by `metadata.date` consistently across collections
+
 ### New Collection: `user_uploaded_documents`
 
 ```typescript
@@ -73,37 +84,49 @@ export const UserUploadedDocumentSchemaLiteral = {
       ref: 'user_documents',
       description: 'The user who uploaded this document',
     },
-    file_name: {
-      type: 'string',
-      description: 'Original filename',
+    metadata: {
+      type: 'object',
+      description: 'User-facing display information (aligned with clinical_documents.metadata)',
+      properties: {
+        date: {
+          type: 'string',
+          format: 'date-time',
+          maxLength: 128,
+          description: 'User-specified effective date (same as clinical_documents.metadata.date)',
+        },
+        display_name: {
+          type: 'string',
+          description: 'User-provided name (same as clinical_documents.metadata.display_name)',
+        },
+      },
     },
-    file_size: {
-      type: 'number',
-      description: 'File size in bytes',
-    },
-    content_type: {
-      type: 'string',
-      maxLength: 128,
-      description: 'MIME type (application/pdf, application/dicom, etc.)',
-    },
-    opfs_path: {
-      type: 'string',
-      description: 'Path to file in OPFS',
+    data_record: {
+      type: 'object',
+      description: 'File content information (aligned with clinical_documents.data_record)',
+      properties: {
+        content_type: {
+          type: 'string',
+          maxLength: 128,
+          description: 'MIME type (application/pdf, application/dicom, etc.)',
+        },
+        file_name: {
+          type: 'string',
+          description: 'Original filename',
+        },
+        file_size: {
+          type: 'number',
+          description: 'File size in bytes',
+        },
+        opfs_path: {
+          type: 'string',
+          description: 'Path to file in OPFS',
+        },
+      },
     },
     upload_date: {
       type: 'string',
       format: 'date-time',
-      description: 'When the document was uploaded',
-    },
-    document_date: {
-      type: 'string',
-      format: 'date-time',
-      maxLength: 128,
-      description: 'User-specified effective date',
-    },
-    display_name: {
-      type: 'string',
-      description: 'User-provided name',
+      description: 'When the document was uploaded (distinct from metadata.date)',
     },
     linked_clinical_document_ids: {
       type: 'array',
@@ -111,18 +134,8 @@ export const UserUploadedDocumentSchemaLiteral = {
       description: 'IDs of linked clinical documents (not indexed - full scan on query)',
     },
   },
-  required: [
-    'id',
-    'user_id',
-    'file_name',
-    'file_size',
-    'content_type',
-    'opfs_path',
-    'upload_date',
-    'document_date',
-    'display_name',
-  ],
-  indexes: ['user_id', 'document_date', 'content_type'],
+  required: ['id', 'user_id', 'metadata', 'data_record', 'upload_date'],
+  indexes: ['user_id', 'metadata.date', 'data_record.content_type'],
 } as const;
 
 export const UserUploadedDocumentSchema: RxJsonSchema<UserUploadedDocument> =
@@ -137,16 +150,32 @@ export const UserUploadedDocumentSchema: RxJsonSchema<UserUploadedDocument> =
 export interface UserUploadedDocument {
   id: string;
   user_id: string;
-  file_name: string;
-  file_size: number;
-  content_type: string;
-  opfs_path: string;
+  metadata: {
+    date: string;
+    display_name: string;
+  };
+  data_record: {
+    content_type: string;
+    file_name: string;
+    file_size: number;
+    opfs_path: string;
+  };
   upload_date: string;
-  document_date: string;
-  display_name: string;
   linked_clinical_document_ids?: string[];
 }
 ```
+
+### Schema Field Mapping Comparison
+
+| Purpose | `clinical_documents` | `user_uploaded_documents` |
+|---------|---------------------|---------------------------|
+| Timeline date | `metadata.date` | `metadata.date` |
+| Display name | `metadata.display_name` | `metadata.display_name` |
+| MIME type | `data_record.content_type` | `data_record.content_type` |
+| Type classification | `data_record.resource_type` | `data_record.content_type` (filter by PDF/DICOM) |
+| Raw data | `data_record.raw` | OPFS via `data_record.opfs_path` |
+| User reference | `user_id` | `user_id` |
+| Source reference | `connection_record_id` | N/A (user-uploaded) |
 
 ### Migration File
 
@@ -390,17 +419,21 @@ export async function uploadDocument(
   try {
     opfsPath = await saveFileToOPFS(file, id);
 
-    // 6. Create metadata record
+    // 6. Create metadata record (aligned with clinical_documents structure)
     const doc = await db.user_uploaded_documents.insert({
       id,
       user_id: userId,
-      file_name: file.name,
-      file_size: file.size,
-      content_type: file.type,
-      opfs_path: opfsPath,
+      metadata: {
+        date: documentDate,
+        display_name: displayName,
+      },
+      data_record: {
+        content_type: file.type,
+        file_name: file.name,
+        file_size: file.size,
+        opfs_path: opfsPath,
+      },
       upload_date: new Date().toISOString(),
-      document_date: documentDate,
-      display_name: displayName,
       linked_clinical_document_ids: [],
     });
 
@@ -421,7 +454,7 @@ export async function deleteUploadedDocument(
   const doc = await db.user_uploaded_documents.findOne(documentId).exec();
   if (!doc) return;
 
-  const opfsPath = doc.opfs_path;
+  const opfsPath = doc.data_record.opfs_path;
 
   // Delete from IndexedDB first
   await doc.remove();
@@ -491,10 +524,10 @@ export async function exportAsZip(
   const uploadsFolder = zip.folder('uploads');
 
   for (const upload of uploads) {
-    const file = await readFileFromOPFS(upload.opfs_path);
+    const file = await readFileFromOPFS(upload.data_record.opfs_path);
     if (file && uploadsFolder) {
       // Get filename from opfs_path (e.g., "/uploads/uuid.pdf" -> "uuid.pdf")
-      const fileName = upload.opfs_path.split('/').pop() || `${upload.id}.pdf`;
+      const fileName = upload.data_record.opfs_path.split('/').pop() || `${upload.id}.pdf`;
       uploadsFolder.file(fileName, file);
     }
   }
@@ -563,13 +596,15 @@ async function importFromZip(
     if (uploadsFolder) {
       for (const doc of uploadDocs) {
         // Get filename from opfs_path
-        const fileName = doc.opfs_path.split('/').pop();
+        const fileName = doc.data_record.opfs_path.split('/').pop();
         if (!fileName) continue;
 
         const zipFile = uploadsFolder.file(fileName);
         if (zipFile) {
           const blob = await zipFile.async('blob');
-          const restoredFile = new File([blob], doc.file_name, { type: doc.content_type });
+          const restoredFile = new File([blob], doc.data_record.file_name, {
+            type: doc.data_record.content_type,
+          });
           await saveFileToOPFS(restoredFile, doc.id);
         }
       }
@@ -964,7 +999,7 @@ export async function cleanupOrphanedFiles(
   try {
     const uploadsDir = await initOPFS();
     const dbDocs = await db.user_uploaded_documents?.find().exec() || [];
-    const dbPaths = new Set(dbDocs.map((d) => d.opfs_path));
+    const dbPaths = new Set(dbDocs.map((d) => d.data_record.opfs_path));
 
     for await (const entry of uploadsDir.values()) {
       if (entry.kind === 'file') {
