@@ -558,13 +558,12 @@ import { UserUploadedDocument } from '../../../models/user-uploaded-document/Use
 import uuid4 from '../../../shared/utils/UUIDUtils';
 import { checkOPFSSupport, saveFileToOPFS, deleteFileFromOPFS } from './opfsStorage';
 
-const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
 const SUPPORTED_TYPES = ['application/pdf'];
 
 export class UploadError extends Error {
   constructor(
     message: string,
-    public code: 'UNSUPPORTED_BROWSER' | 'INVALID_TYPE' | 'FILE_TOO_LARGE' | 'QUOTA_EXCEEDED' | 'STORAGE_ERROR'
+    public code: 'UNSUPPORTED_BROWSER' | 'INVALID_TYPE' | 'STORAGE_ERROR'
   ) {
     super(message);
     this.name = 'UploadError';
@@ -594,39 +593,14 @@ export async function uploadDocument(
     );
   }
 
-  // 3. Validate file size
-  if (file.size > MAX_FILE_SIZE) {
-    throw new UploadError(
-      `File size exceeds maximum of ${MAX_FILE_SIZE / 1024 / 1024}MB.`,
-      'FILE_TOO_LARGE'
-    );
-  }
-
-  // 4. Check storage quota
-  try {
-    const estimate = await navigator.storage.estimate();
-    if (estimate.usage && estimate.quota) {
-      const availableSpace = estimate.quota - estimate.usage;
-      if (file.size > availableSpace * 0.9) {
-        throw new UploadError(
-          'Not enough storage space. Please free up space or export your data.',
-          'QUOTA_EXCEEDED'
-        );
-      }
-    }
-  } catch (e) {
-    if (e instanceof UploadError) throw e;
-    // Quota check failed, continue anyway
-  }
-
-  // 5. Generate ID and save to OPFS
+  // 3. Generate ID and save to OPFS
   const id = uuid4();
   let opfsPath: string | null = null;
 
   try {
     opfsPath = await saveFileToOPFS(file, id);
 
-    // 6. Create metadata record (aligned with clinical_documents structure)
+    // 4. Create metadata record (aligned with clinical_documents structure)
     const doc = await db.user_uploaded_documents.insert({
       id,
       user_id: userId,
@@ -926,14 +900,8 @@ import * as yup from 'yup';
 
 export const uploadValidationSchema = yup.object({
   file: yup.mixed<FileList>().required('Please select a file'),
-  displayName: yup
-    .string()
-    .required('Display name is required')
-    .max(255, 'Display name must be less than 255 characters'),
-  documentDate: yup
-    .date()
-    .required('Document date is required')
-    .max(new Date(), 'Document date cannot be in the future'),
+  displayName: yup.string().required('Display name is required'),
+  documentDate: yup.date().required('Document date is required'),
 });
 
 export type UploadFormFields = yup.InferType<typeof uploadValidationSchema>;
@@ -1231,8 +1199,6 @@ export async function cleanupOrphanedFiles(
 |-------|--------------|------|
 | Browser doesn't support OPFS | "Your browser does not support file uploads. Please use Chrome 86+, Edge 86+, Safari 15.2+, or Firefox 111+." | `UNSUPPORTED_BROWSER` |
 | Invalid file type | "File type X is not supported. Please upload a PDF file." | `INVALID_TYPE` |
-| File too large | "File size exceeds maximum of 200MB." | `FILE_TOO_LARGE` |
-| Storage quota exceeded | "Not enough storage space. Please free up space or export your data." | `QUOTA_EXCEEDED` |
 | Storage write failed | "Failed to save document. Please try again." | `STORAGE_ERROR` |
 
 ---
