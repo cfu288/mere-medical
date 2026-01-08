@@ -1283,6 +1283,445 @@ apps/web/src/
 
 ---
 
+## Testing Strategy
+
+Uses existing patterns: in-memory RxDB via `createTestDatabase()`, test data factories with overrides, and dependency injection for browser APIs.
+
+### Storage Adapter Interface
+
+Inject storage to make upload/cleanup services testable without OPFS:
+
+```typescript
+// apps/web/src/features/upload/services/storageAdapter.ts
+
+export interface StorageAdapter {
+  save(file: File, id: string): Promise<string>;
+  read(path: string): Promise<File | null>;
+  delete(path: string): Promise<void>;
+  list(): Promise<string[]>;
+}
+
+// Production: OPFS implementation
+export function createOPFSAdapter(): StorageAdapter { /* ... */ }
+
+// Test: In-memory implementation
+export function createMemoryAdapter(): StorageAdapter {
+  const files = new Map<string, File>();
+  return {
+    async save(file, id) {
+      const path = `/uploads/${id}.pdf`;
+      files.set(path, file);
+      return path;
+    },
+    async read(path) { return files.get(path) || null; },
+    async delete(path) { files.delete(path); },
+    async list() { return Array.from(files.keys()); },
+  };
+}
+```
+
+### Test Data Factory
+
+```typescript
+// apps/web/src/test-utils/uploadTestData.ts
+
+import uuid4 from '../shared/utils/UUIDUtils';
+import { UserUploadedDocument } from '../models/user-uploaded-document/UserUploadedDocument.type';
+
+export function createTestUpload(
+  overrides?: Partial<UserUploadedDocument>
+): UserUploadedDocument {
+  const id = uuid4();
+  return {
+    id,
+    user_id: 'test-user-id',
+    metadata: {
+      date: new Date().toISOString(),
+      display_name: 'Test Document',
+    },
+    data_record: {
+      content_type: 'application/pdf',
+      file_name: 'test.pdf',
+      opfs_path: `/uploads/${id}.pdf`,
+    },
+    upload_date: new Date().toISOString(),
+    linked_clinical_document_ids: [],
+    ...overrides,
+  };
+}
+
+export function createTestFile(name = 'test.pdf', type = 'application/pdf'): File {
+  const content = new Blob(['%PDF-1.4 test content'], { type });
+  return new File([content], name, { type });
+}
+
+export function createMultipleUploads(
+  count: number,
+  userId = 'test-user-id'
+): UserUploadedDocument[] {
+  return Array.from({ length: count }, (_, i) =>
+    createTestUpload({
+      user_id: userId,
+      metadata: {
+        date: new Date(Date.now() - i * 86400000).toISOString(),
+        display_name: `Document ${i + 1}`,
+      },
+    })
+  );
+}
+```
+
+### Test Files
+
+#### 1. Link Service Tests
+
+```typescript
+// apps/web/src/features/upload/services/linkDocument.spec.ts
+
+describe('linkDocument', () => {
+  let db: RxDatabase<DatabaseCollections>;
+
+  beforeEach(async () => { db = await createTestDatabase(); });
+  afterEach(async () => { await cleanupTestDatabase(db); });
+
+  describe('linkToClinicalDocument', () => {
+    it('adds clinical doc ID to links array', async () => {
+      const upload = createTestUpload();
+      await db.user_uploaded_documents.insert(upload);
+
+      await linkToClinicalDocument(db, upload.id, 'clinical-doc-1');
+
+      const updated = await db.user_uploaded_documents.findOne(upload.id).exec();
+      expect(updated?.linked_clinical_document_ids).toContain('clinical-doc-1');
+    });
+
+    it('does not duplicate existing links', async () => {
+      const upload = createTestUpload({ linked_clinical_document_ids: ['doc-1'] });
+      await db.user_uploaded_documents.insert(upload);
+
+      await linkToClinicalDocument(db, upload.id, 'doc-1');
+
+      const updated = await db.user_uploaded_documents.findOne(upload.id).exec();
+      expect(updated?.linked_clinical_document_ids).toHaveLength(1);
+    });
+
+    it('throws when upload not found', async () => {
+      await expect(
+        linkToClinicalDocument(db, 'non-existent', 'doc-1')
+      ).rejects.toThrow('Uploaded document not found');
+    });
+  });
+
+  describe('unlinkFromClinicalDocument', () => {
+    it('removes clinical doc ID from links array', async () => {
+      const upload = createTestUpload({ linked_clinical_document_ids: ['doc-1', 'doc-2'] });
+      await db.user_uploaded_documents.insert(upload);
+
+      await unlinkFromClinicalDocument(db, upload.id, 'doc-1');
+
+      const updated = await db.user_uploaded_documents.findOne(upload.id).exec();
+      expect(updated?.linked_clinical_document_ids).toEqual(['doc-2']);
+    });
+
+    it('handles non-existent upload gracefully', async () => {
+      await expect(
+        unlinkFromClinicalDocument(db, 'non-existent', 'doc-1')
+      ).resolves.not.toThrow();
+    });
+  });
+
+  describe('getLinkedUploads', () => {
+    it('returns uploads linked to clinical doc (full scan)', async () => {
+      const upload1 = createTestUpload({ linked_clinical_document_ids: ['target-doc'] });
+      const upload2 = createTestUpload({ linked_clinical_document_ids: ['other-doc'] });
+      const upload3 = createTestUpload({ linked_clinical_document_ids: ['target-doc'] });
+      await db.user_uploaded_documents.bulkInsert([upload1, upload2, upload3]);
+
+      const result = await getLinkedUploads(db, 'target-doc');
+
+      expect(result).toHaveLength(2);
+      expect(result.map(u => u.id).sort()).toEqual([upload1.id, upload3.id].sort());
+    });
+
+    it('returns empty array when no uploads linked', async () => {
+      const upload = createTestUpload({ linked_clinical_document_ids: ['other-doc'] });
+      await db.user_uploaded_documents.insert(upload);
+
+      const result = await getLinkedUploads(db, 'target-doc');
+
+      expect(result).toEqual([]);
+    });
+  });
+});
+```
+
+#### 2. Upload Service Tests
+
+```typescript
+// apps/web/src/features/upload/services/uploadDocument.spec.ts
+
+describe('uploadDocument', () => {
+  let db: RxDatabase<DatabaseCollections>;
+  let storage: StorageAdapter;
+
+  beforeEach(async () => {
+    db = await createTestDatabase();
+    storage = createMemoryAdapter();
+  });
+  afterEach(async () => { await cleanupTestDatabase(db); });
+
+  it('saves file to storage and creates DB record', async () => {
+    const file = createTestFile();
+
+    const result = await uploadDocument(db, storage, file, 'user-1', 'My Doc', '2024-01-15T00:00:00Z');
+
+    expect(result.id).toBeTruthy();
+    expect(result.metadata.display_name).toBe('My Doc');
+    expect(result.data_record.content_type).toBe('application/pdf');
+
+    const dbDoc = await db.user_uploaded_documents.findOne(result.id).exec();
+    expect(dbDoc).toBeTruthy();
+
+    const storedFile = await storage.read(result.data_record.opfs_path);
+    expect(storedFile).toBeTruthy();
+  });
+
+  it('rejects unsupported file types', async () => {
+    const file = createTestFile('test.exe', 'application/x-msdownload');
+
+    await expect(
+      uploadDocument(db, storage, file, 'user-1', 'Bad File', '2024-01-15T00:00:00Z')
+    ).rejects.toThrow('not supported');
+  });
+
+  it('cleans up storage if DB insert fails', async () => {
+    const file = createTestFile();
+    // Force DB failure by inserting duplicate
+    const existing = createTestUpload();
+    await db.user_uploaded_documents.insert(existing);
+
+    // Mock uuid4 to return same ID (would cause duplicate key)
+    jest.spyOn(require('../../../shared/utils/UUIDUtils'), 'default')
+      .mockReturnValueOnce(existing.id);
+
+    await expect(
+      uploadDocument(db, storage, file, 'user-1', 'Test', '2024-01-15T00:00:00Z')
+    ).rejects.toThrow();
+
+    // Storage should be cleaned up
+    const files = await storage.list();
+    expect(files).toHaveLength(0);
+  });
+});
+
+describe('deleteUploadedDocument', () => {
+  it('removes both DB record and storage file', async () => {
+    const db = await createTestDatabase();
+    const storage = createMemoryAdapter();
+    const upload = createTestUpload();
+    await db.user_uploaded_documents.insert(upload);
+    await storage.save(createTestFile(), upload.id);
+
+    await deleteUploadedDocument(db, storage, upload.id);
+
+    const dbDoc = await db.user_uploaded_documents.findOne(upload.id).exec();
+    expect(dbDoc).toBeNull();
+
+    const file = await storage.read(upload.data_record.opfs_path);
+    expect(file).toBeNull();
+
+    await cleanupTestDatabase(db);
+  });
+});
+```
+
+#### 3. Validation Tests
+
+```typescript
+// apps/web/src/features/upload/components/uploadValidation.spec.ts
+
+describe('uploadValidationSchema', () => {
+  it('passes with valid input', async () => {
+    const input = {
+      file: [createTestFile()] as unknown as FileList,
+      displayName: 'Test Doc',
+      documentDate: new Date('2024-01-15'),
+    };
+
+    await expect(uploadValidationSchema.validate(input)).resolves.toBeTruthy();
+  });
+
+  it('fails when file is missing', async () => {
+    const input = { displayName: 'Test', documentDate: new Date() };
+
+    await expect(uploadValidationSchema.validate(input)).rejects.toThrow('file');
+  });
+
+  it('fails when displayName is empty', async () => {
+    const input = {
+      file: [createTestFile()] as unknown as FileList,
+      displayName: '',
+      documentDate: new Date(),
+    };
+
+    await expect(uploadValidationSchema.validate(input)).rejects.toThrow('Display name');
+  });
+
+  it('fails when documentDate is missing', async () => {
+    const input = {
+      file: [createTestFile()] as unknown as FileList,
+      displayName: 'Test',
+    };
+
+    await expect(uploadValidationSchema.validate(input)).rejects.toThrow('date');
+  });
+});
+```
+
+#### 4. Export/Import Tests
+
+```typescript
+// apps/web/src/features/upload/services/exportImport.spec.ts
+
+describe('exportAsZip', () => {
+  let db: RxDatabase<DatabaseCollections>;
+  let storage: StorageAdapter;
+
+  beforeEach(async () => {
+    db = await createTestDatabase();
+    storage = createMemoryAdapter();
+  });
+  afterEach(async () => { await cleanupTestDatabase(db); });
+
+  it('creates ZIP with database.json and uploads folder', async () => {
+    const upload = createTestUpload();
+    await db.user_uploaded_documents.insert(upload);
+    await storage.save(createTestFile(), upload.id);
+
+    const blob = await exportAsZip(db, storage);
+
+    const zip = await JSZip.loadAsync(blob);
+    expect(zip.file('database.json')).toBeTruthy();
+    expect(zip.folder('uploads')).toBeTruthy();
+  });
+});
+
+describe('importBackup', () => {
+  it('imports v1 JSON format (backward compatible)', async () => {
+    const db = await createTestDatabase();
+    const jsonData = { collections: { user_documents: [{ id: 'u1', is_default_user: true }] } };
+    const file = new File([JSON.stringify(jsonData)], 'backup.json', { type: 'application/json' });
+
+    await importBackup(file, db, createMemoryAdapter());
+
+    const user = await db.user_documents.findOne('u1').exec();
+    expect(user).toBeTruthy();
+
+    await cleanupTestDatabase(db);
+  });
+
+  it('imports v2 ZIP format with uploads', async () => {
+    // Create a valid ZIP in memory
+    const zip = new JSZip();
+    zip.file('database.json', JSON.stringify({
+      collections: {
+        user_uploaded_documents: [{
+          id: 'upload-1',
+          user_id: 'u1',
+          data_record: { opfs_path: '/uploads/upload-1.pdf' },
+        }],
+      },
+    }));
+    zip.folder('uploads')?.file('upload-1.pdf', '%PDF-1.4 content');
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const file = new File([zipBlob], 'backup.zip', { type: 'application/zip' });
+
+    const db = await createTestDatabase();
+    const storage = createMemoryAdapter();
+
+    await importBackup(file, db, storage);
+
+    const uploadDoc = await db.user_uploaded_documents.findOne('upload-1').exec();
+    expect(uploadDoc).toBeTruthy();
+
+    const storedFile = await storage.read('/uploads/upload-1.pdf');
+    expect(storedFile).toBeTruthy();
+
+    await cleanupTestDatabase(db);
+  });
+
+  it('rejects invalid ZIP without database.json', async () => {
+    const zip = new JSZip();
+    zip.file('random.txt', 'not a database');
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const file = new File([zipBlob], 'bad.zip', { type: 'application/zip' });
+
+    const db = await createTestDatabase();
+
+    await expect(importBackup(file, db, createMemoryAdapter())).rejects.toThrow('missing database.json');
+
+    await cleanupTestDatabase(db);
+  });
+});
+```
+
+#### 5. Orphan Cleanup Tests
+
+```typescript
+// apps/web/src/features/upload/services/cleanupOrphans.spec.ts
+
+describe('cleanupOrphanedFiles', () => {
+  it('deletes storage files not referenced in DB', async () => {
+    const db = await createTestDatabase();
+    const storage = createMemoryAdapter();
+
+    // File in storage but not in DB
+    await storage.save(createTestFile(), 'orphan-id');
+
+    // File in both storage and DB
+    const upload = createTestUpload();
+    await db.user_uploaded_documents.insert(upload);
+    await storage.save(createTestFile(), upload.id);
+
+    await cleanupOrphanedFiles(db, storage);
+
+    const files = await storage.list();
+    expect(files).toHaveLength(1);
+    expect(files[0]).toContain(upload.id);
+
+    await cleanupTestDatabase(db);
+  });
+
+  it('preserves all files when no orphans exist', async () => {
+    const db = await createTestDatabase();
+    const storage = createMemoryAdapter();
+
+    const upload = createTestUpload();
+    await db.user_uploaded_documents.insert(upload);
+    await storage.save(createTestFile(), upload.id);
+
+    await cleanupOrphanedFiles(db, storage);
+
+    const files = await storage.list();
+    expect(files).toHaveLength(1);
+
+    await cleanupTestDatabase(db);
+  });
+});
+```
+
+### Summary
+
+| Component | Test File | Key Scenarios |
+|-----------|-----------|---------------|
+| Link Service | `linkDocument.spec.ts` | link, unlink, reverse lookup, not found |
+| Upload Service | `uploadDocument.spec.ts` | happy path, invalid type, cleanup on failure |
+| Validation | `uploadValidation.spec.ts` | valid input, missing fields |
+| Export/Import | `exportImport.spec.ts` | v1 JSON, v2 ZIP, invalid ZIP |
+| Orphan Cleanup | `cleanupOrphans.spec.ts` | remove orphans, preserve valid |
+
+---
+
 ## Browser Support
 
 | Browser | Minimum Version |
