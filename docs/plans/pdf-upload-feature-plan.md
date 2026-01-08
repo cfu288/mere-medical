@@ -212,26 +212,270 @@ The query "find uploads linked to a clinical document" requires a full collectio
 
 ---
 
-## Query Hook: `useUserUploadedDocuments`
+## Repository: `UserUploadedDocumentRepository`
 
-Encapsulates all query patterns following the existing `useRecordQuery` pattern.
+All data access goes through the repository, enforcing user-scoped queries. Follows the pattern established by `ConnectionRepository` and `UserRepository`.
+
+```typescript
+// apps/web/src/repositories/UserUploadedDocumentRepository.ts
+
+import { RxDatabase, RxDocument } from 'rxdb';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { DatabaseCollections } from '../app/providers/DatabaseCollections';
+import { UserUploadedDocument } from '../models/user-uploaded-document/UserUploadedDocument.type';
+
+// ============ Query Functions ============
+
+export async function findUploadById(
+  db: RxDatabase<DatabaseCollections>,
+  userId: string,
+  id: string,
+): Promise<UserUploadedDocument | null> {
+  const doc = await db.user_uploaded_documents
+    .findOne({ selector: { id } })
+    .exec();
+
+  if (!doc) return null;
+
+  if (doc.user_id !== userId) {
+    throw new Error(`Access denied: Upload ${id} belongs to different user`);
+  }
+
+  return doc.toJSON();
+}
+
+export async function findAllUploads(
+  db: RxDatabase<DatabaseCollections>,
+  userId: string,
+): Promise<UserUploadedDocument[]> {
+  const docs = await db.user_uploaded_documents
+    .find({
+      selector: { user_id: userId },
+      sort: [{ 'metadata.date': 'desc' }],
+    })
+    .exec();
+  return docs.map((doc) => doc.toJSON());
+}
+
+export async function findUploadsByContentType(
+  db: RxDatabase<DatabaseCollections>,
+  userId: string,
+  contentType: string,
+): Promise<UserUploadedDocument[]> {
+  const docs = await db.user_uploaded_documents
+    .find({
+      selector: {
+        user_id: userId,
+        'data_record.content_type': contentType,
+      },
+      sort: [{ 'metadata.date': 'desc' }],
+    })
+    .exec();
+  return docs.map((doc) => doc.toJSON());
+}
+
+/**
+ * Find uploads linked to a clinical document.
+ * Note: Performs full collection scan (RxDB doesn't support array indexes).
+ */
+export async function findUploadsLinkedTo(
+  db: RxDatabase<DatabaseCollections>,
+  userId: string,
+  clinicalDocId: string,
+): Promise<UserUploadedDocument[]> {
+  const allUploads = await db.user_uploaded_documents
+    .find({ selector: { user_id: userId } })
+    .exec();
+
+  return allUploads
+    .filter((doc) => doc.linked_clinical_document_ids?.includes(clinicalDocId))
+    .map((doc) => doc.toJSON());
+}
+
+export async function findUploadWithDoc(
+  db: RxDatabase<DatabaseCollections>,
+  userId: string,
+  id: string,
+): Promise<{
+  upload: UserUploadedDocument | null;
+  rawUpload: RxDocument<UserUploadedDocument> | null;
+}> {
+  const rawUpload = await db.user_uploaded_documents
+    .findOne({ selector: { id } })
+    .exec();
+
+  if (!rawUpload) {
+    return { upload: null, rawUpload: null };
+  }
+
+  if (rawUpload.user_id !== userId) {
+    throw new Error(`Access denied: Upload ${id} belongs to different user`);
+  }
+
+  return {
+    upload: rawUpload.toJSON(),
+    rawUpload: rawUpload as RxDocument<UserUploadedDocument>,
+  };
+}
+
+// ============ Reactive Functions ============
+
+export function watchAllUploads(
+  db: RxDatabase<DatabaseCollections>,
+  userId: string,
+): Observable<UserUploadedDocument[]> {
+  return db.user_uploaded_documents
+    .find({
+      selector: { user_id: userId },
+      sort: [{ 'metadata.date': 'desc' }],
+    })
+    .$.pipe(map((docs) => docs.map((doc) => doc.toJSON())));
+}
+
+export function watchUploadCount(
+  db: RxDatabase<DatabaseCollections>,
+  userId: string,
+): Observable<number> {
+  return db.user_uploaded_documents
+    .find({ selector: { user_id: userId } })
+    .$.pipe(map((docs) => docs.length));
+}
+
+// ============ Command Functions ============
+
+export async function insertUpload(
+  db: RxDatabase<DatabaseCollections>,
+  data: UserUploadedDocument,
+): Promise<RxDocument<UserUploadedDocument>> {
+  if (!data.user_id) {
+    throw new Error('Cannot create upload without user_id');
+  }
+  return db.user_uploaded_documents.insert(data);
+}
+
+export async function updateUploadLinks(
+  db: RxDatabase<DatabaseCollections>,
+  userId: string,
+  uploadId: string,
+  clinicalDocIds: string[],
+): Promise<void> {
+  const doc = await db.user_uploaded_documents
+    .findOne({ selector: { id: uploadId } })
+    .exec();
+
+  if (!doc) {
+    throw new Error(`Upload not found: ${uploadId}`);
+  }
+
+  if (doc.user_id !== userId) {
+    throw new Error(`Access denied: Upload ${uploadId} belongs to different user`);
+  }
+
+  await doc.update({
+    $set: { linked_clinical_document_ids: clinicalDocIds },
+  });
+}
+
+export async function addLink(
+  db: RxDatabase<DatabaseCollections>,
+  userId: string,
+  uploadId: string,
+  clinicalDocId: string,
+): Promise<void> {
+  const doc = await db.user_uploaded_documents
+    .findOne({ selector: { id: uploadId } })
+    .exec();
+
+  if (!doc) {
+    throw new Error(`Upload not found: ${uploadId}`);
+  }
+
+  if (doc.user_id !== userId) {
+    throw new Error(`Access denied: Upload ${uploadId} belongs to different user`);
+  }
+
+  const currentLinks = doc.linked_clinical_document_ids || [];
+  if (currentLinks.includes(clinicalDocId)) return;
+
+  await doc.update({
+    $set: { linked_clinical_document_ids: [...currentLinks, clinicalDocId] },
+  });
+}
+
+export async function removeLink(
+  db: RxDatabase<DatabaseCollections>,
+  userId: string,
+  uploadId: string,
+  clinicalDocId: string,
+): Promise<void> {
+  const doc = await db.user_uploaded_documents
+    .findOne({ selector: { id: uploadId } })
+    .exec();
+
+  if (!doc || doc.user_id !== userId) return;
+
+  const currentLinks = doc.linked_clinical_document_ids || [];
+  await doc.update({
+    $set: {
+      linked_clinical_document_ids: currentLinks.filter((id) => id !== clinicalDocId),
+    },
+  });
+}
+
+export async function removeUpload(
+  db: RxDatabase<DatabaseCollections>,
+  userId: string,
+  uploadId: string,
+): Promise<string | null> {
+  const doc = await db.user_uploaded_documents
+    .findOne({ selector: { id: uploadId } })
+    .exec();
+
+  if (!doc || doc.user_id !== userId) return null;
+
+  const opfsPath = doc.data_record.opfs_path;
+  await doc.remove();
+  return opfsPath; // Return path for storage cleanup
+}
+```
+
+---
+
+## Query Hooks
+
+Hooks use the repository for all data access.
 
 ```typescript
 // apps/web/src/features/upload/hooks/useUserUploadedDocuments.tsx
 
 import { useCallback, useEffect, useState } from 'react';
-import { RxDocument } from 'rxdb';
 import { useRxDb } from '../../../app/providers/RxDbProvider';
 import { useUser } from '../../../app/providers/UserProvider';
 import { UserUploadedDocument } from '../../../models/user-uploaded-document/UserUploadedDocument.type';
+import * as uploadRepo from '../../../repositories/UserUploadedDocumentRepository';
 
 type UploadsByDate = Record<string, UserUploadedDocument[]>;
 
 export type UploadQueryStatus = 'idle' | 'loading' | 'success' | 'error';
 
+function groupByDate(uploads: UserUploadedDocument[]): UploadsByDate {
+  const grouped: UploadsByDate = {};
+  for (const upload of uploads) {
+    const dateKey = upload.metadata.date
+      ? upload.metadata.date.split('T')[0]
+      : new Date(0).toISOString().split('T')[0];
+
+    if (!grouped[dateKey]) {
+      grouped[dateKey] = [];
+    }
+    grouped[dateKey].push(upload);
+  }
+  return grouped;
+}
+
 /**
  * Hook for querying user uploaded documents.
- * Follows the same pattern as useRecordQuery for clinical documents.
  */
 export function useUserUploadedDocuments(): {
   data: UploadsByDate;
@@ -246,27 +490,8 @@ export function useUserUploadedDocuments(): {
   const fetchUploads = useCallback(async () => {
     setStatus('loading');
     try {
-      const docs = await db.user_uploaded_documents
-        .find({
-          selector: { user_id: user.id },
-          sort: [{ 'metadata.date': 'desc' }],
-        })
-        .exec();
-
-      // Group by date (same pattern as clinical documents)
-      const grouped: UploadsByDate = {};
-      for (const doc of docs) {
-        const dateKey = doc.metadata.date
-          ? doc.metadata.date.split('T')[0]
-          : new Date(0).toISOString().split('T')[0];
-
-        if (!grouped[dateKey]) {
-          grouped[dateKey] = [];
-        }
-        grouped[dateKey].push(doc.toJSON() as UserUploadedDocument);
-      }
-
-      setData(grouped);
+      const uploads = await uploadRepo.findAllUploads(db, user.id);
+      setData(groupByDate(uploads));
       setStatus('success');
     } catch (error) {
       console.error('Failed to fetch uploads:', error);
@@ -283,7 +508,6 @@ export function useUserUploadedDocuments(): {
 
 /**
  * Get uploads linked to a specific clinical document.
- * Note: Performs full collection scan (no array index in RxDB).
  */
 export function useLinkedUploads(clinicalDocId: string | undefined): {
   uploads: UserUploadedDocument[];
@@ -303,17 +527,7 @@ export function useLinkedUploads(clinicalDocId: string | undefined): {
     const fetchLinked = async () => {
       setStatus('loading');
       try {
-        // Full scan - filter in memory (RxDB doesn't support array indexes)
-        const allUploads = await db.user_uploaded_documents
-          .find({ selector: { user_id: user.id } })
-          .exec();
-
-        const linked = allUploads
-          .filter((doc) =>
-            doc.linked_clinical_document_ids?.includes(clinicalDocId)
-          )
-          .map((doc) => doc.toJSON() as UserUploadedDocument);
-
+        const linked = await uploadRepo.findUploadsLinkedTo(db, user.id, clinicalDocId);
         setUploads(linked);
         setStatus('success');
       } catch (error) {
@@ -330,7 +544,7 @@ export function useLinkedUploads(clinicalDocId: string | undefined): {
 
 /**
  * Get clinical documents linked FROM an uploaded document.
- * Direct ID lookup - efficient.
+ * Note: Uses clinical_documents collection directly (not part of upload repository).
  */
 export function useLinkedClinicalDocs(uploadedDoc: UserUploadedDocument | undefined): {
   clinicalDocs: any[]; // ClinicalDocument type
@@ -349,6 +563,7 @@ export function useLinkedClinicalDocs(uploadedDoc: UserUploadedDocument | undefi
     const fetchLinked = async () => {
       setStatus('loading');
       try {
+        // Direct query on clinical_documents (outside upload repository scope)
         const docs = await db.clinical_documents
           .find({
             selector: {
@@ -504,16 +719,17 @@ export async function listOPFSFiles(): Promise<string[]> {
 
 ## Upload Service
 
-Uses existing utilities: `uuid4()` from `UUIDUtils.ts`, `getFileFromFileList()` from `FileUtils.ts`.
+Orchestrates storage + repository. Uses `uuid4()` from `UUIDUtils.ts`.
 
 ```typescript
-// apps/web/src/features/upload/services/uploadDocument.ts
+// apps/web/src/features/upload/services/uploadService.ts
 
 import { RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../../../app/providers/DatabaseCollections';
 import { UserUploadedDocument } from '../../../models/user-uploaded-document/UserUploadedDocument.type';
 import uuid4 from '../../../shared/utils/UUIDUtils';
 import { checkOPFSSupport, saveFileToOPFS, deleteFileFromOPFS } from './opfsStorage';
+import * as uploadRepo from '../../../repositories/UserUploadedDocumentRepository';
 
 const SUPPORTED_TYPES = ['application/pdf'];
 
@@ -557,8 +773,8 @@ export async function uploadDocument(
   try {
     opfsPath = await saveFileToOPFS(file, id);
 
-    // 4. Create metadata record (aligned with clinical_documents structure)
-    const doc = await db.user_uploaded_documents.insert({
+    // 4. Create metadata record via repository
+    const doc = await uploadRepo.insertUpload(db, {
       id,
       user_id: userId,
       metadata: {
@@ -576,7 +792,7 @@ export async function uploadDocument(
 
     return doc.toJSON() as UserUploadedDocument;
   } catch (error) {
-    // Cleanup OPFS if IndexedDB insert failed
+    // Cleanup OPFS if repository insert failed
     if (opfsPath) {
       await deleteFileFromOPFS(opfsPath);
     }
@@ -586,18 +802,15 @@ export async function uploadDocument(
 
 export async function deleteUploadedDocument(
   db: RxDatabase<DatabaseCollections>,
+  userId: string,
   documentId: string
 ): Promise<void> {
-  const doc = await db.user_uploaded_documents.findOne(documentId).exec();
-  if (!doc) return;
+  // Repository handles user check and returns opfs path for cleanup
+  const opfsPath = await uploadRepo.removeUpload(db, userId, documentId);
 
-  const opfsPath = doc.data_record.opfs_path;
-
-  // Delete from IndexedDB first
-  await doc.remove();
-
-  // Then delete from OPFS
-  await deleteFileFromOPFS(opfsPath);
+  if (opfsPath) {
+    await deleteFileFromOPFS(opfsPath);
+  }
 }
 ```
 
@@ -1129,66 +1342,6 @@ export function UploadDocumentModal({ open, onClose, onSuccess }: UploadDocument
 
 ---
 
-## Link Service
-
-```typescript
-// apps/web/src/features/upload/services/linkDocument.ts
-
-import { RxDatabase } from 'rxdb';
-import { DatabaseCollections } from '../../../app/providers/DatabaseCollections';
-import { UserUploadedDocument } from '../../../models/user-uploaded-document/UserUploadedDocument.type';
-
-export async function linkToClinicalDocument(
-  db: RxDatabase<DatabaseCollections>,
-  uploadedDocId: string,
-  clinicalDocId: string
-): Promise<void> {
-  const doc = await db.user_uploaded_documents.findOne(uploadedDocId).exec();
-  if (!doc) throw new Error('Uploaded document not found');
-
-  const currentLinks = doc.linked_clinical_document_ids || [];
-  if (currentLinks.includes(clinicalDocId)) return;
-
-  await doc.update({
-    $set: {
-      linked_clinical_document_ids: [...currentLinks, clinicalDocId],
-    },
-  });
-}
-
-export async function unlinkFromClinicalDocument(
-  db: RxDatabase<DatabaseCollections>,
-  uploadedDocId: string,
-  clinicalDocId: string
-): Promise<void> {
-  const doc = await db.user_uploaded_documents.findOne(uploadedDocId).exec();
-  if (!doc) return;
-
-  const currentLinks = doc.linked_clinical_document_ids || [];
-  await doc.update({
-    $set: {
-      linked_clinical_document_ids: currentLinks.filter((id) => id !== clinicalDocId),
-    },
-  });
-}
-
-/**
- * Get all uploaded documents linked to a clinical document.
- * Note: Performs full collection scan (RxDB doesn't support array indexes).
- */
-export async function getLinkedUploads(
-  db: RxDatabase<DatabaseCollections>,
-  clinicalDocId: string
-): Promise<UserUploadedDocument[]> {
-  const allUploads = await db.user_uploaded_documents.find().exec();
-  return allUploads
-    .filter((doc) => doc.linked_clinical_document_ids?.includes(clinicalDocId))
-    .map((doc) => doc.toJSON() as UserUploadedDocument);
-}
-```
-
----
-
 ## Orphan Cleanup
 
 Run on app initialization to clean up orphaned OPFS files.
@@ -1248,15 +1401,20 @@ apps/web/src/
 │       ├── UserUploadedDocument.collection.ts
 │       └── UserUploadedDocument.migration.ts
 │
+├── repositories/
+│   ├── UserUploadedDocumentRepository.ts   # All DB access (query, command, reactive)
+│   └── UserUploadedDocumentRepository.spec.ts
+│
 ├── features/
 │   ├── upload/
 │   │   ├── components/
 │   │   │   ├── UploadDocumentModal.tsx
 │   │   │   └── uploadValidation.ts
+│   │   ├── hooks/
+│   │   │   └── useUserUploadedDocuments.tsx  # Uses repository
 │   │   └── services/
 │   │       ├── opfsStorage.ts
-│   │       ├── uploadDocument.ts
-│   │       ├── linkDocument.ts
+│   │       ├── uploadService.ts       # Orchestrates storage + repository
 │   │       ├── exportService.ts       # ZIP export
 │   │       ├── importService.ts       # ZIP/JSON import
 │   │       └── cleanupOrphans.ts
@@ -1273,12 +1431,13 @@ apps/web/src/
 │       │   ├── layout/
 │       │   │   └── TimelineItem.tsx  (modified)
 │       │   └── LinkDocumentModal.tsx
-│       └── hooks/
-│           └── useUserUploadedDocuments.ts
+│
+├── test-utils/
+│   └── uploadTestData.ts              # Test factories
 │
 └── app/providers/
-    ├── RxDbProvider.tsx       (modified for import)
-    └── DatabaseCollections.ts (modified)
+    ├── RxDbProvider.tsx               (modified for collection registration)
+    └── DatabaseCollections.ts         (modified)
 ```
 
 ---
@@ -1373,83 +1532,166 @@ export function createMultipleUploads(
 
 ### Test Files
 
-#### 1. Link Service Tests
+#### 1. Repository Tests
 
 ```typescript
-// apps/web/src/features/upload/services/linkDocument.spec.ts
+// apps/web/src/repositories/UserUploadedDocumentRepository.spec.ts
 
-describe('linkDocument', () => {
+import * as uploadRepo from './UserUploadedDocumentRepository';
+
+describe('UserUploadedDocumentRepository', () => {
   let db: RxDatabase<DatabaseCollections>;
 
   beforeEach(async () => { db = await createTestDatabase(); });
   afterEach(async () => { await cleanupTestDatabase(db); });
 
-  describe('linkToClinicalDocument', () => {
-    it('adds clinical doc ID to links array', async () => {
-      const upload = createTestUpload();
-      await db.user_uploaded_documents.insert(upload);
+  describe('query functions', () => {
+    describe('findUploadById', () => {
+      it('returns upload when found', async () => {
+        const upload = createTestUpload();
+        await db.user_uploaded_documents.insert(upload);
 
-      await linkToClinicalDocument(db, upload.id, 'clinical-doc-1');
+        const result = await uploadRepo.findUploadById(db, upload.user_id, upload.id);
 
-      const updated = await db.user_uploaded_documents.findOne(upload.id).exec();
-      expect(updated?.linked_clinical_document_ids).toContain('clinical-doc-1');
+        expect(result).toBeTruthy();
+        expect(result?.id).toBe(upload.id);
+      });
+
+      it('returns null when not found', async () => {
+        const result = await uploadRepo.findUploadById(db, 'user-1', 'non-existent');
+        expect(result).toBeNull();
+      });
+
+      it('enforces user isolation', async () => {
+        const upload = createTestUpload({ user_id: 'userA' });
+        await db.user_uploaded_documents.insert(upload);
+
+        await expect(
+          uploadRepo.findUploadById(db, 'userB', upload.id)
+        ).rejects.toThrow('Access denied');
+      });
     });
 
-    it('does not duplicate existing links', async () => {
-      const upload = createTestUpload({ linked_clinical_document_ids: ['doc-1'] });
-      await db.user_uploaded_documents.insert(upload);
+    describe('findAllUploads', () => {
+      it('returns all uploads for user sorted by date desc', async () => {
+        const uploads = createMultipleUploads(3, 'userA');
+        await db.user_uploaded_documents.bulkInsert(uploads);
 
-      await linkToClinicalDocument(db, upload.id, 'doc-1');
+        const result = await uploadRepo.findAllUploads(db, 'userA');
 
-      const updated = await db.user_uploaded_documents.findOne(upload.id).exec();
-      expect(updated?.linked_clinical_document_ids).toHaveLength(1);
+        expect(result).toHaveLength(3);
+      });
+
+      it('only returns uploads for specified user', async () => {
+        const uploadsA = createMultipleUploads(2, 'userA');
+        const uploadsB = createMultipleUploads(2, 'userB');
+        await db.user_uploaded_documents.bulkInsert([...uploadsA, ...uploadsB]);
+
+        const result = await uploadRepo.findAllUploads(db, 'userA');
+
+        expect(result).toHaveLength(2);
+        expect(result.every((u) => u.user_id === 'userA')).toBe(true);
+      });
     });
 
-    it('throws when upload not found', async () => {
-      await expect(
-        linkToClinicalDocument(db, 'non-existent', 'doc-1')
-      ).rejects.toThrow('Uploaded document not found');
+    describe('findUploadsLinkedTo', () => {
+      it('returns uploads linked to clinical doc (full scan)', async () => {
+        const upload1 = createTestUpload({ user_id: 'userA', linked_clinical_document_ids: ['target-doc'] });
+        const upload2 = createTestUpload({ user_id: 'userA', linked_clinical_document_ids: ['other-doc'] });
+        const upload3 = createTestUpload({ user_id: 'userA', linked_clinical_document_ids: ['target-doc'] });
+        await db.user_uploaded_documents.bulkInsert([upload1, upload2, upload3]);
+
+        const result = await uploadRepo.findUploadsLinkedTo(db, 'userA', 'target-doc');
+
+        expect(result).toHaveLength(2);
+        expect(result.map((u) => u.id).sort()).toEqual([upload1.id, upload3.id].sort());
+      });
+
+      it('returns empty array when no uploads linked', async () => {
+        const result = await uploadRepo.findUploadsLinkedTo(db, 'userA', 'target-doc');
+        expect(result).toEqual([]);
+      });
     });
   });
 
-  describe('unlinkFromClinicalDocument', () => {
-    it('removes clinical doc ID from links array', async () => {
-      const upload = createTestUpload({ linked_clinical_document_ids: ['doc-1', 'doc-2'] });
-      await db.user_uploaded_documents.insert(upload);
+  describe('command functions', () => {
+    describe('addLink', () => {
+      it('adds clinical doc ID to links array', async () => {
+        const upload = createTestUpload();
+        await db.user_uploaded_documents.insert(upload);
 
-      await unlinkFromClinicalDocument(db, upload.id, 'doc-1');
+        await uploadRepo.addLink(db, upload.user_id, upload.id, 'clinical-doc-1');
 
-      const updated = await db.user_uploaded_documents.findOne(upload.id).exec();
-      expect(updated?.linked_clinical_document_ids).toEqual(['doc-2']);
+        const updated = await db.user_uploaded_documents.findOne(upload.id).exec();
+        expect(updated?.linked_clinical_document_ids).toContain('clinical-doc-1');
+      });
+
+      it('does not duplicate existing links', async () => {
+        const upload = createTestUpload({ linked_clinical_document_ids: ['doc-1'] });
+        await db.user_uploaded_documents.insert(upload);
+
+        await uploadRepo.addLink(db, upload.user_id, upload.id, 'doc-1');
+
+        const updated = await db.user_uploaded_documents.findOne(upload.id).exec();
+        expect(updated?.linked_clinical_document_ids).toHaveLength(1);
+      });
+
+      it('throws when upload not found', async () => {
+        await expect(
+          uploadRepo.addLink(db, 'user-1', 'non-existent', 'doc-1')
+        ).rejects.toThrow('Upload not found');
+      });
+
+      it('enforces user isolation', async () => {
+        const upload = createTestUpload({ user_id: 'userA' });
+        await db.user_uploaded_documents.insert(upload);
+
+        await expect(
+          uploadRepo.addLink(db, 'userB', upload.id, 'doc-1')
+        ).rejects.toThrow('Access denied');
+      });
     });
 
-    it('handles non-existent upload gracefully', async () => {
-      await expect(
-        unlinkFromClinicalDocument(db, 'non-existent', 'doc-1')
-      ).resolves.not.toThrow();
-    });
-  });
+    describe('removeLink', () => {
+      it('removes clinical doc ID from links array', async () => {
+        const upload = createTestUpload({ linked_clinical_document_ids: ['doc-1', 'doc-2'] });
+        await db.user_uploaded_documents.insert(upload);
 
-  describe('getLinkedUploads', () => {
-    it('returns uploads linked to clinical doc (full scan)', async () => {
-      const upload1 = createTestUpload({ linked_clinical_document_ids: ['target-doc'] });
-      const upload2 = createTestUpload({ linked_clinical_document_ids: ['other-doc'] });
-      const upload3 = createTestUpload({ linked_clinical_document_ids: ['target-doc'] });
-      await db.user_uploaded_documents.bulkInsert([upload1, upload2, upload3]);
+        await uploadRepo.removeLink(db, upload.user_id, upload.id, 'doc-1');
 
-      const result = await getLinkedUploads(db, 'target-doc');
+        const updated = await db.user_uploaded_documents.findOne(upload.id).exec();
+        expect(updated?.linked_clinical_document_ids).toEqual(['doc-2']);
+      });
 
-      expect(result).toHaveLength(2);
-      expect(result.map(u => u.id).sort()).toEqual([upload1.id, upload3.id].sort());
+      it('handles non-existent upload gracefully', async () => {
+        await expect(
+          uploadRepo.removeLink(db, 'user-1', 'non-existent', 'doc-1')
+        ).resolves.not.toThrow();
+      });
     });
 
-    it('returns empty array when no uploads linked', async () => {
-      const upload = createTestUpload({ linked_clinical_document_ids: ['other-doc'] });
-      await db.user_uploaded_documents.insert(upload);
+    describe('removeUpload', () => {
+      it('removes upload and returns opfs path for cleanup', async () => {
+        const upload = createTestUpload();
+        await db.user_uploaded_documents.insert(upload);
 
-      const result = await getLinkedUploads(db, 'target-doc');
+        const opfsPath = await uploadRepo.removeUpload(db, upload.user_id, upload.id);
 
-      expect(result).toEqual([]);
+        expect(opfsPath).toBe(upload.data_record.opfs_path);
+        const deleted = await db.user_uploaded_documents.findOne(upload.id).exec();
+        expect(deleted).toBeNull();
+      });
+
+      it('returns null when user isolation prevents delete', async () => {
+        const upload = createTestUpload({ user_id: 'userA' });
+        await db.user_uploaded_documents.insert(upload);
+
+        const result = await uploadRepo.removeUpload(db, 'userB', upload.id);
+
+        expect(result).toBeNull();
+        const stillExists = await db.user_uploaded_documents.findOne(upload.id).exec();
+        expect(stillExists).toBeTruthy();
+      });
     });
   });
 });
@@ -1714,7 +1956,7 @@ describe('cleanupOrphanedFiles', () => {
 
 | Component | Test File | Key Scenarios |
 |-----------|-----------|---------------|
-| Link Service | `linkDocument.spec.ts` | link, unlink, reverse lookup, not found |
+| Repository | `UserUploadedDocumentRepository.spec.ts` | queries, link/unlink, user isolation, not found |
 | Upload Service | `uploadDocument.spec.ts` | happy path, invalid type, cleanup on failure |
 | Validation | `uploadValidation.spec.ts` | valid input, missing fields |
 | Export/Import | `exportImport.spec.ts` | v1 JSON, v2 ZIP, invalid ZIP |
