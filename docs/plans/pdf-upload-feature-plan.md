@@ -68,71 +68,29 @@ import { UserUploadedDocument } from './UserUploadedDocument.type';
 
 export const UserUploadedDocumentSchemaLiteral = {
   title: 'User Uploaded Document Schema',
-  description: 'Metadata for documents manually uploaded by the user. File binary stored in OPFS.',
   version: 0,
   primaryKey: 'id',
   type: 'object',
   properties: {
-    id: {
-      type: 'string',
-      maxLength: 128,
-      description: 'Unique identifier (UUID)',
-    },
-    user_id: {
-      type: 'string',
-      maxLength: 128,
-      ref: 'user_documents',
-      description: 'The user who uploaded this document',
-    },
+    id: { type: 'string', maxLength: 128 },
+    user_id: { type: 'string', maxLength: 128, ref: 'user_documents' },
     metadata: {
       type: 'object',
-      description: 'User-facing display information (aligned with clinical_documents.metadata)',
       properties: {
-        date: {
-          type: 'string',
-          format: 'date-time',
-          maxLength: 128,
-          description: 'User-specified effective date (same as clinical_documents.metadata.date)',
-        },
-        display_name: {
-          type: 'string',
-          description: 'User-provided name (same as clinical_documents.metadata.display_name)',
-        },
+        date: { type: 'string', format: 'date-time', maxLength: 128 },
+        display_name: { type: 'string' },
       },
     },
     data_record: {
       type: 'object',
-      description: 'File content information (aligned with clinical_documents.data_record)',
       properties: {
-        content_type: {
-          type: 'string',
-          maxLength: 128,
-          description: 'MIME type (application/pdf, application/dicom, etc.)',
-        },
-        file_name: {
-          type: 'string',
-          description: 'Original filename',
-        },
-        file_size: {
-          type: 'number',
-          description: 'File size in bytes',
-        },
-        opfs_path: {
-          type: 'string',
-          description: 'Path to file in OPFS',
-        },
+        content_type: { type: 'string', maxLength: 128 },
+        file_name: { type: 'string' },
+        opfs_path: { type: 'string' },
       },
     },
-    upload_date: {
-      type: 'string',
-      format: 'date-time',
-      description: 'When the document was uploaded (distinct from metadata.date)',
-    },
-    linked_clinical_document_ids: {
-      type: 'array',
-      items: { type: 'string' },
-      description: 'IDs of linked clinical documents (not indexed - full scan on query)',
-    },
+    upload_date: { type: 'string', format: 'date-time' },
+    linked_clinical_document_ids: { type: 'array', items: { type: 'string' } },
   },
   required: ['id', 'user_id', 'metadata', 'data_record', 'upload_date'],
   indexes: ['user_id', 'metadata.date', 'data_record.content_type'],
@@ -157,7 +115,6 @@ export interface UserUploadedDocument {
   data_record: {
     content_type: string;
     file_name: string;
-    file_size: number;
     opfs_path: string;
   };
   upload_date: string;
@@ -611,7 +568,6 @@ export async function uploadDocument(
       data_record: {
         content_type: file.type,
         file_name: file.name,
-        file_size: file.size,
         opfs_path: opfsPath,
       },
       upload_date: new Date().toISOString(),
@@ -651,10 +607,9 @@ export async function deleteUploadedDocument(
 
 ### New Dependency
 
-Add JSZip for client-side ZIP handling:
+Add zip.js for client-side ZIP handling with streaming support:
 ```bash
-npm install jszip
-npm install -D @types/jszip
+npm install @zip.js/zip.js
 ```
 
 ### Export Format
@@ -683,39 +638,87 @@ mere_export_2024-01-15.zip
 ```typescript
 // apps/web/src/features/upload/services/exportService.ts
 
-import JSZip from 'jszip';
+import { BlobWriter, ZipWriter, BlobReader, TextReader } from '@zip.js/zip.js';
 import { RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../../../app/providers/DatabaseCollections';
 import { readFileFromOPFS } from './opfsStorage';
 
 /**
- * Export database and uploaded files as a ZIP
+ * Check if File System Access API is supported (Chrome/Edge)
+ */
+function supportsFileSystemAccess(): boolean {
+  return 'showSaveFilePicker' in window;
+}
+
+/**
+ * Export with streaming to disk (Chrome/Edge) - handles 5GB+ exports
+ */
+export async function exportWithStreaming(
+  db: RxDatabase<DatabaseCollections>
+): Promise<void> {
+  const fileName = `mere_export_${new Date().toISOString().split('T')[0]}.zip`;
+
+  // Get a file handle from the user
+  const fileHandle = await (window as any).showSaveFilePicker({
+    suggestedName: fileName,
+    types: [{ description: 'ZIP Archive', accept: { 'application/zip': ['.zip'] } }],
+  });
+
+  const writable = await fileHandle.createWritable();
+  const zipWriter = new ZipWriter(writable);
+
+  try {
+    // 1. Export RxDB data as JSON
+    const dbExport = await db.exportJSON();
+    await zipWriter.add('database.json', new TextReader(JSON.stringify(dbExport, null, 2)));
+
+    // 2. Stream OPFS files directly to ZIP
+    const uploads = await db.user_uploaded_documents?.find().exec() || [];
+
+    for (const upload of uploads) {
+      const file = await readFileFromOPFS(upload.data_record.opfs_path);
+      if (file) {
+        const fileName = upload.data_record.opfs_path.split('/').pop() || `${upload.id}.pdf`;
+        await zipWriter.add(`uploads/${fileName}`, new BlobReader(file));
+      }
+    }
+
+    await zipWriter.close();
+  } catch (error) {
+    await zipWriter.close();
+    throw error;
+  }
+}
+
+/**
+ * Export to Blob (Firefox/Safari fallback) - memory limited
  */
 export async function exportAsZip(
   db: RxDatabase<DatabaseCollections>
 ): Promise<Blob> {
-  const zip = new JSZip();
+  const blobWriter = new BlobWriter('application/zip');
+  const zipWriter = new ZipWriter(blobWriter);
 
   // 1. Export RxDB data as JSON
   const dbExport = await db.exportJSON();
-  zip.file('database.json', JSON.stringify(dbExport, null, 2));
+  await zipWriter.add('database.json', new TextReader(JSON.stringify(dbExport, null, 2)));
 
   // 2. Add OPFS files to uploads/ folder
   const uploads = await db.user_uploaded_documents?.find().exec() || [];
-  const uploadsFolder = zip.folder('uploads');
 
   for (const upload of uploads) {
     const file = await readFileFromOPFS(upload.data_record.opfs_path);
-    if (file && uploadsFolder) {
-      // Get filename from opfs_path (e.g., "/uploads/uuid.pdf" -> "uuid.pdf")
+    if (file) {
       const fileName = upload.data_record.opfs_path.split('/').pop() || `${upload.id}.pdf`;
-      uploadsFolder.file(fileName, file);
+      await zipWriter.add(`uploads/${fileName}`, new BlobReader(file));
     }
   }
 
-  // 3. Generate ZIP blob
-  return zip.generateAsync({ type: 'blob' });
+  await zipWriter.close();
+  return blobWriter.getData();
 }
+
+export { supportsFileSystemAccess };
 ```
 
 ### Import Service
@@ -723,7 +726,7 @@ export async function exportAsZip(
 ```typescript
 // apps/web/src/features/upload/services/importService.ts
 
-import JSZip from 'jszip';
+import { BlobReader, ZipReader, TextWriter, BlobWriter } from '@zip.js/zip.js';
 import { RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../../../app/providers/DatabaseCollections';
 import { databaseCollections } from '../../../app/providers/RxDbProvider';
@@ -752,47 +755,49 @@ async function importFromZip(
   file: File,
   db: RxDatabase<DatabaseCollections>
 ): Promise<string> {
-  const zip = await JSZip.loadAsync(file);
+  const zipReader = new ZipReader(new BlobReader(file));
+  const entries = await zipReader.getEntries();
 
   // 1. Extract and parse database.json
-  const dbFile = zip.file('database.json');
-  if (!dbFile) {
+  const dbEntry = entries.find((e) => e.filename === 'database.json');
+  if (!dbEntry || !dbEntry.getData) {
+    await zipReader.close();
     throw new Error('Invalid backup: missing database.json');
   }
-  const dbJsonString = await dbFile.async('string');
+
+  const dbJsonString = await dbEntry.getData(new TextWriter());
   const dbData = JSON.parse(dbJsonString);
 
   // 2. Import RxDB data
   await Promise.all(Object.values(db.collections).map((col) => col?.remove()));
   await db.addCollections<DatabaseCollections>(databaseCollections);
 
-  const importResult = await db.importJSON(dbData);
-  // ... handle errors from importResult ...
+  await db.importJSON(dbData);
 
   // 3. Restore OPFS files
+  let uploadCount = 0;
   if (checkOPFSSupport()) {
     const uploadDocs = await db.user_uploaded_documents?.find().exec() || [];
-    const uploadsFolder = zip.folder('uploads');
+    const uploadEntries = entries.filter((e) => e.filename.startsWith('uploads/'));
 
-    if (uploadsFolder) {
-      for (const doc of uploadDocs) {
-        // Get filename from opfs_path
-        const fileName = doc.data_record.opfs_path.split('/').pop();
-        if (!fileName) continue;
+    for (const doc of uploadDocs) {
+      const fileName = doc.data_record.opfs_path.split('/').pop();
+      if (!fileName) continue;
 
-        const zipFile = uploadsFolder.file(fileName);
-        if (zipFile) {
-          const blob = await zipFile.async('blob');
-          const restoredFile = new File([blob], doc.data_record.file_name, {
-            type: doc.data_record.content_type,
-          });
-          await saveFileToOPFS(restoredFile, doc.id);
-        }
+      const zipEntry = uploadEntries.find((e) => e.filename === `uploads/${fileName}`);
+      if (zipEntry && zipEntry.getData) {
+        const blob = await zipEntry.getData(new BlobWriter());
+        const restoredFile = new File([blob], doc.data_record.file_name, {
+          type: doc.data_record.content_type,
+        });
+        await saveFileToOPFS(restoredFile, doc.id);
+        uploadCount++;
       }
     }
   }
 
-  return `Successfully imported backup with ${uploadDocs?.length || 0} uploaded files`;
+  await zipReader.close();
+  return `Successfully imported backup with ${uploadCount} uploaded files`;
 }
 
 /**
@@ -807,8 +812,7 @@ async function importFromJSON(
   await Promise.all(Object.values(db.collections).map((col) => col?.remove()));
   await db.addCollections<DatabaseCollections>(databaseCollections);
 
-  const importResult = await db.importJSON(dbData);
-  // ... handle errors from importResult ...
+  await db.importJSON(dbData);
 
   return 'Successfully imported backup';
 }
@@ -819,23 +823,53 @@ async function importFromJSON(
 ```typescript
 // Modify apps/web/src/features/settings/components/UserDataSettingsGroup.tsx
 
-import { exportAsZip } from '../../upload/services/exportService';
+import {
+  exportAsZip,
+  exportWithStreaming,
+  supportsFileSystemAccess,
+} from '../../upload/services/exportService';
 import { importBackup } from '../../upload/services/importService';
 
 // Export handler
 export const exportData = async (
   db: RxDatabase<DatabaseCollections>,
   setFileDownloadLink: (blob: string) => void,
+  notifyDispatch: NotificationDispatch,
 ) => {
-  // Check if user has uploaded documents
   const uploads = await db.user_uploaded_documents?.find().exec() || [];
 
   if (uploads.length > 0) {
     // v2: Export as ZIP with uploaded files
-    const zipBlob = await exportAsZip(db);
-    const blobUrl = URL.createObjectURL(zipBlob);
-    setFileDownloadLink(blobUrl);
-    return blobUrl;
+    if (supportsFileSystemAccess()) {
+      // Chrome/Edge: Stream directly to disk (handles 5GB+)
+      await exportWithStreaming(db);
+      notifyDispatch({
+        type: 'set_notification',
+        message: 'Export saved successfully',
+        variant: 'success',
+      });
+      return null; // No blob URL - file was saved via picker
+    } else {
+      // Firefox/Safari: Load into memory (show warning for large exports)
+      const totalSize = uploads.reduce((acc, u) => {
+        // Estimate size - actual file size not stored
+        return acc + 1; // Count files instead
+      }, 0);
+
+      if (totalSize > 50) {
+        // More than 50 files - warn user
+        notifyDispatch({
+          type: 'set_notification',
+          message: 'Large export may be slow. Consider using Chrome for better performance.',
+          variant: 'warning',
+        });
+      }
+
+      const zipBlob = await exportAsZip(db);
+      const blobUrl = URL.createObjectURL(zipBlob);
+      setFileDownloadLink(blobUrl);
+      return blobUrl;
+    }
   } else {
     // v1: Export as JSON only (no uploaded files)
     const dbExport = await db.exportJSON();
