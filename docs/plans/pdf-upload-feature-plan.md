@@ -10,7 +10,7 @@ Users who have medical records from providers not covered by supported integrati
 
 ## Requirements
 
-1. Users can upload PDF documents
+1. Users can upload PDF documents (future: DICOM and other large files)
 2. At upload, user provides: **display name** and **effective date** (document date)
 3. Uploaded PDFs appear as **independent items** on the timeline, sorted by effective date
 4. From existing timeline cards, users can **link uploaded documents** via search
@@ -28,15 +28,55 @@ Users who have medical records from providers not covered by supported integrati
 - **Encryption**: Data can be optionally encrypted using a user-provided password (SylvieJS)
 - **Existing Pattern**: PDFs from FHIR servers are stored as base64 strings in `clinical_documents` with `resource_type: 'documentreference_attachment'`
 
-### Design Decision: New Collection
+### Design Decision: OPFS for File Storage
 
-Create a **new `user_uploaded_documents` collection** rather than reusing `clinical_documents`.
+Store uploaded files in **OPFS (Origin Private File System)** rather than base64 in IndexedDB.
 
 **Rationale**:
-1. `clinical_documents` requires a `connection_record_id` (foreign key to a FHIR connection) which user uploads don't have
-2. The primary key is composite: `connection_record_id|user_id|metadata.id` - not suitable for user uploads
-3. Separating user-uploaded content from synced FHIR data maintains data integrity
-4. Cleaner data management and querying
+1. **Large file support**: DICOM and medical imaging files can be hundreds of MB
+2. **No encoding overhead**: Binary files stored natively (no 33% base64 bloat)
+3. **Better performance**: Large files don't impact RxDB query performance
+4. **Streaming support**: Can read files without loading entirely into memory
+5. **No per-record limits**: OPFS handles large files better than IndexedDB
+
+**Trade-offs**:
+1. **Encryption**: Must handle separately (not automatic like SylvieJS)
+2. **Backup/Export**: Need custom logic to include OPFS files
+3. **Complexity**: Two storage systems to coordinate
+4. **Data integrity**: Must keep IndexedDB refs and OPFS files in sync
+
+### Design Decision: Embedded Array for Links (No Junction Table)
+
+Store links as an **embedded array** on `user_uploaded_documents` rather than a separate junction collection.
+
+**Rationale**:
+1. **NoSQL pattern**: Embedding is idiomatic for document databases
+2. **Non-atomic writes**: RxDB doesn't support atomic transactions across collections - a junction table could result in orphaned records if writes fail
+3. **Simpler deletion**: Deleting an upload removes all its links automatically
+4. **Single query**: Find linked uploads with one query instead of join
+
+**Trade-off**:
+- Querying "all uploads linked to clinical doc X" requires scanning the array field
+- Acceptable given expected data volumes (users won't have thousands of uploads)
+
+### Storage Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Browser Storage                       │
+├─────────────────────────┬───────────────────────────────┤
+│      IndexedDB (RxDB)   │         OPFS                  │
+│                         │                               │
+│  user_uploaded_documents│  /uploads/                    │
+│  ┌───────────────────┐  │  ├── {uuid1}.pdf              │
+│  │ id: uuid1         │  │  ├── {uuid2}.pdf              │
+│  │ opfs_path: /upl...│──┼──├── {uuid3}.dcm  (future)    │
+│  │ content_type: ... │  │  └── ...                      │
+│  │ display_name: ... │  │                               │
+│  │ linked_to: [...]  │  │                               │
+│  └───────────────────┘  │                               │
+└─────────────────────────┴───────────────────────────────┘
+```
 
 ---
 
@@ -52,7 +92,7 @@ Create a **new `user_uploaded_documents` collection** rather than reusing `clini
 export const userUploadedDocumentSchemaLiteral = {
   title: 'User Uploaded Document Schema',
   name: 'user_uploaded_documents',
-  description: 'Documents manually uploaded by the user (PDFs, images, etc.)',
+  description: 'Metadata for documents manually uploaded by the user. File binary stored in OPFS.',
   version: 0,
   primaryKey: 'id',
   type: 'object',
@@ -82,11 +122,12 @@ export const userUploadedDocumentSchemaLiteral = {
     content_type: {
       type: 'string',
       maxLength: 128,
-      description: 'MIME type (e.g., application/pdf, image/jpeg)',
+      description: 'MIME type (e.g., application/pdf, application/dicom, image/jpeg)',
     },
-    data: {
+    opfs_path: {
       type: 'string',
-      description: 'Base64-encoded file content',
+      maxLength: 512,
+      description: 'Path to the file in OPFS (e.g., /uploads/{uuid}.pdf)',
     },
     upload_date: {
       type: 'string',
@@ -105,12 +146,21 @@ export const userUploadedDocumentSchemaLiteral = {
       maxLength: 255,
       description: 'User-provided name for the document',
     },
+    linked_clinical_document_ids: {
+      type: 'array',
+      items: {
+        type: 'string',
+        maxLength: 128,
+      },
+      description: 'Array of clinical_documents IDs this upload is linked to',
+    },
   },
-  required: ['id', 'user_id', 'file_name', 'content_type', 'data', 'upload_date', 'document_date', 'display_name'],
+  required: ['id', 'user_id', 'file_name', 'file_size', 'content_type', 'opfs_path', 'upload_date', 'document_date', 'display_name'],
   indexes: [
     'user_id',
     'document_date',
     'upload_date',
+    'content_type',
   ],
 } as const;
 ```
@@ -125,11 +175,12 @@ export interface UserUploadedDocument {
   user_id: string;
   file_name: string;
   file_size: number;
-  content_type: string;
-  data: string;  // Base64-encoded
+  content_type: string;  // MIME type: 'application/pdf', 'application/dicom', etc.
+  opfs_path: string;     // Path in OPFS: '/uploads/{uuid}.pdf'
   upload_date: string;
   document_date: string;
   display_name: string;
+  linked_clinical_document_ids?: string[];  // IDs of linked clinical documents
 }
 
 export type CreateUserUploadedDocument = Omit<UserUploadedDocument, 'id'>;
@@ -137,79 +188,183 @@ export type CreateUserUploadedDocument = Omit<UserUploadedDocument, 'id'>;
 
 ---
 
-## Linking Strategy: Junction Collection
+## OPFS Implementation
 
-To support many-to-many linking between clinical documents and uploaded documents, create a **junction collection**.
-
-### New Collection: `clinical_document_links`
+### OPFS Service
 
 ```typescript
-// apps/web/src/models/clinical-document-link/ClinicalDocumentLink.schema.ts
+// apps/web/src/features/upload/services/opfsStorage.ts
 
-export const clinicalDocumentLinkSchemaLiteral = {
-  title: 'Clinical Document Link Schema',
-  name: 'clinical_document_links',
-  description: 'Links between clinical documents and user-uploaded documents',
-  version: 0,
-  primaryKey: {
-    key: 'id',
-    fields: ['clinical_document_id', 'uploaded_document_id'],
-    separator: '|',
-  },
-  type: 'object',
-  properties: {
-    id: {
-      type: 'string',
-      maxLength: 256,
-      description: 'Composite key: clinical_document_id|uploaded_document_id',
-    },
-    clinical_document_id: {
-      type: 'string',
-      maxLength: 128,
-      ref: 'clinical_documents',
-      description: 'The clinical document being linked from',
-    },
-    uploaded_document_id: {
-      type: 'string',
-      format: 'uuid',
-      maxLength: 128,
-      ref: 'user_uploaded_documents',
-      description: 'The uploaded document being linked to',
-    },
-    user_id: {
-      type: 'string',
-      format: 'uuid',
-      maxLength: 128,
-      ref: 'user_documents',
-      description: 'The user who created this link',
-    },
-    created_at: {
-      type: 'string',
-      format: 'date-time',
-      maxLength: 128,
-      description: 'When the link was created',
-    },
-  },
-  required: ['id', 'clinical_document_id', 'uploaded_document_id', 'user_id', 'created_at'],
-  indexes: [
-    'clinical_document_id',
-    'uploaded_document_id',
-    'user_id',
-  ],
-} as const;
+const UPLOADS_DIR = 'uploads';
+
+/**
+ * Initialize OPFS directory structure
+ */
+export async function initOPFS(): Promise<FileSystemDirectoryHandle> {
+  const root = await navigator.storage.getDirectory();
+  const uploadsDir = await root.getDirectoryHandle(UPLOADS_DIR, { create: true });
+  return uploadsDir;
+}
+
+/**
+ * Save a file to OPFS
+ * @returns The OPFS path where the file was saved
+ */
+export async function saveFileToOPFS(
+  file: File,
+  documentId: string
+): Promise<string> {
+  const uploadsDir = await initOPFS();
+  const extension = getFileExtension(file.name);
+  const fileName = `${documentId}${extension}`;
+  const opfsPath = `/${UPLOADS_DIR}/${fileName}`;
+
+  const fileHandle = await uploadsDir.getFileHandle(fileName, { create: true });
+  const writable = await fileHandle.createWritable();
+  await writable.write(file);
+  await writable.close();
+
+  return opfsPath;
+}
+
+/**
+ * Read a file from OPFS
+ * @returns File object or null if not found
+ */
+export async function readFileFromOPFS(opfsPath: string): Promise<File | null> {
+  try {
+    const root = await navigator.storage.getDirectory();
+    const pathParts = opfsPath.split('/').filter(Boolean);
+
+    let currentDir = root;
+    for (let i = 0; i < pathParts.length - 1; i++) {
+      currentDir = await currentDir.getDirectoryHandle(pathParts[i]);
+    }
+
+    const fileName = pathParts[pathParts.length - 1];
+    const fileHandle = await currentDir.getFileHandle(fileName);
+    return await fileHandle.getFile();
+  } catch (error) {
+    console.error('Error reading file from OPFS:', error);
+    return null;
+  }
+}
+
+/**
+ * Delete a file from OPFS
+ */
+export async function deleteFileFromOPFS(opfsPath: string): Promise<void> {
+  try {
+    const root = await navigator.storage.getDirectory();
+    const pathParts = opfsPath.split('/').filter(Boolean);
+
+    let currentDir = root;
+    for (let i = 0; i < pathParts.length - 1; i++) {
+      currentDir = await currentDir.getDirectoryHandle(pathParts[i]);
+    }
+
+    const fileName = pathParts[pathParts.length - 1];
+    await currentDir.removeEntry(fileName);
+  } catch (error) {
+    console.error('Error deleting file from OPFS:', error);
+  }
+}
+
+/**
+ * Get a blob URL for displaying a file
+ */
+export async function getFileUrl(opfsPath: string): Promise<string | null> {
+  const file = await readFileFromOPFS(opfsPath);
+  if (!file) return null;
+  return URL.createObjectURL(file);
+}
+
+function getFileExtension(fileName: string): string {
+  const lastDot = fileName.lastIndexOf('.');
+  return lastDot !== -1 ? fileName.substring(lastDot) : '';
+}
 ```
 
-#### TypeScript Interface
+### Supported Content Types
+
+For MVP, only PDF is supported. Schema allows future expansion:
+
+| Content Type | Extension | Status |
+|--------------|-----------|--------|
+| `application/pdf` | `.pdf` | MVP |
+| `application/dicom` | `.dcm` | Future |
+| `image/jpeg` | `.jpg`, `.jpeg` | Future |
+| `image/png` | `.png` | Future |
+
+---
+
+## Linking Strategy: Embedded Array
+
+Links are stored as an array of clinical document IDs on the uploaded document.
+
+### Link Operations
 
 ```typescript
-// apps/web/src/models/clinical-document-link/ClinicalDocumentLink.type.ts
+// apps/web/src/features/upload/services/linkDocument.ts
 
-export interface ClinicalDocumentLink {
-  id: string;  // Composite: clinical_document_id|uploaded_document_id
-  clinical_document_id: string;
-  uploaded_document_id: string;
-  user_id: string;
-  created_at: string;
+/**
+ * Link an uploaded document to a clinical document
+ */
+export async function linkToClinicalDocument(
+  db: RxDatabase<DatabaseCollections>,
+  uploadedDocId: string,
+  clinicalDocId: string
+): Promise<void> {
+  const doc = await db.user_uploaded_documents.findOne(uploadedDocId).exec();
+  if (!doc) throw new Error('Uploaded document not found');
+
+  const currentLinks = doc.linked_clinical_document_ids || [];
+  if (currentLinks.includes(clinicalDocId)) return; // Already linked
+
+  await doc.update({
+    $set: {
+      linked_clinical_document_ids: [...currentLinks, clinicalDocId],
+    },
+  });
+}
+
+/**
+ * Unlink an uploaded document from a clinical document
+ */
+export async function unlinkFromClinicalDocument(
+  db: RxDatabase<DatabaseCollections>,
+  uploadedDocId: string,
+  clinicalDocId: string
+): Promise<void> {
+  const doc = await db.user_uploaded_documents.findOne(uploadedDocId).exec();
+  if (!doc) return;
+
+  const currentLinks = doc.linked_clinical_document_ids || [];
+  await doc.update({
+    $set: {
+      linked_clinical_document_ids: currentLinks.filter(id => id !== clinicalDocId),
+    },
+  });
+}
+
+/**
+ * Get all uploaded documents linked to a clinical document
+ */
+export async function getLinkedUploads(
+  db: RxDatabase<DatabaseCollections>,
+  clinicalDocId: string
+): Promise<UserUploadedDocument[]> {
+  const results = await db.user_uploaded_documents
+    .find({
+      selector: {
+        linked_clinical_document_ids: {
+          $elemMatch: clinicalDocId,
+        },
+      },
+    })
+    .exec();
+
+  return results.map(doc => doc.toJSON());
 }
 ```
 
@@ -230,33 +385,22 @@ export interface ClinicalDocumentLink {
 └─────────────────────┘                                  │
          ▲                                               │
          │                                               │
-         │ user_id (FK)                                  │ user_id (FK)
+         │ user_id (FK)                                  │
          │                                               │
 ┌────────┴────────────────┐                              │
 │ user_uploaded_documents │                              │
 │─────────────────────────│                              │
-│ id (PK, UUID)           │◄──────────┐                  │
-│ user_id (FK)            │           │                  │
-│ file_name               │           │                  │
-│ content_type            │           │ uploaded_        │
-│ data (base64)           │           │ document_id      │
-│ document_date           │           │                  │
-│ display_name            │           │                  │
-└─────────────────────────┘           │                  │
-                                      │                  │
-                    ┌─────────────────┴──────────────────┤
-                    │  clinical_document_links           │
-                    │────────────────────────────────────│
-                    │ id (PK, composite)                 │
-                    │ clinical_document_id (FK) ─────────┼──┐
-                    │ uploaded_document_id (FK)          │  │
-                    │ user_id (FK) ──────────────────────┘  │
-                    │ created_at                            │
-                    └───────────────────────────────────────┤
-                                                            │
-                               ┌────────────────────────────┘
-                               │ clinical_document_id (FK)
-                               ▼
+│ id (PK, UUID)           │                              │
+│ user_id (FK) ───────────┼──────────────────────────────┘
+│ file_name               │
+│ content_type            │
+│ opfs_path ──────────────┼── OPFS
+│ document_date           │
+│ display_name            │
+│ linked_clinical_doc_ids │──────────┐
+└─────────────────────────┘          │
+                                     │ Array of IDs (embedded)
+                                     ▼
                   ┌─────────────────────────┐
                   │   clinical_documents    │
                   │─────────────────────────│
@@ -273,14 +417,8 @@ export interface ClinicalDocumentLink {
 | From | Field | To | Type |
 |------|-------|-----|------|
 | `user_uploaded_documents` | `user_id` | `user_documents.id` | Many-to-One |
-| `clinical_document_links` | `clinical_document_id` | `clinical_documents.id` | Many-to-One |
-| `clinical_document_links` | `uploaded_document_id` | `user_uploaded_documents.id` | Many-to-One |
-| `clinical_document_links` | `user_id` | `user_documents.id` | Many-to-One |
-
-### Many-to-Many via Junction
-
-- One **clinical document** can link to **many uploaded documents** (via multiple rows in `clinical_document_links`)
-- One **uploaded document** can be linked from **many clinical documents** (via multiple rows in `clinical_document_links`)
+| `user_uploaded_documents` | `opfs_path` | OPFS file system | Reference |
+| `user_uploaded_documents` | `linked_clinical_document_ids[]` | `clinical_documents.id` | Many-to-Many (embedded) |
 
 ---
 
@@ -301,8 +439,10 @@ Upload modal opens
     ▼
 User clicks "Upload"
     │
-    ▼
-Document saved to user_uploaded_documents
+    ├── 1. Generate UUID for document
+    ├── 2. Save file to OPFS: /uploads/{uuid}.pdf
+    ├── 3. Create metadata record in user_uploaded_documents
+    └── 4. Record contains opfs_path reference
     │
     ▼
 Document appears on timeline at effective date
@@ -326,25 +466,28 @@ Search modal opens showing user's uploaded documents
 User clicks "Link"
     │
     ▼
-Rows created in clinical_document_links
+Each selected upload's linked_clinical_document_ids array updated
     │
     ▼
 Clinical card now shows linked documents
 ```
 
-### Workflow 3: View Linked Documents
+### Workflow 3: View Uploaded Document
 
 ```
-User expands a clinical card
+User clicks on uploaded document card
     │
     ▼
-Card shows "Linked Documents" section
-    │
-    ├── Lists all linked uploaded documents
-    └── Each shows: display name, date, thumbnail/icon
+System reads opfs_path from metadata
     │
     ▼
-User can click to view, or unlink
+System fetches file from OPFS
+    │
+    ▼
+System creates blob URL
+    │
+    ▼
+PDF displayed in iframe viewer
 ```
 
 ---
@@ -375,7 +518,7 @@ When a clinical card is expanded, it shows any linked uploaded documents:
 │ [Lab result details...]                 │
 │                                         │
 │ ─────────────────────────────────────── │
-│ 📎 Linked Documents:                    │
+│ Linked Documents:                       │
 │   • Lab Report Addendum (Jan 15)  [×]   │
 │   • Doctor Notes Scan (Jan 14)    [×]   │
 │                                         │
@@ -387,23 +530,91 @@ When a clinical card is expanded, it shows any linked uploaded documents:
 
 ## Storage Considerations
 
+### OPFS Benefits
+
+| Aspect | OPFS Approach |
+|--------|---------------|
+| Storage overhead | None (native binary) |
+| Large file support | Excellent (streaming) |
+| Query performance | Unaffected (metadata only in RxDB) |
+| Memory usage | Low (files loaded on demand) |
+
 ### File Size Limits
 
 | Constraint | Value |
 |------------|-------|
-| Per-file limit | 50 MB |
+| Per-file limit | 200 MB (can increase for DICOM) |
 | Warning threshold | Show warning when storage > 80% |
 
-### Why Base64 in RxDB?
+### Browser Support
 
-1. **Consistency**: Matches existing pattern for `documentreference_attachment`
-2. **Encryption**: Works seamlessly with SylvieJS encryption
-3. **Backup/Export**: JSON export includes all data
-4. **Simplicity**: No separate file system handling
+OPFS is supported in:
+- Chrome 86+
+- Edge 86+
+- Safari 15.2+
+- Firefox 111+
 
-### Storage Overhead
+For unsupported browsers, show an error message indicating the feature requires a modern browser.
 
-Base64 encoding increases file size by ~33%. A 10MB PDF becomes ~13.3MB in storage.
+---
+
+## Backup & Export Considerations
+
+Since OPFS files are separate from IndexedDB, backup/export needs special handling:
+
+### Export Strategy
+
+```typescript
+export async function exportWithUploads(
+  db: RxDatabase<DatabaseCollections>
+): Promise<Blob> {
+  // 1. Export RxDB data as JSON
+  const dbExport = await db.exportJSON();
+
+  // 2. Get all uploaded document metadata
+  const uploads = await db.user_uploaded_documents.find().exec();
+
+  // 3. Read each file from OPFS and include as base64 in export
+  const filesData = await Promise.all(
+    uploads.map(async (doc) => {
+      const file = await readFileFromOPFS(doc.opfs_path);
+      if (!file) return null;
+      const base64 = await fileToBase64(file);
+      return { id: doc.id, data: base64 };
+    })
+  );
+
+  // 4. Create combined export object
+  const fullExport = {
+    database: dbExport,
+    uploadedFiles: filesData.filter(Boolean),
+  };
+
+  return new Blob([JSON.stringify(fullExport)], { type: 'application/json' });
+}
+```
+
+### Import Strategy
+
+```typescript
+export async function importWithUploads(
+  db: RxDatabase<DatabaseCollections>,
+  exportData: { database: any; uploadedFiles: { id: string; data: string }[] }
+): Promise<void> {
+  // 1. Import RxDB data
+  await db.importJSON(exportData.database);
+
+  // 2. Restore files to OPFS
+  for (const fileData of exportData.uploadedFiles) {
+    const doc = await db.user_uploaded_documents.findOne(fileData.id).exec();
+    if (doc) {
+      const blob = base64ToBlob(fileData.data, doc.content_type);
+      const file = new File([blob], doc.file_name, { type: doc.content_type });
+      await saveFileToOPFS(file, doc.id);
+    }
+  }
+}
+```
 
 ---
 
@@ -419,58 +630,20 @@ Create files in `apps/web/src/models/user-uploaded-document/`:
 - `UserUploadedDocument.collection.ts`
 - `UserUploadedDocument.migration.ts`
 
-#### Step 1.2: Create ClinicalDocumentLink Model
+#### Step 1.2: Register Collection
 
-Create files in `apps/web/src/models/clinical-document-link/`:
-- `ClinicalDocumentLink.schema.ts`
-- `ClinicalDocumentLink.type.ts`
-- `ClinicalDocumentLink.collection.ts`
-- `ClinicalDocumentLink.migration.ts`
+Update `apps/web/src/app/providers/RxDbProvider.tsx` and `DatabaseCollections.ts`.
 
-#### Step 1.3: Register Collections
+### Phase 2: OPFS Storage Layer
 
-Update `apps/web/src/app/providers/RxDbProvider.tsx`:
+#### Step 2.1: Create OPFS Service
 
-```typescript
-import { UserUploadedDocumentSchema } from '../../models/user-uploaded-document/UserUploadedDocument.collection';
-import { ClinicalDocumentLinkSchema } from '../../models/clinical-document-link/ClinicalDocumentLink.collection';
-
-export const databaseCollections = {
-  // ... existing collections
-  user_uploaded_documents: {
-    schema: UserUploadedDocumentSchema,
-    migrationStrategies: {},
-  },
-  clinical_document_links: {
-    schema: ClinicalDocumentLinkSchema,
-    migrationStrategies: {},
-  },
-};
-```
-
-Update `apps/web/src/app/providers/DatabaseCollections.ts`:
-
-```typescript
-import { UserUploadedDocumentCollection } from '../../models/user-uploaded-document/UserUploadedDocument.collection';
-import { ClinicalDocumentLinkCollection } from '../../models/clinical-document-link/ClinicalDocumentLink.collection';
-
-export type DatabaseCollections = {
-  // ... existing collections
-  user_uploaded_documents: UserUploadedDocumentCollection;
-  clinical_document_links: ClinicalDocumentLinkCollection;
-};
-```
-
-### Phase 2: Upload Feature
-
-#### Step 2.1: Create Upload Modal
-
-Create `apps/web/src/features/upload/components/UploadDocumentModal.tsx`:
-- File input (accept: `.pdf`)
-- Display name input (required)
-- Document date picker (required)
-- File size validation (< 50MB)
-- Upload button
+Create `apps/web/src/features/upload/services/opfsStorage.ts`:
+- `initOPFS()` - Initialize directory structure
+- `saveFileToOPFS()` - Save file, return path
+- `readFileFromOPFS()` - Read file by path
+- `deleteFileFromOPFS()` - Delete file
+- `getFileUrl()` - Get blob URL for display
 
 #### Step 2.2: Create Upload Service
 
@@ -484,107 +657,103 @@ export async function uploadDocument(
   displayName: string,
   documentDate: string
 ): Promise<UserUploadedDocument> {
-  // 1. Validate file size (< 50MB)
-  // 2. Read file as base64 using FileReader
-  // 3. Generate UUID for document
-  // 4. Create document object
-  // 5. Insert into user_uploaded_documents collection
-  // 6. Return created document
+  // 1. Validate file type (PDF only for MVP)
+  if (file.type !== 'application/pdf') {
+    throw new Error('Only PDF files are supported');
+  }
+
+  // 2. Validate file size (< 200MB)
+  if (file.size > 200 * 1024 * 1024) {
+    throw new Error('File size must be less than 200MB');
+  }
+
+  // 3. Generate UUID
+  const id = crypto.randomUUID();
+
+  // 4. Save to OPFS
+  const opfsPath = await saveFileToOPFS(file, id);
+
+  // 5. Create metadata record
+  const doc = await db.user_uploaded_documents.insert({
+    id,
+    user_id: userId,
+    file_name: file.name,
+    file_size: file.size,
+    content_type: file.type,
+    opfs_path: opfsPath,
+    upload_date: new Date().toISOString(),
+    document_date: documentDate,
+    display_name: displayName,
+    linked_clinical_document_ids: [],
+  });
+
+  return doc.toJSON();
 }
 ```
 
-### Phase 3: Timeline Integration
+### Phase 3: Upload UI
 
-#### Step 3.1: Query Hook for Uploaded Documents
+#### Step 3.1: Create Upload Modal
 
-Create `apps/web/src/features/timeline/hooks/useUserUploadedDocuments.ts`:
-- Query `user_uploaded_documents` for current user
-- Return documents sorted by `document_date`
+Create `apps/web/src/features/upload/components/UploadDocumentModal.tsx`:
+- File input (accept: `.pdf`)
+- Display name input (required)
+- Document date picker (required)
+- File size validation
+- Upload progress indicator
+- Error handling
 
-#### Step 3.2: Merge with Timeline
+### Phase 4: Timeline Integration
 
-Update timeline query logic to:
-- Fetch both `clinical_documents` and `user_uploaded_documents`
-- Merge and sort by date
-- Distinguish uploaded docs with a flag or wrapper type
+#### Step 4.1: Query Hook
 
-#### Step 3.3: Create Upload Card Component
+Create `apps/web/src/features/timeline/hooks/useUserUploadedDocuments.ts`
 
-Create `apps/web/src/features/timeline/components/cards/UserUploadedDocumentCard.tsx`:
-- PDF icon
-- Display name
-- Effective date
-- Visual indicator that it's user-uploaded (e.g., "Uploaded" badge)
-- Click to expand/view
+#### Step 4.2: Upload Card Component
 
-#### Step 3.4: Create Expandable Viewer
+Create `apps/web/src/features/timeline/components/cards/UserUploadedDocumentCard.tsx`
+
+#### Step 4.3: Expandable Viewer
 
 Create `apps/web/src/features/timeline/components/expandables/ShowUserUploadedDocumentExpandable.tsx`:
-- PDF viewer (iframe-based)
-- Display metadata (name, date, file size)
-- Edit button (rename, change date)
-- Delete button with confirmation
-- Download button
+- Fetch file from OPFS via `opfs_path`
+- Create blob URL
+- Display in iframe
 
-#### Step 3.5: Update TimelineItem
+#### Step 4.4: Update TimelineItem
 
-Update `apps/web/src/features/timeline/components/layout/TimelineItem.tsx` to render `UserUploadedDocumentCard` for uploaded documents.
+Modify `TimelineItem.tsx` to render uploaded document cards.
 
-### Phase 4: Linking Feature
+### Phase 5: Linking Feature
 
-#### Step 4.1: Link Document Modal
+#### Step 5.1: Link Service
+
+Create `apps/web/src/features/upload/services/linkDocument.ts`:
+- `linkToClinicalDocument()` - Add clinical doc ID to array
+- `unlinkFromClinicalDocument()` - Remove clinical doc ID from array
+- `getLinkedUploads()` - Query uploads linked to a clinical doc
+
+#### Step 5.2: Link Document Modal
 
 Create `apps/web/src/features/timeline/components/LinkDocumentModal.tsx`:
 - Search input to filter uploaded documents by display name
 - List of matching uploaded documents
 - Checkbox selection for multiple links
-- "Link" button to create links
+- "Link" button
 
-#### Step 4.2: Link Service
+#### Step 5.3: Update Clinical Card Expandables
 
-Create `apps/web/src/features/timeline/services/linkDocument.ts`:
+Add "Linked Documents" section and "Link Document" button to existing expandables.
 
-```typescript
-export async function linkDocument(
-  db: RxDatabase<DatabaseCollections>,
-  clinicalDocumentId: string,
-  uploadedDocumentId: string,
-  userId: string
-): Promise<ClinicalDocumentLink> {
-  // Create row in clinical_document_links
-}
+### Phase 6: Backup/Export Update
 
-export async function unlinkDocument(
-  db: RxDatabase<DatabaseCollections>,
-  clinicalDocumentId: string,
-  uploadedDocumentId: string
-): Promise<void> {
-  // Delete row from clinical_document_links
-}
+#### Step 6.1: Update Export Function
 
-export async function getLinkedDocuments(
-  db: RxDatabase<DatabaseCollections>,
-  clinicalDocumentId: string
-): Promise<UserUploadedDocument[]> {
-  // Query clinical_document_links for this clinical doc
-  // Fetch corresponding uploaded documents
-}
-```
+Modify backup export to include OPFS files (converted to base64 for portability).
 
-#### Step 4.3: Add Link UI to Clinical Cards
+#### Step 6.2: Update Import Function
 
-Update existing clinical card expandables to:
-- Show "Linked Documents" section
-- Display linked uploaded docs with unlink button
-- Add "Link Document" button that opens LinkDocumentModal
-
-### Phase 5: UI Entry Points
-
-#### Step 5.1: Upload Button in Timeline
-
-Add upload button to Timeline header/toolbar:
-- Icon: Upload or Plus icon
-- Opens UploadDocumentModal
+Modify backup import to restore OPFS files from base64.
 
 ---
 
@@ -593,17 +762,11 @@ Add upload button to Timeline header/toolbar:
 ```
 apps/web/src/
 ├── models/
-│   ├── user-uploaded-document/
-│   │   ├── UserUploadedDocument.schema.ts
-│   │   ├── UserUploadedDocument.type.ts
-│   │   ├── UserUploadedDocument.collection.ts
-│   │   └── UserUploadedDocument.migration.ts
-│   │
-│   └── clinical-document-link/
-│       ├── ClinicalDocumentLink.schema.ts
-│       ├── ClinicalDocumentLink.type.ts
-│       ├── ClinicalDocumentLink.collection.ts
-│       └── ClinicalDocumentLink.migration.ts
+│   └── user-uploaded-document/
+│       ├── UserUploadedDocument.schema.ts
+│       ├── UserUploadedDocument.type.ts
+│       ├── UserUploadedDocument.collection.ts
+│       └── UserUploadedDocument.migration.ts
 │
 ├── features/
 │   ├── upload/
@@ -612,7 +775,9 @@ apps/web/src/
 │   │   ├── hooks/
 │   │   │   └── useUploadDocument.ts
 │   │   └── services/
-│   │       └── uploadDocument.ts
+│   │       ├── opfsStorage.ts          # OPFS operations
+│   │       ├── uploadDocument.ts       # Upload orchestration
+│   │       └── linkDocument.ts         # Link/unlink operations
 │   │
 │   └── timeline/
 │       ├── components/
@@ -623,10 +788,8 @@ apps/web/src/
 │       │   ├── layout/
 │       │   │   └── TimelineItem.tsx  (modified)
 │       │   └── LinkDocumentModal.tsx
-│       ├── hooks/
-│       │   └── useUserUploadedDocuments.ts
-│       └── services/
-│           └── linkDocument.ts
+│       └── hooks/
+│           └── useUserUploadedDocuments.ts
 │
 └── app/
     └── providers/
@@ -639,9 +802,9 @@ apps/web/src/
 ## No Backend Changes Required
 
 The feature is entirely client-side:
-- Files stored in browser IndexedDB
+- Metadata stored in browser IndexedDB (RxDB)
+- Files stored in browser OPFS
 - No server-side storage needed
-- Data automatically included in backup/export
 
 ---
 
@@ -649,34 +812,37 @@ The feature is entirely client-side:
 
 ### Unit Tests
 - Schema validation
+- OPFS service functions
+- File type validation
 - File size validation
-- Base64 encoding/decoding
-- Link/unlink operations
-- Composite key generation for links
+- Link/unlink array operations
 
 ### Integration Tests
-- Upload flow end-to-end
-- Timeline display with mixed document types
-- Link creation and display
-- Backup/restore with uploaded documents and links
+- Upload flow: file → OPFS + metadata
+- Read flow: metadata → OPFS → display
+- Delete flow: remove metadata + OPFS file
+- Link/unlink flow: array updates
+- Backup/restore with uploaded files
 
 ### E2E Tests (Playwright)
 - Upload a PDF with display name and date
-- Verify PDF appears on timeline at correct date
+- Verify PDF appears on timeline
+- Open and view PDF
 - Link uploaded document from clinical card
-- View linked documents on clinical card
 - Unlink document
 - Delete uploaded document
+- Export and import with uploads
 
 ---
 
 ## Success Metrics
 
-- Users can upload PDF files up to 50MB
+- Users can upload PDF files up to 200MB
 - Upload requires display name and effective date
 - Uploaded documents appear on timeline at effective date
+- Files stored in OPFS (not base64 in IndexedDB)
 - Users can link uploaded docs to clinical cards via search
 - Linked documents display on clinical card when expanded
 - Documents persist across browser sessions
-- Documents included in backup exports
-- Works with encrypted database mode
+- Documents included in backup exports (converted to base64 for portability)
+- Works with modern browsers (Chrome 86+, Edge 86+, Safari 15.2+, Firefox 111+)
