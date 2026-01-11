@@ -1930,13 +1930,187 @@ apps/web/src/
 
 ---
 
+## Implementation Order
+
+Follow TDD where possible: target a feature, write tests, implement, validate, then move up the dependency tree.
+
+### Dependency Tree
+
+```
+Level 0 (Foundation - no deps)
+├── ClinicalDocument.type.ts (discriminated union, type guards)
+├── ClinicalDocument.schema.ts (JSON Schema with oneOf)
+└── ClinicalDocument.migration.ts
+
+Level 1 (Storage - no upload deps)
+├── opfsStorage.ts (low-level OPFS operations)
+└── storageAdapter.ts (interface + adapters)
+
+Level 2 (Repository - depends on types)
+└── ClinicalDocumentRepository.ts (query/command functions)
+
+Level 3 (Services - depends on repository + storage)
+├── uploadService.ts
+├── cleanupOrphans.ts
+├── exportService.ts
+└── importService.ts
+
+Level 4 (Hooks - depends on repository)
+└── useUploadedDocuments.tsx (and related hooks)
+
+Level 5 (Timeline Infrastructure - depends on types)
+├── TimelineRecord.ts (normalization)
+└── cardRegistry.tsx
+
+Level 6 (UI Components - depends on everything)
+├── UploadDocumentModal.tsx
+├── UploadedDocumentCard.tsx
+├── ShowUploadedDocumentExpandable.tsx
+└── LinkDocumentModal.tsx
+```
+
+### Phase 1: Schema Migration (Breaking Change)
+
+This must happen first because it changes the shape of existing data.
+
+**1.1 Types + Type Guards**
+- Target: `ClinicalDocument.type.ts`
+- Implement: `DocumentSource` union, type guards, helpers
+- Test: Type guard functions return correct boolean
+
+**1.2 Schema**
+- Target: `ClinicalDocument.schema.ts`
+- Implement: JSON Schema with `oneOf` for source
+- Test: Schema validates both source types
+
+**1.3 Migration**
+- Target: `ClinicalDocument.migration.ts`
+- Implement: Transform `connection_record_id` → `source` object
+- Validate: Manual testing during development
+
+**1.4 Existing Code Updates**
+- Target: ~30 files that reference `connection_record_id`
+- Replace `connection_record_id` with `source.connection_record_id`
+- Validate: All existing tests pass, app boots
+
+### Phase 2: Storage Layer
+
+Can be developed in parallel with Phase 1.
+
+**2.1 OPFS Storage**
+- Target: `opfsStorage.ts`
+- Implement: `saveFileToOPFS`, `readFileFromOPFS`, `deleteFileFromOPFS`, `listOPFSFiles`
+- Validate: Manual browser console testing (no unit tests - browser API)
+
+**2.2 Storage Adapter**
+- Target: `storageAdapter.ts`
+- Implement: `StorageAdapter` interface, `createOPFSAdapter`, `createMemoryAdapter`
+- Test: Memory adapter save/read/delete/list
+
+### Phase 3: Repository
+
+Depends on: Phase 1 (types)
+
+**3.1 Query Functions**
+- Target: `ClinicalDocumentRepository.ts`
+- Implement: `findAllUploads`, `findUploadById`, `findUploadsLinkedTo`, `findByIds`
+- Test: Returns correct documents, user isolation, source type filtering
+
+**3.2 Command Functions**
+- Target: `ClinicalDocumentRepository.ts`
+- Implement: `insertUpload`, `addLink`, `removeLink`, `removeUpload`
+- Test: Creates/updates/deletes correctly, user isolation, returns opfs path
+
+### Phase 4: Services
+
+Depends on: Phase 2 (storage), Phase 3 (repository)
+
+**4.1 Upload Service**
+- Target: `uploadService.ts`
+- Implement: `uploadDocument`, `deleteUploadedDocument`
+- Test: Creates document with file_upload source, rejects bad types, cleanup on failure
+
+**4.2 Orphan Cleanup**
+- Target: `cleanupOrphans.ts`
+- Implement: `cleanupOrphanedFiles`
+- Test: Deletes orphans, preserves valid files
+
+**4.3 Export/Import Services**
+- Target: `exportService.ts`, `importService.ts`
+- Implement: ZIP export with uploads, v1/v2 import
+- Test: v1 JSON import, v2 ZIP import, invalid ZIP rejection
+
+### Phase 5: Timeline Infrastructure
+
+Depends on: Phase 1 (types)
+
+**5.1 TimelineRecord Normalization**
+- Target: `TimelineRecord.ts`
+- Implement: `toTimelineRecord`, type guards
+- Test: Normalizes both source types correctly
+
+**5.2 Card Registry**
+- Target: `cardRegistry.tsx`
+- Implement: `getCardForRecord`, registry mapping
+- Validate: Manual testing
+
+### Phase 6: UI Components
+
+Depends on: Everything above
+
+**6.1 Upload Modal** → **6.2 Uploaded Document Card** → **6.3 Detail View** → **6.4 Link Modal**
+
+Validate through manual testing and integration tests where valuable.
+
+### Phase 7: Integration Points
+
+**7.1 Timeline Integration**
+- Update `useTimelineRecords.ts`, `TimelineItem.tsx`
+- Validate: E2E or manual testing
+
+**7.2 Settings Integration**
+- Update `UserDataSettingsGroup.tsx` for export/import
+- Validate: Manual testing
+
+**7.3 App Initialization**
+- Add `cleanupOrphanedFiles` call in `RxDbProvider.tsx`
+- Validate: Manual testing
+
+### Critical Path (Minimum Viable)
+
+```
+Types + Schema + Migration → Repository → Storage Adapter → Upload Service
+    → Upload Modal → TimelineRecord + Card Registry → UploadedDocumentCard
+    → Timeline Integration
+```
+
+Everything else (export/import, orphan cleanup, linking, detail view) can follow after core upload-and-display works.
+
+---
+
 ## Testing Strategy
 
-Uses existing patterns: in-memory RxDB via `createTestDatabase()`, test data factories with overrides, and dependency injection for browser APIs.
+### Principles
+
+1. **Dependency injection over mocks** - Pass in `db` and `storage` adapter
+2. **Test fixtures over mocks** - Use `createTestUpload()`, `createTestClinicalDoc()` factories
+3. **RxDB test harness** - Use `createTestDatabase()` for in-memory DB
+4. **No browser APIs** - Skip OPFS tests, use `createMemoryAdapter()` everywhere
+5. **Happy path + key failures** - Not 100% coverage
+
+### What NOT to Test
+
+| Item | Reason |
+|------|--------|
+| `opfsStorage.ts` | Browser API - manual testing |
+| `exportWithStreaming` | File System Access API - manual testing |
+| React hooks in isolation | Test through components or skip |
+| Migration | Run once, validate manually |
+| UI component exhaustive coverage | Basic render + key interactions only |
 
 ### Storage Adapter Interface
 
-Inject storage to make upload/cleanup services testable without OPFS:
+Inject storage to make services testable without OPFS:
 
 ```typescript
 // apps/web/src/features/upload/services/storageAdapter.ts
@@ -1990,586 +2164,126 @@ export function createMemoryAdapter(): StorageAdapter {
 ```typescript
 // apps/web/src/test-utils/uploadTestData.ts
 
-import uuid4 from '../shared/utils/UUIDUtils';
-import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
-
-/**
- * Create a test uploaded document (source.type === 'file_upload')
- */
-export function createTestUpload(
-  overrides?: Partial<ClinicalDocument>
-): ClinicalDocument {
+export function createTestUpload(overrides?: Partial<ClinicalDocument>): ClinicalDocument {
   const id = uuid4();
   return {
     id,
     user_id: 'test-user-id',
-    source: {
-      type: 'file_upload',
-      file: {
-        opfs_path: `/uploads/${id}.pdf`,
-        name: 'test.pdf',
-        content_type: 'application/pdf',
-      },
-    },
-    metadata: {
-      date: new Date().toISOString(),
-      display_name: 'Test Document',
-    },
-    // No data_record for file uploads
+    source: { type: 'file_upload', file: { opfs_path: `/uploads/${id}.pdf`, name: 'test.pdf', content_type: 'application/pdf' } },
+    metadata: { date: new Date().toISOString(), display_name: 'Test Document' },
     linked_document_ids: [],
     ...overrides,
   };
 }
 
-export function createTestFile(name = 'test.pdf', type = 'application/pdf'): File {
-  const content = new Blob(['%PDF-1.4 test content'], { type });
-  return new File([content], name, { type });
-}
-
-export function createMultipleUploads(
-  count: number,
-  userId = 'test-user-id'
-): ClinicalDocument[] {
-  return Array.from({ length: count }, (_, i) =>
-    createTestUpload({
-      user_id: userId,
-      metadata: {
-        date: new Date(Date.now() - i * 86400000).toISOString(),
-        display_name: `Document ${i + 1}`,
-      },
-    })
-  );
-}
-
-/**
- * Create a test clinical document (source.type === 'connection', synced from provider)
- */
-export function createTestClinicalDoc(
-  overrides?: Partial<ClinicalDocument>
-): ClinicalDocument {
+export function createTestClinicalDoc(overrides?: Partial<ClinicalDocument>): ClinicalDocument {
   const id = uuid4();
   return {
     id,
     user_id: 'test-user-id',
-    source: {
-      type: 'connection',
-      connection_record_id: 'test-provider-connection',
-    },
-    metadata: {
-      date: new Date().toISOString(),
-      display_name: 'Test Clinical Record',
-    },
-    data_record: {
-      resource_type: 'immunization',
-      content_type: 'application/fhir+json',
-    },
+    source: { type: 'connection', connection_record_id: 'test-provider-connection' },
+    metadata: { date: new Date().toISOString(), display_name: 'Test Clinical Record' },
+    data_record: { resource_type: 'immunization', content_type: 'application/fhir+json' },
     ...overrides,
   };
 }
+
+export function createTestFile(name = 'test.pdf', type = 'application/pdf'): File {
+  return new File([new Blob(['%PDF-1.4 test'], { type })], name, { type });
+}
 ```
 
-### Test Files
+### Tests by Component
 
-#### 1. Repository Tests (Upload Functions in ClinicalDocumentRepository)
+#### Repository Tests (~8 tests)
 
 ```typescript
-// apps/web/src/repositories/ClinicalDocumentRepository.spec.ts
+// ClinicalDocumentRepository.spec.ts
 
-import * as clinicalDocRepo from './ClinicalDocumentRepository';
-import { createTestUpload, createMultipleUploads, createTestClinicalDoc } from '../test-utils/uploadTestData';
-import { isFileUploadSource } from '../models/clinical-document/ClinicalDocument.type';
+describe('findAllUploads', () => {
+  it('returns only file_upload sources for user', async () => {
+    const upload = createTestUpload({ user_id: 'userA' });
+    const clinicalDoc = createTestClinicalDoc({ user_id: 'userA' });
+    await db.clinical_documents.bulkInsert([upload, clinicalDoc]);
 
-describe('ClinicalDocumentRepository - Upload Functions', () => {
-  let db: RxDatabase<DatabaseCollections>;
+    const result = await findAllUploads(db, 'userA');
 
-  beforeEach(async () => { db = await createTestDatabase(); });
-  afterEach(async () => { await cleanupTestDatabase(db); });
+    expect(result).toHaveLength(1);
+    expect(result[0].source.type).toBe('file_upload');
+  });
+});
 
-  describe('query functions', () => {
-    describe('findUploadById', () => {
-      it('returns upload when found', async () => {
-        const upload = createTestUpload();
-        await db.clinical_documents.insert(upload);
+describe('addLink', () => {
+  it('appends to linked_document_ids', async () => {
+    const upload = createTestUpload();
+    await db.clinical_documents.insert(upload);
 
-        const result = await clinicalDocRepo.findUploadById(db, upload.user_id, upload.id);
+    await addLink(db, upload.user_id, upload.id, 'clinical-1');
 
-        expect(result).toBeTruthy();
-        expect(result?.id).toBe(upload.id);
-        expect(result?.source.type).toBe('file_upload');
-      });
-
-      it('returns null when not found', async () => {
-        const result = await clinicalDocRepo.findUploadById(db, 'user-1', 'non-existent');
-        expect(result).toBeNull();
-      });
-
-      it('enforces user isolation', async () => {
-        const upload = createTestUpload({ user_id: 'userA' });
-        await db.clinical_documents.insert(upload);
-
-        await expect(
-          clinicalDocRepo.findUploadById(db, 'userB', upload.id)
-        ).rejects.toThrow('Access denied');
-      });
-
-      it('throws when document is not a file upload', async () => {
-        const clinicalDoc = createTestClinicalDoc(); // source.type: 'connection'
-        await db.clinical_documents.insert(clinicalDoc);
-
-        await expect(
-          clinicalDocRepo.findUploadById(db, clinicalDoc.user_id, clinicalDoc.id)
-        ).rejects.toThrow('not a file upload');
-      });
-    });
-
-    describe('findAllUploads', () => {
-      it('returns all uploads for user sorted by date desc', async () => {
-        const uploads = createMultipleUploads(3, 'userA');
-        await db.clinical_documents.bulkInsert(uploads);
-
-        const result = await clinicalDocRepo.findAllUploads(db, 'userA');
-
-        expect(result).toHaveLength(3);
-        expect(result.every((u) => u.source.type === 'file_upload')).toBe(true);
-      });
-
-      it('only returns uploads for specified user', async () => {
-        const uploadsA = createMultipleUploads(2, 'userA');
-        const uploadsB = createMultipleUploads(2, 'userB');
-        await db.clinical_documents.bulkInsert([...uploadsA, ...uploadsB]);
-
-        const result = await clinicalDocRepo.findAllUploads(db, 'userA');
-
-        expect(result).toHaveLength(2);
-        expect(result.every((u) => u.user_id === 'userA')).toBe(true);
-      });
-
-      it('does not return connection-sourced clinical documents', async () => {
-        const upload = createTestUpload({ user_id: 'userA' });
-        const clinicalDoc = createTestClinicalDoc({ user_id: 'userA' });
-        await db.clinical_documents.bulkInsert([upload, clinicalDoc]);
-
-        const result = await clinicalDocRepo.findAllUploads(db, 'userA');
-
-        expect(result).toHaveLength(1);
-        expect(result[0].id).toBe(upload.id);
-        expect(result[0].source.type).toBe('file_upload');
-      });
-    });
-
-    describe('findUploadsLinkedTo', () => {
-      it('returns uploads linked to clinical doc (full scan)', async () => {
-        const upload1 = createTestUpload({ user_id: 'userA', linked_document_ids: ['target-doc'] });
-        const upload2 = createTestUpload({ user_id: 'userA', linked_document_ids: ['other-doc'] });
-        const upload3 = createTestUpload({ user_id: 'userA', linked_document_ids: ['target-doc'] });
-        await db.clinical_documents.bulkInsert([upload1, upload2, upload3]);
-
-        const result = await clinicalDocRepo.findUploadsLinkedTo(db, 'userA', 'target-doc');
-
-        expect(result).toHaveLength(2);
-        expect(result.map((u) => u.id).sort()).toEqual([upload1.id, upload3.id].sort());
-      });
-
-      it('returns empty array when no uploads linked', async () => {
-        const result = await clinicalDocRepo.findUploadsLinkedTo(db, 'userA', 'target-doc');
-        expect(result).toEqual([]);
-      });
-    });
+    const updated = await db.clinical_documents.findOne(upload.id).exec();
+    expect(updated.linked_document_ids).toContain('clinical-1');
   });
 
-  describe('command functions', () => {
-    describe('addLink', () => {
-      it('adds clinical doc ID to links array', async () => {
-        const upload = createTestUpload();
-        await db.clinical_documents.insert(upload);
+  it('throws when user does not own document', async () => {
+    const upload = createTestUpload({ user_id: 'userA' });
+    await db.clinical_documents.insert(upload);
 
-        await clinicalDocRepo.addLink(db, upload.user_id, upload.id, 'clinical-doc-1');
+    await expect(addLink(db, 'userB', upload.id, 'doc-1')).rejects.toThrow('Access denied');
+  });
+});
 
-        const updated = await db.clinical_documents.findOne(upload.id).exec();
-        expect(updated?.linked_document_ids).toContain('clinical-doc-1');
-      });
+describe('removeUpload', () => {
+  it('deletes document and returns opfs path', async () => {
+    const upload = createTestUpload();
+    await db.clinical_documents.insert(upload);
 
-      it('does not duplicate existing links', async () => {
-        const upload = createTestUpload({ linked_document_ids: ['doc-1'] });
-        await db.clinical_documents.insert(upload);
+    const path = await removeUpload(db, upload.user_id, upload.id);
 
-        await clinicalDocRepo.addLink(db, upload.user_id, upload.id, 'doc-1');
-
-        const updated = await db.clinical_documents.findOne(upload.id).exec();
-        expect(updated?.linked_document_ids).toHaveLength(1);
-      });
-
-      it('throws when document not found', async () => {
-        await expect(
-          clinicalDocRepo.addLink(db, 'user-1', 'non-existent', 'doc-1')
-        ).rejects.toThrow('not found');
-      });
-
-      it('enforces user isolation', async () => {
-        const upload = createTestUpload({ user_id: 'userA' });
-        await db.clinical_documents.insert(upload);
-
-        await expect(
-          clinicalDocRepo.addLink(db, 'userB', upload.id, 'doc-1')
-        ).rejects.toThrow('Access denied');
-      });
-    });
-
-    describe('removeLink', () => {
-      it('removes clinical doc ID from links array', async () => {
-        const upload = createTestUpload({ linked_document_ids: ['doc-1', 'doc-2'] });
-        await db.clinical_documents.insert(upload);
-
-        await clinicalDocRepo.removeLink(db, upload.user_id, upload.id, 'doc-1');
-
-        const updated = await db.clinical_documents.findOne(upload.id).exec();
-        expect(updated?.linked_document_ids).toEqual(['doc-2']);
-      });
-
-      it('handles non-existent upload gracefully', async () => {
-        await expect(
-          clinicalDocRepo.removeLink(db, 'user-1', 'non-existent', 'doc-1')
-        ).resolves.not.toThrow();
-      });
-    });
-
-    describe('removeUpload', () => {
-      it('removes upload and returns opfs path for cleanup', async () => {
-        const upload = createTestUpload();
-        await db.clinical_documents.insert(upload);
-
-        const opfsPath = await clinicalDocRepo.removeUpload(db, upload.user_id, upload.id);
-
-        // Access opfs_path via type guard
-        expect(isFileUploadSource(upload.source)).toBe(true);
-        if (isFileUploadSource(upload.source)) {
-          expect(opfsPath).toBe(upload.source.file.opfs_path);
-        }
-        const deleted = await db.clinical_documents.findOne(upload.id).exec();
-        expect(deleted).toBeNull();
-      });
-
-      it('returns null when user isolation prevents delete', async () => {
-        const upload = createTestUpload({ user_id: 'userA' });
-        await db.clinical_documents.insert(upload);
-
-        const result = await clinicalDocRepo.removeUpload(db, 'userB', upload.id);
-
-        expect(result).toBeNull();
-        const stillExists = await db.clinical_documents.findOne(upload.id).exec();
-        expect(stillExists).toBeTruthy();
-      });
-    });
+    expect(path).toBe(upload.source.file.opfs_path);
+    expect(await db.clinical_documents.findOne(upload.id).exec()).toBeNull();
   });
 });
 ```
 
-#### 2. Upload Service Tests
+#### Upload Service Tests (~3 tests)
 
 ```typescript
-// apps/web/src/features/upload/services/uploadService.spec.ts
-
-import { isFileUploadSource } from '../../../models/clinical-document/ClinicalDocument.type';
+// uploadService.spec.ts
 
 describe('uploadDocument', () => {
-  let db: RxDatabase<DatabaseCollections>;
-  let storage: StorageAdapter;
-
-  beforeEach(async () => {
-    db = await createTestDatabase();
-    storage = createMemoryAdapter();
-  });
-  afterEach(async () => { await cleanupTestDatabase(db); });
-
-  it('saves file to storage and creates DB record with file_upload source', async () => {
+  it('creates document with file_upload source', async () => {
     const file = createTestFile();
+    const result = await uploadDocument(db, storage, file, 'user-1', 'My Doc', '2024-01-15');
 
-    const result = await uploadDocument(db, storage, file, 'user-1', 'My Doc', '2024-01-15T00:00:00Z');
-
-    expect(result.id).toBeTruthy();
-    expect(result.metadata?.display_name).toBe('My Doc');
     expect(result.source.type).toBe('file_upload');
-
-    // Verify file metadata in source
-    expect(isFileUploadSource(result.source)).toBe(true);
-    if (isFileUploadSource(result.source)) {
-      expect(result.source.file.content_type).toBe('application/pdf');
-      expect(result.source.file.name).toBe('test.pdf');
-      expect(result.source.file.opfs_path).toBeTruthy();
-    }
-
-    // Verify no data_record for file uploads
+    expect(result.source.file.content_type).toBe('application/pdf');
     expect(result.data_record).toBeUndefined();
-
-    // Verify stored in clinical_documents collection
-    const dbDoc = await db.clinical_documents.findOne(result.id).exec();
-    expect(dbDoc).toBeTruthy();
-    expect(dbDoc?.source.type).toBe('file_upload');
-
-    if (isFileUploadSource(result.source)) {
-      const storedFile = await storage.read(result.source.file.opfs_path);
-      expect(storedFile).toBeTruthy();
-    }
   });
 
   it('rejects unsupported file types', async () => {
-    const file = createTestFile('test.exe', 'application/x-msdownload');
-
-    await expect(
-      uploadDocument(db, storage, file, 'user-1', 'Bad File', '2024-01-15T00:00:00Z')
-    ).rejects.toThrow('not supported');
+    const file = createTestFile('doc.exe', 'application/x-msdownload');
+    await expect(uploadDocument(db, storage, file, 'user-1', 'Bad', '2024-01-15')).rejects.toThrow('not supported');
   });
 
-  it('cleans up storage if DB insert fails', async () => {
-    const file = createTestFile();
-    // Force DB failure by inserting duplicate
-    const existing = createTestUpload();
+  it('cleans up storage on DB failure', async () => {
+    const existing = createTestUpload({ id: 'forced-id' });
     await db.clinical_documents.insert(existing);
+    jest.spyOn(uuid, 'default').mockReturnValueOnce('forced-id');
 
-    // Mock uuid4 to return same ID (would cause duplicate key)
-    jest.spyOn(require('../../../shared/utils/UUIDUtils'), 'default')
-      .mockReturnValueOnce(existing.id);
-
-    await expect(
-      uploadDocument(db, storage, file, 'user-1', 'Test', '2024-01-15T00:00:00Z')
-    ).rejects.toThrow();
-
-    // Storage should be cleaned up
-    const files = await storage.list();
-    expect(files).toHaveLength(0);
-  });
-});
-
-describe('deleteUploadedDocument', () => {
-  it('removes both DB record and storage file', async () => {
-    const db = await createTestDatabase();
-    const storage = createMemoryAdapter();
-    const upload = createTestUpload();
-    await db.clinical_documents.insert(upload);
-
-    // Save file to storage using path from source
-    if (isFileUploadSource(upload.source)) {
-      await storage.save(createTestFile(), upload.id);
-    }
-
-    await deleteUploadedDocument(db, storage, upload.user_id, upload.id);
-
-    const dbDoc = await db.clinical_documents.findOne(upload.id).exec();
-    expect(dbDoc).toBeNull();
-
-    if (isFileUploadSource(upload.source)) {
-      const file = await storage.read(upload.source.file.opfs_path);
-      expect(file).toBeNull();
-    }
-
-    await cleanupTestDatabase(db);
+    await expect(uploadDocument(db, storage, createTestFile(), 'user-1', 'Test', '2024-01-15')).rejects.toThrow();
+    expect(await storage.list()).toHaveLength(0);
   });
 });
 ```
 
-#### 3. Validation Tests
+#### Orphan Cleanup Tests (~2 tests)
 
 ```typescript
-// apps/web/src/features/upload/components/uploadValidation.spec.ts
-
-describe('uploadValidationSchema', () => {
-  it('passes with valid input', async () => {
-    const input = {
-      file: [createTestFile()] as unknown as FileList,
-      displayName: 'Test Doc',
-      documentDate: new Date('2024-01-15'),
-    };
-
-    await expect(uploadValidationSchema.validate(input)).resolves.toBeTruthy();
-  });
-
-  it('fails when file is missing', async () => {
-    const input = { displayName: 'Test', documentDate: new Date() };
-
-    await expect(uploadValidationSchema.validate(input)).rejects.toThrow('file');
-  });
-
-  it('fails when displayName is empty', async () => {
-    const input = {
-      file: [createTestFile()] as unknown as FileList,
-      displayName: '',
-      documentDate: new Date(),
-    };
-
-    await expect(uploadValidationSchema.validate(input)).rejects.toThrow('Display name');
-  });
-
-  it('fails when documentDate is missing', async () => {
-    const input = {
-      file: [createTestFile()] as unknown as FileList,
-      displayName: 'Test',
-    };
-
-    await expect(uploadValidationSchema.validate(input)).rejects.toThrow('date');
-  });
-});
-```
-
-#### 4. Export/Import Tests
-
-```typescript
-// apps/web/src/features/upload/services/exportImport.spec.ts
-
-import { BlobWriter, ZipWriter, BlobReader, ZipReader, TextReader } from '@zip.js/zip.js';
-import { isFileUploadSource } from '../../../models/clinical-document/ClinicalDocument.type';
-
-// Helper to create test ZIP files using zip.js
-async function createTestZip(
-  files: Record<string, string | Blob>
-): Promise<Blob> {
-  const blobWriter = new BlobWriter('application/zip');
-  const zipWriter = new ZipWriter(blobWriter);
-
-  for (const [name, content] of Object.entries(files)) {
-    if (typeof content === 'string') {
-      await zipWriter.add(name, new TextReader(content));
-    } else {
-      await zipWriter.add(name, new BlobReader(content));
-    }
-  }
-
-  await zipWriter.close();
-  return blobWriter.getData();
-}
-
-// Helper to read ZIP contents for assertions
-async function readZipEntries(blob: Blob): Promise<string[]> {
-  const zipReader = new ZipReader(new BlobReader(blob));
-  const entries = await zipReader.getEntries();
-  const names = entries.map((e) => e.filename);
-  await zipReader.close();
-  return names;
-}
-
-describe('exportAsZip', () => {
-  let db: RxDatabase<DatabaseCollections>;
-  let storage: StorageAdapter;
-
-  beforeEach(async () => {
-    db = await createTestDatabase();
-    storage = createMemoryAdapter();
-  });
-  afterEach(async () => { await cleanupTestDatabase(db); });
-
-  it('creates ZIP with database.json and uploads folder', async () => {
-    // Upload is stored in clinical_documents with source.type === 'file_upload'
-    const upload = createTestUpload();
-    await db.clinical_documents.insert(upload);
-    await storage.save(createTestFile(), upload.id);
-
-    const blob = await exportAsZip(db, storage);
-
-    const entries = await readZipEntries(blob);
-    expect(entries).toContain('database.json');
-    expect(entries.some((e) => e.startsWith('uploads/'))).toBe(true);
-  });
-
-  it('only exports files for file_upload source documents', async () => {
-    const upload = createTestUpload();
-    const clinicalDoc = createTestClinicalDoc(); // connection source clinical doc
-    await db.clinical_documents.bulkInsert([upload, clinicalDoc]);
-    await storage.save(createTestFile(), upload.id);
-
-    const blob = await exportAsZip(db, storage);
-
-    const entries = await readZipEntries(blob);
-    // Should have exactly one upload file
-    const uploadEntries = entries.filter((e) => e.startsWith('uploads/'));
-    expect(uploadEntries).toHaveLength(1);
-  });
-});
-
-describe('importBackup', () => {
-  it('imports v1 JSON format (backward compatible)', async () => {
-    const db = await createTestDatabase();
-    const jsonData = { collections: { user_documents: [{ id: 'u1', is_default_user: true }] } };
-    const file = new File([JSON.stringify(jsonData)], 'backup.json', { type: 'application/json' });
-
-    await importBackup(file, db, createMemoryAdapter());
-
-    const user = await db.user_documents.findOne('u1').exec();
-    expect(user).toBeTruthy();
-
-    await cleanupTestDatabase(db);
-  });
-
-  it('imports v2 ZIP format with file uploads (discriminated union)', async () => {
-    // Create a valid ZIP in memory using zip.js
-    // Uploads use discriminated union: source.type === 'file_upload'
-    const zipBlob = await createTestZip({
-      'database.json': JSON.stringify({
-        collections: {
-          clinical_documents: [{
-            id: 'upload-1',
-            user_id: 'u1',
-            source: {
-              type: 'file_upload',
-              file: {
-                opfs_path: '/uploads/upload-1.pdf',
-                name: 'test.pdf',
-                content_type: 'application/pdf',
-              },
-            },
-            metadata: {
-              date: '2024-01-15T00:00:00Z',
-              display_name: 'Test Upload',
-            },
-            linked_document_ids: [],
-          }],
-        },
-      }),
-      'uploads/upload-1.pdf': '%PDF-1.4 content',
-    });
-    const file = new File([zipBlob], 'backup.zip', { type: 'application/zip' });
-
-    const db = await createTestDatabase();
-    const storage = createMemoryAdapter();
-
-    await importBackup(file, db, storage);
-
-    const uploadDoc = await db.clinical_documents.findOne('upload-1').exec();
-    expect(uploadDoc).toBeTruthy();
-    expect(uploadDoc?.source.type).toBe('file_upload');
-    expect(isFileUploadSource(uploadDoc?.source)).toBe(true);
-
-    const storedFile = await storage.read('/uploads/upload-1.pdf');
-    expect(storedFile).toBeTruthy();
-
-    await cleanupTestDatabase(db);
-  });
-
-  it('rejects invalid ZIP without database.json', async () => {
-    const zipBlob = await createTestZip({ 'random.txt': 'not a database' });
-    const file = new File([zipBlob], 'bad.zip', { type: 'application/zip' });
-
-    const db = await createTestDatabase();
-
-    await expect(importBackup(file, db, createMemoryAdapter())).rejects.toThrow('missing database.json');
-
-    await cleanupTestDatabase(db);
-  });
-});
-```
-
-#### 5. Orphan Cleanup Tests
-
-```typescript
-// apps/web/src/features/upload/services/cleanupOrphans.spec.ts
+// cleanupOrphans.spec.ts
 
 describe('cleanupOrphanedFiles', () => {
-  it('deletes storage files not referenced in DB', async () => {
-    const db = await createTestDatabase();
-    const storage = createMemoryAdapter();
-
-    // File in storage but not in DB
+  it('deletes files not referenced in DB', async () => {
     await storage.save(createTestFile(), 'orphan-id');
-
-    // File in both storage and DB (upload with source.type === 'file_upload')
     const upload = createTestUpload();
     await db.clinical_documents.insert(upload);
     await storage.save(createTestFile(), upload.id);
@@ -2579,56 +2293,127 @@ describe('cleanupOrphanedFiles', () => {
     const files = await storage.list();
     expect(files).toHaveLength(1);
     expect(files[0]).toContain(upload.id);
-
-    await cleanupTestDatabase(db);
-  });
-
-  it('preserves all files when no orphans exist', async () => {
-    const db = await createTestDatabase();
-    const storage = createMemoryAdapter();
-
-    const upload = createTestUpload();
-    await db.clinical_documents.insert(upload);
-    await storage.save(createTestFile(), upload.id);
-
-    await cleanupOrphanedFiles(db, storage);
-
-    const files = await storage.list();
-    expect(files).toHaveLength(1);
-
-    await cleanupTestDatabase(db);
-  });
-
-  it('only considers file_upload source documents', async () => {
-    const db = await createTestDatabase();
-    const storage = createMemoryAdapter();
-
-    // Connection source clinical doc should not affect cleanup
-    const clinicalDoc = createTestClinicalDoc();
-    await db.clinical_documents.insert(clinicalDoc);
-
-    // Orphan file should still be cleaned up
-    await storage.save(createTestFile(), 'orphan-id');
-
-    await cleanupOrphanedFiles(db, storage);
-
-    const files = await storage.list();
-    expect(files).toHaveLength(0);
-
-    await cleanupTestDatabase(db);
   });
 });
 ```
 
-### Summary
+#### Import Service Tests (~3 tests)
 
-| Component | Test File | Key Scenarios |
-|-----------|-----------|---------------|
-| Repository | `ClinicalDocumentRepository.spec.ts` | upload queries, link/unlink, user isolation, not found, source type guards |
-| Upload Service | `uploadService.spec.ts` | happy path, invalid type, cleanup on failure, discriminated union source |
-| Validation | `uploadValidation.spec.ts` | valid input, missing fields |
-| Export/Import | `exportImport.spec.ts` | v1 JSON, v2 ZIP, invalid ZIP, source.type filtering |
-| Orphan Cleanup | `cleanupOrphans.spec.ts` | remove orphans, preserve valid, source.type filtering |
+```typescript
+// importService.spec.ts
+
+describe('importBackup', () => {
+  it('handles v1 JSON format', async () => {
+    const json = JSON.stringify({ collections: { user_documents: [{ id: 'u1' }] } });
+    const file = new File([json], 'backup.json', { type: 'application/json' });
+
+    await importBackup(file, db);
+
+    expect(await db.user_documents.findOne('u1').exec()).toBeTruthy();
+  });
+
+  it('handles v2 ZIP with uploads', async () => {
+    const zipBlob = await createTestZip({
+      'database.json': JSON.stringify({
+        collections: {
+          clinical_documents: [{
+            id: 'upload-1', user_id: 'u1',
+            source: { type: 'file_upload', file: { opfs_path: '/uploads/upload-1.pdf', name: 'test.pdf', content_type: 'application/pdf' } },
+            metadata: { date: '2024-01-15', display_name: 'Test' },
+          }],
+        },
+      }),
+      'uploads/upload-1.pdf': '%PDF-1.4',
+    });
+
+    await importBackup(new File([zipBlob], 'backup.zip'), db, storage);
+
+    const doc = await db.clinical_documents.findOne('upload-1').exec();
+    expect(doc.source.type).toBe('file_upload');
+  });
+
+  it('rejects ZIP without database.json', async () => {
+    const zipBlob = await createTestZip({ 'random.txt': 'nope' });
+    await expect(importBackup(new File([zipBlob], 'bad.zip'), db)).rejects.toThrow('missing database.json');
+  });
+});
+```
+
+#### TimelineRecord Tests (~2 tests)
+
+```typescript
+// TimelineRecord.spec.ts
+
+describe('toTimelineRecord', () => {
+  it('normalizes file_upload source', () => {
+    const doc = createTestUpload();
+    const record = toTimelineRecord(doc);
+
+    expect(record.sourceType).toBe('file_upload');
+    expect(record.filePath).toBe(doc.source.file.opfs_path);
+    expect(record.resourceType).toBeUndefined();
+  });
+
+  it('normalizes connection source', () => {
+    const doc = createTestClinicalDoc();
+    const record = toTimelineRecord(doc);
+
+    expect(record.sourceType).toBe('connection');
+    expect(record.connectionId).toBe(doc.source.connection_record_id);
+    expect(record.resourceType).toBe('immunization');
+  });
+});
+```
+
+#### Type Guard Tests (~2 tests)
+
+```typescript
+// ClinicalDocument.type.spec.ts
+
+describe('isFileUploadSource', () => {
+  it('returns true for file_upload', () => {
+    const source = { type: 'file_upload', file: { opfs_path: '/x', name: 'x', content_type: 'x' } };
+    expect(isFileUploadSource(source)).toBe(true);
+  });
+
+  it('returns false for connection', () => {
+    const source = { type: 'connection', connection_record_id: 'x' };
+    expect(isFileUploadSource(source)).toBe(false);
+  });
+});
+```
+
+#### Validation Tests (~2 tests)
+
+```typescript
+// uploadValidation.spec.ts
+
+describe('uploadValidationSchema', () => {
+  it('passes with valid input', async () => {
+    const input = { file: [createTestFile()], displayName: 'Test', documentDate: new Date() };
+    await expect(uploadValidationSchema.validate(input)).resolves.toBeTruthy();
+  });
+
+  it('fails when displayName empty', async () => {
+    const input = { file: [createTestFile()], displayName: '', documentDate: new Date() };
+    await expect(uploadValidationSchema.validate(input)).rejects.toThrow();
+  });
+});
+```
+
+### Test Summary
+
+| Component | Tests | Focus |
+|-----------|-------|-------|
+| Repository | ~8 | Query/command functions, user isolation |
+| Upload Service | ~3 | Orchestration, cleanup on failure |
+| Orphan Cleanup | ~2 | Orphan detection |
+| Import Service | ~3 | v1 JSON, v2 ZIP, invalid ZIP |
+| TimelineRecord | ~2 | Normalization both source types |
+| Type Guards | ~2 | Discriminated union guards |
+| Validation | ~2 | Valid + invalid input |
+
+**Total: ~22 focused tests**
 
 ---
 
