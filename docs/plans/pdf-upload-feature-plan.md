@@ -1728,13 +1728,13 @@ The following components are required to complete the feature. Implementation de
 - Display `metadata.display_name` as the title
 - Display `metadata.date` formatted consistently with other timeline cards
 - Show file type icon (PDF icon initially)
-- Show `data_record.file_name` as secondary info
+- Show `source.file.name` as secondary info
 - "View" button to open the PDF viewer
 - "Delete" button with confirmation dialog
 - Visual indicator if document has links to clinical records (`linked_document_ids.length > 0`)
 
 **Data Requirements**:
-- Input: `TimelineRecord` (with `_original` being a `ClinicalDocument` where `isUploaded` is true)
+- Input: `TimelineRecord` (with `_original` being a `ClinicalDocument` where `isFileUploadSource(doc.source)` is true)
 - Actions: `deleteUploadedDocument(db, storage, userId, documentId)`
 
 ### 2. ShowUploadedDocumentExpandable
