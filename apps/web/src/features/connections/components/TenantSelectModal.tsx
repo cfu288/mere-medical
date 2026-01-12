@@ -85,11 +85,26 @@ function isConfigured(value: string | undefined): boolean {
   return !!value && !value.startsWith('$');
 }
 
-const epicR4Enabled =
+const epicR4ProductionConfigured =
   isConfigured(Config.EPIC_CLIENT_ID_R4) || isConfigured(Config.EPIC_CLIENT_ID);
-const epicDstu2Enabled =
+const epicR4SandboxConfigured =
+  isConfigured(Config.EPIC_SANDBOX_CLIENT_ID_R4) ||
+  isConfigured(Config.EPIC_SANDBOX_CLIENT_ID);
+const epicR4Enabled = epicR4ProductionConfigured || epicR4SandboxConfigured;
+const epicR4SandboxOnly =
+  epicR4SandboxConfigured && !epicR4ProductionConfigured;
+
+const epicDstu2ProductionConfigured =
   isConfigured(Config.EPIC_CLIENT_ID_DSTU2) ||
   isConfigured(Config.EPIC_CLIENT_ID);
+const epicDstu2SandboxConfigured =
+  isConfigured(Config.EPIC_SANDBOX_CLIENT_ID_DSTU2) ||
+  isConfigured(Config.EPIC_SANDBOX_CLIENT_ID);
+const epicDstu2Enabled =
+  epicDstu2ProductionConfigured || epicDstu2SandboxConfigured;
+const epicDstu2SandboxOnly =
+  epicDstu2SandboxConfigured && !epicDstu2ProductionConfigured;
+
 const cernerEnabled = isConfigured(Config.CERNER_CLIENT_ID);
 const veradigmEnabled = isConfigured(Config.VERADIGM_CLIENT_ID);
 const vaEnabled = isConfigured(Config.VA_CLIENT_ID);
@@ -166,9 +181,12 @@ export function TenantSelectModal({
         title: 'MyChart',
         vendor: 'epic',
         source: EpicLogo,
-        alt: 'Epic',
+        alt: epicR4SandboxOnly
+          ? 'Sandbox only - set EPIC_CLIENT_ID_R4 for production'
+          : undefined,
         enabled: epicR4Enabled,
-        disabledMessage: 'Provide EPIC_CLIENT_ID_R4 env var to enable',
+        disabledMessage:
+          'Provide EPIC_CLIENT_ID_R4 or EPIC_SANDBOX_CLIENT_ID_R4 env var to enable',
         id: 1,
         fhirVersion: 'R4',
       },
@@ -240,9 +258,12 @@ export function TenantSelectModal({
         title: 'MyChart Legacy',
         vendor: 'epic',
         source: EpicLogo,
-        alt: 'Epic',
+        alt: epicDstu2SandboxOnly
+          ? 'Sandbox only - set EPIC_CLIENT_ID_DSTU2 for production'
+          : undefined,
         enabled: epicDstu2Enabled,
-        disabledMessage: 'Provide EPIC_CLIENT_ID_DSTU2 env var to enable',
+        disabledMessage:
+          'Provide EPIC_CLIENT_ID_DSTU2 or EPIC_SANDBOX_CLIENT_ID_DSTU2 env var to enable',
         id: 8,
         fhirVersion: 'DSTU2',
       },
@@ -278,14 +299,19 @@ export function TenantSelectModal({
               ? `/api/v1/${state.emrVendor}/tenants?`
               : `/api/v1/dstu2/tenants?`;
 
-      fetch(
-        Config.PUBLIC_URL +
-          apiPath +
-          new URLSearchParams({ query: state.query }),
-        {
-          signal: abortController.signal,
-        },
-      )
+      const sandboxOnly =
+        state.emrVendor === 'epic' &&
+        ((state.fhirVersion === 'R4' && epicR4SandboxOnly) ||
+          (state.fhirVersion === 'DSTU2' && epicDstu2SandboxOnly));
+
+      const params: Record<string, string> = { query: state.query };
+      if (sandboxOnly) {
+        params['sandboxOnly'] = 'true';
+      }
+
+      fetch(Config.PUBLIC_URL + apiPath + new URLSearchParams(params), {
+        signal: abortController.signal,
+      })
         .then((x) => x.json())
         .then((x) => dispatch({ type: 'setItems', payload: x }))
         .catch(() => {

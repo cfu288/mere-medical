@@ -18,9 +18,13 @@ export class EpicController {
     @NestRequest() request: Request,
     @Res() response: Response,
     @Query('query') query: string,
+    @Query('sandboxOnly') sandboxOnly: string,
   ) {
     try {
-      const data = await this.epicService.queryTenants(query);
+      const data = await this.epicService.queryTenants(
+        query,
+        sandboxOnly === 'true',
+      );
       response.json(data);
     } catch (e) {
       Logger.error(e);
@@ -29,9 +33,16 @@ export class EpicController {
   }
 
   @Get('tenants')
-  async getTenants(@Res() response: Response, @Query('query') query: string) {
+  async getTenants(
+    @Res() response: Response,
+    @Query('query') query: string,
+    @Query('sandboxOnly') sandboxOnly: string,
+  ) {
     try {
-      const data = await this.epicService.queryTenants(query);
+      const data = await this.epicService.queryTenants(
+        query,
+        sandboxOnly === 'true',
+      );
       response.json(data);
     } catch (e) {
       Logger.error(e);
@@ -44,9 +55,13 @@ export class EpicController {
     @NestRequest() request: Request,
     @Res() response: Response,
     @Query('query') query: string,
+    @Query('sandboxOnly') sandboxOnly: string,
   ) {
     try {
-      const data = await this.epicService.queryR4Tenants(query);
+      const data = await this.epicService.queryR4Tenants(
+        query,
+        sandboxOnly === 'true',
+      );
       response.json(data);
     } catch (e) {
       Logger.error(e);

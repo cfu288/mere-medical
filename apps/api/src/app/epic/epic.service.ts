@@ -7,17 +7,31 @@ import {
 } from '@mere/epic';
 import { stringSimilarity } from '@mere/shared';
 
+const SANDBOX_IDS = ['sandbox_epic', 'sandbox_epic_r4'];
+
 @Injectable()
 export class EpicService {
   private readonly items = EpicDSTU2TenantEndpoints;
   private readonly r4Items = EpicR4TenantEndpoints;
 
-  async queryTenants(query: string): Promise<DSTU2Endpoint[]> {
-    return filteredItemsWithQuery(this.items, query);
+  async queryTenants(
+    query: string,
+    sandboxOnly = false,
+  ): Promise<DSTU2Endpoint[]> {
+    const items = sandboxOnly
+      ? this.items.filter((item) => SANDBOX_IDS.includes(item.id))
+      : this.items;
+    return filteredItemsWithQuery(items, query);
   }
 
-  async queryR4Tenants(query: string): Promise<R4Endpoint[]> {
-    return filteredItemsWithQuery(this.r4Items, query);
+  async queryR4Tenants(
+    query: string,
+    sandboxOnly = false,
+  ): Promise<R4Endpoint[]> {
+    const items = sandboxOnly
+      ? this.r4Items.filter((item) => SANDBOX_IDS.includes(item.id))
+      : this.r4Items;
+    return filteredItemsWithQuery(items, query);
   }
 }
 
