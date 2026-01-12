@@ -16,6 +16,8 @@ import * as Epic from '../../services/fhir/Epic';
 import * as Cerner from '../../services/fhir/Cerner';
 import * as Veradigm from '../../services/fhir/Veradigm';
 import * as VA from '../../services/fhir/VA';
+import * as Healow from '../../services/fhir/Healow';
+import { HealowConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
 import { from, Subject } from 'rxjs';
 import { useNotificationDispatch } from '../../app/providers/NotificationProvider';
 import { differenceInDays, parseISO } from 'date-fns';
@@ -467,6 +469,31 @@ async function fetchMedicalRecords(
         const syncJob = await Veradigm.syncAllRecords(
           baseUrl,
           connectionDocument.toMutableJSON() as unknown as VeradigmConnectionDocument,
+          db,
+        );
+        await updateConnectionDocumentTimestamps(
+          syncJob,
+          connectionDocument,
+          db,
+        );
+        return syncJob;
+      } catch (e) {
+        console.error(e);
+        await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
+        throw new Error(
+          `Error refreshing ${connectionDocument.get(
+            'name',
+          )} access - try logging in again`,
+        );
+      }
+    }
+
+    case 'healow': {
+      try {
+        const syncJob = await Healow.syncAllRecords(
+          config.PUBLIC_URL || '',
+          baseUrl,
+          connectionDocument.toMutableJSON() as unknown as HealowConnectionDocument,
           db,
         );
         await updateConnectionDocumentTimestamps(

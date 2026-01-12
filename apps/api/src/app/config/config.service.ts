@@ -11,6 +11,7 @@ export interface PublicConfig {
   CERNER_CLIENT_ID?: string;
   VERADIGM_CLIENT_ID?: string;
   VA_CLIENT_ID?: string;
+  HEALOW_CLIENT_ID?: string;
   PUBLIC_URL?: string;
 }
 
@@ -28,6 +29,7 @@ export class ConfigService {
       CERNER_CLIENT_ID: process.env.CERNER_CLIENT_ID,
       VERADIGM_CLIENT_ID: process.env.VERADIGM_CLIENT_ID,
       VA_CLIENT_ID: process.env.VA_CLIENT_ID,
+      HEALOW_CLIENT_ID: process.env.HEALOW_CLIENT_ID,
       PUBLIC_URL: process.env.PUBLIC_URL,
     };
   }

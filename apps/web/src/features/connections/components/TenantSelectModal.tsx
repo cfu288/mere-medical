@@ -26,6 +26,7 @@ import {
   TenantSelectModelResultItem,
 } from './TenantSelectModelResultItem';
 import VALogo from '../../../assets/img/va-logo.png';
+import HealowLogo from '../../../assets/img/eclinicalworks-logo.jpeg';
 import { useConfig } from '../../../app/providers/AppConfigProvider';
 
 export type EMRVendor =
@@ -34,6 +35,7 @@ export type EMRVendor =
   | 'veradigm'
   | 'onpatient'
   | 'va'
+  | 'healow'
   | 'any';
 
 export type UnifiedDSTU2Endpoint = CernerDSTU2Endpoint &
@@ -130,6 +132,7 @@ export function TenantSelectModal({
   const cernerEnabled = isConfigured(config.CERNER_CLIENT_ID);
   const veradigmEnabled = isConfigured(config.VERADIGM_CLIENT_ID);
   const vaEnabled = isConfigured(config.VA_CLIENT_ID);
+  const healowEnabled = isConfigured(config.HEALOW_CLIENT_ID);
 
   const [state, dispatch] = useReducer(
     (
@@ -234,6 +237,16 @@ export function TenantSelectModal({
         id: 4,
       },
       {
+        title: 'Healow',
+        vendor: 'healow',
+        source: HealowLogo,
+        alt: 'eClinicalWorks',
+        enabled: healowEnabled,
+        disabledMessage: 'Provide HEALOW_CLIENT_ID env var to enable',
+        id: 9,
+        fhirVersion: 'R4',
+      },
+      {
         title: 'Search All',
         vendor: 'any',
         source: '',
@@ -277,6 +290,7 @@ export function TenantSelectModal({
     cernerEnabled,
     veradigmEnabled,
     vaEnabled,
+    healowEnabled,
   ]);
 
   const mainSources = useMemo(
@@ -312,9 +326,11 @@ export function TenantSelectModal({
             ? state.fhirVersion === 'R4'
               ? `/api/v1/epic/r4/tenants?`
               : `/api/v1/epic/tenants?`
-            : state.emrVendor !== 'any'
-              ? `/api/v1/${state.emrVendor}/tenants?`
-              : `/api/v1/dstu2/tenants?`;
+            : state.emrVendor === 'healow'
+              ? `/api/v1/healow/tenants?`
+              : state.emrVendor !== 'any'
+                ? `/api/v1/${state.emrVendor}/tenants?`
+                : `/api/v1/dstu2/tenants?`;
 
       const sandboxOnly =
         state.emrVendor === 'epic' &&

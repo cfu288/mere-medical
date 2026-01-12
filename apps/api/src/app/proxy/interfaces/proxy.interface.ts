@@ -11,9 +11,14 @@ export interface Service {
   forwardToken?: boolean;
 }
 
+export interface VendorServices {
+  vendor: string;
+  endpoints: Service[];
+}
+
 export interface ProxyModuleOptions {
   config?: server.ServerOptions;
-  services?: Service[];
+  services?: VendorServices[];
   allowedCookies?: string[];
 }
 

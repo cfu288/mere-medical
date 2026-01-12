@@ -23,6 +23,10 @@ import {
   getLoginUrl as getVeradigmLoginUrl,
   VeradigmLocalStorageKeys,
 } from '../../services/fhir/Veradigm';
+import {
+  getLoginUrl as getHealowLoginUrl,
+  HealowLocalStorageKeys,
+} from '../../services/fhir/Healow';
 
 export async function getLoginUrlBySource(
   config: AppConfig,
@@ -60,6 +64,13 @@ export async function getLoginUrlBySource(
     }
     case 'va': {
       return getVaLoginUrl(config);
+    }
+    case 'healow': {
+      return getHealowLoginUrl(
+        config,
+        item.get('location'),
+        item.get('auth_uri'),
+      );
     }
     default: {
       return '' as string & Location;
@@ -126,6 +137,16 @@ export function setTenantUrlBySource(
       );
       break;
     }
+    case 'healow': {
+      setTenantHealowUrl(
+        item.get('location'),
+        item.get('auth_uri'),
+        item.get('token_uri'),
+        item.get('name'),
+        item.get('id'),
+      );
+      break;
+    }
     default: {
       break;
     }
@@ -176,6 +197,20 @@ function setTenantVeradigmUrl(
   localStorage.setItem(VeradigmLocalStorageKeys.VERADIGM_TOKEN_URL, token);
   localStorage.setItem(VeradigmLocalStorageKeys.VERADIGM_NAME, name);
   localStorage.setItem(VeradigmLocalStorageKeys.VERADIGM_ID, id);
+}
+
+function setTenantHealowUrl(
+  base: string & Location,
+  auth: string & Location,
+  token: string & Location,
+  name: string,
+  id: string,
+): void {
+  localStorage.setItem(HealowLocalStorageKeys.HEALOW_BASE_URL, base);
+  localStorage.setItem(HealowLocalStorageKeys.HEALOW_AUTH_URL, auth);
+  localStorage.setItem(HealowLocalStorageKeys.HEALOW_TOKEN_URL, token);
+  localStorage.setItem(HealowLocalStorageKeys.HEALOW_NAME, name);
+  localStorage.setItem(HealowLocalStorageKeys.HEALOW_ID, id);
 }
 
 const ConnectionTab: React.FC = () => {
@@ -229,6 +264,14 @@ const ConnectionTab: React.FC = () => {
             setTenantVeradigmUrl(base, auth, token, name, id);
             setOpenSelectModal((x) => !x);
             window.location = getVeradigmLoginUrl(config, base, auth);
+            break;
+          }
+          case 'healow': {
+            setTenantHealowUrl(base, auth, token, name, id);
+            setOpenSelectModal((x) => !x);
+            getHealowLoginUrl(config, base, auth).then((url) => {
+              window.location = url;
+            });
             break;
           }
         }

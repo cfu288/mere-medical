@@ -5,6 +5,7 @@ import { StaticModule } from './static/static.module';
 import { LoginProxyModule } from './proxy/proxy.module';
 import { CernerModule } from './cerner/cerner.module';
 import { EpicModule } from './epic/epic.module';
+import { HealowModule } from './healow/healow.module';
 import { VeradigmModule } from './veradigm/veradigm.module';
 import { TenantModule } from './tenant/tenant.module';
 import { VAModule } from './va/va.module';
@@ -42,6 +43,11 @@ if (cernerConfigured.check) {
 const veradigmConfigured = checkIfVeradigmIsConfigured();
 if (veradigmConfigured.check) {
   imports.push(VeradigmModule);
+}
+
+const healowConfigured = checkIfHealowIsConfigured();
+if (healowConfigured.check) {
+  imports.push(HealowModule);
 }
 
 @Module({
@@ -168,6 +174,34 @@ function checkIfVeradigmIsConfigured():
     return {
       check,
       clientId: process.env.VERADIGM_CLIENT_ID!,
+    };
+  }
+
+  return { check };
+}
+
+function checkIfHealowIsConfigured():
+  | {
+      check: true;
+      clientId: string;
+    }
+  | {
+      check: false;
+    } {
+  const check = !!process.env.HEALOW_CLIENT_ID;
+  if (!process.env.HEALOW_CLIENT_ID) {
+    Logger.warn(
+      'HEALOW_CLIENT_ID was not provided: Healow services will be disabled.',
+    );
+  }
+  if (check) {
+    Logger.log(
+      'HEALOW_CLIENT_ID was provided: Healow service will be enabled.',
+    );
+
+    return {
+      check,
+      clientId: process.env.HEALOW_CLIENT_ID!,
     };
   }
 
