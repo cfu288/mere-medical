@@ -12,6 +12,15 @@ const envVars = [
   { name: 'EPIC_CLIENT_ID', value: Config.EPIC_CLIENT_ID },
   { name: 'EPIC_CLIENT_ID_DSTU2', value: Config.EPIC_CLIENT_ID_DSTU2 },
   { name: 'EPIC_CLIENT_ID_R4', value: Config.EPIC_CLIENT_ID_R4 },
+  { name: 'EPIC_SANDBOX_CLIENT_ID', value: Config.EPIC_SANDBOX_CLIENT_ID },
+  {
+    name: 'EPIC_SANDBOX_CLIENT_ID_DSTU2',
+    value: Config.EPIC_SANDBOX_CLIENT_ID_DSTU2,
+  },
+  {
+    name: 'EPIC_SANDBOX_CLIENT_ID_R4',
+    value: Config.EPIC_SANDBOX_CLIENT_ID_R4,
+  },
   { name: 'CERNER_CLIENT_ID', value: Config.CERNER_CLIENT_ID },
   { name: 'VERADIGM_CLIENT_ID', value: Config.VERADIGM_CLIENT_ID },
   { name: 'VA_CLIENT_ID', value: Config.VA_CLIENT_ID },

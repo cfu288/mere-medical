@@ -1,4 +1,6 @@
+export const EPIC_SANDBOX_IDS = ['sandbox_epic', 'sandbox_epic_r4'] as const;
+
 export function isEpicSandbox(epicId?: string): boolean {
   if (!epicId) return false;
-  return epicId === 'sandbox_epic' || epicId === 'sandbox_epic_r4';
+  return EPIC_SANDBOX_IDS.includes(epicId as (typeof EPIC_SANDBOX_IDS)[number]);
 }
