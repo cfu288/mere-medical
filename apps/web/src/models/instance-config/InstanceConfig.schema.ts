@@ -39,9 +39,6 @@ export const instanceConfigSchemaLiteral = {
     VA_CLIENT_ID: {
       type: 'string',
     },
-    IS_DEMO: {
-      type: 'string',
-    },
     PUBLIC_URL: {
       type: 'string',
     },

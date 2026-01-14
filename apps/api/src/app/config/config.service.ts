@@ -11,7 +11,6 @@ export interface PublicConfig {
   CERNER_CLIENT_ID?: string;
   VERADIGM_CLIENT_ID?: string;
   VA_CLIENT_ID?: string;
-  IS_DEMO?: string;
   PUBLIC_URL?: string;
   REDIRECT_URI?: string;
 }
@@ -30,7 +29,6 @@ export class ConfigService {
       CERNER_CLIENT_ID: process.env.CERNER_CLIENT_ID,
       VERADIGM_CLIENT_ID: process.env.VERADIGM_CLIENT_ID,
       VA_CLIENT_ID: process.env.VA_CLIENT_ID,
-      IS_DEMO: process.env.IS_DEMO,
       PUBLIC_URL: process.env.PUBLIC_URL,
       REDIRECT_URI: process.env.REDIRECT_URI || process.env.PUBLIC_URL,
     };

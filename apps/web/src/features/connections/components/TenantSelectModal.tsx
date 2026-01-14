@@ -380,7 +380,7 @@ export function TenantSelectModal({
                         }
                         onClick={() => {
                           if (!file.enabled) return;
-                          if (config.IS_DEMO === 'enabled') {
+                          if (IS_DEMO === 'enabled') {
                             notifyDispatch({
                               type: 'set_notification',
                               message:
@@ -460,7 +460,7 @@ export function TenantSelectModal({
                           }`}
                           onClick={() => {
                             if (!file.enabled) return;
-                            if (config.IS_DEMO === 'enabled') {
+                            if (IS_DEMO === 'enabled') {
                               notifyDispatch({
                                 type: 'set_notification',
                                 message:
@@ -550,7 +550,7 @@ export function TenantSelectModal({
                               }`}
                               onClick={() => {
                                 if (!file.enabled) return;
-                                if (config.IS_DEMO === 'enabled') {
+                                if (IS_DEMO === 'enabled') {
                                   notifyDispatch({
                                     type: 'set_notification',
                                     message:

@@ -20,7 +20,6 @@ export interface AppConfig {
   CERNER_CLIENT_ID?: string;
   VERADIGM_CLIENT_ID?: string;
   VA_CLIENT_ID?: string;
-  IS_DEMO?: string;
   PUBLIC_URL?: string;
   REDIRECT_URI?: string;
 }
