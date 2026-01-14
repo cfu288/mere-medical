@@ -2,7 +2,7 @@ import {
   createContext,
   useContext,
   useEffect,
-  useState,
+  useReducer,
   PropsWithChildren,
   useCallback,
   useRef,
@@ -25,22 +25,47 @@ export interface AppConfig {
   REDIRECT_URI?: string;
 }
 
-interface AppConfigContextValue {
+interface AppConfigState {
   config: AppConfig;
+  isLoading: boolean;
   isStale: boolean;
 }
+
+type AppConfigAction =
+  | { type: 'LOAD_CACHED'; config: AppConfig }
+  | { type: 'LOAD_FRESH'; config: AppConfig }
+  | { type: 'LOAD_COMPLETE' }
+  | { type: 'LOAD_ERROR' };
 
 const INSTANCE_CONFIG_ID = 'instance_config';
 
 const emptyConfig: AppConfig = {};
 
-const defaultContextValue: AppConfigContextValue = {
+const initialState: AppConfigState = {
   config: emptyConfig,
+  isLoading: true,
   isStale: true,
 };
 
-const AppConfigContext =
-  createContext<AppConfigContextValue>(defaultContextValue);
+function configReducer(
+  state: AppConfigState,
+  action: AppConfigAction,
+): AppConfigState {
+  switch (action.type) {
+    case 'LOAD_CACHED':
+      return { config: action.config, isLoading: false, isStale: true };
+    case 'LOAD_FRESH':
+      return { config: action.config, isLoading: false, isStale: false };
+    case 'LOAD_COMPLETE':
+      return { ...state, isLoading: false };
+    case 'LOAD_ERROR':
+      return { ...state, isLoading: false };
+    default:
+      return state;
+  }
+}
+
+const AppConfigContext = createContext<AppConfigState>(initialState);
 
 export type ConfigFetcher = () => Promise<AppConfig | null>;
 
@@ -67,8 +92,7 @@ export function AppConfigProvider({
   configFetcher = defaultConfigFetcher,
 }: AppConfigProviderProps) {
   const db = useRxDb();
-  const [config, setConfig] = useState<AppConfig>(emptyConfig);
-  const [isStale, setIsStale] = useState(true);
+  const [state, dispatch] = useReducer(configReducer, initialState);
   const hasInitialized = useRef(false);
 
   const saveConfigToDb = useCallback(
@@ -119,34 +143,47 @@ export function AppConfigProvider({
     if (hasInitialized.current) return;
     hasInitialized.current = true;
 
+    let cancelled = false;
+
     const initConfig = async () => {
-      const cachedConfig = await loadCachedConfig();
+      try {
+        const cachedConfig = await loadCachedConfig();
+        if (cancelled) return;
 
-      if (cachedConfig) {
-        setConfig(cachedConfig);
-        setIsStale(true);
-      }
+        if (cachedConfig) {
+          dispatch({ type: 'LOAD_CACHED', config: cachedConfig });
+        }
 
-      const freshConfig = await configFetcher();
+        const freshConfig = await configFetcher();
+        if (cancelled) return;
 
-      if (freshConfig) {
-        setConfig(freshConfig);
-        setIsStale(false);
-        await saveConfigToDb(freshConfig);
+        if (freshConfig) {
+          dispatch({ type: 'LOAD_FRESH', config: freshConfig });
+          await saveConfigToDb(freshConfig);
+        } else {
+          dispatch({ type: 'LOAD_COMPLETE' });
+        }
+      } catch (error) {
+        console.error('Error initializing config:', error);
+        dispatch({ type: 'LOAD_ERROR' });
       }
     };
 
     initConfig();
+
+    return () => {
+      cancelled = true;
+    };
   }, [loadCachedConfig, configFetcher, saveConfigToDb]);
 
   return (
-    <AppConfigContext.Provider value={{ config, isStale }}>
+    <AppConfigContext.Provider value={state}>
       {children}
     </AppConfigContext.Provider>
   );
 }
 
-export function useAppConfig(): AppConfigContextValue {
+export function useAppConfig(): AppConfigState {
   const context = useContext(AppConfigContext);
   if (context === undefined) {
     throw new Error('useAppConfig must be used within an AppConfigProvider');

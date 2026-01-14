@@ -19,7 +19,7 @@ import * as VA from '../../services/fhir/VA';
 import { from, Subject } from 'rxjs';
 import { useNotificationDispatch } from '../../app/providers/NotificationProvider';
 import { differenceInDays, parseISO } from 'date-fns';
-import { AppConfig, useConfig } from '../../app/providers/AppConfigProvider';
+import { AppConfig, useAppConfig } from '../../app/providers/AppConfigProvider';
 import { useUserPreferences } from '../../app/providers/UserPreferencesProvider';
 import { useConnectionCards } from '../connections/hooks/useConnectionCards';
 import { findUserById } from '../../repositories/UserRepository';
@@ -121,7 +121,7 @@ function HandleInitalSync({ children }: PropsWithChildren) {
     userPreferences = useUserPreferences(),
     conList = useConnectionCards(),
     db = useRxDb(),
-    config = useConfig(),
+    { config, isLoading: isConfigLoading } = useAppConfig(),
     isDemo = IS_DEMO === 'enabled',
     currentSyncJobLength = Object.keys(sync).length,
     syncJobEntries = useMemo(() => new Set(Object.keys(sync)), [sync]),
@@ -152,6 +152,7 @@ function HandleInitalSync({ children }: PropsWithChildren) {
     }, [conList, handleFetchData, syncJobEntries]);
 
   useEffect(() => {
+    if (isConfigLoading) return;
     if (!isDemo) {
       if (currentSyncJobLength === 0) {
         console.debug(
@@ -161,7 +162,7 @@ function HandleInitalSync({ children }: PropsWithChildren) {
         startSyncAllConnections();
       }
     }
-  }, [isDemo, startSyncAllConnections, currentSyncJobLength]);
+  }, [isConfigLoading, isDemo, startSyncAllConnections, currentSyncJobLength]);
 
   return <>{children}</>;
 }

@@ -6,7 +6,10 @@ import { GenericBanner } from '../../../shared/components/GenericBanner';
 import { useRxDb } from '../../../app/providers/RxDbProvider';
 import { DatabaseCollections } from '../../../app/providers/DatabaseCollections';
 import { Routes } from '../../../Routes';
-import { AppConfig, useConfig } from '../../../app/providers/AppConfigProvider';
+import {
+  AppConfig,
+  useAppConfig,
+} from '../../../app/providers/AppConfigProvider';
 import {
   DynamicRegistrationError,
   EpicDynamicRegistrationResponse,
@@ -35,7 +38,7 @@ import { UserDocument } from '../../../models/user-document/UserDocument.type';
  */
 function useEpicDynamicRegistrationLogin() {
   const db = useRxDb(),
-    config = useConfig(),
+    { config, isLoading } = useAppConfig(),
     user = useUser(),
     [error, setError] = useState(''),
     notifyDispatch = useNotificationDispatch(),
@@ -45,6 +48,7 @@ function useEpicDynamicRegistrationLogin() {
     { search } = useLocation();
 
   useEffect(() => {
+    if (isLoading) return;
     if (!hasRun.current) {
       const searchRequest = new URLSearchParams(search),
         code = searchRequest.get('code'),
@@ -114,6 +118,7 @@ function useEpicDynamicRegistrationLogin() {
     }
   }, [
     config,
+    isLoading,
     db,
     db.connection_documents,
     notifyDispatch,

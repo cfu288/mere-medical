@@ -8,7 +8,7 @@ import { useNotificationDispatch } from '../../../app/providers/NotificationProv
 import { AppPage } from '../../../shared/components/AppPage';
 import { GenericBanner } from '../../../shared/components/GenericBanner';
 import { useUser } from '../../../app/providers/UserProvider';
-import { useConfig } from '../../../app/providers/AppConfigProvider';
+import { useAppConfig } from '../../../app/providers/AppConfigProvider';
 import {
   CernerLocalStorageKeys,
   fetchAccessTokenWithCode,
@@ -17,7 +17,7 @@ import { createConnection } from '../../../repositories/ConnectionRepository';
 
 const CernerRedirect: React.FC = () => {
   const navigate = useNavigate(),
-    config = useConfig(),
+    { config, isLoading } = useAppConfig(),
     user = useUser(),
     db = useRxDb(),
     notifyDispatch = useNotificationDispatch(),
@@ -26,6 +26,7 @@ const CernerRedirect: React.FC = () => {
     { search } = useLocation();
 
   useEffect(() => {
+    if (isLoading) return;
     if (!hasRun.current) {
       hasRun.current = true;
       const searchRequest = new URLSearchParams(search),
@@ -126,7 +127,15 @@ const CernerRedirect: React.FC = () => {
         );
       }
     }
-  }, [db.connection_documents, navigate, notifyDispatch, search, user.id]);
+  }, [
+    config,
+    isLoading,
+    db.connection_documents,
+    navigate,
+    notifyDispatch,
+    search,
+    user.id,
+  ]);
 
   return (
     <AppPage
