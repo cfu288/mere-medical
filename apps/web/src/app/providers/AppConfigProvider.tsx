@@ -1,4 +1,4 @@
-import React, {
+import {
   createContext,
   useContext,
   useEffect,
@@ -42,26 +42,34 @@ const defaultContextValue: AppConfigContextValue = {
 const AppConfigContext =
   createContext<AppConfigContextValue>(defaultContextValue);
 
-export function AppConfigProvider({ children }: PropsWithChildren) {
+export type ConfigFetcher = () => Promise<AppConfig | null>;
+
+export const defaultConfigFetcher: ConfigFetcher = async () => {
+  try {
+    const response = await fetch('/api/v1/instance-config');
+    if (!response.ok) {
+      console.warn('Failed to fetch config from API:', response.status);
+      return null;
+    }
+    return await response.json();
+  } catch (error) {
+    console.warn('Error fetching config from API:', error);
+    return null;
+  }
+};
+
+interface AppConfigProviderProps extends PropsWithChildren {
+  configFetcher?: ConfigFetcher;
+}
+
+export function AppConfigProvider({
+  children,
+  configFetcher = defaultConfigFetcher,
+}: AppConfigProviderProps) {
   const db = useRxDb();
   const [config, setConfig] = useState<AppConfig>(emptyConfig);
   const [isStale, setIsStale] = useState(true);
   const hasInitialized = useRef(false);
-
-  const fetchConfigFromApi =
-    useCallback(async (): Promise<AppConfig | null> => {
-      try {
-        const response = await fetch('/api/v1/instance-config');
-        if (!response.ok) {
-          console.warn('Failed to fetch config from API:', response.status);
-          return null;
-        }
-        return await response.json();
-      } catch (error) {
-        console.warn('Error fetching config from API:', error);
-        return null;
-      }
-    }, []);
 
   const saveConfigToDb = useCallback(
     async (configData: AppConfig) => {
@@ -84,7 +92,21 @@ export function AppConfigProvider({ children }: PropsWithChildren) {
         .findOne(INSTANCE_CONFIG_ID)
         .exec();
       if (cached) {
-        return cached.toJSON() as AppConfig;
+        const doc = cached.toJSON();
+        return {
+          ONPATIENT_CLIENT_ID: doc.ONPATIENT_CLIENT_ID,
+          EPIC_CLIENT_ID: doc.EPIC_CLIENT_ID,
+          EPIC_CLIENT_ID_DSTU2: doc.EPIC_CLIENT_ID_DSTU2,
+          EPIC_CLIENT_ID_R4: doc.EPIC_CLIENT_ID_R4,
+          EPIC_SANDBOX_CLIENT_ID: doc.EPIC_SANDBOX_CLIENT_ID,
+          EPIC_SANDBOX_CLIENT_ID_DSTU2: doc.EPIC_SANDBOX_CLIENT_ID_DSTU2,
+          EPIC_SANDBOX_CLIENT_ID_R4: doc.EPIC_SANDBOX_CLIENT_ID_R4,
+          CERNER_CLIENT_ID: doc.CERNER_CLIENT_ID,
+          VERADIGM_CLIENT_ID: doc.VERADIGM_CLIENT_ID,
+          VA_CLIENT_ID: doc.VA_CLIENT_ID,
+          PUBLIC_URL: doc.PUBLIC_URL,
+          REDIRECT_URI: doc.REDIRECT_URI,
+        };
       }
       return null;
     } catch (error) {
@@ -105,7 +127,7 @@ export function AppConfigProvider({ children }: PropsWithChildren) {
         setIsStale(true);
       }
 
-      const freshConfig = await fetchConfigFromApi();
+      const freshConfig = await configFetcher();
 
       if (freshConfig) {
         setConfig(freshConfig);
@@ -115,7 +137,7 @@ export function AppConfigProvider({ children }: PropsWithChildren) {
     };
 
     initConfig();
-  }, [loadCachedConfig, fetchConfigFromApi, saveConfigToDb]);
+  }, [loadCachedConfig, configFetcher, saveConfigToDb]);
 
   return (
     <AppConfigContext.Provider value={{ config, isStale }}>

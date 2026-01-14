@@ -52,4 +52,4 @@ COPY ./healthcheck.js /app/healthcheck.js
 
 ENV NODE_ENV production
 
-CMD ["node", "--openssl-config=openssl.cnf", "api/main.js"]
+CMD ["node", "api/main.js"]
