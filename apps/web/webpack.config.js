@@ -31,6 +31,7 @@ function myCustomPlugin() {
         plugins: [
           new DefinePlugin({
             MERE_APP_VERSION: JSON.stringify(commitHash),
+            IS_DEMO: JSON.stringify(process.env.IS_DEMO || 'disabled'),
           }),
         ],
         ignoreWarnings: [/Failed to parse source map/],

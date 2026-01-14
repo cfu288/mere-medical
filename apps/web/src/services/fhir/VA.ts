@@ -20,7 +20,7 @@ import {
 } from '../../models/connection-document/ConnectionDocument.type';
 import { Routes } from '../../Routes';
 import { DSTU2 } from '.';
-import Config from '../../environments/config.json';
+import { AppConfig } from '../../app/providers/AppConfigProvider';
 import { createConnection } from '../../repositories/ConnectionRepository';
 import {
   ClinicalDocument,
@@ -49,11 +49,12 @@ export function getDSTU2Url(baseUrl = VA_BASE_URL) {
 }
 
 export async function getLoginUrl(
+  config: AppConfig,
   authorizeUrl = VA_AUTH_URL,
 ): Promise<string & Location> {
   const params = {
-    client_id: `${Config.VA_CLIENT_ID}`,
-    redirect_uri: `${Config.PUBLIC_URL}${'/api/v1/va/app-redirect'}`,
+    client_id: `${config.VA_CLIENT_ID}`,
+    redirect_uri: `${config.PUBLIC_URL}${'/api/v1/va/app-redirect'}`,
     response_type: 'code',
     scope: [
       'profile',
@@ -369,6 +370,7 @@ async function fetchAttachmentData(
  * @returns Promise of the auth response from the VA server
  */
 export async function fetchAccessTokenWithCode(
+  config: AppConfig,
   code: string,
   vaTokenUrl: string,
 ): Promise<VAAuthResponse> {
@@ -380,8 +382,8 @@ export async function fetchAccessTokenWithCode(
     },
     body: new URLSearchParams({
       grant_type: 'authorization_code',
-      client_id: `${Config.VA_CLIENT_ID}`,
-      redirect_uri: `${Config.PUBLIC_URL}${Routes.VACallback}`,
+      client_id: `${config.VA_CLIENT_ID}`,
+      redirect_uri: `${config.PUBLIC_URL}${Routes.VACallback}`,
       code: code,
       code_verifier: getCodeVerifier(),
     }),

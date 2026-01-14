@@ -19,9 +19,9 @@ import { UpdateAppChecker } from '../app/providers/UpdateAppChecker';
 import { UserPreferencesProvider } from '../app/providers/UserPreferencesProvider';
 import { UserProvider } from '../app/providers/UserProvider';
 import VectorProvider from '../features/vectors';
+import { AppConfigProvider } from '../app/providers/AppConfigProvider';
 import { TabWrapper } from '../shared/components/TabWrapper';
 import { TutorialOverlay } from '../features/tutorial/TutorialOverlay';
-import Config from '../environments/config.json';
 import CernerRedirect from '../features/connections/oauth-callbacks/CernerRedirect';
 import ConnectionTab from '../features/connections/ConnectionTab';
 import EpicRedirect from '../features/connections/oauth-callbacks/EpicRedirect';
@@ -43,22 +43,24 @@ export default function App() {
       <LocalConfigProvider>
         <DeveloperLogsProvider>
           <TutorialConfigProvider>
-            {Config.IS_DEMO !== 'enabled' && <TutorialOverlay />}
+            {IS_DEMO !== 'enabled' && <TutorialOverlay />}
           </TutorialConfigProvider>
           <NotificationProvider>
             <UpdateAppChecker />
             <RxDbProvider>
-              <UserProvider>
-                <VectorProvider>
-                  {/* <RecommendationGeneratorInitializer> */}
-                  <UserPreferencesProvider>
-                    <SyncJobProvider>
-                      <RouterProvider router={router} />
-                    </SyncJobProvider>
-                  </UserPreferencesProvider>
-                  {/* </RecommendationGeneratorInitializer> */}
-                </VectorProvider>
-              </UserProvider>
+              <AppConfigProvider>
+                <UserProvider>
+                  <VectorProvider>
+                    {/* <RecommendationGeneratorInitializer> */}
+                    <UserPreferencesProvider>
+                      <SyncJobProvider>
+                        <RouterProvider router={router} />
+                      </SyncJobProvider>
+                    </UserPreferencesProvider>
+                    {/* </RecommendationGeneratorInitializer> */}
+                  </VectorProvider>
+                </UserProvider>
+              </AppConfigProvider>
             </RxDbProvider>
           </NotificationProvider>
         </DeveloperLogsProvider>

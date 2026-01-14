@@ -8,6 +8,7 @@ import { useNotificationDispatch } from '../../../app/providers/NotificationProv
 import { AppPage } from '../../../shared/components/AppPage';
 import { GenericBanner } from '../../../shared/components/GenericBanner';
 import { useUser } from '../../../app/providers/UserProvider';
+import { useConfig } from '../../../app/providers/AppConfigProvider';
 import {
   CernerLocalStorageKeys,
   fetchAccessTokenWithCode,
@@ -16,6 +17,7 @@ import { createConnection } from '../../../repositories/ConnectionRepository';
 
 const CernerRedirect: React.FC = () => {
   const navigate = useNavigate(),
+    config = useConfig(),
     user = useUser(),
     db = useRxDb(),
     notifyDispatch = useNotificationDispatch(),
@@ -44,7 +46,7 @@ const CernerRedirect: React.FC = () => {
 
       if (code && cernerUrl && cernerName && cernerAuthUrl && cernerTokenUrl) {
         const tokenEndpoint = cernerTokenUrl;
-        fetchAccessTokenWithCode(code, tokenEndpoint)
+        fetchAccessTokenWithCode(config, code, tokenEndpoint)
           .then((res) => {
             if (
               res.access_token &&

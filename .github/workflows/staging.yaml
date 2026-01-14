@@ -45,13 +45,8 @@ jobs:
         with:
           context: .
           platforms: ${{ matrix.platform }}
-          # Push by digest without a tag to avoid race conditions between platforms
-          # Each platform pushes its image with a unique digest (sha256:abc123...)
-          # The manifest job will combine these into a single multi-arch image
           outputs: type=image,name=cfu288/mere-medical,push-by-digest=true,name-canonical=true,push=true
 
-      # Save the digest to a file for the manifest job to use
-      # Digests are unique content identifiers like sha256:abc123...
       - name: Export digest
         run: |
           mkdir -p /tmp/digests
@@ -61,15 +56,11 @@ jobs:
       - name: Upload digest
         uses: actions/upload-artifact@v4
         with:
-          # Upload the digest file as an artifact for the manifest job
-          # Named by platform to avoid conflicts (amd64 or arm64)
           name: digests-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
           path: /tmp/digests/*
           if-no-files-found: error
           retention-days: 1
 
-  # Combine the platform-specific images into a single multi-arch manifest
-  # This allows Docker to automatically select the right image for the user's platform
   app-manifest:
     runs-on: ubuntu-latest
     needs:
@@ -91,12 +82,85 @@ jobs:
           username: ${{ env.username }}
           password: ${{ env.PASSWORD }}
 
-      # Create a manifest list that points to both platform images
-      # Docker will automatically select the right one based on the user's architecture
       - name: Create manifest list and push
         working-directory: /tmp/digests
         run: |
           docker buildx imagetools create -t cfu288/mere-medical:beta \
+            $(printf 'cfu288/mere-medical@sha256:%s ' *)
+
+  app-demo-multiplatform:
+    strategy:
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            platform: linux/amd64
+          - runner: ubuntu-22.04-arm
+            platform: linux/arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.username }}
+          password: ${{ env.PASSWORD }}
+
+      - name: Build and push demo by platform
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          build-args: |
+            IS_DEMO=enabled
+          outputs: type=image,name=cfu288/mere-medical,push-by-digest=true,name-canonical=true,push=true
+
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests-demo
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests-demo/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-demo-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
+          path: /tmp/digests-demo/*
+          if-no-files-found: error
+          retention-days: 1
+
+  app-demo-manifest:
+    runs-on: ubuntu-latest
+    needs:
+      - app-demo-multiplatform
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests-demo
+          pattern: digests-demo-*
+          merge-multiple: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.username }}
+          password: ${{ env.PASSWORD }}
+
+      - name: Create demo manifest list and push
+        working-directory: /tmp/digests-demo
+        run: |
+          docker buildx imagetools create -t cfu288/mere-medical:beta-demo \
             $(printf 'cfu288/mere-medical@sha256:%s ' *)
 
   docs:

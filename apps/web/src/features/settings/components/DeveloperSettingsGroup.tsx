@@ -1,34 +1,35 @@
 import { useLocalConfig } from '../../../app/providers/LocalConfigProvider';
 import { useDeveloperLogs } from '../../../app/providers/DeveloperLogsProvider';
 import { Console } from 'console-feed';
-import Config from '../../../environments/config.json';
+import { useConfig } from '../../../environments';
 
 function isConfigured(value: string | undefined): boolean {
   return !!value && !value.startsWith('$');
 }
 
-const envVars = [
-  { name: 'PUBLIC_URL', value: Config.PUBLIC_URL },
-  { name: 'EPIC_CLIENT_ID', value: Config.EPIC_CLIENT_ID },
-  { name: 'EPIC_CLIENT_ID_DSTU2', value: Config.EPIC_CLIENT_ID_DSTU2 },
-  { name: 'EPIC_CLIENT_ID_R4', value: Config.EPIC_CLIENT_ID_R4 },
-  { name: 'EPIC_SANDBOX_CLIENT_ID', value: Config.EPIC_SANDBOX_CLIENT_ID },
-  {
-    name: 'EPIC_SANDBOX_CLIENT_ID_DSTU2',
-    value: Config.EPIC_SANDBOX_CLIENT_ID_DSTU2,
-  },
-  {
-    name: 'EPIC_SANDBOX_CLIENT_ID_R4',
-    value: Config.EPIC_SANDBOX_CLIENT_ID_R4,
-  },
-  { name: 'CERNER_CLIENT_ID', value: Config.CERNER_CLIENT_ID },
-  { name: 'VERADIGM_CLIENT_ID', value: Config.VERADIGM_CLIENT_ID },
-  { name: 'VA_CLIENT_ID', value: Config.VA_CLIENT_ID },
-  { name: 'ONPATIENT_CLIENT_ID', value: Config.ONPATIENT_CLIENT_ID },
-];
-
 export function DeveloperSettingsGroup() {
   const localConfig = useLocalConfig();
+  const config = useConfig();
+
+  const envVars = [
+    { name: 'PUBLIC_URL', value: config.PUBLIC_URL },
+    { name: 'EPIC_CLIENT_ID', value: config.EPIC_CLIENT_ID },
+    { name: 'EPIC_CLIENT_ID_DSTU2', value: config.EPIC_CLIENT_ID_DSTU2 },
+    { name: 'EPIC_CLIENT_ID_R4', value: config.EPIC_CLIENT_ID_R4 },
+    { name: 'EPIC_SANDBOX_CLIENT_ID', value: config.EPIC_SANDBOX_CLIENT_ID },
+    {
+      name: 'EPIC_SANDBOX_CLIENT_ID_DSTU2',
+      value: config.EPIC_SANDBOX_CLIENT_ID_DSTU2,
+    },
+    {
+      name: 'EPIC_SANDBOX_CLIENT_ID_R4',
+      value: config.EPIC_SANDBOX_CLIENT_ID_R4,
+    },
+    { name: 'CERNER_CLIENT_ID', value: config.CERNER_CLIENT_ID },
+    { name: 'VERADIGM_CLIENT_ID', value: config.VERADIGM_CLIENT_ID },
+    { name: 'VA_CLIENT_ID', value: config.VA_CLIENT_ID },
+    { name: 'ONPATIENT_CLIENT_ID', value: config.ONPATIENT_CLIENT_ID },
+  ];
 
   if (!localConfig.developer_mode_enabled) {
     return null;

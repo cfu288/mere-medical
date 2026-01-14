@@ -8,7 +8,8 @@ declare global {
       TEST_VAR: string;
     }
   }
-  var MERE_APP_VERSION: number;
+  var MERE_APP_VERSION: string;
+  var IS_DEMO: string;
 }
 
 export {};

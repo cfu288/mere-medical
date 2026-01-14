@@ -19,7 +19,7 @@ import * as VA from '../../services/fhir/VA';
 import { from, Subject } from 'rxjs';
 import { useNotificationDispatch } from '../../app/providers/NotificationProvider';
 import { differenceInDays, parseISO } from 'date-fns';
-import Config from '../../environments/config.json';
+import { AppConfig, useConfig } from '../../app/providers/AppConfigProvider';
 import { useUserPreferences } from '../../app/providers/UserPreferencesProvider';
 import { useConnectionCards } from '../connections/hooks/useConnectionCards';
 import { findUserById } from '../../repositories/UserRepository';
@@ -43,6 +43,7 @@ const SyncJobDispatchContext = React.createContext<Dispatch | undefined>(
 type Action =
   | {
       type: 'add_job';
+      config: AppConfig;
       id: string;
       connectionDocument: RxDocument<ConnectionDocument>;
       baseUrl: string;
@@ -65,6 +66,7 @@ const syncJobReducer: (
       const subject = new Subject<PromiseSettledResult<void[]>[]>();
       const observable = from(
         fetchMedicalRecords(
+          action.config,
           action.connectionDocument,
           action.db,
           action.baseUrl,
@@ -119,7 +121,8 @@ function HandleInitalSync({ children }: PropsWithChildren) {
     userPreferences = useUserPreferences(),
     conList = useConnectionCards(),
     db = useRxDb(),
-    isDemo = Config.IS_DEMO === 'enabled',
+    config = useConfig(),
+    isDemo = IS_DEMO === 'enabled',
     currentSyncJobLength = Object.keys(sync).length,
     syncJobEntries = useMemo(() => new Set(Object.keys(sync)), [sync]),
     handleFetchData = useCallback(
@@ -127,6 +130,7 @@ function HandleInitalSync({ children }: PropsWithChildren) {
         if (syncD && userPreferences) {
           syncD({
             type: 'add_job',
+            config,
             id: item.toJSON().id,
             connectionDocument: item,
             baseUrl: item.get('location'),
@@ -135,7 +139,7 @@ function HandleInitalSync({ children }: PropsWithChildren) {
           });
         }
       },
-      [db, syncD, userPreferences],
+      [config, db, syncD, userPreferences],
     ),
     startSyncAllConnections = useCallback(() => {
       if (conList) {
@@ -335,6 +339,7 @@ export function useSyncJobDispatchContext() {
 }
 
 async function fetchMedicalRecords(
+  config: AppConfig,
   connectionDocument: RxDocument<ConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
   baseUrl: string,
@@ -366,11 +371,13 @@ async function fetchMedicalRecords(
     case 'epic': {
       try {
         await refreshEpicConnectionTokenIfNeeded(
+          config,
           connectionDocument,
           db,
           useProxy,
         );
         const syncJob = await Epic.syncAllRecords(
+          config,
           baseUrl,
           connectionDocument.toMutableJSON() as unknown as EpicConnectionDocument,
           db,
@@ -574,6 +581,7 @@ async function refreshCernerConnectionTokenIfNeeded(
  * @param db
  */
 async function refreshEpicConnectionTokenIfNeeded(
+  config: AppConfig,
   connectionDocument: RxDocument<ConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
   useProxy = false,
@@ -606,6 +614,7 @@ async function refreshEpicConnectionTokenIfNeeded(
       }
 
       const access_token_data = await Epic.fetchAccessTokenUsingJWT(
+        config,
         clientId,
         epicTokenUrl,
         epicId,

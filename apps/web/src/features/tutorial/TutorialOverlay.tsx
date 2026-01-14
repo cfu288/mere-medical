@@ -10,7 +10,6 @@ import { TutorialAddConnectionScreen } from './components/TutorialAddConnectionS
 import { TutorialWelcomeScreen } from './components/TutorialWelcomeScreen';
 import { TutorialInstallPWAScreen } from './components/TutorialInstallPWAScreen';
 import { TutorialCompleteScreen } from './components/TutorialCompleteScreen';
-import Config from '../../environments/config.json';
 
 export type TutorialState = {
   currentStep: number;

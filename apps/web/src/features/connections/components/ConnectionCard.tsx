@@ -14,6 +14,7 @@ import { RxDocument } from 'rxdb';
 import { useNotificationDispatch } from '../../../app/providers/NotificationProvider';
 import { useUserPreferences } from '../../../app/providers/UserPreferencesProvider';
 import { useUser } from '../../../app/providers/UserProvider';
+import { useConfig } from '../../../app/providers/AppConfigProvider';
 import { ButtonLoadingSpinner } from './ButtonLoadingSpinner';
 import {
   useSyncJobContext,
@@ -57,6 +58,7 @@ export function ConnectionCard({
   baseUrl: string;
 }) {
   const db = useRxDb(),
+    config = useConfig(),
     user = useUser(),
     [deleting, setDeleting] = useState(false),
     userPreferences = useUserPreferences(),
@@ -92,6 +94,7 @@ export function ConnectionCard({
       if (syncD && userPreferences) {
         syncD({
           type: 'add_job',
+          config,
           id: item.toJSON().id,
           connectionDocument: item,
           baseUrl,
@@ -99,7 +102,7 @@ export function ConnectionCard({
           db,
         });
       }
-    }, [baseUrl, db, item, syncD, userPreferences]);
+    }, [baseUrl, config, db, item, syncD, userPreferences]);
 
   const [showModal, setShowModal] = useState(false);
   const [showPeriodText, setShowPeriodText] = useState('...');
@@ -202,7 +205,7 @@ export function ConnectionCard({
               className="-ml-px flex flex-initial divide-x divide-gray-800 px-4 disabled:bg-slate-50"
               onClick={async () => {
                 setTenantUrlBySource(item);
-                window.location = await getLoginUrlBySource(item);
+                window.location = await getLoginUrlBySource(config, item);
               }}
             >
               <div className="relative inline-flex h-full flex-initial items-center justify-center rounded-br-lg border border-transparent py-4 text-sm font-bold text-red-500 hover:text-gray-800">
