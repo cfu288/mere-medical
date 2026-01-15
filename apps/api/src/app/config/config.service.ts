@@ -12,7 +12,6 @@ export interface PublicConfig {
   VERADIGM_CLIENT_ID?: string;
   VA_CLIENT_ID?: string;
   PUBLIC_URL?: string;
-  REDIRECT_URI?: string;
 }
 
 @Injectable()
@@ -30,7 +29,6 @@ export class ConfigService {
       VERADIGM_CLIENT_ID: process.env.VERADIGM_CLIENT_ID,
       VA_CLIENT_ID: process.env.VA_CLIENT_ID,
       PUBLIC_URL: process.env.PUBLIC_URL,
-      REDIRECT_URI: process.env.REDIRECT_URI || process.env.PUBLIC_URL,
     };
   }
 }

@@ -42,9 +42,6 @@ export const instanceConfigSchemaLiteral = {
     PUBLIC_URL: {
       type: 'string',
     },
-    REDIRECT_URI: {
-      type: 'string',
-    },
     updated_at: {
       type: 'number',
     },

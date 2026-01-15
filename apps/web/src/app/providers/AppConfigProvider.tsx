@@ -8,6 +8,7 @@ import {
   useRef,
 } from 'react';
 import { useRxDb } from './RxDbProvider';
+import { useNotificationDispatch } from './NotificationProvider';
 
 export interface AppConfig {
   ONPATIENT_CLIENT_ID?: string;
@@ -21,7 +22,6 @@ export interface AppConfig {
   VERADIGM_CLIENT_ID?: string;
   VA_CLIENT_ID?: string;
   PUBLIC_URL?: string;
-  REDIRECT_URI?: string;
 }
 
 interface AppConfigState {
@@ -91,6 +91,7 @@ export function AppConfigProvider({
   configFetcher = defaultConfigFetcher,
 }: AppConfigProviderProps) {
   const db = useRxDb();
+  const notifyDispatch = useNotificationDispatch();
   const [state, dispatch] = useReducer(configReducer, initialState);
   const hasInitialized = useRef(false);
 
@@ -128,7 +129,6 @@ export function AppConfigProvider({
           VERADIGM_CLIENT_ID: doc.VERADIGM_CLIENT_ID,
           VA_CLIENT_ID: doc.VA_CLIENT_ID,
           PUBLIC_URL: doc.PUBLIC_URL,
-          REDIRECT_URI: doc.REDIRECT_URI,
         };
       }
       return null;
@@ -164,6 +164,11 @@ export function AppConfigProvider({
         }
       } catch (error) {
         console.error('Error initializing config:', error);
+        notifyDispatch({
+          type: 'set_notification',
+          message: 'Failed to load configuration. Some features may not work.',
+          variant: 'error',
+        });
         dispatch({ type: 'LOAD_ERROR' });
       }
     };
@@ -173,7 +178,7 @@ export function AppConfigProvider({
     return () => {
       cancelled = true;
     };
-  }, [loadCachedConfig, configFetcher, saveConfigToDb]);
+  }, [loadCachedConfig, configFetcher, saveConfigToDb, notifyDispatch]);
 
   return (
     <AppConfigContext.Provider value={state}>
@@ -193,4 +198,8 @@ export function useAppConfig(): AppConfigState {
 export function useConfig(): AppConfig {
   const { config } = useAppConfig();
   return config;
+}
+
+export function isConfigValid(config: AppConfig): boolean {
+  return !!config.PUBLIC_URL;
 }

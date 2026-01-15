@@ -209,25 +209,20 @@ export function TenantSelectModal({
         disabledMessage: 'Provide VERADIGM_CLIENT_ID env var to enable',
         id: 3,
       },
-      !userPreferences?.use_proxy
-        ? {
-            title: 'OnPatient',
-            vendor: 'onpatient',
-            source: OnpatientLogo,
-            alt: 'Dr. Chrono',
-            href: OnPatient.getLoginUrl(config),
-            enabled: false,
-            id: 4,
-          }
-        : {
-            title: 'OnPatient',
-            vendor: 'onpatient',
-            source: OnpatientLogo,
-            alt: 'Dr. Chrono',
-            href: OnPatient.getLoginUrl(config),
-            enabled: true,
-            id: 4,
-          },
+      {
+        title: 'OnPatient',
+        vendor: 'onpatient',
+        source: OnpatientLogo,
+        alt: 'Dr. Chrono',
+        href: OnPatient.getLoginUrl(config),
+        enabled:
+          isConfigured(config.ONPATIENT_CLIENT_ID) &&
+          !!userPreferences?.use_proxy,
+        disabledMessage: !isConfigured(config.ONPATIENT_CLIENT_ID)
+          ? 'Provide ONPATIENT_CLIENT_ID env var to enable'
+          : undefined,
+        id: 4,
+      },
       {
         title: 'Veterans Affairs',
         vendor: 'va',
@@ -298,6 +293,16 @@ export function TenantSelectModal({
     const abortController = new AbortController();
 
     if (state.hasSelectedEmrVendor) {
+      if (!config.PUBLIC_URL) {
+        notifyDispatch({
+          type: 'set_notification',
+          message: 'Configuration not loaded. Please try again.',
+          variant: 'error',
+        });
+        dispatch({ type: 'setItems', payload: [] });
+        return;
+      }
+
       const apiPath =
         state.emrVendor === 'cerner'
           ? state.fhirVersion === 'R4'

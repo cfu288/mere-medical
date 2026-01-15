@@ -31,23 +31,5 @@ describe('ConfigService', () => {
 
       expect(config.EPIC_CLIENT_ID).toBeUndefined();
     });
-
-    it('uses PUBLIC_URL as fallback for REDIRECT_URI when not set', () => {
-      process.env.PUBLIC_URL = 'https://example.com';
-      delete process.env.REDIRECT_URI;
-
-      const config = service.getPublicConfig();
-
-      expect(config.REDIRECT_URI).toBe('https://example.com');
-    });
-
-    it('uses REDIRECT_URI when explicitly set', () => {
-      process.env.PUBLIC_URL = 'https://example.com';
-      process.env.REDIRECT_URI = 'https://redirect.example.com';
-
-      const config = service.getPublicConfig();
-
-      expect(config.REDIRECT_URI).toBe('https://redirect.example.com');
-    });
   });
 });

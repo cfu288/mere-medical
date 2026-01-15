@@ -19,7 +19,11 @@ import * as VA from '../../services/fhir/VA';
 import { from, Subject } from 'rxjs';
 import { useNotificationDispatch } from '../../app/providers/NotificationProvider';
 import { differenceInDays, parseISO } from 'date-fns';
-import { AppConfig, useAppConfig } from '../../app/providers/AppConfigProvider';
+import {
+  AppConfig,
+  useAppConfig,
+  isConfigValid,
+} from '../../app/providers/AppConfigProvider';
 import { useUserPreferences } from '../../app/providers/UserPreferencesProvider';
 import { useConnectionCards } from '../connections/hooks/useConnectionCards';
 import { findUserById } from '../../repositories/UserRepository';
@@ -153,6 +157,7 @@ function HandleInitalSync({ children }: PropsWithChildren) {
 
   useEffect(() => {
     if (isConfigLoading) return;
+    if (!isConfigValid(config)) return;
     if (!isDemo) {
       if (currentSyncJobLength === 0) {
         console.debug(
@@ -162,7 +167,13 @@ function HandleInitalSync({ children }: PropsWithChildren) {
         startSyncAllConnections();
       }
     }
-  }, [isConfigLoading, isDemo, startSyncAllConnections, currentSyncJobLength]);
+  }, [
+    isConfigLoading,
+    config,
+    isDemo,
+    startSyncAllConnections,
+    currentSyncJobLength,
+  ]);
 
   return <>{children}</>;
 }
