@@ -609,11 +609,12 @@ async function fetchAttachmentData(
 export async function fetchAccessTokenWithCode(
   code: string,
   healowTokenUrl: string,
+  clientId: string,
+  redirectUri: string,
   healowId?: string,
   useProxy = false,
 ): Promise<HealowAuthResponse> {
-  const publicUrl =
-    typeof window !== 'undefined' ? window.location.origin : '';
+  const publicUrl = typeof window !== 'undefined' ? window.location.origin : '';
   const proxyUrl = concatPath(
     publicUrl || '',
     `/api/proxy?vendor=healow&serviceId=${healowId}&target_type=token`,
@@ -626,6 +627,8 @@ export async function fetchAccessTokenWithCode(
     body: new URLSearchParams({
       grant_type: 'authorization_code',
       code: code,
+      redirect_uri: redirectUri,
+      client_id: clientId,
       code_verifier: getCodeVerifier(),
     }),
   });

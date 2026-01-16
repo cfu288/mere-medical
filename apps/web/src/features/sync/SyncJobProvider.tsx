@@ -495,6 +495,7 @@ async function fetchMedicalRecords(
           baseUrl,
           connectionDocument.toMutableJSON() as unknown as HealowConnectionDocument,
           db,
+          useProxy,
         );
         await updateConnectionDocumentTimestamps(
           syncJob,

@@ -8,6 +8,8 @@ import { useNotificationDispatch } from '../../../app/providers/NotificationProv
 import { AppPage } from '../../../shared/components/AppPage';
 import { GenericBanner } from '../../../shared/components/GenericBanner';
 import { useUser } from '../../../app/providers/UserProvider';
+import { useConfig } from '../../../app/providers/AppConfigProvider';
+import { useUserPreferences } from '../../../app/providers/UserPreferencesProvider';
 import {
   HealowLocalStorageKeys,
   fetchAccessTokenWithCode,
@@ -18,13 +20,15 @@ const HealowRedirect: React.FC = () => {
   const navigate = useNavigate(),
     user = useUser(),
     db = useRxDb(),
+    config = useConfig(),
+    userPreferences = useUserPreferences(),
     notifyDispatch = useNotificationDispatch(),
     hasRun = useRef(false),
     [error, setError] = useState(''),
     { search } = useLocation();
 
   useEffect(() => {
-    if (!hasRun.current) {
+    if (!hasRun.current && userPreferences !== undefined) {
       hasRun.current = true;
       const searchRequest = new URLSearchParams(search),
         code = searchRequest.get('code'),
@@ -44,8 +48,10 @@ const HealowRedirect: React.FC = () => {
         fetchAccessTokenWithCode(
           code,
           healowTokenUrl,
+          config.HEALOW_CLIENT_ID || '',
+          `${config.PUBLIC_URL}${Routes.HealowCallback}`,
           healowId || undefined,
-          true,
+          userPreferences.use_proxy,
         )
           .then((res) => {
             if (
@@ -144,7 +150,7 @@ const HealowRedirect: React.FC = () => {
         );
       }
     }
-  }, [db.connection_documents, navigate, notifyDispatch, search, user.id]);
+  }, [db, config, userPreferences, navigate, notifyDispatch, search, user.id]);
 
   return (
     <AppPage
