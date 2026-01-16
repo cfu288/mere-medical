@@ -26,6 +26,9 @@ COPY ./nginx.conf /nginx.conf
 
 FROM node:20.11.0 as build-web-stage
 
+ARG IS_DEMO=disabled
+ENV IS_DEMO=${IS_DEMO}
+
 COPY --from=build-web-base . .
 WORKDIR /app
 # Increase Node memory limit for production build
@@ -42,18 +45,11 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-RUN apk update && apk add --no-cache gettext moreutils
-ENV JSFOLDER=/app/web/*.js
-
 COPY --from=build-web-stage /app/dist/apps/web/ /app/web/
 COPY --from=build-api-stage /app/dist/apps/api/ /app/api/
 COPY --from=build-api-stage /app/node_modules/ /app/node_modules/
-
 COPY ./healthcheck.js /app/healthcheck.js
-
-COPY ./inject-env-and-start.sh /usr/bin/inject-env-and-start.sh
-RUN chmod +x /usr/bin/inject-env-and-start.sh
 
 ENV NODE_ENV production
 
-ENTRYPOINT [ "inject-env-and-start.sh" ]
+CMD ["node", "api/main.js"]

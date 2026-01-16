@@ -26,7 +26,7 @@ import {
   TenantSelectModelResultItem,
 } from './TenantSelectModelResultItem';
 import VALogo from '../../../assets/img/va-logo.png';
-import Config from '../../../environments/config.json';
+import { useConfig } from '../../../app/providers/AppConfigProvider';
 
 export type EMRVendor =
   | 'epic'
@@ -85,30 +85,6 @@ function isConfigured(value: string | undefined): boolean {
   return !!value && !value.startsWith('$');
 }
 
-const epicR4ProductionConfigured =
-  isConfigured(Config.EPIC_CLIENT_ID_R4) || isConfigured(Config.EPIC_CLIENT_ID);
-const epicR4SandboxConfigured =
-  isConfigured(Config.EPIC_SANDBOX_CLIENT_ID_R4) ||
-  isConfigured(Config.EPIC_SANDBOX_CLIENT_ID);
-const epicR4Enabled = epicR4ProductionConfigured || epicR4SandboxConfigured;
-const epicR4SandboxOnly =
-  epicR4SandboxConfigured && !epicR4ProductionConfigured;
-
-const epicDstu2ProductionConfigured =
-  isConfigured(Config.EPIC_CLIENT_ID_DSTU2) ||
-  isConfigured(Config.EPIC_CLIENT_ID);
-const epicDstu2SandboxConfigured =
-  isConfigured(Config.EPIC_SANDBOX_CLIENT_ID_DSTU2) ||
-  isConfigured(Config.EPIC_SANDBOX_CLIENT_ID);
-const epicDstu2Enabled =
-  epicDstu2ProductionConfigured || epicDstu2SandboxConfigured;
-const epicDstu2SandboxOnly =
-  epicDstu2SandboxConfigured && !epicDstu2ProductionConfigured;
-
-const cernerEnabled = isConfigured(Config.CERNER_CLIENT_ID);
-const veradigmEnabled = isConfigured(Config.VERADIGM_CLIENT_ID);
-const vaEnabled = isConfigured(Config.VA_CLIENT_ID);
-
 export function TenantSelectModal({
   open,
   setOpen,
@@ -128,6 +104,32 @@ export function TenantSelectModal({
 }) {
   const userPreferences = useUserPreferences(),
     notifyDispatch = useNotificationDispatch();
+  const config = useConfig();
+
+  const epicR4ProductionConfigured =
+    isConfigured(config.EPIC_CLIENT_ID_R4) ||
+    isConfigured(config.EPIC_CLIENT_ID);
+  const epicR4SandboxConfigured =
+    isConfigured(config.EPIC_SANDBOX_CLIENT_ID_R4) ||
+    isConfigured(config.EPIC_SANDBOX_CLIENT_ID);
+  const epicR4Enabled = epicR4ProductionConfigured || epicR4SandboxConfigured;
+  const epicR4SandboxOnly =
+    epicR4SandboxConfigured && !epicR4ProductionConfigured;
+
+  const epicDstu2ProductionConfigured =
+    isConfigured(config.EPIC_CLIENT_ID_DSTU2) ||
+    isConfigured(config.EPIC_CLIENT_ID);
+  const epicDstu2SandboxConfigured =
+    isConfigured(config.EPIC_SANDBOX_CLIENT_ID_DSTU2) ||
+    isConfigured(config.EPIC_SANDBOX_CLIENT_ID);
+  const epicDstu2Enabled =
+    epicDstu2ProductionConfigured || epicDstu2SandboxConfigured;
+  const epicDstu2SandboxOnly =
+    epicDstu2SandboxConfigured && !epicDstu2ProductionConfigured;
+
+  const cernerEnabled = isConfigured(config.CERNER_CLIENT_ID);
+  const veradigmEnabled = isConfigured(config.VERADIGM_CLIENT_ID);
+  const vaEnabled = isConfigured(config.VA_CLIENT_ID);
 
   const [state, dispatch] = useReducer(
     (
@@ -169,11 +171,10 @@ export function TenantSelectModal({
   );
 
   useEffect(() => {
-    // get VA url
-    getVaLoginUrl().then((url) => {
+    getVaLoginUrl(config).then((url) => {
       setVaUrl(url);
     });
-  }, []);
+  }, [config]);
 
   const ConnectionSources: SourceItem[] = useMemo(() => {
     const sources = [
@@ -208,25 +209,20 @@ export function TenantSelectModal({
         disabledMessage: 'Provide VERADIGM_CLIENT_ID env var to enable',
         id: 3,
       },
-      !userPreferences?.use_proxy
-        ? {
-            title: 'OnPatient',
-            vendor: 'onpatient',
-            source: OnpatientLogo,
-            alt: 'Dr. Chrono',
-            href: OnPatient.getLoginUrl(),
-            enabled: false,
-            id: 4,
-          }
-        : {
-            title: 'OnPatient',
-            vendor: 'onpatient',
-            source: OnpatientLogo,
-            alt: 'Dr. Chrono',
-            href: OnPatient.getLoginUrl(),
-            enabled: true,
-            id: 4,
-          },
+      {
+        title: 'OnPatient',
+        vendor: 'onpatient',
+        source: OnpatientLogo,
+        alt: 'Dr. Chrono',
+        href: OnPatient.getLoginUrl(config),
+        enabled:
+          isConfigured(config.ONPATIENT_CLIENT_ID) &&
+          !!userPreferences?.use_proxy,
+        disabledMessage: !isConfigured(config.ONPATIENT_CLIENT_ID)
+          ? 'Provide ONPATIENT_CLIENT_ID env var to enable'
+          : undefined,
+        id: 4,
+      },
       {
         title: 'Veterans Affairs',
         vendor: 'va',
@@ -270,7 +266,18 @@ export function TenantSelectModal({
     ];
 
     return sources as SourceItem[];
-  }, [userPreferences?.use_proxy, vaUrl]);
+  }, [
+    config,
+    userPreferences?.use_proxy,
+    vaUrl,
+    epicR4Enabled,
+    epicR4SandboxOnly,
+    epicDstu2Enabled,
+    epicDstu2SandboxOnly,
+    cernerEnabled,
+    veradigmEnabled,
+    vaEnabled,
+  ]);
 
   const mainSources = useMemo(
     () => ConnectionSources.filter((s) => s.fhirVersion !== 'DSTU2'),
@@ -286,6 +293,16 @@ export function TenantSelectModal({
     const abortController = new AbortController();
 
     if (state.hasSelectedEmrVendor) {
+      if (!config.PUBLIC_URL) {
+        notifyDispatch({
+          type: 'set_notification',
+          message: 'Configuration not loaded. Please try again.',
+          variant: 'error',
+        });
+        dispatch({ type: 'setItems', payload: [] });
+        return;
+      }
+
       const apiPath =
         state.emrVendor === 'cerner'
           ? state.fhirVersion === 'R4'
@@ -309,7 +326,7 @@ export function TenantSelectModal({
         params['sandboxOnly'] = 'true';
       }
 
-      fetch(Config.PUBLIC_URL + apiPath + new URLSearchParams(params), {
+      fetch(config.PUBLIC_URL + apiPath + new URLSearchParams(params), {
         signal: abortController.signal,
       })
         .then((x) => x.json())
@@ -332,6 +349,10 @@ export function TenantSelectModal({
     state.query,
     notifyDispatch,
     state.hasSelectedEmrVendor,
+    state.fhirVersion,
+    config.PUBLIC_URL,
+    epicR4SandboxOnly,
+    epicDstu2SandboxOnly,
   ]);
 
   return (
@@ -364,7 +385,7 @@ export function TenantSelectModal({
                         }
                         onClick={() => {
                           if (!file.enabled) return;
-                          if (Config.IS_DEMO === 'enabled') {
+                          if (IS_DEMO === 'enabled') {
                             notifyDispatch({
                               type: 'set_notification',
                               message:
@@ -444,7 +465,7 @@ export function TenantSelectModal({
                           }`}
                           onClick={() => {
                             if (!file.enabled) return;
-                            if (Config.IS_DEMO === 'enabled') {
+                            if (IS_DEMO === 'enabled') {
                               notifyDispatch({
                                 type: 'set_notification',
                                 message:
@@ -534,7 +555,7 @@ export function TenantSelectModal({
                               }`}
                               onClick={() => {
                                 if (!file.enabled) return;
-                                if (Config.IS_DEMO === 'enabled') {
+                                if (IS_DEMO === 'enabled') {
                                   notifyDispatch({
                                     type: 'set_notification',
                                     message:

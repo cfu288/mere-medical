@@ -8,6 +8,7 @@ import { EMRVendor, TenantSelectModal } from './components/TenantSelectModal';
 import { GenericBanner } from '../../shared/components/GenericBanner';
 import { useConnectionCards } from './hooks/useConnectionCards';
 import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
+import { AppConfig, useConfig } from '../../app/providers/AppConfigProvider';
 import {
   CernerLocalStorageKeys,
   getLoginUrl as getCernerLoginUrl,
@@ -24,20 +25,20 @@ import {
 } from '../../services/fhir/Veradigm';
 
 export async function getLoginUrlBySource(
+  config: AppConfig,
   item: RxDocument<ConnectionDocument>,
 ): Promise<string & Location> {
   switch (item.get('source')) {
     case 'epic': {
       const baseUrl = item.get('location');
 
-      // to stay backwards compatible with old epic connections
-      // append /oauth2/authorize to the end of the auth url, if it doesn't already exist
       let authUrl = item.get('auth_uri');
       if (authUrl === undefined) {
         authUrl = baseUrl + '/oauth2/authorize';
       }
 
       return getEpicLoginUrl(
+        config,
         baseUrl,
         authUrl,
         isEpicSandbox(item.get('tenant_id')),
@@ -46,19 +47,19 @@ export async function getLoginUrlBySource(
     }
     case 'cerner': {
       return Promise.resolve(
-        getCernerLoginUrl(item.get('location'), item.get('auth_uri')),
+        getCernerLoginUrl(config, item.get('location'), item.get('auth_uri')),
       );
     }
     case 'veradigm': {
       return Promise.resolve(
-        getVeradigmLoginUrl(item.get('location'), item.get('auth_uri')),
+        getVeradigmLoginUrl(config, item.get('location'), item.get('auth_uri')),
       );
     }
     case 'onpatient': {
-      return Promise.resolve(OnPatient.getLoginUrl());
+      return Promise.resolve(OnPatient.getLoginUrl(config));
     }
     case 'va': {
-      return getVaLoginUrl();
+      return getVaLoginUrl(config);
     }
     default: {
       return '' as string & Location;
@@ -179,6 +180,7 @@ function setTenantVeradigmUrl(
 
 const ConnectionTab: React.FC = () => {
   const list = useConnectionCards(),
+    config = useConfig(),
     [openSelectModal, setOpenSelectModal] = useState(false),
     handleTogglePanel = useCallback(
       (
@@ -202,6 +204,7 @@ const ConnectionTab: React.FC = () => {
             );
             setOpenSelectModal((x) => !x);
             window.location = getEpicLoginUrl(
+              config,
               base,
               auth,
               isEpicSandbox(id),
@@ -219,18 +222,18 @@ const ConnectionTab: React.FC = () => {
               fhirVersion || 'DSTU2',
             );
             setOpenSelectModal((x) => !x);
-            window.location = getCernerLoginUrl(base, auth);
+            window.location = getCernerLoginUrl(config, base, auth);
             break;
           }
           case 'veradigm': {
             setTenantVeradigmUrl(base, auth, token, name, id);
             setOpenSelectModal((x) => !x);
-            window.location = getVeradigmLoginUrl(base, auth);
+            window.location = getVeradigmLoginUrl(config, base, auth);
             break;
           }
         }
       },
-      [],
+      [config],
     );
 
   return (

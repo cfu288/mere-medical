@@ -13,9 +13,11 @@ import { GenericBanner } from '../../../shared/components/GenericBanner';
 import { useNotificationDispatch } from '../../../app/providers/NotificationProvider';
 import { useRxDb } from '../../../app/providers/RxDbProvider';
 import { useUser } from '../../../app/providers/UserProvider';
+import { useAppConfig } from '../../../app/providers/AppConfigProvider';
 
 const VARedirect: React.FC = () => {
   const navigate = useNavigate(),
+    { config, isLoading } = useAppConfig(),
     user = useUser(),
     db = useRxDb(),
     notifyDispatch = useNotificationDispatch(),
@@ -23,13 +25,14 @@ const VARedirect: React.FC = () => {
     { search } = useLocation();
 
   useEffect(() => {
+    if (isLoading) return;
     if (!hasRun.current) {
       hasRun.current = true;
       const searchRequest = new URLSearchParams(search),
         code = searchRequest.get('code');
 
       if (code) {
-        fetchAccessTokenWithCode(code, VA_TOKEN_URL)
+        fetchAccessTokenWithCode(config, code, VA_TOKEN_URL)
           .then((res) => {
             if (
               res.access_token &&
@@ -84,7 +87,17 @@ const VARedirect: React.FC = () => {
           });
       }
     }
-  }, [db, db.connection_documents, navigate, notifyDispatch, user, user.id]);
+  }, [
+    config,
+    isLoading,
+    db,
+    db.connection_documents,
+    navigate,
+    notifyDispatch,
+    search,
+    user,
+    user.id,
+  ]);
 
   return (
     <AppPage banner={<GenericBanner text="Authenticated! Redirecting" />}>

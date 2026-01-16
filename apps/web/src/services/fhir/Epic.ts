@@ -45,7 +45,7 @@ import {
 } from '../../models/connection-document/ConnectionDocument.type';
 import { Routes } from '../../Routes';
 import { DSTU2, R4 } from '.';
-import Config from '../../environments/config.json';
+import { AppConfig } from '../../app/providers/AppConfigProvider';
 import { createConnection } from '../../repositories/ConnectionRepository';
 import uuid4 from '../../shared/utils/UUIDUtils';
 import { concatPath } from '../../shared/utils/urlUtils';
@@ -91,43 +91,42 @@ export function isR4Url(url: string) {
 }
 
 export function getEpicClientId(
+  config: AppConfig,
   version: 'DSTU2' | 'R4',
   isSandbox: boolean,
 ): string {
   if (isSandbox) {
     if (version === 'R4') {
       return (
-        Config.EPIC_SANDBOX_CLIENT_ID_R4 || Config.EPIC_SANDBOX_CLIENT_ID || ''
+        config.EPIC_SANDBOX_CLIENT_ID_R4 || config.EPIC_SANDBOX_CLIENT_ID || ''
       );
     }
     return (
-      Config.EPIC_SANDBOX_CLIENT_ID_DSTU2 || Config.EPIC_SANDBOX_CLIENT_ID || ''
+      config.EPIC_SANDBOX_CLIENT_ID_DSTU2 || config.EPIC_SANDBOX_CLIENT_ID || ''
     );
   }
 
   if (version === 'R4') {
-    return Config.EPIC_CLIENT_ID_R4 || Config.EPIC_CLIENT_ID || '';
+    return config.EPIC_CLIENT_ID_R4 || config.EPIC_CLIENT_ID || '';
   }
-  return Config.EPIC_CLIENT_ID_DSTU2 || Config.EPIC_CLIENT_ID || '';
+  return config.EPIC_CLIENT_ID_DSTU2 || config.EPIC_CLIENT_ID || '';
 }
 
 export function getLoginUrl(
+  config: AppConfig,
   baseUrl: string,
   authorizeUrl: string,
   isSandbox = false,
   version: 'DSTU2' | 'R4' = 'DSTU2',
 ): string & Location {
   const params = {
-    client_id: getEpicClientId(version, isSandbox),
+    client_id: getEpicClientId(config, version, isSandbox),
     scope: 'openid fhirUser',
-    redirect_uri: `${Config.PUBLIC_URL}${Routes.EpicCallback}`,
+    redirect_uri: `${config.PUBLIC_URL}${Routes.EpicCallback}`,
     aud: version === 'R4' ? getR4Url(baseUrl) : getDSTU2Url(baseUrl),
     response_type: 'code',
   };
 
-  // return `${baseUrl}/oauth2/authorize?${new URLSearchParams(
-  //   params
-  // )}` as string & Location;
   return `${authorizeUrl}?${new URLSearchParams(params)}` as string & Location;
 }
 
@@ -141,6 +140,7 @@ export enum EpicLocalStorageKeys {
 }
 
 async function getFHIRResource<T extends FhirResource>(
+  config: AppConfig,
   baseUrl: string,
   connectionDocument: EpicConnectionDocument,
   fhirResourceUrl: string,
@@ -169,7 +169,7 @@ async function getFHIRResource<T extends FhirResource>(
     `?${searchParams.toString()}`,
   )}`;
   const proxyUrl = URLJoin(
-    Config.PUBLIC_URL,
+    config.PUBLIC_URL || '',
     '/api/proxy',
     `?serviceId=${epicId}`,
     `&target=${encodeURIComponent(
@@ -217,6 +217,7 @@ async function getFHIRResource<T extends FhirResource>(
  * @returns
  */
 async function syncFHIRResource<T extends FhirResource>(
+  config: AppConfig,
   baseUrl: string,
   connectionDocument: EpicConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
@@ -226,6 +227,7 @@ async function syncFHIRResource<T extends FhirResource>(
   useProxy = false,
 ) {
   const resc = await getFHIRResource<T>(
+    config,
     baseUrl,
     connectionDocument,
     fhirResourceUrl,
@@ -279,6 +281,7 @@ async function processIncludedResources(
 }
 
 async function syncFHIRResourceWithIncludes<T extends FhirResource>(
+  config: AppConfig,
   baseUrl: string,
   connectionDocument: EpicConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
@@ -292,6 +295,7 @@ async function syncFHIRResourceWithIncludes<T extends FhirResource>(
   useProxy = false,
 ) {
   const resc = await getFHIRResource<T>(
+    config,
     baseUrl,
     connectionDocument,
     fhirResourceUrl,
@@ -320,6 +324,7 @@ async function syncFHIRResourceWithIncludes<T extends FhirResource>(
  * @returns A promise of void arrays
  */
 export async function syncAllRecords(
+  config: AppConfig,
   baseUrl: string,
   connectionDocument: EpicConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
@@ -400,6 +405,7 @@ export async function syncAllRecords(
 
   const syncJob = await Promise.allSettled([
     syncFHIRResource<Procedure>(
+      config,
       baseUrl,
       connectionDocument,
       db,
@@ -411,6 +417,7 @@ export async function syncAllRecords(
       useProxy,
     ),
     syncFHIRResource<Patient>(
+      config,
       baseUrl,
       connectionDocument,
       db,
@@ -423,6 +430,7 @@ export async function syncAllRecords(
     ),
     fhirVersion === 'R4'
       ? syncFHIRResourceWithIncludes<Observation>(
+          config,
           baseUrl,
           connectionDocument,
           db,
@@ -438,6 +446,7 @@ export async function syncAllRecords(
           useProxy,
         )
       : syncFHIRResource<Observation>(
+          config,
           baseUrl,
           connectionDocument,
           db,
@@ -451,6 +460,7 @@ export async function syncAllRecords(
         ),
     fhirVersion === 'R4'
       ? syncFHIRResourceWithIncludes<DiagnosticReport>(
+          config,
           baseUrl,
           connectionDocument,
           db,
@@ -465,6 +475,7 @@ export async function syncAllRecords(
           useProxy,
         )
       : syncFHIRResource<DiagnosticReport>(
+          config,
           baseUrl,
           connectionDocument,
           db,
@@ -477,6 +488,7 @@ export async function syncAllRecords(
         ),
     fhirVersion === 'R4'
       ? syncFHIRResource<any>(
+          config,
           baseUrl,
           connectionDocument,
           db,
@@ -488,6 +500,7 @@ export async function syncAllRecords(
           useProxy,
         )
       : syncFHIRResource<MedicationStatement>(
+          config,
           baseUrl,
           connectionDocument,
           db,
@@ -499,6 +512,7 @@ export async function syncAllRecords(
           useProxy,
         ),
     syncFHIRResource<Immunization>(
+      config,
       baseUrl,
       connectionDocument,
       db,
@@ -510,6 +524,7 @@ export async function syncAllRecords(
       useProxy,
     ),
     syncFHIRResource<Condition>(
+      config,
       baseUrl,
       connectionDocument,
       db,
@@ -521,6 +536,7 @@ export async function syncAllRecords(
       useProxy,
     ),
     syncFHIRResource<AllergyIntolerance>(
+      config,
       baseUrl,
       connectionDocument,
       db,
@@ -532,6 +548,7 @@ export async function syncAllRecords(
       useProxy,
     ),
     syncDocumentReferences(
+      config,
       baseUrl,
       connectionDocument,
       db,
@@ -544,6 +561,7 @@ export async function syncAllRecords(
     ...(fhirVersion === 'DSTU2'
       ? [
           syncFHIRResource<CarePlan>(
+            config,
             baseUrl,
             connectionDocument,
             db,
@@ -559,6 +577,7 @@ export async function syncAllRecords(
     ...(fhirVersion === 'R4'
       ? [
           syncFHIRResourceWithIncludes<any>(
+            config,
             baseUrl,
             connectionDocument,
             db,
@@ -572,6 +591,7 @@ export async function syncAllRecords(
             useProxy,
           ),
           syncFHIRResourceWithIncludes<any>(
+            config,
             baseUrl,
             connectionDocument,
             db,
@@ -586,6 +606,7 @@ export async function syncAllRecords(
             useProxy,
           ),
           syncFHIRResourceWithIncludes<any>(
+            config,
             baseUrl,
             connectionDocument,
             db,
@@ -599,6 +620,7 @@ export async function syncAllRecords(
             useProxy,
           ),
           syncFHIRResourceWithIncludes<any>(
+            config,
             baseUrl,
             connectionDocument,
             db,
@@ -613,6 +635,7 @@ export async function syncAllRecords(
             useProxy,
           ),
           syncFHIRResourceWithIncludes<any>(
+            config,
             baseUrl,
             connectionDocument,
             db,
@@ -627,6 +650,7 @@ export async function syncAllRecords(
             useProxy,
           ),
           syncFHIRResourceWithIncludes<any>(
+            config,
             baseUrl,
             connectionDocument,
             db,
@@ -640,6 +664,7 @@ export async function syncAllRecords(
             useProxy,
           ),
           syncFHIRResourceWithIncludes<any>(
+            config,
             baseUrl,
             connectionDocument,
             db,
@@ -665,6 +690,7 @@ export async function syncAllRecords(
 }
 
 async function syncDocumentReferences(
+  config: AppConfig,
   baseUrl: string,
   connectionDocument: EpicConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
@@ -676,8 +702,8 @@ async function syncDocumentReferences(
     fhirVersion === 'R4'
       ? R4.mapDocumentReferenceToClinicalDocument(dr as any, connectionDocument)
       : DSTU2.mapDocumentReferenceToClinicalDocument(dr, connectionDocument);
-  // Sync document references and return them
   await syncFHIRResource<any>(
+    config,
     baseUrl,
     connectionDocument,
     db,
@@ -728,8 +754,8 @@ async function syncDocumentReferences(
             })
             .exec();
           if (exists.length === 0) {
-            // attachment does not exist, sync it
             const { contentType, raw } = await fetchAttachmentData(
+              config,
               baseUrl,
               attachmentUrl,
               connectionDocument,
@@ -786,6 +812,7 @@ async function syncDocumentReferences(
  * @returns
  */
 async function fetchAttachmentData(
+  config: AppConfig,
   baseUrl: string,
   url: string,
   connectionDocument: EpicConnectionDocument,
@@ -798,7 +825,7 @@ async function fetchAttachmentData(
     const fullUrl = isRelativeUrl ? concatPath(baseUrl, url) : url;
     const defaultUrl = fullUrl;
     const proxyUrlExtension = fullUrl.replace(baseUrl, '');
-    const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${epicId}&target=${`${encodeURIComponent(proxyUrlExtension)}&target_type=base`}`;
+    const proxyUrl = `${config.PUBLIC_URL || ''}/api/proxy?serviceId=${epicId}&target=${`${encodeURIComponent(proxyUrlExtension)}&target_type=base`}`;
     const fetchUrl = useProxy ? proxyUrl : defaultUrl;
     const res = await fetch(fetchUrl, {
       headers: {
@@ -864,6 +891,7 @@ async function fetchAttachmentData(
  * @returns Promise of the auth response from the Epic server
  */
 export async function fetchAccessTokenWithCode(
+  config: AppConfig,
   code: string,
   epicTokenUrl: string,
   epicName: string,
@@ -872,16 +900,15 @@ export async function fetchAccessTokenWithCode(
   version: 'DSTU2' | 'R4' = 'DSTU2',
 ): Promise<EpicAuthResponse> {
   const defaultUrl = epicTokenUrl;
-  const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${`
-  ${epicId}`}&target_type=token`;
+  const proxyUrl = `${config.PUBLIC_URL || ''}/api/proxy?serviceId=${epicId}&target_type=token`;
   const headers = {
     'Content-Type': 'application/x-www-form-urlencoded',
   };
   const isSandbox = isEpicSandbox(epicId);
   const body = new URLSearchParams({
     grant_type: 'authorization_code',
-    client_id: getEpicClientId(version, isSandbox),
-    redirect_uri: `${Config.PUBLIC_URL}${Routes.EpicCallback}`,
+    client_id: getEpicClientId(config, version, isSandbox),
+    redirect_uri: `${config.PUBLIC_URL}${Routes.EpicCallback}`,
     code: code,
   });
   const res = await fetch(useProxy ? proxyUrl : defaultUrl, {
@@ -897,6 +924,7 @@ export async function fetchAccessTokenWithCode(
 }
 
 export async function registerDynamicClient({
+  config,
   res,
   epicBaseUrl,
   epicName,
@@ -904,6 +932,7 @@ export async function registerDynamicClient({
   useProxy = false,
   version = 'DSTU2',
 }: {
+  config: AppConfig;
   res: EpicAuthResponse;
   epicBaseUrl: string;
   epicName: string;
@@ -917,13 +946,13 @@ export async function registerDynamicClient({
     .replace('/api/FHIR/R4/', '')
     .replace('/api/FHIR/R4', '');
   const defaultUrl = URLJoin(baseUrl, '/oauth2/register');
-  const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${epicId}&target_type=register`;
+  const proxyUrl = `${config.PUBLIC_URL || ''}/api/proxy?serviceId=${epicId}&target_type=register`;
 
   const jsonWebKeySet = await getPublicKey();
   const validJWKS = jsonWebKeySet as JsonWebKeyWKid;
   const isSandbox = isEpicSandbox(epicId);
   const request: EpicDynamicRegistrationRequest = {
-    software_id: getEpicClientId(version, isSandbox),
+    software_id: getEpicClientId(config, version, isSandbox),
     jwks: {
       keys: [
         {
@@ -976,13 +1005,14 @@ export class DynamicRegistrationError extends Error {
 }
 
 export async function fetchAccessTokenUsingJWT(
+  config: AppConfig,
   clientId: string,
   epicTokenUrl: string,
   epicId?: string,
   useProxy = false,
 ): Promise<EpicAuthResponseWithClientId> {
   const defaultUrl = epicTokenUrl;
-  const proxyUrl = `${Config.PUBLIC_URL}/api/proxy?serviceId=${epicId}&target_type=token`;
+  const proxyUrl = `${config.PUBLIC_URL || ''}/api/proxy?serviceId=${epicId}&target_type=token`;
 
   // We've registered, now we can get another access token with our signed JWT
   const jwtBody = {
@@ -1131,6 +1161,7 @@ export async function saveConnectionToDb({
  * @param db
  */
 export async function refreshEpicConnectionTokenIfNeeded(
+  config: AppConfig,
   connectionDocument: RxDocument<ConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
   useProxy = false,
@@ -1146,7 +1177,6 @@ export async function refreshEpicConnectionTokenIfNeeded(
         epicId = connectionDocument.get('tenant_id'),
         userId = connectionDocument.get('user_id');
 
-      // Fetch the actual UserDocument from the database
       const userObject = await findUserById(db, userId);
 
       if (!userObject) {
@@ -1154,6 +1184,7 @@ export async function refreshEpicConnectionTokenIfNeeded(
       }
 
       const access_token_data = await fetchAccessTokenUsingJWT(
+        config,
         clientId,
         epicTokenUrl,
         epicId,

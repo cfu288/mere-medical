@@ -50,7 +50,7 @@ import {
 } from '../../models/connection-document/ConnectionDocument.type';
 import { Routes } from '../../Routes';
 import { DSTU2, R4 } from '.';
-import Config from '../../environments/config.json';
+import { AppConfig } from '../../app/providers/AppConfigProvider';
 import { createConnection } from '../../repositories/ConnectionRepository';
 import { findUserById } from '../../repositories/UserRepository';
 import { JsonWebKeySet } from '../crypto/JWTTools';
@@ -60,7 +60,6 @@ import {
   ClinicalDocument,
   CreateClinicalDocument,
 } from '../../models/clinical-document/ClinicalDocument.type';
-import { getRedirectUri } from '../../environments';
 import { concatPath } from '../../shared/utils/urlUtils';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
 
@@ -74,11 +73,12 @@ export enum CernerLocalStorageKeys {
 }
 
 export function getLoginUrl(
+  config: AppConfig,
   baseUrl: string,
   authorizeUrl: string,
 ): string & Location {
   const params = {
-    client_id: `${Config.CERNER_CLIENT_ID}`,
+    client_id: `${config.CERNER_CLIENT_ID}`,
     scope: [
       'fhirUser',
       'offline_access',
@@ -120,7 +120,7 @@ export function getLoginUrl(
       'patient/Slot.read',
       'patient/Specimen.read',
     ].join(' '),
-    redirect_uri: concatPath(getRedirectUri() || '', Routes.CernerCallback),
+    redirect_uri: concatPath(config.PUBLIC_URL || '', Routes.CernerCallback),
     aud: baseUrl,
     response_type: 'code',
   };
@@ -810,6 +810,7 @@ async function fetchAttachmentData(
  * @returns Promise of the auth response from the Cerner server
  */
 export async function fetchAccessTokenWithCode(
+  config: AppConfig,
   code: string,
   cernerTokenUrl: string,
 ): Promise<CernerAuthResponse> {
@@ -821,8 +822,8 @@ export async function fetchAccessTokenWithCode(
     },
     body: new URLSearchParams({
       grant_type: 'authorization_code',
-      client_id: `${Config.CERNER_CLIENT_ID}`,
-      redirect_uri: concatPath(getRedirectUri() || '', Routes.CernerCallback),
+      client_id: `${config.CERNER_CLIENT_ID}`,
+      redirect_uri: concatPath(config.PUBLIC_URL || '', Routes.CernerCallback),
       code: code,
     }),
   });

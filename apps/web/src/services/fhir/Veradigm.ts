@@ -1,4 +1,4 @@
-import Config from '../../environments/config.json';
+import { AppConfig } from '../../app/providers/AppConfigProvider';
 import { Routes } from '../../Routes';
 import * as DSTU2 from './DSTU2';
 import { VeradigmConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
@@ -54,11 +54,12 @@ Patient Password	Allscripts#1
  */
 
 export function getLoginUrl(
+  config: AppConfig,
   baseUrl: string,
   authorizeUrl: string,
 ): string & Location {
   const params = {
-    client_id: `${Config.VERADIGM_CLIENT_ID}`,
+    client_id: `${config.VERADIGM_CLIENT_ID}`,
     scope: [
       'launch/patient',
       'openid',
@@ -66,7 +67,7 @@ export function getLoginUrl(
       'user/*.read',
       'patient/*.read',
     ].join(' '),
-    redirect_uri: `${Config.PUBLIC_URL}${Routes.VeradigmCallback}`,
+    redirect_uri: `${config.PUBLIC_URL}${Routes.VeradigmCallback}`,
     aud: baseUrl,
     response_type: 'code',
   };
@@ -82,6 +83,7 @@ export function getLoginUrl(
 }
 
 export async function fetchAccessTokenWithCode(
+  config: AppConfig,
   code: string,
   veradigmTokenUrl: string,
 ): Promise<VeradigmAuthResponse> {
@@ -93,8 +95,8 @@ export async function fetchAccessTokenWithCode(
     },
     body: new URLSearchParams({
       grant_type: 'authorization_code',
-      client_id: `${Config.VERADIGM_CLIENT_ID}`,
-      redirect_uri: `${Config.PUBLIC_URL}${Routes.VeradigmCallback}`,
+      client_id: `${config.VERADIGM_CLIENT_ID}`,
+      redirect_uri: `${config.PUBLIC_URL}${Routes.VeradigmCallback}`,
       code: code,
     }),
   });

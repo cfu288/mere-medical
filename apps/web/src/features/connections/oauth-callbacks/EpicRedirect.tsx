@@ -7,6 +7,10 @@ import { useRxDb } from '../../../app/providers/RxDbProvider';
 import { DatabaseCollections } from '../../../app/providers/DatabaseCollections';
 import { Routes } from '../../../Routes';
 import {
+  AppConfig,
+  useAppConfig,
+} from '../../../app/providers/AppConfigProvider';
+import {
   DynamicRegistrationError,
   EpicDynamicRegistrationResponse,
   EpicLocalStorageKeys,
@@ -34,6 +38,7 @@ import { UserDocument } from '../../../models/user-document/UserDocument.type';
  */
 function useEpicDynamicRegistrationLogin() {
   const db = useRxDb(),
+    { config, isLoading } = useAppConfig(),
     user = useUser(),
     [error, setError] = useState(''),
     notifyDispatch = useNotificationDispatch(),
@@ -43,6 +48,7 @@ function useEpicDynamicRegistrationLogin() {
     { search } = useLocation();
 
   useEffect(() => {
+    if (isLoading) return;
     if (!hasRun.current) {
       const searchRequest = new URLSearchParams(search),
         code = searchRequest.get('code'),
@@ -72,6 +78,7 @@ function useEpicDynamicRegistrationLogin() {
           storedFhirVersion ||
           (epicBaseUrl.toUpperCase().includes('/R4') ? 'R4' : 'DSTU2');
         handleLogin({
+          config,
           code,
           epicBaseUrl,
           epicTokenUrl,
@@ -110,6 +117,8 @@ function useEpicDynamicRegistrationLogin() {
       }
     }
   }, [
+    config,
+    isLoading,
     db,
     db.connection_documents,
     notifyDispatch,
@@ -198,6 +207,7 @@ const redirectToConnectionsTab = (navigate: NavigateFunction) => {
  * @returns Promise<void>
  */
 const handleLogin = async ({
+  config,
   code,
   epicBaseUrl,
   epicTokenUrl,
@@ -210,6 +220,7 @@ const handleLogin = async ({
   enableProxy = false,
   fhirVersion = 'DSTU2',
 }: {
+  config: AppConfig;
   code: string;
   epicBaseUrl: string;
   epicTokenUrl: string;
@@ -224,8 +235,8 @@ const handleLogin = async ({
 }) => {
   let dynamicRegResponse: EpicDynamicRegistrationResponse;
 
-  // Attempt initial code swap
   const initalAuthResponse = await fetchAccessTokenWithCode(
+    config,
     code,
     epicTokenUrl,
     epicName,
@@ -234,9 +245,9 @@ const handleLogin = async ({
     fhirVersion,
   );
 
-  // Attempt dynamic registration
   try {
     dynamicRegResponse = await registerDynamicClient({
+      config,
       res: initalAuthResponse,
       epicBaseUrl,
       epicName,
@@ -272,8 +283,8 @@ const handleLogin = async ({
     );
   }
 
-  // Using DR to fetch new token
   const jwtAuthResponse = await fetchAccessTokenUsingJWT(
+    config,
     dynamicRegResponse.client_id,
     epicTokenUrl,
     epicId,

@@ -27,7 +27,6 @@ import { UserPreferencesMigrations } from '../../models/user-preferences/UserPre
 import { getRxStorageDexie } from 'rxdb/plugins/dexie';
 import { getRxStorageLoki } from 'rxdb/plugins/lokijs';
 import { ClinicalDocumentMigrations } from '../../models/clinical-document/ClinicalDocument.migration';
-import Config from '../../environments/config.json';
 import { useNotificationDispatch } from './NotificationProvider';
 import { ConnectionDocumentMigrations } from '../../models/connection-document/ConnectionDocument.migration';
 import { getRxStorageMemory } from 'rxdb/plugins/memory';
@@ -41,6 +40,7 @@ import { DatabaseCollections } from './DatabaseCollections';
 import { VectorStorageDocumentSchema } from '../../models/vector-storage-document/VectorStorageDocument.collection';
 import { VectorStorageDocumentMigrations } from '../../models/vector-storage-document/VectorStorageDocument.migration';
 import { USPSTFRecommendationDocumentSchema } from '../../models/uspstf-recommendation-document/USPSTFRecommendationDocument.collection';
+import { InstanceConfigDocumentSchema } from '../../models/instance-config/InstanceConfig.collection';
 
 if (process.env.NODE_ENV === 'development') {
   addRxPlugin(RxDBDevModePlugin);
@@ -83,6 +83,12 @@ export const databaseCollections = {
   },
   uspstf_recommendation_documents: {
     schema: USPSTFRecommendationDocumentSchema,
+  },
+  instance_config: {
+    schema: InstanceConfigDocumentSchema,
+    migrationStrategies: {
+      1: (oldDoc: Record<string, unknown>) => oldDoc,
+    },
   },
 };
 
@@ -269,7 +275,7 @@ export function RxDbProvider(props: RxDbProviderProps) {
   };
 
   useEffect(() => {
-    if (Config.IS_DEMO === 'enabled') {
+    if (IS_DEMO === 'enabled') {
       // If this is a demo instance, load the demo data
       setInitialized('PROGRESS');
       initDemoRxDb().then((db) => {

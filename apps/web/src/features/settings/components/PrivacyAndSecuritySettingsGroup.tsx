@@ -22,7 +22,6 @@ import { Modal } from '../../../shared/components/Modal';
 import { ModalHeader } from '../../../shared/components/ModalHeader';
 import { CryptedIndexedDBAdapter } from 'sylviejs/storage-adapter/crypted-indexeddb-adapter';
 import { ButtonLoadingSpinner } from '../../connections/components/ButtonLoadingSpinner';
-import Config from '../../../environments/config.json';
 
 export function PrivacyAndSecuritySettingsGroup() {
   const db = useRxDb(),
