@@ -490,6 +490,12 @@ async function fetchMedicalRecords(
 
     case 'healow': {
       try {
+        await Healow.refreshHealowConnectionTokenIfNeeded(
+          config,
+          connectionDocument,
+          db,
+          useProxy,
+        );
         const syncJob = await Healow.syncAllRecords(
           config.PUBLIC_URL || '',
           baseUrl,

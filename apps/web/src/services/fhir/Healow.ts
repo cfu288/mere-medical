@@ -642,9 +642,16 @@ export async function fetchAccessTokenWithCode(
 export async function fetchAccessTokenWithRefreshToken(
   refreshToken: string,
   healowTokenUrl: string,
+  clientId: string,
+  healowId?: string,
+  useProxy = false,
 ): Promise<HealowAuthResponse> {
-  const defaultUrl = healowTokenUrl;
-  const res = await fetch(defaultUrl, {
+  const publicUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const proxyUrl = concatPath(
+    publicUrl || '',
+    `/api/proxy?vendor=healow&serviceId=${healowId}&target_type=token`,
+  );
+  const res = await fetch(useProxy ? proxyUrl : healowTokenUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -652,6 +659,7 @@ export async function fetchAccessTokenWithRefreshToken(
     body: new URLSearchParams({
       grant_type: 'refresh_token',
       refresh_token: refreshToken,
+      client_id: clientId,
     }),
   });
   if (!res.ok) {
@@ -699,6 +707,10 @@ export async function saveConnectionToDb({
 
           if (res.id_token) {
             updateData['id_token'] = res.id_token;
+          }
+
+          if (res.refresh_token) {
+            updateData['refresh_token'] = res.refresh_token;
           }
 
           doc
@@ -763,8 +775,10 @@ export async function saveConnectionToDb({
 }
 
 export async function refreshHealowConnectionTokenIfNeeded(
+  config: AppConfig,
   connectionDocument: RxDocument<ConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
+  useProxy = false,
 ) {
   const nowInSeconds = Math.floor(Date.now() / 1000);
   if (connectionDocument.get('expires_at') <= nowInSeconds) {
@@ -786,6 +800,9 @@ export async function refreshHealowConnectionTokenIfNeeded(
       const access_token_data = await fetchAccessTokenWithRefreshToken(
         refreshToken,
         tokenUri,
+        config.HEALOW_CLIENT_ID || '',
+        tenantId,
+        useProxy,
       );
 
       return await saveConnectionToDb({

@@ -29,6 +29,6 @@ jobs:
       - name: Install local certs
         run: mkcert -install
       - name: Setup api env vars
-        run: cp apps/api/.example.env .env
+        run: cp .example.env .env
       - name: Run Playwright tests
         run: npx nx run web-e2e:e2e
