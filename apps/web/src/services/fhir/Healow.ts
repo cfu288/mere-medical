@@ -636,9 +636,23 @@ export async function fetchAccessTokenWithCode(
     console.error(await res.text());
     throw new Error('Error getting authorization token');
   }
-  return res.json();
+  const tokenResponse = await res.json();
+  console.debug('Healow initial token response:', {
+    hasAccessToken: !!tokenResponse.access_token,
+    hasRefreshToken: !!tokenResponse.refresh_token,
+    hasIdToken: !!tokenResponse.id_token,
+    expiresIn: tokenResponse.expires_in,
+    scope: tokenResponse.scope,
+  });
+  return tokenResponse;
 }
 
+/**
+ * Healow public apps do not receive refresh tokens. Only confidential apps with client secrets
+ * get refresh tokens when requesting offline_access/online_access scopes.
+ * Users with public app connections must re-authenticate when the access token expires.
+ * @see https://connect4.healow.com/apps/jsp/dev/r4/fhirClinicalDocumentation.jsp
+ */
 export async function fetchAccessTokenWithRefreshToken(
   refreshToken: string,
   healowTokenUrl: string,
@@ -651,7 +665,16 @@ export async function fetchAccessTokenWithRefreshToken(
     publicUrl,
     `/api/proxy?vendor=healow&serviceId=${healowId}&target_type=token`,
   );
-  const res = await fetch(useProxy ? proxyUrl : healowTokenUrl, {
+  const targetUrl = useProxy ? proxyUrl : healowTokenUrl;
+  console.debug('Healow refresh token request:', {
+    targetUrl,
+    healowTokenUrl,
+    useProxy,
+    healowId,
+    hasRefreshToken: !!refreshToken,
+    refreshTokenLength: refreshToken?.length,
+  });
+  const res = await fetch(targetUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -663,7 +686,8 @@ export async function fetchAccessTokenWithRefreshToken(
     }),
   });
   if (!res.ok) {
-    console.error(await res.text());
+    const errorText = await res.text();
+    console.error('Healow refresh token error:', errorText);
     throw new Error('Error getting authorization token');
   }
   return res.json();
