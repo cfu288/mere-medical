@@ -22,6 +22,7 @@ export interface AppConfig {
   VERADIGM_CLIENT_ID?: string;
   VA_CLIENT_ID?: string;
   HEALOW_CLIENT_ID?: string;
+  HEALOW_CONFIDENTIAL_MODE?: boolean;
   PUBLIC_URL?: string;
 }
 
@@ -130,6 +131,7 @@ export function AppConfigProvider({
           VERADIGM_CLIENT_ID: doc.VERADIGM_CLIENT_ID,
           VA_CLIENT_ID: doc.VA_CLIENT_ID,
           HEALOW_CLIENT_ID: doc.HEALOW_CLIENT_ID,
+          HEALOW_CONFIDENTIAL_MODE: doc.HEALOW_CONFIDENTIAL_MODE,
           PUBLIC_URL: doc.PUBLIC_URL,
         };
       }

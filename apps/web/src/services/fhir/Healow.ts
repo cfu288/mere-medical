@@ -1,3 +1,36 @@
+/**
+ * Healow FHIR R4 Integration
+ *
+ * This module supports two OAuth modes based on server configuration:
+ *
+ * PUBLIC CLIENT MODE (config.HEALOW_CONFIDENTIAL_MODE = false):
+ *   - Only HEALOW_CLIENT_ID is configured on the server
+ *   - Uses PKCE (code_verifier/code_challenge) for security
+ *   - Token exchange happens via proxy to work around CORS
+ *   - NO refresh tokens - Healow doesn't issue them to public clients
+ *   - Users must re-authenticate when access token expires (~1 hour)
+ *
+ * CONFIDENTIAL CLIENT MODE (config.HEALOW_CONFIDENTIAL_MODE = true):
+ *   - Both HEALOW_CLIENT_ID and HEALOW_CLIENT_SECRET configured on server
+ *   - Token exchange goes through /api/v1/healow/token endpoint
+ *   - Server injects client_secret (never exposed to browser)
+ *   - Requests offline_access scope to enable refresh tokens
+ *   - Token refresh via /api/v1/healow/refresh endpoint
+ *   - Better UX - background token refresh without re-authentication
+ *
+ * The mode is automatically detected from config.HEALOW_CONFIDENTIAL_MODE
+ * which is set to true when HEALOW_CLIENT_SECRET env var is present.
+ *
+ * TODO: Healow requires proxy for all API calls due to CORS. Currently useProxy is a global
+ * user preference, but it should become a per-connection or per-integration setting so that
+ * Healow can enforce proxy usage while other integrations (e.g., Epic) can work without it.
+ *
+ * Frankly if a user tries to call healow APIs or oauth endpoints without useProxy it will
+ * fail due to CORS, so the public client mode is currently pretty useless.
+ *
+ * @see https://connect4.healow.com/apps/jsp/dev/r4/fhirClinicalDocumentation.jsp#SymmetricAuthentication
+ * @see https://connect4.healow.com/apps/jsp/dev/r4/fhirClinicalDocumentation.jsp#HealowSupportedScopes
+ */
 import {
   AllergyIntolerance,
   Bundle,
@@ -31,6 +64,11 @@ import {
   CreateClinicalDocument,
 } from '../../models/clinical-document/ClinicalDocument.type';
 import { concatPath } from '../../shared/utils/urlUtils';
+import {
+  getCodeVerifier,
+  getCodeChallenge,
+  getOAuthState,
+} from '../../shared/utils/pkceUtils';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
 
 export enum HealowLocalStorageKeys {
@@ -41,103 +79,53 @@ export enum HealowLocalStorageKeys {
   HEALOW_ID = 'healowId',
 }
 
-function dec2hex(dec: number) {
-  return ('0' + dec.toString(16)).slice(-2);
-}
-
-function generateCodeVerifier() {
-  const array = new Uint32Array(56 / 2);
-  window.crypto.getRandomValues(array);
-  return Array.from(array, dec2hex).join('');
-}
-
-function getCodeVerifier() {
-  const codeVerifier = sessionStorage.getItem('healow_code_verifier');
-  if (codeVerifier) {
-    return codeVerifier;
-  }
-  const generatedCodeVerifier = generateCodeVerifier();
-  sessionStorage.setItem('healow_code_verifier', generatedCodeVerifier);
-  return generatedCodeVerifier;
-}
-
-function sha256(plain: string) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(plain);
-  return window.crypto.subtle.digest('SHA-256', data);
-}
-
-function base64urlencode(a: ArrayBuffer) {
-  let str = '';
-  const bytes = new Uint8Array(a);
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    str += String.fromCharCode(bytes[i]);
-  }
-  return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-async function generateCodeChallengeFromVerifier(v: string) {
-  const hashed = await sha256(v);
-  const base64encoded = base64urlencode(hashed);
-  return base64encoded;
-}
-
-async function getCodeChallenge() {
-  const codeVerifier = getCodeVerifier();
-  const codeChallenge = await generateCodeChallengeFromVerifier(codeVerifier);
-  return codeChallenge;
-}
-
-function getOAuth2State() {
-  const state = sessionStorage.getItem('healow_oauth2_state');
-  if (state) {
-    return state;
-  }
-  const randBytes = window.crypto.getRandomValues(new Uint8Array(4));
-  const hex = Array.from(randBytes, (byte) => byte.toString(16)).join('');
-  sessionStorage.setItem('healow_oauth2_state', hex);
-  return hex;
-}
+export const HEALOW_CODE_VERIFIER_KEY = 'healow_code_verifier';
+export const HEALOW_OAUTH_STATE_KEY = 'healow_oauth2_state';
 
 export async function getLoginUrl(
   config: AppConfig,
   baseUrl: string,
   authorizeUrl: string,
 ): Promise<string & Location> {
+  const scopes = [
+    'openid',
+    'fhirUser',
+    'patient/AllergyIntolerance.read',
+    'patient/CarePlan.read',
+    'patient/CareTeam.read',
+    'patient/Condition.read',
+    'patient/Device.read',
+    'patient/DiagnosticReport.read',
+    'patient/DocumentReference.read',
+    'patient/Binary.read',
+    'patient/Encounter.read',
+    'patient/Goal.read',
+    'patient/Immunization.read',
+    'patient/MedicationAdministration.read',
+    'patient/MedicationRequest.read',
+    'patient/Observation.read',
+    'patient/Organization.read',
+    'patient/Patient.read',
+    'patient/Practitioner.read',
+    'patient/PractitionerRole.read',
+    'patient/Procedure.read',
+    'patient/Provenance.read',
+    'patient/Medication.read',
+    'patient/Location.read',
+  ];
+
+  if (config.HEALOW_CONFIDENTIAL_MODE) {
+    scopes.push('offline_access');
+  }
+
   const params = {
     client_id: `${config.HEALOW_CLIENT_ID}`,
-    scope: [
-      'openid',
-      'fhirUser',
-      'patient/AllergyIntolerance.read',
-      'patient/CarePlan.read',
-      'patient/CareTeam.read',
-      'patient/Condition.read',
-      'patient/Device.read',
-      'patient/DiagnosticReport.read',
-      'patient/DocumentReference.read',
-      'patient/Binary.read',
-      'patient/Encounter.read',
-      'patient/Goal.read',
-      'patient/Immunization.read',
-      'patient/MedicationAdministration.read',
-      'patient/MedicationRequest.read',
-      'patient/Observation.read',
-      'patient/Organization.read',
-      'patient/Patient.read',
-      'patient/Practitioner.read',
-      'patient/PractitionerRole.read',
-      'patient/Procedure.read',
-      'patient/Provenance.read',
-      'patient/Medication.read',
-      'patient/Location.read',
-    ].join(' '),
+    scope: scopes.join(' '),
     redirect_uri: concatPath(config.PUBLIC_URL || '', Routes.HealowCallback),
     aud: baseUrl,
     response_type: 'code',
-    state: getOAuth2State(),
-    code_challenge: await getCodeChallenge(),
+    state: getOAuthState(HEALOW_OAUTH_STATE_KEY),
+    code_challenge: await getCodeChallenge(HEALOW_CODE_VERIFIER_KEY),
     code_challenge_method: 'S256',
   };
 
@@ -614,24 +602,39 @@ export async function fetchAccessTokenWithCode(
   healowId?: string,
   useProxy = false,
   publicUrl = '',
+  confidentialMode = false,
 ): Promise<HealowAuthResponse> {
-  const proxyUrl = concatPath(
-    publicUrl,
-    `/api/proxy?vendor=healow&serviceId=${healowId}&target_type=token`,
-  );
-  const res = await fetch(useProxy ? proxyUrl : healowTokenUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      grant_type: 'authorization_code',
-      code: code,
-      redirect_uri: redirectUri,
-      client_id: clientId,
-      code_verifier: getCodeVerifier(),
-    }),
-  });
+  let res: Response;
+
+  if (confidentialMode) {
+    res = await fetch(concatPath(publicUrl, '/api/v1/healow/token'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        code,
+        redirect_uri: redirectUri,
+        code_verifier: getCodeVerifier(HEALOW_CODE_VERIFIER_KEY),
+        token_endpoint: healowTokenUrl,
+      }),
+    });
+  } else {
+    const proxyUrl = concatPath(
+      publicUrl,
+      `/api/proxy?vendor=healow&serviceId=${healowId}&target_type=token`,
+    );
+    res = await fetch(useProxy ? proxyUrl : healowTokenUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code: code,
+        redirect_uri: redirectUri,
+        client_id: clientId,
+        code_verifier: getCodeVerifier(HEALOW_CODE_VERIFIER_KEY),
+      }),
+    });
+  }
+
   if (!res.ok) {
     console.error(await res.text());
     throw new Error('Error getting authorization token');
@@ -648,10 +651,13 @@ export async function fetchAccessTokenWithCode(
 }
 
 /**
- * Healow public apps do not receive refresh tokens. Only confidential apps with client secrets
- * get refresh tokens when requesting offline_access/online_access scopes.
- * Users with public app connections must re-authenticate when the access token expires.
- * @see https://connect4.healow.com/apps/jsp/dev/r4/fhirClinicalDocumentation.jsp
+ * Refreshes an access token using a refresh token.
+ *
+ * In PUBLIC CLIENT MODE: This will fail since Healow doesn't issue refresh tokens
+ * to public clients. The calling code should handle this by prompting re-authentication.
+ *
+ * In CONFIDENTIAL CLIENT MODE: Routes through /api/v1/healow/refresh which injects
+ * the client_secret server-side before forwarding to Healow's token endpoint.
  */
 export async function fetchAccessTokenWithRefreshToken(
   refreshToken: string,
@@ -660,31 +666,36 @@ export async function fetchAccessTokenWithRefreshToken(
   healowId?: string,
   useProxy = false,
   publicUrl = '',
+  confidentialMode = false,
 ): Promise<HealowAuthResponse> {
-  const proxyUrl = concatPath(
-    publicUrl,
-    `/api/proxy?vendor=healow&serviceId=${healowId}&target_type=token`,
-  );
-  const targetUrl = useProxy ? proxyUrl : healowTokenUrl;
-  console.debug('Healow refresh token request:', {
-    targetUrl,
-    healowTokenUrl,
-    useProxy,
-    healowId,
-    hasRefreshToken: !!refreshToken,
-    refreshTokenLength: refreshToken?.length,
-  });
-  const res = await fetch(targetUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      grant_type: 'refresh_token',
-      refresh_token: refreshToken,
-      client_id: clientId,
-    }),
-  });
+  let res: Response;
+
+  if (confidentialMode) {
+    res = await fetch(concatPath(publicUrl, '/api/v1/healow/refresh'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        refresh_token: refreshToken,
+        token_endpoint: healowTokenUrl,
+      }),
+    });
+  } else {
+    const proxyUrl = concatPath(
+      publicUrl,
+      `/api/proxy?vendor=healow&serviceId=${healowId}&target_type=token`,
+    );
+    const targetUrl = useProxy ? proxyUrl : healowTokenUrl;
+    res = await fetch(targetUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+        client_id: clientId,
+      }),
+    });
+  }
+
   if (!res.ok) {
     const errorText = await res.text();
     console.error('Healow refresh token error:', errorText);
@@ -828,6 +839,7 @@ export async function refreshHealowConnectionTokenIfNeeded(
         tenantId,
         useProxy,
         config.PUBLIC_URL || '',
+        config.HEALOW_CONFIDENTIAL_MODE || false,
       );
 
       return await saveConnectionToDb({

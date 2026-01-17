@@ -1,10 +1,43 @@
-import { Controller, Get, Logger, Query, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Logger,
+  Query,
+  Res,
+} from '@nestjs/common';
 import { Response } from 'express';
 import { HealowService } from './healow.service';
+import { ConfigService } from '../config/config.service';
 
+interface TokenExchangeDto {
+  code: string;
+  redirect_uri: string;
+  code_verifier: string;
+  token_endpoint: string;
+}
+
+interface TokenRefreshDto {
+  refresh_token: string;
+  token_endpoint: string;
+}
+
+/**
+ * Healow API endpoints for tenant search and confidential client OAuth.
+ *
+ * The /token and /refresh endpoints are used only in CONFIDENTIAL CLIENT MODE
+ * when HEALOW_CLIENT_SECRET is configured. They inject the client_secret
+ * server-side before forwarding requests to Healow's OAuth endpoints.
+ *
+ * In PUBLIC CLIENT MODE, the frontend uses the proxy endpoint instead.
+ */
 @Controller('v1/healow')
 export class HealowController {
-  constructor(private readonly healowService: HealowService) {}
+  constructor(
+    private readonly healowService: HealowService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Get('tenants')
   async getTenants(@Res() response: Response, @Query('query') query: string) {
@@ -25,6 +58,99 @@ export class HealowController {
     } catch (e) {
       Logger.error(e);
       response.status(500).send({ message: 'There was an error' });
+    }
+  }
+
+  @Post('token')
+  async exchangeToken(
+    @Res() response: Response,
+    @Body() body: TokenExchangeDto,
+  ) {
+    const clientId = this.configService.getPublicConfig().HEALOW_CLIENT_ID;
+    const clientSecret = this.configService.getHealowClientSecret();
+
+    if (!clientId || !clientSecret) {
+      response.status(400).send({
+        error: 'server_configuration_error',
+        error_description: 'Healow confidential client not configured',
+      });
+      return;
+    }
+
+    try {
+      const params = new URLSearchParams({
+        grant_type: 'authorization_code',
+        code: body.code,
+        redirect_uri: body.redirect_uri,
+        code_verifier: body.code_verifier,
+        client_id: clientId,
+        client_secret: clientSecret,
+      });
+
+      const tokenResponse = await fetch(body.token_endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString(),
+      });
+
+      const data = await tokenResponse.json();
+
+      if (!tokenResponse.ok) {
+        response.status(tokenResponse.status).send(data);
+        return;
+      }
+
+      response.json(data);
+    } catch (e) {
+      Logger.error('Healow token exchange error:', e);
+      response.status(500).send({
+        error: 'token_exchange_error',
+        error_description: 'Failed to exchange token with Healow',
+      });
+    }
+  }
+
+  @Post('refresh')
+  async refreshToken(@Res() response: Response, @Body() body: TokenRefreshDto) {
+    const clientId = this.configService.getPublicConfig().HEALOW_CLIENT_ID;
+    const clientSecret = this.configService.getHealowClientSecret();
+
+    if (!clientId || !clientSecret) {
+      response.status(400).send({
+        error: 'server_configuration_error',
+        error_description: 'Healow confidential client not configured',
+      });
+      return;
+    }
+
+    try {
+      const params = new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: body.refresh_token,
+        client_id: clientId,
+        client_secret: clientSecret,
+      });
+
+      const tokenResponse = await fetch(body.token_endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString(),
+      });
+
+      const data = await tokenResponse.json();
+
+      if (!tokenResponse.ok) {
+        response.status(tokenResponse.status).send(data);
+        return;
+      }
+
+      response.json(data);
+    } catch (e) {
+      Logger.error('Healow token refresh error:', e);
+      response.status(500).send({
+        error: 'token_refresh_error',
+        error_description: 'Failed to refresh token with Healow',
+      });
     }
   }
 }

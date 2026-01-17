@@ -1,7 +1,7 @@
 export const instanceConfigSchemaLiteral = {
   title: 'Instance Config Schema',
   description: 'Stores server instance configuration fetched from the API',
-  version: 2,
+  version: 3,
   primaryKey: 'id',
   type: 'object',
   properties: {
@@ -41,6 +41,9 @@ export const instanceConfigSchemaLiteral = {
     },
     HEALOW_CLIENT_ID: {
       type: 'string',
+    },
+    HEALOW_CONFIDENTIAL_MODE: {
+      type: 'boolean',
     },
     PUBLIC_URL: {
       type: 'string',

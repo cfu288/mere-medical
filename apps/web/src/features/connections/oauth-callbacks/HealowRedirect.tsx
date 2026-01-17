@@ -12,9 +12,24 @@ import { useAppConfig } from '../../../app/providers/AppConfigProvider';
 import { useUserPreferences } from '../../../app/providers/UserPreferencesProvider';
 import {
   HealowLocalStorageKeys,
+  HEALOW_CODE_VERIFIER_KEY,
+  HEALOW_OAUTH_STATE_KEY,
   fetchAccessTokenWithCode,
 } from '../../../services/fhir/Healow';
+import {
+  clearPkceSession,
+  getOAuthState,
+} from '../../../shared/utils/pkceUtils';
 import { createConnection } from '../../../repositories/ConnectionRepository';
+
+function clearHealowSession() {
+  localStorage.removeItem(HealowLocalStorageKeys.HEALOW_BASE_URL);
+  localStorage.removeItem(HealowLocalStorageKeys.HEALOW_NAME);
+  localStorage.removeItem(HealowLocalStorageKeys.HEALOW_AUTH_URL);
+  localStorage.removeItem(HealowLocalStorageKeys.HEALOW_TOKEN_URL);
+  localStorage.removeItem(HealowLocalStorageKeys.HEALOW_ID);
+  clearPkceSession(HEALOW_CODE_VERIFIER_KEY, HEALOW_OAUTH_STATE_KEY);
+}
 
 const HealowRedirect: React.FC = () => {
   const navigate = useNavigate(),
@@ -45,6 +60,19 @@ const HealowRedirect: React.FC = () => {
         );
 
       if (code && healowUrl && healowName && healowAuthUrl && healowTokenUrl) {
+        const returnedState = searchRequest.get('state');
+        const storedState = getOAuthState(HEALOW_OAUTH_STATE_KEY);
+
+        if (returnedState !== storedState) {
+          notifyDispatch({
+            type: 'set_notification',
+            message: 'Error completing authentication: state mismatch',
+            variant: 'error',
+          });
+          navigate(Routes.AddConnection);
+          return;
+        }
+
         const healowId = localStorage.getItem(HealowLocalStorageKeys.HEALOW_ID);
         fetchAccessTokenWithCode(
           code,
@@ -54,6 +82,7 @@ const HealowRedirect: React.FC = () => {
           healowId || undefined,
           userPreferences.use_proxy,
           config.PUBLIC_URL || '',
+          config.HEALOW_CONFIDENTIAL_MODE || false,
         )
           .then((res) => {
             if (
@@ -80,39 +109,15 @@ const HealowRedirect: React.FC = () => {
                 tenant_id: healowId,
               };
               createConnection(db, dbentry as any)
-                .then(() => {
-                  localStorage.removeItem(
-                    HealowLocalStorageKeys.HEALOW_BASE_URL,
-                  );
-                  localStorage.removeItem(HealowLocalStorageKeys.HEALOW_NAME);
-                  localStorage.removeItem(
-                    HealowLocalStorageKeys.HEALOW_AUTH_URL,
-                  );
-                  localStorage.removeItem(
-                    HealowLocalStorageKeys.HEALOW_TOKEN_URL,
-                  );
-                  localStorage.removeItem(HealowLocalStorageKeys.HEALOW_ID);
-                  sessionStorage.removeItem('healow_code_verifier');
-                  sessionStorage.removeItem('healow_oauth2_state');
-                  navigate(Routes.AddConnection);
-                })
                 .catch((e: unknown) => {
-                  localStorage.removeItem(
-                    HealowLocalStorageKeys.HEALOW_BASE_URL,
-                  );
-                  localStorage.removeItem(HealowLocalStorageKeys.HEALOW_NAME);
-                  localStorage.removeItem(
-                    HealowLocalStorageKeys.HEALOW_AUTH_URL,
-                  );
-                  localStorage.removeItem(
-                    HealowLocalStorageKeys.HEALOW_TOKEN_URL,
-                  );
-                  localStorage.removeItem(HealowLocalStorageKeys.HEALOW_ID);
                   notifyDispatch({
                     type: 'set_notification',
                     message: `Error adding connection: ${(e as Error).message}`,
                     variant: 'error',
                   });
+                })
+                .finally(() => {
+                  clearHealowSession();
                   navigate(Routes.AddConnection);
                 });
             } else {

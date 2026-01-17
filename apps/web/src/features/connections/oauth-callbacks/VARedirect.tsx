@@ -4,10 +4,11 @@ import { Routes } from '../../../Routes';
 import {
   VA_BASE_URL,
   VA_TOKEN_URL,
+  VA_OAUTH_STATE_KEY,
   fetchAccessTokenWithCode,
-  getOAuth2State,
   saveConnectionToDb,
 } from '../../../services/fhir/VA';
+import { getOAuthState } from '../../../shared/utils/pkceUtils';
 import { AppPage } from '../../../shared/components/AppPage';
 import { GenericBanner } from '../../../shared/components/GenericBanner';
 import { useNotificationDispatch } from '../../../app/providers/NotificationProvider';
@@ -41,7 +42,7 @@ const VARedirect: React.FC = () => {
               user.id
             ) {
               const state = res.state;
-              const storedState = getOAuth2State();
+              const storedState = getOAuthState(VA_OAUTH_STATE_KEY);
 
               if (state !== storedState) {
                 notifyDispatch({
@@ -50,6 +51,7 @@ const VARedirect: React.FC = () => {
                   variant: 'error',
                 });
                 navigate(Routes.AddConnection);
+                return;
               }
 
               saveConnectionToDb({
