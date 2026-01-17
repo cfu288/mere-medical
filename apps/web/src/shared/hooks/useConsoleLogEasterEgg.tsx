@@ -13,5 +13,6 @@ export function useConsoleLogEasterEgg() {
       );
     }
     console.debug('Mere App Version: ', MERE_APP_VERSION);
+    IS_DEMO && console.debug('Demo Mode: ', IS_DEMO);
   }, []);
 }

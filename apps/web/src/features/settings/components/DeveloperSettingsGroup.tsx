@@ -11,6 +11,11 @@ export function DeveloperSettingsGroup() {
   const localConfig = useLocalConfig();
   const config = useConfig();
 
+  const buildVars = [
+    { name: 'IS_DEMO', value: IS_DEMO },
+    { name: 'MERE_APP_VERSION', value: MERE_APP_VERSION },
+  ];
+
   const envVars = [
     { name: 'PUBLIC_URL', value: config.PUBLIC_URL },
     { name: 'EPIC_CLIENT_ID', value: config.EPIC_CLIENT_ID },
@@ -39,6 +44,30 @@ export function DeveloperSettingsGroup() {
   return (
     <>
       <div className="py-6 text-xl font-extrabold">Developer Settings</div>
+      <div className="pb-2 text-lg font-bold">Build Settings</div>
+      <div className="mb-4 rounded border border-gray-200 bg-gray-50 p-4">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-gray-200">
+              <th className="pb-2 text-left font-medium">Variable</th>
+              <th className="pb-2 text-left font-medium">Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            {buildVars.map((v) => (
+              <tr
+                key={v.name}
+                className="border-b border-gray-100 last:border-0"
+              >
+                <td className="py-2 font-mono text-xs">{v.name}</td>
+                <td className="py-2 font-mono text-xs text-gray-600">
+                  {v.value}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <div className="pb-2 text-lg font-bold">Environment Variables</div>
       <div className="mb-4 rounded border border-gray-200 bg-gray-50 p-4">
         <table className="w-full text-sm">
