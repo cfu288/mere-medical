@@ -25,4 +25,6 @@ services:
       # Cerner Health (supports both R4 and DSTU2)
       - CERNER_CLIENT_ID=${CERNER_CLIENT_ID}
       - VERADIGM_CLIENT_ID=${VERADIGM_CLIENT_ID}
+      - VA_CLIENT_ID=${VA_CLIENT_ID}
+      - HEALOW_CLIENT_ID=${HEALOW_CLIENT_ID}
       - PUBLIC_URL=https://meremedical.local
