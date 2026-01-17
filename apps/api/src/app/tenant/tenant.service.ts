@@ -58,6 +58,9 @@ const searchDSTU2Items: UnifiedTenantEndpoint[] = (
     ),
   );
 
+// TODO: Add Healow R4 endpoints to searchR4Items so they appear in unified search.
+// Healow currently has its own /api/v1/healow/tenants endpoint but is excluded from
+// the combined "Search All" results.
 const searchR4Items: UnifiedTenantEndpoint[] = ([] as UnifiedTenantEndpoint[])
   .concat(
     (EpicR4TenantEndpoints as unknown as UnifiedTenantEndpoint[]).map((i) => {

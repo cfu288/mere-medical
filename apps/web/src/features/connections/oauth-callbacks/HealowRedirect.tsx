@@ -8,7 +8,7 @@ import { useNotificationDispatch } from '../../../app/providers/NotificationProv
 import { AppPage } from '../../../shared/components/AppPage';
 import { GenericBanner } from '../../../shared/components/GenericBanner';
 import { useUser } from '../../../app/providers/UserProvider';
-import { useConfig } from '../../../app/providers/AppConfigProvider';
+import { useAppConfig } from '../../../app/providers/AppConfigProvider';
 import { useUserPreferences } from '../../../app/providers/UserPreferencesProvider';
 import {
   HealowLocalStorageKeys,
@@ -20,7 +20,7 @@ const HealowRedirect: React.FC = () => {
   const navigate = useNavigate(),
     user = useUser(),
     db = useRxDb(),
-    config = useConfig(),
+    { config, isLoading } = useAppConfig(),
     userPreferences = useUserPreferences(),
     notifyDispatch = useNotificationDispatch(),
     hasRun = useRef(false),
@@ -28,6 +28,7 @@ const HealowRedirect: React.FC = () => {
     { search } = useLocation();
 
   useEffect(() => {
+    if (isLoading) return;
     if (!hasRun.current && userPreferences !== undefined) {
       hasRun.current = true;
       const searchRequest = new URLSearchParams(search),
@@ -52,6 +53,7 @@ const HealowRedirect: React.FC = () => {
           `${config.PUBLIC_URL}${Routes.HealowCallback}`,
           healowId || undefined,
           userPreferences.use_proxy,
+          config.PUBLIC_URL || '',
         )
           .then((res) => {
             if (
@@ -150,7 +152,16 @@ const HealowRedirect: React.FC = () => {
         );
       }
     }
-  }, [db, config, userPreferences, navigate, notifyDispatch, search, user.id]);
+  }, [
+    db,
+    config,
+    isLoading,
+    userPreferences,
+    navigate,
+    notifyDispatch,
+    search,
+    user.id,
+  ]);
 
   return (
     <AppPage

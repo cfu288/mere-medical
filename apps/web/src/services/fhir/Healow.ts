@@ -613,10 +613,10 @@ export async function fetchAccessTokenWithCode(
   redirectUri: string,
   healowId?: string,
   useProxy = false,
+  publicUrl = '',
 ): Promise<HealowAuthResponse> {
-  const publicUrl = typeof window !== 'undefined' ? window.location.origin : '';
   const proxyUrl = concatPath(
-    publicUrl || '',
+    publicUrl,
     `/api/proxy?vendor=healow&serviceId=${healowId}&target_type=token`,
   );
   const res = await fetch(useProxy ? proxyUrl : healowTokenUrl, {
@@ -645,10 +645,10 @@ export async function fetchAccessTokenWithRefreshToken(
   clientId: string,
   healowId?: string,
   useProxy = false,
+  publicUrl = '',
 ): Promise<HealowAuthResponse> {
-  const publicUrl = typeof window !== 'undefined' ? window.location.origin : '';
   const proxyUrl = concatPath(
-    publicUrl || '',
+    publicUrl,
     `/api/proxy?vendor=healow&serviceId=${healowId}&target_type=token`,
   );
   const res = await fetch(useProxy ? proxyUrl : healowTokenUrl, {
@@ -803,6 +803,7 @@ export async function refreshHealowConnectionTokenIfNeeded(
         config.HEALOW_CLIENT_ID || '',
         tenantId,
         useProxy,
+        config.PUBLIC_URL || '',
       );
 
       return await saveConnectionToDb({
