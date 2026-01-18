@@ -41,6 +41,7 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule, {
     httpsOptions,
+    bodyParser: false,
     bufferLogs: true,
     logger: LOGGING_LEVELS,
   });

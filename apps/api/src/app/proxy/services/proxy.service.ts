@@ -21,10 +21,6 @@ export class ProxyService {
   ):
     | { service: Service; error?: never }
     | { service?: never; error: { status: number; body: object } } {
-    const isSandbox =
-      serviceId === 'sandbox_epic' || serviceId === 'sandbox_epic_r4';
-    const normalizedServiceId = isSandbox ? 'sandbox_epic' : serviceId;
-
     if (vendor) {
       const vendorServices = this.options.services?.find(
         (s) => s.vendor === vendor,
@@ -37,9 +33,7 @@ export class ProxyService {
           },
         };
       }
-      const service = vendorServices.endpoints.find(
-        (e) => e.id === normalizedServiceId,
-      );
+      const service = vendorServices.endpoints.find((e) => e.id === serviceId);
       if (!service) {
         return {
           error: {
@@ -53,7 +47,7 @@ export class ProxyService {
 
     const matches = (this.options.services || []).flatMap((v) =>
       v.endpoints
-        .filter((e) => e.id === normalizedServiceId)
+        .filter((e) => e.id === serviceId)
         .map((e) => ({ vendor: v.vendor, ...e })),
     );
 
