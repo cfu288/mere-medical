@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import uuid4 from '../../../shared/utils/UUIDUtils';
-import { CreateHealowConnectionDocument } from '../../../models/connection-document/ConnectionDocument.type';
 import { useRxDb } from '../../../app/providers/RxDbProvider';
 import { Routes } from '../../../Routes';
 import { useNotificationDispatch } from '../../../app/providers/NotificationProvider';
@@ -15,12 +13,12 @@ import {
   HEALOW_CODE_VERIFIER_KEY,
   HEALOW_OAUTH_STATE_KEY,
   fetchAccessTokenWithCode,
+  saveConnectionToDb,
 } from '../../../services/fhir/Healow';
 import {
   clearPkceSession,
   getOAuthState,
 } from '../../../shared/utils/pkceUtils';
-import { createConnection } from '../../../repositories/ConnectionRepository';
 
 function clearHealowSession() {
   localStorage.removeItem(HealowLocalStorageKeys.HEALOW_BASE_URL);
@@ -85,48 +83,37 @@ const HealowRedirect: React.FC = () => {
           config.HEALOW_CONFIDENTIAL_MODE || false,
         )
           .then((res) => {
-            if (
-              res.access_token &&
-              res.expires_in &&
-              res.id_token &&
-              user.id &&
-              healowId
-            ) {
-              const nowInSeconds = Math.floor(Date.now() / 1000);
-              const dbentry: CreateHealowConnectionDocument = {
-                id: uuid4(),
-                user_id: user.id,
-                source: 'healow',
-                location: healowUrl,
-                name: healowName,
-                access_token: res.access_token,
-                scope: res.scope,
-                id_token: res.id_token,
-                refresh_token: res.refresh_token,
-                expires_at: nowInSeconds + res.expires_in,
-                auth_uri: healowAuthUrl,
-                token_uri: healowTokenUrl,
-                tenant_id: healowId,
-              };
-              createConnection(db, dbentry as any)
-                .catch((e: unknown) => {
-                  notifyDispatch({
-                    type: 'set_notification',
-                    message: `Error adding connection: ${(e as Error).message}`,
-                    variant: 'error',
-                  });
-                })
-                .finally(() => {
-                  clearHealowSession();
-                  navigate(Routes.AddConnection);
-                });
-            } else {
+            if (!res.access_token || !res.expires_in || !healowId) {
               notifyDispatch({
                 type: 'set_notification',
-                message: `Error completing authentication: no access token provided`,
+                message:
+                  'Error completing authentication: no access token provided',
                 variant: 'error',
               });
+              return;
             }
+
+            saveConnectionToDb({
+              res,
+              healowBaseUrl: healowUrl,
+              healowName,
+              healowAuthUrl,
+              healowTokenUrl,
+              healowId,
+              db,
+              user,
+            })
+              .catch((e: unknown) => {
+                notifyDispatch({
+                  type: 'set_notification',
+                  message: `Error adding connection: ${(e as Error).message}`,
+                  variant: 'error',
+                });
+              })
+              .finally(() => {
+                clearHealowSession();
+                navigate(Routes.AddConnection);
+              });
           })
           .catch((e) => {
             notifyDispatch({

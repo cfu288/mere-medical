@@ -11,16 +11,16 @@ import { Response } from 'express';
 import { HealowService } from './healow.service';
 import { ConfigService } from '../config/config.service';
 
-interface TokenExchangeDto {
+interface TokenExchangeRequest {
   code: string;
   redirect_uri: string;
   code_verifier: string;
-  token_endpoint: string;
+  tenant_id: string;
 }
 
-interface TokenRefreshDto {
+interface TokenRefreshRequest {
   refresh_token: string;
-  token_endpoint: string;
+  tenant_id: string;
 }
 
 /**
@@ -64,7 +64,7 @@ export class HealowController {
   @Post('token')
   async exchangeToken(
     @Res() response: Response,
-    @Body() body: TokenExchangeDto,
+    @Body() body: TokenExchangeRequest,
   ) {
     const clientId = this.configService.getPublicConfig().HEALOW_CLIENT_ID;
     const clientSecret = this.configService.getHealowClientSecret();
@@ -73,6 +73,15 @@ export class HealowController {
       response.status(400).send({
         error: 'server_configuration_error',
         error_description: 'Healow confidential client not configured',
+      });
+      return;
+    }
+
+    const tenant = this.healowService.findTenantById(body.tenant_id);
+    if (!tenant) {
+      response.status(400).send({
+        error: 'invalid_tenant',
+        error_description: 'Unknown Healow tenant ID',
       });
       return;
     }
@@ -87,7 +96,7 @@ export class HealowController {
         client_secret: clientSecret,
       });
 
-      const tokenResponse = await fetch(body.token_endpoint, {
+      const tokenResponse = await fetch(tenant.token, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: params.toString(),
@@ -111,7 +120,10 @@ export class HealowController {
   }
 
   @Post('refresh')
-  async refreshToken(@Res() response: Response, @Body() body: TokenRefreshDto) {
+  async refreshToken(
+    @Res() response: Response,
+    @Body() body: TokenRefreshRequest,
+  ) {
     const clientId = this.configService.getPublicConfig().HEALOW_CLIENT_ID;
     const clientSecret = this.configService.getHealowClientSecret();
 
@@ -119,6 +131,15 @@ export class HealowController {
       response.status(400).send({
         error: 'server_configuration_error',
         error_description: 'Healow confidential client not configured',
+      });
+      return;
+    }
+
+    const tenant = this.healowService.findTenantById(body.tenant_id);
+    if (!tenant) {
+      response.status(400).send({
+        error: 'invalid_tenant',
+        error_description: 'Unknown Healow tenant ID',
       });
       return;
     }
@@ -131,7 +152,7 @@ export class HealowController {
         client_secret: clientSecret,
       });
 
-      const tokenResponse = await fetch(body.token_endpoint, {
+      const tokenResponse = await fetch(tenant.token, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: params.toString(),

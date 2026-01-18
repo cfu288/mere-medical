@@ -9,6 +9,10 @@ export class HealowService {
   async queryR4Tenants(query: string): Promise<R4Endpoint[]> {
     return filteredItemsWithQuery(this.r4Items, query);
   }
+
+  findTenantById(tenantId: string): R4Endpoint | undefined {
+    return this.r4Items.find((t) => t.id === tenantId);
+  }
 }
 
 function filteredItemsWithQuery<T extends { name: string }>(

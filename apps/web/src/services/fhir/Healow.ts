@@ -614,7 +614,7 @@ export async function fetchAccessTokenWithCode(
         code,
         redirect_uri: redirectUri,
         code_verifier: getCodeVerifier(HEALOW_CODE_VERIFIER_KEY),
-        token_endpoint: healowTokenUrl,
+        tenant_id: healowId,
       }),
     });
   } else {
@@ -676,7 +676,7 @@ export async function fetchAccessTokenWithRefreshToken(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         refresh_token: refreshToken,
-        token_endpoint: healowTokenUrl,
+        tenant_id: healowId,
       }),
     });
   } else {
@@ -817,6 +817,10 @@ export async function refreshHealowConnectionTokenIfNeeded(
 ) {
   const nowInSeconds = Math.floor(Date.now() / 1000);
   if (connectionDocument.get('expires_at') <= nowInSeconds) {
+    if (!config.HEALOW_CONFIDENTIAL_MODE) {
+      throw new Error('Login expired - login required in order to sync data');
+    }
+
     try {
       const baseUrl = connectionDocument.get('location'),
         refreshToken = connectionDocument.get('refresh_token'),
