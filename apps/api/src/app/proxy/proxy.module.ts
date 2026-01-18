@@ -1,8 +1,8 @@
 // @ts-nocheck
-// import { EpicDSTU2TenantEndpoints } from '@mere/epic';
 import { DynamicModule, Logger, Module, Provider } from '@nestjs/common';
 import { createProxyServer } from 'http-proxy';
 import { EpicDSTU2TenantEndpoints, EpicR4TenantEndpoints } from '@mere/epic';
+import { HealowR4TenantEndpoints } from '@mere/healow';
 import * as queryString from 'querystring';
 import { ProxyController } from './controllers';
 import {
@@ -140,5 +140,11 @@ export const LoginProxyModule = ProxyModule.forRoot({
       'Content-Type': 'application/x-www-form-urlencoded',
     },
   },
-  services: [...EpicDSTU2TenantEndpoints, ...EpicR4TenantEndpoints],
+  services: [
+    {
+      vendor: 'epic',
+      endpoints: [...EpicDSTU2TenantEndpoints, ...EpicR4TenantEndpoints],
+    },
+    { vendor: 'healow', endpoints: [...HealowR4TenantEndpoints] },
+  ],
 });

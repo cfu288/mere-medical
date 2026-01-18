@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger, Param } from '@nestjs/common';
 import { Request, Response } from 'express';
 import * as server from 'http-proxy';
-import { ProxyModuleOptions } from '../interfaces';
+import { ProxyModuleOptions, Service } from '../interfaces';
 import { HTTP_PROXY, PROXY_MODULE_OPTIONS } from '../proxy.constants';
 import { concatPath, getBaseURL } from '../utils';
 
@@ -14,6 +14,67 @@ export class ProxyService {
     @Inject(PROXY_MODULE_OPTIONS) private options: ProxyModuleOptions,
   ) {}
 
+  // TODO: Convert endpoints arrays to Map<id, endpoint> for O(1) lookup instead of O(n) scan
+  private findService(
+    vendor: string | undefined,
+    serviceId: string,
+  ):
+    | { service: Service; error?: never }
+    | { service?: never; error: { status: number; body: object } } {
+    if (vendor) {
+      const vendorServices = this.options.services?.find(
+        (s) => s.vendor === vendor,
+      );
+      if (!vendorServices) {
+        return {
+          error: {
+            status: 404,
+            body: { error: `Vendor '${vendor}' not found` },
+          },
+        };
+      }
+      const service = vendorServices.endpoints.find((e) => e.id === serviceId);
+      if (!service) {
+        return {
+          error: {
+            status: 404,
+            body: { error: `Service '${vendor}/${serviceId}' not found` },
+          },
+        };
+      }
+      return { service };
+    }
+
+    const matches = (this.options.services || []).flatMap((v) =>
+      v.endpoints
+        .filter((e) => e.id === serviceId)
+        .map((e) => ({ vendor: v.vendor, ...e })),
+    );
+
+    if (matches.length === 0) {
+      return {
+        error: {
+          status: 404,
+          body: { error: `Service '${serviceId}' not found` },
+        },
+      };
+    }
+
+    if (matches.length > 1) {
+      return {
+        error: {
+          status: 400,
+          body: {
+            error: `Ambiguous serviceId '${serviceId}' matches multiple vendors. Provide 'vendor' param.`,
+            matches: matches.map((m) => m.vendor),
+          },
+        },
+      };
+    }
+
+    return { service: matches[0] };
+  }
+
   async proxyRequest(
     req: Request,
     res: Response,
@@ -21,7 +82,8 @@ export class ProxyService {
   ) {
     const target = req.query.target as string;
     const target_type = req.query.target_type as string;
-    let serviceId = (req.query.serviceId as string).trim();
+    const serviceId = (req.query.serviceId as string | undefined)?.trim();
+    const vendor = req.query.vendor as string | undefined;
     let token = null;
 
     // eslint-disable-next-line no-prototype-builtins
@@ -46,56 +108,46 @@ export class ProxyService {
     const headers = req.headers as { [header: string]: string };
 
     if (serviceId) {
-      const services = new Map(
-        this.options.services
-          ? this.options.services.map((service) => [service.id, service])
-          : [],
-      );
-      const isSandbox =
-        serviceId === 'sandbox_epic' || serviceId === 'sandbox_epic_r4';
-      if (isSandbox) {
-        serviceId = 'sandbox_epic';
-      }
+      const result = this.findService(vendor, serviceId);
 
-      if (services.has(serviceId) || isSandbox) {
-        const service = services.get(serviceId)!;
-        this.logger.debug(`Proxying ${req.method} ${req.url} to ${serviceId}`);
-        const baseUrl = service.url;
-        const authUrl = service.authorize;
-        const tokenUrl = service.token;
-        let urlToProxy = baseUrl;
-
-        if (target_type === 'authorize') {
-          urlToProxy = authUrl;
-        } else if (target_type === 'token') {
-          urlToProxy = tokenUrl;
-        } else if (target_type === 'register') {
-          urlToProxy =
-            baseUrl
-              .replace('/api/FHIR/DSTU2/', '')
-              .replace('/api/FHIR/DSTU2', '')
-              .replace('/api/FHIR/R4/', '')
-              .replace('/api/FHIR/R4', '') + '/oauth2/register';
-        }
-
-        return this.doProxy(
-          req,
-          res,
-          target ? concatPath(urlToProxy, prefix, target) : urlToProxy,
-          service.forwardToken === false ? null : token,
-          { ...service.config, headers },
-        );
-      } else {
-        const error = `Could not find serviceId '${serviceId}'`;
+      if (result.error) {
         this.logger.warn({
-          message: error,
-          error: new Error(`Could not find serviceId '${serviceId}'`),
+          message: JSON.stringify(result.error.body),
+          error: new Error(JSON.stringify(result.error.body)),
           timestamp: new Date().toISOString(),
         });
-        return res.status(404).send({
-          error,
-        });
+        return res.status(result.error.status).send(result.error.body);
       }
+
+      const service = result.service;
+      this.logger.debug(
+        `Proxying ${req.method} ${req.url} to ${vendor ? `${vendor}/` : ''}${serviceId}`,
+      );
+      const baseUrl = service.url;
+      const authUrl = service.authorize;
+      const tokenUrl = service.token;
+      let urlToProxy = baseUrl;
+
+      if (target_type === 'authorize') {
+        urlToProxy = authUrl;
+      } else if (target_type === 'token') {
+        urlToProxy = tokenUrl;
+      } else if (target_type === 'register') {
+        urlToProxy =
+          baseUrl
+            .replace('/api/FHIR/DSTU2/', '')
+            .replace('/api/FHIR/DSTU2', '')
+            .replace('/api/FHIR/R4/', '')
+            .replace('/api/FHIR/R4', '') + '/oauth2/register';
+      }
+
+      return this.doProxy(
+        req,
+        res,
+        target ? concatPath(urlToProxy, prefix, target) : urlToProxy,
+        service.forwardToken === false ? null : token,
+        { ...service.config, headers },
+      );
     }
 
     res.status(404).send({ error: "Could not find 'target' or 'serviceId'" });

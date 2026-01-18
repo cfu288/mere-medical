@@ -1,0 +1,14 @@
+{
+  "name": "@mere/healow",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "scripts": {
+    "fetch-endpoints": "tsx fetchMetadata.ts --openssl-config=openssl.cnf --no-experimental-fetch"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  }
+}

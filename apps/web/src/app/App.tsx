@@ -25,6 +25,7 @@ import { TutorialOverlay } from '../features/tutorial/TutorialOverlay';
 import CernerRedirect from '../features/connections/oauth-callbacks/CernerRedirect';
 import ConnectionTab from '../features/connections/ConnectionTab';
 import EpicRedirect from '../features/connections/oauth-callbacks/EpicRedirect';
+import HealowRedirect from '../features/connections/oauth-callbacks/HealowRedirect';
 import MereAITab from '../features/ai-chat/MereAITab';
 import OnPatientRedirect from '../features/connections/oauth-callbacks/OnPatientRedirect';
 import SettingsTab from '../features/settings/SettingsTab';
@@ -33,7 +34,6 @@ import { TimelineTab } from '../features/timeline/TimelineTab';
 import VARedirect from '../features/connections/oauth-callbacks/VARedirect';
 import VeradigmRedirect from '../features/connections/oauth-callbacks/VeradigmRedirect';
 import { Routes as AppRoutes } from '../Routes';
-// import { RecommendationGeneratorInitializer } from '../features/ai-recommendations/components/RecommendationGeneratorInitializer';
 
 export default function App() {
   useConsoleLogEasterEgg();
@@ -51,13 +51,11 @@ export default function App() {
               <AppConfigProvider>
                 <UserProvider>
                   <VectorProvider>
-                    {/* <RecommendationGeneratorInitializer> */}
                     <UserPreferencesProvider>
                       <SyncJobProvider>
                         <RouterProvider router={router} />
                       </SyncJobProvider>
                     </UserPreferencesProvider>
-                    {/* </RecommendationGeneratorInitializer> */}
                   </VectorProvider>
                 </UserProvider>
               </AppConfigProvider>
@@ -112,6 +110,10 @@ const routes = [
       {
         path: AppRoutes.VACallback,
         element: <VARedirect />,
+      },
+      {
+        path: AppRoutes.HealowCallback,
+        element: <HealowRedirect />,
       },
       {
         path: '*',

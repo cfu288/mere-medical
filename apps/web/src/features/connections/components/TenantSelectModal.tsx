@@ -26,6 +26,7 @@ import {
   TenantSelectModelResultItem,
 } from './TenantSelectModelResultItem';
 import VALogo from '../../../assets/img/va-logo.png';
+import HealowLogo from '../../../assets/img/eclinicalworks-logo.jpeg';
 import { useConfig } from '../../../app/providers/AppConfigProvider';
 
 export type EMRVendor =
@@ -34,7 +35,58 @@ export type EMRVendor =
   | 'veradigm'
   | 'onpatient'
   | 'va'
+  | 'healow'
   | 'any';
+
+export type FhirVersion = 'DSTU2' | 'R4';
+
+type VendorVersions = {
+  epic: 'DSTU2' | 'R4';
+  cerner: 'DSTU2' | 'R4';
+  healow: 'R4';
+  veradigm: 'DSTU2';
+  onpatient: 'DSTU2';
+  va: 'DSTU2';
+  // TODO: 'any' only searches DSTU2 endpoints, excluding R4-only vendors like Healow
+  any: 'DSTU2';
+};
+
+type VendorPaths = {
+  [V in keyof VendorVersions]: Record<VendorVersions[V], string>;
+};
+
+const vendorPaths: VendorPaths = {
+  epic: {
+    R4: '/api/v1/epic/r4/tenants?',
+    DSTU2: '/api/v1/epic/tenants?',
+  },
+  cerner: {
+    R4: '/api/v1/cerner/r4/tenants?',
+    DSTU2: '/api/v1/cerner/tenants?',
+  },
+  healow: {
+    R4: '/api/v1/healow/tenants?',
+  },
+  veradigm: {
+    DSTU2: '/api/v1/veradigm/tenants?',
+  },
+  onpatient: {
+    DSTU2: '/api/v1/onpatient/tenants?',
+  },
+  va: {
+    DSTU2: '/api/v1/va/tenants?',
+  },
+  any: {
+    DSTU2: '/api/v1/dstu2/tenants?',
+  },
+};
+
+function getApiPath<V extends EMRVendor>(
+  emrVendor: V,
+  fhirVersion: VendorVersions[V],
+): string {
+  return vendorPaths[emrVendor][fhirVersion];
+}
 
 export type UnifiedDSTU2Endpoint = CernerDSTU2Endpoint &
   EpicDSTU2Endpoint &
@@ -130,6 +182,7 @@ export function TenantSelectModal({
   const cernerEnabled = isConfigured(config.CERNER_CLIENT_ID);
   const veradigmEnabled = isConfigured(config.VERADIGM_CLIENT_ID);
   const vaEnabled = isConfigured(config.VA_CLIENT_ID);
+  const healowEnabled = isConfigured(config.HEALOW_CLIENT_ID);
 
   const [state, dispatch] = useReducer(
     (
@@ -234,6 +287,16 @@ export function TenantSelectModal({
         id: 4,
       },
       {
+        title: 'Healow',
+        vendor: 'healow',
+        source: HealowLogo,
+        alt: 'eClinicalWorks',
+        enabled: healowEnabled,
+        disabledMessage: 'Provide HEALOW_CLIENT_ID env var to enable',
+        id: 9,
+        fhirVersion: 'R4',
+      },
+      {
         title: 'Search All',
         vendor: 'any',
         source: '',
@@ -277,6 +340,7 @@ export function TenantSelectModal({
     cernerEnabled,
     veradigmEnabled,
     vaEnabled,
+    healowEnabled,
   ]);
 
   const mainSources = useMemo(
@@ -303,26 +367,20 @@ export function TenantSelectModal({
         return;
       }
 
-      const apiPath =
-        state.emrVendor === 'cerner'
-          ? state.fhirVersion === 'R4'
-            ? `/api/v1/cerner/r4/tenants?`
-            : `/api/v1/cerner/tenants?`
-          : state.emrVendor === 'epic'
-            ? state.fhirVersion === 'R4'
-              ? `/api/v1/epic/r4/tenants?`
-              : `/api/v1/epic/tenants?`
-            : state.emrVendor !== 'any'
-              ? `/api/v1/${state.emrVendor}/tenants?`
-              : `/api/v1/dstu2/tenants?`;
+      const fhirVersion = state.fhirVersion ?? 'DSTU2';
+      const apiPath = getApiPath(
+        state.emrVendor,
+        fhirVersion as VendorVersions[typeof state.emrVendor],
+      );
 
-      const sandboxOnly =
+      // Epic provides separate client ids for sandbox only, we detect it here so we can provide conditional rendering later depending on which env variables are provided
+      const epicSandboxOnly =
         state.emrVendor === 'epic' &&
         ((state.fhirVersion === 'R4' && epicR4SandboxOnly) ||
           (state.fhirVersion === 'DSTU2' && epicDstu2SandboxOnly));
 
       const params: Record<string, string> = { query: state.query };
-      if (sandboxOnly) {
+      if (epicSandboxOnly) {
         params['sandboxOnly'] = 'true';
       }
 

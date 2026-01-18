@@ -9,6 +9,7 @@ import epicLogo from '../../../assets/img/MyChartByEpic.png';
 import cernerLogo from '../../../assets/img/cerner-logo.png';
 import allscriptsConnectLogo from '../../../assets/img/allscripts-logo.png';
 import vaLogo from '../../../assets/img/va-logo.png';
+import healowLogo from '../../../assets/img/ecw-logo.png';
 import { differenceInDays, format, parseISO } from 'date-fns';
 import { RxDocument } from 'rxdb';
 import { useNotificationDispatch } from '../../../app/providers/NotificationProvider';
@@ -46,6 +47,9 @@ function getImage(logo: ConnectionSources) {
     }
     case 'va': {
       return vaLogo;
+    }
+    case 'healow': {
+      return healowLogo;
     }
     default: {
       return undefined;

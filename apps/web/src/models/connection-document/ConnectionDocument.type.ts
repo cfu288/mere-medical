@@ -6,7 +6,8 @@ export type ConnectionSources =
   | 'onpatient'
   | 'cerner'
   | 'veradigm'
-  | 'va';
+  | 'va'
+  | 'healow';
 
 export interface ConnectionDocument extends BaseDocument {
   user_id: string;
@@ -77,5 +78,17 @@ export type CreateEpicConnectionDocument = Omit<
 
 export type CreateOnPatientConnectionDocument = Omit<
   ConnectionDocument,
+  'last_refreshed' | 'last_sync_attempt' | 'last_sync_was_error'
+>;
+
+export interface HealowConnectionDocument extends ConnectionDocument {
+  id_token: string;
+  auth_uri: string | Location;
+  token_uri: string | Location;
+  tenant_id: string;
+}
+
+export type CreateHealowConnectionDocument = Omit<
+  HealowConnectionDocument,
   'last_refreshed' | 'last_sync_attempt' | 'last_sync_was_error'
 >;

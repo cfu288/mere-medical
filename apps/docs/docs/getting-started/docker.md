@@ -52,6 +52,8 @@ services:
       - CERNER_CLIENT_ID=${CERNER_CLIENT_ID}
       - VERADIGM_CLIENT_ID=${VERADIGM_CLIENT_ID}
       - VA_CLIENT_ID=${VA_CLIENT_ID}
+      - HEALOW_CLIENT_ID=${HEALOW_CLIENT_ID}
+      - HEALOW_CLIENT_SECRET=${HEALOW_CLIENT_SECRET}
       - PUBLIC_URL=https://meremedical.local
 ```
 
@@ -118,6 +120,8 @@ EPIC_SANDBOX_CLIENT_ID_R4=
 CERNER_CLIENT_ID=
 VERADIGM_CLIENT_ID=
 VA_CLIENT_ID=
+HEALOW_CLIENT_ID=
+HEALOW_CLIENT_SECRET=
 ```
 
 `cd` into the directory of the `docker-compose.yaml` , and then run
@@ -146,6 +150,8 @@ docker run -p 4200:80 -i -t \
   -e CERNER_CLIENT_ID=<ID_HERE> \
   -e VERADIGM_CLIENT_ID=<ID_HERE> \
   -e VA_CLIENT_ID=<ID_HERE> \
+  -e HEALOW_CLIENT_ID=<ID_HERE> \
+  -e HEALOW_CLIENT_SECRET=<SECRET_HERE> \
   -e PUBLIC_URL=https://localhost:4200 \
   cfu288/mere-medical:latest
 ```
@@ -170,6 +176,8 @@ docker run -p 4200:80 \
   -e CERNER_CLIENT_ID=<ID_HERE> \
   -e VERADIGM_CLIENT_ID=<ID_HERE> \
   -e VA_CLIENT_ID=<ID_HERE> \
+  -e HEALOW_CLIENT_ID=<ID_HERE> \
+  -e HEALOW_CLIENT_SECRET=<SECRET_HERE> \
   -e PUBLIC_URL=https://localhost:4200 \
   cfu288/mere-medical:latest
 ```
@@ -202,6 +210,8 @@ services:
       - CERNER_CLIENT_ID=${CERNER_CLIENT_ID}
       - VERADIGM_CLIENT_ID=${VERADIGM_CLIENT_ID}
       - VA_CLIENT_ID=${VA_CLIENT_ID}
+      - HEALOW_CLIENT_ID=${HEALOW_CLIENT_ID}
+      - HEALOW_CLIENT_SECRET=${HEALOW_CLIENT_SECRET}
       - PUBLIC_URL=${PUBLIC_URL}
 ```
 
@@ -231,6 +241,8 @@ Note that this will not set up SSL for you, which is needed for some patient por
 | `CERNER_CLIENT_ID` | No | Client ID for Cerner Health (supports both R4 and DSTU2) | See [Cerner setup](./cerner-setup) |
 | `VERADIGM_CLIENT_ID` | No | Client ID for Veradigm | |
 | `VA_CLIENT_ID` | No | Client ID for VA (Veterans Affairs). **Note: Only works with VA sandbox, not production access at this time.** | |
+| `HEALOW_CLIENT_ID` | No | Client ID for Healow (eClinicalWorks) | See [Healow setup](./healow-setup) |
+| `HEALOW_CLIENT_SECRET` | No | Client secret for Healow confidential client (enables refresh tokens) | See [Healow setup](./healow-setup) |
 
 ## Troubleshooting
 
