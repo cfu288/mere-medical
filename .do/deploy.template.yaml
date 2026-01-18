@@ -29,5 +29,9 @@ spec:
           scope: RUN_TIME
         - key: VA_CLIENT_ID
           scope: RUN_TIME
+        - key: HEALOW_CLIENT_ID
+          scope: RUN_TIME
+        - key: HEALOW_CLIENT_SECRET
+          scope: RUN_TIME
         - key: PUBLIC_URL
           value: ${APP_URL}
