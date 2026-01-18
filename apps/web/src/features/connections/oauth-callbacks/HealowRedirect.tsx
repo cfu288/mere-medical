@@ -17,7 +17,7 @@ import {
 } from '../../../services/fhir/Healow';
 import {
   clearPkceSession,
-  getOAuthState,
+  validateOAuthState,
 } from '../../../shared/utils/pkceUtils';
 
 function clearHealowSession() {
@@ -59,9 +59,9 @@ const HealowRedirect: React.FC = () => {
 
       if (code && healowUrl && healowName && healowAuthUrl && healowTokenUrl) {
         const returnedState = searchRequest.get('state');
-        const storedState = getOAuthState(HEALOW_OAUTH_STATE_KEY);
 
-        if (returnedState !== storedState) {
+        if (!validateOAuthState(returnedState, HEALOW_OAUTH_STATE_KEY)) {
+          clearHealowSession();
           notifyDispatch({
             type: 'set_notification',
             message: 'Error completing authentication: state mismatch',
@@ -81,6 +81,7 @@ const HealowRedirect: React.FC = () => {
         )
           .then((res) => {
             if (!res.access_token || !res.expires_in || !healowId) {
+              clearHealowSession();
               notifyDispatch({
                 type: 'set_notification',
                 message:
@@ -113,6 +114,7 @@ const HealowRedirect: React.FC = () => {
               });
           })
           .catch((e) => {
+            clearHealowSession();
             notifyDispatch({
               type: 'set_notification',
               message: `Error adding connection: ${(e as Error).message}`,
@@ -121,6 +123,7 @@ const HealowRedirect: React.FC = () => {
             navigate(Routes.AddConnection);
           });
       } else {
+        clearHealowSession();
         notifyDispatch({
           type: 'set_notification',
           message: `Error adding connection: missing required parameters`,

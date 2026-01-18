@@ -68,3 +68,11 @@ export function clearPkceSession(verifierKey: string, stateKey?: string): void {
     sessionStorage.removeItem(stateKey);
   }
 }
+
+export function validateOAuthState(
+  returnedState: string | null,
+  stateKey: string,
+): boolean {
+  const storedState = sessionStorage.getItem(stateKey);
+  return !!returnedState && !!storedState && returnedState === storedState;
+}
