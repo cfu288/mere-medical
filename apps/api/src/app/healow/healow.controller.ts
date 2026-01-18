@@ -92,19 +92,35 @@ export class HealowController {
         code: body.code,
         redirect_uri: body.redirect_uri,
         code_verifier: body.code_verifier,
-        client_id: clientId,
-        client_secret: clientSecret,
+      });
+
+      const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString(
+        'base64',
+      );
+
+      Logger.log(`Healow token exchange to ${tenant.token}`);
+      Logger.log({
+        redirect_uri: body.redirect_uri,
+        tenant_id: body.tenant_id,
       });
 
       const tokenResponse = await fetch(tenant.token, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Authorization: `Basic ${basicAuth}`,
+        },
         body: params.toString(),
       });
 
       const data = await tokenResponse.json();
 
       if (!tokenResponse.ok) {
+        Logger.error('Healow token exchange failed', {
+          status: tokenResponse.status,
+          data,
+          token_url: tenant.token,
+        });
         response.status(tokenResponse.status).send(data);
         return;
       }
@@ -148,19 +164,28 @@ export class HealowController {
       const params = new URLSearchParams({
         grant_type: 'refresh_token',
         refresh_token: body.refresh_token,
-        client_id: clientId,
-        client_secret: clientSecret,
       });
+
+      const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString(
+        'base64',
+      );
 
       const tokenResponse = await fetch(tenant.token, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Authorization: `Basic ${basicAuth}`,
+        },
         body: params.toString(),
       });
 
       const data = await tokenResponse.json();
 
       if (!tokenResponse.ok) {
+        Logger.error('Healow token refresh failed', {
+          status: tokenResponse.status,
+          data,
+        });
         response.status(tokenResponse.status).send(data);
         return;
       }

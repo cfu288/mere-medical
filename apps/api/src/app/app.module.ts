@@ -199,6 +199,16 @@ function checkIfHealowIsConfigured():
       'HEALOW_CLIENT_ID was provided: Healow service will be enabled.',
     );
 
+    if (process.env.HEALOW_CLIENT_SECRET) {
+      Logger.log(
+        'HEALOW_CLIENT_SECRET was provided: Healow confidential client mode enabled with refresh token support.',
+      );
+    } else {
+      Logger.log(
+        'HEALOW_CLIENT_SECRET was not provided: Healow public client mode enabled (no refresh tokens).',
+      );
+    }
+
     return {
       check,
       clientId: process.env.HEALOW_CLIENT_ID!,

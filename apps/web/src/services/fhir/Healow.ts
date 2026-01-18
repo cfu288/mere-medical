@@ -422,6 +422,51 @@ export async function syncAllRecords(
       { patient: patientId },
       useProxy,
     ),
+    syncFHIRResource<Observation>(
+      publicUrl,
+      baseUrl,
+      connectionDocument,
+      db,
+      'Observation',
+      obsMapper as any,
+      { patient: patientId, category: 'vital-signs' },
+      useProxy,
+    ),
+    syncFHIRResource<Observation>(
+      publicUrl,
+      baseUrl,
+      connectionDocument,
+      db,
+      'Observation',
+      obsMapper as any,
+      { patient: patientId, category: 'social-history' },
+      useProxy,
+    ),
+    syncFHIRResource(
+      publicUrl,
+      baseUrl,
+      connectionDocument,
+      db,
+      'MedicationAdministration',
+      ((item: any) =>
+        R4.mapMedicationAdministrationToClinicalDocument(
+          item,
+          connectionDocument,
+        )) as any,
+      { patient: patientId },
+      useProxy,
+    ),
+    syncFHIRResource(
+      publicUrl,
+      baseUrl,
+      connectionDocument,
+      db,
+      'Provenance',
+      ((item: any) =>
+        R4.mapProvenanceToClinicalDocument(item, connectionDocument)) as any,
+      { patient: patientId },
+      useProxy,
+    ),
   ]);
 
   return syncJob as unknown as Promise<PromiseSettledResult<void[]>[]>;
@@ -542,11 +587,11 @@ async function fetchAttachmentData(
       !url.startsWith('http://') && !url.startsWith('https://');
     const baseUrl = cd.location as string;
     const fullUrl = isRelativeUrl ? concatPath(baseUrl, url) : url;
-    const urlPath = new URL(fullUrl).pathname + new URL(fullUrl).search;
+    const proxyUrlExtension = fullUrl.replace(baseUrl, '');
     const proxyUrl = concatPath(
       publicUrl || '',
       `/api/proxy?vendor=healow&serviceId=${cd.tenant_id}&target=${encodeURIComponent(
-        urlPath,
+        proxyUrlExtension,
       )}&target_type=base`,
     );
 

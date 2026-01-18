@@ -89,6 +89,7 @@ export const databaseCollections = {
     migrationStrategies: {
       1: (oldDoc: Record<string, unknown>) => oldDoc,
       2: (oldDoc: Record<string, unknown>) => oldDoc,
+      3: (oldDoc: Record<string, unknown>) => oldDoc,
     },
   },
 };
