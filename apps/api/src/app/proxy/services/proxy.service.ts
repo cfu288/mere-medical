@@ -14,6 +14,7 @@ export class ProxyService {
     @Inject(PROXY_MODULE_OPTIONS) private options: ProxyModuleOptions,
   ) {}
 
+  // TODO: Convert endpoints arrays to Map<id, endpoint> for O(1) lookup instead of O(n) scan
   private findService(
     vendor: string | undefined,
     serviceId: string,

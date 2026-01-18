@@ -35,13 +35,44 @@ Select all available FHIR scopes to ensure Mere Medical can access all of your h
 
 ## Other Details
 
-Configure the remaining settings:
+Healow supports two OAuth client types:
 
-![Other Details](/img/healow-4-other-details.jpeg)
+- **Confidential Client**: Your server stores a client secret and can request refresh tokens. Users authenticate once and Mere Medical can sync in the background without re-authentication.
+- **Public Client**: No client secret required, but Healow does not issue refresh tokens. Users must re-authenticate every time the access token expires (typically 1 hour).
+
+### Confidential Client (Recommended)
+
+:::danger
+
+In confidential mode, token exchange occurs through the hosted backend service. If you are not self-hosting, the server operator can potentially see your access tokens.
+
+:::
+
+![Other Details - Confidential](/img/healow-4a-other-details-confidential.jpeg)
 
 - **Redirect URL**: Set this to `{PUBLIC_URL}/healow/callback` where `{PUBLIC_URL}` is your Mere Medical instance URL (e.g., `https://mere.example.com/healow/callback`)
-- **OpenID Connect**: Enable OpenID Connect support
-- **App Type**: Configure as a public app (no client secret)
+- **Does your app support OpenID?**: Yes
+- **Is the app**: Confidential
+- **Which authentication method does your app support?**: Symmetric
+- **How is the app setup as a confidential app?**: "Client secret is stored on the server"
+- **Does your app require Refresh Token for authentication?**: Yes
+- **Please select which refresh token would your app require**: Offline access
+- **How often and how many queries will the app send?**: "Once a week, or more often if a user manually triggers a sync"
+
+### Public Client
+
+:::warning
+
+Healow does not enable CORS, preventing the Mere web from communicating directly with their servers. All requests must go through the hosted proxy, exposing similar risk to the confidential workflow but without the benefit of token refresh. For this reason, confidential client setup is recommended.
+
+:::
+
+![Other Details - Public](/img/healow-4-other-details.jpeg)
+
+- **Redirect URL**: Set this to `{PUBLIC_URL}/healow/callback` where `{PUBLIC_URL}` is your Mere Medical instance URL (e.g., `https://mere.example.com/healow/callback`)
+- **Does your app support OpenID?**: Yes
+- **Is the app**: Public
+- **Refresh Token**: No (public apps cannot use refresh tokens)
 
 :::warning
 
@@ -57,16 +88,19 @@ Complete the required questionnaire to finish your app registration.
 
 ## Configuration
 
-After your app is approved, you'll receive a Client ID. Add this to your Mere Medical instance:
+After your app is approved, you'll receive a Client ID (and Client Secret if using confidential mode). Add these to your Mere Medical instance:
+
+### Public Client
 
 ```
 HEALOW_CLIENT_ID=your-client-id-here
 ```
 
-## Important Notes
+### Confidential Client
 
-:::info Token Expiration
+```
+HEALOW_CLIENT_ID=your-client-id-here
+HEALOW_CLIENT_SECRET=your-client-secret-here
+```
 
-Healow public apps do not receive refresh tokens. Users will need to re-authenticate when the access token expires (typically after 1 hour). This is a limitation of Healow's public app implementation, not Mere Medical.
-
-:::
+When `HEALOW_CLIENT_SECRET` is set, Mere Medical automatically enables confidential mode with refresh token support.

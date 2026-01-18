@@ -538,7 +538,11 @@ async function fetchAttachmentData(
     const isBinaryResource = url.includes('/Binary/');
     const acceptHeader = isBinaryResource ? 'application/fhir+json' : '*/*';
 
-    const urlPath = new URL(url).pathname + new URL(url).search;
+    const isRelativeUrl =
+      !url.startsWith('http://') && !url.startsWith('https://');
+    const baseUrl = cd.location as string;
+    const fullUrl = isRelativeUrl ? concatPath(baseUrl, url) : url;
+    const urlPath = new URL(fullUrl).pathname + new URL(fullUrl).search;
     const proxyUrl = concatPath(
       publicUrl || '',
       `/api/proxy?vendor=healow&serviceId=${cd.tenant_id}&target=${encodeURIComponent(
@@ -546,7 +550,7 @@ async function fetchAttachmentData(
       )}&target_type=base`,
     );
 
-    const res = await fetch(useProxy ? proxyUrl : url, {
+    const res = await fetch(useProxy ? proxyUrl : fullUrl, {
       headers: {
         Authorization: `Bearer ${cd.access_token}`,
         Accept: acceptHeader,
