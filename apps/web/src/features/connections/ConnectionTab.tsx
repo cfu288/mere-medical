@@ -50,8 +50,10 @@ export async function getLoginUrlBySource(
       );
     }
     case 'cerner': {
-      return Promise.resolve(
-        getCernerLoginUrl(config, item.get('location'), item.get('auth_uri')),
+      return getCernerLoginUrl(
+        config,
+        item.get('location'),
+        item.get('auth_uri'),
       );
     }
     case 'veradigm': {
@@ -257,7 +259,9 @@ const ConnectionTab: React.FC = () => {
               fhirVersion || 'DSTU2',
             );
             setOpenSelectModal((x) => !x);
-            window.location = getCernerLoginUrl(config, base, auth);
+            getCernerLoginUrl(config, base, auth).then((url) => {
+              window.location = url;
+            });
             break;
           }
           case 'veradigm': {

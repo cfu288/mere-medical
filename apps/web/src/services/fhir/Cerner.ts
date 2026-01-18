@@ -62,6 +62,14 @@ import {
 } from '../../models/clinical-document/ClinicalDocument.type';
 import { concatPath } from '../../shared/utils/urlUtils';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
+import {
+  getCodeChallenge,
+  getCodeVerifier,
+  getOAuthState,
+} from '../../shared/utils/pkceUtils';
+
+export const CERNER_CODE_VERIFIER_KEY = 'cerner_code_verifier';
+export const CERNER_OAUTH_STATE_KEY = 'cerner_oauth_state';
 
 export enum CernerLocalStorageKeys {
   CERNER_BASE_URL = 'cernerBaseUrl',
@@ -72,11 +80,14 @@ export enum CernerLocalStorageKeys {
   FHIR_VERSION = 'cernerFhirVersion',
 }
 
-export function getLoginUrl(
+export async function getLoginUrl(
   config: AppConfig,
   baseUrl: string,
   authorizeUrl: string,
-): string & Location {
+): Promise<string & Location> {
+  const codeChallenge = await getCodeChallenge(CERNER_CODE_VERIFIER_KEY);
+  const state = getOAuthState(CERNER_OAUTH_STATE_KEY);
+
   const params = {
     client_id: `${config.CERNER_CLIENT_ID}`,
     scope: [
@@ -123,6 +134,9 @@ export function getLoginUrl(
     redirect_uri: concatPath(config.PUBLIC_URL || '', Routes.CernerCallback),
     aud: baseUrl,
     response_type: 'code',
+    state,
+    code_challenge: codeChallenge,
+    code_challenge_method: 'S256',
   };
 
   return `${authorizeUrl}?${new URLSearchParams(params)}` as string & Location;
@@ -813,6 +827,7 @@ export async function fetchAccessTokenWithCode(
   config: AppConfig,
   code: string,
   cernerTokenUrl: string,
+  codeVerifier: string,
 ): Promise<CernerAuthResponse> {
   const defaultUrl = `${cernerTokenUrl}`;
   const res = await fetch(defaultUrl, {
@@ -825,6 +840,7 @@ export async function fetchAccessTokenWithCode(
       client_id: `${config.CERNER_CLIENT_ID}`,
       redirect_uri: concatPath(config.PUBLIC_URL || '', Routes.CernerCallback),
       code: code,
+      code_verifier: codeVerifier,
     }),
   });
   if (!res.ok) {
