@@ -599,15 +599,17 @@ async function fetchAttachmentData(
 }
 
 export async function fetchAccessTokenWithCode(
+  config: AppConfig,
   code: string,
   healowTokenUrl: string,
-  clientId: string,
-  redirectUri: string,
-  healowId?: string,
+  healowId: string,
   useProxy = false,
-  publicUrl = '',
-  confidentialMode = false,
 ): Promise<HealowAuthResponse> {
+  const clientId = config.HEALOW_CLIENT_ID || '';
+  const publicUrl = config.PUBLIC_URL || '';
+  const confidentialMode = config.HEALOW_CONFIDENTIAL_MODE || false;
+  const redirectUri = `${publicUrl}${Routes.HealowCallback}`;
+
   let res: Response;
 
   if (confidentialMode) {
@@ -664,14 +666,16 @@ export async function fetchAccessTokenWithCode(
  * the client_secret server-side before forwarding to Healow's token endpoint.
  */
 export async function fetchAccessTokenWithRefreshToken(
+  config: AppConfig,
   refreshToken: string,
   healowTokenUrl: string,
-  clientId: string,
-  healowId?: string,
+  healowId: string,
   useProxy = false,
-  publicUrl = '',
-  confidentialMode = false,
 ): Promise<HealowAuthResponse> {
+  const clientId = config.HEALOW_CLIENT_ID || '';
+  const publicUrl = config.PUBLIC_URL || '';
+  const confidentialMode = config.HEALOW_CONFIDENTIAL_MODE || false;
+
   let res: Response;
 
   if (confidentialMode) {
@@ -841,13 +845,11 @@ export async function refreshHealowConnectionTokenIfNeeded(
       }
 
       const access_token_data = await fetchAccessTokenWithRefreshToken(
+        config,
         refreshToken,
         tokenUri,
-        config.HEALOW_CLIENT_ID || '',
         tenantId,
         useProxy,
-        config.PUBLIC_URL || '',
-        config.HEALOW_CONFIDENTIAL_MODE || false,
       );
 
       return await saveConnectionToDb({

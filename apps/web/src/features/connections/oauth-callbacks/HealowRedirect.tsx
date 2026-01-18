@@ -73,14 +73,11 @@ const HealowRedirect: React.FC = () => {
 
         const healowId = localStorage.getItem(HealowLocalStorageKeys.HEALOW_ID);
         fetchAccessTokenWithCode(
+          config,
           code,
           healowTokenUrl,
-          config.HEALOW_CLIENT_ID || '',
-          `${config.PUBLIC_URL}${Routes.HealowCallback}`,
-          healowId || undefined,
+          healowId || '',
           userPreferences.use_proxy,
-          config.PUBLIC_URL || '',
-          config.HEALOW_CONFIDENTIAL_MODE || false,
         )
           .then((res) => {
             if (!res.access_token || !res.expires_in || !healowId) {

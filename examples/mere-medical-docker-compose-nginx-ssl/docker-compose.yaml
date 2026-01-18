@@ -27,4 +27,5 @@ services:
       - VERADIGM_CLIENT_ID=${VERADIGM_CLIENT_ID}
       - VA_CLIENT_ID=${VA_CLIENT_ID}
       - HEALOW_CLIENT_ID=${HEALOW_CLIENT_ID}
+      - HEALOW_CLIENT_SECRET=${HEALOW_CLIENT_SECRET}
       - PUBLIC_URL=https://meremedical.local
