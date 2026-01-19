@@ -41,7 +41,7 @@ export async function getLoginUrlBySource(
         authUrl = baseUrl + '/oauth2/authorize';
       }
 
-      return getEpicLoginUrl(
+      return await getEpicLoginUrl(
         config,
         baseUrl,
         authUrl,
@@ -240,13 +240,15 @@ const ConnectionTab: React.FC = () => {
               fhirVersion || 'DSTU2',
             );
             setOpenSelectModal((x) => !x);
-            window.location = getEpicLoginUrl(
+            getEpicLoginUrl(
               config,
               base,
               auth,
               isEpicSandbox(id),
               fhirVersion || 'DSTU2',
-            );
+            ).then((url) => {
+              window.location = url;
+            });
             break;
           }
           case 'cerner': {
