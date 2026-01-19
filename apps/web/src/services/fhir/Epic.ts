@@ -123,8 +123,17 @@ export async function getLoginUrl(
   isSandbox = false,
   version: 'DSTU2' | 'R4' = 'DSTU2',
 ): Promise<string & Location> {
-  const codeChallenge = await getCodeChallenge(EPIC_CODE_VERIFIER_KEY);
   const state = getOAuthState(EPIC_OAUTH_STATE_KEY);
+  const codeChallenge = await getCodeChallenge(EPIC_CODE_VERIFIER_KEY);
+
+  // Debug PKCE values
+  const codeVerifier = sessionStorage.getItem(EPIC_CODE_VERIFIER_KEY);
+  console.log('PKCE Debug:', {
+    codeVerifier,
+    codeVerifierLength: codeVerifier?.length,
+    codeChallenge,
+    codeChallengeLength: codeChallenge.length,
+  });
 
   const params = {
     client_id: getEpicClientId(config, version, isSandbox),
