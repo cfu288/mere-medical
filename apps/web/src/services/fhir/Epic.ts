@@ -59,6 +59,10 @@ import {
 } from '../../models/clinical-document/ClinicalDocument.type';
 import { findUserById } from '../../repositories/UserRepository';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
+import { getCodeChallenge, getOAuthState } from '../../shared/utils/pkceUtils';
+
+export const EPIC_CODE_VERIFIER_KEY = 'epic_code_verifier';
+export const EPIC_OAUTH_STATE_KEY = 'epic_oauth_state';
 
 const URLJoin = (...args: string[]) =>
   args
@@ -112,19 +116,25 @@ export function getEpicClientId(
   return config.EPIC_CLIENT_ID_DSTU2 || config.EPIC_CLIENT_ID || '';
 }
 
-export function getLoginUrl(
+export async function getLoginUrl(
   config: AppConfig,
   baseUrl: string,
   authorizeUrl: string,
   isSandbox = false,
   version: 'DSTU2' | 'R4' = 'DSTU2',
-): string & Location {
+): Promise<string & Location> {
+  const state = getOAuthState(EPIC_OAUTH_STATE_KEY);
+  const codeChallenge = await getCodeChallenge(EPIC_CODE_VERIFIER_KEY);
+
   const params = {
     client_id: getEpicClientId(config, version, isSandbox),
     scope: 'openid fhirUser',
     redirect_uri: `${config.PUBLIC_URL}${Routes.EpicCallback}`,
     aud: version === 'R4' ? getR4Url(baseUrl) : getDSTU2Url(baseUrl),
     response_type: 'code',
+    state,
+    code_challenge: codeChallenge,
+    code_challenge_method: 'S256',
   };
 
   return `${authorizeUrl}?${new URLSearchParams(params)}` as string & Location;
@@ -895,6 +905,7 @@ export async function fetchAccessTokenWithCode(
   code: string,
   epicTokenUrl: string,
   epicName: string,
+  codeVerifier: string,
   epicId?: string,
   useProxy = false,
   version: 'DSTU2' | 'R4' = 'DSTU2',
@@ -910,6 +921,7 @@ export async function fetchAccessTokenWithCode(
     client_id: getEpicClientId(config, version, isSandbox),
     redirect_uri: `${config.PUBLIC_URL}${Routes.EpicCallback}`,
     code: code,
+    code_verifier: codeVerifier,
   });
   const res = await fetch(useProxy ? proxyUrl : defaultUrl, {
     method: 'POST',

@@ -4,11 +4,19 @@ import { Routes } from '../../../Routes';
 import {
   VA_BASE_URL,
   VA_TOKEN_URL,
+  VA_CODE_VERIFIER_KEY,
   VA_OAUTH_STATE_KEY,
   fetchAccessTokenWithCode,
   saveConnectionToDb,
 } from '../../../services/fhir/VA';
-import { getOAuthState } from '../../../shared/utils/pkceUtils';
+import {
+  clearPkceSession,
+  validateOAuthState,
+} from '../../../shared/utils/pkceUtils';
+
+function clearVASession() {
+  clearPkceSession(VA_CODE_VERIFIER_KEY, VA_OAUTH_STATE_KEY);
+}
 import { AppPage } from '../../../shared/components/AppPage';
 import { GenericBanner } from '../../../shared/components/GenericBanner';
 import { useNotificationDispatch } from '../../../app/providers/NotificationProvider';
@@ -41,10 +49,8 @@ const VARedirect: React.FC = () => {
               res.expires_in &&
               user.id
             ) {
-              const state = res.state;
-              const storedState = getOAuthState(VA_OAUTH_STATE_KEY);
-
-              if (state !== storedState) {
+              if (!validateOAuthState(res.state, VA_OAUTH_STATE_KEY)) {
+                clearVASession();
                 notifyDispatch({
                   type: 'set_notification',
                   message: `Error completing authentication: state mismatch`,
@@ -60,18 +66,19 @@ const VARedirect: React.FC = () => {
                 db,
                 user,
               })
-                .then(() => {
-                  navigate(Routes.AddConnection);
-                })
                 .catch((e) => {
                   notifyDispatch({
                     type: 'set_notification',
                     message: `Error adding connection: ${(e as Error).message}`,
                     variant: 'error',
                   });
+                })
+                .finally(() => {
+                  clearVASession();
                   navigate(Routes.AddConnection);
                 });
             } else {
+              clearVASession();
               notifyDispatch({
                 type: 'set_notification',
                 message: `Error completing authentication: no access token provided`,
@@ -80,6 +87,7 @@ const VARedirect: React.FC = () => {
             }
           })
           .catch((e) => {
+            clearVASession();
             notifyDispatch({
               type: 'set_notification',
               message: `Error adding connection: ${(e as Error).message}`,

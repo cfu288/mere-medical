@@ -11,9 +11,26 @@ import { useUser } from '../../../app/providers/UserProvider';
 import { useAppConfig } from '../../../app/providers/AppConfigProvider';
 import {
   CernerLocalStorageKeys,
+  CERNER_CODE_VERIFIER_KEY,
+  CERNER_OAUTH_STATE_KEY,
   fetchAccessTokenWithCode,
 } from '../../../services/fhir/Cerner';
 import { createConnection } from '../../../repositories/ConnectionRepository';
+import {
+  clearPkceSession,
+  getCodeVerifier,
+  validateOAuthState,
+} from '../../../shared/utils/pkceUtils';
+
+function clearCernerSession() {
+  localStorage.removeItem(CernerLocalStorageKeys.CERNER_BASE_URL);
+  localStorage.removeItem(CernerLocalStorageKeys.CERNER_AUTH_URL);
+  localStorage.removeItem(CernerLocalStorageKeys.CERNER_TOKEN_URL);
+  localStorage.removeItem(CernerLocalStorageKeys.CERNER_NAME);
+  localStorage.removeItem(CernerLocalStorageKeys.CERNER_ID);
+  localStorage.removeItem(CernerLocalStorageKeys.FHIR_VERSION);
+  clearPkceSession(CERNER_CODE_VERIFIER_KEY, CERNER_OAUTH_STATE_KEY);
+}
 
 const CernerRedirect: React.FC = () => {
   const navigate = useNavigate(),
@@ -31,6 +48,7 @@ const CernerRedirect: React.FC = () => {
       hasRun.current = true;
       const searchRequest = new URLSearchParams(search),
         code = searchRequest.get('code'),
+        returnedState = searchRequest.get('state'),
         cernerUrl = localStorage.getItem(
           CernerLocalStorageKeys.CERNER_BASE_URL,
         ),
@@ -43,11 +61,18 @@ const CernerRedirect: React.FC = () => {
         ),
         storedFhirVersion = localStorage.getItem(
           CernerLocalStorageKeys.FHIR_VERSION,
-        ) as 'DSTU2' | 'R4' | null;
+        ) as 'DSTU2' | 'R4' | null,
+        codeVerifier = getCodeVerifier(CERNER_CODE_VERIFIER_KEY);
+
+      if (!validateOAuthState(returnedState, CERNER_OAUTH_STATE_KEY)) {
+        setError('OAuth state mismatch. Please try again.');
+        clearCernerSession();
+        return;
+      }
 
       if (code && cernerUrl && cernerName && cernerAuthUrl && cernerTokenUrl) {
         const tokenEndpoint = cernerTokenUrl;
-        fetchAccessTokenWithCode(config, code, tokenEndpoint)
+        fetchAccessTokenWithCode(config, code, tokenEndpoint, codeVerifier)
           .then((res) => {
             if (
               res.access_token &&
@@ -76,20 +101,19 @@ const CernerRedirect: React.FC = () => {
                 fhir_version: fhirVersion,
               };
               createConnection(db, dbentry as any)
-                .then(() => {
-                  localStorage.removeItem(CernerLocalStorageKeys.FHIR_VERSION);
-                  navigate(Routes.AddConnection);
-                })
                 .catch((e: unknown) => {
-                  localStorage.removeItem(CernerLocalStorageKeys.FHIR_VERSION);
                   notifyDispatch({
                     type: 'set_notification',
                     message: `Error adding connection: ${(e as Error).message}`,
                     variant: 'error',
                   });
+                })
+                .finally(() => {
+                  clearCernerSession();
                   navigate(Routes.AddConnection);
                 });
             } else {
+              clearCernerSession();
               notifyDispatch({
                 type: 'set_notification',
                 message: `Error completing authentication: no access token provided`,
@@ -98,6 +122,7 @@ const CernerRedirect: React.FC = () => {
             }
           })
           .catch((e) => {
+            clearCernerSession();
             notifyDispatch({
               type: 'set_notification',
               message: `Error adding connection: ${(e as Error).message}`,
@@ -106,13 +131,13 @@ const CernerRedirect: React.FC = () => {
             navigate(Routes.AddConnection);
           });
       } else {
+        clearCernerSession();
         notifyDispatch({
           type: 'set_notification',
           message: `Error adding connection: missing required parameters`,
           variant: 'error',
         });
         console.error('Missing required parameters');
-        // show which parameters are missing
         const missingParams = [
           !code ? 'code' : '',
           !cernerUrl ? 'cernerUrl' : '',

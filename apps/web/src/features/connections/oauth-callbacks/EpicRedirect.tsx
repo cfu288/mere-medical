@@ -14,15 +14,32 @@ import {
   DynamicRegistrationError,
   EpicDynamicRegistrationResponse,
   EpicLocalStorageKeys,
+  EPIC_CODE_VERIFIER_KEY,
+  EPIC_OAUTH_STATE_KEY,
   fetchAccessTokenUsingJWT,
   fetchAccessTokenWithCode,
   registerDynamicClient,
   saveConnectionToDb,
 } from '../../../services/fhir/Epic';
+import {
+  clearPkceSession,
+  getCodeVerifier,
+  validateOAuthState,
+} from '../../../shared/utils/pkceUtils';
 import { useNotificationDispatch } from '../../../app/providers/NotificationProvider';
 import { useUserPreferences } from '../../../app/providers/UserPreferencesProvider';
 import { useUser } from '../../../app/providers/UserProvider';
 import { UserDocument } from '../../../models/user-document/UserDocument.type';
+
+function clearEpicSession() {
+  localStorage.removeItem(EpicLocalStorageKeys.EPIC_BASE_URL);
+  localStorage.removeItem(EpicLocalStorageKeys.EPIC_NAME);
+  localStorage.removeItem(EpicLocalStorageKeys.EPIC_ID);
+  localStorage.removeItem(EpicLocalStorageKeys.EPIC_AUTH_URL);
+  localStorage.removeItem(EpicLocalStorageKeys.EPIC_TOKEN_URL);
+  localStorage.removeItem(EpicLocalStorageKeys.FHIR_VERSION);
+  clearPkceSession(EPIC_CODE_VERIFIER_KEY, EPIC_OAUTH_STATE_KEY);
+}
 
 /**
  * Handles the redirect from Epic's authorization server. If possible, it
@@ -52,6 +69,7 @@ function useEpicDynamicRegistrationLogin() {
     if (!hasRun.current) {
       const searchRequest = new URLSearchParams(search),
         code = searchRequest.get('code'),
+        returnedState = searchRequest.get('state'),
         epicBaseUrl = localStorage.getItem(EpicLocalStorageKeys.EPIC_BASE_URL),
         epicTokenUrl = localStorage.getItem(
           EpicLocalStorageKeys.EPIC_TOKEN_URL,
@@ -61,7 +79,15 @@ function useEpicDynamicRegistrationLogin() {
         epicId = localStorage.getItem(EpicLocalStorageKeys.EPIC_ID),
         storedFhirVersion = localStorage.getItem(
           EpicLocalStorageKeys.FHIR_VERSION,
-        ) as 'DSTU2' | 'R4' | null;
+        ) as 'DSTU2' | 'R4' | null,
+        codeVerifier = getCodeVerifier(EPIC_CODE_VERIFIER_KEY);
+
+      if (!validateOAuthState(returnedState, EPIC_OAUTH_STATE_KEY)) {
+        hasRun.current = true;
+        setError('OAuth state mismatch. Please try again.');
+        clearEpicSession();
+        return;
+      }
 
       if (
         code &&
@@ -80,6 +106,7 @@ function useEpicDynamicRegistrationLogin() {
         handleLogin({
           config,
           code,
+          codeVerifier,
           epicBaseUrl,
           epicTokenUrl,
           epicAuthUrl,
@@ -91,8 +118,11 @@ function useEpicDynamicRegistrationLogin() {
           enableProxy: userPreferences?.use_proxy,
           fhirVersion,
         })
-          .then()
+          .then(() => {
+            clearEpicSession();
+          })
           .catch((e) => {
+            clearEpicSession();
             if (e instanceof DynamicRegistrationError) {
               notifyDispatch({
                 type: 'set_notification',
@@ -111,9 +141,10 @@ function useEpicDynamicRegistrationLogin() {
           });
       } else {
         if (!(code && epicBaseUrl && epicName && epicId)) {
+          hasRun.current = true;
+          clearEpicSession();
           setError('There was a problem trying to sign in');
         }
-        // Otherwise, we're just pulling data
       }
     }
   }, [
@@ -209,6 +240,7 @@ const redirectToConnectionsTab = (navigate: NavigateFunction) => {
 const handleLogin = async ({
   config,
   code,
+  codeVerifier,
   epicBaseUrl,
   epicTokenUrl,
   epicAuthUrl,
@@ -222,6 +254,7 @@ const handleLogin = async ({
 }: {
   config: AppConfig;
   code: string;
+  codeVerifier: string;
   epicBaseUrl: string;
   epicTokenUrl: string;
   epicAuthUrl: string;
@@ -240,6 +273,7 @@ const handleLogin = async ({
     code,
     epicTokenUrl,
     epicName,
+    codeVerifier,
     epicId,
     enableProxy,
     fhirVersion,
