@@ -172,7 +172,7 @@
     "workbox-core": "^6.5.4",
     "workbox-expiration": "^6.5.4",
     "workbox-google-analytics": "^7.0.0",
-    "workbox-navigation-preload": "^6.5.4",
+    "workbox-navigation-preload": "^7.4.0",
     "workbox-precaching": "^7.4.0",
     "workbox-range-requests": "^7.3.0",
     "workbox-routing": "^7.0.0",
