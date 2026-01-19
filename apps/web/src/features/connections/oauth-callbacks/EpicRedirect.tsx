@@ -67,7 +67,6 @@ function useEpicDynamicRegistrationLogin() {
   useEffect(() => {
     if (isLoading) return;
     if (!hasRun.current) {
-      hasRun.current = true;
       const searchRequest = new URLSearchParams(search),
         code = searchRequest.get('code'),
         returnedState = searchRequest.get('state'),
@@ -84,6 +83,7 @@ function useEpicDynamicRegistrationLogin() {
         codeVerifier = getCodeVerifier(EPIC_CODE_VERIFIER_KEY);
 
       if (!validateOAuthState(returnedState, EPIC_OAUTH_STATE_KEY)) {
+        hasRun.current = true;
         setError('OAuth state mismatch. Please try again.');
         clearEpicSession();
         return;
@@ -99,6 +99,7 @@ function useEpicDynamicRegistrationLogin() {
         userPreferences &&
         user
       ) {
+        hasRun.current = true;
         const fhirVersion =
           storedFhirVersion ||
           (epicBaseUrl.toUpperCase().includes('/R4') ? 'R4' : 'DSTU2');
@@ -139,8 +140,9 @@ function useEpicDynamicRegistrationLogin() {
             }
           });
       } else {
-        clearEpicSession();
         if (!(code && epicBaseUrl && epicName && epicId)) {
+          hasRun.current = true;
+          clearEpicSession();
           setError('There was a problem trying to sign in');
         }
       }

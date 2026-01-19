@@ -59,11 +59,7 @@ import {
 } from '../../models/clinical-document/ClinicalDocument.type';
 import { findUserById } from '../../repositories/UserRepository';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
-import {
-  getCodeChallenge,
-  getCodeVerifier,
-  getOAuthState,
-} from '../../shared/utils/pkceUtils';
+import { getCodeChallenge, getOAuthState } from '../../shared/utils/pkceUtils';
 
 export const EPIC_CODE_VERIFIER_KEY = 'epic_code_verifier';
 export const EPIC_OAUTH_STATE_KEY = 'epic_oauth_state';
