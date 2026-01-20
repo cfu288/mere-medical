@@ -16,6 +16,7 @@ env:
 
 jobs:
   app-multiplatform:
+    if: github.event_name == 'push' || !github.event.pull_request.draft
     strategy:
       matrix:
         include:
@@ -89,6 +90,7 @@ jobs:
             $(printf 'cfu288/mere-medical@sha256:%s ' *)
 
   app-demo-multiplatform:
+    if: github.event_name == 'push' || !github.event.pull_request.draft
     strategy:
       matrix:
         include:
@@ -164,6 +166,7 @@ jobs:
             $(printf 'cfu288/mere-medical@sha256:%s ' *)
 
   docs:
+    if: github.event_name == 'push' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
