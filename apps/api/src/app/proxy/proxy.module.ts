@@ -1,5 +1,7 @@
 // @ts-nocheck
 import { DynamicModule, Logger, Module, Provider } from '@nestjs/common';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { createProxyServer } from 'http-proxy';
 import { EpicDSTU2TenantEndpoints, EpicR4TenantEndpoints } from '@mere/epic';
 import { HealowR4TenantEndpoints } from '@mere/healow';
@@ -17,6 +19,7 @@ import {
 } from './proxy.constants';
 import { ProxyService } from './services';
 import { concatPath } from './utils';
+import { OriginGuard } from './guards';
 
 const proxyFactory = {
   provide: HTTP_PROXY,
@@ -77,7 +80,18 @@ const proxyFactory = {
 };
 
 @Module({
-  providers: [ProxyService, proxyFactory],
+  imports: [
+    ThrottlerModule.forRoot([
+      { name: 'short', ttl: 1000, limit: 3 },
+      { name: 'medium', ttl: 60000, limit: 100 },
+    ]),
+  ],
+  providers: [
+    ProxyService,
+    proxyFactory,
+    OriginGuard,
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
   controllers: [ProxyController],
 })
 export class ProxyModule {
