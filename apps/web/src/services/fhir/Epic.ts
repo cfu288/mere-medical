@@ -1046,7 +1046,6 @@ export async function fetchAccessTokenUsingJWT(
     }),
   });
   if (!tokenRes.ok) {
-    console.log(await tokenRes.text());
     throw new Error('Error getting access token');
   }
   const result = await tokenRes.json();
