@@ -2,12 +2,14 @@
 import { format, parseISO } from 'date-fns';
 import {
   BundleEntry,
+  AllergyIntolerance,
   Condition,
   DiagnosticReport,
   DocumentReference,
   Encounter,
   FhirResource,
   Immunization,
+  MedicationOrder,
   MedicationStatement,
   Observation,
   Procedure,
@@ -25,6 +27,7 @@ import {
 import { memo } from 'react';
 
 import { ClinicalDocument } from '../../../../models/clinical-document/ClinicalDocument.type';
+import { AllergyIntoleranceCard } from '../cards/AllergyIntoleranceCard';
 import { AppointmentCard } from '../cards/AppointmentCard';
 import { CarePlanCard } from '../cards/CarePlanCard';
 import { CareTeamCard } from '../cards/CareTeamCard';
@@ -40,6 +43,7 @@ import { EncounterCard } from '../cards/EncounterCard';
 import { GoalCard } from '../cards/GoalCard';
 import { ImmunizationCard } from '../cards/ImmunizationCard';
 import { MedicationCard } from '../cards/MedicationCard';
+import { MedicationOrderCard } from '../cards/MedicationOrderCard';
 import { MedicationRequestCard } from '../cards/MedicationRequestCard';
 import { ObservationCard } from '../cards/ObservationCard';
 import { ProcedureCard } from '../cards/ProcedureCard';
@@ -181,6 +185,22 @@ export const TimelineItem = memo(function TimelineItem({
                   <SpecimenCard
                     key={item.id}
                     item={item as ClinicalDocument<R4BundleEntry<Specimen>>}
+                  />
+                )}
+                {item.data_record.resource_type === 'allergyintolerance' && (
+                  <AllergyIntoleranceCard
+                    key={item.id}
+                    item={
+                      item as ClinicalDocument<BundleEntry<AllergyIntolerance>>
+                    }
+                  />
+                )}
+                {item.data_record.resource_type === 'medicationorder' && (
+                  <MedicationOrderCard
+                    key={item.id}
+                    item={
+                      item as ClinicalDocument<BundleEntry<MedicationOrder>>
+                    }
                   />
                 )}
               </div>

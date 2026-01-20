@@ -69,6 +69,7 @@ export function useRecordQuery(
             days: Object.keys(result.records).length,
             hasMore: result.hasMore,
             lastOffset: result.lastOffset,
+            records: result.records,
           });
 
           setData((prev) =>

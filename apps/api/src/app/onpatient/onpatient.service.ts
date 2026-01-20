@@ -28,18 +28,22 @@ export class OnPatientService {
       );
     }
 
-    const params = {
+    const params = new URLSearchParams({
       grant_type: 'authorization_code',
       client_id: this.envConfig.clientId,
       client_secret: this.envConfig.clientSecret,
       redirect_uri: this.envConfig.redirectUri,
       code: code,
-    };
+    });
 
     const response = await this.httpService.post<OnPatientAuthResponse>(
-      'https://onpatient.com/o/token/?' + new URLSearchParams(params),
-      null,
-      { method: 'POST' },
+      'https://onpatient.com/o/token/',
+      params.toString(),
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      },
     );
 
     const awaitedRes = await response.toPromise();

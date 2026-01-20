@@ -485,7 +485,6 @@ export async function fetchRecords(
         'patient',
         // 'observation', - Not all labs are part of a diagnostic report, and will be missed if we exclude this
         'careplan',
-        'allergyintolerance',
         'documentreference_attachment',
         'provenance',
       ],
@@ -496,7 +495,6 @@ export async function fetchRecords(
     selector['data_record.resource_type']['$nin'] = [
       'patient',
       'careplan',
-      'allergyintolerance',
       'documentreference_attachment',
       'provenance',
     ];
@@ -560,7 +558,6 @@ export async function fetchRawRecords(
       $nin: [
         'patient',
         'careplan',
-        'allergyintolerance',
         'documentreference_attachment',
         'provenance',
       ],

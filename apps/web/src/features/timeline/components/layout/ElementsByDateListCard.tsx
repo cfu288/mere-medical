@@ -1,11 +1,13 @@
 import {
   BundleEntry,
+  AllergyIntolerance,
   Condition,
   DiagnosticReport,
   DocumentReference,
   Encounter,
   FhirResource,
   Immunization,
+  MedicationOrder,
   MedicationStatement,
   Observation,
   Procedure,
@@ -27,6 +29,8 @@ import {
   getDiagnosticReportPerformer,
   getObservationPerformer,
   getProcedurePerformer,
+  getAllergyIntoleranceDisplayName,
+  getMedicationOrderDisplayName,
 } from '../../../../shared/utils/fhirAccessHelpers';
 
 import { Transition } from '@headlessui/react';
@@ -36,6 +40,7 @@ import { MapPinIcon, UserIcon } from '@heroicons/react/24/outline';
 import { ClinicalDocument } from '../../../../models/clinical-document/ClinicalDocument.type';
 import { CardBase } from '../../../connections/components/CardBase';
 import { useConnectionDocs } from '../../../connections/hooks/useConnectionDoc';
+import { AllergyIntoleranceCard } from '../cards/AllergyIntoleranceCard';
 import { AppointmentCard } from '../cards/AppointmentCard';
 import { CarePlanCard } from '../cards/CarePlanCard';
 import { CareTeamCard } from '../cards/CareTeamCard';
@@ -50,6 +55,7 @@ import { EncounterCard } from '../cards/EncounterCard';
 import { GoalCard } from '../cards/GoalCard';
 import { ImmunizationCard } from '../cards/ImmunizationCard';
 import { MedicationCard } from '../cards/MedicationCard';
+import { MedicationOrderCard } from '../cards/MedicationOrderCard';
 import { MedicationRequestCard } from '../cards/MedicationRequestCard';
 import { ObservationCard } from '../cards/ObservationCard';
 import { ProcedureCard } from '../cards/ProcedureCard';
@@ -404,6 +410,38 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
             return 0;
           }) as ClinicalDocument<R4BundleEntry<Specimen>>[],
       [itemList],
+    ),
+    allergyIntolerances = useMemo(
+      () =>
+        itemList
+          .filter(
+            (item) => item.data_record.resource_type === 'allergyintolerance',
+          )
+          .sort((a, b) => {
+            if (a.metadata?.display_name && b.metadata?.display_name) {
+              return a.metadata.display_name.localeCompare(
+                b.metadata.display_name,
+              );
+            }
+            return 0;
+          }) as ClinicalDocument<BundleEntry<AllergyIntolerance>>[],
+      [itemList],
+    ),
+    medicationOrders = useMemo(
+      () =>
+        itemList
+          .filter(
+            (item) => item.data_record.resource_type === 'medicationorder',
+          )
+          .sort((a, b) => {
+            if (a.metadata?.display_name && b.metadata?.display_name) {
+              return a.metadata.display_name.localeCompare(
+                b.metadata.display_name,
+              );
+            }
+            return 0;
+          }) as ClinicalDocument<BundleEntry<MedicationOrder>>[],
+      [itemList],
     );
 
   const [expanded, setExpanded] = React.useState(false);
@@ -415,7 +453,9 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
         conditions.length > 0 ? 'Conditions' : '',
         procedures.length > 0 ? 'Procedures' : '',
         observations.length > 0 ? 'Labs' : '',
-        medicationStatements.length > 0 || medicationRequests.length > 0
+        medicationStatements.length > 0 ||
+        medicationRequests.length > 0 ||
+        medicationOrders.length > 0
           ? 'Medications'
           : '',
         diagnosticReports.length > 0 ? 'Lab Panels' : '',
@@ -429,6 +469,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
         goals.length > 0 ? 'Goals' : '',
         appointments.length > 0 ? 'Appointments' : '',
         specimens.length > 0 ? 'Specimens' : '',
+        allergyIntolerances.length > 0 ? 'Allergies' : '',
       ].filter(Boolean),
     [
       conditions.length,
@@ -439,6 +480,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
       immunizations.length,
       medicationStatements.length,
       medicationRequests.length,
+      medicationOrders.length,
       observations.length,
       procedures.length,
       coverages.length,
@@ -447,6 +489,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
       goals.length,
       appointments.length,
       specimens.length,
+      allergyIntolerances.length,
     ],
   );
 
@@ -648,7 +691,9 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
             </ul>
           </div>
         )}
-        {(medicationStatements.length > 0 || medicationRequests.length > 0) && (
+        {(medicationStatements.length > 0 ||
+          medicationRequests.length > 0 ||
+          medicationOrders.length > 0) && (
           <div className="mb-2 ml-2">
             <TimelineCardCategoryTitle
               title={'Medications'}
@@ -669,6 +714,14 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
                   key={item.id}
                 >
                   {item.metadata?.display_name}
+                </li>
+              ))}
+              {medicationOrders.map((item) => (
+                <li
+                  className="text-xs font-medium md:text-sm text-gray-900"
+                  key={item.id}
+                >
+                  {getMedicationOrderDisplayName(item)}
                 </li>
               ))}
             </ul>
@@ -777,6 +830,24 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
                   key={item.id}
                 >
                   {item.metadata?.display_name}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {allergyIntolerances.length > 0 && (
+          <div className="mb-2 ml-2">
+            <TimelineCardCategoryTitle
+              title={'Allergies'}
+              color="text-red-600"
+            />
+            <ul className="list-disc list-inside">
+              {allergyIntolerances.map((item) => (
+                <li
+                  className="text-xs font-medium md:text-sm text-gray-900"
+                  key={item.id}
+                >
+                  {getAllergyIntoleranceDisplayName(item)}
                 </li>
               ))}
             </ul>
@@ -902,6 +973,11 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
                 />
               </div>
             ))}
+            {medicationOrders.map((item) => (
+              <div key={item.id} className="my-2">
+                <MedicationOrderCard key={item.id} item={item} />
+              </div>
+            ))}
             {coverages.map((item) => (
               <div key={item.id} className="my-2">
                 <CoverageCard key={item.id} item={item} />
@@ -930,6 +1006,11 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
             {specimens.map((item) => (
               <div key={item.id} className="my-2">
                 <SpecimenCard key={item.id} item={item} />
+              </div>
+            ))}
+            {allergyIntolerances.map((item) => (
+              <div key={item.id} className="my-2">
+                <AllergyIntoleranceCard key={item.id} item={item} />
               </div>
             ))}
           </div>
