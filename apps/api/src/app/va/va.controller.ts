@@ -1,11 +1,10 @@
 import { Controller, Get, Logger, Query, Res } from '@nestjs/common';
 import { Response } from 'express';
+import { buildVARedirectUrl } from './va.utils';
 
 @Controller('v1/va')
 export class VAController {
   @Get('app-redirect')
-  // https://localhost:4200/api/v1/va/app-redirect
-  // We removed the desktop app, so this endpoint just redirects to the web app
   async redirectToApp(
     @Res() response: Response,
     @Query('code') code: string,
@@ -13,7 +12,7 @@ export class VAController {
   ) {
     try {
       const webAppUrl = process.env.WEB_APP_URL || 'http://localhost:4200';
-      const redirectUrl = `${webAppUrl}/va/callback?code=${code}${state ? `&state=${state}` : ''}`;
+      const redirectUrl = buildVARedirectUrl(webAppUrl, code, state);
 
       response.send(`<html><head>
       <meta charset="utf-8">
