@@ -38,7 +38,19 @@ const VARedirect: React.FC = () => {
     if (!hasRun.current) {
       hasRun.current = true;
       const searchRequest = new URLSearchParams(search),
-        code = searchRequest.get('code');
+        code = searchRequest.get('code'),
+        returnedState = searchRequest.get('state');
+
+      if (!validateOAuthState(returnedState, VA_OAUTH_STATE_KEY)) {
+        clearVASession();
+        notifyDispatch({
+          type: 'set_notification',
+          message: `Error completing authentication: state mismatch`,
+          variant: 'error',
+        });
+        navigate(Routes.AddConnection);
+        return;
+      }
 
       if (code) {
         fetchAccessTokenWithCode(config, code, VA_TOKEN_URL)
@@ -49,17 +61,6 @@ const VARedirect: React.FC = () => {
               res.expires_in &&
               user.id
             ) {
-              if (!validateOAuthState(res.state, VA_OAUTH_STATE_KEY)) {
-                clearVASession();
-                notifyDispatch({
-                  type: 'set_notification',
-                  message: `Error completing authentication: state mismatch`,
-                  variant: 'error',
-                });
-                navigate(Routes.AddConnection);
-                return;
-              }
-
               saveConnectionToDb({
                 res,
                 vaBaseUrl: VA_BASE_URL,
