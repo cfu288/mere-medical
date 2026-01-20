@@ -1,5 +1,7 @@
 import { Disclosure } from '@headlessui/react';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
+import DOMPurify from 'dompurify';
+import parse from 'html-react-parser';
 import { LOINC_CODE_SYSTEM } from '../ShowDocumentReferenceAttachmentExpandable';
 import { getMatchingSections, parseDateString } from './parseCCDA';
 
@@ -88,12 +90,9 @@ export function parseCCDAHPISection(
               </div>
             </Disclosure.Button>
             <Disclosure.Panel className="m-1 text-sm text-gray-800">
-              <p
-                className="text-md whitespace-wrap max-h-screen overflow-y-scroll p-2 sm:prose prose-sm w-full min-w-full"
-                dangerouslySetInnerHTML={{
-                  __html: extractedNote?.text || 'No note',
-                }}
-              />
+              <div className="text-md whitespace-wrap max-h-screen overflow-y-scroll p-2 sm:prose prose-sm w-full min-w-full">
+                {parse(DOMPurify.sanitize(extractedNote?.text || 'No note'))}
+              </div>
               {/* horizonal divider */}
               <hr className="my-4" />
               <p className="mt-2 mb-4 text-sm font-semibold italic text-gray-900">
