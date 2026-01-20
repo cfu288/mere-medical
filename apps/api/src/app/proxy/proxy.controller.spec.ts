@@ -227,7 +227,7 @@ describe('ProxyController Rate Limiting', () => {
     jest.clearAllMocks();
   });
 
-  it('allows requests within short window rate limit', async () => {
+  it('allows requests within limit then returns 429 when exceeded', async () => {
     mockProxyService.proxyRequest.mockImplementation((_req, res) => {
       res.status(200).json({ success: true });
     });
@@ -240,19 +240,13 @@ describe('ProxyController Rate Limiting', () => {
 
       expect(response.status).not.toBe(429);
     }
-  });
 
-  it('returns 429 when short window rate limit exceeded', async () => {
-    mockProxyService.proxyRequest.mockImplementation((_req, res) => {
-      res.status(200).json({ success: true });
-    });
-
-    const response = await request(app.getHttpServer())
+    const exceededResponse = await request(app.getHttpServer())
       .get('/proxy')
       .set('Origin', 'https://app.example.com')
       .query({ serviceId: 'test', target: '/Patient' });
 
-    expect(response.status).toBe(429);
+    expect(exceededResponse.status).toBe(429);
   });
 });
 
@@ -299,7 +293,7 @@ describe('ProxyController Rate Limiting - Medium Window', () => {
     jest.clearAllMocks();
   });
 
-  it('allows requests within medium window rate limit', async () => {
+  it('allows requests within limit then returns 429 when exceeded', async () => {
     mockProxyService.proxyRequest.mockImplementation((_req, res) => {
       res.status(200).json({ success: true });
     });
@@ -312,19 +306,13 @@ describe('ProxyController Rate Limiting - Medium Window', () => {
 
       expect(response.status).not.toBe(429);
     }
-  });
 
-  it('returns 429 when medium window rate limit exceeded', async () => {
-    mockProxyService.proxyRequest.mockImplementation((_req, res) => {
-      res.status(200).json({ success: true });
-    });
-
-    const response = await request(app.getHttpServer())
+    const exceededResponse = await request(app.getHttpServer())
       .get('/proxy')
       .set('Origin', 'https://app.example.com')
       .query({ serviceId: 'test', target: '/Patient' });
 
-    expect(response.status).toBe(429);
+    expect(exceededResponse.status).toBe(429);
   });
 });
 
