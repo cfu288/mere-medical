@@ -207,7 +207,7 @@ describe('useRecordQuery helper functions', () => {
       const docs = createDocumentsForDays(userId, 1, 5);
       docs[0].data_record.resource_type = 'patient';
       docs[1].data_record.resource_type = 'careplan';
-      docs[2].data_record.resource_type = 'allergyintolerance';
+      docs[2].data_record.resource_type = 'provenance';
       await db.clinical_documents.bulkInsert(docs);
 
       const records = await fetchRawRecords(db, userId, 0, 10);
