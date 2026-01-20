@@ -23,65 +23,72 @@ export interface OnPatientAuthResponse {
   token_type: string;
 }
 
+async function fetchTokensFromServer(
+  sessionId: string,
+): Promise<OnPatientAuthResponse> {
+  const response = await fetch(`/api/v1/onpatient/tokens?session=${sessionId}`);
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to retrieve tokens');
+  }
+  return response.json();
+}
+
 const OnPatientRedirect: React.FC = () => {
   const navigate = useNavigate(),
+    { search } = useLocation(),
     user = useUser(),
     db = useRxDb(),
     notifyDispatch = useNotificationDispatch(),
-    hasRun = useRef(false),
-    { search } = useLocation();
+    hasRun = useRef(false);
 
   useEffect(() => {
     if (!hasRun.current) {
       hasRun.current = true;
-      const searchRequest = new URLSearchParams(search),
-        accessToken = searchRequest.get('accessToken'),
-        refreshToken = searchRequest.get('refreshToken'),
-        expiresIn = searchRequest.get('expiresIn');
 
-      if (accessToken && refreshToken && expiresIn && user.id) {
-        getConnectionCardByUrl<ConnectionDocument>(
-          'https://onpatient.com',
-          db,
-          user.id,
-        ).then((doc) => {
+      const params = new URLSearchParams(search);
+      const sessionId = params.get('session');
+
+      if (!sessionId) {
+        notifyDispatch({
+          type: 'set_notification',
+          message: 'Error completing authentication: no session',
+          variant: 'error',
+        });
+        navigate(Routes.AddConnection);
+        return;
+      }
+
+      if (!user.id) {
+        notifyDispatch({
+          type: 'set_notification',
+          message: 'Error completing authentication: not logged in',
+          variant: 'error',
+        });
+        navigate(Routes.AddConnection);
+        return;
+      }
+
+      fetchTokensFromServer(sessionId)
+        .then(async (data) => {
+          const doc = await getConnectionCardByUrl<ConnectionDocument>(
+            'https://onpatient.com',
+            db,
+            user.id,
+          );
+
+          const nowInSeconds = Math.floor(Date.now() / 1000);
+
           if (doc) {
-            try {
-              const nowInSeconds = Math.floor(Date.now() / 1000);
-              doc
-                .update({
-                  $set: {
-                    access_token: accessToken,
-                    refresh_token: refreshToken,
-                    expires_at: nowInSeconds + parseInt(expiresIn),
-                    last_sync_was_error: false,
-                  },
-                })
-                .then(() => {
-                  navigate(Routes.AddConnection);
-                })
-                .catch((e: unknown) => {
-                  console.error(e);
-                  notifyDispatch({
-                    type: 'set_notification',
-                    message: `Error updating connection: ${
-                      (e as Error).message
-                    }`,
-                    variant: 'error',
-                  });
-                  navigate(Routes.AddConnection);
-                });
-            } catch (e) {
-              console.error(e);
-              notifyDispatch({
-                type: 'set_notification',
-                message: `Error updating connection: ${(e as Error).message}`,
-                variant: 'error',
-              });
-              navigate(Routes.AddConnection);
-            }
+            await doc.update({
+              $set: {
+                access_token: data.access_token,
+                refresh_token: data.refresh_token,
+                expires_at: nowInSeconds + data.expires_in,
+                last_sync_was_error: false,
+              },
+            });
           } else {
-            const nowInSeconds = Math.floor(Date.now() / 1000);
             const dbentry: Omit<
               CreateOnPatientConnectionDocument,
               'patient' | 'scope'
@@ -91,33 +98,25 @@ const OnPatientRedirect: React.FC = () => {
               source: 'onpatient',
               location: 'https://onpatient.com',
               name: 'OnPatient',
-              access_token: accessToken,
-              refresh_token: refreshToken,
-              expires_at: nowInSeconds + parseInt(expiresIn),
+              access_token: data.access_token,
+              refresh_token: data.refresh_token,
+              expires_at: nowInSeconds + data.expires_in,
             };
-            createConnection(db, dbentry)
-              .then(() => {
-                navigate(Routes.AddConnection);
-              })
-              .catch((e: unknown) => {
-                notifyDispatch({
-                  type: 'set_notification',
-                  message: `Error adding connection: ${(e as Error).message}`,
-                  variant: 'error',
-                });
-                navigate(Routes.AddConnection);
-              });
+            await createConnection(db, dbentry);
           }
+          navigate(Routes.AddConnection);
+        })
+        .catch((e: unknown) => {
+          console.error(e);
+          notifyDispatch({
+            type: 'set_notification',
+            message: `Error completing authentication: ${(e as Error).message}`,
+            variant: 'error',
+          });
+          navigate(Routes.AddConnection);
         });
-      } else {
-        notifyDispatch({
-          type: 'set_notification',
-          message: `Error completing authentication: no access token provided`,
-          variant: 'error',
-        });
-      }
     }
-  }, [db.connection_documents, navigate, notifyDispatch, user.id]);
+  }, [db, navigate, notifyDispatch, search, user.id]);
 
   return (
     <AppPage banner={<GenericBanner text="Authenticated! Redirecting" />}>

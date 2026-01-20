@@ -117,42 +117,42 @@ export async function syncAllRecords(
   const medOrderMapper = (dr: BundleEntry<MedicationOrder>) =>
     DSTU2.mapMedicationOrderToClinicalDocument(dr, connectionDocument);
   const syncJob = await Promise.allSettled([
-    // syncFHIRResource<Immunization>(
-    //   connectionDocument,
-    //   db,
-    //   'Immunization',
-    //   immMapper,
-    // ),
-    // syncFHIRResource<Procedure>(
-    //   connectionDocument,
-    //   db,
-    //   'Procedure',
-    //   procMapper,
-    // ),
-    // syncFHIRResource<Condition>(
-    //   connectionDocument,
-    //   db,
-    //   'Condition',
-    //   conditionMapper,
-    // ),
-    // syncFHIRResource<Observation>(
-    //   connectionDocument,
-    //   db,
-    //   'Observation',
-    //   obsMapper,
-    // ),
-    // syncFHIRResource<DiagnosticReport>(
-    //   connectionDocument,
-    //   db,
-    //   'DiagnosticReport',
-    //   drMapper,
-    // ),
-    // syncFHIRResource<MedicationStatement>(
-    //   connectionDocument,
-    //   db,
-    //   'MedicationStatement',
-    //   medStatementMapper,
-    // ),
+    syncFHIRResource<Immunization>(
+      connectionDocument,
+      db,
+      'Immunization',
+      immMapper,
+    ),
+    syncFHIRResource<Procedure>(
+      connectionDocument,
+      db,
+      'Procedure',
+      procMapper,
+    ),
+    syncFHIRResource<Condition>(
+      connectionDocument,
+      db,
+      'Condition',
+      conditionMapper,
+    ),
+    syncFHIRResource<Observation>(
+      connectionDocument,
+      db,
+      'Observation',
+      obsMapper,
+    ),
+    syncFHIRResource<DiagnosticReport>(
+      connectionDocument,
+      db,
+      'DiagnosticReport',
+      drMapper,
+    ),
+    syncFHIRResource<MedicationStatement>(
+      connectionDocument,
+      db,
+      'MedicationStatement',
+      medStatementMapper,
+    ),
     syncFHIRResource<AllergyIntolerance>(
       connectionDocument,
       db,
@@ -165,7 +165,7 @@ export async function syncAllRecords(
       'MedicationOrder',
       medOrderMapper,
     ),
-    // syncFHIRResource<Patient>(connectionDocument, db, 'Patient', patientMapper),
+    syncFHIRResource<Patient>(connectionDocument, db, 'Patient', patientMapper),
   ]);
 
   return syncJob as unknown as Promise<PromiseSettledResult<void[]>[]>;
