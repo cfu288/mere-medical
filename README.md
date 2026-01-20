@@ -188,19 +188,19 @@ services:
 | Variable                  | Required | Description                                                                                     | Example                                  |
 | ------------------------- | -------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------- |
 | `PUBLIC_URL`              | Yes      | Full URL where Mere Medical is accessible. **Must include protocol** (`https://` or `http://`). | `https://app.meremedical.co`             |
-| `ONPATIENT_CLIENT_ID`     | No       | Client ID for OnPatient/DrChrono                                                                | See [OnPatient setup](./onpatient-setup) |
-| `ONPATIENT_CLIENT_SECRET` | No       | Client secret for OnPatient/DrChrono                                                            | See [OnPatient setup](./onpatient-setup) |
-| `EPIC_CLIENT_ID_R4`       | No       | Client ID for Epic MyChart production (recommended)                                             | See [Epic setup](./epic-setup)           |
-| `EPIC_SANDBOX_CLIENT_ID_R4` | No     | Client ID for Epic MyChart sandbox (recommended)                                                | See [Epic setup](./epic-setup)           |
-| `EPIC_CLIENT_ID`          | No       | Client ID for Epic MyChart production (legacy DSTU2, for backwards compatibility)               | See [Epic setup](./epic-setup)           |
-| `EPIC_CLIENT_ID_DSTU2`    | No       | Client ID for Epic MyChart production (legacy DSTU2)                                            | See [Epic setup](./epic-setup)           |
-| `EPIC_SANDBOX_CLIENT_ID`  | No       | Client ID for Epic MyChart sandbox (legacy DSTU2, for backwards compatibility)                  | See [Epic setup](./epic-setup)           |
-| `EPIC_SANDBOX_CLIENT_ID_DSTU2` | No  | Client ID for Epic MyChart sandbox (legacy DSTU2)                                               | See [Epic setup](./epic-setup)           |
-| `CERNER_CLIENT_ID`        | No       | Client ID for Cerner Health (supports both R4 and DSTU2)                                        | See [Cerner setup](./cerner-setup)       |
+| `ONPATIENT_CLIENT_ID`     | No       | Client ID for OnPatient/DrChrono                                                                | See [OnPatient setup](https://meremedical.co/docs/getting-started/onpatient-setup) |
+| `ONPATIENT_CLIENT_SECRET` | No       | Client secret for OnPatient/DrChrono                                                            | See [OnPatient setup](https://meremedical.co/docs/getting-started/onpatient-setup) |
+| `EPIC_CLIENT_ID_R4`       | No       | Client ID for Epic MyChart production (recommended)                                             | See [Epic setup](https://meremedical.co/docs/getting-started/epic-setup) |
+| `EPIC_SANDBOX_CLIENT_ID_R4` | No     | Client ID for Epic MyChart sandbox (recommended)                                                | See [Epic setup](https://meremedical.co/docs/getting-started/epic-setup) |
+| `EPIC_CLIENT_ID`          | No       | Client ID for Epic MyChart production (legacy DSTU2, for backwards compatibility)               | See [Epic setup](https://meremedical.co/docs/getting-started/epic-setup) |
+| `EPIC_CLIENT_ID_DSTU2`    | No       | Client ID for Epic MyChart production (legacy DSTU2)                                            | See [Epic setup](https://meremedical.co/docs/getting-started/epic-setup) |
+| `EPIC_SANDBOX_CLIENT_ID`  | No       | Client ID for Epic MyChart sandbox (legacy DSTU2, for backwards compatibility)                  | See [Epic setup](https://meremedical.co/docs/getting-started/epic-setup) |
+| `EPIC_SANDBOX_CLIENT_ID_DSTU2` | No  | Client ID for Epic MyChart sandbox (legacy DSTU2)                                               | See [Epic setup](https://meremedical.co/docs/getting-started/epic-setup) |
+| `CERNER_CLIENT_ID`        | No       | Client ID for Cerner Health (supports both R4 and DSTU2)                                        | See [Cerner setup](https://meremedical.co/docs/getting-started/cerner-setup) |
 | `VERADIGM_CLIENT_ID`      | No       | Client ID for Veradigm                                                                          |                                          |
 | `VA_CLIENT_ID`            | No       | Client ID for VA (Veterans Affairs). **Note: Only works with VA sandbox, not production access at this time.** |                                          |
-| `HEALOW_CLIENT_ID`        | No       | Client ID for Healow (eClinicalWorks)                                                           |                                          |
-| `HEALOW_CLIENT_SECRET`    | No       | Client secret for Healow confidential client (enables refresh tokens)                           |                                          |
+| `HEALOW_CLIENT_ID`        | No       | Client ID for Healow (eClinicalWorks)                                                           | See [Healow setup](https://meremedical.co/docs/getting-started/healow-setup) |
+| `HEALOW_CLIENT_SECRET`    | No       | Client secret for Healow confidential client (enables refresh tokens)                           | See [Healow setup](https://meremedical.co/docs/getting-started/healow-setup) |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
