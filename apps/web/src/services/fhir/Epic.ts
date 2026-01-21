@@ -53,6 +53,7 @@ import { signJwt, JsonWebKeySet } from '@mere/crypto';
 import {
   createEpicClient,
   createEpicClientWithProxy,
+  EPIC_DEFAULT_SCOPES,
   type OAuthConfig,
   type TokenSet,
 } from '@mere/fhir-oauth';
@@ -125,7 +126,7 @@ export function getEpicClientId(
   return config.EPIC_CLIENT_ID_DSTU2 || config.EPIC_CLIENT_ID || '';
 }
 
-export const EPIC_SCOPES = ['openid', 'fhirUser'];
+export { EPIC_DEFAULT_SCOPES as EPIC_SCOPES };
 
 export enum EpicLocalStorageKeys {
   EPIC_BASE_URL = 'epicUrl',

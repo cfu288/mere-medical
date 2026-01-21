@@ -38,6 +38,17 @@ export {
   type SessionManager,
 } from './lib/session-manager.js';
 
+// Config builders - validated OAuthConfig construction
+export {
+  buildEpicOAuthConfig,
+  buildCernerOAuthConfig,
+  buildOnPatientAuthUrl,
+  EPIC_DEFAULT_SCOPES,
+  CERNER_DEFAULT_SCOPES,
+  type OAuthConfigOptions,
+  type OnPatientConfigOptions,
+} from './lib/config-builders.js';
+
 // Core types
 export type {
   OAuthClient,

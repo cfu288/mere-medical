@@ -4,9 +4,12 @@ import { RxDocument } from 'rxdb';
 import {
   createEpicClient,
   createCernerClient,
-  createOnPatientClient,
   createSessionManager,
-  type OAuthConfig,
+  buildEpicOAuthConfig,
+  buildCernerOAuthConfig,
+  buildOnPatientAuthUrl,
+  EPIC_DEFAULT_SCOPES,
+  CERNER_DEFAULT_SCOPES,
 } from '@mere/fhir-oauth';
 import { signJwt } from '@mere/crypto';
 import { isEpicSandbox } from '../../services/fhir/EpicUtils';
@@ -17,13 +20,9 @@ import { GenericBanner } from '../../shared/components/GenericBanner';
 import { useConnectionCards } from './hooks/useConnectionCards';
 import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
 import { AppConfig, useConfig } from '../../app/providers/AppConfigProvider';
-import {
-  CernerLocalStorageKeys,
-  CERNER_SCOPES,
-} from '../../services/fhir/Cerner';
+import { CernerLocalStorageKeys } from '../../services/fhir/Cerner';
 import {
   EpicLocalStorageKeys,
-  EPIC_SCOPES,
   getEpicClientId,
   getDSTU2Url,
   getR4Url,
@@ -41,7 +40,6 @@ import { Routes } from '../../Routes';
 
 const epicClient = createEpicClient({ signJwt });
 const cernerClient = createCernerClient();
-const onPatientClient = createOnPatientClient();
 const epicSession = createSessionManager('epic');
 const cernerSession = createSessionManager('cerner');
 
@@ -63,10 +61,11 @@ async function initiateEpicAuth(
   const fhirBaseUrl =
     fhirVersion === 'R4' ? getR4Url(baseUrl) : getDSTU2Url(baseUrl);
 
-  const oauthConfig: OAuthConfig = {
+  const oauthConfig = buildEpicOAuthConfig({
     clientId: getEpicClientId(config, fhirVersion, isSandbox),
-    redirectUri: `${config.PUBLIC_URL}${Routes.EpicCallback}`,
-    scopes: EPIC_SCOPES,
+    publicUrl: config.PUBLIC_URL,
+    redirectPath: Routes.EpicCallback,
+    scopes: EPIC_DEFAULT_SCOPES,
     tenant: {
       id,
       name,
@@ -75,7 +74,7 @@ async function initiateEpicAuth(
       fhirBaseUrl,
       fhirVersion,
     },
-  };
+  });
 
   const { url, session } = await epicClient.initiateAuth(oauthConfig);
   await epicSession.save(session);
@@ -96,10 +95,11 @@ async function initiateCernerAuth(
   id: string,
   fhirVersion: 'DSTU2' | 'R4',
 ): Promise<string> {
-  const oauthConfig: OAuthConfig = {
-    clientId: config.CERNER_CLIENT_ID || '',
-    redirectUri: `${config.PUBLIC_URL}${Routes.CernerCallback}`,
-    scopes: CERNER_SCOPES,
+  const oauthConfig = buildCernerOAuthConfig({
+    clientId: config.CERNER_CLIENT_ID,
+    publicUrl: config.PUBLIC_URL,
+    redirectPath: Routes.CernerCallback,
+    scopes: CERNER_DEFAULT_SCOPES,
     tenant: {
       id,
       name,
@@ -108,7 +108,7 @@ async function initiateCernerAuth(
       fhirBaseUrl: baseUrl,
       fhirVersion,
     },
-  };
+  });
 
   const { url, session } = await cernerClient.initiateAuth(oauthConfig);
   await cernerSession.save(session);
@@ -121,9 +121,10 @@ async function initiateCernerAuth(
  * so no PKCE or session storage is needed on the frontend.
  */
 function initiateOnPatientAuth(config: AppConfig): string {
-  return onPatientClient.buildAuthUrl({
-    clientId: config.ONPATIENT_CLIENT_ID || '',
-    redirectUri: `${config.PUBLIC_URL}/api/v1/onpatient/callback`,
+  return buildOnPatientAuthUrl({
+    clientId: config.ONPATIENT_CLIENT_ID,
+    publicUrl: config.PUBLIC_URL,
+    redirectPath: '/api/v1/onpatient/callback',
   });
 }
 

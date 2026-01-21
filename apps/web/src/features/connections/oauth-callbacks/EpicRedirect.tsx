@@ -12,7 +12,8 @@ import {
   createEpicClient,
   createEpicClientWithProxy,
   registerEpicDynamicClient,
-  type OAuthConfig,
+  buildEpicOAuthConfig,
+  EPIC_DEFAULT_SCOPES,
   type TokenSet,
   OAuthError,
 } from '@mere/fhir-oauth';
@@ -111,10 +112,11 @@ function useEpicOAuthCallback() {
       fhirVersion === 'R4' ? getR4Url(epicBaseUrl) : getDSTU2Url(epicBaseUrl);
     const isSandbox = isEpicSandbox(epicId);
 
-    const oauthConfig: OAuthConfig = {
+    const oauthConfig = buildEpicOAuthConfig({
       clientId: getEpicClientId(config, fhirVersion, isSandbox),
-      redirectUri: `${publicUrl}${Routes.EpicCallback}`,
-      scopes: ['openid', 'fhirUser'],
+      publicUrl: config.PUBLIC_URL,
+      redirectPath: Routes.EpicCallback,
+      scopes: EPIC_DEFAULT_SCOPES,
       tenant: {
         id: epicId,
         name: epicName,
@@ -123,7 +125,7 @@ function useEpicOAuthCallback() {
         fhirBaseUrl,
         fhirVersion,
       },
-    };
+    });
 
     (async () => {
       try {

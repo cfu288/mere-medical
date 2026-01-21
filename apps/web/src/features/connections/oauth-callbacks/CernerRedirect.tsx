@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { createCernerClient, type OAuthConfig } from '@mere/fhir-oauth';
+import {
+  createCernerClient,
+  buildCernerOAuthConfig,
+  CERNER_DEFAULT_SCOPES,
+} from '@mere/fhir-oauth';
 import {
   useOAuthFlow,
   useOAuthorizationRequestState,
@@ -15,7 +19,6 @@ import { useUser } from '../../../app/providers/UserProvider';
 import { CernerLocalStorageKeys } from '../../../services/fhir/Cerner';
 import { createConnection } from '../../../repositories/ConnectionRepository';
 import uuid4 from '../../../shared/utils/UUIDUtils';
-import { concatPath } from '../../../shared/utils/urlUtils';
 import type { CreateCernerConnectionDocument } from '../../../models/connection-document/ConnectionDocument.type';
 
 const cernerClient = createCernerClient();
@@ -80,10 +83,11 @@ function useCernerOAuthCallback() {
       storedFhirVersion ||
       (cernerBaseUrl.toUpperCase().includes('/R4') ? 'R4' : 'DSTU2');
 
-    const oauthConfig: OAuthConfig = {
-      clientId: config.CERNER_CLIENT_ID || '',
-      redirectUri: concatPath(config.PUBLIC_URL || '', Routes.CernerCallback),
-      scopes: ['openid', 'fhirUser', 'offline_access'],
+    const oauthConfig = buildCernerOAuthConfig({
+      clientId: config.CERNER_CLIENT_ID,
+      publicUrl: config.PUBLIC_URL,
+      redirectPath: Routes.CernerCallback,
+      scopes: CERNER_DEFAULT_SCOPES,
       tenant: {
         id: cernerId || cernerBaseUrl,
         name: cernerName,
@@ -92,7 +96,7 @@ function useCernerOAuthCallback() {
         fhirBaseUrl: cernerBaseUrl,
         fhirVersion,
       },
-    };
+    });
 
     (async () => {
       try {

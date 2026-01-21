@@ -54,6 +54,7 @@ import { findUserById } from '../../repositories/UserRepository';
 import { JsonWebKeySet } from '@mere/crypto';
 import {
   createCernerClient,
+  CERNER_DEFAULT_SCOPES,
   type OAuthConfig,
   type TokenSet,
 } from '@mere/fhir-oauth';
@@ -78,47 +79,7 @@ export enum CernerLocalStorageKeys {
   FHIR_VERSION = 'cernerFhirVersion',
 }
 
-export const CERNER_SCOPES = [
-  'fhirUser',
-  'offline_access',
-  'openid',
-  'patient/AllergyIntolerance.read',
-  'patient/Appointment.read',
-  'patient/Binary.read',
-  'patient/CarePlan.read',
-  'patient/CareTeam.read',
-  'patient/Condition.read',
-  'patient/Consent.read',
-  'patient/Contract.read',
-  'patient/Coverage.read',
-  'patient/DiagnosticReport.read',
-  'patient/DocumentReference.read',
-  'patient/Device.read',
-  'patient/Encounter.read',
-  'patient/FamilyMemberHistory.read',
-  'patient/Goal.read',
-  'patient/Immunization.read',
-  'patient/InsurancePlan.read',
-  'patient/Media.read',
-  'patient/MedicationAdministration.read',
-  'patient/MedicationDispense.read',
-  'patient/MedicationRequest.read',
-  'patient/MedicationStatement.read',
-  'patient/NutritionOrder.read',
-  'patient/Observation.read',
-  'patient/Patient.read',
-  'patient/Person.read',
-  'patient/Practitioner.read',
-  'patient/Procedure.read',
-  'patient/Provenance.read',
-  'patient/Questionnaire.read',
-  'patient/QuestionnaireResponse.read',
-  'patient/RelatedPerson.read',
-  'patient/Schedule.read',
-  'patient/ServiceRequest.read',
-  'patient/Slot.read',
-  'patient/Specimen.read',
-];
+export const CERNER_SCOPES = CERNER_DEFAULT_SCOPES;
 
 function parseIdToken(token: string) {
   const base64Url = token.split('.')[1];
