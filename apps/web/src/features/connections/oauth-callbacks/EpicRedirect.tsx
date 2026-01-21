@@ -53,7 +53,7 @@ function useEpicOAuthCallback() {
   const { handleCallback } = useOAuthFlow({ client, vendor: 'epic' });
 
   useEffect(() => {
-    if (configLoading || hasRun.current) return;
+    if (configLoading || !userPreferences || hasRun.current) return;
 
     const searchParams = new URLSearchParams(search);
     const epicBaseUrl = localStorage.getItem(
@@ -189,7 +189,7 @@ function useEpicOAuthCallback() {
     publicUrl,
     db,
     user,
-    userPreferences?.use_proxy,
+    userPreferences,
     enableProxy,
     client,
     handleCallback,

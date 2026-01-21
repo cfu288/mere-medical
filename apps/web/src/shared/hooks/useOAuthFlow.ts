@@ -54,6 +54,7 @@ export const useOAuthFlow = ({ client, vendor }: UseOAuthFlowOptions) => {
         clearSession();
         return tokens;
       } catch (err) {
+        clearSession();
         const error =
           err instanceof Error ? err : new Error('OAuth callback failed');
         setError(error);
