@@ -1,171 +1,214 @@
 import { useEffect, useRef, useState } from 'react';
-import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom';
-import { RxDatabase } from 'rxdb';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { AppPage } from '../../../shared/components/AppPage';
 import { GenericBanner } from '../../../shared/components/GenericBanner';
 import { useRxDb } from '../../../app/providers/RxDbProvider';
-import { DatabaseCollections } from '../../../app/providers/DatabaseCollections';
 import { Routes } from '../../../Routes';
-import {
-  AppConfig,
-  useAppConfig,
-} from '../../../app/providers/AppConfigProvider';
-import {
-  DynamicRegistrationError,
-  EpicDynamicRegistrationResponse,
-  EpicLocalStorageKeys,
-  EPIC_CODE_VERIFIER_KEY,
-  EPIC_OAUTH_STATE_KEY,
-  fetchAccessTokenUsingJWT,
-  fetchAccessTokenWithCode,
-  registerDynamicClient,
-  saveConnectionToDb,
-} from '../../../services/fhir/Epic';
-import {
-  clearPkceSession,
-  getCodeVerifier,
-  validateOAuthState,
-} from '../../../shared/utils/pkceUtils';
+import { useAppConfig } from '../../../app/providers/AppConfigProvider';
 import { useNotificationDispatch } from '../../../app/providers/NotificationProvider';
 import { useUserPreferences } from '../../../app/providers/UserPreferencesProvider';
 import { useUser } from '../../../app/providers/UserProvider';
-import { UserDocument } from '../../../models/user-document/UserDocument.type';
+import {
+  createEpicClient,
+  createEpicClientWithProxy,
+  registerEpicDynamicClient,
+  type OAuthConfig,
+  type TokenSet,
+  OAuthError,
+} from '@mere/fhir-oauth';
+import { signJwt, getPublicKey } from '@mere/crypto';
+import { useOAuthFlow } from '../../../shared/hooks/useOAuthFlow';
+import {
+  EpicLocalStorageKeys,
+  getEpicClientId,
+  getDSTU2Url,
+  getR4Url,
+  saveConnectionToDb,
+} from '../../../services/fhir/Epic';
 
-function clearEpicSession() {
-  localStorage.removeItem(EpicLocalStorageKeys.EPIC_BASE_URL);
-  localStorage.removeItem(EpicLocalStorageKeys.EPIC_NAME);
-  localStorage.removeItem(EpicLocalStorageKeys.EPIC_ID);
-  localStorage.removeItem(EpicLocalStorageKeys.EPIC_AUTH_URL);
-  localStorage.removeItem(EpicLocalStorageKeys.EPIC_TOKEN_URL);
-  localStorage.removeItem(EpicLocalStorageKeys.FHIR_VERSION);
-  clearPkceSession(EPIC_CODE_VERIFIER_KEY, EPIC_OAUTH_STATE_KEY);
-}
+const epicClient = createEpicClient({ signJwt });
 
-/**
- * Handles the redirect from Epic's authorization server. If possible, it
- * will attempt to register a dynamic client so we can automatically refresh
- * tokens in the future. If that fails, it will attempt to use the access
- * token provided by Epic to pull FHIR resources once and we will need the
- * user to manually re-sign in every time they want to manually pull their
- * records.
- * Ideally, we would use the conformance statement to determine whether or
- * not we can register a dynamic client, but Epic's conformance statement at
- * `api/FHIR/DSTU2/metadata` at `rest.security.extensions` is mostly inaccurate
- * anyways so we can't tell.
- */
-function useEpicDynamicRegistrationLogin() {
-  const db = useRxDb(),
-    { config, isLoading } = useAppConfig(),
-    user = useUser(),
-    [error, setError] = useState(''),
-    notifyDispatch = useNotificationDispatch(),
-    userPreferences = useUserPreferences(),
-    navigate = useNavigate(),
-    hasRun = useRef(false),
-    { search } = useLocation();
+const createProxiedEpicClient = (publicUrl: string) =>
+  createEpicClientWithProxy(
+    { signJwt },
+    (tenantId, targetType) =>
+      `${publicUrl}/api/proxy?serviceId=${tenantId}&target_type=${targetType}`,
+  );
+
+function useEpicOAuthCallback() {
+  const db = useRxDb();
+  const { config, isLoading: configLoading } = useAppConfig();
+  const user = useUser();
+  const userPreferences = useUserPreferences();
+  const navigate = useNavigate();
+  const notifyDispatch = useNotificationDispatch();
+  const { search } = useLocation();
+  const hasRun = useRef(false);
+  const [error, setError] = useState('');
+
+  const enableProxy = userPreferences?.use_proxy ?? false;
+  const publicUrl = config.PUBLIC_URL || '';
+  const client = enableProxy ? createProxiedEpicClient(publicUrl) : epicClient;
+  const { handleCallback } = useOAuthFlow({ client, vendor: 'epic' });
 
   useEffect(() => {
-    if (isLoading) return;
-    if (!hasRun.current) {
-      const searchRequest = new URLSearchParams(search),
-        code = searchRequest.get('code'),
-        returnedState = searchRequest.get('state'),
-        epicBaseUrl = localStorage.getItem(EpicLocalStorageKeys.EPIC_BASE_URL),
-        epicTokenUrl = localStorage.getItem(
-          EpicLocalStorageKeys.EPIC_TOKEN_URL,
-        ),
-        epicAuthUrl = localStorage.getItem(EpicLocalStorageKeys.EPIC_AUTH_URL),
-        epicName = localStorage.getItem(EpicLocalStorageKeys.EPIC_NAME),
-        epicId = localStorage.getItem(EpicLocalStorageKeys.EPIC_ID),
-        storedFhirVersion = localStorage.getItem(
-          EpicLocalStorageKeys.FHIR_VERSION,
-        ) as 'DSTU2' | 'R4' | null,
-        codeVerifier = getCodeVerifier(EPIC_CODE_VERIFIER_KEY);
+    if (configLoading || hasRun.current) return;
 
-      if (!validateOAuthState(returnedState, EPIC_OAUTH_STATE_KEY)) {
-        hasRun.current = true;
-        setError('OAuth state mismatch. Please try again.');
-        clearEpicSession();
-        return;
-      }
+    const searchParams = new URLSearchParams(search);
+    const epicBaseUrl = localStorage.getItem(
+      EpicLocalStorageKeys.EPIC_BASE_URL,
+    );
+    const epicTokenUrl = localStorage.getItem(
+      EpicLocalStorageKeys.EPIC_TOKEN_URL,
+    );
+    const epicAuthUrl = localStorage.getItem(
+      EpicLocalStorageKeys.EPIC_AUTH_URL,
+    );
+    const epicName = localStorage.getItem(EpicLocalStorageKeys.EPIC_NAME);
+    const epicId = localStorage.getItem(EpicLocalStorageKeys.EPIC_ID);
+    const storedFhirVersion = localStorage.getItem(
+      EpicLocalStorageKeys.FHIR_VERSION,
+    ) as 'DSTU2' | 'R4' | null;
 
-      if (
-        code &&
-        epicBaseUrl &&
-        epicName &&
-        epicTokenUrl &&
-        epicAuthUrl &&
-        epicId &&
-        userPreferences &&
-        user
-      ) {
-        hasRun.current = true;
-        const fhirVersion =
-          storedFhirVersion ||
-          (epicBaseUrl.toUpperCase().includes('/R4') ? 'R4' : 'DSTU2');
-        handleLogin({
-          config,
-          code,
-          codeVerifier,
+    if (
+      !epicBaseUrl ||
+      !epicTokenUrl ||
+      !epicAuthUrl ||
+      !epicName ||
+      !epicId ||
+      !user
+    ) {
+      hasRun.current = true;
+      clearLocalStorage();
+      setError('Missing required session data. Please try again.');
+      return;
+    }
+
+    hasRun.current = true;
+    const fhirVersion =
+      storedFhirVersion ||
+      (epicBaseUrl.toUpperCase().includes('/R4') ? 'R4' : 'DSTU2');
+    const fhirBaseUrl =
+      fhirVersion === 'R4' ? getR4Url(epicBaseUrl) : getDSTU2Url(epicBaseUrl);
+    const isSandbox = epicId.includes('sandbox');
+
+    const oauthConfig: OAuthConfig = {
+      clientId: getEpicClientId(config, fhirVersion, isSandbox),
+      redirectUri: `${publicUrl}/epic/callback`,
+      scopes: ['openid', 'fhirUser'],
+      tenant: {
+        id: epicId,
+        name: epicName,
+        authUrl: epicAuthUrl,
+        tokenUrl: epicTokenUrl,
+        fhirBaseUrl,
+        fhirVersion,
+      },
+    };
+
+    (async () => {
+      try {
+        const tokens = await handleCallback(searchParams, oauthConfig);
+
+        let finalTokens: TokenSet = tokens;
+        let dynamicClientId: string | undefined;
+
+        try {
+          const publicKey = await getPublicKey();
+          const proxyUrl = enableProxy
+            ? `${publicUrl}/api/proxy?serviceId=${epicId}&target_type=register`
+            : undefined;
+
+          const dcr = await registerEpicDynamicClient(
+            tokens.accessToken,
+            epicBaseUrl,
+            oauthConfig.clientId,
+            publicKey,
+            { useProxy: enableProxy, proxyUrl },
+          );
+          dynamicClientId = dcr.clientId;
+
+          finalTokens = await client.refresh(
+            { ...tokens, clientId: dynamicClientId },
+            oauthConfig,
+          );
+        } catch (dcrError) {
+          if (
+            dcrError instanceof OAuthError &&
+            dcrError.code === 'dcr_not_supported'
+          ) {
+            notifyDispatch({
+              type: 'set_notification',
+              message:
+                'This MyChart instance does not support automatic token refresh. You will need to sign in again to sync records in the future.',
+              variant: 'info',
+            });
+          } else {
+            console.warn('Dynamic client registration failed:', dcrError);
+          }
+        }
+
+        await saveConnectionToDb({
+          res: {
+            access_token: finalTokens.accessToken,
+            expires_in: finalTokens.expiresAt - Math.floor(Date.now() / 1000),
+            patient: finalTokens.patientId || '',
+            token_type: 'Bearer',
+            scope: finalTokens.scope || '',
+            refresh_token: finalTokens.refreshToken || '',
+            ...(dynamicClientId && { client_id: dynamicClientId }),
+          },
           epicBaseUrl,
           epicTokenUrl,
           epicAuthUrl,
-          epicId,
           epicName,
           db,
-          navigate,
+          epicId,
           user,
-          enableProxy: userPreferences?.use_proxy,
           fhirVersion,
-        })
-          .then(() => {
-            clearEpicSession();
-          })
-          .catch((e) => {
-            clearEpicSession();
-            if (e instanceof DynamicRegistrationError) {
-              notifyDispatch({
-                type: 'set_notification',
-                message: `${e.message}`,
-                variant: 'error',
-              });
-              redirectToConnectionsTab(navigate);
-            } else {
-              notifyDispatch({
-                type: 'set_notification',
-                message: `${(e as Error).message}`,
-                variant: 'error',
-              });
-              setError(`${(e as Error).message}`);
-            }
-          });
-      } else {
-        if (!(code && epicBaseUrl && epicName && epicId)) {
-          hasRun.current = true;
-          clearEpicSession();
-          setError('There was a problem trying to sign in');
-        }
+        });
+
+        clearLocalStorage();
+        navigate(Routes.AddConnection, { replace: true });
+      } catch (err) {
+        clearLocalStorage();
+        const message =
+          err instanceof Error ? err.message : 'Authentication failed';
+        setError(message);
+        notifyDispatch({
+          type: 'set_notification',
+          message,
+          variant: 'error',
+        });
       }
-    }
+    })();
   }, [
+    configLoading,
     config,
-    isLoading,
+    publicUrl,
     db,
-    db.connection_documents,
-    notifyDispatch,
-    userPreferences?.use_proxy,
     user,
+    userPreferences?.use_proxy,
+    enableProxy,
+    client,
+    handleCallback,
     navigate,
-    userPreferences,
+    notifyDispatch,
     search,
   ]);
 
-  return [error];
+  return error;
+}
+
+function clearLocalStorage() {
+  Object.values(EpicLocalStorageKeys).forEach((key) =>
+    localStorage.removeItem(key),
+  );
 }
 
 const EpicRedirect: React.FC = () => {
-  const navigate = useNavigate(),
-    [error] = useEpicDynamicRegistrationLogin();
+  const navigate = useNavigate();
+  const error = useEpicOAuthCallback();
 
   return (
     <AppPage
@@ -227,114 +270,3 @@ const EpicRedirect: React.FC = () => {
 };
 
 export default EpicRedirect;
-
-const redirectToConnectionsTab = (navigate: NavigateFunction) => {
-  navigate(Routes.AddConnection);
-};
-
-/**
- * Handles the login process for Epic, with fallbacks to a proxy server if needed
- * @param param0
- * @returns Promise<void>
- */
-const handleLogin = async ({
-  config,
-  code,
-  codeVerifier,
-  epicBaseUrl,
-  epicTokenUrl,
-  epicAuthUrl,
-  epicId,
-  epicName,
-  db,
-  navigate,
-  user,
-  enableProxy = false,
-  fhirVersion = 'DSTU2',
-}: {
-  config: AppConfig;
-  code: string;
-  codeVerifier: string;
-  epicBaseUrl: string;
-  epicTokenUrl: string;
-  epicAuthUrl: string;
-  epicName: string;
-  epicId: string;
-  db: RxDatabase<DatabaseCollections>;
-  navigate: NavigateFunction;
-  user: UserDocument;
-  enableProxy?: boolean;
-  fhirVersion?: 'DSTU2' | 'R4';
-}) => {
-  let dynamicRegResponse: EpicDynamicRegistrationResponse;
-
-  const initalAuthResponse = await fetchAccessTokenWithCode(
-    config,
-    code,
-    epicTokenUrl,
-    epicName,
-    codeVerifier,
-    epicId,
-    enableProxy,
-    fhirVersion,
-  );
-
-  try {
-    dynamicRegResponse = await registerDynamicClient({
-      config,
-      res: initalAuthResponse,
-      epicBaseUrl,
-      epicName,
-      epicId,
-      useProxy: enableProxy,
-      version: fhirVersion,
-    });
-  } catch (e) {
-    // Failed, save current access token without dynamic registration
-    if (e instanceof DynamicRegistrationError) {
-      const res = e.data;
-      await saveConnectionToDb({
-        res,
-        epicBaseUrl,
-        epicTokenUrl,
-        epicAuthUrl,
-        epicName,
-        db,
-        epicId,
-        user,
-        fhirVersion,
-      });
-      localStorage.removeItem(EpicLocalStorageKeys.FHIR_VERSION);
-      return Promise.reject(
-        new DynamicRegistrationError(
-          'This MyChart instance does not support dynamic client registration, which means we cannot automatically fetch your records in the future. We will still try to pull your records once, but you will need to sign in again to pull them again in the future.',
-          res,
-        ),
-      );
-    }
-    return Promise.reject(
-      new Error('There was an error registering you at this MyChart instance'),
-    );
-  }
-
-  const jwtAuthResponse = await fetchAccessTokenUsingJWT(
-    config,
-    dynamicRegResponse.client_id,
-    epicTokenUrl,
-    epicId,
-    enableProxy,
-  );
-  await saveConnectionToDb({
-    res: jwtAuthResponse,
-    epicBaseUrl,
-    epicTokenUrl,
-    epicAuthUrl,
-    epicName,
-    db,
-    epicId,
-    user,
-    fhirVersion,
-  });
-  localStorage.removeItem(EpicLocalStorageKeys.FHIR_VERSION);
-  return await redirectToConnectionsTab(navigate);
-};

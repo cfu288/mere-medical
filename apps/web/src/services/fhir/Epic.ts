@@ -49,9 +49,7 @@ import { AppConfig } from '../../app/providers/AppConfigProvider';
 import { createConnection } from '../../repositories/ConnectionRepository';
 import uuid4 from '../../shared/utils/UUIDUtils';
 import { concatPath } from '../../shared/utils/urlUtils';
-import { JsonWebKeyWKid, signJwt } from '../crypto/JWTTools';
-import { getPublicKey, IDBKeyConfig } from '../crypto/WebCrypto';
-import { JsonWebKeySet } from '../crypto/JWTTools';
+import { signJwt, JsonWebKeySet, getPublicKey } from '@mere/crypto';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
 import {
   ClinicalDocument,
@@ -960,18 +958,17 @@ export async function registerDynamicClient({
   const defaultUrl = URLJoin(baseUrl, '/oauth2/register');
   const proxyUrl = `${config.PUBLIC_URL || ''}/api/proxy?serviceId=${epicId}&target_type=register`;
 
-  const jsonWebKeySet = await getPublicKey();
-  const validJWKS = jsonWebKeySet as JsonWebKeyWKid;
+  const publicKey = await getPublicKey();
   const isSandbox = isEpicSandbox(epicId);
   const request: EpicDynamicRegistrationRequest = {
     software_id: getEpicClientId(config, version, isSandbox),
     jwks: {
       keys: [
         {
-          e: validJWKS.e,
-          kty: validJWKS.kty,
-          n: validJWKS.n,
-          kid: `${IDBKeyConfig.KEY_ID}`,
+          e: publicKey.e,
+          kty: publicKey.kty,
+          n: publicKey.n,
+          kid: publicKey.kid,
         },
       ],
     },

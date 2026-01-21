@@ -18,7 +18,9 @@
     "baseUrl": ".",
     "paths": {
       "@mere/cerner": ["libs/cerner/src/index.ts"],
+      "@mere/crypto": ["libs/crypto/src/index.ts"],
       "@mere/epic": ["libs/epic/src/index.ts"],
+      "@mere/fhir-oauth": ["libs/fhir-oauth/src/index.ts"],
       "@mere/healow": ["libs/healow/src/index.ts"],
       "@mere/onpatient": ["libs/onpatient/src/index.ts"],
       "@mere/search": ["libs/search/src/index.ts"],

@@ -53,7 +53,7 @@ import { DSTU2, R4 } from '.';
 import { AppConfig } from '../../app/providers/AppConfigProvider';
 import { createConnection } from '../../repositories/ConnectionRepository';
 import { findUserById } from '../../repositories/UserRepository';
-import { JsonWebKeySet } from '../crypto/JWTTools';
+import { JsonWebKeySet } from '@mere/crypto';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
 import uuid4 from '../../shared/utils/UUIDUtils';
 import {
