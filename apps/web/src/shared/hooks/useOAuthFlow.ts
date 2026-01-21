@@ -10,6 +10,34 @@ interface UseOAuthFlowOptions {
   vendor: OAuthVendor;
 }
 
+/**
+ * React hook that manages OAuth authorization flows across browser redirects.
+ *
+ * OAuth requires redirecting the user away to an authorization server and back,
+ * which means the app loses all in-memory state. This hook solves that by:
+ * - Persisting PKCE code verifier and state parameter in sessionStorage before redirect
+ * - Restoring session state after redirect to complete the token exchange
+ * - Providing React-friendly loading/error states
+ *
+ * @param client - The vendor-specific OAuth client (e.g., from createEpicClient)
+ * @param vendor - Vendor identifier used to namespace sessionStorage keys
+ *
+ * @returns
+ * - `initiateAuth(config)` - Call on login page. Saves session, redirects to auth server.
+ * - `handleCallback(searchParams, config)` - Call on callback page. Restores session,
+ *    exchanges code for tokens, returns TokenSet.
+ * - `isLoading` - True while auth operations are in progress
+ * - `error` - Error object if auth failed, null otherwise
+ *
+ * @example
+ * // Login page - user clicks "Connect to Epic"
+ * const { initiateAuth } = useOAuthFlow({ client: epicClient, vendor: 'epic' });
+ * await initiateAuth(oauthConfig); // Redirects away to Epic
+ *
+ * // Callback page - user returns from Epic
+ * const { handleCallback } = useOAuthFlow({ client: epicClient, vendor: 'epic' });
+ * const tokens = await handleCallback(new URLSearchParams(location.search), oauthConfig);
+ */
 export const useOAuthFlow = ({ client, vendor }: UseOAuthFlowOptions) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
