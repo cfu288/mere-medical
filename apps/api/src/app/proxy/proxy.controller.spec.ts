@@ -317,7 +317,13 @@ describe('ProxyController Rate Limiting - Medium Window', () => {
 });
 
 describe('ProxyService Header Filtering', () => {
-  const ALLOWED_PROXY_HEADERS = ['accept', 'content-type', 'content-length'];
+  const ALLOWED_PROXY_HEADERS = [
+    'accept',
+    'authorization',
+    'content-type',
+    'content-length',
+    'host',
+  ];
 
   it('filters out non-allowed headers', () => {
     const inputHeaders = {
@@ -325,9 +331,9 @@ describe('ProxyService Header Filtering', () => {
       'content-type': 'application/fhir+json',
       'content-length': '100',
       'x-evil-header': 'malicious-payload',
-      authorization: 'Bearer should-not-pass',
+      authorization: 'Bearer token',
       cookie: 'session=abc123',
-      host: 'malicious-host.com',
+      host: 'fhir.example.com',
     };
 
     const filteredHeaders = Object.fromEntries(
@@ -338,13 +344,13 @@ describe('ProxyService Header Filtering', () => {
 
     expect(filteredHeaders).toEqual({
       accept: 'application/json',
+      authorization: 'Bearer token',
       'content-type': 'application/fhir+json',
       'content-length': '100',
+      host: 'fhir.example.com',
     });
     expect(filteredHeaders['x-evil-header']).toBeUndefined();
-    expect(filteredHeaders['authorization']).toBeUndefined();
     expect(filteredHeaders['cookie']).toBeUndefined();
-    expect(filteredHeaders['host']).toBeUndefined();
   });
 
   it('preserves allowed headers with different cases', () => {

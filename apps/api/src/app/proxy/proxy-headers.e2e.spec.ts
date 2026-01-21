@@ -14,7 +14,13 @@ import {
 } from './proxy.constants';
 import { createProxyServer } from 'http-proxy';
 
-const ALLOWED_HEADERS = ['accept', 'content-type', 'content-length', 'host'];
+const ALLOWED_HEADERS = [
+  'accept',
+  'authorization',
+  'content-type',
+  'content-length',
+  'host',
+];
 
 function generateRandomHeaderName(): string {
   const prefixes = ['x-', 'x-custom-', 'x-forwarded-', 'x-real-', 'x-attack-'];
@@ -132,18 +138,18 @@ describe('Proxy Header Filtering E2E', () => {
     receivedHeaders = {};
   });
 
-  it('strips all non-allowed headers from proxied requests', async () => {
+  it('strips non-allowed headers but preserves authorization', async () => {
     await request(app.getHttpServer())
       .get('/proxy')
       .set('Origin', 'https://app.example.com')
-      .set('Authorization', 'Bearer stolen-token')
+      .set('Authorization', 'Bearer valid-token')
       .set('Cookie', 'session=hijacked')
       .set('X-Forwarded-For', '192.168.1.1')
       .set('X-Forwarded-Host', 'attacker.com')
       .set('X-Evil-Header', 'malicious-payload')
       .query({ serviceId: 'test-service', target: '/Patient' });
 
-    expect(receivedHeaders['authorization']).toBeUndefined();
+    expect(receivedHeaders['authorization']).toBe('Bearer valid-token');
     expect(receivedHeaders['cookie']).toBeUndefined();
     expect(receivedHeaders['x-forwarded-for']).toBeUndefined();
     expect(receivedHeaders['x-forwarded-host']).toBeUndefined();

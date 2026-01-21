@@ -32,6 +32,7 @@ const proxyFactory = {
 
     const ALLOWED_HEADERS = [
       'accept',
+      'authorization',
       'content-type',
       'content-length',
       'host',
