@@ -30,7 +30,7 @@ export {
 } from './lib/token-exchange.js';
 
 // Token refresh
-export type { TokenRefresher, JwtSigner, JwtPayload } from './lib/token-refresh.js';
+export type { TokenRefresher, JwtSigner, JwtPayload, JwtBearerRefreshOptions } from './lib/token-refresh.js';
 export {
   noRefresh,
   standardRefresh,

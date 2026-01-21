@@ -9,18 +9,18 @@ export type OAuthVendor =
   | 'healow';
 
 const STORAGE_KEYS = {
-  epic: { verifier: 'EPIC_CODE_VERIFIER', state: 'EPIC_OAUTH_STATE' },
-  cerner: { verifier: 'CERNER_CODE_VERIFIER', state: 'CERNER_OAUTH_STATE' },
+  epic: { verifier: 'epic_code_verifier', state: 'epic_oauth_state' },
+  cerner: { verifier: 'cerner_code_verifier', state: 'cerner_oauth_state' },
   veradigm: {
-    verifier: 'VERADIGM_CODE_VERIFIER',
-    state: 'VERADIGM_OAUTH_STATE',
+    verifier: 'veradigm_code_verifier',
+    state: 'veradigm_oauth_state',
   },
   onpatient: {
-    verifier: 'ONPATIENT_CODE_VERIFIER',
-    state: 'ONPATIENT_OAUTH_STATE',
+    verifier: 'onpatient_code_verifier',
+    state: 'onpatient_oauth_state',
   },
-  va: { verifier: 'VA_CODE_VERIFIER', state: 'VA_OAUTH_STATE' },
-  healow: { verifier: 'HEALOW_CODE_VERIFIER', state: 'HEALOW_OAUTH_STATE' },
+  va: { verifier: 'va_code_verifier', state: 'va_oauth2_state' },
+  healow: { verifier: 'healow_code_verifier', state: 'healow_oauth2_state' },
 } as const satisfies Record<OAuthVendor, { verifier: string; state: string }>;
 
 export const useOAuthSession = <V extends OAuthVendor>(vendor: V) => {

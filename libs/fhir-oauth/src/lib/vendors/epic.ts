@@ -53,7 +53,13 @@ export const createEpicClientWithProxy = (
     extractPatientId: patientIdFromResponse('patient'),
     refreshToken: conditionalRefresh(
       (tokens) => !!tokens.clientId,
-      jwtBearerRefresh(signJwt),
+      jwtBearerRefresh({
+        signJwt,
+        proxyUrlBuilder: (config) =>
+          config.tenant?.id
+            ? proxyUrlBuilder(config.tenant.id, 'token')
+            : config.tenant!.tokenUrl,
+      }),
       noRefresh
     ),
   });

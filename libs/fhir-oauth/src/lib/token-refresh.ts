@@ -69,15 +69,29 @@ export type JwtPayload = Record<string, string | number | boolean | object>;
 
 export type JwtSigner = (payload: JwtPayload) => Promise<string>;
 
+export interface JwtBearerRefreshOptions {
+  signJwt: JwtSigner;
+  proxyUrlBuilder?: (config: OAuthConfig) => string;
+}
+
 export const jwtBearerRefresh =
-  (signJwt: JwtSigner): TokenRefresher =>
+  (signJwtOrOptions: JwtSigner | JwtBearerRefreshOptions): TokenRefresher =>
   async (tokens, config) => {
+    const { signJwt, proxyUrlBuilder } =
+      typeof signJwtOrOptions === 'function'
+        ? { signJwt: signJwtOrOptions, proxyUrlBuilder: undefined }
+        : signJwtOrOptions;
+
     if (!tokens.clientId) {
       throw createOAuthError(
         'no_client_id',
         'No dynamic client registered - cannot refresh'
       );
     }
+
+    const tokenUrl = proxyUrlBuilder
+      ? proxyUrlBuilder(config)
+      : config.tenant!.tokenUrl;
 
     const now = Math.floor(Date.now() / 1000);
     const assertion = await signJwt({
@@ -89,7 +103,7 @@ export const jwtBearerRefresh =
       iat: now,
     });
 
-    const res = await fetch(config.tenant!.tokenUrl, {
+    const res = await fetch(tokenUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({

@@ -110,7 +110,6 @@ export const parseTokenResponse = async (res: Response): Promise<TokenSet> => {
     refreshToken: data.refresh_token,
     idToken: data.id_token,
     scope: data.scope,
-    patientId: data.patient,
     raw: data,
   };
 };

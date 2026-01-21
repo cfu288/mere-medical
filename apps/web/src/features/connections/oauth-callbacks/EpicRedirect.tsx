@@ -25,6 +25,7 @@ import {
   getR4Url,
   saveConnectionToDb,
 } from '../../../services/fhir/Epic';
+import { isEpicSandbox } from '../../../services/fhir/EpicUtils';
 
 const epicClient = createEpicClient({ signJwt });
 
@@ -90,7 +91,7 @@ function useEpicOAuthCallback() {
       (epicBaseUrl.toUpperCase().includes('/R4') ? 'R4' : 'DSTU2');
     const fhirBaseUrl =
       fhirVersion === 'R4' ? getR4Url(epicBaseUrl) : getDSTU2Url(epicBaseUrl);
-    const isSandbox = epicId.includes('sandbox');
+    const isSandbox = isEpicSandbox(epicId);
 
     const oauthConfig: OAuthConfig = {
       clientId: getEpicClientId(config, fhirVersion, isSandbox),
