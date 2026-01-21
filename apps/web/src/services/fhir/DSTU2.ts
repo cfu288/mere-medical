@@ -11,6 +11,8 @@ import {
   DiagnosticReport,
   Observation,
   MedicationStatement,
+  MedicationOrder,
+  Medication,
   Patient,
   AllergyIntolerance,
   Practitioner,
@@ -269,9 +271,60 @@ export function mapAllergyIntoleranceToClinicalDocument(
     },
     metadata: {
       id: parseId(bundleItem),
-
       date: bundleItem.resource?.recordedDate || new Date(0).toISOString(),
-      display_name: bundleItem.resource?.text?.div,
+      display_name:
+        bundleItem.resource?.substance?.text ||
+        bundleItem.resource?.substance?.coding?.[0]?.display ||
+        bundleItem.resource?.text?.div,
+    },
+  };
+  return cd;
+}
+
+export function mapMedicationOrderToClinicalDocument(
+  bundleItem: BundleEntry<MedicationOrder>,
+  connectionDocument: ConnectionDocument,
+) {
+  const cd: CreateClinicalDocument<BundleEntry<MedicationOrder>> = {
+    user_id: connectionDocument.user_id,
+    connection_record_id: connectionDocument.id,
+    data_record: {
+      raw: bundleItem,
+      format: 'FHIR.DSTU2',
+      content_type: 'application/json',
+      resource_type: 'medicationorder',
+      version_history: [],
+    },
+    metadata: {
+      id: parseId(bundleItem),
+      date: bundleItem.resource?.dateWritten || new Date(0).toISOString(),
+      display_name:
+        bundleItem.resource?.medicationCodeableConcept?.text ||
+        bundleItem.resource?.text?.div,
+    },
+  };
+  return cd;
+}
+
+export function mapMedicationToClinicalDocument(
+  bundleItem: BundleEntry<Medication>,
+  connectionDocument: ConnectionDocument,
+) {
+  const cd: CreateClinicalDocument<BundleEntry<Medication>> = {
+    user_id: connectionDocument.user_id,
+    connection_record_id: connectionDocument.id,
+    data_record: {
+      raw: bundleItem,
+      format: 'FHIR.DSTU2',
+      content_type: 'application/json',
+      resource_type: 'medication',
+      version_history: [],
+    },
+    metadata: {
+      id: parseId(bundleItem),
+      date: new Date(0).toISOString(),
+      display_name:
+        bundleItem.resource?.code?.text || bundleItem.resource?.text?.div,
     },
   };
   return cd;

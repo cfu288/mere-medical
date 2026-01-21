@@ -11,6 +11,8 @@ import {
   Observation,
   DiagnosticReport,
   MedicationStatement,
+  MedicationOrder,
+  AllergyIntolerance,
   Patient,
   FhirResource,
 } from 'fhir/r2';
@@ -110,7 +112,10 @@ export async function syncAllRecords(
     DSTU2.mapMedicationStatementToClinicalDocument(dr, connectionDocument);
   const conditionMapper = (dr: BundleEntry<Condition>) =>
     DSTU2.mapConditionToClinicalDocument(dr, connectionDocument);
-
+  const allergyMapper = (dr: BundleEntry<AllergyIntolerance>) =>
+    DSTU2.mapAllergyIntoleranceToClinicalDocument(dr, connectionDocument);
+  const medOrderMapper = (dr: BundleEntry<MedicationOrder>) =>
+    DSTU2.mapMedicationOrderToClinicalDocument(dr, connectionDocument);
   const syncJob = await Promise.allSettled([
     syncFHIRResource<Immunization>(
       connectionDocument,
@@ -147,6 +152,18 @@ export async function syncAllRecords(
       db,
       'MedicationStatement',
       medStatementMapper,
+    ),
+    syncFHIRResource<AllergyIntolerance>(
+      connectionDocument,
+      db,
+      'AllergyIntolerance',
+      allergyMapper,
+    ),
+    syncFHIRResource<MedicationOrder>(
+      connectionDocument,
+      db,
+      'MedicationOrder',
+      medOrderMapper,
     ),
     syncFHIRResource<Patient>(connectionDocument, db, 'Patient', patientMapper),
   ]);

@@ -5,12 +5,16 @@ import {
   DiagnosticReport as R4DiagnosticReport,
   Observation as R4Observation,
   Procedure as R4Procedure,
+  AllergyIntolerance as R4AllergyIntolerance,
+  MedicationRequest as R4MedicationRequest,
 } from 'fhir/r4';
 import {
   Encounter as DSTU2Encounter,
   DiagnosticReport as DSTU2DiagnosticReport,
   Observation as DSTU2Observation,
   Procedure as DSTU2Procedure,
+  AllergyIntolerance as DSTU2AllergyIntolerance,
+  MedicationOrder as DSTU2MedicationOrder,
 } from 'fhir/r2';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 
@@ -155,5 +159,69 @@ export function getEncounterIndication(
     }
     default:
       return [];
+  }
+}
+
+export function getAllergyIntoleranceDisplayName(
+  document: ClinicalDocument,
+): string | undefined {
+  if (document.metadata?.display_name) {
+    return document.metadata.display_name;
+  }
+  switch (document.data_record.format) {
+    case 'FHIR.R4': {
+      const resource = (
+        document.data_record.raw as R4BundleEntry<R4AllergyIntolerance>
+      )?.resource;
+      return (
+        resource?.code?.text ||
+        resource?.code?.coding?.[0]?.display ||
+        resource?.text?.div
+      );
+    }
+    case 'FHIR.DSTU2': {
+      const resource = (
+        document.data_record.raw as DSTU2BundleEntry<DSTU2AllergyIntolerance>
+      )?.resource;
+      return (
+        resource?.substance?.text ||
+        resource?.substance?.coding?.[0]?.display ||
+        resource?.text?.div
+      );
+    }
+    default:
+      return undefined;
+  }
+}
+
+export function getMedicationOrderDisplayName(
+  document: ClinicalDocument,
+): string | undefined {
+  if (document.metadata?.display_name) {
+    return document.metadata.display_name;
+  }
+  switch (document.data_record.format) {
+    case 'FHIR.R4': {
+      const resource = (
+        document.data_record.raw as R4BundleEntry<R4MedicationRequest>
+      )?.resource;
+      return (
+        resource?.medicationCodeableConcept?.text ||
+        resource?.medicationCodeableConcept?.coding?.[0]?.display ||
+        resource?.text?.div
+      );
+    }
+    case 'FHIR.DSTU2': {
+      const resource = (
+        document.data_record.raw as DSTU2BundleEntry<DSTU2MedicationOrder>
+      )?.resource;
+      return (
+        resource?.medicationCodeableConcept?.text ||
+        resource?.medicationCodeableConcept?.coding?.[0]?.display ||
+        resource?.text?.div
+      );
+    }
+    default:
+      return undefined;
   }
 }
