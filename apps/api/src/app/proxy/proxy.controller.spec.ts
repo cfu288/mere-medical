@@ -48,7 +48,7 @@ describe('ProxyController Origin Validation', () => {
     jest.clearAllMocks();
   });
 
-  describe('Happy paths', () => {
+  describe('Valid origin requests', () => {
     it('accepts requests with valid Origin', async () => {
       mockProxyService.proxyRequest.mockImplementation((_req, res) => {
         res.status(200).json({ success: true });
@@ -89,7 +89,7 @@ describe('ProxyController Origin Validation', () => {
     });
   });
 
-  describe('Failure paths', () => {
+  describe('Invalid origin requests', () => {
     it('rejects requests with no Origin header', async () => {
       const response = await request(app.getHttpServer())
         .get('/proxy')
