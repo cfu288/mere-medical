@@ -48,24 +48,26 @@ import {
   ConnectionDocument,
   CreateCernerConnectionDocument,
 } from '../../models/connection-document/ConnectionDocument.type';
-import { Routes } from '../../Routes';
 import { DSTU2, R4 } from '.';
-import { AppConfig } from '../../app/providers/AppConfigProvider';
 import { createConnection } from '../../repositories/ConnectionRepository';
 import { findUserById } from '../../repositories/UserRepository';
 import { JsonWebKeySet } from '@mere/crypto';
+import {
+  createCernerClient,
+  type OAuthConfig,
+  type TokenSet,
+} from '@mere/fhir-oauth';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
 import uuid4 from '../../shared/utils/UUIDUtils';
 import {
   ClinicalDocument,
   CreateClinicalDocument,
 } from '../../models/clinical-document/ClinicalDocument.type';
-import { concatPath } from '../../shared/utils/urlUtils';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
-import { getCodeChallenge, getOAuthState } from '../../shared/utils/pkceUtils';
+import { Routes } from '../../Routes';
+import { AppConfig } from '../../app/providers/AppConfigProvider';
 
-export const CERNER_CODE_VERIFIER_KEY = 'cerner_code_verifier';
-export const CERNER_OAUTH_STATE_KEY = 'cerner_oauth_state';
+const cernerClient = createCernerClient();
 
 export enum CernerLocalStorageKeys {
   CERNER_BASE_URL = 'cernerBaseUrl',
@@ -76,67 +78,47 @@ export enum CernerLocalStorageKeys {
   FHIR_VERSION = 'cernerFhirVersion',
 }
 
-export async function getLoginUrl(
-  config: AppConfig,
-  baseUrl: string,
-  authorizeUrl: string,
-): Promise<string & Location> {
-  const codeChallenge = await getCodeChallenge(CERNER_CODE_VERIFIER_KEY);
-  const state = getOAuthState(CERNER_OAUTH_STATE_KEY);
-
-  const params = {
-    client_id: `${config.CERNER_CLIENT_ID}`,
-    scope: [
-      'fhirUser',
-      'offline_access',
-      'openid',
-      'patient/AllergyIntolerance.read',
-      'patient/Appointment.read',
-      'patient/Binary.read',
-      'patient/CarePlan.read',
-      'patient/CareTeam.read',
-      'patient/Condition.read',
-      'patient/Consent.read',
-      'patient/Contract.read',
-      'patient/Coverage.read',
-      'patient/DiagnosticReport.read',
-      'patient/DocumentReference.read',
-      'patient/Device.read',
-      'patient/Encounter.read',
-      'patient/FamilyMemberHistory.read',
-      'patient/Goal.read',
-      'patient/Immunization.read',
-      'patient/InsurancePlan.read',
-      'patient/Media.read',
-      'patient/MedicationAdministration.read',
-      'patient/MedicationDispense.read',
-      'patient/MedicationRequest.read',
-      'patient/MedicationStatement.read',
-      'patient/NutritionOrder.read',
-      'patient/Observation.read',
-      'patient/Patient.read',
-      'patient/Person.read',
-      'patient/Practitioner.read',
-      'patient/Procedure.read',
-      'patient/Provenance.read',
-      'patient/Questionnaire.read',
-      'patient/QuestionnaireResponse.read',
-      'patient/RelatedPerson.read',
-      'patient/Schedule.read',
-      'patient/ServiceRequest.read',
-      'patient/Slot.read',
-      'patient/Specimen.read',
-    ].join(' '),
-    redirect_uri: concatPath(config.PUBLIC_URL || '', Routes.CernerCallback),
-    aud: baseUrl,
-    response_type: 'code',
-    state,
-    code_challenge: codeChallenge,
-    code_challenge_method: 'S256',
-  };
-
-  return `${authorizeUrl}?${new URLSearchParams(params)}` as string & Location;
-}
+export const CERNER_SCOPES = [
+  'fhirUser',
+  'offline_access',
+  'openid',
+  'patient/AllergyIntolerance.read',
+  'patient/Appointment.read',
+  'patient/Binary.read',
+  'patient/CarePlan.read',
+  'patient/CareTeam.read',
+  'patient/Condition.read',
+  'patient/Consent.read',
+  'patient/Contract.read',
+  'patient/Coverage.read',
+  'patient/DiagnosticReport.read',
+  'patient/DocumentReference.read',
+  'patient/Device.read',
+  'patient/Encounter.read',
+  'patient/FamilyMemberHistory.read',
+  'patient/Goal.read',
+  'patient/Immunization.read',
+  'patient/InsurancePlan.read',
+  'patient/Media.read',
+  'patient/MedicationAdministration.read',
+  'patient/MedicationDispense.read',
+  'patient/MedicationRequest.read',
+  'patient/MedicationStatement.read',
+  'patient/NutritionOrder.read',
+  'patient/Observation.read',
+  'patient/Patient.read',
+  'patient/Person.read',
+  'patient/Practitioner.read',
+  'patient/Procedure.read',
+  'patient/Provenance.read',
+  'patient/Questionnaire.read',
+  'patient/QuestionnaireResponse.read',
+  'patient/RelatedPerson.read',
+  'patient/Schedule.read',
+  'patient/ServiceRequest.read',
+  'patient/Slot.read',
+  'patient/Specimen.read',
+];
 
 function parseIdToken(token: string) {
   const base64Url = token.split('.')[1];
@@ -812,28 +794,6 @@ async function fetchAttachmentData(
   }
 }
 
-export async function fetchAccessTokenWithRefreshToken(
-  refreshToken: string,
-  cernerTokenUrl: string,
-): Promise<CernerAuthResponse> {
-  const defaultUrl = cernerTokenUrl;
-  const res = await fetch(defaultUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      grant_type: 'refresh_token',
-      refresh_token: refreshToken,
-    }),
-  });
-  if (!res.ok) {
-    console.error(await res.text());
-    throw new Error('Error getting authorization token ');
-  }
-  return res.json();
-}
-
 export async function saveConnectionToDb({
   res,
   cernerBaseUrl,
@@ -935,43 +895,75 @@ export async function saveConnectionToDb({
 }
 
 /**
- * For a connection document, if the access token is expired, refresh it and save it to the db
- * @param connectionDocument the connection document to refresh the access token for
- * @param db
+ * For a connection document, if the access token is expired, refresh it and save it to the db.
+ * Uses the lib's cernerClient.refresh() which handles standard refresh_token grant.
  */
 export async function refreshCernerConnectionTokenIfNeeded(
+  config: AppConfig,
   connectionDocument: RxDocument<ConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
 ) {
-  const nowInSeconds = Math.floor(Date.now() / 1000);
-  if (connectionDocument.get('expires_at') <= nowInSeconds) {
+  const refreshToken = connectionDocument.get('refresh_token');
+  const currentTokens: TokenSet = {
+    accessToken: connectionDocument.get('access_token'),
+    expiresAt: connectionDocument.get('expires_at'),
+    refreshToken,
+    patientId: connectionDocument.get('patient'),
+    raw: {},
+  };
+
+  if (cernerClient.isExpired(currentTokens, 0)) {
     try {
       const baseUrl = connectionDocument.get('location'),
-        refreshToken = connectionDocument.get('refresh_token'),
         tokenUri = connectionDocument.get('token_uri'),
-        userId = connectionDocument.get('user_id');
+        authUri = connectionDocument.get('auth_uri'),
+        name = connectionDocument.get('name'),
+        cernerId =
+          connectionDocument.get('tenant_id') || connectionDocument.get('id'),
+        userId = connectionDocument.get('user_id'),
+        fhirVersion = (connectionDocument.get('fhir_version') || 'DSTU2') as
+          | 'DSTU2'
+          | 'R4';
 
-      // Fetch the actual UserDocument from the database
+      if (!refreshToken) {
+        throw new Error('No refresh_token found');
+      }
+
       const userObject = await findUserById(db, userId);
-
       if (!userObject) {
         throw new Error(`User not found: ${userId}`);
       }
 
-      const access_token_data = await fetchAccessTokenWithRefreshToken(
-        refreshToken,
-        tokenUri,
-      );
+      const oauthConfig: OAuthConfig = {
+        clientId: config.CERNER_CLIENT_ID || '',
+        redirectUri: `${config.PUBLIC_URL}${Routes.CernerCallback}`,
+        scopes: CERNER_SCOPES,
+        tenant: {
+          id: cernerId,
+          name,
+          authUrl: authUri,
+          tokenUrl: tokenUri,
+          fhirBaseUrl: baseUrl,
+          fhirVersion,
+        },
+      };
+
+      const newTokens = await cernerClient.refresh(currentTokens, oauthConfig);
 
       return await saveConnectionToDb({
-        res: access_token_data,
+        res: {
+          access_token: newTokens.accessToken,
+          expires_in: newTokens.expiresAt - Math.floor(Date.now() / 1000),
+          scope: newTokens.scope || '',
+          token_type: 'Bearer',
+        },
         cernerBaseUrl: baseUrl,
         db,
         user: userObject,
       });
     } catch (e) {
       console.error(e);
-      throw new Error('Error refreshing token  - try logging in again');
+      throw new Error('Error refreshing token - try logging in again');
     }
   }
   return Promise.resolve();

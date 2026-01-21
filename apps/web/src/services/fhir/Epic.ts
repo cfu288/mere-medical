@@ -49,7 +49,13 @@ import { AppConfig } from '../../app/providers/AppConfigProvider';
 import { createConnection } from '../../repositories/ConnectionRepository';
 import uuid4 from '../../shared/utils/UUIDUtils';
 import { concatPath } from '../../shared/utils/urlUtils';
-import { signJwt, JsonWebKeySet, getPublicKey } from '@mere/crypto';
+import { signJwt, JsonWebKeySet } from '@mere/crypto';
+import {
+  createEpicClient,
+  createEpicClientWithProxy,
+  type OAuthConfig,
+  type TokenSet,
+} from '@mere/fhir-oauth';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
 import {
   ClinicalDocument,
@@ -57,10 +63,15 @@ import {
 } from '../../models/clinical-document/ClinicalDocument.type';
 import { findUserById } from '../../repositories/UserRepository';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
-import { getCodeChallenge, getOAuthState } from '../../shared/utils/pkceUtils';
 
-export const EPIC_CODE_VERIFIER_KEY = 'epic_code_verifier';
-export const EPIC_OAUTH_STATE_KEY = 'epic_oauth_state';
+const epicClient = createEpicClient({ signJwt });
+
+const createProxiedEpicClient = (publicUrl: string) =>
+  createEpicClientWithProxy(
+    { signJwt },
+    (tenantId, targetType) =>
+      `${publicUrl}/api/proxy?serviceId=${tenantId}&target_type=${targetType}`,
+  );
 
 const URLJoin = (...args: string[]) =>
   args
@@ -114,29 +125,7 @@ export function getEpicClientId(
   return config.EPIC_CLIENT_ID_DSTU2 || config.EPIC_CLIENT_ID || '';
 }
 
-export async function getLoginUrl(
-  config: AppConfig,
-  baseUrl: string,
-  authorizeUrl: string,
-  isSandbox = false,
-  version: 'DSTU2' | 'R4' = 'DSTU2',
-): Promise<string & Location> {
-  const state = getOAuthState(EPIC_OAUTH_STATE_KEY);
-  const codeChallenge = await getCodeChallenge(EPIC_CODE_VERIFIER_KEY);
-
-  const params = {
-    client_id: getEpicClientId(config, version, isSandbox),
-    scope: 'openid fhirUser',
-    redirect_uri: `${config.PUBLIC_URL}${Routes.EpicCallback}`,
-    aud: version === 'R4' ? getR4Url(baseUrl) : getDSTU2Url(baseUrl),
-    response_type: 'code',
-    state,
-    code_challenge: codeChallenge,
-    code_challenge_method: 'S256',
-  };
-
-  return `${authorizeUrl}?${new URLSearchParams(params)}` as string & Location;
-}
+export const EPIC_SCOPES = ['openid', 'fhirUser'];
 
 export enum EpicLocalStorageKeys {
   EPIC_BASE_URL = 'epicUrl',
@@ -933,122 +922,6 @@ export async function fetchAccessTokenWithCode(
   return res.json();
 }
 
-export async function registerDynamicClient({
-  config,
-  res,
-  epicBaseUrl,
-  epicName,
-  epicId,
-  useProxy = false,
-  version = 'DSTU2',
-}: {
-  config: AppConfig;
-  res: EpicAuthResponse;
-  epicBaseUrl: string;
-  epicName: string;
-  epicId?: string;
-  useProxy?: boolean;
-  version?: 'DSTU2' | 'R4';
-}): Promise<EpicDynamicRegistrationResponse> {
-  const baseUrl = epicBaseUrl
-    .replace('/api/FHIR/DSTU2/', '')
-    .replace('/api/FHIR/DSTU2', '')
-    .replace('/api/FHIR/R4/', '')
-    .replace('/api/FHIR/R4', '');
-  const defaultUrl = URLJoin(baseUrl, '/oauth2/register');
-  const proxyUrl = `${config.PUBLIC_URL || ''}/api/proxy?serviceId=${epicId}&target_type=register`;
-
-  const publicKey = await getPublicKey();
-  const isSandbox = isEpicSandbox(epicId);
-  const request: EpicDynamicRegistrationRequest = {
-    software_id: getEpicClientId(config, version, isSandbox),
-    jwks: {
-      keys: [
-        {
-          e: publicKey.e,
-          kty: publicKey.kty,
-          n: publicKey.n,
-          kid: publicKey.kid,
-        },
-      ],
-    },
-  };
-  // We've got a temp access token and public key, now we can register this app as a dynamic client
-  try {
-    const registerRes = await fetch(useProxy ? proxyUrl : defaultUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${res.access_token}`,
-      },
-      body: JSON.stringify(request),
-    });
-
-    if (!registerRes.ok) {
-      if (registerRes.status === 404) {
-        throw new DynamicRegistrationError(
-          'This site does not support dynamic client registration.',
-          res,
-        );
-      }
-      console.log(await registerRes.text());
-      throw new Error('Error registering dynamic client with ' + epicName);
-    }
-    return await registerRes.json();
-  } catch (e) {
-    throw new DynamicRegistrationError(
-      'This site does not support dynamic client registration.',
-      res,
-    );
-  }
-}
-
-export class DynamicRegistrationError extends Error {
-  public data: EpicAuthResponse;
-
-  constructor(message: string, data: EpicAuthResponse) {
-    super(message);
-    this.name = 'DynamicRegistrationError';
-    this.data = data;
-  }
-}
-
-export async function fetchAccessTokenUsingJWT(
-  config: AppConfig,
-  clientId: string,
-  epicTokenUrl: string,
-  epicId?: string,
-  useProxy = false,
-): Promise<EpicAuthResponseWithClientId> {
-  const defaultUrl = epicTokenUrl;
-  const proxyUrl = `${config.PUBLIC_URL || ''}/api/proxy?serviceId=${epicId}&target_type=token`;
-
-  // We've registered, now we can get another access token with our signed JWT
-  const jwtBody = {
-    sub: clientId,
-    iss: clientId,
-    aud: epicTokenUrl,
-    jti: uuid4(),
-  };
-  const signedJwt = await signJwt(jwtBody);
-  const tokenRes = await fetch(useProxy ? proxyUrl : defaultUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      client_id: clientId,
-      assertion: signedJwt,
-    }),
-  });
-  if (!tokenRes.ok) {
-    throw new Error('Error getting access token');
-  }
-  const result = await tokenRes.json();
-  return { ...result, client_id: clientId };
-}
-
 export async function saveConnectionToDb({
   res,
   epicBaseUrl: epicUrl,
@@ -1164,9 +1037,8 @@ export async function saveConnectionToDb({
 }
 
 /**
- * For a connection document, if the access token is expired, refresh it and save it to the db
- * @param connectionDocument the connection document to refresh the access token for
- * @param db
+ * For a connection document, if the access token is expired, refresh it and save it to the db.
+ * Uses the lib's epicClient.refresh() which handles JWT bearer token refresh.
  */
 export async function refreshEpicConnectionTokenIfNeeded(
   config: AppConfig,
@@ -1174,33 +1046,68 @@ export async function refreshEpicConnectionTokenIfNeeded(
   db: RxDatabase<DatabaseCollections>,
   useProxy = false,
 ) {
-  const nowInSeconds = Math.floor(Date.now() / 1000);
-  if (connectionDocument.get('expires_at') <= nowInSeconds) {
+  const clientId = connectionDocument.get('client_id');
+  const currentTokens: TokenSet = {
+    accessToken: connectionDocument.get('access_token'),
+    expiresAt: connectionDocument.get('expires_at'),
+    refreshToken: connectionDocument.get('refresh_token'),
+    clientId,
+    patientId: connectionDocument.get('patient'),
+    raw: {},
+  };
+
+  if (epicClient.isExpired(currentTokens, 0)) {
     try {
       const epicUrl = connectionDocument.get('location'),
         epicTokenUrl = connectionDocument.get('token_uri'),
         epicAuthUrl = connectionDocument.get('auth_uri'),
         epicName = connectionDocument.get('name'),
-        clientId = connectionDocument.get('client_id'),
         epicId = connectionDocument.get('tenant_id'),
-        userId = connectionDocument.get('user_id');
+        userId = connectionDocument.get('user_id'),
+        fhirVersion = (connectionDocument.get('fhir_version') || 'DSTU2') as
+          | 'DSTU2'
+          | 'R4';
+
+      if (!clientId) {
+        throw new Error(
+          'No client_id found - dynamic registration may not have succeeded',
+        );
+      }
 
       const userObject = await findUserById(db, userId);
-
       if (!userObject) {
         throw new Error(`User not found: ${userId}`);
       }
 
-      const access_token_data = await fetchAccessTokenUsingJWT(
-        config,
-        clientId,
-        epicTokenUrl,
-        epicId,
-        useProxy,
-      );
+      const oauthConfig: OAuthConfig = {
+        clientId: getEpicClientId(config, fhirVersion, isEpicSandbox(epicId)),
+        redirectUri: `${config.PUBLIC_URL}${Routes.EpicCallback}`,
+        scopes: ['openid', 'fhirUser'],
+        tenant: {
+          id: epicId,
+          name: epicName,
+          authUrl: epicAuthUrl,
+          tokenUrl: epicTokenUrl,
+          fhirBaseUrl: epicUrl,
+          fhirVersion,
+        },
+      };
+
+      const client = useProxy
+        ? createProxiedEpicClient(config.PUBLIC_URL || '')
+        : epicClient;
+      const newTokens = await client.refresh(currentTokens, oauthConfig);
 
       return await saveConnectionToDb({
-        res: access_token_data,
+        res: {
+          access_token: newTokens.accessToken,
+          expires_in: newTokens.expiresAt - Math.floor(Date.now() / 1000),
+          patient: newTokens.patientId || '',
+          token_type: 'Bearer',
+          scope: newTokens.scope || '',
+          refresh_token: newTokens.refreshToken || '',
+          client_id: clientId,
+        },
         epicBaseUrl: epicUrl,
         epicName,
         epicTokenUrl,
@@ -1208,10 +1115,11 @@ export async function refreshEpicConnectionTokenIfNeeded(
         db,
         epicId,
         user: userObject,
+        fhirVersion,
       });
     } catch (e) {
       console.error(e);
-      throw new Error('Error refreshing token  - try logging in again');
+      throw new Error('Error refreshing token - try logging in again');
     }
   }
   return Promise.resolve();

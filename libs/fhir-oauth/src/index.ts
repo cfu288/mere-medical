@@ -32,6 +32,12 @@ export {
   type OnPatientTokenResponse,
 } from './lib/vendors/onpatient.js';
 
+// Session management
+export {
+  createSessionManager,
+  type SessionManager,
+} from './lib/session-manager.js';
+
 // Core types
 export type {
   OAuthClient,

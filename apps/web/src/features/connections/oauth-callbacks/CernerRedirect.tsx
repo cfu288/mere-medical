@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { createCernerClient, type OAuthConfig } from '@mere/fhir-oauth';
+import {
+  useOAuthFlow,
+  useOAuthorizationRequestState,
+} from '@mere/fhir-oauth/react';
 import { AppPage } from '../../../shared/components/AppPage';
 import { GenericBanner } from '../../../shared/components/GenericBanner';
 import { useRxDb } from '../../../app/providers/RxDbProvider';
@@ -8,8 +12,6 @@ import { Routes } from '../../../Routes';
 import { useAppConfig } from '../../../app/providers/AppConfigProvider';
 import { useNotificationDispatch } from '../../../app/providers/NotificationProvider';
 import { useUser } from '../../../app/providers/UserProvider';
-import { useOAuthFlow } from '../../../shared/hooks/useOAuthFlow';
-import { useOAuthorizationRequestState } from '../../../shared/hooks/useOAuthSession';
 import { CernerLocalStorageKeys } from '../../../services/fhir/Cerner';
 import { createConnection } from '../../../repositories/ConnectionRepository';
 import uuid4 from '../../../shared/utils/UUIDUtils';

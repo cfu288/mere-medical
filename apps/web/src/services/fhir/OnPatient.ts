@@ -17,10 +17,9 @@ import {
   FhirResource,
 } from 'fhir/r2';
 import { RxDatabase } from 'rxdb';
-import { createOnPatientClient, ONPATIENT_CONSTANTS } from '@mere/fhir-oauth';
+import { ONPATIENT_CONSTANTS } from '@mere/fhir-oauth';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import { DSTU2 } from '.';
-import { AppConfig } from '../../app/providers/AppConfigProvider';
 import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
 import {
   ClinicalDocument,
@@ -29,14 +28,6 @@ import {
 
 export const OnPatientBaseUrl = ONPATIENT_CONSTANTS.BASE_URL;
 export const OnPatientDSTU2Url = ONPATIENT_CONSTANTS.FHIR_URL;
-
-export function getLoginUrl(config: AppConfig): string & Location {
-  const client = createOnPatientClient();
-  return client.buildAuthUrl({
-    clientId: config.ONPATIENT_CLIENT_ID || '',
-    redirectUri: `${config.PUBLIC_URL}/api/v1/onpatient/callback`,
-  }) as string & Location;
-}
 
 async function getFHIRResource<T extends FhirResource>(
   connectionDocument: ConnectionDocument,

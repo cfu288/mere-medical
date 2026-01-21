@@ -1,6 +1,6 @@
 # @mere/fhir-oauth
 
-OAuth clients for SMART on FHIR servers. Provides vendor-specific clients that handle the differences in OAuth implementations across EHR systems while exposing a consistent `TokenSet` type.
+OAuth clients for SMART on FHIR servers. Note that this is specifically for patient standalone launch flows. Provides vendor-specific clients that handle the differences in OAuth implementations across EHR systems while exposing a consistent `TokenSet` return type for clients to use.
 
 ## Supported Vendors
 
@@ -19,8 +19,10 @@ interface TokenSet {
   accessToken: string;
   expiresAt: number;
   refreshToken?: string;
-  patientId?: string;
+  idToken?: string;
   scope?: string;
+  patientId?: string;
+  clientId?: string;
   raw: Record<string, unknown>;
 }
 
@@ -37,6 +39,7 @@ interface TenantConfig {
   authUrl: string;
   tokenUrl: string;
   fhirBaseUrl: string;
+  fhirVersion?: 'DSTU2' | 'R4';
 }
 ```
 
@@ -96,6 +99,78 @@ if (client.isExpired(tokens)) {
   const newTokens = await client.refresh(tokens, config);
 }
 ```
+
+## React Hooks
+
+For React apps, import hooks from `@mere/fhir-oauth/react` to handle session persistence and provide loading/error states:
+
+```typescript
+import { createCernerClient } from '@mere/fhir-oauth';
+import { useOAuthFlow } from '@mere/fhir-oauth/react';
+
+type Vendor = 'epic' | 'cerner';
+const client = createCernerClient();
+
+// On login page
+const { initiateAuth, isLoading, error } = useOAuthFlow<Vendor>({
+  client,
+  vendor: 'cerner',
+});
+const { url } = await initiateAuth(config);
+window.location.href = url;
+
+// On callback page
+const { handleCallback } = useOAuthFlow<Vendor>({ client, vendor: 'cerner' });
+const tokens = await handleCallback(searchParams, config);
+```
+
+The `useOAuthorizationRequestState` hook can be used directly for lower-level session control:
+
+```typescript
+const { saveSession, loadSession, clearSession } = useOAuthorizationRequestState<Vendor>('cerner');
+```
+
+### Custom Storage Adapters
+
+By default, the hooks use `sessionStorage` in browser environments. For non-browser React environments like [Ink](https://github.com/vadimdemedes/ink) (React for CLI apps), you can provide a custom storage adapter:
+
+```typescript
+import { useOAuthFlow, StorageAdapter } from '@mere/fhir-oauth/react';
+
+const fileStorage: StorageAdapter = {
+  async getItem(key) {
+    // Read from file, keychain, etc.
+  },
+  async setItem(key, value) {
+    // Write to file, keychain, etc.
+  },
+  async removeItem(key) {
+    // Delete from file, keychain, etc.
+  },
+};
+
+const { initiateAuth, handleCallback } = useOAuthFlow({
+  client,
+  vendor: 'epic',
+  storage: fileStorage,
+});
+
+// CLI apps can open the URL in the system browser
+const { url } = await initiateAuth(config);
+await open(url);
+```
+
+The `StorageAdapter` interface supports both sync and async implementations:
+
+```typescript
+interface StorageAdapter {
+  getItem(key: string): string | null | Promise<string | null>;
+  setItem(key: string, value: string): void | Promise<void>;
+  removeItem(key: string): void | Promise<void>;
+}
+```
+
+Browser's `sessionStorage` can be passed directly since it satisfies this interface.
 
 ## Confidential Client Flow (OnPatient)
 

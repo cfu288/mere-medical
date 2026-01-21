@@ -17,8 +17,10 @@ import {
   OAuthError,
 } from '@mere/fhir-oauth';
 import { signJwt, getPublicKey } from '@mere/crypto';
-import { useOAuthFlow } from '../../../shared/hooks/useOAuthFlow';
-import { useOAuthorizationRequestState } from '../../../shared/hooks/useOAuthSession';
+import {
+  useOAuthFlow,
+  useOAuthorizationRequestState,
+} from '@mere/fhir-oauth/react';
 import {
   EpicLocalStorageKeys,
   getEpicClientId,
