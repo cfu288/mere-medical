@@ -63,12 +63,23 @@ function useCernerOAuthCallback() {
       !cernerTokenUrl ||
       !cernerAuthUrl ||
       !cernerName ||
+      !cernerId ||
       !user?.id
     ) {
       hasRun.current = true;
       clearLocalStorage();
       clearSession();
-      const errorMessage = 'Missing required session data. Please try again.';
+      const missingParams = [
+        !cernerBaseUrl && 'cernerBaseUrl',
+        !cernerTokenUrl && 'cernerTokenUrl',
+        !cernerAuthUrl && 'cernerAuthUrl',
+        !cernerName && 'cernerName',
+        !cernerId && 'cernerId',
+        !user?.id && 'user',
+      ]
+        .filter(Boolean)
+        .join(', ');
+      const errorMessage = `Missing required parameters: ${missingParams}`;
       setError(errorMessage);
       notifyDispatch({
         type: 'set_notification',
@@ -89,7 +100,7 @@ function useCernerOAuthCallback() {
       redirectPath: Routes.CernerCallback,
       scopes: CERNER_DEFAULT_SCOPES,
       tenant: {
-        id: cernerId || cernerBaseUrl,
+        id: cernerId,
         name: cernerName,
         authUrl: cernerAuthUrl,
         tokenUrl: cernerTokenUrl,

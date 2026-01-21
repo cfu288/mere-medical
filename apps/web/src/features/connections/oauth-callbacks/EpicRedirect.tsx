@@ -100,7 +100,17 @@ function useEpicOAuthCallback() {
       hasRun.current = true;
       clearLocalStorage();
       clearSession();
-      setError('Missing required session data. Please try again.');
+      const missingParams = [
+        !epicBaseUrl && 'epicBaseUrl',
+        !epicTokenUrl && 'epicTokenUrl',
+        !epicAuthUrl && 'epicAuthUrl',
+        !epicName && 'epicName',
+        !epicId && 'epicId',
+        !user && 'user',
+      ]
+        .filter(Boolean)
+        .join(', ');
+      setError(`Missing required parameters: ${missingParams}`);
       return;
     }
 
