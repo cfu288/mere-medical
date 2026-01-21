@@ -62,11 +62,7 @@ import {
 } from '../../models/clinical-document/ClinicalDocument.type';
 import { concatPath } from '../../shared/utils/urlUtils';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
-import {
-  getCodeChallenge,
-  getCodeVerifier,
-  getOAuthState,
-} from '../../shared/utils/pkceUtils';
+import { getCodeChallenge, getOAuthState } from '../../shared/utils/pkceUtils';
 
 export const CERNER_CODE_VERIFIER_KEY = 'cerner_code_verifier';
 export const CERNER_OAUTH_STATE_KEY = 'cerner_oauth_state';
@@ -814,40 +810,6 @@ async function fetchAttachmentData(
       'Could not get document as the user is unauthorized. Try logging in again.',
     );
   }
-}
-
-/**
- * Using the code from the Cerner callback, fetch the access token
- * @param code code from the Cerner callback, usually a query param
- * @param CernerUrl url of the Cerner server we are connecting to
- * @param CernerName user friendly name of the Cerner server we are connecting to
- * @returns Promise of the auth response from the Cerner server
- */
-export async function fetchAccessTokenWithCode(
-  config: AppConfig,
-  code: string,
-  cernerTokenUrl: string,
-  codeVerifier: string,
-): Promise<CernerAuthResponse> {
-  const defaultUrl = `${cernerTokenUrl}`;
-  const res = await fetch(defaultUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      grant_type: 'authorization_code',
-      client_id: `${config.CERNER_CLIENT_ID}`,
-      redirect_uri: concatPath(config.PUBLIC_URL || '', Routes.CernerCallback),
-      code: code,
-      code_verifier: codeVerifier,
-    }),
-  });
-  if (!res.ok) {
-    console.error(await res.text());
-    throw new Error('Error getting authorization token ');
-  }
-  return res.json();
 }
 
 export async function fetchAccessTokenWithRefreshToken(

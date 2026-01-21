@@ -23,6 +23,8 @@ export {
   registerEpicDynamicClient,
 } from './lib/vendors/epic.js';
 
+export { createCernerClient } from './lib/vendors/cerner.js';
+
 // Core types
 export type {
   OAuthClient,

@@ -101,3 +101,40 @@ const refreshedTokens = await client.refresh(
   config
 );
 ```
+
+## Cerner / Oracle Health
+
+Cerner uses standard OAuth2 with PKCE (no JWT signing required):
+
+```typescript
+import { createCernerClient, OAuthConfig } from '@mere/fhir-oauth';
+
+const client = createCernerClient();
+
+const config: OAuthConfig = {
+  clientId: 'your-cerner-client-id',
+  redirectUri: 'https://yourapp.com/cerner/callback',
+  scopes: ['openid', 'fhirUser', 'offline_access', 'patient/Patient.read'],
+  tenant: {
+    id: 'cerner-tenant-id',
+    name: 'Hospital Name',
+    authUrl: 'https://authorization.cerner.com/.../authorize',
+    tokenUrl: 'https://authorization.cerner.com/.../token',
+    fhirBaseUrl: 'https://fhir-myrecord.cerner.com/r4/...',
+  },
+};
+
+// Initiate auth (same flow as Epic)
+const { url, session } = await client.initiateAuth(config);
+sessionStorage.setItem('oauth_session', JSON.stringify(session));
+window.location.href = url;
+
+// On callback page
+const session = JSON.parse(sessionStorage.getItem('oauth_session'));
+const tokens = await client.handleCallback(searchParams, config, session);
+
+// Token refresh uses standard refresh_token grant (no JWT required)
+if (client.isExpired(tokens)) {
+  const newTokens = await client.refresh(tokens, config);
+}
+```
