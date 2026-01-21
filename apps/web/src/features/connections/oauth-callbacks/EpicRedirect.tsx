@@ -36,6 +36,19 @@ const createProxiedEpicClient = (publicUrl: string) =>
       `${publicUrl}/api/proxy?serviceId=${tenantId}&target_type=${targetType}`,
   );
 
+/**
+ * Handles the redirect from Epic's authorization server. If possible, it
+ * will attempt to register a dynamic client so we can automatically refresh
+ * tokens in the future. If that fails, it will attempt to use the access
+ * token provided by Epic to pull FHIR resources once and we will need the
+ * user to manually re-sign in every time they want to manually pull their
+ * records.
+ *
+ * Ideally, we would use the conformance statement to determine whether or
+ * not we can register a dynamic client, but Epic's conformance statement at
+ * `api/FHIR/DSTU2/metadata` at `rest.security.extensions` is mostly inaccurate
+ * anyways so we can't tell.
+ */
 function useEpicOAuthCallback() {
   const db = useRxDb();
   const { config, isLoading: configLoading } = useAppConfig();
@@ -169,10 +182,8 @@ function useEpicOAuthCallback() {
           fhirVersion,
         });
 
-        clearLocalStorage();
         navigate(Routes.AddConnection, { replace: true });
       } catch (err) {
-        clearLocalStorage();
         const message =
           err instanceof Error ? err.message : 'Authentication failed';
         setError(message);
@@ -181,6 +192,8 @@ function useEpicOAuthCallback() {
           message,
           variant: 'error',
         });
+      } finally {
+        clearLocalStorage();
       }
     })();
   }, [

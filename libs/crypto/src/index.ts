@@ -1,3 +1,13 @@
+/**
+ * @mere/crypto - WebCrypto abstractions for browser-based cryptographic operations
+ *
+ * Provides key management and signing utilities that persist CryptoKeys in IndexedDB
+ * across browser sessions. Keys are non-exportable for security.
+ *
+ * Primary use case: JWT signing for SMART on FHIR OAuth flows with dynamic client
+ * registration, where the client needs a persistent key pair for token refresh.
+ */
+
 export type {
   PublicKeyWithKid,
   JsonWebKeySet,
