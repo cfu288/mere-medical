@@ -25,6 +25,13 @@ export {
 
 export { createCernerClient } from './lib/vendors/cerner.js';
 
+export {
+  createOnPatientClient,
+  ONPATIENT_CONSTANTS,
+  type OnPatientClient,
+  type OnPatientTokenResponse,
+} from './lib/vendors/onpatient.js';
+
 // Core types
 export type {
   OAuthClient,
