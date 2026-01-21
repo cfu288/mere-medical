@@ -880,48 +880,6 @@ async function fetchAttachmentData(
   }
 }
 
-/**
- * Using the code from the Epic callback, fetch the access token
- * @param code code from the Epic callback, usually a query param
- * @param epicTokenUrl url of the Epic server we are connecting to
- * @param epicName user friendly name of the Epic server we are connecting to
- * @returns Promise of the auth response from the Epic server
- */
-export async function fetchAccessTokenWithCode(
-  config: AppConfig,
-  code: string,
-  epicTokenUrl: string,
-  epicName: string,
-  codeVerifier: string,
-  epicId?: string,
-  useProxy = false,
-  version: 'DSTU2' | 'R4' = 'DSTU2',
-): Promise<EpicAuthResponse> {
-  const defaultUrl = epicTokenUrl;
-  const proxyUrl = `${config.PUBLIC_URL || ''}/api/proxy?serviceId=${epicId}&target_type=token`;
-  const headers = {
-    'Content-Type': 'application/x-www-form-urlencoded',
-  };
-  const isSandbox = isEpicSandbox(epicId);
-  const body = new URLSearchParams({
-    grant_type: 'authorization_code',
-    client_id: getEpicClientId(config, version, isSandbox),
-    redirect_uri: `${config.PUBLIC_URL}${Routes.EpicCallback}`,
-    code: code,
-    code_verifier: codeVerifier,
-  });
-  const res = await fetch(useProxy ? proxyUrl : defaultUrl, {
-    method: 'POST',
-    headers,
-    body,
-  });
-  if (!res.ok) {
-    console.error(await res.text());
-    throw new Error('Error getting authorization token in ' + epicName);
-  }
-  return res.json();
-}
-
 export async function saveConnectionToDb({
   res,
   epicBaseUrl: epicUrl,

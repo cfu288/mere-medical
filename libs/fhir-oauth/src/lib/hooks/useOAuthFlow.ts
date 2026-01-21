@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useReducer } from 'react';
 import type { OAuthClient, OAuthConfig, StorageAdapter, TokenSet } from '../types.js';
 import { useOAuthorizationRequestState } from './useOAuthorizationRequestState.js';
 
@@ -6,6 +6,29 @@ export interface UseOAuthFlowOptions<K extends string> {
   client: OAuthClient;
   vendor: K;
   storage?: StorageAdapter;
+}
+
+type State =
+  | { status: 'idle'; isLoading: false; error: null }
+  | { status: 'loading'; isLoading: true; error: null }
+  | { status: 'error'; isLoading: false; error: Error };
+
+type Action =
+  | { type: 'START' }
+  | { type: 'SUCCESS' }
+  | { type: 'ERROR'; error: Error };
+
+const initialState: State = { status: 'idle', isLoading: false, error: null };
+
+function reducer(_state: State, action: Action): State {
+  switch (action.type) {
+    case 'START':
+      return { status: 'loading', isLoading: true, error: null };
+    case 'SUCCESS':
+      return { status: 'idle', isLoading: false, error: null };
+    case 'ERROR':
+      return { status: 'error', isLoading: false, error: action.error };
+  }
 }
 
 /**
@@ -27,24 +50,22 @@ export function useOAuthFlow<K extends string>({
   vendor,
   storage,
 }: UseOAuthFlowOptions<K>) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const [state, dispatch] = useReducer(reducer, initialState);
   const { saveSession, loadSession, clearSession } = useOAuthorizationRequestState(vendor, { storage });
 
   const initiateAuth = useCallback(
     async (config: OAuthConfig): Promise<{ url: string }> => {
-      setIsLoading(true);
-      setError(null);
+      dispatch({ type: 'START' });
 
       try {
         const { url, session } = await client.initiateAuth(config);
         await saveSession(session);
+        dispatch({ type: 'SUCCESS' });
         return { url };
       } catch (err) {
         const error =
           err instanceof Error ? err : new Error('Failed to initiate auth');
-        setError(error);
-        setIsLoading(false);
+        dispatch({ type: 'ERROR', error });
         throw error;
       }
     },
@@ -56,8 +77,7 @@ export function useOAuthFlow<K extends string>({
       searchParams: URLSearchParams,
       config: OAuthConfig,
     ): Promise<TokenSet> => {
-      setIsLoading(true);
-      setError(null);
+      dispatch({ type: 'START' });
 
       try {
         const session = await loadSession();
@@ -71,19 +91,18 @@ export function useOAuthFlow<K extends string>({
           session,
         );
         await clearSession();
+        dispatch({ type: 'SUCCESS' });
         return tokens;
       } catch (err) {
         await clearSession();
         const error =
           err instanceof Error ? err : new Error('OAuth callback failed');
-        setError(error);
+        dispatch({ type: 'ERROR', error });
         throw error;
-      } finally {
-        setIsLoading(false);
       }
     },
     [client, loadSession, clearSession],
   );
 
-  return { initiateAuth, handleCallback, isLoading, error, clearSession };
+  return { initiateAuth, handleCallback, isLoading: state.isLoading, error: state.error, clearSession };
 }
