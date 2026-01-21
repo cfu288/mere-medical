@@ -1,5 +1,7 @@
 // @ts-nocheck
 import { DynamicModule, Logger, Module, Provider } from '@nestjs/common';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { createProxyServer } from 'http-proxy';
 import { EpicDSTU2TenantEndpoints, EpicR4TenantEndpoints } from '@mere/epic';
 import { HealowR4TenantEndpoints } from '@mere/healow';
@@ -17,6 +19,7 @@ import {
 } from './proxy.constants';
 import { ProxyService } from './services';
 import { concatPath } from './utils';
+import { OriginGuard } from './guards';
 
 const proxyFactory = {
   provide: HTTP_PROXY,
@@ -27,27 +30,61 @@ const proxyFactory = {
       ...options.config,
     });
 
+    const ALLOWED_HEADERS = [
+      'accept',
+      'authorization',
+      'content-type',
+      'content-length',
+      'host',
+    ];
+
     proxy.on('proxyReq', function (proxyReq, req, res, opts) {
       const url = concatPath(`${proxyReq.protocol}//${proxyReq.host}`, req.url);
       logger.debug(`Sending ${req.method} ${url}`);
 
-      let cookies = (proxyReq.getHeader('cookie') || '') as string;
-      const allowedCookies = options.allowedCookies || [];
-      cookies = cookies
-        .split(';')
-        .filter(
-          (cookie) =>
-            allowedCookies.indexOf(cookie.split('=')[0].trim()) !== -1,
-        )
-        .join(';');
+      const savedContentType = proxyReq.getHeader('content-type');
+      const savedHost = proxyReq.getHeader('host');
+      const serverHeaders = (opts as any).headers || {};
 
-      proxyReq.setHeader('cookie', cookies);
+      proxyReq.getHeaderNames().forEach((h) => proxyReq.removeHeader(h));
+
+      ALLOWED_HEADERS.forEach((h) => {
+        const value = req.headers[h];
+        if (value) {
+          proxyReq.setHeader(h, value);
+        }
+      });
+
+      if (savedHost) {
+        proxyReq.setHeader('host', savedHost);
+      }
+
+      Object.entries(serverHeaders).forEach(([key, value]) => {
+        if (value) {
+          proxyReq.setHeader(key, value as string);
+        }
+      });
+
+      const allowedCookies = options.allowedCookies || [];
+      if (allowedCookies.length > 0) {
+        const cookies = ((req.headers.cookie as string) || '')
+          .split(';')
+          .filter(
+            (cookie) =>
+              allowedCookies.indexOf(cookie.split('=')[0].trim()) !== -1,
+          )
+          .join(';');
+        if (cookies) {
+          proxyReq.setHeader('cookie', cookies);
+        }
+      }
 
       if (!req['body'] || !Object.keys(req['body']).length) {
         return;
       }
 
-      const contentType = proxyReq.getHeader('Content-Type');
+      const contentType =
+        savedContentType || proxyReq.getHeader('content-type');
       let bodyData: string;
 
       if (contentType === 'application/json') {
@@ -59,7 +96,7 @@ const proxyFactory = {
       }
 
       if (bodyData) {
-        proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
+        proxyReq.setHeader('content-length', Buffer.byteLength(bodyData));
         proxyReq.write(bodyData);
       }
     });
@@ -77,7 +114,18 @@ const proxyFactory = {
 };
 
 @Module({
-  providers: [ProxyService, proxyFactory],
+  imports: [
+    ThrottlerModule.forRoot([
+      { name: 'short', ttl: 1000, limit: 30 },
+      { name: 'medium', ttl: 60000, limit: 600 },
+    ]),
+  ],
+  providers: [
+    ProxyService,
+    proxyFactory,
+    OriginGuard,
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
   controllers: [ProxyController],
 })
 export class ProxyModule {

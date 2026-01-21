@@ -5,6 +5,8 @@ import { ProxyModuleOptions, Service } from '../interfaces';
 import { HTTP_PROXY, PROXY_MODULE_OPTIONS } from '../proxy.constants';
 import { concatPath, getBaseURL } from '../utils';
 
+const ALLOWED_PROXY_HEADERS = ['accept', 'content-type', 'content-length'];
+
 @Injectable()
 export class ProxyService {
   private readonly logger = new Logger(ProxyService.name);
@@ -105,7 +107,11 @@ export class ProxyService {
       });
     }
 
-    const headers = req.headers as { [header: string]: string };
+    const headers = Object.fromEntries(
+      Object.entries(req.headers).filter(([key]) =>
+        ALLOWED_PROXY_HEADERS.includes(key.toLowerCase()),
+      ),
+    ) as { [header: string]: string };
 
     if (serviceId) {
       const result = this.findService(vendor, serviceId);

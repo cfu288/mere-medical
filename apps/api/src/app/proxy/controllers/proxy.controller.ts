@@ -5,10 +5,13 @@ import {
   Param,
   Request as NestRequest,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ProxyService } from '../services';
+import { OriginGuard } from '../guards';
 
+@UseGuards(OriginGuard)
 @Controller('?*/proxy')
 export class ProxyController {
   private readonly logger = new Logger(ProxyController.name);
