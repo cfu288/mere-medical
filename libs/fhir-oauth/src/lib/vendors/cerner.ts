@@ -61,14 +61,7 @@ export function createCernerClient(): CernerClient {
       }
 
       const tokens = await exchangeWithPkce(code, config, session);
-
       const patientId = tokens.raw['patient'] as string | undefined;
-      if (!patientId) {
-        throw createOAuthError(
-          'missing_patient',
-          'No patient field in token response',
-        );
-      }
 
       return { ...tokens, patientId };
     },

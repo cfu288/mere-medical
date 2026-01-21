@@ -64,6 +64,14 @@ export async function parseTokenResponse(res: Response): Promise<TokenSet> {
   }
 
   const data = await res.json();
+
+  if (!data.access_token) {
+    throw createOAuthError(
+      'missing_access_token',
+      'No access_token in token response',
+    );
+  }
+
   const nowSeconds = Math.floor(Date.now() / 1000);
 
   return {

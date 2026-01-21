@@ -18,6 +18,7 @@ import {
 } from '@mere/fhir-oauth';
 import { signJwt, getPublicKey } from '@mere/crypto';
 import { useOAuthFlow } from '../../../shared/hooks/useOAuthFlow';
+import { useOAuthorizationRequestState } from '../../../shared/hooks/useOAuthSession';
 import {
   EpicLocalStorageKeys,
   getEpicClientId,
@@ -64,6 +65,7 @@ function useEpicOAuthCallback() {
   const publicUrl = config.PUBLIC_URL || '';
   const client = enableProxy ? createProxiedEpicClient(publicUrl) : epicClient;
   const { handleCallback } = useOAuthFlow({ client, vendor: 'epic' });
+  const { clearSession } = useOAuthorizationRequestState('epic');
 
   useEffect(() => {
     if (configLoading || !userPreferences || hasRun.current) return;
@@ -94,6 +96,7 @@ function useEpicOAuthCallback() {
     ) {
       hasRun.current = true;
       clearLocalStorage();
+      clearSession();
       setError('Missing required session data. Please try again.');
       return;
     }
@@ -108,7 +111,7 @@ function useEpicOAuthCallback() {
 
     const oauthConfig: OAuthConfig = {
       clientId: getEpicClientId(config, fhirVersion, isSandbox),
-      redirectUri: `${publicUrl}/epic/callback`,
+      redirectUri: `${publicUrl}${Routes.EpicCallback}`,
       scopes: ['openid', 'fhirUser'],
       tenant: {
         id: epicId,
@@ -142,10 +145,20 @@ function useEpicOAuthCallback() {
           );
           dynamicClientId = dcr.clientId;
 
-          finalTokens = await client.refresh(
-            { ...tokens, clientId: dynamicClientId },
-            oauthConfig,
-          );
+          try {
+            finalTokens = await client.refresh(
+              { ...tokens, clientId: dynamicClientId },
+              oauthConfig,
+            );
+          } catch (refreshError) {
+            notifyDispatch({
+              type: 'set_notification',
+              message:
+                'Token refresh failed. You may need to sign in again to sync records in the future.',
+              variant: 'info',
+            });
+            dynamicClientId = undefined;
+          }
         } catch (dcrError) {
           if (
             dcrError instanceof OAuthError &&
@@ -158,7 +171,12 @@ function useEpicOAuthCallback() {
               variant: 'info',
             });
           } else {
-            console.warn('Dynamic client registration failed:', dcrError);
+            notifyDispatch({
+              type: 'set_notification',
+              message:
+                'Dynamic client registration failed. You may need to sign in again to sync records in the future.',
+              variant: 'info',
+            });
           }
         }
 
@@ -206,6 +224,7 @@ function useEpicOAuthCallback() {
     enableProxy,
     client,
     handleCallback,
+    clearSession,
     navigate,
     notifyDispatch,
     search,
