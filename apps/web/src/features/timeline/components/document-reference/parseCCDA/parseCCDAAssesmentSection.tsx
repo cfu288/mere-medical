@@ -1,6 +1,8 @@
 import { Disclosure } from '@headlessui/react';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
-import { title } from 'process';
+import DOMPurify from 'dompurify';
+import parse from 'html-react-parser';
+import { useMemo } from 'react';
 import { LOINC_CODE_SYSTEM } from '../ShowDocumentReferenceAttachmentExpandable';
 import { getMatchingSections, parseDateString } from './parseCCDA';
 
@@ -42,6 +44,11 @@ export function DisplayCCDAAssesmentSection({
 }: {
   data: CCDAAssesmentData;
 }) {
+  const sanitizedContent = useMemo(
+    () => parse(DOMPurify.sanitize(data.value || '')),
+    [data.value],
+  );
+
   return (
     <Disclosure defaultOpen>
       {({ open }) => (
@@ -57,10 +64,9 @@ export function DisplayCCDAAssesmentSection({
             </div>
           </Disclosure.Button>
           <Disclosure.Panel className="m-1 text-sm text-gray-800">
-            <div
-              className="sm:prose prose-sm max-w-none [&_table]:table-auto [&_tr]:border-b [&_caption]:text-center"
-              dangerouslySetInnerHTML={{ __html: data.value || '' }}
-            />
+            <div className="sm:prose prose-sm max-w-none [&_table]:table-auto [&_tr]:border-b [&_caption]:text-center">
+              {sanitizedContent}
+            </div>
           </Disclosure.Panel>
         </>
       )}

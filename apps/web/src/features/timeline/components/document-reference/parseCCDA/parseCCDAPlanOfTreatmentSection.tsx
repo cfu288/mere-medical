@@ -1,7 +1,9 @@
 /* eslint-disable react/jsx-no-useless-fragment */
 import { Disclosure } from '@headlessui/react';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
-import { title } from 'process';
+import DOMPurify from 'dompurify';
+import parse from 'html-react-parser';
+import { useMemo } from 'react';
 import {
   LOINC_CODE_SYSTEM,
   SNOMED_CT_CODE_SYSTEM,
@@ -436,6 +438,16 @@ export function DisplayCCDAPlanOfTreatmentSection({
 }: {
   data: Partial<CCDAPlanOfTreatmentData>;
 }) {
+  const sanitizedFallbackHtml = useMemo(
+    () =>
+      parse(
+        DOMPurify.sanitize(
+          (data.planOfTreatment?.fallbackHtml as string) || '',
+        ),
+      ),
+    [data.planOfTreatment?.fallbackHtml],
+  );
+
   return (
     <Disclosure defaultOpen>
       {({ open }) => (
@@ -721,14 +733,9 @@ export function DisplayCCDAPlanOfTreatmentSection({
                             </div>
                           )}
                           {data.planOfTreatment.fallbackHtml && (
-                            <div
-                              className="p-2 flex flex-col items-center justify-between text-sm overflow-x-scroll [&_table]:table-auto [&_tr]:border-b [&_caption]:text-center  [&_caption]:font-bold [&_caption]:text-lg [&_caption]:uppercase [&_caption]:py-1"
-                              dangerouslySetInnerHTML={{
-                                __html:
-                                  (data.planOfTreatment
-                                    .fallbackHtml as string) || '',
-                              }}
-                            />
+                            <div className="p-2 flex flex-col items-center justify-between text-sm overflow-x-scroll [&_table]:table-auto [&_tr]:border-b [&_caption]:text-center  [&_caption]:font-bold [&_caption]:text-lg [&_caption]:uppercase [&_caption]:py-1">
+                              {sanitizedFallbackHtml}
+                            </div>
                           )}
                         </ul>
                       </dd>
