@@ -691,13 +691,6 @@ export async function fetchAccessTokenWithCode(
     throw new Error('Error getting authorization token');
   }
   const tokenResponse = await res.json();
-  console.debug('Healow initial token response:', {
-    hasAccessToken: !!tokenResponse.access_token,
-    hasRefreshToken: !!tokenResponse.refresh_token,
-    hasIdToken: !!tokenResponse.id_token,
-    expiresIn: tokenResponse.expires_in,
-    scope: tokenResponse.scope,
-  });
   return tokenResponse;
 }
 
@@ -750,8 +743,6 @@ export async function fetchAccessTokenWithRefreshToken(
   }
 
   if (!res.ok) {
-    const errorText = await res.text();
-    console.error('Healow refresh token error:', errorText);
     throw new Error('Error getting authorization token');
   }
   return res.json();
