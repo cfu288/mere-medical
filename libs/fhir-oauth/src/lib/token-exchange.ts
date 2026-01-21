@@ -1,21 +1,37 @@
-import type { OAuthConfig, AuthSession, TokenSet } from './types.js';
+import type {
+  OAuthConfig,
+  AuthorizationRequestState,
+  TokenSet,
+} from './types.js';
 import { createOAuthError } from './types.js';
 
-export type TokenExchanger = (
+/**
+ * Exchanges an authorization code for tokens using PKCE. Requires a code
+ * verifier in the session that matches the challenge sent during authorization.
+ *
+ * @param code - Authorization code from the callback URL query params
+ * @param config - OAuth configuration with clientId, redirectUri, and tenant
+ * @param session - Authorization state containing the PKCE code verifier
+ * @returns TokenSet with access token, expiration, and optional refresh/id tokens
+ * @throws OAuthError if code verifier is missing or token exchange fails
+ */
+export async function exchangeWithPkce(
   code: string,
   config: OAuthConfig,
-  session: AuthSession
-) => Promise<TokenSet>;
-
-export const exchangeWithPkce: TokenExchanger = async (code, config, session) => {
+  session: AuthorizationRequestState,
+): Promise<TokenSet> {
   if (!session.codeVerifier) {
     throw createOAuthError(
       'missing_code_verifier',
-      'PKCE code verifier not found in session'
+      'PKCE code verifier not found in session',
     );
   }
 
-  const res = await fetch(config.tenant!.tokenUrl, {
+  if (!config.tenant?.tokenUrl) {
+    throw createOAuthError('no_token_url', 'OAuth token URL not provided');
+  }
+
+  const res = await fetch(config.tenant.tokenUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
@@ -28,76 +44,22 @@ export const exchangeWithPkce: TokenExchanger = async (code, config, session) =>
   });
 
   return parseTokenResponse(res);
-};
+}
 
-export const exchangeNoPkce: TokenExchanger = async (code, config) => {
-  const res = await fetch(config.tenant!.tokenUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'authorization_code',
-      client_id: config.clientId,
-      redirect_uri: config.redirectUri,
-      code,
-    }),
-  });
-
-  return parseTokenResponse(res);
-};
-
-export const exchangeViaProxy =
-  (proxyUrlBuilder: (config: OAuthConfig) => string): TokenExchanger =>
-  async (code, config, session) => {
-    const body = new URLSearchParams({
-      grant_type: 'authorization_code',
-      client_id: config.clientId,
-      redirect_uri: config.redirectUri,
-      code,
-    });
-
-    if (session.codeVerifier) {
-      body.set('code_verifier', session.codeVerifier);
-    }
-
-    const res = await fetch(proxyUrlBuilder(config), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body,
-    });
-
-    return parseTokenResponse(res);
-  };
-
-export const exchangeAtFixedEndpoint =
-  (tokenEndpoint: string): TokenExchanger =>
-  async (code, config, session) => {
-    const body = new URLSearchParams({
-      grant_type: 'authorization_code',
-      client_id: config.clientId,
-      redirect_uri: config.redirectUri,
-      code,
-    });
-
-    if (session.codeVerifier) {
-      body.set('code_verifier', session.codeVerifier);
-    }
-
-    const res = await fetch(tokenEndpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body,
-    });
-
-    return parseTokenResponse(res);
-  };
-
-export const parseTokenResponse = async (res: Response): Promise<TokenSet> => {
+/**
+ * Parses an OAuth token endpoint response into a TokenSet.
+ *
+ * @param res - Fetch Response from the token endpoint
+ * @returns TokenSet with access token, expiration, and optional refresh/id tokens
+ * @throws OAuthError on non-2xx responses, with the error body as the cause
+ */
+export async function parseTokenResponse(res: Response): Promise<TokenSet> {
   if (!res.ok) {
     const errorText = await res.text();
     throw createOAuthError(
       'token_exchange_failed',
       `Token exchange failed: ${res.status}`,
-      errorText
+      errorText,
     );
   }
 
@@ -112,4 +74,4 @@ export const parseTokenResponse = async (res: Response): Promise<TokenSet> => {
     scope: data.scope,
     raw: data,
   };
-};
+}

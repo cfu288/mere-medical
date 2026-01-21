@@ -1,4 +1,4 @@
-import type { AuthSession } from '@mere/fhir-oauth';
+import type { AuthorizationRequestState } from '@mere/fhir-oauth';
 
 export type OAuthVendor =
   | 'epic'
@@ -23,10 +23,12 @@ const STORAGE_KEYS = {
   healow: { verifier: 'healow_code_verifier', state: 'healow_oauth2_state' },
 } as const satisfies Record<OAuthVendor, { verifier: string; state: string }>;
 
-export const useOAuthSession = <V extends OAuthVendor>(vendor: V) => {
+export const useOAuthorizationRequestState = <V extends OAuthVendor>(
+  vendor: V,
+) => {
   const keys = STORAGE_KEYS[vendor];
 
-  const saveSession = (session: AuthSession) => {
+  const saveSession = (session: AuthorizationRequestState) => {
     if (session.codeVerifier) {
       sessionStorage.setItem(keys.verifier, session.codeVerifier);
     }
@@ -35,7 +37,7 @@ export const useOAuthSession = <V extends OAuthVendor>(vendor: V) => {
     }
   };
 
-  const loadSession = (): AuthSession | null => {
+  const loadSession = (): AuthorizationRequestState | null => {
     const verifier = sessionStorage.getItem(keys.verifier);
     const state = sessionStorage.getItem(keys.state);
     if (!verifier && !state) return null;

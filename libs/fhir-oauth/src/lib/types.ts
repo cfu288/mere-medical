@@ -14,7 +14,7 @@ export interface OAuthConfig {
   tenant?: TenantConfig;
 }
 
-export interface AuthSession {
+export interface AuthorizationRequestState {
   codeVerifier?: string;
   state?: string;
   tenant?: TenantConfig;
@@ -32,6 +32,17 @@ export interface TokenSet {
   raw: Record<string, unknown>;
 }
 
+export interface OAuthClient {
+  initiateAuth: (config: OAuthConfig) => Promise<{ url: string; session: AuthorizationRequestState }>;
+  handleCallback: (
+    params: URLSearchParams,
+    config: OAuthConfig,
+    session: AuthorizationRequestState,
+  ) => Promise<TokenSet>;
+  refresh: (tokens: TokenSet, config: OAuthConfig) => Promise<TokenSet>;
+  isExpired: (tokens: TokenSet, bufferSeconds?: number) => boolean;
+}
+
 export class OAuthError extends Error {
   public code: string;
   public cause?: unknown;
@@ -44,8 +55,10 @@ export class OAuthError extends Error {
   }
 }
 
-export const createOAuthError = (
+export function createOAuthError(
   code: string,
   message: string,
-  cause?: unknown
-): OAuthError => new OAuthError(code, message, cause);
+  cause?: unknown,
+): OAuthError {
+  return new OAuthError(code, message, cause);
+}

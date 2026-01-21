@@ -1,6 +1,9 @@
 import { useCallback, useState } from 'react';
 import type { OAuthClient, OAuthConfig, TokenSet } from '@mere/fhir-oauth';
-import { useOAuthSession, type OAuthVendor } from './useOAuthSession';
+import {
+  useOAuthorizationRequestState,
+  type OAuthVendor,
+} from './useOAuthSession';
 
 interface UseOAuthFlowOptions {
   client: OAuthClient;
@@ -10,7 +13,8 @@ interface UseOAuthFlowOptions {
 export const useOAuthFlow = ({ client, vendor }: UseOAuthFlowOptions) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const { saveSession, loadSession, clearSession } = useOAuthSession(vendor);
+  const { saveSession, loadSession, clearSession } =
+    useOAuthorizationRequestState(vendor);
 
   const initiateAuth = useCallback(
     async (config: OAuthConfig) => {
