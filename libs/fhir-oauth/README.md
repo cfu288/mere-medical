@@ -51,7 +51,7 @@ Epic and Cerner use public OAuth clients where token exchange happens. The flow 
 
 ```typescript
 import { createEpicClient } from '@mere/fhir-oauth';
-import { signJwt } from '@mere/crypto';
+import { signJwt } from '@mere/crypto/browser';
 
 // Epic requires JWT signing; Cerner does not
 // JWT is passed in as a dep as different platforms may have different signing methods (e.g. Web Crypto, Node.js crypto)
@@ -218,7 +218,7 @@ Epic supports registering a dynamic client for token refresh:
 
 ```typescript
 import { registerEpicDynamicClient } from '@mere/fhir-oauth';
-import { getPublicKey } from '@mere/crypto';
+import { getPublicKey } from '@mere/crypto/browser';
 
 const publicKey = await getPublicKey();
 const { clientId } = await registerEpicDynamicClient(tokens.accessToken, epicBaseUrl, originalClientId, publicKey);

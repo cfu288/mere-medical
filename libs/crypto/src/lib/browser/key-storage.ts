@@ -1,4 +1,4 @@
-import type { PublicKeyWithKid, KeyStorage } from './types';
+import type { PublicKeyWithKid, KeyStorage } from '../types';
 
 export const IDBKeyConfig = {
   DATABASE_NAME: 'KeyDb',

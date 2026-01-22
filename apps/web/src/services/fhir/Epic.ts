@@ -49,7 +49,8 @@ import { AppConfig } from '../../app/providers/AppConfigProvider';
 import { createConnection } from '../../repositories/ConnectionRepository';
 import uuid4 from '../../shared/utils/UUIDUtils';
 import { concatPath } from '../../shared/utils/urlUtils';
-import { signJwt, JsonWebKeySet } from '@mere/crypto';
+import { signJwt } from '@mere/crypto/browser';
+import type { JsonWebKeySet } from '@mere/crypto';
 import {
   createEpicClient,
   createEpicClientWithProxy,

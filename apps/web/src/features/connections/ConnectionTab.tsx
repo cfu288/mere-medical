@@ -11,7 +11,7 @@ import {
   EPIC_DEFAULT_SCOPES,
   CERNER_DEFAULT_SCOPES,
 } from '@mere/fhir-oauth';
-import { signJwt } from '@mere/crypto';
+import { signJwt } from '@mere/crypto/browser';
 import { isEpicSandbox } from '../../services/fhir/EpicUtils';
 import { AppPage } from '../../shared/components/AppPage';
 import { ConnectionCard } from './components/ConnectionCard';

@@ -19,6 +19,7 @@
     "paths": {
       "@mere/cerner": ["libs/cerner/src/index.ts"],
       "@mere/crypto": ["libs/crypto/src/index.ts"],
+      "@mere/crypto/browser": ["libs/crypto/src/browser.ts"],
       "@mere/epic": ["libs/epic/src/index.ts"],
       "@mere/fhir-oauth": ["libs/fhir-oauth/src/index.ts"],
       "@mere/fhir-oauth/react": ["libs/fhir-oauth/src/react.ts"],

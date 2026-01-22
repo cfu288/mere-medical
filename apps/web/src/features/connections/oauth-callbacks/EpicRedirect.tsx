@@ -17,7 +17,7 @@ import {
   type TokenSet,
   OAuthError,
 } from '@mere/fhir-oauth';
-import { signJwt, getPublicKey } from '@mere/crypto';
+import { signJwt, getPublicKey } from '@mere/crypto/browser';
 import {
   useOAuthFlow,
   useOAuthorizationRequestState,
