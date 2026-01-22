@@ -42,10 +42,12 @@ jobs:
 
       - name: Build and push by platform
         id: build
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           platforms: ${{ matrix.platform }}
+          cache-from: type=gha,scope=app-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
+          cache-to: type=gha,mode=max,scope=app-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
           outputs: type=image,name=cfu288/mere-medical,push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
@@ -108,11 +110,13 @@ jobs:
           password: ${{ env.PASSWORD }}
 
       - name: Build and push demo
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           push: true
           platforms: linux/amd64
+          cache-from: type=gha,scope=app-demo
+          cache-to: type=gha,mode=max,scope=app-demo
           build-args: |
             IS_DEMO=enabled
           tags: cfu288/mere-medical:beta-demo
@@ -134,9 +138,11 @@ jobs:
           password: ${{ env.PASSWORD }}
 
       - name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           push: true
           file: Dockerfile-docs
+          cache-from: type=gha,scope=docs
+          cache-to: type=gha,mode=max,scope=docs
           tags: cfu288/mere-medical-docs:beta
