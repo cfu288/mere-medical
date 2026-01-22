@@ -4,7 +4,7 @@
   "type": "commonjs",
   "devDependencies": {
     "@types/node": "^20.10.5",
-    "tsx": "^4.7.0"
+    "tsx": "^4.21.0"
   },
   "scripts": {
     "fetch-endpoints": "npm run fetch-endpoints:dstu2 && npm run fetch-endpoints:r4",
