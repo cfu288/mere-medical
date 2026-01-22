@@ -8,7 +8,7 @@ import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import { DSTU2Endpoint as CernerDSTU2Endpoint } from '@mere/cerner';
 import { DSTU2Endpoint as EpicDSTU2Endpoint } from '@mere/epic';
 import { DSTU2Endpoint as VeradigmDSTU2Endpoint } from '@mere/veradigm';
-import { createOnPatientClient } from '@mere/fhir-oauth';
+import { buildOnPatientAuthUrl } from '@mere/fhir-oauth';
 
 import VeradigmLogo from '../../../assets/img/allscripts-logo.png';
 import CernerLogo from '../../../assets/img/cerner-logo.png';
@@ -28,8 +28,6 @@ import {
 import VALogo from '../../../assets/img/va-logo.png';
 import HealowLogo from '../../../assets/img/eclinicalworks-logo.jpeg';
 import { useConfig } from '../../../app/providers/AppConfigProvider';
-
-const onPatientClient = createOnPatientClient();
 
 export type EMRVendor =
   | 'epic'
@@ -269,9 +267,10 @@ export function TenantSelectModal({
         vendor: 'onpatient',
         source: OnpatientLogo,
         alt: 'Dr. Chrono',
-        href: onPatientClient.buildAuthUrl({
+        href: buildOnPatientAuthUrl({
           clientId: config.ONPATIENT_CLIENT_ID || '',
-          redirectUri: `${config.PUBLIC_URL}/api/v1/onpatient/callback`,
+          publicUrl: config.PUBLIC_URL || '',
+          redirectPath: '/api/v1/onpatient/callback',
         }),
         enabled:
           isConfigured(config.ONPATIENT_CLIENT_ID) &&

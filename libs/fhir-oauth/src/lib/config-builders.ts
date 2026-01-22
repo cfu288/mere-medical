@@ -80,6 +80,7 @@ export function buildOnPatientAuthUrl(options: OnPatientConfigOptions): string {
   const params = new URLSearchParams({
     client_id: options.clientId,
     redirect_uri: `${options.publicUrl}${options.redirectPath}`,
+    scope: 'patient/*.read',
     response_type: 'code',
   });
 

@@ -174,31 +174,35 @@ Browser's `sessionStorage` can be passed directly since it satisfies this interf
 
 ## Confidential Client Flow (OnPatient)
 
-OnPatient requires a `client_secret`, so token exchange must happen on the backend. The client provides helpers for the frontend portion of the flow.
+OnPatient requires a `client_secret`, so token exchange must happen on the backend. Unlike Epic/Cerner, there's no client factory - just standalone utilities for the frontend portion of the flow.
 
 ```typescript
-import { createOnPatientClient, ONPATIENT_CONSTANTS } from '@mere/fhir-oauth';
-
-const client = createOnPatientClient();
+import {
+  buildOnPatientAuthUrl,
+  parseOnPatientTokenResponse,
+  ONPATIENT_CONSTANTS,
+} from '@mere/fhir-oauth';
 
 // Frontend: Build auth URL and redirect
-const authUrl = client.buildAuthUrl({
+const authUrl = buildOnPatientAuthUrl({
   clientId: 'your-client-id',
-  redirectUri: 'https://yourapp.com/api/onpatient/callback',
+  publicUrl: 'https://yourapp.com',
+  redirectPath: '/api/onpatient/callback',
 });
 window.location.href = authUrl;
 
 // Backend handles code exchange with client_secret...
-// Frontend fetches tokens from backend via session
+// Frontend fetches tokens from your backend
 
 // Frontend: Parse backend response into TokenSet
-const tokens = client.parseTokenResponse(backendResponse);
+const tokens = parseOnPatientTokenResponse(backendResponse);
 ```
 
 Constants are exported for API calls:
 
 - `ONPATIENT_CONSTANTS.BASE_URL` - `https://onpatient.com`
 - `ONPATIENT_CONSTANTS.FHIR_URL` - `https://onpatient.com/api/fhir`
+- `ONPATIENT_CONSTANTS.DEFAULT_SCOPE` - `patient/*.read`
 
 ## Epic-Specific Features
 

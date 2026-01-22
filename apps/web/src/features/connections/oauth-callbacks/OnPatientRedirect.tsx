@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  createOnPatientClient,
+  parseOnPatientTokenResponse,
   type OnPatientTokenResponse,
   type TokenSet,
 } from '@mere/fhir-oauth';
@@ -19,8 +19,6 @@ import { useUser } from '../../../app/providers/UserProvider';
 import { getConnectionCardByUrl } from '../../../services/fhir/getConnectionCardByUrl';
 import { createConnection } from '../../../repositories/ConnectionRepository';
 
-const onPatientClient = createOnPatientClient();
-
 async function fetchTokensFromServer(sessionId: string): Promise<TokenSet> {
   const response = await fetch(`/api/v1/onpatient/tokens?session=${sessionId}`);
   if (!response.ok) {
@@ -28,7 +26,7 @@ async function fetchTokensFromServer(sessionId: string): Promise<TokenSet> {
     throw new Error(error.error || 'Failed to retrieve tokens');
   }
   const data: OnPatientTokenResponse = await response.json();
-  return onPatientClient.parseTokenResponse(data);
+  return parseOnPatientTokenResponse(data);
 }
 
 const OnPatientRedirect: React.FC = () => {
