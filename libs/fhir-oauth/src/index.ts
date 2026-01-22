@@ -61,4 +61,4 @@ export type {
   TokenSet,
   AuthorizationRequestState,
 } from './lib/types.js';
-export { OAuthError } from './lib/types.js';
+export { OAuthError, OAuthErrors } from './lib/types.js';

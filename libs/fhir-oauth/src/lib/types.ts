@@ -68,3 +68,13 @@ export function createOAuthError(
 ): OAuthError {
   return new OAuthError(code, message, cause);
 }
+
+export const OAuthErrors = {
+  noTokenUrl: () => new OAuthError('no_token_url', 'No token URL provided'),
+  stateMismatch: () => new OAuthError('state_mismatch', 'OAuth state validation failed'),
+  missingCode: () => new OAuthError('missing_code', 'No authorization code in callback'),
+  missingCodeVerifier: () => new OAuthError('missing_code_verifier', 'PKCE code verifier not found in session'),
+  missingAccessToken: () => new OAuthError('missing_access_token', 'No access_token in token response'),
+  tokenExchangeFailed: (status: number, cause?: unknown) =>
+    new OAuthError('token_exchange_failed', `Token exchange failed: ${status}`, cause),
+} as const;

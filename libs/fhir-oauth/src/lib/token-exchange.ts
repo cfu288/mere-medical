@@ -3,7 +3,7 @@ import type {
   AuthorizationRequestState,
   TokenSet,
 } from './types.js';
-import { createOAuthError } from './types.js';
+import { createOAuthError, OAuthErrors } from './types.js';
 
 /**
  * Validates OAuth callback parameters and returns the authorization code.
@@ -29,18 +29,12 @@ export function validateCallback(
 
   const returnedState = params.get('state');
   if (returnedState !== session.state) {
-    throw createOAuthError(
-      'state_mismatch',
-      'OAuth state validation failed',
-    );
+    throw OAuthErrors.stateMismatch();
   }
 
   const code = params.get('code');
   if (!code) {
-    throw createOAuthError(
-      'missing_code',
-      'No authorization code in callback',
-    );
+    throw OAuthErrors.missingCode();
   }
 
   return code;
@@ -62,14 +56,11 @@ export async function exchangeWithPkce(
   session: AuthorizationRequestState,
 ): Promise<TokenSet> {
   if (!session.codeVerifier) {
-    throw createOAuthError(
-      'missing_code_verifier',
-      'PKCE code verifier not found in session',
-    );
+    throw OAuthErrors.missingCodeVerifier();
   }
 
   if (!config.tenant?.tokenUrl) {
-    throw createOAuthError('no_token_url', 'OAuth token URL not provided');
+    throw OAuthErrors.noTokenUrl();
   }
 
   const res = await fetch(config.tenant.tokenUrl, {
@@ -97,20 +88,13 @@ export async function exchangeWithPkce(
 export async function parseTokenResponse(res: Response): Promise<TokenSet> {
   if (!res.ok) {
     const errorText = await res.text();
-    throw createOAuthError(
-      'token_exchange_failed',
-      `Token exchange failed: ${res.status}`,
-      errorText,
-    );
+    throw OAuthErrors.tokenExchangeFailed(res.status, errorText);
   }
 
   const data = await res.json();
 
   if (!data.access_token) {
-    throw createOAuthError(
-      'missing_access_token',
-      'No access_token in token response',
-    );
+    throw OAuthErrors.missingAccessToken();
   }
 
   const nowSeconds = Math.floor(Date.now() / 1000);

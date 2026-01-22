@@ -1,5 +1,5 @@
 import type { OAuthConfig, AuthorizationRequestState, TokenSet } from '../types.js';
-import { createOAuthError } from '../types.js';
+import { createOAuthError, OAuthErrors } from '../types.js';
 import { initiateStandardAuth } from '../auth-url.js';
 import { exchangeWithPkce, parseTokenResponse, validateCallback, isTokenExpired } from '../token-exchange.js';
 
@@ -43,7 +43,7 @@ export function createCernerClient(): CernerClient {
       }
 
       if (!config.tenant?.tokenUrl) {
-        throw createOAuthError('no_token_url', 'No token URL provided');
+        throw OAuthErrors.noTokenUrl();
       }
 
       const res = await fetch(config.tenant.tokenUrl, {
