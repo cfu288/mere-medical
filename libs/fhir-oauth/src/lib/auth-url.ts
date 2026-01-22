@@ -1,5 +1,5 @@
 import type { OAuthConfig, AuthorizationRequestState } from './types.js';
-import { generateCodeChallenge } from './session.js';
+import { generateCodeChallenge, generateAuthorizationRequestState } from './session.js';
 
 /**
  * Builds the authorization URL for SMART on FHIR OAuth flows. Includes PKCE
@@ -33,4 +33,21 @@ export async function buildStandardAuthUrl(
 
   const authUrl = config.tenant?.authUrl ?? '';
   return `${authUrl}?${params}`;
+}
+
+/**
+ * Generates PKCE credentials and state, then builds the authorization URL.
+ * Returns both the redirect URL and the session state that must be persisted
+ * across the OAuth redirect to validate the callback.
+ */
+export async function initiateStandardAuth(
+  config: OAuthConfig,
+): Promise<{ url: string; session: AuthorizationRequestState }> {
+  const session = await generateAuthorizationRequestState({
+    usePkce: true,
+    useState: true,
+    tenant: config.tenant,
+  });
+  const url = await buildStandardAuthUrl(config, session);
+  return { url, session };
 }

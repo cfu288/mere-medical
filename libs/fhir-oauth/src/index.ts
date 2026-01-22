@@ -49,6 +49,10 @@ export {
   type OnPatientConfigOptions,
 } from './lib/config-builders.js';
 
+// Shared utilities - use when implementing custom clients
+export { validateCallback, isTokenExpired } from './lib/token-exchange.js';
+export { initiateStandardAuth } from './lib/auth-url.js';
+
 // Core types
 export type {
   OAuthClient,

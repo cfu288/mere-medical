@@ -1,8 +1,7 @@
 import type { OAuthConfig, AuthorizationRequestState, TokenSet } from '../types.js';
 import { createOAuthError } from '../types.js';
-import { buildStandardAuthUrl } from '../auth-url.js';
-import { exchangeWithPkce, parseTokenResponse } from '../token-exchange.js';
-import { generateAuthorizationRequestState } from '../session.js';
+import { initiateStandardAuth } from '../auth-url.js';
+import { exchangeWithPkce, parseTokenResponse, validateCallback, isTokenExpired } from '../token-exchange.js';
 
 export interface CernerClient {
   initiateAuth: (
@@ -25,41 +24,10 @@ export interface CernerClient {
  */
 export function createCernerClient(): CernerClient {
   return {
-    async initiateAuth(config) {
-      const session = await generateAuthorizationRequestState({
-        usePkce: true,
-        useState: true,
-        tenant: config.tenant,
-      });
-      const url = await buildStandardAuthUrl(config, session);
-      return { url, session };
-    },
+    initiateAuth: initiateStandardAuth,
 
     async handleCallback(params, config, session) {
-      const error = params.get('error');
-      if (error) {
-        throw createOAuthError(
-          error,
-          params.get('error_description') ?? 'OAuth error',
-        );
-      }
-
-      const returnedState = params.get('state');
-      if (returnedState !== session.state) {
-        throw createOAuthError(
-          'state_mismatch',
-          'OAuth state validation failed',
-        );
-      }
-
-      const code = params.get('code');
-      if (!code) {
-        throw createOAuthError(
-          'missing_code',
-          'No authorization code in callback',
-        );
-      }
-
+      const code = validateCallback(params, session);
       const tokens = await exchangeWithPkce(code, config, session);
       const patientId = tokens.raw['patient'] as string | undefined;
 
@@ -96,9 +64,6 @@ export function createCernerClient(): CernerClient {
       };
     },
 
-    isExpired(tokens, bufferSeconds = 60) {
-      const nowSeconds = Math.floor(Date.now() / 1000);
-      return tokens.expiresAt <= nowSeconds + bufferSeconds;
-    },
+    isExpired: isTokenExpired,
   };
 }

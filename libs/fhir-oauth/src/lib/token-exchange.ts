@@ -6,6 +6,47 @@ import type {
 import { createOAuthError } from './types.js';
 
 /**
+ * Validates OAuth callback parameters and returns the authorization code.
+ * Checks for OAuth errors, validates state parameter against session, and
+ * extracts the authorization code. Call this at the start of handleCallback
+ * before performing token exchange.
+ *
+ * @throws OAuthError with code from the OAuth server if error param is present
+ * @throws OAuthError with 'state_mismatch' if state doesn't match session
+ * @throws OAuthError with 'missing_code' if no authorization code in params
+ */
+export function validateCallback(
+  params: URLSearchParams,
+  session: AuthorizationRequestState,
+): string {
+  const error = params.get('error');
+  if (error) {
+    throw createOAuthError(
+      error,
+      params.get('error_description') ?? 'OAuth error',
+    );
+  }
+
+  const returnedState = params.get('state');
+  if (returnedState !== session.state) {
+    throw createOAuthError(
+      'state_mismatch',
+      'OAuth state validation failed',
+    );
+  }
+
+  const code = params.get('code');
+  if (!code) {
+    throw createOAuthError(
+      'missing_code',
+      'No authorization code in callback',
+    );
+  }
+
+  return code;
+}
+
+/**
  * Exchanges an authorization code for tokens using PKCE. Requires a code
  * verifier in the session that matches the challenge sent during authorization.
  *
@@ -82,4 +123,9 @@ export async function parseTokenResponse(res: Response): Promise<TokenSet> {
     scope: data.scope,
     raw: data,
   };
+}
+
+export function isTokenExpired(tokens: TokenSet, bufferSeconds = 60): boolean {
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  return tokens.expiresAt <= nowSeconds + bufferSeconds;
 }

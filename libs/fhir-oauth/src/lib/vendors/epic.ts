@@ -1,8 +1,7 @@
 import type { OAuthConfig, AuthorizationRequestState, TokenSet } from '../types.js';
 import { createOAuthError } from '../types.js';
-import { buildStandardAuthUrl } from '../auth-url.js';
-import { exchangeWithPkce, parseTokenResponse } from '../token-exchange.js';
-import { generateAuthorizationRequestState } from '../session.js';
+import { initiateStandardAuth } from '../auth-url.js';
+import { exchangeWithPkce, parseTokenResponse, validateCallback, isTokenExpired } from '../token-exchange.js';
 
 export type JwtSigner = (
   payload: Record<string, string | number | boolean | object>,
@@ -36,41 +35,10 @@ export function createEpicClient(deps: EpicClientDependencies): EpicClient {
   const { signJwt } = deps;
 
   return {
-    async initiateAuth(config) {
-      const session = await generateAuthorizationRequestState({
-        usePkce: true,
-        useState: true,
-        tenant: config.tenant,
-      });
-      const url = await buildStandardAuthUrl(config, session);
-      return { url, session };
-    },
+    initiateAuth: initiateStandardAuth,
 
     async handleCallback(params, config, session) {
-      const error = params.get('error');
-      if (error) {
-        throw createOAuthError(
-          error,
-          params.get('error_description') ?? 'OAuth error',
-        );
-      }
-
-      const returnedState = params.get('state');
-      if (returnedState !== session.state) {
-        throw createOAuthError(
-          'state_mismatch',
-          'OAuth state validation failed',
-        );
-      }
-
-      const code = params.get('code');
-      if (!code) {
-        throw createOAuthError(
-          'missing_code',
-          'No authorization code in callback',
-        );
-      }
-
+      const code = validateCallback(params, session);
       const tokens = await exchangeWithPkce(code, config, session);
 
       const patientId = tokens.raw['patient'] as string | undefined;
@@ -126,10 +94,7 @@ export function createEpicClient(deps: EpicClientDependencies): EpicClient {
       };
     },
 
-    isExpired(tokens, bufferSeconds = 60) {
-      const nowSeconds = Math.floor(Date.now() / 1000);
-      return tokens.expiresAt <= nowSeconds + bufferSeconds;
-    },
+    isExpired: isTokenExpired,
   };
 }
 
@@ -166,42 +131,11 @@ export function createEpicClientWithProxy(
   const { signJwt } = deps;
 
   return {
-    async initiateAuth(config) {
-      const session = await generateAuthorizationRequestState({
-        usePkce: true,
-        useState: true,
-        tenant: config.tenant,
-      });
-      const url = await buildStandardAuthUrl(config, session);
-      return { url, session };
-    },
+    initiateAuth: initiateStandardAuth,
 
     async handleCallback(params, config, session) {
-      const error = params.get('error');
-      if (error) {
-        throw createOAuthError(
-          error,
-          params.get('error_description') ?? 'OAuth error',
-        );
-      }
+      const code = validateCallback(params, session);
 
-      const returnedState = params.get('state');
-      if (returnedState !== session.state) {
-        throw createOAuthError(
-          'state_mismatch',
-          'OAuth state validation failed',
-        );
-      }
-
-      const code = params.get('code');
-      if (!code) {
-        throw createOAuthError(
-          'missing_code',
-          'No authorization code in callback',
-        );
-      }
-
-      // Use proxy if tenant ID is available, otherwise direct
       let tokens: TokenSet;
       if (config.tenant?.id) {
         const proxyUrl = proxyUrlBuilder(config.tenant.id, 'token');
@@ -282,10 +216,7 @@ export function createEpicClientWithProxy(
       };
     },
 
-    isExpired(tokens, bufferSeconds = 60) {
-      const nowSeconds = Math.floor(Date.now() / 1000);
-      return tokens.expiresAt <= nowSeconds + bufferSeconds;
-    },
+    isExpired: isTokenExpired,
   };
 }
 
