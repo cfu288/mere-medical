@@ -46,10 +46,8 @@ import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import {
   CernerConnectionDocument,
   ConnectionDocument,
-  CreateCernerConnectionDocument,
 } from '../../models/connection-document/ConnectionDocument.type';
 import { DSTU2, R4 } from '.';
-import { createConnection } from '../../repositories/ConnectionRepository';
 import { findUserById } from '../../repositories/UserRepository';
 import { JsonWebKeySet } from '@mere/crypto';
 import {
@@ -59,7 +57,6 @@ import {
   type TokenSet,
 } from '@mere/fhir-oauth';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
-import uuid4 from '../../shared/utils/UUIDUtils';
 import {
   ClinicalDocument,
   CreateClinicalDocument,
@@ -755,7 +752,7 @@ async function fetchAttachmentData(
   }
 }
 
-export async function saveConnectionToDb({
+async function updateConnectionTokens({
   res,
   cernerBaseUrl,
   db,
@@ -771,88 +768,32 @@ export async function saveConnectionToDb({
     db,
     user.id,
   );
-  return new Promise((resolve, reject) => {
-    // For token refresh, id_token might not be present
-    if (res?.access_token && res?.expires_in) {
-      if (doc) {
-        // If we already have a connection card for this URL, update it
-        try {
-          const nowInSeconds = Math.floor(Date.now() / 1000);
-          const updateData: any = {
-            access_token: res.access_token,
-            expires_at: nowInSeconds + res.expires_in,
-            scope: res.scope,
-            last_sync_was_error: false,
-          };
 
-          // Only update id_token if it's present (not present in refresh responses)
-          if (res.id_token) {
-            updateData.id_token = res.id_token;
-          }
+  if (!res?.access_token || !res?.expires_in) {
+    throw new Error(
+      'Error completing authentication: no access token provided',
+    );
+  }
 
-          doc
-            .update({
-              $set: updateData,
-            })
-            .then(() => {
-              resolve(true);
-            })
-            .catch((e) => {
-              console.error(e);
-              reject(new Error('Error updating connection'));
-            });
-        } catch (e) {
-          console.error(e);
-          reject(new Error('Error updating connection'));
-        }
-      } else {
-        // This should only happen during initial authentication, not refresh
-        if (!res.id_token) {
-          // If we don't have an id_token and no existing doc, this is likely a refresh token
-          // response but the connection doc is missing, which shouldn't happen
-          reject(
-            new Error('Connection document not found during token refresh'),
-          );
-          return;
-        }
+  if (!doc) {
+    throw new Error(
+      'Connection document not found - cannot update non-existent connection',
+    );
+  }
 
-        const nowInSeconds = Math.floor(Date.now() / 1000);
-        // Otherwise, create a new connection card
-        const dbentry: Omit<CreateCernerConnectionDocument, 'refresh_token'> = {
-          id: uuid4(),
-          user_id: user.id,
-          source: 'cerner',
-          location: cernerBaseUrl,
-          name: 'Cerner',
-          access_token: res.access_token,
-          expires_at: nowInSeconds + res.expires_in,
-          scope: res.scope,
-          id_token: res.id_token,
-          auth_uri:
-            'https://authorization.cerner.com/tenants/ec2458f2-1e24-41c8-b71b-0e701af7583d/protocols/oauth2/profiles/smart-v1/personas/patient/authorize',
-          token_uri:
-            'https://authorization.cerner.com/tenants/ec2458f2-1e24-41c8-b71b-0e701af7583d/protocols/oauth2/profiles/smart-v1/token',
-        };
-        try {
-          createConnection(db, dbentry as ConnectionDocument)
-            .then(() => {
-              resolve(true);
-            })
-            .catch((e) => {
-              console.error(e);
-              reject(new Error('Error updating connection'));
-            });
-        } catch (e) {
-          console.error(e);
-          reject(new Error('Error updating connection'));
-        }
-      }
-    } else {
-      reject(
-        new Error('Error completing authentication: no access token provided'),
-      );
-    }
-  });
+  const nowInSeconds = Math.floor(Date.now() / 1000);
+  const updateData: Record<string, unknown> = {
+    access_token: res.access_token,
+    expires_at: nowInSeconds + res.expires_in,
+    scope: res.scope,
+    last_sync_was_error: false,
+  };
+
+  if (res.id_token) {
+    updateData['id_token'] = res.id_token;
+  }
+
+  await doc.update({ $set: updateData });
 }
 
 /**
@@ -911,7 +852,7 @@ export async function refreshCernerConnectionTokenIfNeeded(
 
       const newTokens = await cernerClient.refresh(currentTokens, oauthConfig);
 
-      return await saveConnectionToDb({
+      return await updateConnectionTokens({
         res: {
           access_token: newTokens.accessToken,
           expires_in: newTokens.expiresAt - Math.floor(Date.now() / 1000),
