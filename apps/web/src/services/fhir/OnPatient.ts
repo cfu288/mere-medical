@@ -17,26 +17,17 @@ import {
   FhirResource,
 } from 'fhir/r2';
 import { RxDatabase } from 'rxdb';
+import { ONPATIENT_CONSTANTS } from '@mere/fhir-oauth';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import { DSTU2 } from '.';
-import { AppConfig } from '../../app/providers/AppConfigProvider';
 import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
 import {
   ClinicalDocument,
   CreateClinicalDocument,
 } from '../../models/clinical-document/ClinicalDocument.type';
 
-export const OnPatientBaseUrl = 'https://onpatient.com';
-export const OnPatientDSTU2Url = `${OnPatientBaseUrl}/api/fhir`;
-
-export function getLoginUrl(config: AppConfig): string & Location {
-  return `${OnPatientBaseUrl}/o/authorize/?${new URLSearchParams({
-    client_id: config.ONPATIENT_CLIENT_ID || '',
-    redirect_uri: `${config.PUBLIC_URL}/api/v1/onpatient/callback`,
-    scope: 'patient/*.read',
-    response_type: 'code',
-  })}` as string & Location;
-}
+export const OnPatientBaseUrl = ONPATIENT_CONSTANTS.BASE_URL;
+export const OnPatientDSTU2Url = ONPATIENT_CONSTANTS.FHIR_URL;
 
 async function getFHIRResource<T extends FhirResource>(
   connectionDocument: ConnectionDocument,

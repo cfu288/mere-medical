@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { Inject } from '@nestjs/common';
-import { OnPatientAuthResponse } from '@mere/onpatient';
+import { OnPatientTokenResponse } from '@mere/fhir-oauth';
 import { randomUUID } from 'crypto';
 
 export interface OnPatientServiceConfig {
@@ -11,7 +11,7 @@ export interface OnPatientServiceConfig {
 }
 
 interface TokenCacheEntry {
-  tokens: OnPatientAuthResponse;
+  tokens: OnPatientTokenResponse;
   expires: number;
 }
 
@@ -36,7 +36,7 @@ export class OnPatientService {
     this.envConfig = options;
   }
 
-  storeTokens(tokens: OnPatientAuthResponse): string {
+  storeTokens(tokens: OnPatientTokenResponse): string {
     const sessionId = randomUUID();
     this.tokenCache.set(sessionId, {
       tokens,
@@ -45,7 +45,7 @@ export class OnPatientService {
     return sessionId;
   }
 
-  retrieveTokens(sessionId: string): OnPatientAuthResponse | null {
+  retrieveTokens(sessionId: string): OnPatientTokenResponse | null {
     const entry = this.tokenCache.get(sessionId);
     if (!entry || entry.expires < Date.now()) {
       this.tokenCache.delete(sessionId);
@@ -55,7 +55,7 @@ export class OnPatientService {
     return entry.tokens;
   }
 
-  async getAuthCode(code: string): Promise<OnPatientAuthResponse> {
+  async getAuthCode(code: string): Promise<OnPatientTokenResponse> {
     if (!code) {
       throw new HttpException(
         'Forbidden: no auth code provided in callback url',
@@ -71,7 +71,7 @@ export class OnPatientService {
       code: code,
     });
 
-    const response = await this.httpService.post<OnPatientAuthResponse>(
+    const response = await this.httpService.post<OnPatientTokenResponse>(
       'https://onpatient.com/o/token/',
       params.toString(),
       {

@@ -1,15 +1,16 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "forceConsistentCasingInFileNames": true,
     "strict": true,
+    "importHelpers": true,
+    "noImplicitOverride": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "resolveJsonModule": true,
-    "lib": ["ES2022", "dom"],
-    "esModuleInterop": true,
-    "moduleResolution": "NodeNext",
-    "module": "NodeNext"
+    "noPropertyAccessFromIndexSignature": true,
+    "lib": ["ES2022", "DOM"]
   },
   "files": [],
   "include": [],

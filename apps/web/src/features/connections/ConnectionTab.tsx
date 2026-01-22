@@ -1,6 +1,17 @@
 import React, { useCallback, useState } from 'react';
 import { RxDocument } from 'rxdb';
 
+import {
+  createEpicClient,
+  createCernerClient,
+  createSessionManager,
+  buildEpicOAuthConfig,
+  buildCernerOAuthConfig,
+  buildOnPatientAuthUrl,
+  EPIC_DEFAULT_SCOPES,
+  CERNER_DEFAULT_SCOPES,
+} from '@mere/fhir-oauth';
+import { signJwt } from '@mere/crypto/browser';
 import { isEpicSandbox } from '../../services/fhir/EpicUtils';
 import { AppPage } from '../../shared/components/AppPage';
 import { ConnectionCard } from './components/ConnectionCard';
@@ -9,15 +20,13 @@ import { GenericBanner } from '../../shared/components/GenericBanner';
 import { useConnectionCards } from './hooks/useConnectionCards';
 import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
 import { AppConfig, useConfig } from '../../app/providers/AppConfigProvider';
-import {
-  CernerLocalStorageKeys,
-  getLoginUrl as getCernerLoginUrl,
-} from '../../services/fhir/Cerner';
+import { CernerLocalStorageKeys } from '../../services/fhir/Cerner';
 import {
   EpicLocalStorageKeys,
-  getLoginUrl as getEpicLoginUrl,
+  getEpicClientId,
+  getDSTU2Url,
+  getR4Url,
 } from '../../services/fhir/Epic';
-import * as OnPatient from '../../services/fhir/OnPatient';
 import { getLoginUrl as getVaLoginUrl } from '../../services/fhir/VA';
 import {
   getLoginUrl as getVeradigmLoginUrl,
@@ -27,6 +36,110 @@ import {
   getLoginUrl as getHealowLoginUrl,
   HealowLocalStorageKeys,
 } from '../../services/fhir/Healow';
+import { Routes } from '../../Routes';
+
+const epicClient = createEpicClient({ signJwt });
+const cernerClient = createCernerClient();
+const epicSession = createSessionManager('epic');
+const cernerSession = createSessionManager('cerner');
+
+/**
+ * Initiates OAuth authorization flow for Epic MyChart connections.
+ * Generates PKCE challenge, stores session state, and returns the authorization URL.
+ * The callback page will use the stored session to complete the token exchange.
+ */
+async function initiateEpicAuth(
+  config: AppConfig,
+  baseUrl: string,
+  authUrl: string,
+  tokenUrl: string,
+  name: string,
+  id: string,
+  fhirVersion: 'DSTU2' | 'R4',
+): Promise<string> {
+  const isSandbox = isEpicSandbox(id);
+  const clientId = getEpicClientId(config, fhirVersion, isSandbox);
+  if (!clientId || !config.PUBLIC_URL) {
+    throw new Error('Epic OAuth configuration is incomplete');
+  }
+
+  const fhirBaseUrl =
+    fhirVersion === 'R4' ? getR4Url(baseUrl) : getDSTU2Url(baseUrl);
+
+  const oauthConfig = buildEpicOAuthConfig({
+    clientId,
+    publicUrl: config.PUBLIC_URL,
+    redirectPath: Routes.EpicCallback,
+    scopes: EPIC_DEFAULT_SCOPES,
+    tenant: {
+      id,
+      name,
+      authUrl,
+      tokenUrl,
+      fhirBaseUrl,
+      fhirVersion,
+    },
+  });
+
+  const { url, session } = await epicClient.initiateAuth(oauthConfig);
+  await epicSession.save(session);
+  return url;
+}
+
+/**
+ * Initiates OAuth authorization flow for Cerner connections.
+ * Generates PKCE challenge, stores session state, and returns the authorization URL.
+ * The callback page will use the stored session to complete the token exchange.
+ */
+async function initiateCernerAuth(
+  config: AppConfig,
+  baseUrl: string,
+  authUrl: string,
+  tokenUrl: string,
+  name: string,
+  id: string,
+  fhirVersion: 'DSTU2' | 'R4',
+): Promise<string> {
+  if (!config.CERNER_CLIENT_ID || !config.PUBLIC_URL) {
+    throw new Error('Cerner OAuth configuration is incomplete');
+  }
+
+  const oauthConfig = buildCernerOAuthConfig({
+    clientId: config.CERNER_CLIENT_ID,
+    publicUrl: config.PUBLIC_URL,
+    redirectPath: Routes.CernerCallback,
+    scopes: CERNER_DEFAULT_SCOPES,
+    tenant: {
+      id,
+      name,
+      authUrl,
+      tokenUrl,
+      fhirBaseUrl: baseUrl,
+      fhirVersion,
+    },
+  });
+
+  const { url, session } = await cernerClient.initiateAuth(oauthConfig);
+  await cernerSession.save(session);
+  return url;
+}
+
+/**
+ * Returns the OnPatient OAuth authorization URL.
+ * OnPatient uses a confidential client flow where the backend handles token exchange,
+ * so no PKCE or session storage is needed on the frontend.
+ */
+function initiateOnPatientAuth(config: AppConfig): string {
+  if (!config.ONPATIENT_CLIENT_ID || !config.PUBLIC_URL) {
+    throw new Error('OnPatient OAuth configuration is incomplete');
+  }
+
+  return buildOnPatientAuthUrl({
+    clientId: config.ONPATIENT_CLIENT_ID,
+    publicUrl: config.PUBLIC_URL,
+    redirectPath: '/api/v1/onpatient/callback',
+  });
+}
 
 export async function getLoginUrlBySource(
   config: AppConfig,
@@ -34,27 +147,56 @@ export async function getLoginUrlBySource(
 ): Promise<string & Location> {
   switch (item.get('source')) {
     case 'epic': {
-      const baseUrl = item.get('location');
+      let baseUrl = item.get('location');
+      const fhirVersion = (item.get('fhir_version') || 'DSTU2') as
+        | 'DSTU2'
+        | 'R4';
+
+      if (fhirVersion === 'R4') {
+        if (!baseUrl.includes('/api/FHIR/R4')) {
+          baseUrl = baseUrl + '/api/FHIR/R4/';
+        }
+      } else {
+        if (!baseUrl.includes('/api/FHIR/DSTU2')) {
+          baseUrl = baseUrl + '/api/FHIR/DSTU2/';
+        }
+      }
 
       let authUrl = item.get('auth_uri');
       if (authUrl === undefined) {
         authUrl = baseUrl + '/oauth2/authorize';
       }
 
-      return await getEpicLoginUrl(
+      let tokenUrl = item.get('token_uri');
+      if (tokenUrl === undefined) {
+        tokenUrl = baseUrl + '/oauth2/token';
+      }
+
+      const url = await initiateEpicAuth(
         config,
         baseUrl,
         authUrl,
-        isEpicSandbox(item.get('tenant_id')),
-        item.get('fhir_version') || 'DSTU2',
+        tokenUrl,
+        item.get('name'),
+        item.get('tenant_id'),
+        fhirVersion,
       );
+      return url as string & Location;
     }
     case 'cerner': {
-      return getCernerLoginUrl(
+      const fhirVersion = (item.get('fhir_version') || 'DSTU2') as
+        | 'DSTU2'
+        | 'R4';
+      const url = await initiateCernerAuth(
         config,
         item.get('location'),
         item.get('auth_uri'),
+        item.get('token_uri'),
+        item.get('name'),
+        item.get('id'),
+        fhirVersion,
       );
+      return url as string & Location;
     }
     case 'veradigm': {
       return Promise.resolve(
@@ -62,7 +204,9 @@ export async function getLoginUrlBySource(
       );
     }
     case 'onpatient': {
-      return Promise.resolve(OnPatient.getLoginUrl(config));
+      return Promise.resolve(
+        initiateOnPatientAuth(config) as string & Location,
+      );
     }
     case 'va': {
       return getVaLoginUrl(config);
@@ -240,14 +384,16 @@ const ConnectionTab: React.FC = () => {
               fhirVersion || 'DSTU2',
             );
             setOpenSelectModal((x) => !x);
-            getEpicLoginUrl(
+            initiateEpicAuth(
               config,
               base,
               auth,
-              isEpicSandbox(id),
+              token,
+              name,
+              id,
               fhirVersion || 'DSTU2',
             ).then((url) => {
-              window.location = url;
+              window.location.href = url;
             });
             break;
           }
@@ -261,8 +407,16 @@ const ConnectionTab: React.FC = () => {
               fhirVersion || 'DSTU2',
             );
             setOpenSelectModal((x) => !x);
-            getCernerLoginUrl(config, base, auth).then((url) => {
-              window.location = url;
+            initiateCernerAuth(
+              config,
+              base,
+              auth,
+              token,
+              name,
+              id,
+              fhirVersion || 'DSTU2',
+            ).then((url) => {
+              window.location.href = url;
             });
             break;
           }
@@ -306,13 +460,6 @@ const ConnectionTab: React.FC = () => {
             />
           ))}
         </ul>
-        {/* <div className="mb-4 box-border	flex w-full justify-center align-middle">
-          <a href={vaUrl} className="w-full">
-            <button className="bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-[98%] w-full rounded-lg p-4 text-white duration-75">
-              <p className="font-bold">Log in to the VA</p>
-            </button>
-          </a>
-        </div> */}
         <div className="mb-4 box-border	flex w-full justify-center align-middle">
           <button
             className="bg-primary hover:bg-primary-600 active:bg-primary-700 w-full rounded-lg p-4 text-white duration-75 active:scale-[98%]"

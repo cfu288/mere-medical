@@ -1,5 +1,10 @@
 import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import {
+  parseOnPatientTokenResponse,
+  type OnPatientTokenResponse,
+  type TokenSet,
+} from '@mere/fhir-oauth';
 import uuid4 from '../../../shared/utils/UUIDUtils';
 import {
   ConnectionDocument,
@@ -14,24 +19,14 @@ import { useUser } from '../../../app/providers/UserProvider';
 import { getConnectionCardByUrl } from '../../../services/fhir/getConnectionCardByUrl';
 import { createConnection } from '../../../repositories/ConnectionRepository';
 
-export interface OnPatientAuthResponse {
-  access_token: string;
-  expires_in: number;
-  patient: string;
-  refresh_token: string;
-  scope: string;
-  token_type: string;
-}
-
-async function fetchTokensFromServer(
-  sessionId: string,
-): Promise<OnPatientAuthResponse> {
+async function fetchTokensFromServer(sessionId: string): Promise<TokenSet> {
   const response = await fetch(`/api/v1/onpatient/tokens?session=${sessionId}`);
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.error || 'Failed to retrieve tokens');
   }
-  return response.json();
+  const data: OnPatientTokenResponse = await response.json();
+  return parseOnPatientTokenResponse(data);
 }
 
 const OnPatientRedirect: React.FC = () => {
@@ -70,21 +65,19 @@ const OnPatientRedirect: React.FC = () => {
       }
 
       fetchTokensFromServer(sessionId)
-        .then(async (data) => {
+        .then(async (tokens) => {
           const doc = await getConnectionCardByUrl<ConnectionDocument>(
             'https://onpatient.com',
             db,
             user.id,
           );
 
-          const nowInSeconds = Math.floor(Date.now() / 1000);
-
           if (doc) {
             await doc.update({
               $set: {
-                access_token: data.access_token,
-                refresh_token: data.refresh_token,
-                expires_at: nowInSeconds + data.expires_in,
+                access_token: tokens.accessToken,
+                refresh_token: tokens.refreshToken,
+                expires_at: tokens.expiresAt,
                 last_sync_was_error: false,
               },
             });
@@ -98,9 +91,9 @@ const OnPatientRedirect: React.FC = () => {
               source: 'onpatient',
               location: 'https://onpatient.com',
               name: 'OnPatient',
-              access_token: data.access_token,
-              refresh_token: data.refresh_token,
-              expires_at: nowInSeconds + data.expires_in,
+              access_token: tokens.accessToken,
+              refresh_token: tokens.refreshToken,
+              expires_at: tokens.expiresAt,
             };
             await createConnection(db, dbentry);
           }

@@ -28,9 +28,7 @@ import {
 } from '../../app/providers/AppConfigProvider';
 import { useUserPreferences } from '../../app/providers/UserPreferencesProvider';
 import { useConnectionCards } from '../connections/hooks/useConnectionCards';
-import { findUserById } from '../../repositories/UserRepository';
 import { refreshVAConnectionTokenIfNeeded } from '../../services/fhir/VA';
-import { upsertConnection } from '../../repositories/ConnectionRepository';
 import {
   recordSyncSuccess,
   recordSyncError,
@@ -384,7 +382,7 @@ async function fetchMedicalRecords(
     }
     case 'epic': {
       try {
-        await refreshEpicConnectionTokenIfNeeded(
+        await Epic.refreshEpicConnectionTokenIfNeeded(
           config,
           connectionDocument,
           db,
@@ -415,7 +413,11 @@ async function fetchMedicalRecords(
     }
     case 'cerner': {
       try {
-        await refreshCernerConnectionTokenIfNeeded(connectionDocument, db);
+        await Cerner.refreshCernerConnectionTokenIfNeeded(
+          config,
+          connectionDocument,
+          db,
+        );
         const cernerConnection =
           connectionDocument.toMutableJSON() as unknown as CernerConnectionDocument;
         const syncJob = await Cerner.syncAllRecords(
@@ -567,120 +569,4 @@ async function updateConnectionDocumentTimestamps(
   } else {
     await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
   }
-}
-
-/**
- * For a connection document, if the access token is expired, refresh it and save it to the db
- * @param connectionDocument the connection document to refresh the access token for
- * @param db
- */
-async function refreshCernerConnectionTokenIfNeeded(
-  connectionDocument: RxDocument<ConnectionDocument>,
-  db: RxDatabase<DatabaseCollections>,
-) {
-  const nowInSeconds = Math.floor(Date.now() / 1000);
-  if (connectionDocument.get('source') !== 'cerner') {
-    return Promise.reject(
-      new Error(
-        `Cannot refresh connection token for source: ${connectionDocument.get(
-          'source',
-        )}, expected 'cerner'`,
-      ),
-    );
-  }
-  if (connectionDocument.get('expires_at') <= nowInSeconds) {
-    try {
-      const baseUrl = connectionDocument.get('location'),
-        refreshToken = connectionDocument.get('refresh_token'),
-        tokenUri = connectionDocument.get('token_uri'),
-        userId = connectionDocument.get('user_id');
-
-      // Fetch the actual UserDocument from the database
-      const userObject = await findUserById(db, userId);
-
-      if (!userObject) {
-        throw new Error(`User not found: ${userId}`);
-      }
-
-      const access_token_data = await Cerner.fetchAccessTokenWithRefreshToken(
-        refreshToken,
-        tokenUri,
-      );
-
-      return await Cerner.saveConnectionToDb({
-        res: access_token_data,
-        cernerBaseUrl: baseUrl,
-        db,
-        user: userObject,
-      });
-    } catch (e) {
-      console.error(e);
-      throw new Error('Error refreshing token  - try logging in again');
-    }
-  }
-  return Promise.resolve();
-}
-
-/**
- * For a connection document, if the access token is expired, refresh it and save it to the db
- * @param connectionDocument the connection document to refresh the access token for
- * @param db
- */
-async function refreshEpicConnectionTokenIfNeeded(
-  config: AppConfig,
-  connectionDocument: RxDocument<ConnectionDocument>,
-  db: RxDatabase<DatabaseCollections>,
-  useProxy = false,
-) {
-  const nowInSeconds = Math.floor(Date.now() / 1000);
-  if (connectionDocument.get('source') !== 'epic') {
-    return Promise.reject(
-      new Error(
-        `Cannot refresh connection token for source: ${connectionDocument.get(
-          'source',
-        )}, expected 'epic'`,
-      ),
-    );
-  }
-  if (connectionDocument.get('expires_at') <= nowInSeconds) {
-    try {
-      const epicBaseUrl = connectionDocument.get('location'),
-        epicName = connectionDocument.get('name'),
-        epicAuthUrl = connectionDocument.get('auth_uri'),
-        epicTokenUrl = connectionDocument.get('token_uri'),
-        clientId = connectionDocument.get('client_id'),
-        epicId = connectionDocument.get('tenant_id'),
-        userId = connectionDocument.get('user_id');
-
-      // Fetch the actual UserDocument from the database
-      const userObject = await findUserById(db, userId);
-
-      if (!userObject) {
-        throw new Error(`User not found: ${userId}`);
-      }
-
-      const access_token_data = await Epic.fetchAccessTokenUsingJWT(
-        config,
-        clientId,
-        epicTokenUrl,
-        epicId,
-        useProxy,
-      );
-
-      return await Epic.saveConnectionToDb({
-        res: access_token_data,
-        epicBaseUrl,
-        epicTokenUrl,
-        epicAuthUrl,
-        epicName,
-        db,
-        epicId,
-        user: userObject,
-      });
-    } catch (e) {
-      console.error(e);
-      throw new Error('Error refreshing token  - try logging in again');
-    }
-  }
-  return Promise.resolve();
 }

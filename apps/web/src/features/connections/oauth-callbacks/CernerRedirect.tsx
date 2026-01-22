@@ -1,166 +1,192 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import uuid4 from '../../../shared/utils/UUIDUtils';
-import { CreateCernerConnectionDocument } from '../../../models/connection-document/ConnectionDocument.type';
-import { useRxDb } from '../../../app/providers/RxDbProvider';
-import { Routes } from '../../../Routes';
-import { useNotificationDispatch } from '../../../app/providers/NotificationProvider';
+import {
+  createCernerClient,
+  buildCernerOAuthConfig,
+  CERNER_DEFAULT_SCOPES,
+} from '@mere/fhir-oauth';
+import {
+  useOAuthFlow,
+  useOAuthorizationRequestState,
+} from '@mere/fhir-oauth/react';
 import { AppPage } from '../../../shared/components/AppPage';
 import { GenericBanner } from '../../../shared/components/GenericBanner';
-import { useUser } from '../../../app/providers/UserProvider';
+import { useRxDb } from '../../../app/providers/RxDbProvider';
+import { Routes } from '../../../Routes';
 import { useAppConfig } from '../../../app/providers/AppConfigProvider';
-import {
-  CernerLocalStorageKeys,
-  CERNER_CODE_VERIFIER_KEY,
-  CERNER_OAUTH_STATE_KEY,
-  fetchAccessTokenWithCode,
-} from '../../../services/fhir/Cerner';
+import { useNotificationDispatch } from '../../../app/providers/NotificationProvider';
+import { useUser } from '../../../app/providers/UserProvider';
+import { CernerLocalStorageKeys } from '../../../services/fhir/Cerner';
 import { createConnection } from '../../../repositories/ConnectionRepository';
-import {
-  clearPkceSession,
-  getCodeVerifier,
-  validateOAuthState,
-} from '../../../shared/utils/pkceUtils';
+import uuid4 from '../../../shared/utils/UUIDUtils';
+import type { CreateCernerConnectionDocument } from '../../../models/connection-document/ConnectionDocument.type';
 
-function clearCernerSession() {
-  localStorage.removeItem(CernerLocalStorageKeys.CERNER_BASE_URL);
-  localStorage.removeItem(CernerLocalStorageKeys.CERNER_AUTH_URL);
-  localStorage.removeItem(CernerLocalStorageKeys.CERNER_TOKEN_URL);
-  localStorage.removeItem(CernerLocalStorageKeys.CERNER_NAME);
-  localStorage.removeItem(CernerLocalStorageKeys.CERNER_ID);
-  localStorage.removeItem(CernerLocalStorageKeys.FHIR_VERSION);
-  clearPkceSession(CERNER_CODE_VERIFIER_KEY, CERNER_OAUTH_STATE_KEY);
-}
+const cernerClient = createCernerClient();
 
-const CernerRedirect: React.FC = () => {
-  const navigate = useNavigate(),
-    { config, isLoading } = useAppConfig(),
-    user = useUser(),
-    db = useRxDb(),
-    notifyDispatch = useNotificationDispatch(),
-    hasRun = useRef(false),
-    [error, setError] = useState(''),
-    { search } = useLocation();
+function useCernerOAuthCallback() {
+  const db = useRxDb();
+  const { config, isLoading: configLoading } = useAppConfig();
+  const user = useUser();
+  const navigate = useNavigate();
+  const notifyDispatch = useNotificationDispatch();
+  const { search } = useLocation();
+  const hasRun = useRef(false);
+  const [error, setError] = useState('');
+
+  const { handleCallback } = useOAuthFlow({
+    client: cernerClient,
+    vendor: 'cerner',
+  });
+  const { clearSession } = useOAuthorizationRequestState('cerner');
 
   useEffect(() => {
-    if (isLoading) return;
-    if (!hasRun.current) {
+    if (configLoading || hasRun.current) return;
+
+    const searchParams = new URLSearchParams(search);
+    const cernerBaseUrl = localStorage.getItem(
+      CernerLocalStorageKeys.CERNER_BASE_URL,
+    );
+    const cernerTokenUrl = localStorage.getItem(
+      CernerLocalStorageKeys.CERNER_TOKEN_URL,
+    );
+    const cernerAuthUrl = localStorage.getItem(
+      CernerLocalStorageKeys.CERNER_AUTH_URL,
+    );
+    const cernerName = localStorage.getItem(CernerLocalStorageKeys.CERNER_NAME);
+    const cernerId = localStorage.getItem(CernerLocalStorageKeys.CERNER_ID);
+    const storedFhirVersion = localStorage.getItem(
+      CernerLocalStorageKeys.FHIR_VERSION,
+    ) as 'DSTU2' | 'R4' | null;
+
+    if (
+      !cernerBaseUrl ||
+      !cernerTokenUrl ||
+      !cernerAuthUrl ||
+      !cernerName ||
+      !cernerId ||
+      !user?.id
+    ) {
       hasRun.current = true;
-      const searchRequest = new URLSearchParams(search),
-        code = searchRequest.get('code'),
-        returnedState = searchRequest.get('state'),
-        cernerUrl = localStorage.getItem(
-          CernerLocalStorageKeys.CERNER_BASE_URL,
-        ),
-        cernerName = localStorage.getItem(CernerLocalStorageKeys.CERNER_NAME),
-        cernerAuthUrl = localStorage.getItem(
-          CernerLocalStorageKeys.CERNER_AUTH_URL,
-        ),
-        cernerTokenUrl = localStorage.getItem(
-          CernerLocalStorageKeys.CERNER_TOKEN_URL,
-        ),
-        storedFhirVersion = localStorage.getItem(
-          CernerLocalStorageKeys.FHIR_VERSION,
-        ) as 'DSTU2' | 'R4' | null,
-        codeVerifier = getCodeVerifier(CERNER_CODE_VERIFIER_KEY);
+      clearLocalStorage();
+      clearSession();
+      const missingParams = [
+        !cernerBaseUrl && 'cernerBaseUrl',
+        !cernerTokenUrl && 'cernerTokenUrl',
+        !cernerAuthUrl && 'cernerAuthUrl',
+        !cernerName && 'cernerName',
+        !cernerId && 'cernerId',
+        !user?.id && 'user',
+      ]
+        .filter(Boolean)
+        .join(', ');
+      const errorMessage = `Missing required parameters: ${missingParams}`;
+      setError(errorMessage);
+      notifyDispatch({
+        type: 'set_notification',
+        message: errorMessage,
+        variant: 'error',
+      });
+      return;
+    }
 
-      if (!validateOAuthState(returnedState, CERNER_OAUTH_STATE_KEY)) {
-        setError('OAuth state mismatch. Please try again.');
-        clearCernerSession();
-        return;
-      }
+    hasRun.current = true;
+    const fhirVersion =
+      storedFhirVersion ||
+      (cernerBaseUrl.toUpperCase().includes('/R4') ? 'R4' : 'DSTU2');
 
-      if (code && cernerUrl && cernerName && cernerAuthUrl && cernerTokenUrl) {
-        const tokenEndpoint = cernerTokenUrl;
-        fetchAccessTokenWithCode(config, code, tokenEndpoint, codeVerifier)
-          .then((res) => {
-            if (
-              res.access_token &&
-              res.refresh_token &&
-              res.expires_in &&
-              res.id_token &&
-              user.id
-            ) {
-              const nowInSeconds = Math.floor(Date.now() / 1000);
-              const fhirVersion =
-                storedFhirVersion ||
-                (cernerUrl.toUpperCase().includes('/R4') ? 'R4' : 'DSTU2');
-              const dbentry: Omit<CreateCernerConnectionDocument, 'patient'> = {
-                id: uuid4(),
-                user_id: user.id,
-                source: 'cerner',
-                location: cernerUrl,
-                name: cernerName,
-                access_token: res.access_token,
-                scope: res.scope,
-                id_token: res.id_token,
-                refresh_token: res.refresh_token,
-                expires_at: nowInSeconds + res.expires_in,
-                auth_uri: cernerAuthUrl,
-                token_uri: cernerTokenUrl,
-                fhir_version: fhirVersion,
-              };
-              createConnection(db, dbentry as any)
-                .catch((e: unknown) => {
-                  notifyDispatch({
-                    type: 'set_notification',
-                    message: `Error adding connection: ${(e as Error).message}`,
-                    variant: 'error',
-                  });
-                })
-                .finally(() => {
-                  clearCernerSession();
-                  navigate(Routes.AddConnection);
-                });
-            } else {
-              clearCernerSession();
-              notifyDispatch({
-                type: 'set_notification',
-                message: `Error completing authentication: no access token provided`,
-                variant: 'error',
-              });
-            }
-          })
-          .catch((e) => {
-            clearCernerSession();
-            notifyDispatch({
-              type: 'set_notification',
-              message: `Error adding connection: ${(e as Error).message}`,
-              variant: 'error',
-            });
-            navigate(Routes.AddConnection);
-          });
-      } else {
-        clearCernerSession();
+    if (!config.CERNER_CLIENT_ID || !config.PUBLIC_URL) {
+      clearLocalStorage();
+      clearSession();
+      const errorMessage = 'Cerner OAuth configuration is incomplete';
+      setError(errorMessage);
+      notifyDispatch({
+        type: 'set_notification',
+        message: errorMessage,
+        variant: 'error',
+      });
+      return;
+    }
+
+    const oauthConfig = buildCernerOAuthConfig({
+      clientId: config.CERNER_CLIENT_ID,
+      publicUrl: config.PUBLIC_URL,
+      redirectPath: Routes.CernerCallback,
+      scopes: CERNER_DEFAULT_SCOPES,
+      tenant: {
+        id: cernerId,
+        name: cernerName,
+        authUrl: cernerAuthUrl,
+        tokenUrl: cernerTokenUrl,
+        fhirBaseUrl: cernerBaseUrl,
+        fhirVersion,
+      },
+    });
+
+    (async () => {
+      try {
+        const tokens = await handleCallback(searchParams, oauthConfig);
+
+        if (!tokens.refreshToken || !tokens.idToken) {
+          throw new Error(
+            'Missing required tokens from authentication response',
+          );
+        }
+
+        const dbentry: Omit<CreateCernerConnectionDocument, 'patient'> = {
+          id: uuid4(),
+          user_id: user.id,
+          source: 'cerner',
+          location: cernerBaseUrl,
+          name: cernerName,
+          access_token: tokens.accessToken,
+          scope: tokens.scope || '',
+          id_token: tokens.idToken,
+          refresh_token: tokens.refreshToken,
+          expires_at: tokens.expiresAt,
+          auth_uri: cernerAuthUrl,
+          token_uri: cernerTokenUrl,
+          fhir_version: fhirVersion,
+        };
+
+        await createConnection(db, dbentry as any);
+        navigate(Routes.AddConnection, { replace: true });
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : 'Authentication failed';
+        setError(message);
         notifyDispatch({
           type: 'set_notification',
-          message: `Error adding connection: missing required parameters`,
+          message,
           variant: 'error',
         });
-        console.error('Missing required parameters');
-        const missingParams = [
-          !code ? 'code' : '',
-          !cernerUrl ? 'cernerUrl' : '',
-          !cernerName ? 'cernerName' : '',
-          !cernerAuthUrl ? 'cernerAuthUrl' : '',
-          !cernerTokenUrl ? 'cernerTokenUrl' : '',
-        ]
-          .filter((x) => x)
-          .join(', ');
-        setError(
-          `There was a problem trying to sign in: Missing parameters: ${missingParams}`,
-        );
+      } finally {
+        clearLocalStorage();
       }
-    }
+    })();
   }, [
+    configLoading,
     config,
-    isLoading,
-    db.connection_documents,
+    db,
+    user,
+    handleCallback,
+    clearSession,
     navigate,
     notifyDispatch,
     search,
-    user.id,
   ]);
+
+  return error;
+}
+
+function clearLocalStorage() {
+  Object.values(CernerLocalStorageKeys).forEach((key) =>
+    localStorage.removeItem(key),
+  );
+}
+
+const CernerRedirect: React.FC = () => {
+  const navigate = useNavigate();
+  const error = useCernerOAuthCallback();
 
   return (
     <AppPage
