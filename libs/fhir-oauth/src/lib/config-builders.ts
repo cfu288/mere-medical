@@ -1,4 +1,4 @@
-import { OAuthConfig, OAuthError, TenantConfig } from './types.js';
+import { OAuthConfig, TenantConfig } from './types.js';
 
 export const EPIC_DEFAULT_SCOPES = ['openid', 'fhirUser'];
 
@@ -45,36 +45,20 @@ export const CERNER_DEFAULT_SCOPES = [
 ];
 
 export interface OAuthConfigOptions {
-  clientId: string | undefined;
-  publicUrl: string | undefined;
+  clientId: string;
+  publicUrl: string;
   redirectPath: string;
   scopes: string[];
   tenant: TenantConfig;
 }
 
 export interface OnPatientConfigOptions {
-  clientId: string | undefined;
-  publicUrl: string | undefined;
+  clientId: string;
+  publicUrl: string;
   redirectPath: string;
 }
 
-function validateRequired(
-  value: string | undefined,
-  fieldName: string,
-  vendor: string,
-): asserts value is string {
-  if (!value) {
-    throw new OAuthError(
-      'config_error',
-      `${fieldName} is required for ${vendor} OAuth but was not provided`,
-    );
-  }
-}
-
 export function buildEpicOAuthConfig(options: OAuthConfigOptions): OAuthConfig {
-  validateRequired(options.clientId, 'clientId', 'Epic');
-  validateRequired(options.publicUrl, 'publicUrl', 'Epic');
-
   return {
     clientId: options.clientId,
     redirectUri: `${options.publicUrl}${options.redirectPath}`,
@@ -84,9 +68,6 @@ export function buildEpicOAuthConfig(options: OAuthConfigOptions): OAuthConfig {
 }
 
 export function buildCernerOAuthConfig(options: OAuthConfigOptions): OAuthConfig {
-  validateRequired(options.clientId, 'clientId', 'Cerner');
-  validateRequired(options.publicUrl, 'publicUrl', 'Cerner');
-
   return {
     clientId: options.clientId,
     redirectUri: `${options.publicUrl}${options.redirectPath}`,
@@ -96,9 +77,6 @@ export function buildCernerOAuthConfig(options: OAuthConfigOptions): OAuthConfig
 }
 
 export function buildOnPatientAuthUrl(options: OnPatientConfigOptions): string {
-  validateRequired(options.clientId, 'clientId', 'OnPatient');
-  validateRequired(options.publicUrl, 'publicUrl', 'OnPatient');
-
   const params = new URLSearchParams({
     client_id: options.clientId,
     redirect_uri: `${options.publicUrl}${options.redirectPath}`,

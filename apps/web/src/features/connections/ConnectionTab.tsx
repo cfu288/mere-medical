@@ -58,11 +58,16 @@ async function initiateEpicAuth(
   fhirVersion: 'DSTU2' | 'R4',
 ): Promise<string> {
   const isSandbox = isEpicSandbox(id);
+  const clientId = getEpicClientId(config, fhirVersion, isSandbox);
+  if (!clientId || !config.PUBLIC_URL) {
+    throw new Error('Epic OAuth configuration is incomplete');
+  }
+
   const fhirBaseUrl =
     fhirVersion === 'R4' ? getR4Url(baseUrl) : getDSTU2Url(baseUrl);
 
   const oauthConfig = buildEpicOAuthConfig({
-    clientId: getEpicClientId(config, fhirVersion, isSandbox),
+    clientId,
     publicUrl: config.PUBLIC_URL,
     redirectPath: Routes.EpicCallback,
     scopes: EPIC_DEFAULT_SCOPES,
@@ -95,6 +100,10 @@ async function initiateCernerAuth(
   id: string,
   fhirVersion: 'DSTU2' | 'R4',
 ): Promise<string> {
+  if (!config.CERNER_CLIENT_ID || !config.PUBLIC_URL) {
+    throw new Error('Cerner OAuth configuration is incomplete');
+  }
+
   const oauthConfig = buildCernerOAuthConfig({
     clientId: config.CERNER_CLIENT_ID,
     publicUrl: config.PUBLIC_URL,
@@ -121,6 +130,10 @@ async function initiateCernerAuth(
  * so no PKCE or session storage is needed on the frontend.
  */
 function initiateOnPatientAuth(config: AppConfig): string {
+  if (!config.ONPATIENT_CLIENT_ID || !config.PUBLIC_URL) {
+    throw new Error('OnPatient OAuth configuration is incomplete');
+  }
+
   return buildOnPatientAuthUrl({
     clientId: config.ONPATIENT_CLIENT_ID,
     publicUrl: config.PUBLIC_URL,

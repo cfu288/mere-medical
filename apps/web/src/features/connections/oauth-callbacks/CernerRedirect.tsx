@@ -94,6 +94,19 @@ function useCernerOAuthCallback() {
       storedFhirVersion ||
       (cernerBaseUrl.toUpperCase().includes('/R4') ? 'R4' : 'DSTU2');
 
+    if (!config.CERNER_CLIENT_ID || !config.PUBLIC_URL) {
+      clearLocalStorage();
+      clearSession();
+      const errorMessage = 'Cerner OAuth configuration is incomplete';
+      setError(errorMessage);
+      notifyDispatch({
+        type: 'set_notification',
+        message: errorMessage,
+        variant: 'error',
+      });
+      return;
+    }
+
     const oauthConfig = buildCernerOAuthConfig({
       clientId: config.CERNER_CLIENT_ID,
       publicUrl: config.PUBLIC_URL,

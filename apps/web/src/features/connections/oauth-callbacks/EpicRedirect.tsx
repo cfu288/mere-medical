@@ -121,9 +121,17 @@ function useEpicOAuthCallback() {
     const fhirBaseUrl =
       fhirVersion === 'R4' ? getR4Url(epicBaseUrl) : getDSTU2Url(epicBaseUrl);
     const isSandbox = isEpicSandbox(epicId);
+    const clientId = getEpicClientId(config, fhirVersion, isSandbox);
+
+    if (!clientId || !config.PUBLIC_URL) {
+      clearLocalStorage();
+      clearSession();
+      setError('Epic OAuth configuration is incomplete');
+      return;
+    }
 
     const oauthConfig = buildEpicOAuthConfig({
-      clientId: getEpicClientId(config, fhirVersion, isSandbox),
+      clientId,
       publicUrl: config.PUBLIC_URL,
       redirectPath: Routes.EpicCallback,
       scopes: EPIC_DEFAULT_SCOPES,
