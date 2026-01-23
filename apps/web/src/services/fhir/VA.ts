@@ -35,7 +35,7 @@ import {
   createSessionManager,
   VA_SANDBOX_TENANT,
   buildVAOAuthConfig,
-  type TokenSet,
+  type VATokenSet,
 } from '@mere/fhir-oauth';
 
 export enum VALocalStorageKeys {
@@ -287,7 +287,7 @@ export async function saveConnectionToDb({
   db,
   user,
 }: {
-  tokens: TokenSet;
+  tokens: VATokenSet;
   db: RxDatabase<DatabaseCollections>;
   user: UserDocument;
 }) {
@@ -358,7 +358,7 @@ export async function refreshVAConnectionTokenIfNeeded(
     throw new Error('No refresh token available - try logging in again');
   }
 
-  const currentTokens: TokenSet = {
+  const currentTokens: VATokenSet = {
     accessToken: connectionDocument.get('access_token'),
     refreshToken,
     expiresAt,

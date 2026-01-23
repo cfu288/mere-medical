@@ -54,7 +54,7 @@ import {
   createCernerClient,
   CERNER_DEFAULT_SCOPES,
   type OAuthConfig,
-  type TokenSet,
+  type CernerTokenSet,
 } from '@mere/fhir-oauth';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
 import {
@@ -806,11 +806,10 @@ export async function refreshCernerConnectionTokenIfNeeded(
   db: RxDatabase<DatabaseCollections>,
 ) {
   const refreshToken = connectionDocument.get('refresh_token');
-  const currentTokens: TokenSet = {
+  const currentTokens: CernerTokenSet = {
     accessToken: connectionDocument.get('access_token'),
     expiresAt: connectionDocument.get('expires_at'),
     refreshToken,
-    patientId: connectionDocument.get('patient'),
     raw: {},
   };
 

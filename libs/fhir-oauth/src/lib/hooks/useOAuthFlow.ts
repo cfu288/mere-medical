@@ -1,9 +1,9 @@
 import { useCallback, useReducer } from 'react';
-import type { OAuthClient, OAuthConfig, StorageAdapter, TokenSet } from '../types.js';
+import type { OAuthClient, OAuthConfig, StorageAdapter, CoreTokenSet } from '../types.js';
 import { useOAuthorizationRequestState } from './useOAuthorizationRequestState.js';
 
-export interface UseOAuthFlowOptions<K extends string> {
-  client: OAuthClient;
+export interface UseOAuthFlowOptions<K extends string, T extends CoreTokenSet = CoreTokenSet> {
+  client: OAuthClient<T>;
   vendor: K;
   storage?: StorageAdapter;
 }
@@ -45,11 +45,11 @@ function reducer(_state: State, action: Action): State {
  * @param vendor - Unique key to namespace the session in storage
  * @param storage - Storage adapter (defaults to sessionStorage in browser)
  */
-export function useOAuthFlow<K extends string>({
+export function useOAuthFlow<K extends string, T extends CoreTokenSet = CoreTokenSet>({
   client,
   vendor,
   storage,
-}: UseOAuthFlowOptions<K>) {
+}: UseOAuthFlowOptions<K, T>) {
   const [state, dispatch] = useReducer(reducer, initialState);
   const { saveSession, loadSession, clearSession } = useOAuthorizationRequestState(vendor, { storage });
 
@@ -76,7 +76,7 @@ export function useOAuthFlow<K extends string>({
     async (
       searchParams: URLSearchParams,
       config: OAuthConfig,
-    ): Promise<TokenSet> => {
+    ): Promise<T> => {
       dispatch({ type: 'START' });
 
       try {

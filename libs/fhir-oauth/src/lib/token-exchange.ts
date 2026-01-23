@@ -1,7 +1,8 @@
 import type {
   OAuthConfig,
   AuthorizationRequestState,
-  TokenSet,
+  CoreTokenSet,
+  ParsedTokenResponse,
 } from './types.js';
 import { createOAuthError, OAuthErrors } from './types.js';
 
@@ -47,14 +48,14 @@ export function validateCallback(
  * @param code - Authorization code from the callback URL query params
  * @param config - OAuth configuration with clientId, redirectUri, and tenant
  * @param session - Authorization state containing the PKCE code verifier
- * @returns TokenSet with access token, expiration, and optional refresh/id tokens
+ * @returns ParsedTokenResponse with access token, expiration, and optional refresh/id tokens
  * @throws OAuthError if code verifier is missing or token exchange fails
  */
 export async function exchangeWithPkce(
   code: string,
   config: OAuthConfig,
   session: AuthorizationRequestState,
-): Promise<TokenSet> {
+): Promise<ParsedTokenResponse> {
   if (!session.codeVerifier) {
     throw OAuthErrors.missingCodeVerifier();
   }
@@ -79,13 +80,13 @@ export async function exchangeWithPkce(
 }
 
 /**
- * Parses an OAuth token endpoint response into a TokenSet.
+ * Parses an OAuth token endpoint response into a ParsedTokenResponse.
  *
  * @param res - Fetch Response from the token endpoint
- * @returns TokenSet with access token, expiration, and optional refresh/id tokens
+ * @returns ParsedTokenResponse with access token, expiration, and optional refresh/id tokens
  * @throws OAuthError on non-2xx responses, with the error body as the cause
  */
-export async function parseTokenResponse(res: Response): Promise<TokenSet> {
+export async function parseTokenResponse(res: Response): Promise<ParsedTokenResponse> {
   if (!res.ok) {
     const errorText = await res.text();
     throw OAuthErrors.tokenExchangeFailed(res.status, errorText);
@@ -109,7 +110,7 @@ export async function parseTokenResponse(res: Response): Promise<TokenSet> {
   };
 }
 
-export function isTokenExpired(tokens: TokenSet, bufferSeconds = 60): boolean {
+export function isTokenExpired(tokens: CoreTokenSet, bufferSeconds = 60): boolean {
   const nowSeconds = Math.floor(Date.now() / 1000);
   return tokens.expiresAt <= nowSeconds + bufferSeconds;
 }

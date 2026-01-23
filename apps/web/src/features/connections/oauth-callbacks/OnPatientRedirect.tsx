@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import {
   parseOnPatientTokenResponse,
   type OnPatientTokenResponse,
-  type TokenSet,
+  type OnPatientTokenSet,
 } from '@mere/fhir-oauth';
 import uuid4 from '../../../shared/utils/UUIDUtils';
 import {
@@ -19,7 +19,9 @@ import { useUser } from '../../../app/providers/UserProvider';
 import { getConnectionCardByUrl } from '../../../services/fhir/getConnectionCardByUrl';
 import { createConnection } from '../../../repositories/ConnectionRepository';
 
-async function fetchTokensFromServer(sessionId: string): Promise<TokenSet> {
+async function fetchTokensFromServer(
+  sessionId: string,
+): Promise<OnPatientTokenSet> {
   const response = await fetch(`/api/v1/onpatient/tokens?session=${sessionId}`);
   if (!response.ok) {
     const error = await response.json();

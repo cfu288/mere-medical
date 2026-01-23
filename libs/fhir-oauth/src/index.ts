@@ -3,16 +3,27 @@ export {
   createEpicClient,
   createEpicClientWithProxy,
   registerEpicDynamicClient,
+  type EpicClient,
+  type EpicTokenSet,
 } from './lib/vendors/epic.js';
 
-export { createCernerClient } from './lib/vendors/cerner.js';
+export {
+  createCernerClient,
+  type CernerClient,
+  type CernerTokenSet,
+} from './lib/vendors/cerner.js';
 
-export { createVAClient } from './lib/vendors/va.js';
+export {
+  createVAClient,
+  type VAClient,
+  type VATokenSet,
+} from './lib/vendors/va.js';
 
 export {
   parseOnPatientTokenResponse,
   ONPATIENT_CONSTANTS,
   type OnPatientTokenResponse,
+  type OnPatientTokenSet,
 } from './lib/vendors/onpatient.js';
 
 // Session management
@@ -45,7 +56,13 @@ export type {
   OAuthClient,
   OAuthConfig,
   TenantConfig,
-  TokenSet,
+  CoreTokenSet,
+  ParsedTokenResponse,
+  WithRefreshToken,
+  WithIdToken,
+  WithScope,
+  WithPatientId,
+  WithClientId,
   AuthorizationRequestState,
 } from './lib/types.js';
 export { OAuthError, OAuthErrors } from './lib/types.js';

@@ -1,9 +1,10 @@
 import type {
   OAuthConfig,
   AuthorizationRequestState,
-  TokenSet,
+  CoreTokenSet,
+  WithPatientId,
 } from '../types.js';
-import { OAuthErrors } from '../types.js';
+import { createOAuthError, OAuthErrors } from '../types.js';
 import {
   generateAuthorizationRequestState,
   generateCodeChallenge,
@@ -15,6 +16,19 @@ import {
   isTokenExpired,
 } from '../token-exchange.js';
 
+/**
+ * VA Patient Health API token responses include a patient field when the
+ * launch/patient scope is requested. Per VA docs: "A permission setting to
+ * obtain the patient's identifier in the token response."
+ * @see https://developer.va.gov/explore/api/patient-health/authorization-code
+ */
+export type VATokenSet = CoreTokenSet &
+  WithPatientId & {
+    refreshToken?: string;
+    idToken?: string;
+    scope?: string;
+  };
+
 export interface VAClient {
   initiateAuth: (
     config: OAuthConfig,
@@ -23,11 +37,17 @@ export interface VAClient {
     params: URLSearchParams,
     config: OAuthConfig,
     session: AuthorizationRequestState,
-  ) => Promise<TokenSet>;
-  refresh: (tokens: TokenSet, config: OAuthConfig) => Promise<TokenSet>;
-  isExpired: (tokens: TokenSet, bufferSeconds?: number) => boolean;
+  ) => Promise<VATokenSet>;
+  refresh: (tokens: VATokenSet, config: OAuthConfig) => Promise<VATokenSet>;
+  isExpired: (tokens: VATokenSet, bufferSeconds?: number) => boolean;
 }
 
+/**
+ * Creates an OAuth client for VA (Veterans Affairs) Patient Health API.
+ * Handles the SMART on FHIR flow with PKCE and standard refresh_token grant.
+ * Requires the launch/patient scope to receive the patient identifier.
+ * @see https://developer.va.gov/explore/api/patient-health/authorization-code
+ */
 export function createVAClient(): VAClient {
   return {
     async initiateAuth(config) {
@@ -64,6 +84,13 @@ export function createVAClient(): VAClient {
       const code = validateCallback(params, session);
       const tokens = await exchangeWithPkce(code, config, session);
       const patientId = tokens.raw['patient'] as string | undefined;
+
+      if (!patientId) {
+        throw createOAuthError(
+          'missing_patient',
+          'No patient field in token response',
+        );
+      }
 
       return { ...tokens, patientId };
     },

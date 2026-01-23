@@ -1,7 +1,19 @@
-import type { OAuthConfig, AuthorizationRequestState, TokenSet } from '../types.js';
+import type { OAuthConfig, AuthorizationRequestState, CoreTokenSet } from '../types.js';
 import { createOAuthError, OAuthErrors } from '../types.js';
 import { initiateStandardAuth } from '../auth-url.js';
 import { exchangeWithPkce, parseTokenResponse, validateCallback, isTokenExpired } from '../token-exchange.js';
+
+/**
+ * Cerner standalone token responses do not include a patient field. Per Oracle docs:
+ * "Upon retrieving an access token, an identity token is presented in the access
+ * token response" - patient identity is extracted from fhirUser claim in id_token.
+ * @see https://docs.oracle.com/en/industries/health/millennium-platform-apis/millennium-authorization-framework/#smart-application-launch-flow
+ */
+export type CernerTokenSet = CoreTokenSet & {
+  refreshToken?: string;
+  idToken?: string;
+  scope?: string;
+};
 
 export interface CernerClient {
   initiateAuth: (
@@ -11,9 +23,9 @@ export interface CernerClient {
     params: URLSearchParams,
     config: OAuthConfig,
     session: AuthorizationRequestState,
-  ) => Promise<TokenSet>;
-  refresh: (tokens: TokenSet, config: OAuthConfig) => Promise<TokenSet>;
-  isExpired: (tokens: TokenSet, bufferSeconds?: number) => boolean;
+  ) => Promise<CernerTokenSet>;
+  refresh: (tokens: CernerTokenSet, config: OAuthConfig) => Promise<CernerTokenSet>;
+  isExpired: (tokens: CernerTokenSet, bufferSeconds?: number) => boolean;
 }
 
 /**
@@ -21,6 +33,7 @@ export interface CernerClient {
  * SMART on FHIR flow including PKCE and standard refresh_token grant for
  * token refresh. Unlike Epic, Cerner does not require JWT signing or dynamic
  * client registration.
+ * @see https://docs.oracle.com/en/industries/health/millennium-platform-apis/millennium-authorization-framework/#smart-application-launch-flow
  */
 export function createCernerClient(): CernerClient {
   return {
@@ -28,10 +41,7 @@ export function createCernerClient(): CernerClient {
 
     async handleCallback(params, config, session) {
       const code = validateCallback(params, session);
-      const tokens = await exchangeWithPkce(code, config, session);
-      const patientId = tokens.raw['patient'] as string | undefined;
-
-      return { ...tokens, patientId };
+      return exchangeWithPkce(code, config, session);
     },
 
     async refresh(tokens, config) {
@@ -60,7 +70,6 @@ export function createCernerClient(): CernerClient {
       return {
         ...newTokens,
         idToken: newTokens.idToken ?? tokens.idToken,
-        patientId: tokens.patientId,
       };
     },
 

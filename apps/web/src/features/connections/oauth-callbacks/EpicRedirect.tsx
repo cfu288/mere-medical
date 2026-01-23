@@ -14,7 +14,7 @@ import {
   registerEpicDynamicClient,
   buildEpicOAuthConfig,
   EPIC_DEFAULT_SCOPES,
-  type TokenSet,
+  type EpicTokenSet,
   OAuthError,
 } from '@mere/fhir-oauth';
 import { signJwt, getPublicKey } from '@mere/crypto/browser';
@@ -149,7 +149,7 @@ function useEpicOAuthCallback() {
       try {
         const tokens = await handleCallback(searchParams, oauthConfig);
 
-        let finalTokens: TokenSet = tokens;
+        let finalTokens: EpicTokenSet = tokens;
         let dynamicClientId: string | undefined;
 
         try {
@@ -208,7 +208,7 @@ function useEpicOAuthCallback() {
             expires_in: finalTokens.expiresAt - Math.floor(Date.now() / 1000),
             patient: finalTokens.patientId || '',
             token_type: 'Bearer',
-            scope: finalTokens.scope || '',
+            scope: (finalTokens.raw['scope'] as string) || '',
             refresh_token: finalTokens.refreshToken || '',
             ...(dynamicClientId && { client_id: dynamicClientId }),
           },

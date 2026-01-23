@@ -1,4 +1,4 @@
-import type { TokenSet } from '../types.js';
+import type { CoreTokenSet } from '../types.js';
 
 export const ONPATIENT_CONSTANTS = {
   BASE_URL: 'https://onpatient.com',
@@ -16,13 +16,17 @@ export interface OnPatientTokenResponse {
   token_type?: string;
 }
 
-export function parseOnPatientTokenResponse(data: OnPatientTokenResponse): TokenSet {
+export type OnPatientTokenSet = CoreTokenSet & {
+  refreshToken?: string;
+  patientId?: string;
+};
+
+export function parseOnPatientTokenResponse(data: OnPatientTokenResponse): OnPatientTokenSet {
   const nowSeconds = Math.floor(Date.now() / 1000);
   return {
     accessToken: data.access_token,
     expiresAt: nowSeconds + data.expires_in,
     refreshToken: data.refresh_token,
-    scope: data.scope,
     patientId: data.patient,
     raw: data as unknown as Record<string, unknown>,
   };
