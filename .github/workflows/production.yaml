@@ -27,6 +27,10 @@ jobs:
       - name: Generate CalVer env var
         run: echo "RELEASE_CALVER_VERSION=$(echo $(date '+%Y.%m.%d'))" >> $GITHUB_ENV
 
+      - name: Get app version
+        id: version
+        run: echo "version=$(git describe --tags)" >> $GITHUB_OUTPUT
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -44,6 +48,8 @@ jobs:
           platforms: ${{ matrix.platform }}
           cache-from: type=gha,scope=app-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
           cache-to: type=gha,mode=max,scope=app-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
+          build-args: |
+            MERE_APP_VERSION=${{ steps.version.outputs.version }}
           outputs: type=image,name=cfu288/mere-medical,push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
@@ -116,6 +122,10 @@ jobs:
       - name: Generate CalVer env var
         run: echo "RELEASE_CALVER_VERSION=$(date '+%Y.%m.%d')" >> $GITHUB_ENV
 
+      - name: Get app version
+        id: version
+        run: echo "version=$(git describe --tags)" >> $GITHUB_OUTPUT
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -135,6 +145,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=app-demo
           build-args: |
             IS_DEMO=enabled
+            MERE_APP_VERSION=${{ steps.version.outputs.version }}
           tags: |
             cfu288/mere-medical:latest-demo
             cfu288/mere-medical:${{ env.RELEASE_CALVER_VERSION }}-demo

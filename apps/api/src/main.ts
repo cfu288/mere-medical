@@ -35,7 +35,9 @@ function getHttpsOptions(): NestApplicationOptions['httpsOptions'] | undefined {
 
 async function bootstrap() {
   const isDevMode = isDevelopmentMode();
+  const appVersion = process.env.MERE_APP_VERSION || 'unknown';
   Logger.log(`Running in ${isDevMode ? 'development' : 'production'} mode`);
+  Logger.log(`MERE_APP_VERSION: ${appVersion}`);
 
   const httpsOptions = getHttpsOptions();
 

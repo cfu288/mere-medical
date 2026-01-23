@@ -43,6 +43,9 @@ RUN npx nx run web:build:production --verbose
 # Package React App and API together
 FROM node:18-alpine
 
+ARG MERE_APP_VERSION=unknown
+ENV MERE_APP_VERSION=${MERE_APP_VERSION}
+
 WORKDIR /app
 
 COPY --from=build-web-stage /app/dist/apps/web/ /app/web/
