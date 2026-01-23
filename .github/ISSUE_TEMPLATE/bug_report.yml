@@ -6,6 +6,8 @@ body:
     attributes:
       value: |
         > **Note:** This repository is managed by a single contributor who is a full time medical resident. I will attempt to respond to issues in a timely manner, however there may be weeks or months with slow responses.
+
+        Please check [existing bug issues](https://github.com/cfu288/mere-medical/issues?q=label%3Abug) before submitting a new report.
   - type: textarea
     id: description
     attributes:
