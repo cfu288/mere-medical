@@ -338,12 +338,10 @@ export async function saveConnectionToDb({
  * For a connection document, if the access token is expired, refresh it and save it to the db
  * @param config App configuration containing VA_CLIENT_ID
  * @param connectionDocument the connection document to refresh the access token for
- * @param _db Database (unused, kept for API compatibility)
  */
 export async function refreshVAConnectionTokenIfNeeded(
   config: AppConfig,
   connectionDocument: RxDocument<ConnectionDocument>,
-  _db: RxDatabase<DatabaseCollections>,
 ) {
   const nowInSeconds = Math.floor(Date.now() / 1000);
   const expiresAt = connectionDocument.get('expires_at');
