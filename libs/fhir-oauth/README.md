@@ -134,16 +134,17 @@ if (client.isExpired(tokens)) {
 ## Core Types
 
 ```typescript
-interface TokenSet {
+interface CoreTokenSet {
   accessToken: string;
   expiresAt: number;
-  refreshToken?: string;
-  idToken?: string;
-  scope?: string;
-  patientId?: string;
-  clientId?: string;
   raw: Record<string, unknown>;
 }
+
+// Vendor-specific types extend CoreTokenSet with additional fields:
+// - EpicTokenSet: CoreTokenSet & WithPatientId & { refreshToken?, idToken?, scope?, clientId? }
+// - CernerTokenSet: CoreTokenSet & WithPatientId & { refreshToken?, idToken?, scope? }
+// - VATokenSet: CoreTokenSet & WithPatientId & { refreshToken?, idToken?, scope? }
+// - OnPatientTokenSet: CoreTokenSet & { refreshToken? }
 
 interface OAuthConfig {
   clientId: string;

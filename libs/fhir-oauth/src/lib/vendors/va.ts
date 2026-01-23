@@ -112,8 +112,6 @@ export function createVAClient(): VAClient {
 
       if (tokens.scope) {
         body.set('scope', tokens.scope);
-      } else if (config.scopes?.length) {
-        body.set('scope', config.scopes.join(' '));
       }
 
       const res = await fetch(config.tenant.tokenUrl, {

@@ -139,7 +139,7 @@ const VARedirect: React.FC = () => {
     >
       {error ? (
         <div className="flex h-full flex-col items-center justify-center">
-          <h1 className="font-2xl mb-4 font-bold text-red-700">{error}</h1>
+          <h1 className="text-2xl mb-4 font-bold text-red-700">{error}</h1>
           <div className="flex flex-row justify-center gap-x-4">
             <button
               className="bg-primary w-36 rounded-lg p-4 text-white"
