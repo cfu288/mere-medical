@@ -1,0 +1,43 @@
+name: Self-Hosting Issue
+description: Issues with deploying or running your own instance
+labels: ['Self-hosting Help']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > **Note:** This repository is managed by a single contributor who is a full time medical resident. I will attempt to respond to issues in a timely manner, however there may be weeks or months with slow responses.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What issue are you experiencing?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Deployment Method
+      options:
+        - Docker
+        - Docker Compose
+        - Other
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: Image Tag
+      placeholder: 'e.g., latest, beta, 2025.01.22'
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs or Screenshots
+      description: Any error messages or logs
+      render: shell
+    validations:
+      required: false

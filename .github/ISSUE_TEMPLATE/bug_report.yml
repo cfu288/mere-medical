@@ -1,0 +1,51 @@
+name: Bug Report
+description: Report a bug or unexpected behavior
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > **Note:** This repository is managed by a single contributor who is a full time medical resident. I will attempt to respond to issues in a timely manner, however there may be weeks or months with slow responses.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened? What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this issue?
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. See error
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: App Version
+      description: Found in Settings > About Mere
+      placeholder: 'e.g., 2025.01.22'
+    validations:
+      required: false
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Web (Chrome)
+        - Web (Firefox)
+        - Web (Safari)
+        - iOS (PWA)
+        - Android (PWA)
+        - Docker
+        - Other
+    validations:
+      required: false
