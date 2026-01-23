@@ -444,7 +444,7 @@ async function fetchMedicalRecords(
     }
     case 'va': {
       try {
-        await refreshVAConnectionTokenIfNeeded(connectionDocument, db);
+        await refreshVAConnectionTokenIfNeeded(config, connectionDocument, db);
         const syncJob = await VA.syncAllRecords(
           baseUrl,
           connectionDocument.toMutableJSON() as unknown as VAConnectionDocument,

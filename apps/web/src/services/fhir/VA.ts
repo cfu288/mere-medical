@@ -31,13 +31,12 @@ import uuid4 from '../../shared/utils/UUIDUtils';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
 import {
-  getCodeVerifier,
-  getCodeChallenge,
-  getOAuthState,
-} from '../../shared/utils/pkceUtils';
-
-export const VA_CODE_VERIFIER_KEY = 'va_code_verifier';
-export const VA_OAUTH_STATE_KEY = 'va_oauth2_state';
+  createVAClient,
+  createSessionManager,
+  VA_SANDBOX_TENANT,
+  buildVAOAuthConfig,
+  type TokenSet,
+} from '@mere/fhir-oauth';
 
 export enum VALocalStorageKeys {
   VA_BASE_URL = 'vaBaseUrl',
@@ -47,56 +46,22 @@ export enum VALocalStorageKeys {
   VA_ID = 'vaId',
 }
 
-export const VA_BASE_URL = 'https://sandbox-api.va.gov/services/fhir/v0';
-export const VA_AUTH_URL =
-  'https://sandbox-api.va.gov/oauth2/health/v1/authorization';
-export const VA_TOKEN_URL = 'https://sandbox-api.va.gov/oauth2/health/v1/token';
-
-export function getDSTU2Url(baseUrl = VA_BASE_URL) {
-  return `${baseUrl}/dstu2/`;
-}
+const vaClient = createVAClient();
 
 export async function getLoginUrl(
   config: AppConfig,
-  authorizeUrl = VA_AUTH_URL,
 ): Promise<string & Location> {
-  const params = {
-    client_id: `${config.VA_CLIENT_ID}`,
-    redirect_uri: `${config.PUBLIC_URL}${Routes.VACallback}`,
-    response_type: 'code',
-    scope: [
-      'profile',
-      'openid',
-      'offline_access',
-      'launch/patient',
-      'patient/AllergyIntolerance.read',
-      'patient/Appointment.read',
-      'patient/Binary.read',
-      'patient/Condition.read',
-      'patient/Device.read',
-      'patient/DeviceRequest.read',
-      'patient/DiagnosticReport.read',
-      'patient/DocumentReference.read',
-      'patient/Encounter.read',
-      'patient/Immunization.read',
-      'patient/Location.read',
-      'patient/Medication.read',
-      'patient/MedicationOrder.read',
-      'patient/MedicationRequest.read',
-      'patient/MedicationStatement.read',
-      'patient/Observation.read',
-      'patient/Organization.read',
-      'patient/Patient.read',
-      'patient/Practitioner.read',
-      'patient/PractitionerRole.read',
-      'patient/Procedure.read',
-    ].join(' '),
-    state: getOAuthState(VA_OAUTH_STATE_KEY),
-    code_challenge_method: 'S256',
-    code_challenge: await getCodeChallenge(VA_CODE_VERIFIER_KEY),
-  };
+  const oauthConfig = buildVAOAuthConfig({
+    clientId: config.VA_CLIENT_ID || '',
+    publicUrl: config.PUBLIC_URL || '',
+    redirectPath: Routes.VACallback,
+  });
 
-  return `${authorizeUrl}?${new URLSearchParams(params)}` as string & Location;
+  const { url, session } = await vaClient.initiateAuth(oauthConfig);
+  const sessionManager = createSessionManager('va');
+  await sessionManager.save(session);
+
+  return url as unknown as string & Location;
 }
 
 /**
@@ -112,7 +77,7 @@ export async function getLoginUrl(
  * We want to iterate through all the pages using the ?page=<number>
  * query param until we've gotten all the results
  * This should iterate through pages 1 to N and call getFHIRResource for each page
- * */
+ */
 async function getAllFHIRResourcesWithPaging<T extends FhirResource>(
   baseUrl: string,
   connectionDocument: VAConnectionDocument,
@@ -174,7 +139,6 @@ async function getFHIRResource<T extends FhirResource>(
  * @param fhirResourceUrl URL path FHIR resource to sync. e.g. Patient, Procedure, etc. Exclude the leading slash.
  * @param mapper Function to map the FHIR resource to a ClinicalDocument
  * @param params Query parameters to pass to the FHIR request
- * @returns
  */
 async function syncFHIRResource<T extends FhirResource>(
   baseUrl: string,
@@ -209,7 +173,6 @@ async function syncFHIRResource<T extends FhirResource>(
  * @param baseUrl Base url of the FHIR server to sync from
  * @param connectionDocument
  * @param db
- * @param useProxy
  * @returns A promise of void arrays
  */
 export async function syncAllRecords(
@@ -319,231 +282,111 @@ export async function syncAllRecords(
   return syncJob as unknown as Promise<PromiseSettledResult<void[]>[]>;
 }
 
-/**
- * Fetch attachment data from the FHIR server
- * @param url URL of the attachment
- * @param cd
- * @returns
- */
-async function fetchAttachmentData(
-  url: string,
-  cd: VAConnectionDocument,
-): Promise<{ contentType: string | null; raw: string | Blob | undefined }> {
-  try {
-    const res = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${cd.access_token}`,
-      },
-    });
-    if (!res.ok) {
-      throw new Error(
-        'Could not get document as the user is unauthorized. Try logging in again.',
-      );
-    }
-    const contentType = res.headers.get('Content-Type');
-    let raw = undefined;
-    if (contentType === 'application/xml') {
-      raw = await res.text();
-    }
-
-    if (contentType === 'application/pdf') {
-      raw = await res.blob();
-    }
-
-    return { contentType, raw };
-  } catch (e) {
-    throw new Error(
-      'Could not get document as the user is unauthorized. Try logging in again.',
-    );
-  }
-}
-
-/**
- * Using the code from the VA callback, fetch the access token
- * @param code code from the VA callback, usually a query param
- * @param VAUrl url of the VA server we are connecting to
- * @param VAName user friendly name of the VA server we are connecting to
- * @returns Promise of the auth response from the VA server
- */
-export async function fetchAccessTokenWithCode(
-  config: AppConfig,
-  code: string,
-  vaTokenUrl: string,
-): Promise<VAAuthResponse> {
-  const defaultUrl = `${vaTokenUrl}`;
-  const res = await fetch(defaultUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      grant_type: 'authorization_code',
-      client_id: `${config.VA_CLIENT_ID}`,
-      redirect_uri: `${config.PUBLIC_URL}${Routes.VACallback}`,
-      code: code,
-      code_verifier: getCodeVerifier(VA_CODE_VERIFIER_KEY),
-    }),
-  });
-  if (!res.ok) {
-    console.error(await res.text());
-    throw new Error('Error getting authorization token ');
-  }
-  return res.json();
-}
-
-export async function fetchAccessTokenWithRefreshToken(
-  refreshToken: string,
-  vaTokenUrl: string,
-): Promise<VAAuthResponse> {
-  const defaultUrl = vaTokenUrl;
-  const res = await fetch(defaultUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      grant_type: 'refresh_token',
-      refresh_token: refreshToken,
-    }),
-  });
-  if (!res.ok) {
-    console.error(await res.text());
-    throw new Error('Error getting authorization token ');
-  }
-  return res.json();
-}
-
 export async function saveConnectionToDb({
-  res,
-  vaBaseUrl,
+  tokens,
   db,
   user,
 }: {
-  res: VAAuthResponse;
-  vaBaseUrl: string;
+  tokens: TokenSet;
   db: RxDatabase<DatabaseCollections>;
   user: UserDocument;
 }) {
   const doc = await getConnectionCardByUrl<VAConnectionDocument>(
-    vaBaseUrl,
+    VA_SANDBOX_TENANT.fhirBaseUrl,
     db,
     user.id,
   );
-  return new Promise((resolve, reject) => {
-    if (res?.access_token && res?.expires_in && res?.id_token) {
-      if (doc) {
-        // If we already have a connection card for this URL, update it
-        try {
-          const nowInSeconds = Math.floor(Date.now() / 1000);
-          doc
-            .update({
-              $set: {
-                access_token: res.access_token,
-                expires_in: nowInSeconds + res.expires_in,
-                scope: res.scope,
-                last_sync_was_error: false,
-              },
-            })
-            .then(() => {
-              console.log('Updated connection card');
-              console.log(doc.toJSON());
-              resolve(true);
-            })
-            .catch((e) => {
-              console.error(e);
-              reject(new Error('Error updating connection'));
-            });
-        } catch (e) {
-          console.error(e);
-          reject(new Error('Error updating connection'));
-        }
-      } else {
-        const nowInSeconds = Math.floor(Date.now() / 1000);
-        // Otherwise, create a new connection card
-        const dbentry: CreateVAConnectionDocument = {
-          id: uuid4(),
-          user_id: user.id,
-          source: 'va',
-          location: getDSTU2Url(),
-          name: "VA's Sandbox API",
-          access_token: res.access_token,
-          patient: res.patient,
-          scope: res.scope,
-          id_token: res.id_token,
-          refresh_token: res.refresh_token,
-          expires_at: nowInSeconds + res.expires_in,
-          auth_uri: VA_AUTH_URL,
-          token_uri: VA_TOKEN_URL,
-        };
-        try {
-          createConnection(db, dbentry as ConnectionDocument)
-            .then(() => {
-              resolve(true);
-            })
-            .catch((e) => {
-              console.error(e);
-              reject(new Error('Error updating connection'));
-            });
-        } catch (e) {
-          console.error(e);
-          reject(new Error('Error updating connection'));
-        }
-      }
-    } else {
-      reject(
-        new Error('Error completing authentication: no access token provided'),
-      );
-    }
-  });
+
+  if (!tokens.accessToken || !tokens.idToken) {
+    throw new Error(
+      'Error completing authentication: no access token provided',
+    );
+  }
+
+  if (doc) {
+    await doc.update({
+      $set: {
+        access_token: tokens.accessToken,
+        expires_at: tokens.expiresAt,
+        scope: tokens.scope || '',
+        last_sync_was_error: false,
+      },
+    });
+    return;
+  }
+
+  const dbentry: CreateVAConnectionDocument = {
+    id: uuid4(),
+    user_id: user.id,
+    source: 'va',
+    location: VA_SANDBOX_TENANT.fhirBaseUrl,
+    name: VA_SANDBOX_TENANT.name,
+    access_token: tokens.accessToken,
+    patient: tokens.patientId || '',
+    scope: tokens.scope || '',
+    id_token: tokens.idToken,
+    refresh_token: tokens.refreshToken || '',
+    expires_at: tokens.expiresAt,
+    auth_uri: VA_SANDBOX_TENANT.authUrl,
+    token_uri: VA_SANDBOX_TENANT.tokenUrl,
+  };
+
+  await createConnection(db, dbentry as ConnectionDocument);
 }
 
 /**
  * For a connection document, if the access token is expired, refresh it and save it to the db
+ * @param config App configuration containing VA_CLIENT_ID
  * @param connectionDocument the connection document to refresh the access token for
- * @param db
+ * @param _db Database (unused, kept for API compatibility)
  */
 export async function refreshVAConnectionTokenIfNeeded(
+  config: AppConfig,
   connectionDocument: RxDocument<ConnectionDocument>,
-  db: RxDatabase<DatabaseCollections>,
+  _db: RxDatabase<DatabaseCollections>,
 ) {
-  try {
-    const nowInSeconds = Math.floor(Date.now() / 1000);
-    if (connectionDocument.get('expires_in') <= nowInSeconds) {
-      const baseUrl = connectionDocument.get('location'),
-        refreshToken = connectionDocument.get('refresh_token'),
-        tokenUri = connectionDocument.get('token_uri'),
-        user = connectionDocument.get('user_id');
+  const nowInSeconds = Math.floor(Date.now() / 1000);
+  const expiresAt = connectionDocument.get('expires_at');
 
-      // TODO: Fix user_id string being passed instead of UserDocument object
-      // Same issue as fixed in Cerner - needs to fetch UserDocument from DB
-      // using findUserById(db, user_id) before passing to saveConnectionToDb
-
-      const access_token_data = await fetchAccessTokenWithRefreshToken(
-        refreshToken,
-        tokenUri,
-      );
-
-      return await saveConnectionToDb({
-        res: access_token_data,
-        vaBaseUrl: baseUrl,
-        db,
-        user,
-      });
-    }
-    return Promise.resolve();
-  } catch (e) {
-    console.error(e);
-    throw new Error('Error refreshing token  - try logging in again');
+  if (expiresAt > nowInSeconds) {
+    return;
   }
-}
 
-export interface VAAuthResponse {
-  access_token: string;
-  id_token: string;
-  expires_in: number;
-  refresh_token: string;
-  scope: string;
-  state: string;
-  token_type: string;
-  patient: string;
+  const refreshToken = connectionDocument.get('refresh_token');
+  const tokenUri = connectionDocument.get('token_uri');
+  const scope = connectionDocument.get('scope');
+
+  if (!refreshToken) {
+    throw new Error('No refresh token available - try logging in again');
+  }
+
+  const currentTokens: TokenSet = {
+    accessToken: connectionDocument.get('access_token'),
+    refreshToken,
+    expiresAt,
+    scope,
+    patientId: connectionDocument.get('patient'),
+    raw: {},
+  };
+
+  const oauthConfig = buildVAOAuthConfig({
+    clientId: config.VA_CLIENT_ID || '',
+    publicUrl: config.PUBLIC_URL || '',
+    redirectPath: Routes.VACallback,
+    tenant: {
+      ...VA_SANDBOX_TENANT,
+      tokenUrl: tokenUri,
+    },
+  });
+
+  const newTokens = await vaClient.refresh(currentTokens, oauthConfig);
+
+  await connectionDocument.update({
+    $set: {
+      access_token: newTokens.accessToken,
+      expires_at: newTokens.expiresAt,
+      scope: newTokens.scope || scope,
+      last_sync_was_error: false,
+    },
+  });
 }

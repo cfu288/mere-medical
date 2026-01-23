@@ -7,6 +7,8 @@ export {
 
 export { createCernerClient } from './lib/vendors/cerner.js';
 
+export { createVAClient } from './lib/vendors/va.js';
+
 export {
   parseOnPatientTokenResponse,
   ONPATIENT_CONSTANTS,
@@ -23,11 +25,15 @@ export {
 export {
   buildEpicOAuthConfig,
   buildCernerOAuthConfig,
+  buildVAOAuthConfig,
   buildOnPatientAuthUrl,
   EPIC_DEFAULT_SCOPES,
   CERNER_DEFAULT_SCOPES,
+  VA_DEFAULT_SCOPES,
+  VA_SANDBOX_TENANT,
   type OAuthConfigOptions,
   type OnPatientConfigOptions,
+  type VAOAuthConfigOptions,
 } from './lib/config-builders.js';
 
 // Shared utilities - use when implementing custom clients
