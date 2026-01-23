@@ -15,7 +15,6 @@ import {
   getRecordDateKey,
   groupRecordsByDate,
   mergeRecordsByDate,
-  PAGE_SIZE,
 } from '../TimelineTab';
 
 describe('useRecordQuery helper functions', () => {
@@ -350,5 +349,516 @@ describe('fetchRecordsUntilCompleteDays', () => {
 
     const dates = Object.keys(result.records);
     expect(dates).toEqual(['2024-01-15', '2024-01-14', '2024-01-13']);
+  });
+
+  it('exits early after timeout if at least 1 complete day found', async () => {
+    const docs = createDocumentsWithSpecificDates(userId, [
+      { date: '2024-01-15T10:00:00Z', count: 300 },
+      { date: '2024-01-14T10:00:00Z', count: 300 },
+      { date: '2024-01-13T10:00:00Z', count: 300 },
+    ]);
+    await db.clinical_documents.bulkInsert(docs);
+
+    let callCount = 0;
+    const dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => {
+      callCount++;
+      return callCount === 1 ? 0 : 5000;
+    });
+
+    const result = await fetchRecordsUntilCompleteDays(db, userId, 3, 0, 1);
+
+    expect(result.hasMore).toBe(true);
+    expect(Object.keys(result.records).length).toBeLessThan(3);
+    for (const dateKey of Object.keys(result.records)) {
+      expect(['2024-01-15', '2024-01-14', '2024-01-13']).toContain(dateKey);
+    }
+
+    dateNowSpy.mockRestore();
+  });
+
+  it('does not timeout if next record is on same date as oldest', async () => {
+    const docs = createDocumentsWithSpecificDates(userId, [
+      { date: '2024-01-15T10:00:00Z', count: 300 },
+    ]);
+    await db.clinical_documents.bulkInsert(docs);
+
+    let callCount = 0;
+    const dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => {
+      callCount++;
+      return callCount === 1 ? 0 : 5000;
+    });
+
+    const result = await fetchRecordsUntilCompleteDays(db, userId, 3, 0, 1);
+
+    expect(result.records['2024-01-15'].length).toBe(300);
+    expect(result.hasMore).toBe(false);
+
+    dateNowSpy.mockRestore();
+  });
+
+  it('continues fetching past timeout when all records are on same date', async () => {
+    const docs = createDocumentsWithSpecificDates(userId, [
+      { date: '2024-01-15T10:00:00Z', count: 750 },
+    ]);
+    await db.clinical_documents.bulkInsert(docs);
+
+    let callCount = 0;
+    const dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => {
+      callCount++;
+      return callCount * 2000;
+    });
+
+    const result = await fetchRecordsUntilCompleteDays(db, userId, 3, 0, 1);
+
+    expect(result.records['2024-01-15'].length).toBe(750);
+    expect(result.hasMore).toBe(false);
+    expect(callCount).toBeGreaterThan(3);
+
+    dateNowSpy.mockRestore();
+  });
+
+  it('returns only complete days when timeout exceeded with 1+ complete days', async () => {
+    const docs = createDocumentsWithSpecificDates(userId, [
+      { date: '2024-01-15T10:00:00Z', count: 200 },
+      { date: '2024-01-14T10:00:00Z', count: 200 },
+      { date: '2024-01-13T10:00:00Z', count: 200 },
+    ]);
+    await db.clinical_documents.bulkInsert(docs);
+
+    let callCount = 0;
+    const dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => {
+      callCount++;
+      return callCount === 1 ? 0 : 5000;
+    });
+
+    const result = await fetchRecordsUntilCompleteDays(db, userId, 3, 0, 1);
+
+    expect(Object.keys(result.records)).toEqual(['2024-01-15']);
+    expect(result.records['2024-01-15'].length).toBe(200);
+    expect(result.hasMore).toBe(true);
+    expect(result.lastOffset).toBe(200);
+
+    dateNowSpy.mockRestore();
+  });
+
+  it('returns complete days on timeout even when hasEnoughDays is true', async () => {
+    const dates: { date: string; count: number }[] = [];
+    const baseDate = new Date('2024-01-15T10:00:00Z');
+    for (let i = 0; i < 50; i++) {
+      const d = new Date(baseDate);
+      d.setDate(d.getDate() - i);
+      dates.push({ date: d.toISOString(), count: 10 });
+    }
+    const docs = createDocumentsWithSpecificDates(userId, dates);
+    await db.clinical_documents.bulkInsert(docs);
+
+    let callCount = 0;
+    const dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => {
+      callCount++;
+      return callCount === 1 ? 0 : 5000;
+    });
+
+    const result = await fetchRecordsUntilCompleteDays(db, userId, 3, 0, 1);
+
+    const returnedDates = Object.keys(result.records);
+    expect(returnedDates.length).toBeLessThan(50);
+    expect(result.hasMore).toBe(true);
+
+    dateNowSpy.mockRestore();
+  });
+
+  it('emits partial results when timeout exceeded with 0 complete days', async () => {
+    const docs = createDocumentsWithSpecificDates(userId, [
+      { date: '2024-01-15T10:00:00Z', count: 750 },
+    ]);
+    await db.clinical_documents.bulkInsert(docs);
+
+    let callCount = 0;
+    const dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => {
+      callCount++;
+      return callCount === 1 ? 0 : 5000;
+    });
+
+    const partialResults: any[] = [];
+    const onPartialResults = jest.fn((partial) => {
+      partialResults.push(partial);
+    });
+
+    const result = await fetchRecordsUntilCompleteDays(
+      db,
+      userId,
+      3,
+      0,
+      1,
+      onPartialResults,
+    );
+
+    expect(onPartialResults).toHaveBeenCalled();
+    expect(partialResults.length).toBeGreaterThanOrEqual(1);
+    expect(partialResults[0].hasMore).toBe(true);
+    expect(Object.keys(partialResults[0].records)).toContain('2024-01-15');
+
+    expect(result.records['2024-01-15'].length).toBe(750);
+    expect(result.hasMore).toBe(false);
+
+    dateNowSpy.mockRestore();
+  });
+
+  it('only emits partial results once per query', async () => {
+    const docs = createDocumentsWithSpecificDates(userId, [
+      { date: '2024-01-15T10:00:00Z', count: 1000 },
+    ]);
+    await db.clinical_documents.bulkInsert(docs);
+
+    let callCount = 0;
+    const dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => {
+      callCount++;
+      return callCount === 1 ? 0 : 5000;
+    });
+
+    const onPartialResults = jest.fn();
+
+    await fetchRecordsUntilCompleteDays(db, userId, 3, 0, 1, onPartialResults);
+
+    expect(onPartialResults).toHaveBeenCalledTimes(1);
+
+    dateNowSpy.mockRestore();
+  });
+
+  it('returns exactly the complete days when multiple are available at timeout', async () => {
+    const docs = createDocumentsWithSpecificDates(userId, [
+      { date: '2024-01-15T10:00:00Z', count: 100 },
+      { date: '2024-01-14T10:00:00Z', count: 100 },
+      { date: '2024-01-13T10:00:00Z', count: 100 },
+    ]);
+    await db.clinical_documents.bulkInsert(docs);
+
+    let callCount = 0;
+    const dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => {
+      callCount++;
+      return callCount === 1 ? 0 : 5000;
+    });
+
+    const result = await fetchRecordsUntilCompleteDays(db, userId, 3, 0, 1);
+
+    const returnedDates = Object.keys(result.records).sort((a, b) =>
+      b.localeCompare(a),
+    );
+    expect(returnedDates).toEqual(['2024-01-15', '2024-01-14']);
+    expect(result.records['2024-01-15'].length).toBe(100);
+    expect(result.records['2024-01-14'].length).toBe(100);
+    expect(result.hasMore).toBe(true);
+
+    dateNowSpy.mockRestore();
+  });
+
+  it('does not emit partial results when timeout exceeded but has complete days', async () => {
+    const docs = createDocumentsWithSpecificDates(userId, [
+      { date: '2024-01-15T10:00:00Z', count: 200 },
+      { date: '2024-01-14T10:00:00Z', count: 200 },
+    ]);
+    await db.clinical_documents.bulkInsert(docs);
+
+    let callCount = 0;
+    const dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => {
+      callCount++;
+      return callCount === 1 ? 0 : 5000;
+    });
+
+    const onPartialResults = jest.fn();
+
+    const result = await fetchRecordsUntilCompleteDays(
+      db,
+      userId,
+      3,
+      0,
+      1,
+      onPartialResults,
+    );
+
+    expect(onPartialResults).not.toHaveBeenCalled();
+    expect(Object.keys(result.records)).toEqual(['2024-01-15']);
+    expect(result.hasMore).toBe(true);
+
+    dateNowSpy.mockRestore();
+  });
+
+  it('truncates to complete days when exiting via date boundary with incomplete day', async () => {
+    const docs = createDocumentsWithSpecificDates(userId, [
+      { date: '2024-01-15T10:00:00Z', count: 100 },
+      { date: '2024-01-14T10:00:00Z', count: 100 },
+      { date: '2024-01-13T10:00:00Z', count: 50 },
+      { date: '2024-01-12T10:00:00Z', count: 1 },
+    ]);
+    await db.clinical_documents.bulkInsert(docs);
+
+    const result = await fetchRecordsUntilCompleteDays(db, userId, 3, 0);
+
+    expect(
+      Object.keys(result.records).sort((a, b) => b.localeCompare(a)),
+    ).toEqual(['2024-01-15', '2024-01-14']);
+    expect(result.records['2024-01-15'].length).toBe(100);
+    expect(result.records['2024-01-14'].length).toBe(100);
+    expect(result.hasMore).toBe(true);
+    expect(result.lastOffset).toBe(200);
+  });
+
+  describe('boundary conditions', () => {
+    it('handles 0 records for user', async () => {
+      const result = await fetchRecordsUntilCompleteDays(db, userId, 3, 0);
+
+      expect(Object.keys(result.records)).toHaveLength(0);
+      expect(result.hasMore).toBe(false);
+      expect(result.lastOffset).toBe(0);
+    });
+
+    it('handles exactly minDays days', async () => {
+      const docs = createDocumentsWithSpecificDates(userId, [
+        { date: '2024-01-15T10:00:00Z', count: 10 },
+        { date: '2024-01-14T10:00:00Z', count: 10 },
+        { date: '2024-01-13T10:00:00Z', count: 10 },
+      ]);
+      await db.clinical_documents.bulkInsert(docs);
+
+      const result = await fetchRecordsUntilCompleteDays(db, userId, 3, 0);
+
+      expect(Object.keys(result.records)).toHaveLength(3);
+      expect(result.hasMore).toBe(false);
+    });
+
+    it('handles exactly GROUPED_VIEW_BATCH_SIZE records (250)', async () => {
+      const docs = createDocumentsWithSpecificDates(userId, [
+        { date: '2024-01-15T10:00:00Z', count: 100 },
+        { date: '2024-01-14T10:00:00Z', count: 100 },
+        { date: '2024-01-13T10:00:00Z', count: 50 },
+      ]);
+      await db.clinical_documents.bulkInsert(docs);
+
+      const result = await fetchRecordsUntilCompleteDays(db, userId, 3, 0);
+
+      const totalRecords = Object.values(result.records).reduce(
+        (sum, arr) => sum + arr.length,
+        0,
+      );
+      expect(totalRecords).toBe(250);
+      expect(result.hasMore).toBe(false);
+    });
+
+    it('handles GROUPED_VIEW_BATCH_SIZE - 1 records (249)', async () => {
+      const docs = createDocumentsWithSpecificDates(userId, [
+        { date: '2024-01-15T10:00:00Z', count: 100 },
+        { date: '2024-01-14T10:00:00Z', count: 100 },
+        { date: '2024-01-13T10:00:00Z', count: 49 },
+      ]);
+      await db.clinical_documents.bulkInsert(docs);
+
+      const result = await fetchRecordsUntilCompleteDays(db, userId, 3, 0);
+
+      const totalRecords = Object.values(result.records).reduce(
+        (sum, arr) => sum + arr.length,
+        0,
+      );
+      expect(totalRecords).toBe(249);
+      expect(result.hasMore).toBe(false);
+    });
+
+    it('handles GROUPED_VIEW_BATCH_SIZE + 1 records (251)', async () => {
+      const docs = createDocumentsWithSpecificDates(userId, [
+        { date: '2024-01-15T10:00:00Z', count: 100 },
+        { date: '2024-01-14T10:00:00Z', count: 100 },
+        { date: '2024-01-13T10:00:00Z', count: 51 },
+      ]);
+      await db.clinical_documents.bulkInsert(docs);
+
+      const result = await fetchRecordsUntilCompleteDays(db, userId, 3, 0);
+
+      expect(Object.keys(result.records)).toHaveLength(3);
+      expect(result.hasMore).toBe(false);
+    });
+
+    it('handles single record', async () => {
+      const docs = createDocumentsWithSpecificDates(userId, [
+        { date: '2024-01-15T10:00:00Z', count: 1 },
+      ]);
+      await db.clinical_documents.bulkInsert(docs);
+
+      const result = await fetchRecordsUntilCompleteDays(db, userId, 3, 0);
+
+      expect(Object.keys(result.records)).toHaveLength(1);
+      expect(result.records['2024-01-15']).toHaveLength(1);
+      expect(result.hasMore).toBe(false);
+    });
+  });
+
+  describe('fuzz testing - pagination integrity', () => {
+    function generateRandomDateDistribution(
+      seed: number,
+    ): { date: string; count: number }[] {
+      const random = (max: number) => {
+        seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+        return seed % max;
+      };
+
+      const numDays = 3 + random(15);
+      const baseDate = new Date('2024-01-15T10:00:00Z');
+      const dates: { date: string; count: number }[] = [];
+
+      for (let i = 0; i < numDays; i++) {
+        const d = new Date(baseDate);
+        d.setDate(d.getDate() - i);
+        const count = 1 + random(150);
+        dates.push({ date: d.toISOString(), count });
+      }
+
+      return dates;
+    }
+
+    async function getAllRecordsPaged(
+      db: RxDatabase<DatabaseCollections>,
+      userId: string,
+      minDays: number,
+    ): Promise<string[]> {
+      const allIds: string[] = [];
+      let offset = 0;
+      let hasMore = true;
+
+      while (hasMore) {
+        const result = await fetchRecordsUntilCompleteDays(
+          db,
+          userId,
+          minDays,
+          offset,
+        );
+        for (const records of Object.values(result.records)) {
+          for (const record of records) {
+            allIds.push(record.id!);
+          }
+        }
+        offset = result.lastOffset;
+        hasMore = result.hasMore;
+
+        if (allIds.length > 10000) {
+          throw new Error('Safety limit exceeded');
+        }
+      }
+
+      return allIds;
+    }
+
+    async function getAllRecordsUnpaged(
+      db: RxDatabase<DatabaseCollections>,
+      userId: string,
+    ): Promise<string[]> {
+      const records = await fetchRawRecords(db, userId, 0, 100000);
+      return records.map((r) => r.id!);
+    }
+
+    it.each([42, 123, 456, 789, 1001])(
+      'paged results match unpaged for seed %i',
+      async (seed) => {
+        const dates = generateRandomDateDistribution(seed);
+        const totalExpected = dates.reduce((sum, d) => sum + d.count, 0);
+        const docs = createDocumentsWithSpecificDates(userId, dates);
+        await db.clinical_documents.bulkInsert(docs);
+
+        const pagedIds = await getAllRecordsPaged(db, userId, 3);
+        const unpagedIds = await getAllRecordsUnpaged(db, userId);
+
+        const pagedSet = new Set(pagedIds);
+        const unpagedSet = new Set(unpagedIds);
+
+        expect(pagedIds.length).toBe(totalExpected);
+        expect(unpagedIds.length).toBe(totalExpected);
+
+        expect(pagedIds.length).toBe(pagedSet.size);
+
+        const missingFromPaged = unpagedIds.filter((id) => !pagedSet.has(id));
+        const extraInPaged = pagedIds.filter((id) => !unpagedSet.has(id));
+
+        expect(missingFromPaged).toEqual([]);
+        expect(extraInPaged).toEqual([]);
+      },
+    );
+
+    it('pagination with varying minDays produces consistent results', async () => {
+      const dates = generateRandomDateDistribution(999);
+      const docs = createDocumentsWithSpecificDates(userId, dates);
+      await db.clinical_documents.bulkInsert(docs);
+
+      const unpagedIds = await getAllRecordsUnpaged(db, userId);
+
+      for (const minDays of [1, 2, 3, 5, 7]) {
+        const pagedIds = await getAllRecordsPaged(db, userId, minDays);
+        const pagedSet = new Set(pagedIds);
+
+        expect(pagedIds.length).toBe(pagedSet.size);
+        expect(pagedIds.length).toBe(unpagedIds.length);
+
+        const missing = unpagedIds.filter((id) => !pagedSet.has(id));
+        expect(missing).toEqual([]);
+      }
+    });
+  });
+});
+
+describe('guardedDispatch pattern (stale response handling)', () => {
+  function createGuardedDispatch<T>(
+    requestIdRef: { current: number },
+    thisRequestId: number,
+    dispatch: (action: T) => void,
+  ): (action: T) => void {
+    return (action: T) => {
+      if (requestIdRef.current !== thisRequestId) {
+        return;
+      }
+      dispatch(action);
+    };
+  }
+
+  it('dispatches when request ID matches', () => {
+    const requestIdRef = { current: 1 };
+    const dispatch = jest.fn();
+    const guarded = createGuardedDispatch(requestIdRef, 1, dispatch);
+
+    guarded({ type: 'TEST' });
+
+    expect(dispatch).toHaveBeenCalledWith({ type: 'TEST' });
+  });
+
+  it('ignores dispatch when request ID has changed (stale response)', () => {
+    const requestIdRef = { current: 2 };
+    const dispatch = jest.fn();
+    const guarded = createGuardedDispatch(requestIdRef, 1, dispatch);
+
+    guarded({ type: 'TEST' });
+
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it('handles rapid query changes correctly', async () => {
+    const requestIdRef = { current: 0 };
+    const results: string[] = [];
+    const dispatch = (action: { query: string }) => {
+      results.push(action.query);
+    };
+
+    const simulateQuery = async (query: string, delayMs: number) => {
+      const thisRequestId = ++requestIdRef.current;
+      const guarded = createGuardedDispatch(
+        requestIdRef,
+        thisRequestId,
+        dispatch,
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      guarded({ query });
+    };
+
+    await Promise.all([
+      simulateQuery('slow-query', 50),
+      simulateQuery('fast-query', 10),
+    ]);
+
+    expect(results).toEqual(['fast-query']);
   });
 });

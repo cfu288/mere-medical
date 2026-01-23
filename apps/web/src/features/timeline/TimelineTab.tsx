@@ -34,15 +34,9 @@ import { TimelineYearHeader } from './components/layout/TimelineYearHeader';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { TimelineMonthDayHeader } from './components/layout/TimelineMonthDayHeader';
 import { useRecordQuery } from './hooks/useRecordQuery';
+import { QueryStatus } from './types';
 
-export enum QueryStatus {
-  IDLE,
-  LOADING, // Initial load and queries with page === 0
-  LOADING_MORE, // Currently loading more results using loadNextPage
-  SUCCESS,
-  ERROR,
-  COMPLETE_HIDE_LOAD_MORE, // Indicates that there are no more results to load using loadNextPage
-}
+export { QueryStatus };
 
 export function TimelineTab() {
   const user = useUser(),
@@ -275,6 +269,7 @@ export const formattedTitleDateDayString = (dateKey: string) =>
     : format(parseISO(dateKey), 'dd');
 
 export const PAGE_SIZE = 50;
+export const GROUPED_VIEW_BATCH_SIZE = 250;
 
 export async function fetchRecordsWithVectorSearch({
   db,
@@ -622,44 +617,153 @@ export function mergeRecordsByDate(
   return merged;
 }
 
+export type PartialResultsCallback = (partial: {
+  records: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>;
+  hasMore: boolean;
+  lastOffset: number;
+}) => void;
+
 export async function fetchRecordsUntilCompleteDays(
   db: RxDatabase<DatabaseCollections>,
   user_id: string,
   minDays: number = 5,
   existingOffset: number = 0,
+  timeoutMs: number = 3000,
+  onPartialResults?: PartialResultsCallback,
 ): Promise<{
   records: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>;
   hasMore: boolean;
   lastOffset: number;
 }> {
+  const startTime = Date.now();
   let offset = existingOffset;
   const allRecords: ClinicalDocument<BundleEntry<FhirResource>>[] = [];
   const uniqueDates = new Set<string>();
+  const completeDates = new Set<string>();
+  let newestDate: string | null = null;
   let hasMore = true;
+  let iteration = 0;
+  let emittedPartialUpdate = false;
 
   while (true) {
-    const batch = await fetchRawRecords(db, user_id, offset, PAGE_SIZE);
+    iteration++;
+    const batchStartTime = Date.now();
+    const batch = await fetchRawRecords(
+      db,
+      user_id,
+      offset,
+      GROUPED_VIEW_BATCH_SIZE,
+    );
+    const batchDuration = Date.now() - batchStartTime;
+    const elapsed = Date.now() - startTime;
+
+    console.debug('[fetchRecordsUntilCompleteDays] batch fetched', {
+      iteration,
+      batchSize: batch.length,
+      batchDuration,
+      elapsed,
+      timeoutMs,
+      offset,
+      uniqueDates: uniqueDates.size,
+      completeDates: completeDates.size,
+      totalRecords: allRecords.length,
+    });
 
     if (batch.length === 0) {
+      console.debug('[fetchRecordsUntilCompleteDays] exiting: empty batch');
       hasMore = false;
       break;
+    }
+
+    for (const record of batch) {
+      const dateKey = getRecordDateKey(record);
+      if (newestDate && dateKey < newestDate) {
+        completeDates.add(newestDate);
+      }
+      newestDate = dateKey;
+      uniqueDates.add(dateKey);
     }
 
     allRecords.push(...batch);
     offset += batch.length;
 
-    for (const record of batch) {
-      uniqueDates.add(getRecordDateKey(record));
-    }
-
-    if (batch.length < PAGE_SIZE) {
+    if (batch.length < GROUPED_VIEW_BATCH_SIZE) {
+      console.debug('[fetchRecordsUntilCompleteDays] exiting: partial batch', {
+        batchSize: batch.length,
+        expectedSize: GROUPED_VIEW_BATCH_SIZE,
+      });
       hasMore = false;
       break;
     }
 
-    if (uniqueDates.size >= minDays) {
+    const timeoutExceeded = elapsed > timeoutMs;
+    const hasEnoughDays = uniqueDates.size >= minDays;
+
+    console.debug('[fetchRecordsUntilCompleteDays] exit check', {
+      iteration,
+      hasEnoughDays,
+      timeoutExceeded,
+      uniqueDates: uniqueDates.size,
+      completeDates: completeDates.size,
+      minDays,
+    });
+
+    if (timeoutExceeded && completeDates.size >= 1) {
+      console.debug(
+        '[fetchRecordsUntilCompleteDays] timeout with complete days, returning early',
+        {
+          completeDates: completeDates.size,
+        },
+      );
+      const grouped = groupRecordsByDate(allRecords);
+      const sortedDates = Object.keys(grouped).sort((a, b) =>
+        b.localeCompare(a),
+      );
+      const completeDatesToReturn = sortedDates.filter((d) =>
+        completeDates.has(d),
+      );
+
+      const truncated: Record<
+        string,
+        ClinicalDocument<BundleEntry<FhirResource>>[]
+      > = {};
+      let keptCount = 0;
+      for (const date of completeDatesToReturn) {
+        truncated[date] = grouped[date];
+        keptCount += grouped[date].length;
+      }
+
+      return {
+        records: truncated,
+        hasMore: true,
+        lastOffset: existingOffset + keptCount,
+      };
+    }
+
+    if (timeoutExceeded && completeDates.size === 0) {
+      console.debug(
+        '[fetchRecordsUntilCompleteDays] timeout with 0 complete days, emitting partial',
+        {
+          uniqueDates: uniqueDates.size,
+          totalRecords: allRecords.length,
+        },
+      );
+      if (onPartialResults && !emittedPartialUpdate) {
+        emittedPartialUpdate = true;
+        onPartialResults({
+          records: groupRecordsByDate(allRecords),
+          hasMore: true,
+          lastOffset: offset,
+        });
+      }
+    }
+
+    if (hasEnoughDays) {
       const checkBatch = await fetchRawRecords(db, user_id, offset, 1);
       if (checkBatch.length === 0) {
+        console.debug(
+          '[fetchRecordsUntilCompleteDays] exiting: no more records after exit check',
+        );
         hasMore = false;
         break;
       }
@@ -668,9 +772,22 @@ export async function fetchRecordsUntilCompleteDays(
       const sortedDates = [...uniqueDates].sort();
       const oldestDate = sortedDates[0];
 
+      console.debug('[fetchRecordsUntilCompleteDays] date boundary check', {
+        nextDate,
+        oldestDate,
+        willExit: nextDate !== oldestDate,
+      });
+
       if (nextDate !== oldestDate) {
+        console.debug(
+          '[fetchRecordsUntilCompleteDays] exiting: date boundary reached',
+        );
         break;
       }
+
+      console.debug(
+        '[fetchRecordsUntilCompleteDays] continuing: next record same date as oldest',
+      );
     }
   }
 
@@ -692,6 +809,37 @@ export async function fetchRecordsUntilCompleteDays(
       }
     }
 
+    return {
+      records: truncated,
+      hasMore: true,
+      lastOffset: existingOffset + keptCount,
+    };
+  }
+
+  if (
+    hasMore &&
+    completeDates.size >= 1 &&
+    completeDates.size < sortedDates.length
+  ) {
+    console.debug(
+      '[fetchRecordsUntilCompleteDays] truncating to complete days at end',
+      {
+        completeDates: completeDates.size,
+        totalDates: sortedDates.length,
+      },
+    );
+    const completeDatesToReturn = sortedDates.filter((d) =>
+      completeDates.has(d),
+    );
+    const truncated: Record<
+      string,
+      ClinicalDocument<BundleEntry<FhirResource>>[]
+    > = {};
+    let keptCount = 0;
+    for (const date of completeDatesToReturn) {
+      truncated[date] = grouped[date];
+      keptCount += grouped[date].length;
+    }
     return {
       records: truncated,
       hasMore: true,
