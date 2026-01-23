@@ -1,6 +1,6 @@
 # @mere/fhir-oauth
 
-OAuth clients for SMART on FHIR servers. Handles patient standalone launch flows with vendor-specific clients that normalize the differences in OAuth implementations across EHR systems, exposing a consistent `TokenSet` return type.
+OAuth clients for SMART on FHIR servers. Handles patient standalone launch flows with vendor-specific clients that normalize the differences in OAuth implementations across EHR systems. Each vendor returns a typed token set extending `CoreTokenSet`.
 
 ## Supported Vendors
 
@@ -8,6 +8,7 @@ OAuth clients for SMART on FHIR servers. Handles patient standalone launch flows
 | --------- | ------------ | -------------- | ---- | ------------------- |
 | Epic      | Public       | Frontend       | Yes  | JWT-based           |
 | Cerner    | Public       | Frontend       | Yes  | refresh_token grant |
+| VA        | Public       | Frontend       | Yes  | refresh_token grant |
 | OnPatient | Confidential | Backend        | No   | Not supported       |
 
 ## Quick Start (React)
