@@ -16,9 +16,15 @@ export interface OnPatientTokenResponse {
   token_type?: string;
 }
 
+/**
+ * OnPatient token responses include access_token, refresh_token, scope, and
+ * expires_in (always 48 hours). Per OnPatient docs, patient ID is not included
+ * in the token response - it must be obtained separately via the FHIR API.
+ * @see https://www.onpatient.com/api_fhir/api-docs/documentation/
+ */
 export type OnPatientTokenSet = CoreTokenSet & {
   refreshToken?: string;
-  patientId?: string;
+  scope?: string;
 };
 
 export function parseOnPatientTokenResponse(data: OnPatientTokenResponse): OnPatientTokenSet {
@@ -27,7 +33,7 @@ export function parseOnPatientTokenResponse(data: OnPatientTokenResponse): OnPat
     accessToken: data.access_token,
     expiresAt: nowSeconds + data.expires_in,
     refreshToken: data.refresh_token,
-    patientId: data.patient,
+    scope: data.scope,
     raw: data as unknown as Record<string, unknown>,
   };
 }
