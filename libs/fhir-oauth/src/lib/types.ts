@@ -27,26 +27,47 @@ export interface AuthorizationRequestState {
   startedAt: number;
 }
 
-export interface TokenSet {
+export interface CoreTokenSet {
   accessToken: string;
   expiresAt: number;
-  refreshToken?: string;
-  idToken?: string;
-  scope?: string;
-  patientId?: string;
-  clientId?: string;
   raw: Record<string, unknown>;
 }
 
-export interface OAuthClient {
+export interface WithRefreshToken {
+  refreshToken: string;
+}
+
+export interface WithIdToken {
+  idToken: string;
+}
+
+export interface WithScope {
+  scope: string;
+}
+
+export interface WithPatientId {
+  patientId: string;
+}
+
+export interface WithClientId {
+  clientId: string;
+}
+
+export type ParsedTokenResponse = CoreTokenSet & {
+  refreshToken?: string;
+  idToken?: string;
+  scope?: string;
+};
+
+export interface OAuthClient<T extends CoreTokenSet = CoreTokenSet> {
   initiateAuth: (config: OAuthConfig) => Promise<{ url: string; session: AuthorizationRequestState }>;
   handleCallback: (
     params: URLSearchParams,
     config: OAuthConfig,
     session: AuthorizationRequestState,
-  ) => Promise<TokenSet>;
-  refresh: (tokens: TokenSet, config: OAuthConfig) => Promise<TokenSet>;
-  isExpired: (tokens: TokenSet, bufferSeconds?: number) => boolean;
+  ) => Promise<T>;
+  refresh: (tokens: T, config: OAuthConfig) => Promise<T>;
+  isExpired: (tokens: T, bufferSeconds?: number) => boolean;
 }
 
 export class OAuthError extends Error {

@@ -1,6 +1,6 @@
 import { validateCallback, isTokenExpired } from './token-exchange';
 import { OAuthError } from './types';
-import type { AuthorizationRequestState, TokenSet } from './types';
+import type { AuthorizationRequestState, CoreTokenSet } from './types';
 
 describe('validateCallback', () => {
   const validSession: AuthorizationRequestState = {
@@ -119,7 +119,7 @@ describe('validateCallback', () => {
 });
 
 describe('isTokenExpired', () => {
-  const createTokenSet = (expiresAt: number): TokenSet => ({
+  const createTokenSet = (expiresAt: number): CoreTokenSet => ({
     accessToken: 'test-token',
     expiresAt,
     raw: {},

@@ -1,4 +1,4 @@
-import type { OAuthConfig, AuthorizationRequestState, TokenSet } from '../types.js';
+import type { OAuthConfig, AuthorizationRequestState, CoreTokenSet, ParsedTokenResponse, WithPatientId, WithClientId } from '../types.js';
 import { createOAuthError, OAuthErrors } from '../types.js';
 import { initiateStandardAuth } from '../auth-url.js';
 import { exchangeWithPkce, parseTokenResponse, validateCallback, isTokenExpired } from '../token-exchange.js';
@@ -11,6 +11,18 @@ export interface EpicClientDependencies {
   signJwt: JwtSigner;
 }
 
+/**
+ * Epic standalone token responses include a patient field for patient-facing workflows.
+ * Per Epic docs: "For patient-facing workflows, this parameter identifies the FHIR ID
+ * for the patient on whose behalf authorization to the system was granted."
+ * @see https://fhir.epic.com/Documentation?docId=oauth2
+ */
+export type EpicTokenSet = CoreTokenSet &
+  WithPatientId & {
+    refreshToken?: string;
+    clientId?: string;
+  };
+
 export interface EpicClient {
   initiateAuth: (
     config: OAuthConfig,
@@ -19,9 +31,9 @@ export interface EpicClient {
     params: URLSearchParams,
     config: OAuthConfig,
     session: AuthorizationRequestState,
-  ) => Promise<TokenSet>;
-  refresh: (tokens: TokenSet, config: OAuthConfig) => Promise<TokenSet>;
-  isExpired: (tokens: TokenSet, bufferSeconds?: number) => boolean;
+  ) => Promise<EpicTokenSet>;
+  refresh: (tokens: EpicTokenSet, config: OAuthConfig) => Promise<EpicTokenSet>;
+  isExpired: (tokens: EpicTokenSet, bufferSeconds?: number) => boolean;
 }
 
 /**
@@ -30,6 +42,7 @@ export interface EpicClient {
  * clients. Use this when making direct requests to Epic's token endpoint.
  *
  * @param deps.signJwt - Function to sign JWTs for client authentication
+ * @see https://fhir.epic.com/Documentation?docId=oauth2
  */
 export function createEpicClient(deps: EpicClientDependencies): EpicClient {
   const { signJwt } = deps;
@@ -87,10 +100,12 @@ export function createEpicClient(deps: EpicClientDependencies): EpicClient {
       const newTokens = await parseTokenResponse(res);
 
       return {
-        ...newTokens,
-        idToken: newTokens.idToken ?? tokens.idToken,
+        accessToken: newTokens.accessToken,
+        expiresAt: newTokens.expiresAt,
+        refreshToken: newTokens.refreshToken,
         patientId: tokens.patientId,
         clientId: tokens.clientId,
+        raw: newTokens.raw,
       };
     },
 
@@ -136,7 +151,7 @@ export function createEpicClientWithProxy(
     async handleCallback(params, config, session) {
       const code = validateCallback(params, session);
 
-      let tokens: TokenSet;
+      let tokens: ParsedTokenResponse;
       if (config.tenant?.id) {
         const proxyUrl = proxyUrlBuilder(config.tenant.id, 'token');
         const body = new URLSearchParams({
@@ -209,10 +224,12 @@ export function createEpicClientWithProxy(
       const newTokens = await parseTokenResponse(res);
 
       return {
-        ...newTokens,
-        idToken: newTokens.idToken ?? tokens.idToken,
+        accessToken: newTokens.accessToken,
+        expiresAt: newTokens.expiresAt,
+        refreshToken: newTokens.refreshToken,
         patientId: tokens.patientId,
         clientId: tokens.clientId,
+        raw: newTokens.raw,
       };
     },
 

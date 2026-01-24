@@ -56,7 +56,7 @@ import {
   createEpicClientWithProxy,
   EPIC_DEFAULT_SCOPES,
   type OAuthConfig,
-  type TokenSet,
+  type EpicTokenSet,
 } from '@mere/fhir-oauth';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
 import {
@@ -1007,7 +1007,7 @@ export async function refreshEpicConnectionTokenIfNeeded(
   useProxy = false,
 ) {
   const clientId = connectionDocument.get('client_id');
-  const currentTokens: TokenSet = {
+  const currentTokens: EpicTokenSet = {
     accessToken: connectionDocument.get('access_token'),
     expiresAt: connectionDocument.get('expires_at'),
     refreshToken: connectionDocument.get('refresh_token'),
@@ -1064,7 +1064,7 @@ export async function refreshEpicConnectionTokenIfNeeded(
           expires_in: newTokens.expiresAt - Math.floor(Date.now() / 1000),
           patient: newTokens.patientId || '',
           token_type: 'Bearer',
-          scope: newTokens.scope || '',
+          scope: (newTokens.raw['scope'] as string) || '',
           refresh_token: newTokens.refreshToken || '',
           client_id: clientId,
         },
