@@ -15,7 +15,7 @@ import {
   getRecordDateKey,
   groupRecordsByDate,
   mergeRecordsByDate,
-} from '../TimelineTab';
+} from './useRecordQuery';
 
 describe('useRecordQuery helper functions', () => {
   let db: RxDatabase<DatabaseCollections>;
@@ -207,14 +207,24 @@ describe('useRecordQuery helper functions', () => {
       docs[0].data_record.resource_type = 'patient';
       docs[1].data_record.resource_type = 'careplan';
       docs[2].data_record.resource_type = 'provenance';
+      docs[3].data_record.resource_type = 'documentreference_attachment';
+      await db.clinical_documents.bulkInsert(docs);
+
+      const records = await fetchRawRecords(db, userId, 0, 10);
+
+      expect(records).toHaveLength(1);
+      expect(records[0].data_record.resource_type).toBe('observation');
+    });
+
+    it('excludes records with empty metadata.date', async () => {
+      const docs = createDocumentsForDays(userId, 1, 3);
+      docs[0].metadata!.date = '';
       await db.clinical_documents.bulkInsert(docs);
 
       const records = await fetchRawRecords(db, userId, 0, 10);
 
       expect(records).toHaveLength(2);
-      expect(
-        records.every((r) => r.data_record.resource_type === 'observation'),
-      ).toBe(true);
+      expect(records.every((r) => r.metadata?.date)).toBe(true);
     });
   });
 });
@@ -234,7 +244,7 @@ describe('fetchRecordsUntilCompleteDays', () => {
     await cleanupTestDatabase(db);
   });
 
-  it('fetches at least minDays complete days on initial load', async () => {
+  it('returns at least the requested number of days on initial load', async () => {
     const docs = createDocumentsWithSpecificDates(userId, [
       { date: '2024-01-15T10:00:00Z', count: 20 },
       { date: '2024-01-14T10:00:00Z', count: 20 },
@@ -251,7 +261,7 @@ describe('fetchRecordsUntilCompleteDays', () => {
     expect(result.hasMore).toBe(true);
   });
 
-  it('exits immediately when minDays complete days are available (sparse data)', async () => {
+  it('returns exactly the requested days when data has few records per day', async () => {
     const dates: { date: string; count: number }[] = [];
     const baseDate = new Date('2024-01-15T10:00:00Z');
     for (let i = 0; i < 100; i++) {
@@ -274,7 +284,7 @@ describe('fetchRecordsUntilCompleteDays', () => {
     expect(totalRecords).toBeLessThan(50);
   });
 
-  it('uses date boundary check when uniqueDates >= minDays but completeDates < minDays (dense data)', async () => {
+  it('fetches all records when days have many records spanning multiple batches', async () => {
     const docs = createDocumentsWithSpecificDates(userId, [
       { date: '2024-01-15T10:00:00Z', count: 100 },
       { date: '2024-01-14T10:00:00Z', count: 100 },
@@ -285,10 +295,15 @@ describe('fetchRecordsUntilCompleteDays', () => {
     const result = await fetchRecordsUntilCompleteDays(db, userId, 3, 0);
 
     expect(Object.keys(result.records).length).toBe(3);
+    const totalRecords = Object.values(result.records).reduce(
+      (sum, arr) => sum + arr.length,
+      0,
+    );
+    expect(totalRecords).toBe(300);
     expect(result.hasMore).toBe(false);
   });
 
-  it('continues fetching with sparse data until minDays complete (exactly minDays)', async () => {
+  it('returns the requested days even when records span multiple batches', async () => {
     const docs = createDocumentsWithSpecificDates(userId, [
       { date: '2024-01-15T10:00:00Z', count: 80 },
       { date: '2024-01-14T10:00:00Z', count: 80 },
@@ -300,10 +315,15 @@ describe('fetchRecordsUntilCompleteDays', () => {
     const result = await fetchRecordsUntilCompleteDays(db, userId, 3, 0);
 
     expect(Object.keys(result.records).length).toBe(3);
+    const totalRecords = Object.values(result.records).reduce(
+      (sum, arr) => sum + arr.length,
+      0,
+    );
+    expect(totalRecords).toBe(240);
     expect(result.hasMore).toBe(true);
   });
 
-  it('handles load more correctly with sparse data', async () => {
+  it('load more returns different days than initial load', async () => {
     const dates: { date: string; count: number }[] = [];
     const baseDate = new Date('2024-01-15T10:00:00Z');
     for (let i = 0; i < 20; i++) {
@@ -351,7 +371,7 @@ describe('fetchRecordsUntilCompleteDays', () => {
     expect(totalRecords).toBe(20);
   });
 
-  it('stops at day boundary, not mid-day', async () => {
+  it('never returns partial days', async () => {
     const docs = createDocumentsWithSpecificDates(userId, [
       { date: '2024-01-15T10:00:00Z', count: 30 },
       { date: '2024-01-14T10:00:00Z', count: 30 },
@@ -375,7 +395,7 @@ describe('fetchRecordsUntilCompleteDays', () => {
     }
   });
 
-  it('tracks lastOffset correctly for pagination', async () => {
+  it('lastOffset equals total records returned for pagination', async () => {
     const docs = createDocumentsWithSpecificDates(userId, [
       { date: '2024-01-15T10:00:00Z', count: 20 },
       { date: '2024-01-14T10:00:00Z', count: 20 },
@@ -393,7 +413,7 @@ describe('fetchRecordsUntilCompleteDays', () => {
     expect(result.lastOffset).toBe(totalRecords);
   });
 
-  it('continues from existingOffset for load more', async () => {
+  it('load more returns non-overlapping days', async () => {
     const docs = createDocumentsWithSpecificDates(userId, [
       { date: '2024-01-15T10:00:00Z', count: 20 },
       { date: '2024-01-14T10:00:00Z', count: 20 },
@@ -418,7 +438,7 @@ describe('fetchRecordsUntilCompleteDays', () => {
     expect(firstDates.some((d) => secondDates.includes(d))).toBe(false);
   });
 
-  it('returns records sorted by date descending', async () => {
+  it('returns days in newest-to-oldest order', async () => {
     const docs = createDocumentsWithSpecificDates(userId, [
       { date: '2024-01-13T10:00:00Z', count: 10 },
       { date: '2024-01-15T10:00:00Z', count: 10 },
@@ -432,7 +452,7 @@ describe('fetchRecordsUntilCompleteDays', () => {
     expect(dates).toEqual(['2024-01-15', '2024-01-14', '2024-01-13']);
   });
 
-  it('exits early after timeout if at least 1 complete day found', async () => {
+  it('on timeout, returns available complete days immediately', async () => {
     const docs = createDocumentsWithSpecificDates(userId, [
       { date: '2024-01-15T10:00:00Z', count: 300 },
       { date: '2024-01-14T10:00:00Z', count: 300 },
@@ -457,27 +477,7 @@ describe('fetchRecordsUntilCompleteDays', () => {
     dateNowSpy.mockRestore();
   });
 
-  it('does not timeout if next record is on same date as oldest', async () => {
-    const docs = createDocumentsWithSpecificDates(userId, [
-      { date: '2024-01-15T10:00:00Z', count: 300 },
-    ]);
-    await db.clinical_documents.bulkInsert(docs);
-
-    let callCount = 0;
-    const dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => {
-      callCount++;
-      return callCount === 1 ? 0 : 5000;
-    });
-
-    const result = await fetchRecordsUntilCompleteDays(db, userId, 3, 0, 1);
-
-    expect(result.records['2024-01-15'].length).toBe(300);
-    expect(result.hasMore).toBe(false);
-
-    dateNowSpy.mockRestore();
-  });
-
-  it('continues fetching past timeout when all records are on same date', async () => {
+  it('fetches all records even past timeout when only one day exists', async () => {
     const docs = createDocumentsWithSpecificDates(userId, [
       { date: '2024-01-15T10:00:00Z', count: 750 },
     ]);
@@ -498,7 +498,7 @@ describe('fetchRecordsUntilCompleteDays', () => {
     dateNowSpy.mockRestore();
   });
 
-  it('returns only complete days when timeout exceeded with 1+ complete days', async () => {
+  it('on timeout, excludes partially-loaded days', async () => {
     const docs = createDocumentsWithSpecificDates(userId, [
       { date: '2024-01-15T10:00:00Z', count: 200 },
       { date: '2024-01-14T10:00:00Z', count: 200 },
@@ -522,33 +522,7 @@ describe('fetchRecordsUntilCompleteDays', () => {
     dateNowSpy.mockRestore();
   });
 
-  it('returns complete days on timeout even when hasEnoughDays is true', async () => {
-    const dates: { date: string; count: number }[] = [];
-    const baseDate = new Date('2024-01-15T10:00:00Z');
-    for (let i = 0; i < 50; i++) {
-      const d = new Date(baseDate);
-      d.setDate(d.getDate() - i);
-      dates.push({ date: d.toISOString(), count: 10 });
-    }
-    const docs = createDocumentsWithSpecificDates(userId, dates);
-    await db.clinical_documents.bulkInsert(docs);
-
-    let callCount = 0;
-    const dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => {
-      callCount++;
-      return callCount === 1 ? 0 : 5000;
-    });
-
-    const result = await fetchRecordsUntilCompleteDays(db, userId, 3, 0, 1);
-
-    const returnedDates = Object.keys(result.records);
-    expect(returnedDates.length).toBeLessThan(50);
-    expect(result.hasMore).toBe(true);
-
-    dateNowSpy.mockRestore();
-  });
-
-  it('emits partial results when timeout exceeded with 0 complete days', async () => {
+  it('shows incremental progress when loading a day with many records', async () => {
     const docs = createDocumentsWithSpecificDates(userId, [
       { date: '2024-01-15T10:00:00Z', count: 750 },
     ]);
@@ -585,7 +559,7 @@ describe('fetchRecordsUntilCompleteDays', () => {
     dateNowSpy.mockRestore();
   });
 
-  it('only emits partial results once per query', async () => {
+  it('incremental progress callback fires each batch until a day completes', async () => {
     const docs = createDocumentsWithSpecificDates(userId, [
       { date: '2024-01-15T10:00:00Z', count: 1000 },
     ]);
@@ -601,12 +575,18 @@ describe('fetchRecordsUntilCompleteDays', () => {
 
     await fetchRecordsUntilCompleteDays(db, userId, 3, 0, 1, onPartialResults);
 
-    expect(onPartialResults).toHaveBeenCalledTimes(1);
+    expect(onPartialResults).toHaveBeenCalledTimes(4);
+
+    const calls = onPartialResults.mock.calls;
+    expect(calls[0][0].lastOffset).toBe(250);
+    expect(calls[1][0].lastOffset).toBe(500);
+    expect(calls[2][0].lastOffset).toBe(750);
+    expect(calls[3][0].lastOffset).toBe(1000);
 
     dateNowSpy.mockRestore();
   });
 
-  it('returns exactly the complete days when multiple are available at timeout', async () => {
+  it('on timeout with multiple complete days, returns all of them', async () => {
     const docs = createDocumentsWithSpecificDates(userId, [
       { date: '2024-01-15T10:00:00Z', count: 100 },
       { date: '2024-01-14T10:00:00Z', count: 100 },
@@ -633,7 +613,7 @@ describe('fetchRecordsUntilCompleteDays', () => {
     dateNowSpy.mockRestore();
   });
 
-  it('does not emit partial results when timeout exceeded but has complete days', async () => {
+  it('no incremental progress when complete days are available', async () => {
     const docs = createDocumentsWithSpecificDates(userId, [
       { date: '2024-01-15T10:00:00Z', count: 200 },
       { date: '2024-01-14T10:00:00Z', count: 200 },
@@ -664,7 +644,7 @@ describe('fetchRecordsUntilCompleteDays', () => {
     dateNowSpy.mockRestore();
   });
 
-  it('truncates to complete days when exiting via date boundary with incomplete day', async () => {
+  it('excludes partially-loaded oldest day when more records exist', async () => {
     const docs = createDocumentsWithSpecificDates(userId, [
       { date: '2024-01-15T10:00:00Z', count: 100 },
       { date: '2024-01-14T10:00:00Z', count: 100 },
@@ -685,7 +665,7 @@ describe('fetchRecordsUntilCompleteDays', () => {
   });
 
   describe('boundary conditions', () => {
-    it('handles 0 records for user', async () => {
+    it('returns empty when user has no records', async () => {
       const result = await fetchRecordsUntilCompleteDays(db, userId, 3, 0);
 
       expect(Object.keys(result.records)).toHaveLength(0);
@@ -693,7 +673,7 @@ describe('fetchRecordsUntilCompleteDays', () => {
       expect(result.lastOffset).toBe(0);
     });
 
-    it('handles exactly minDays days', async () => {
+    it('returns all days when exactly minDays exist', async () => {
       const docs = createDocumentsWithSpecificDates(userId, [
         { date: '2024-01-15T10:00:00Z', count: 10 },
         { date: '2024-01-14T10:00:00Z', count: 10 },
@@ -717,6 +697,7 @@ describe('fetchRecordsUntilCompleteDays', () => {
 
       const result = await fetchRecordsUntilCompleteDays(db, userId, 3, 0);
 
+      expect(Object.keys(result.records).length).toBe(3);
       const totalRecords = Object.values(result.records).reduce(
         (sum, arr) => sum + arr.length,
         0,
@@ -735,6 +716,7 @@ describe('fetchRecordsUntilCompleteDays', () => {
 
       const result = await fetchRecordsUntilCompleteDays(db, userId, 3, 0);
 
+      expect(Object.keys(result.records).length).toBe(3);
       const totalRecords = Object.values(result.records).reduce(
         (sum, arr) => sum + arr.length,
         0,
@@ -754,10 +736,15 @@ describe('fetchRecordsUntilCompleteDays', () => {
       const result = await fetchRecordsUntilCompleteDays(db, userId, 3, 0);
 
       expect(Object.keys(result.records)).toHaveLength(3);
+      const totalRecords = Object.values(result.records).reduce(
+        (sum, arr) => sum + arr.length,
+        0,
+      );
+      expect(totalRecords).toBe(251);
       expect(result.hasMore).toBe(false);
     });
 
-    it('handles single record', async () => {
+    it('returns single day when only one record exists', async () => {
       const docs = createDocumentsWithSpecificDates(userId, [
         { date: '2024-01-15T10:00:00Z', count: 1 },
       ]);
@@ -835,7 +822,7 @@ describe('fetchRecordsUntilCompleteDays', () => {
     }
 
     it.each([42, 123, 456, 789, 1001])(
-      'paged results match unpaged for seed %i',
+      'all records are returned across multiple load-more calls (seed %i)',
       async (seed) => {
         const dates = generateRandomDateDistribution(seed);
         const totalExpected = dates.reduce((sum, d) => sum + d.count, 0);
@@ -861,7 +848,7 @@ describe('fetchRecordsUntilCompleteDays', () => {
       },
     );
 
-    it('pagination with varying minDays produces consistent results', async () => {
+    it('all records are returned regardless of minDays setting', async () => {
       const dates = generateRandomDateDistribution(999);
       const docs = createDocumentsWithSpecificDates(userId, dates);
       await db.clinical_documents.bulkInsert(docs);
@@ -882,7 +869,7 @@ describe('fetchRecordsUntilCompleteDays', () => {
   });
 });
 
-describe('guardedDispatch pattern (stale response handling)', () => {
+describe('stale response handling', () => {
   function createGuardedDispatch<T>(
     requestIdRef: { current: number },
     thisRequestId: number,
@@ -896,7 +883,7 @@ describe('guardedDispatch pattern (stale response handling)', () => {
     };
   }
 
-  it('dispatches when request ID matches', () => {
+  it('processes response from current request', () => {
     const requestIdRef = { current: 1 };
     const dispatch = jest.fn();
     const guarded = createGuardedDispatch(requestIdRef, 1, dispatch);
@@ -906,7 +893,7 @@ describe('guardedDispatch pattern (stale response handling)', () => {
     expect(dispatch).toHaveBeenCalledWith({ type: 'TEST' });
   });
 
-  it('ignores dispatch when request ID has changed (stale response)', () => {
+  it('ignores response from outdated request', () => {
     const requestIdRef = { current: 2 };
     const dispatch = jest.fn();
     const guarded = createGuardedDispatch(requestIdRef, 1, dispatch);
@@ -916,7 +903,7 @@ describe('guardedDispatch pattern (stale response handling)', () => {
     expect(dispatch).not.toHaveBeenCalled();
   });
 
-  it('handles rapid query changes correctly', async () => {
+  it('only shows results from most recent query when user types fast', async () => {
     const requestIdRef = { current: 0 };
     const results: string[] = [];
     const dispatch = (action: { query: string }) => {
