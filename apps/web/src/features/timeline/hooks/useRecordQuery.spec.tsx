@@ -251,6 +251,87 @@ describe('fetchRecordsUntilCompleteDays', () => {
     expect(result.hasMore).toBe(true);
   });
 
+  it('exits immediately when minDays complete days are available (sparse data)', async () => {
+    const dates: { date: string; count: number }[] = [];
+    const baseDate = new Date('2024-01-15T10:00:00Z');
+    for (let i = 0; i < 100; i++) {
+      const d = new Date(baseDate);
+      d.setDate(d.getDate() - i);
+      dates.push({ date: d.toISOString(), count: 3 });
+    }
+    const docs = createDocumentsWithSpecificDates(userId, dates);
+    await db.clinical_documents.bulkInsert(docs);
+
+    const result = await fetchRecordsUntilCompleteDays(db, userId, 3, 0);
+
+    expect(Object.keys(result.records).length).toBe(3);
+    expect(result.hasMore).toBe(true);
+
+    const totalRecords = Object.values(result.records).reduce(
+      (sum, arr) => sum + arr.length,
+      0,
+    );
+    expect(totalRecords).toBeLessThan(50);
+  });
+
+  it('uses date boundary check when uniqueDates >= minDays but completeDates < minDays (dense data)', async () => {
+    const docs = createDocumentsWithSpecificDates(userId, [
+      { date: '2024-01-15T10:00:00Z', count: 100 },
+      { date: '2024-01-14T10:00:00Z', count: 100 },
+      { date: '2024-01-13T10:00:00Z', count: 100 },
+    ]);
+    await db.clinical_documents.bulkInsert(docs);
+
+    const result = await fetchRecordsUntilCompleteDays(db, userId, 3, 0);
+
+    expect(Object.keys(result.records).length).toBe(3);
+    expect(result.hasMore).toBe(false);
+  });
+
+  it('continues fetching with sparse data until minDays complete (exactly minDays)', async () => {
+    const docs = createDocumentsWithSpecificDates(userId, [
+      { date: '2024-01-15T10:00:00Z', count: 80 },
+      { date: '2024-01-14T10:00:00Z', count: 80 },
+      { date: '2024-01-13T10:00:00Z', count: 80 },
+      { date: '2024-01-12T10:00:00Z', count: 80 },
+    ]);
+    await db.clinical_documents.bulkInsert(docs);
+
+    const result = await fetchRecordsUntilCompleteDays(db, userId, 3, 0);
+
+    expect(Object.keys(result.records).length).toBe(3);
+    expect(result.hasMore).toBe(true);
+  });
+
+  it('handles load more correctly with sparse data', async () => {
+    const dates: { date: string; count: number }[] = [];
+    const baseDate = new Date('2024-01-15T10:00:00Z');
+    for (let i = 0; i < 20; i++) {
+      const d = new Date(baseDate);
+      d.setDate(d.getDate() - i);
+      dates.push({ date: d.toISOString(), count: 5 });
+    }
+    const docs = createDocumentsWithSpecificDates(userId, dates);
+    await db.clinical_documents.bulkInsert(docs);
+
+    const firstLoad = await fetchRecordsUntilCompleteDays(db, userId, 3, 0);
+    expect(Object.keys(firstLoad.records).length).toBe(3);
+    expect(firstLoad.hasMore).toBe(true);
+
+    const secondLoad = await fetchRecordsUntilCompleteDays(
+      db,
+      userId,
+      3,
+      firstLoad.lastOffset,
+    );
+    expect(Object.keys(secondLoad.records).length).toBe(3);
+
+    const firstDates = new Set(Object.keys(firstLoad.records));
+    const secondDates = Object.keys(secondLoad.records);
+    const overlap = secondDates.filter((d) => firstDates.has(d));
+    expect(overlap).toEqual([]);
+  });
+
   it('returns all records when fewer than minDays exist', async () => {
     const docs = createDocumentsWithSpecificDates(userId, [
       { date: '2024-01-15T10:00:00Z', count: 10 },

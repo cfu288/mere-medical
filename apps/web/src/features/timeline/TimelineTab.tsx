@@ -758,6 +758,14 @@ export async function fetchRecordsUntilCompleteDays(
       }
     }
 
+    if (completeDates.size >= minDays) {
+      console.debug(
+        '[fetchRecordsUntilCompleteDays] exiting: have enough complete days',
+        { completeDates: completeDates.size, minDays },
+      );
+      break;
+    }
+
     if (hasEnoughDays) {
       const checkBatch = await fetchRawRecords(db, user_id, offset, 1);
       if (checkBatch.length === 0) {
