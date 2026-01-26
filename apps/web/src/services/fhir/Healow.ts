@@ -18,16 +18,6 @@
  *   - Token refresh via /api/v1/healow/refresh endpoint
  *   - Better UX - background token refresh without re-authentication
  *
- * The mode is automatically detected from config.HEALOW_CONFIDENTIAL_MODE
- * which is set to true when HEALOW_CLIENT_SECRET env var is present.
- *
- * TODO: Healow requires proxy for all API calls due to CORS. Currently useProxy is a global
- * user preference, but it should become a per-connection or per-integration setting so that
- * Healow can enforce proxy usage while other integrations (e.g., Epic) can work without it.
- *
- * Frankly if a user tries to call healow APIs or oauth endpoints without useProxy it will
- * fail due to CORS, so the public client mode is currently pretty useless.
- *
  * @see https://connect4.healow.com/apps/jsp/dev/r4/fhirClinicalDocumentation.jsp#SymmetricAuthentication
  * @see https://connect4.healow.com/apps/jsp/dev/r4/fhirClinicalDocumentation.jsp#HealowSupportedScopes
  */
@@ -64,12 +54,26 @@ import {
   CreateClinicalDocument,
 } from '../../models/clinical-document/ClinicalDocument.type';
 import { concatPath } from '../../shared/utils/urlUtils';
-import {
-  getCodeVerifier,
-  getCodeChallenge,
-  getOAuthState,
-} from '../../shared/utils/pkceUtils';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
+import {
+  createHealowClient,
+  buildHealowOAuthConfig,
+  extractHealowPatientId,
+  extractRelativeFhirPath,
+  parseJwtPayload,
+  type HealowTokenSet,
+} from '@mere/fhir-oauth';
+
+export {
+  createHealowClient,
+  buildHealowOAuthConfig,
+  extractHealowPatientId,
+  HEALOW_DEFAULT_SCOPES,
+  type HealowClient,
+  type HealowClientConfig,
+  type HealowTokenSet,
+  type HealowOAuthConfigOptions,
+} from '@mere/fhir-oauth';
 
 export enum HealowLocalStorageKeys {
   HEALOW_BASE_URL = 'healowBaseUrl',
@@ -79,83 +83,20 @@ export enum HealowLocalStorageKeys {
   HEALOW_ID = 'healowId',
 }
 
-export const HEALOW_CODE_VERIFIER_KEY = 'healow_code_verifier';
-export const HEALOW_OAUTH_STATE_KEY = 'healow_oauth2_state';
-
-export async function getLoginUrl(
-  config: AppConfig,
-  baseUrl: string,
-  authorizeUrl: string,
-): Promise<string & Location> {
-  const scopes = [
-    'openid',
-    'fhirUser',
-    'patient/AllergyIntolerance.read',
-    'patient/CarePlan.read',
-    'patient/CareTeam.read',
-    'patient/Condition.read',
-    'patient/Device.read',
-    'patient/DiagnosticReport.read',
-    'patient/DocumentReference.read',
-    'patient/Binary.read',
-    'patient/Encounter.read',
-    'patient/Goal.read',
-    'patient/Immunization.read',
-    'patient/MedicationAdministration.read',
-    'patient/MedicationRequest.read',
-    'patient/Observation.read',
-    'patient/Organization.read',
-    'patient/Patient.read',
-    'patient/Practitioner.read',
-    'patient/PractitionerRole.read',
-    'patient/Procedure.read',
-    'patient/Provenance.read',
-    'patient/Medication.read',
-    'patient/Location.read',
-  ];
-
-  if (config.HEALOW_CONFIDENTIAL_MODE) {
-    scopes.push('offline_access');
-  }
-
-  const params = {
-    client_id: `${config.HEALOW_CLIENT_ID}`,
-    scope: scopes.join(' '),
-    redirect_uri: concatPath(config.PUBLIC_URL || '', Routes.HealowCallback),
-    aud: baseUrl,
-    response_type: 'code',
-    state: getOAuthState(HEALOW_OAUTH_STATE_KEY),
-    code_challenge: await getCodeChallenge(HEALOW_CODE_VERIFIER_KEY),
-    code_challenge_method: 'S256',
-  };
-
-  return `${authorizeUrl}?${new URLSearchParams(params)}` as string & Location;
+interface HealowIdTokenPayload {
+  sub: string;
+  aud: string;
+  profile: string;
+  iss: string;
+  name: string;
+  exp: number;
+  iat: number;
+  fhirUser: string;
+  email: string;
 }
 
-function parseIdToken(token: string) {
-  const base64Url = token.split('.')[1];
-  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-  const jsonPayload = decodeURIComponent(
-    self
-      .atob(base64)
-      .split('')
-      .map(function (c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      })
-      .join(''),
-  );
-
-  return JSON.parse(jsonPayload) as {
-    sub: string;
-    aud: string;
-    profile: string;
-    iss: string;
-    name: string;
-    exp: number;
-    iat: number;
-    fhirUser: string;
-    email: string;
-  };
+function parseIdToken(token: string): HealowIdTokenPayload {
+  return parseJwtPayload<HealowIdTokenPayload>(token);
 }
 
 async function getFHIRResource<T extends FhirResource>(
@@ -199,12 +140,11 @@ async function getFHIRResource<T extends FhirResource>(
       (link: { relation?: string; url?: string }) => link.relation === 'next',
     );
     if (nextLink?.url && useProxy) {
-      const nextPath =
-        new URL(nextLink.url).pathname + new URL(nextLink.url).search;
+      const relativePath = extractRelativeFhirPath(nextLink.url, baseUrl);
       nextUrl = concatPath(
         publicUrl || '',
         `/api/proxy?vendor=healow&serviceId=${connectionDocument.tenant_id}&target=${encodeURIComponent(
-          nextPath,
+          relativePath,
         )}&target_type=base`,
       );
     } else {
@@ -643,113 +583,8 @@ async function fetchAttachmentData(
   }
 }
 
-export async function fetchAccessTokenWithCode(
-  config: AppConfig,
-  code: string,
-  healowTokenUrl: string,
-  healowId: string,
-  useProxy = false,
-): Promise<HealowAuthResponse> {
-  const clientId = config.HEALOW_CLIENT_ID || '';
-  const publicUrl = config.PUBLIC_URL || '';
-  const confidentialMode = config.HEALOW_CONFIDENTIAL_MODE || false;
-  const redirectUri = `${publicUrl}${Routes.HealowCallback}`;
-
-  let res: Response;
-
-  if (confidentialMode) {
-    res = await fetch(concatPath(publicUrl, '/api/v1/healow/token'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        code,
-        redirect_uri: redirectUri,
-        code_verifier: getCodeVerifier(HEALOW_CODE_VERIFIER_KEY),
-        tenant_id: healowId,
-      }),
-    });
-  } else {
-    const proxyUrl = concatPath(
-      publicUrl,
-      `/api/proxy?vendor=healow&serviceId=${healowId}&target_type=token`,
-    );
-    res = await fetch(useProxy ? proxyUrl : healowTokenUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        code: code,
-        redirect_uri: redirectUri,
-        client_id: clientId,
-        code_verifier: getCodeVerifier(HEALOW_CODE_VERIFIER_KEY),
-      }),
-    });
-  }
-
-  if (!res.ok) {
-    console.error(await res.text());
-    throw new Error('Error getting authorization token');
-  }
-  const tokenResponse = await res.json();
-  return tokenResponse;
-}
-
-/**
- * Refreshes an access token using a refresh token.
- *
- * In PUBLIC CLIENT MODE: This will fail since Healow doesn't issue refresh tokens
- * to public clients. The calling code should handle this by prompting re-authentication.
- *
- * In CONFIDENTIAL CLIENT MODE: Routes through /api/v1/healow/refresh which injects
- * the client_secret server-side before forwarding to Healow's token endpoint.
- */
-export async function fetchAccessTokenWithRefreshToken(
-  config: AppConfig,
-  refreshToken: string,
-  healowTokenUrl: string,
-  healowId: string,
-  useProxy = false,
-): Promise<HealowAuthResponse> {
-  const clientId = config.HEALOW_CLIENT_ID || '';
-  const publicUrl = config.PUBLIC_URL || '';
-  const confidentialMode = config.HEALOW_CONFIDENTIAL_MODE || false;
-
-  let res: Response;
-
-  if (confidentialMode) {
-    res = await fetch(concatPath(publicUrl, '/api/v1/healow/refresh'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        refresh_token: refreshToken,
-        tenant_id: healowId,
-      }),
-    });
-  } else {
-    const proxyUrl = concatPath(
-      publicUrl,
-      `/api/proxy?vendor=healow&serviceId=${healowId}&target_type=token`,
-    );
-    const targetUrl = useProxy ? proxyUrl : healowTokenUrl;
-    res = await fetch(targetUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'refresh_token',
-        refresh_token: refreshToken,
-        client_id: clientId,
-      }),
-    });
-  }
-
-  if (!res.ok) {
-    throw new Error('Error getting authorization token');
-  }
-  return res.json();
-}
-
 export async function saveConnectionToDb({
-  res,
+  tokens,
   healowBaseUrl,
   healowName,
   healowAuthUrl,
@@ -758,7 +593,7 @@ export async function saveConnectionToDb({
   db,
   user,
 }: {
-  res: HealowAuthResponse;
+  tokens: HealowTokenSet;
   healowBaseUrl: string;
   healowName: string;
   healowAuthUrl: string;
@@ -773,23 +608,22 @@ export async function saveConnectionToDb({
     user.id,
   );
   return new Promise((resolve, reject) => {
-    if (res?.access_token && res?.expires_in) {
+    if (tokens?.accessToken) {
       if (doc) {
         try {
-          const nowInSeconds = Math.floor(Date.now() / 1000);
           const updateData: Record<string, unknown> = {
-            access_token: res.access_token,
-            expires_at: nowInSeconds + res.expires_in,
-            scope: res.scope,
+            access_token: tokens.accessToken,
+            expires_at: tokens.expiresAt,
+            scope: tokens.scope,
             last_sync_was_error: false,
           };
 
-          if (res.id_token) {
-            updateData['id_token'] = res.id_token;
+          if (tokens.idToken) {
+            updateData['id_token'] = tokens.idToken;
           }
 
-          if (res.refresh_token) {
-            updateData['refresh_token'] = res.refresh_token;
+          if (tokens.refreshToken) {
+            updateData['refresh_token'] = tokens.refreshToken;
           }
 
           doc
@@ -808,25 +642,24 @@ export async function saveConnectionToDb({
           reject(new Error('Error updating connection'));
         }
       } else {
-        if (!res.id_token) {
+        if (!tokens.idToken) {
           reject(
             new Error('Connection document not found during token refresh'),
           );
           return;
         }
 
-        const nowInSeconds = Math.floor(Date.now() / 1000);
         const dbentry: CreateHealowConnectionDocument = {
           id: uuid4(),
           user_id: user.id,
           source: 'healow',
           location: healowBaseUrl,
           name: healowName,
-          access_token: res.access_token,
-          expires_at: nowInSeconds + res.expires_in,
-          scope: res.scope,
-          id_token: res.id_token,
-          refresh_token: res.refresh_token,
+          access_token: tokens.accessToken,
+          expires_at: tokens.expiresAt,
+          scope: tokens.scope,
+          id_token: tokens.idToken,
+          refresh_token: tokens.refreshToken,
           auth_uri: healowAuthUrl,
           token_uri: healowTokenUrl,
           tenant_id: healowId,
@@ -853,6 +686,14 @@ export async function saveConnectionToDb({
   });
 }
 
+function buildHealowProxyUrlBuilder(publicUrl: string) {
+  return (tenantId: string, targetType: 'token' | 'base') =>
+    concatPath(
+      publicUrl,
+      `/api/proxy?vendor=healow&serviceId=${tenantId}&target_type=${targetType}`,
+    );
+}
+
 export async function refreshHealowConnectionTokenIfNeeded(
   config: AppConfig,
   connectionDocument: RxDocument<ConnectionDocument>,
@@ -872,7 +713,9 @@ export async function refreshHealowConnectionTokenIfNeeded(
         authUri = connectionDocument.get('auth_uri'),
         name = connectionDocument.get('name'),
         userId = connectionDocument.get('user_id'),
-        tenantId = connectionDocument.get('tenant_id');
+        tenantId = connectionDocument.get('tenant_id'),
+        scope = connectionDocument.get('scope'),
+        idToken = connectionDocument.get('id_token');
 
       const userObject = await findUserById(db, userId);
 
@@ -880,16 +723,48 @@ export async function refreshHealowConnectionTokenIfNeeded(
         throw new Error(`User not found: ${userId}`);
       }
 
-      const access_token_data = await fetchAccessTokenWithRefreshToken(
-        config,
+      const client = createHealowClient({
+        mode: config.HEALOW_CONFIDENTIAL_MODE ? 'confidential' : 'public',
+        apiEndpoints: {
+          token: concatPath(config.PUBLIC_URL || '', '/api/v1/healow/token'),
+          refresh: concatPath(
+            config.PUBLIC_URL || '',
+            '/api/v1/healow/refresh',
+          ),
+        },
+        proxyUrlBuilder: useProxy
+          ? buildHealowProxyUrlBuilder(config.PUBLIC_URL || '')
+          : undefined,
+      });
+
+      const oauthConfig = buildHealowOAuthConfig({
+        clientId: config.HEALOW_CLIENT_ID || '',
+        publicUrl: config.PUBLIC_URL || '',
+        redirectPath: Routes.HealowCallback,
+        confidentialMode: config.HEALOW_CONFIDENTIAL_MODE,
+        tenant: {
+          id: tenantId,
+          name,
+          authUrl: authUri,
+          tokenUrl: tokenUri,
+          fhirBaseUrl: baseUrl,
+        },
+      });
+
+      const currentTokens: HealowTokenSet = {
+        accessToken: connectionDocument.get('access_token'),
+        expiresAt: connectionDocument.get('expires_at'),
+        idToken,
         refreshToken,
-        tokenUri,
+        scope,
         tenantId,
-        useProxy,
-      );
+        raw: {},
+      };
+
+      const newTokens = await client.refresh(currentTokens, oauthConfig);
 
       return await saveConnectionToDb({
-        res: access_token_data,
+        tokens: newTokens,
         healowBaseUrl: baseUrl,
         healowName: name,
         healowAuthUrl: authUri,
@@ -904,14 +779,4 @@ export async function refreshHealowConnectionTokenIfNeeded(
     }
   }
   return Promise.resolve();
-}
-
-export interface HealowAuthResponse {
-  access_token: string;
-  id_token?: string;
-  expires_in: number;
-  patient?: string;
-  refresh_token?: string;
-  scope: string;
-  token_type: string;
 }

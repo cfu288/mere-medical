@@ -214,8 +214,11 @@ export async function syncAllRecords(
       baseUrl,
       connectionDocument,
       db,
-      `Patient/${patientId}`,
+      'Patient',
       patientMapper,
+      {
+        _id: patientId,
+      },
     ),
     syncFHIRResource<Observation>(
       baseUrl,

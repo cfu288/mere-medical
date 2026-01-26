@@ -1,12 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import uuid4 from '../../../shared/utils/UUIDUtils';
-import {
-  CreateVeradigmConnectionDocument,
-  VeradigmConnectionDocument,
-} from '../../../models/connection-document/ConnectionDocument.type';
 import { useRxDb } from '../../../app/providers/RxDbProvider';
-import { DatabaseCollections } from '../../../app/providers/DatabaseCollections';
 import { Routes } from '../../../Routes';
 import { useNotificationDispatch } from '../../../app/providers/NotificationProvider';
 import { AppPage } from '../../../shared/components/AppPage';
@@ -14,285 +8,142 @@ import { GenericBanner } from '../../../shared/components/GenericBanner';
 import { useUser } from '../../../app/providers/UserProvider';
 import { useAppConfig } from '../../../app/providers/AppConfigProvider';
 import {
-  fetchAccessTokenWithCode,
-  VeradigmAuthResponse,
   VeradigmLocalStorageKeys,
+  saveConnectionToDb,
 } from '../../../services/fhir/Veradigm';
-import { RxDatabase } from 'rxdb';
-import { UserDocument } from '../../../models/user-document/UserDocument.type';
-import { getConnectionCardByUrl } from '../../../services/fhir/getConnectionCardByUrl';
-import { createConnection } from '../../../repositories/ConnectionRepository';
+import {
+  createVeradigmClient,
+  buildVeradigmOAuthConfig,
+} from '@mere/fhir-oauth';
 
-function removeEndSlash(url: string) {
-  if (url?.endsWith('/')) {
-    return `${url.substring(0, url.length - 1)}` as string & Location;
-  }
-  return url as string & Location;
-}
+const veradigmClient = createVeradigmClient();
 
-export async function saveConnectionToDb({
-  res,
-  veradigmBaseUrl,
-  db,
-  user,
-  name,
-  auth_uri,
-  token_uri,
-}: {
-  res: VeradigmAuthResponse;
-  veradigmBaseUrl: string;
-  db: RxDatabase<DatabaseCollections>;
-  user: UserDocument;
-  name: string;
-  auth_uri: string;
-  token_uri: string;
-}) {
-  const doc = await getConnectionCardByUrl<VeradigmConnectionDocument>(
-    veradigmBaseUrl,
-    db,
-    user.id,
+function clearLocalStorage() {
+  Object.values(VeradigmLocalStorageKeys).forEach((key) =>
+    localStorage.removeItem(key),
   );
-  return new Promise((resolve, reject) => {
-    if (res.access_token && res.expires_in && res.token_type && user.id) {
-      if (doc) {
-        // If we already have a connection card for this URL, update it
-        try {
-          const nowInSeconds = Math.floor(Date.now() / 1000);
-          doc
-            .update({
-              $set: {
-                access_token: res.access_token,
-                expires_at: nowInSeconds + res.expires_in,
-                id_token: res.id_token,
-                last_sync_was_error: false,
-              },
-            })
-            .then(() => {
-              console.log('Updated connection card');
-              console.log(doc.toJSON());
-              resolve(true);
-            })
-            .catch((e) => {
-              console.error(e);
-              reject(new Error('Error updating connection'));
-            });
-        } catch (e) {
-          console.error(e);
-          reject(new Error('Error updating connection'));
-        }
-      } else {
-        const nowInSeconds = Math.floor(Date.now() / 1000);
-        // Otherwise, create a new connection card
-        const dbentry: Omit<CreateVeradigmConnectionDocument, 'refresh_token'> =
-          {
-            id: uuid4(),
-            user_id: user.id,
-            source: 'veradigm',
-            location: veradigmBaseUrl,
-            access_token: res.access_token,
-            expires_at: nowInSeconds + res.expires_in,
-            id_token: res.id_token,
-            name,
-            auth_uri,
-            token_uri,
-          };
-        try {
-          createConnection(db, dbentry)
-            .then(() => {
-              resolve(true);
-            })
-            .catch((e) => {
-              console.error(e);
-              reject(new Error('Error updating connection'));
-            });
-        } catch (e) {
-          console.error(e);
-          reject(new Error('Error updating connection'));
-        }
-      }
-    } else {
-      reject(
-        new Error('Error completing authentication: no access token provided'),
-      );
-    }
-  });
 }
 
 const VeradigmRedirect: React.FC = () => {
-  const navigate = useNavigate(),
-    { config, isLoading } = useAppConfig(),
-    user = useUser(),
-    db = useRxDb(),
-    notifyDispatch = useNotificationDispatch(),
-    [error, setError] = useState(''),
-    hasRun = useRef(false),
-    { search } = useLocation();
+  const navigate = useNavigate();
+  const { config, isLoading } = useAppConfig();
+  const user = useUser();
+  const db = useRxDb();
+  const notifyDispatch = useNotificationDispatch();
+  const [error, setError] = useState('');
+  const hasRun = useRef(false);
+  const { search } = useLocation();
 
   useEffect(() => {
-    if (isLoading) return;
-    if (!hasRun.current) {
-      hasRun.current = true;
-      const searchRequest = new URLSearchParams(search),
-        code = searchRequest.get('code'),
-        errorMsg = searchRequest.get('error'),
-        errorMsgDescription = searchRequest.get('error_description'),
-        veradigmUrl = localStorage.getItem(
-          VeradigmLocalStorageKeys.VERADIGM_BASE_URL,
-        ),
-        veradigmName = localStorage.getItem(
-          VeradigmLocalStorageKeys.VERADIGM_NAME,
-        ),
-        veradigmAuthUrl = localStorage.getItem(
-          VeradigmLocalStorageKeys.VERADIGM_AUTH_URL,
-        ),
-        veradigmTokenUrl = localStorage.getItem(
-          VeradigmLocalStorageKeys.VERADIGM_TOKEN_URL,
-        );
-      // TODO: use tenant specific urls in connection document
+    if (isLoading || hasRun.current) return;
 
-      if (
-        code &&
-        veradigmTokenUrl &&
-        veradigmAuthUrl &&
-        veradigmUrl &&
-        veradigmName
-      ) {
-        getConnectionCardByUrl<VeradigmConnectionDocument>(
-          veradigmUrl,
-          db,
-          user.id,
-        ).then((doc) => {
-          fetchAccessTokenWithCode(
-            config,
-            code,
-            removeEndSlash(veradigmTokenUrl),
-          )
-            .then((res) => {
-              if (
-                res.access_token &&
-                res.expires_in &&
-                res.token_type &&
-                user.id
-              ) {
-                if (doc) {
-                  // If we already have a connection card for this URL, update it
-                  try {
-                    const nowInSeconds = Math.floor(Date.now() / 1000);
-                    doc
-                      .update({
-                        $set: {
-                          access_token: res.access_token,
-                          expires_at: nowInSeconds + res.expires_in,
-                          id_token: res.id_token,
-                          last_sync_was_error: false,
-                        },
-                      })
-                      .then(() => {
-                        navigate(Routes.AddConnection);
-                      })
-                      .catch((e) => {
-                        console.error(e);
-                        notifyDispatch({
-                          type: 'set_notification',
-                          message: `Error adding connection: ${
-                            (e as Error).message
-                          }`,
-                          variant: 'error',
-                        });
-                        navigate(Routes.AddConnection);
-                      });
-                  } catch (e) {
-                    console.error(e);
-                    notifyDispatch({
-                      type: 'set_notification',
-                      message: `Error adding connection: ${
-                        (e as Error).message
-                      }`,
-                      variant: 'error',
-                    });
-                    navigate(Routes.AddConnection);
-                  }
-                } else {
-                  // Otherwise, create a new connection card
-                  const nowInSeconds = Math.floor(Date.now() / 1000);
-                  const dbentry: Omit<
-                    CreateVeradigmConnectionDocument,
-                    'patient'
-                  > = {
-                    id: uuid4(),
-                    user_id: user.id,
-                    source: 'veradigm',
-                    location: veradigmUrl,
-                    name: veradigmName,
-                    access_token: res.access_token,
-                    expires_at: nowInSeconds + res.expires_in,
-                    id_token: res.id_token,
-                    auth_uri: veradigmAuthUrl,
-                    token_uri: veradigmTokenUrl,
-                  };
-                  createConnection(db, dbentry as any)
-                    .then(() => {
-                      navigate(Routes.AddConnection);
-                    })
-                    .catch((e: unknown) => {
-                      notifyDispatch({
-                        type: 'set_notification',
-                        message: `Error adding connection: ${
-                          (e as Error).message
-                        }`,
-                        variant: 'error',
-                      });
-                      navigate(Routes.AddConnection);
-                    });
-                }
-              } else {
-                notifyDispatch({
-                  type: 'set_notification',
-                  message: `Error completing authentication: no access token provided`,
-                  variant: 'error',
-                });
-              }
-            })
-            .catch((e) => {
-              setError(`${(e as Error).message}`);
-              notifyDispatch({
-                type: 'set_notification',
-                message: `Error adding connection: ${(e as Error).message}`,
-                variant: 'error',
-              });
-              navigate(Routes.AddConnection);
-            });
-        });
-      } else {
-        if (
-          !(
-            code &&
-            veradigmTokenUrl &&
-            veradigmAuthUrl &&
-            veradigmUrl &&
-            veradigmName
-          )
-        ) {
-          if (errorMsg && errorMsgDescription) {
-            setError(`${errorMsg}: ${errorMsgDescription}`);
-          } else {
-            setError('There was a problem trying to sign in');
-          }
-        }
+    hasRun.current = true;
 
-        // Otherwise, we're just pulling data
-      }
+    const searchParams = new URLSearchParams(search);
+    const errorMsg = searchParams.get('error');
+    const errorMsgDescription = searchParams.get('error_description');
+    const veradigmUrl = localStorage.getItem(
+      VeradigmLocalStorageKeys.VERADIGM_BASE_URL,
+    );
+    const veradigmName = localStorage.getItem(
+      VeradigmLocalStorageKeys.VERADIGM_NAME,
+    );
+    const veradigmAuthUrl = localStorage.getItem(
+      VeradigmLocalStorageKeys.VERADIGM_AUTH_URL,
+    );
+    const veradigmTokenUrl = localStorage.getItem(
+      VeradigmLocalStorageKeys.VERADIGM_TOKEN_URL,
+    );
+    const veradigmId = localStorage.getItem(
+      VeradigmLocalStorageKeys.VERADIGM_ID,
+    );
+
+    if (errorMsg) {
+      clearLocalStorage();
+      setError(`${errorMsg}: ${errorMsgDescription || 'Unknown error'}`);
+      return;
     }
-  }, [
-    config,
-    isLoading,
-    db,
-    db.connection_documents,
-    navigate,
-    notifyDispatch,
-    search,
-    user.id,
-  ]);
+
+    if (
+      !veradigmTokenUrl ||
+      !veradigmAuthUrl ||
+      !veradigmUrl ||
+      !veradigmName ||
+      !veradigmId ||
+      !user?.id
+    ) {
+      clearLocalStorage();
+      notifyDispatch({
+        type: 'set_notification',
+        message: `Error adding connection: missing required parameters`,
+        variant: 'error',
+      });
+      navigate(Routes.AddConnection);
+      return;
+    }
+
+    if (!config.VERADIGM_CLIENT_ID || !config.PUBLIC_URL) {
+      clearLocalStorage();
+      notifyDispatch({
+        type: 'set_notification',
+        message: 'Veradigm OAuth configuration is incomplete',
+        variant: 'error',
+      });
+      navigate(Routes.AddConnection);
+      return;
+    }
+
+    const oauthConfig = buildVeradigmOAuthConfig({
+      clientId: config.VERADIGM_CLIENT_ID,
+      publicUrl: config.PUBLIC_URL,
+      redirectPath: Routes.VeradigmCallback,
+      tenant: {
+        id: veradigmUrl,
+        name: veradigmName,
+        authUrl: veradigmAuthUrl,
+        tokenUrl: veradigmTokenUrl,
+        fhirBaseUrl: veradigmUrl,
+      },
+    });
+
+    veradigmClient
+      .handleCallback(searchParams, oauthConfig, { startedAt: 0 })
+      .then((tokens) => {
+        saveConnectionToDb({
+          tokens,
+          veradigmBaseUrl: veradigmUrl,
+          veradigmId,
+          db,
+          user,
+          name: veradigmName,
+          auth_uri: veradigmAuthUrl,
+          token_uri: veradigmTokenUrl,
+        })
+          .then(() => {
+            clearLocalStorage();
+            navigate(Routes.AddConnection);
+          })
+          .catch((e) => {
+            console.error(e);
+            clearLocalStorage();
+            notifyDispatch({
+              type: 'set_notification',
+              message: `Error adding connection: ${(e as Error).message}`,
+              variant: 'error',
+            });
+            navigate(Routes.AddConnection);
+          });
+      })
+      .catch((e) => {
+        clearLocalStorage();
+        setError(`${(e as Error).message}`);
+        notifyDispatch({
+          type: 'set_notification',
+          message: `Error adding connection: ${(e as Error).message}`,
+          variant: 'error',
+        });
+      });
+  }, [config, isLoading, db, navigate, notifyDispatch, search, user]);
 
   return (
     <AppPage

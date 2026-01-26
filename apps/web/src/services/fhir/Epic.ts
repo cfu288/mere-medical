@@ -55,6 +55,7 @@ import {
   createEpicClient,
   createEpicClientWithProxy,
   EPIC_DEFAULT_SCOPES,
+  extractRelativeFhirPath,
   type OAuthConfig,
   type EpicTokenSet,
 } from '@mere/fhir-oauth';
@@ -199,7 +200,17 @@ async function getFHIRResource<T extends FhirResource>(
     const nextLink = bundle.link?.find(
       (link: { relation?: string; url?: string }) => link.relation === 'next',
     );
-    nextUrl = nextLink?.url;
+    if (nextLink?.url && useProxy) {
+      const relativePath = extractRelativeFhirPath(nextLink.url, fhirUrl);
+      nextUrl = URLJoin(
+        config.PUBLIC_URL || '',
+        '/api/proxy',
+        `?serviceId=${epicId}`,
+        `&target=${encodeURIComponent(relativePath)}&target_type=base`,
+      );
+    } else {
+      nextUrl = nextLink?.url;
+    }
   }
 
   return allEntries;

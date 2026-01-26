@@ -10,6 +10,10 @@ import {
   buildOnPatientAuthUrl,
   EPIC_DEFAULT_SCOPES,
   CERNER_DEFAULT_SCOPES,
+  createVeradigmClient,
+  buildVeradigmOAuthConfig,
+  createHealowClient,
+  buildHealowOAuthConfig,
 } from '@mere/fhir-oauth';
 import { signJwt } from '@mere/crypto/browser';
 import { isEpicSandbox } from '../../services/fhir/EpicUtils';
@@ -28,26 +32,20 @@ import {
   getR4Url,
 } from '../../services/fhir/Epic';
 import { getLoginUrl as getVaLoginUrl } from '../../services/fhir/VA';
-import {
-  getLoginUrl as getVeradigmLoginUrl,
-  VeradigmLocalStorageKeys,
-} from '../../services/fhir/Veradigm';
-import {
-  getLoginUrl as getHealowLoginUrl,
-  HealowLocalStorageKeys,
-} from '../../services/fhir/Healow';
+import { VeradigmLocalStorageKeys } from '../../services/fhir/Veradigm';
+import { HealowLocalStorageKeys } from '../../services/fhir/Healow';
 import { Routes } from '../../Routes';
 
 const epicClient = createEpicClient({ signJwt });
 const cernerClient = createCernerClient();
+const veradigmClient = createVeradigmClient();
+const healowClient = createHealowClient({
+  mode: 'public',
+});
 const epicSession = createSessionManager('epic');
 const cernerSession = createSessionManager('cerner');
+const healowSession = createSessionManager('healow');
 
-/**
- * Initiates OAuth authorization flow for Epic MyChart connections.
- * Generates PKCE challenge, stores session state, and returns the authorization URL.
- * The callback page will use the stored session to complete the token exchange.
- */
 async function initiateEpicAuth(
   config: AppConfig,
   baseUrl: string,
@@ -86,11 +84,6 @@ async function initiateEpicAuth(
   return url;
 }
 
-/**
- * Initiates OAuth authorization flow for Cerner connections.
- * Generates PKCE challenge, stores session state, and returns the authorization URL.
- * The callback page will use the stored session to complete the token exchange.
- */
 async function initiateCernerAuth(
   config: AppConfig,
   baseUrl: string,
@@ -124,11 +117,6 @@ async function initiateCernerAuth(
   return url;
 }
 
-/**
- * Returns the OnPatient OAuth authorization URL.
- * OnPatient uses a confidential client flow where the backend handles token exchange,
- * so no PKCE or session storage is needed on the frontend.
- */
 function initiateOnPatientAuth(config: AppConfig): string {
   if (!config.ONPATIENT_CLIENT_ID || !config.PUBLIC_URL) {
     throw new Error('OnPatient OAuth configuration is incomplete');
@@ -139,6 +127,65 @@ function initiateOnPatientAuth(config: AppConfig): string {
     publicUrl: config.PUBLIC_URL,
     redirectPath: '/api/v1/onpatient/callback',
   });
+}
+
+async function initiateVeradigmAuth(
+  config: AppConfig,
+  baseUrl: string,
+  authUrl: string,
+  tokenUrl: string,
+  name: string,
+): Promise<string> {
+  if (!config.VERADIGM_CLIENT_ID || !config.PUBLIC_URL) {
+    throw new Error('Veradigm OAuth configuration is incomplete');
+  }
+
+  const oauthConfig = buildVeradigmOAuthConfig({
+    clientId: config.VERADIGM_CLIENT_ID,
+    publicUrl: config.PUBLIC_URL,
+    redirectPath: Routes.VeradigmCallback,
+    tenant: {
+      id: baseUrl,
+      name,
+      authUrl,
+      tokenUrl,
+      fhirBaseUrl: baseUrl,
+    },
+  });
+
+  const { url } = await veradigmClient.initiateAuth(oauthConfig);
+  return url;
+}
+
+async function initiateHealowAuth(
+  config: AppConfig,
+  baseUrl: string,
+  authUrl: string,
+  tokenUrl: string,
+  name: string,
+  id: string,
+): Promise<string> {
+  if (!config.HEALOW_CLIENT_ID || !config.PUBLIC_URL) {
+    throw new Error('Healow OAuth configuration is incomplete');
+  }
+
+  const oauthConfig = buildHealowOAuthConfig({
+    clientId: config.HEALOW_CLIENT_ID,
+    publicUrl: config.PUBLIC_URL,
+    redirectPath: Routes.HealowCallback,
+    confidentialMode: config.HEALOW_CONFIDENTIAL_MODE,
+    tenant: {
+      id,
+      name,
+      authUrl,
+      tokenUrl,
+      fhirBaseUrl: baseUrl,
+    },
+  });
+
+  const { url, session } = await healowClient.initiateAuth(oauthConfig);
+  await healowSession.save(session);
+  return url;
 }
 
 export async function getLoginUrlBySource(
@@ -199,9 +246,13 @@ export async function getLoginUrlBySource(
       return url as string & Location;
     }
     case 'veradigm': {
-      return Promise.resolve(
-        getVeradigmLoginUrl(config, item.get('location'), item.get('auth_uri')),
-      );
+      return initiateVeradigmAuth(
+        config,
+        item.get('location'),
+        item.get('auth_uri'),
+        item.get('token_uri'),
+        item.get('name'),
+      ).then((url) => url as string & Location);
     }
     case 'onpatient': {
       return Promise.resolve(
@@ -212,11 +263,14 @@ export async function getLoginUrlBySource(
       return getVaLoginUrl(config);
     }
     case 'healow': {
-      return getHealowLoginUrl(
+      return initiateHealowAuth(
         config,
         item.get('location'),
         item.get('auth_uri'),
-      );
+        item.get('token_uri'),
+        item.get('name'),
+        item.get('tenant_id'),
+      ).then((url) => url as string & Location);
     }
     default: {
       return '' as string & Location;
@@ -279,7 +333,7 @@ export function setTenantUrlBySource(
         item.get('auth_uri'),
         item.get('token_uri'),
         item.get('name'),
-        item.get('id'),
+        item.get('tenant_id'),
       );
       break;
     }
@@ -289,7 +343,7 @@ export function setTenantUrlBySource(
         item.get('auth_uri'),
         item.get('token_uri'),
         item.get('name'),
-        item.get('id'),
+        item.get('tenant_id'),
       );
       break;
     }
@@ -423,15 +477,21 @@ const ConnectionTab: React.FC = () => {
           case 'veradigm': {
             setTenantVeradigmUrl(base, auth, token, name, id);
             setOpenSelectModal((x) => !x);
-            window.location = getVeradigmLoginUrl(config, base, auth);
+            initiateVeradigmAuth(config, base, auth, token, name).then(
+              (url) => {
+                window.location.href = url;
+              },
+            );
             break;
           }
           case 'healow': {
             setTenantHealowUrl(base, auth, token, name, id);
             setOpenSelectModal((x) => !x);
-            getHealowLoginUrl(config, base, auth).then((url) => {
-              window.location = url;
-            });
+            initiateHealowAuth(config, base, auth, token, name, id).then(
+              (url) => {
+                window.location.href = url;
+              },
+            );
             break;
           }
         }
