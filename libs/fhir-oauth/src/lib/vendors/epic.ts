@@ -1,4 +1,4 @@
-import type { OAuthConfig, AuthorizationRequestState, CoreTokenSet, ParsedTokenResponse, WithPatientId, WithClientId } from '../types.js';
+import type { OAuthConfig, AuthorizationRequestState, CoreTokenSet, ParsedTokenResponse, WithPatientId } from '../types.js';
 import { createOAuthError, OAuthErrors } from '../types.js';
 import { initiateStandardAuth } from '../auth-url.js';
 import { exchangeWithPkce, parseTokenResponse, validateCallback, isTokenExpired } from '../token-exchange.js';
@@ -77,14 +77,11 @@ export function createEpicClient(deps: EpicClientDependencies): EpicClient {
         throw OAuthErrors.noTokenUrl();
       }
 
-      const now = Math.floor(Date.now() / 1000);
       const assertion = await signJwt({
         sub: tokens.clientId,
         iss: tokens.clientId,
         aud: config.tenant.tokenUrl,
         jti: crypto.randomUUID(),
-        exp: now + 300,
-        iat: now,
       });
 
       const res = await fetch(config.tenant.tokenUrl, {
@@ -201,14 +198,11 @@ export function createEpicClientWithProxy(
         ? proxyUrlBuilder(config.tenant.id, 'token')
         : config.tenant.tokenUrl;
 
-      const now = Math.floor(Date.now() / 1000);
       const assertion = await signJwt({
         sub: tokens.clientId,
         iss: tokens.clientId,
         aud: config.tenant.tokenUrl,
         jti: crypto.randomUUID(),
-        exp: now + 300,
-        iat: now,
       });
 
       const res = await fetch(tokenUrl, {
