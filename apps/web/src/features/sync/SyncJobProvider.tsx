@@ -162,6 +162,12 @@ export function SyncJobProvider({
   );
 }
 
+/**
+ * Safety net that cleans up clinical documents whose parent connection no longer exists.
+ * This handles edge cases where documents were inserted but the connection was deleted
+ * before the post-upsert verification could clean them up. Once the race condition in
+ * upsertDocumentsIfConnectionValid is proven stable, this component can be removed.
+ */
 function OrphanCleanup({ children }: PropsWithChildren) {
   const db = useRxDb();
   const user = useUser();
