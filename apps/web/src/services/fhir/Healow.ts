@@ -159,6 +159,14 @@ function parseIdToken(token: string) {
   };
 }
 
+function throwIfAborted(signal?: AbortSignal, context?: string) {
+  if (signal?.aborted) {
+    console.log(`[Healow] Sync aborted${context ? `: ${context}` : ''}`);
+    const error = new DOMException('Sync was cancelled', 'AbortError');
+    throw error;
+  }
+}
+
 async function getFHIRResource<T extends FhirResource>(
   publicUrl: string,
   baseUrl: string,
@@ -181,6 +189,7 @@ async function getFHIRResource<T extends FhirResource>(
   let nextUrl: string | undefined = useProxy ? proxyUrl : defaultUrl;
 
   while (nextUrl) {
+    throwIfAborted(signal, `before fetching ${fhirResourceUrl}`);
     const response = await fetch(nextUrl, {
       signal,
       headers: {
@@ -238,6 +247,8 @@ async function syncFHIRResource<T extends FhirResource>(
     useProxy,
     signal,
   );
+
+  throwIfAborted(signal, `before upserting ${fhirResourceUrl}`);
 
   const cds = resc
     .filter(
@@ -541,11 +552,13 @@ async function syncDocumentReferences(
       >,
   );
   const cdsmap = docRefItems.map(async (docRefItem) => {
+    throwIfAborted(signal, 'before processing document attachments');
     const attachmentUrls = docRefItem.data_record.raw.resource?.content.map(
       (a) => a.attachment.url,
     );
     if (attachmentUrls) {
       for (const attachmentUrl of attachmentUrls) {
+        throwIfAborted(signal, 'before fetching attachment');
         if (attachmentUrl) {
           const exists = await db.clinical_documents
             .find({
@@ -569,6 +582,7 @@ async function syncDocumentReferences(
               useProxy,
               signal,
             );
+            throwIfAborted(signal, 'before upserting attachment');
             if (raw && contentType) {
               const cd: CreateClinicalDocument<string | Blob> = {
                 user_id: connectionDocument.user_id,

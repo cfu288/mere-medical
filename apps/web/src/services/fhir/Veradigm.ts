@@ -108,6 +108,14 @@ export async function fetchAccessTokenWithCode(
   return res.json();
 }
 
+function throwIfAborted(signal?: AbortSignal, context?: string) {
+  if (signal?.aborted) {
+    console.log(`[Veradigm] Sync aborted${context ? `: ${context}` : ''}`);
+    const error = new DOMException('Sync was cancelled', 'AbortError');
+    throw error;
+  }
+}
+
 async function getFHIRResource<T extends FhirResource>(
   baseUrl: string,
   connectionDocument: VeradigmConnectionDocument,
@@ -123,6 +131,7 @@ async function getFHIRResource<T extends FhirResource>(
   let nextUrl: string | undefined = defaultUrl;
 
   while (nextUrl) {
+    throwIfAborted(signal, `before fetching ${fhirResourceUrl}`);
     const response = await fetch(nextUrl, {
       signal,
       headers: {
@@ -165,6 +174,8 @@ async function syncFHIRResource<T extends FhirResource>(
     params,
     signal,
   );
+
+  throwIfAborted(signal, `before upserting ${fhirResourceUrl}`);
 
   const cds = resc
     .filter(
@@ -368,11 +379,13 @@ async function syncDocumentReferences(
   );
   // for each docref, get attachments and sync them
   const cdsmap = docRefItems.map(async (docRefItem) => {
+    throwIfAborted(signal, 'before processing document attachments');
     const attachmentUrls = (
       docRefItem.data_record.raw as BundleEntry<DocumentReference>
     ).resource?.content.map((a) => a.attachment.url);
     if (attachmentUrls) {
       for (const attachmentUrl of attachmentUrls) {
+        throwIfAborted(signal, 'before fetching attachment');
         if (attachmentUrl) {
           const exists = await db.clinical_documents
             .find({
@@ -394,6 +407,7 @@ async function syncDocumentReferences(
               connectionDocument,
               signal,
             );
+            throwIfAborted(signal, 'before upserting attachment');
             if (raw && contentType) {
               const cd: CreateClinicalDocument<string | Blob> = {
                 user_id: connectionDocument.user_id,

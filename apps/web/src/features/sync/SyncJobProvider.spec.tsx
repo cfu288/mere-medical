@@ -111,6 +111,38 @@ function TestComponent({ connectionId }: TestComponentProps) {
   );
 }
 
+function createPaginatedSyncMock(options: {
+  totalPages: number;
+  onPageFetch: (pageNumber: number) => void;
+  pageDelayMs?: number;
+}) {
+  const { totalPages, onPageFetch, pageDelayMs = 10 } = options;
+
+  return jest.fn(
+    async (
+      _connection: unknown,
+      _db: unknown,
+      signal?: AbortSignal,
+    ): Promise<PromiseSettledResult<void[]>[]> => {
+      for (let page = 1; page <= totalPages; page++) {
+        if (signal?.aborted) {
+          throw new DOMException('Sync was cancelled', 'AbortError');
+        }
+
+        onPageFetch(page);
+
+        await new Promise((resolve) => setTimeout(resolve, pageDelayMs));
+
+        if (signal?.aborted) {
+          throw new DOMException('Sync was cancelled', 'AbortError');
+        }
+      }
+
+      return [{ status: 'fulfilled', value: [] }];
+    },
+  );
+}
+
 describe('SyncJobProvider', () => {
   let db: RxDatabase<DatabaseCollections>;
   let testUser: UserDocument;
@@ -125,6 +157,214 @@ describe('SyncJobProvider', () => {
   afterEach(async () => {
     mockUser = undefined;
     await cleanupTestDatabase(db);
+  });
+
+  describe('abort stops pagination mid-sync', () => {
+    it('demonstrates the bug: pagination continues when signal is ignored', async () => {
+      const connection = createTestConnection({
+        user_id: testUser.id,
+        source: 'onpatient',
+      });
+      const connectionDoc = await db.connection_documents.insert(connection);
+
+      const fetchedPages: number[] = [];
+      const totalPages = 10;
+      let resolveAbortTrigger: () => void;
+      const abortTriggerPromise = new Promise<void>((resolve) => {
+        resolveAbortTrigger = resolve;
+      });
+
+      const buggyMockSync = jest.fn(
+        async (
+          _connection: unknown,
+          _db: unknown,
+          _signal?: AbortSignal,
+        ): Promise<PromiseSettledResult<void[]>[]> => {
+          for (let page = 1; page <= totalPages; page++) {
+            fetchedPages.push(page);
+            if (page === 3) {
+              resolveAbortTrigger();
+            }
+            await new Promise((resolve) => setTimeout(resolve, 50));
+          }
+          return [{ status: 'fulfilled', value: [] }];
+        },
+      );
+
+      let dispatchRef: ReturnType<typeof useSyncJobDispatchContext>;
+      const CaptureDispatch = () => {
+        dispatchRef = useSyncJobDispatchContext();
+        return null;
+      };
+
+      render(
+        <TestProviders db={db} syncFunctions={{ onpatient: buggyMockSync }}>
+          <CaptureDispatch />
+          <TestComponent connectionId={connection.id} />
+        </TestProviders>,
+      );
+
+      await act(async () => {
+        dispatchRef!({
+          type: 'add_job',
+          config: { PUBLIC_URL: 'https://test.example.com' },
+          id: connection.id,
+          connectionDocument: connectionDoc,
+          baseUrl: connection.location as string,
+          useProxy: false,
+          db,
+        });
+      });
+
+      await act(async () => {
+        await abortTriggerPromise;
+      });
+
+      await act(async () => {
+        dispatchRef!({ type: 'remove_job', id: connection.id });
+      });
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+      });
+
+      expect(fetchedPages.length).toBe(totalPages);
+    });
+
+    it('stops fetching pages when abort is triggered during pagination', async () => {
+      const connection = createTestConnection({
+        user_id: testUser.id,
+        source: 'onpatient',
+      });
+      const connectionDoc = await db.connection_documents.insert(connection);
+
+      const fetchedPages: number[] = [];
+      const totalPages = 10;
+      let resolveAbortTrigger: () => void;
+      const abortTriggerPromise = new Promise<void>((resolve) => {
+        resolveAbortTrigger = resolve;
+      });
+
+      const mockOnPatientSync = createPaginatedSyncMock({
+        totalPages,
+        pageDelayMs: 50,
+        onPageFetch: (pageNumber) => {
+          fetchedPages.push(pageNumber);
+          if (pageNumber === 3) {
+            resolveAbortTrigger();
+          }
+        },
+      });
+
+      let dispatchRef: ReturnType<typeof useSyncJobDispatchContext>;
+      const CaptureDispatch = () => {
+        dispatchRef = useSyncJobDispatchContext();
+        return null;
+      };
+
+      render(
+        <TestProviders db={db} syncFunctions={{ onpatient: mockOnPatientSync }}>
+          <CaptureDispatch />
+          <TestComponent connectionId={connection.id} />
+        </TestProviders>,
+      );
+
+      await act(async () => {
+        dispatchRef!({
+          type: 'add_job',
+          config: { PUBLIC_URL: 'https://test.example.com' },
+          id: connection.id,
+          connectionDocument: connectionDoc,
+          baseUrl: connection.location as string,
+          useProxy: false,
+          db,
+        });
+      });
+
+      await act(async () => {
+        await abortTriggerPromise;
+      });
+
+      await act(async () => {
+        dispatchRef!({ type: 'remove_job', id: connection.id });
+      });
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      });
+
+      expect(fetchedPages.length).toBeLessThan(totalPages);
+      expect(fetchedPages.length).toBeGreaterThanOrEqual(3);
+      expect(fetchedPages.length).toBeLessThanOrEqual(5);
+    });
+
+    it('completes all pages when not aborted', async () => {
+      const connection = createTestConnection({
+        user_id: testUser.id,
+        source: 'onpatient',
+      });
+      const connectionDoc = await db.connection_documents.insert(connection);
+
+      const fetchedPages: number[] = [];
+      const totalPages = 5;
+      let syncComplete: () => void;
+      const syncCompletePromise = new Promise<void>((resolve) => {
+        syncComplete = resolve;
+      });
+
+      const mockOnPatientSync = jest.fn(
+        async (
+          _connection: unknown,
+          _db: unknown,
+          signal?: AbortSignal,
+        ): Promise<PromiseSettledResult<void[]>[]> => {
+          for (let page = 1; page <= totalPages; page++) {
+            if (signal?.aborted) {
+              throw new DOMException('Sync was cancelled', 'AbortError');
+            }
+            fetchedPages.push(page);
+            await new Promise((resolve) => setTimeout(resolve, 10));
+          }
+          syncComplete();
+          return [{ status: 'fulfilled', value: [] }];
+        },
+      );
+
+      let dispatchRef: ReturnType<typeof useSyncJobDispatchContext>;
+      const CaptureDispatch = () => {
+        dispatchRef = useSyncJobDispatchContext();
+        return null;
+      };
+
+      render(
+        <TestProviders db={db} syncFunctions={{ onpatient: mockOnPatientSync }}>
+          <CaptureDispatch />
+          <TestComponent connectionId={connection.id} />
+        </TestProviders>,
+      );
+
+      await act(async () => {
+        dispatchRef!({
+          type: 'add_job',
+          config: { PUBLIC_URL: 'https://test.example.com' },
+          id: connection.id,
+          connectionDocument: connectionDoc,
+          baseUrl: connection.location as string,
+          useProxy: false,
+          db,
+        });
+      });
+
+      await act(async () => {
+        await syncCompletePromise;
+      });
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      });
+
+      expect(fetchedPages).toEqual([1, 2, 3, 4, 5]);
+    });
   });
 
   describe('abort behavior', () => {

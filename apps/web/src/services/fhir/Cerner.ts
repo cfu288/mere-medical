@@ -106,6 +106,14 @@ function parseIdToken(token: string) {
   };
 }
 
+function throwIfAborted(signal?: AbortSignal, context?: string) {
+  if (signal?.aborted) {
+    console.log(`[Cerner] Sync aborted${context ? `: ${context}` : ''}`);
+    const error = new DOMException('Sync was cancelled', 'AbortError');
+    throw error;
+  }
+}
+
 async function getFHIRResource<T extends FhirResource>(
   baseUrl: string,
   connectionDocument: CernerConnectionDocument,
@@ -121,6 +129,7 @@ async function getFHIRResource<T extends FhirResource>(
   let nextUrl: string | undefined = defaultUrl;
 
   while (nextUrl) {
+    throwIfAborted(signal, `before fetching ${fhirResourceUrl}`);
     const response = await fetch(nextUrl, {
       signal,
       headers: {
@@ -174,6 +183,8 @@ async function syncFHIRResource<T extends FhirResource>(
     signal,
   );
 
+  throwIfAborted(signal, `before upserting ${fhirResourceUrl}`);
+
   const cds = resc
     .filter(
       (i) =>
@@ -201,6 +212,7 @@ async function processIncludedResources(
   db: RxDatabase<DatabaseCollections>,
   connectionDocument: CernerConnectionDocument,
   excludeResourceTypes: string[] = [],
+  signal?: AbortSignal,
 ): Promise<void> {
   const resourceTypeGroups = new Map<string, BundleEntry<any>[]>();
   for (const entry of entries) {
@@ -213,6 +225,7 @@ async function processIncludedResources(
     }
   }
   for (const [resourceType, groupedEntries] of resourceTypeGroups.entries()) {
+    throwIfAborted(signal, `before upserting included ${resourceType}`);
     const mapper = mappers[resourceType];
     if (mapper) {
       const cds = groupedEntries.map(mapper);
@@ -246,6 +259,8 @@ async function syncFHIRResourceWithIncludes<T extends FhirResource>(
     params,
     signal,
   );
+  throwIfAborted(signal, `before upserting ${fhirResourceUrl}`);
+
   const cds = resc
     .filter(
       (i) =>
@@ -261,9 +276,14 @@ async function syncFHIRResourceWithIncludes<T extends FhirResource>(
     cds as unknown as ClinicalDocument[],
   );
 
-  await processIncludedResources(resc, includeMappers, db, connectionDocument, [
-    fhirResourceUrl,
-  ]);
+  await processIncludedResources(
+    resc,
+    includeMappers,
+    db,
+    connectionDocument,
+    [fhirResourceUrl],
+    signal,
+  );
 }
 
 /**
@@ -646,11 +666,13 @@ async function syncDocumentReferences(
   );
   // for each docref, get attachments and sync them
   const cdsmap = docRefItems.map(async (docRefItem) => {
+    throwIfAborted(signal, 'before processing document attachments');
     const attachmentUrls = docRefItem.data_record.raw.resource?.content.map(
       (a) => a.attachment.url,
     );
     if (attachmentUrls) {
       for (const attachmentUrl of attachmentUrls) {
+        throwIfAborted(signal, 'before fetching attachment');
         if (attachmentUrl) {
           const exists = await db.clinical_documents
             .find({
@@ -672,6 +694,7 @@ async function syncDocumentReferences(
               connectionDocument,
               signal,
             );
+            throwIfAborted(signal, 'before upserting attachment');
             if (raw && contentType) {
               const cd: CreateClinicalDocument<string | Blob> = {
                 user_id: connectionDocument.user_id,

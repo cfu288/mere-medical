@@ -191,7 +191,9 @@ function OrphanCleanup({ children }: PropsWithChildren) {
 
 /**
  * Wrapping component that initiates a connection sync job for each connection card
- * if they have not been synced in the last week
+ * if they have not been synced in the last week. Uses a ref to ensure sync only triggers
+ * once per mount - without this guard, the useEffect would re-trigger whenever sync jobs
+ * complete or are cancelled (since dependencies change), causing an infinite sync loop.
  */
 function HandleInitalSync({ children }: PropsWithChildren) {
   const sync = useSyncJobContext(),
@@ -201,8 +203,8 @@ function HandleInitalSync({ children }: PropsWithChildren) {
     db = useRxDb(),
     { config, isLoading: isConfigLoading } = useAppConfig(),
     isDemo = IS_DEMO === 'enabled',
-    currentSyncJobLength = Object.keys(sync).length,
     syncJobEntries = useMemo(() => new Set(Object.keys(sync)), [sync]),
+    initialSyncStarted = React.useRef(false),
     handleFetchData = useCallback(
       (item: RxDocument<ConnectionDocument>) => {
         if (syncD && userPreferences) {
@@ -232,21 +234,21 @@ function HandleInitalSync({ children }: PropsWithChildren) {
   useEffect(() => {
     if (isConfigLoading) return;
     if (!isConfigValid(config)) return;
+    if (!conList) return;
+    if (!userPreferences) return;
+    if (initialSyncStarted.current) return;
     if (!isDemo) {
-      if (currentSyncJobLength === 0) {
-        console.debug(
-          'SyncJobProvider: Current Sync Jobs In Progress: ' +
-            currentSyncJobLength,
-        );
-        startSyncAllConnections();
-      }
+      initialSyncStarted.current = true;
+      console.debug('SyncJobProvider: Starting initial sync');
+      startSyncAllConnections();
     }
   }, [
     isConfigLoading,
     config,
     isDemo,
     startSyncAllConnections,
-    currentSyncJobLength,
+    conList,
+    userPreferences,
   ]);
 
   return <>{children}</>;

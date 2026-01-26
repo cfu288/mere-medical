@@ -65,6 +65,14 @@ export async function getLoginUrl(
   return url as unknown as string & Location;
 }
 
+function throwIfAborted(signal?: AbortSignal, context?: string) {
+  if (signal?.aborted) {
+    console.log(`[VA] Sync aborted${context ? `: ${context}` : ''}`);
+    const error = new DOMException('Sync was cancelled', 'AbortError');
+    throw error;
+  }
+}
+
 /**
  * Sometimes bundles may only return a subset of the total results
  * ex: {
@@ -91,6 +99,10 @@ async function getAllFHIRResourcesWithPaging<T extends FhirResource>(
 
   const allEntries: BundleEntry<T>[] = [];
   do {
+    throwIfAborted(
+      signal,
+      `before fetching ${fhirResourceUrl} page ${page + 1}`,
+    );
     page++;
     const entries = await getFHIRResource<T>(
       baseUrl,
@@ -120,6 +132,7 @@ async function getFHIRResource<T extends FhirResource>(
     !params ? '' : `?${new URLSearchParams(params)}`
   }`;
 
+  throwIfAborted(signal, `before fetching ${fhirResourceUrl}`);
   const res = await fetch(defaultUrl, {
     signal,
     headers: {
@@ -161,6 +174,8 @@ async function syncFHIRResource<T extends FhirResource>(
     params,
     signal,
   );
+
+  throwIfAborted(signal, `before upserting ${fhirResourceUrl}`);
 
   const cds = resc
     .filter(

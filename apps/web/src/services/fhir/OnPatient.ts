@@ -30,6 +30,14 @@ import { upsertDocumentsIfConnectionValid } from '../../repositories/ClinicalDoc
 export const OnPatientBaseUrl = ONPATIENT_CONSTANTS.BASE_URL;
 export const OnPatientDSTU2Url = ONPATIENT_CONSTANTS.FHIR_URL;
 
+function throwIfAborted(signal?: AbortSignal, context?: string) {
+  if (signal?.aborted) {
+    console.log(`[OnPatient] Sync aborted${context ? `: ${context}` : ''}`);
+    const error = new DOMException('Sync was cancelled', 'AbortError');
+    throw error;
+  }
+}
+
 async function getFHIRResource<T extends FhirResource>(
   connectionDocument: ConnectionDocument,
   fhirResourcePathUrl: string,
@@ -40,6 +48,7 @@ async function getFHIRResource<T extends FhirResource>(
     `${OnPatientDSTU2Url}/${fhirResourcePathUrl}`;
 
   while (nextUrl) {
+    throwIfAborted(signal, `before fetching ${fhirResourcePathUrl}`);
     const response = await fetch(nextUrl, {
       signal,
       headers: {
@@ -77,6 +86,8 @@ async function syncFHIRResource<T extends FhirResource>(
     fhirResourceUrl,
     signal,
   );
+
+  throwIfAborted(signal, `before upserting ${fhirResourceUrl}`);
 
   const cds = fhirResources
     .filter(
