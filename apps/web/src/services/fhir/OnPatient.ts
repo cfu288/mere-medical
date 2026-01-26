@@ -25,6 +25,8 @@ import {
   ClinicalDocument,
   CreateClinicalDocument,
 } from '../../models/clinical-document/ClinicalDocument.type';
+import { connectionExists } from '../../repositories/ClinicalDocumentRepository';
+import { ConnectionDeletedError } from '../../shared/errors';
 
 export const OnPatientBaseUrl = ONPATIENT_CONSTANTS.BASE_URL;
 export const OnPatientDSTU2Url = ONPATIENT_CONSTANTS.FHIR_URL;
@@ -32,6 +34,7 @@ export const OnPatientDSTU2Url = ONPATIENT_CONSTANTS.FHIR_URL;
 async function getFHIRResource<T extends FhirResource>(
   connectionDocument: ConnectionDocument,
   fhirResourcePathUrl: string,
+  signal?: AbortSignal,
 ): Promise<BundleEntry<T>[]> {
   let allEntries: BundleEntry<T>[] = [];
   let nextUrl: string | undefined =
@@ -39,6 +42,7 @@ async function getFHIRResource<T extends FhirResource>(
 
   while (nextUrl) {
     const response = await fetch(nextUrl, {
+      signal,
       headers: {
         Authorization: `Bearer ${connectionDocument.access_token}`,
       },
@@ -67,11 +71,24 @@ async function syncFHIRResource<T extends FhirResource>(
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
   mapper: (proc: BundleEntry<T>) => CreateClinicalDocument<BundleEntry<T>>,
+  signal?: AbortSignal,
 ) {
   const fhirResources = await getFHIRResource<T>(
     connectionDocument,
     fhirResourceUrl,
+    signal,
   );
+
+  if (
+    !(await connectionExists(
+      db,
+      connectionDocument.user_id,
+      connectionDocument.id,
+    ))
+  ) {
+    throw new ConnectionDeletedError(connectionDocument.id);
+  }
+
   const cds = fhirResources
     .filter(
       (i) =>
@@ -88,6 +105,7 @@ async function syncFHIRResource<T extends FhirResource>(
 export async function syncAllRecords(
   connectionDocument: ConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
+  signal?: AbortSignal,
 ): Promise<PromiseSettledResult<void[]>[]> {
   const immMapper = (dr: BundleEntry<Immunization>) =>
     DSTU2.mapImmunizationToClinicalDocument(dr, connectionDocument);
@@ -113,50 +131,64 @@ export async function syncAllRecords(
       db,
       'Immunization',
       immMapper,
+      signal,
     ),
     syncFHIRResource<Procedure>(
       connectionDocument,
       db,
       'Procedure',
       procMapper,
+      signal,
     ),
     syncFHIRResource<Condition>(
       connectionDocument,
       db,
       'Condition',
       conditionMapper,
+      signal,
     ),
     syncFHIRResource<Observation>(
       connectionDocument,
       db,
       'Observation',
       obsMapper,
+      signal,
     ),
     syncFHIRResource<DiagnosticReport>(
       connectionDocument,
       db,
       'DiagnosticReport',
       drMapper,
+      signal,
     ),
     syncFHIRResource<MedicationStatement>(
       connectionDocument,
       db,
       'MedicationStatement',
       medStatementMapper,
+      signal,
     ),
     syncFHIRResource<AllergyIntolerance>(
       connectionDocument,
       db,
       'AllergyIntolerance',
       allergyMapper,
+      signal,
     ),
     syncFHIRResource<MedicationOrder>(
       connectionDocument,
       db,
       'MedicationOrder',
       medOrderMapper,
+      signal,
     ),
-    syncFHIRResource<Patient>(connectionDocument, db, 'Patient', patientMapper),
+    syncFHIRResource<Patient>(
+      connectionDocument,
+      db,
+      'Patient',
+      patientMapper,
+      signal,
+    ),
   ]);
 
   return syncJob as unknown as Promise<PromiseSettledResult<void[]>[]>;

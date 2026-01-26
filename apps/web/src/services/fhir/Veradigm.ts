@@ -22,6 +22,8 @@ import {
   ClinicalDocument,
   CreateClinicalDocument,
 } from '../../models/clinical-document/ClinicalDocument.type';
+import { connectionExists } from '../../repositories/ClinicalDocumentRepository';
+import { ConnectionDeletedError } from '../../shared/errors';
 
 export enum VeradigmLocalStorageKeys {
   VERADIGM_BASE_URL = 'veradigmBaseUrl',
@@ -112,6 +114,7 @@ async function getFHIRResource<T extends FhirResource>(
   connectionDocument: VeradigmConnectionDocument,
   fhirResourceUrl: string,
   params?: Record<string, string>,
+  signal?: AbortSignal,
 ): Promise<BundleEntry<T>[]> {
   const defaultUrl = params
     ? `${baseUrl}${fhirResourceUrl}?${new URLSearchParams(params)}`
@@ -122,6 +125,7 @@ async function getFHIRResource<T extends FhirResource>(
 
   while (nextUrl) {
     const response = await fetch(nextUrl, {
+      signal,
       headers: {
         Authorization: `Bearer ${connectionDocument.access_token}`,
         Accept: 'application/json+fhir',
@@ -153,13 +157,25 @@ async function syncFHIRResource<T extends FhirResource>(
   fhirResourceUrl: string,
   mapper: (proc: BundleEntry<T>) => CreateClinicalDocument<BundleEntry<T>>,
   params?: Record<string, string>,
+  signal?: AbortSignal,
 ) {
   const resc = await getFHIRResource<T>(
     baseUrl,
     connectionDocument,
     fhirResourceUrl,
     params,
+    signal,
   );
+
+  if (
+    !(await connectionExists(
+      db,
+      connectionDocument.user_id,
+      connectionDocument.id,
+    ))
+  ) {
+    throw new ConnectionDeletedError(connectionDocument.id);
+  }
 
   const cds = resc
     .filter(
@@ -210,6 +226,7 @@ export async function syncAllRecords(
   baseUrl: string,
   connectionDocument: VeradigmConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
+  signal?: AbortSignal,
 ): Promise<PromiseSettledResult<void[]>[]> {
   const procMapper = (proc: BundleEntry<Procedure>) =>
     DSTU2.mapProcedureToClinicalDocument(proc, connectionDocument);
@@ -239,9 +256,8 @@ export async function syncAllRecords(
       db,
       'Procedure',
       procMapper,
-      {
-        patient: patientId,
-      },
+      { patient: patientId },
+      signal,
     ),
     syncFHIRResource<Patient>(
       baseUrl,
@@ -249,9 +265,8 @@ export async function syncAllRecords(
       db,
       'Patient',
       patientMapper,
-      {
-        _id: patientId,
-      },
+      { _id: patientId },
+      signal,
     ),
     syncFHIRResource<Observation>(
       baseUrl,
@@ -259,10 +274,8 @@ export async function syncAllRecords(
       db,
       'Observation',
       obsMapper,
-      {
-        patient: patientId,
-        category: 'laboratory',
-      },
+      { patient: patientId, category: 'laboratory' },
+      signal,
     ),
     syncFHIRResource<DiagnosticReport>(
       baseUrl,
@@ -270,9 +283,8 @@ export async function syncAllRecords(
       db,
       'DiagnosticReport',
       drMapper,
-      {
-        patient: patientId,
-      },
+      { patient: patientId },
+      signal,
     ),
     syncFHIRResource<MedicationStatement>(
       baseUrl,
@@ -280,9 +292,8 @@ export async function syncAllRecords(
       db,
       'MedicationStatement',
       medStatementMapper,
-      {
-        patient: patientId,
-      },
+      { patient: patientId },
+      signal,
     ),
     syncFHIRResource<Immunization>(
       baseUrl,
@@ -290,9 +301,8 @@ export async function syncAllRecords(
       db,
       'Immunization',
       immMapper,
-      {
-        patient: patientId,
-      },
+      { patient: patientId },
+      signal,
     ),
     syncFHIRResource<Condition>(
       baseUrl,
@@ -300,22 +310,24 @@ export async function syncAllRecords(
       db,
       'Condition',
       conditionMapper,
-      {
-        patient: patientId,
-      },
+      { patient: patientId },
+      signal,
     ),
-    syncDocumentReferences(baseUrl, connectionDocument, db, {
-      patient: patientId,
-    }),
+    syncDocumentReferences(
+      baseUrl,
+      connectionDocument,
+      db,
+      { patient: patientId },
+      signal,
+    ),
     syncFHIRResource<AllergyIntolerance>(
       baseUrl,
       connectionDocument,
       db,
       'AllergyIntolerance',
       allergyIntoleranceMapper,
-      {
-        patient: patientId,
-      },
+      { patient: patientId },
+      signal,
     ),
   ]);
 
@@ -327,10 +339,10 @@ async function syncDocumentReferences(
   connectionDocument: VeradigmConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   params: Record<string, string>,
+  signal?: AbortSignal,
 ) {
   const documentReferenceMapper = (dr: BundleEntry<DocumentReference>) =>
     DSTU2.mapDocumentReferenceToClinicalDocument(dr, connectionDocument);
-  // Sync document references and return them
   await syncFHIRResource<DocumentReference>(
     baseUrl,
     connectionDocument,
@@ -338,6 +350,7 @@ async function syncDocumentReferences(
     'DocumentReference',
     documentReferenceMapper,
     params,
+    signal,
   );
 
   const docs = await db.clinical_documents
@@ -382,12 +395,21 @@ async function syncDocumentReferences(
             .exec();
           if (exists.length === 0) {
             console.log('Syncing attachment: ' + attachmentUrl);
-            // attachment does not exist, sync it
             const { contentType, raw } = await fetchAttachmentData(
               attachmentUrl,
               connectionDocument,
+              signal,
             );
             if (raw && contentType) {
+              if (
+                !(await connectionExists(
+                  db,
+                  connectionDocument.user_id,
+                  connectionDocument.id,
+                ))
+              ) {
+                throw new ConnectionDeletedError(connectionDocument.id);
+              }
               const cd: CreateClinicalDocument<string | Blob> = {
                 user_id: connectionDocument.user_id,
                 connection_record_id: connectionDocument.id,
@@ -426,9 +448,11 @@ async function syncDocumentReferences(
 async function fetchAttachmentData(
   url: string,
   cd: VeradigmConnectionDocument,
+  signal?: AbortSignal,
 ): Promise<{ contentType: string | null; raw: string | Blob | undefined }> {
   try {
     const res = await fetch(url, {
+      signal,
       headers: {
         Authorization: `Bearer ${cd.access_token}`,
       },

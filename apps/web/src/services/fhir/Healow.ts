@@ -64,6 +64,8 @@ import {
   CreateClinicalDocument,
 } from '../../models/clinical-document/ClinicalDocument.type';
 import { concatPath } from '../../shared/utils/urlUtils';
+import { connectionExists } from '../../repositories/ClinicalDocumentRepository';
+import { ConnectionDeletedError } from '../../shared/errors';
 import {
   getCodeVerifier,
   getCodeChallenge,
@@ -165,6 +167,7 @@ async function getFHIRResource<T extends FhirResource>(
   fhirResourceUrl: string,
   params?: Record<string, string>,
   useProxy = true,
+  signal?: AbortSignal,
 ): Promise<BundleEntry<T>[]> {
   const searchParams = new URLSearchParams(params);
   const defaultUrl = `${concatPath(baseUrl, fhirResourceUrl)}?${searchParams}`;
@@ -180,6 +183,7 @@ async function getFHIRResource<T extends FhirResource>(
 
   while (nextUrl) {
     const response = await fetch(nextUrl, {
+      signal,
       headers: {
         Authorization: `Bearer ${connectionDocument.access_token}`,
         Accept: 'application/json+fhir',
@@ -224,6 +228,7 @@ async function syncFHIRResource<T extends FhirResource>(
   mapper: (proc: BundleEntry<T>) => CreateClinicalDocument<BundleEntry<T>>,
   params?: Record<string, string>,
   useProxy = true,
+  signal?: AbortSignal,
 ) {
   const resc = await getFHIRResource<T>(
     publicUrl,
@@ -232,7 +237,18 @@ async function syncFHIRResource<T extends FhirResource>(
     fhirResourceUrl,
     params,
     useProxy,
+    signal,
   );
+
+  if (
+    !(await connectionExists(
+      db,
+      connectionDocument.user_id,
+      connectionDocument.id,
+    ))
+  ) {
+    throw new ConnectionDeletedError(connectionDocument.id);
+  }
 
   const cds = resc
     .filter(
@@ -253,6 +269,7 @@ export async function syncAllRecords(
   connectionDocument: HealowConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   useProxy = true,
+  signal?: AbortSignal,
 ): Promise<PromiseSettledResult<void[]>[]> {
   const procMapper = (proc: BundleEntry<Procedure>) =>
     R4.mapProcedureToClinicalDocument(proc, connectionDocument);
@@ -287,6 +304,7 @@ export async function syncAllRecords(
       procMapper as any,
       { patient: patientId },
       useProxy,
+      signal,
     ),
     syncFHIRResource<Patient>(
       publicUrl,
@@ -297,6 +315,7 @@ export async function syncAllRecords(
       patientMapper as any,
       { _id: patientId },
       useProxy,
+      signal,
     ),
     syncFHIRResource<Observation>(
       publicUrl,
@@ -307,6 +326,7 @@ export async function syncAllRecords(
       obsMapper as any,
       { patient: patientId, category: 'laboratory' },
       useProxy,
+      signal,
     ),
     syncFHIRResource<DiagnosticReport>(
       publicUrl,
@@ -317,6 +337,7 @@ export async function syncAllRecords(
       drMapper as any,
       { patient: patientId },
       useProxy,
+      signal,
     ),
     syncFHIRResource<any>(
       publicUrl,
@@ -327,6 +348,7 @@ export async function syncAllRecords(
       medRequestMapper as any,
       { patient: patientId },
       useProxy,
+      signal,
     ),
     syncFHIRResource<Immunization>(
       publicUrl,
@@ -337,6 +359,7 @@ export async function syncAllRecords(
       immMapper as any,
       { patient: patientId },
       useProxy,
+      signal,
     ),
     syncFHIRResource<Condition>(
       publicUrl,
@@ -347,16 +370,16 @@ export async function syncAllRecords(
       conditionMapper as any,
       { patient: patientId },
       useProxy,
+      signal,
     ),
     syncDocumentReferences(
       publicUrl,
       baseUrl,
       connectionDocument,
       db,
-      {
-        patient: patientId,
-      },
+      { patient: patientId },
       useProxy,
+      signal,
     ),
     syncFHIRResource<Encounter>(
       publicUrl,
@@ -367,6 +390,7 @@ export async function syncAllRecords(
       encounterMapper as any,
       { patient: patientId },
       useProxy,
+      signal,
     ),
     syncFHIRResource<AllergyIntolerance>(
       publicUrl,
@@ -377,6 +401,7 @@ export async function syncAllRecords(
       allergyIntoleranceMapper as any,
       { patient: patientId },
       useProxy,
+      signal,
     ),
     syncFHIRResource(
       publicUrl,
@@ -388,6 +413,7 @@ export async function syncAllRecords(
         R4.mapCareTeamToClinicalDocument(item, connectionDocument)) as any,
       { patient: patientId },
       useProxy,
+      signal,
     ),
     syncFHIRResource(
       publicUrl,
@@ -399,6 +425,7 @@ export async function syncAllRecords(
         R4.mapGoalToClinicalDocument(item, connectionDocument)) as any,
       { patient: patientId },
       useProxy,
+      signal,
     ),
     syncFHIRResource(
       publicUrl,
@@ -410,6 +437,7 @@ export async function syncAllRecords(
         R4.mapCarePlanToClinicalDocument(item, connectionDocument)) as any,
       { patient: patientId },
       useProxy,
+      signal,
     ),
     syncFHIRResource(
       publicUrl,
@@ -421,6 +449,7 @@ export async function syncAllRecords(
         R4.mapDeviceToClinicalDocument(item, connectionDocument)) as any,
       { patient: patientId },
       useProxy,
+      signal,
     ),
     syncFHIRResource<Observation>(
       publicUrl,
@@ -431,6 +460,7 @@ export async function syncAllRecords(
       obsMapper as any,
       { patient: patientId, category: 'vital-signs' },
       useProxy,
+      signal,
     ),
     syncFHIRResource<Observation>(
       publicUrl,
@@ -441,6 +471,7 @@ export async function syncAllRecords(
       obsMapper as any,
       { patient: patientId, category: 'social-history' },
       useProxy,
+      signal,
     ),
     syncFHIRResource(
       publicUrl,
@@ -455,6 +486,7 @@ export async function syncAllRecords(
         )) as any,
       { patient: patientId },
       useProxy,
+      signal,
     ),
     syncFHIRResource(
       publicUrl,
@@ -466,6 +498,7 @@ export async function syncAllRecords(
         R4.mapProvenanceToClinicalDocument(item, connectionDocument)) as any,
       { patient: patientId },
       useProxy,
+      signal,
     ),
   ]);
 
@@ -479,6 +512,7 @@ async function syncDocumentReferences(
   db: RxDatabase<DatabaseCollections>,
   params: Record<string, string>,
   useProxy = true,
+  signal?: AbortSignal,
 ) {
   const documentReferenceMapper = (dr: BundleEntry<DocumentReference>) =>
     R4.mapDocumentReferenceToClinicalDocument(dr, connectionDocument);
@@ -491,6 +525,7 @@ async function syncDocumentReferences(
     documentReferenceMapper as any,
     params,
     useProxy,
+    signal,
   );
 
   const docs = await db.clinical_documents
@@ -538,8 +573,18 @@ async function syncDocumentReferences(
               attachmentUrl,
               connectionDocument,
               useProxy,
+              signal,
             );
             if (raw && contentType) {
+              if (
+                !(await connectionExists(
+                  db,
+                  connectionDocument.user_id,
+                  connectionDocument.id,
+                ))
+              ) {
+                throw new ConnectionDeletedError(connectionDocument.id);
+              }
               const cd: CreateClinicalDocument<string | Blob> = {
                 user_id: connectionDocument.user_id,
                 connection_record_id: connectionDocument.id,
@@ -578,6 +623,7 @@ async function fetchAttachmentData(
   url: string,
   cd: HealowConnectionDocument,
   useProxy = true,
+  signal?: AbortSignal,
 ): Promise<{ contentType: string | null; raw: string | Blob | undefined }> {
   try {
     const isBinaryResource = url.includes('/Binary/');
@@ -596,6 +642,7 @@ async function fetchAttachmentData(
     );
 
     const res = await fetch(useProxy ? proxyUrl : fullUrl, {
+      signal,
       headers: {
         Authorization: `Bearer ${cd.access_token}`,
         Accept: acceptHeader,

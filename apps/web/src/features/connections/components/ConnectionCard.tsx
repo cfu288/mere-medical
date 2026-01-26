@@ -73,6 +73,10 @@ export function ConnectionCard({
       setDeleting(true);
       const connectionId = document.get('id');
 
+      if (syncD && syncJobEntries.has(connectionId)) {
+        syncD({ type: 'remove_job', id: connectionId });
+      }
+
       deleteConnectionWithCascade(db, user.id, connectionId)
         .then(() => {
           setDeleting(false);

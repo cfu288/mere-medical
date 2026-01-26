@@ -30,6 +30,8 @@ import { UserDocument } from '../../models/user-document/UserDocument.type';
 import uuid4 from '../../shared/utils/UUIDUtils';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
+import { connectionExists } from '../../repositories/ClinicalDocumentRepository';
+import { ConnectionDeletedError } from '../../shared/errors';
 import {
   createVAClient,
   createSessionManager,
@@ -83,6 +85,7 @@ async function getAllFHIRResourcesWithPaging<T extends FhirResource>(
   connectionDocument: VAConnectionDocument,
   fhirResourceUrl: string,
   params?: Record<string, string>,
+  signal?: AbortSignal,
 ): Promise<BundleEntry<T>[]> {
   let page = 0;
   let totalEntriesCount = 0;
@@ -99,6 +102,7 @@ async function getAllFHIRResourcesWithPaging<T extends FhirResource>(
         page: `${page}`,
         _count: 1000,
       },
+      signal,
     );
     totalEntriesCount = entries.length;
     allEntries.push(...entries);
@@ -111,12 +115,14 @@ async function getFHIRResource<T extends FhirResource>(
   connectionDocument: VAConnectionDocument,
   fhirResourceUrl: string,
   params?: Record<string, any>,
+  signal?: AbortSignal,
 ): Promise<BundleEntry<T>[]> {
   const defaultUrl = `${baseUrl}${fhirResourceUrl}${
     !params ? '' : `?${new URLSearchParams(params)}`
   }`;
 
   const res = await fetch(defaultUrl, {
+    signal,
     headers: {
       Authorization: `Bearer ${connectionDocument.access_token}`,
       Accept: 'application/json+fhir',
@@ -147,13 +153,25 @@ async function syncFHIRResource<T extends FhirResource>(
   fhirResourceUrl: string,
   mapper: (proc: BundleEntry<T>) => CreateClinicalDocument<BundleEntry<T>>,
   params?: Record<string, string>,
+  signal?: AbortSignal,
 ) {
   const resc = await getAllFHIRResourcesWithPaging<T>(
     baseUrl,
     connectionDocument,
     fhirResourceUrl,
     params,
+    signal,
   );
+
+  if (
+    !(await connectionExists(
+      db,
+      connectionDocument.user_id,
+      connectionDocument.id,
+    ))
+  ) {
+    throw new ConnectionDeletedError(connectionDocument.id);
+  }
 
   const cds = resc
     .filter(
@@ -173,12 +191,14 @@ async function syncFHIRResource<T extends FhirResource>(
  * @param baseUrl Base url of the FHIR server to sync from
  * @param connectionDocument
  * @param db
+ * @param signal Optional abort signal to cancel the sync
  * @returns A promise of void arrays
  */
 export async function syncAllRecords(
   baseUrl: string,
   connectionDocument: VAConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
+  signal?: AbortSignal,
 ): Promise<PromiseSettledResult<void[]>[]> {
   const procMapper = (proc: BundleEntry<Procedure>) =>
     DSTU2.mapProcedureToClinicalDocument(proc, connectionDocument);
@@ -206,9 +226,8 @@ export async function syncAllRecords(
       db,
       'Procedure',
       procMapper,
-      {
-        patient: patientId,
-      },
+      { patient: patientId },
+      signal,
     ),
     syncFHIRResource<Patient>(
       baseUrl,
@@ -216,6 +235,8 @@ export async function syncAllRecords(
       db,
       `Patient/${patientId}`,
       patientMapper,
+      undefined,
+      signal,
     ),
     syncFHIRResource<Observation>(
       baseUrl,
@@ -223,9 +244,8 @@ export async function syncAllRecords(
       db,
       'Observation',
       obsMapper,
-      {
-        patient: patientId,
-      },
+      { patient: patientId },
+      signal,
     ),
     syncFHIRResource<DiagnosticReport>(
       baseUrl,
@@ -233,9 +253,8 @@ export async function syncAllRecords(
       db,
       'DiagnosticReport',
       drMapper,
-      {
-        patient: patientId,
-      },
+      { patient: patientId },
+      signal,
     ),
     syncFHIRResource<MedicationStatement>(
       baseUrl,
@@ -243,9 +262,8 @@ export async function syncAllRecords(
       db,
       'MedicationStatement',
       medStatementMapper,
-      {
-        patient: patientId,
-      },
+      { patient: patientId },
+      signal,
     ),
     syncFHIRResource<Immunization>(
       baseUrl,
@@ -253,9 +271,8 @@ export async function syncAllRecords(
       db,
       'Immunization',
       immMapper,
-      {
-        patient: patientId,
-      },
+      { patient: patientId },
+      signal,
     ),
     syncFHIRResource<Condition>(
       baseUrl,
@@ -263,9 +280,8 @@ export async function syncAllRecords(
       db,
       'Condition',
       conditionMapper,
-      {
-        patient: patientId,
-      },
+      { patient: patientId },
+      signal,
     ),
     syncFHIRResource<AllergyIntolerance>(
       baseUrl,
@@ -273,9 +289,8 @@ export async function syncAllRecords(
       db,
       'AllergyIntolerance',
       allergyIntoleranceMapper,
-      {
-        patient: patientId,
-      },
+      { patient: patientId },
+      signal,
     ),
   ]);
 

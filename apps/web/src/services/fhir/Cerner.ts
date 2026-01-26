@@ -64,6 +64,8 @@ import {
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
 import { Routes } from '../../Routes';
 import { AppConfig } from '../../app/providers/AppConfigProvider';
+import { connectionExists } from '../../repositories/ClinicalDocumentRepository';
+import { ConnectionDeletedError } from '../../shared/errors';
 
 const cernerClient = createCernerClient();
 
@@ -110,6 +112,7 @@ async function getFHIRResource<T extends FhirResource>(
   connectionDocument: CernerConnectionDocument,
   fhirResourceUrl: string,
   params?: Record<string, string>,
+  signal?: AbortSignal,
 ): Promise<BundleEntry<T>[]> {
   const defaultUrl = `${baseUrl}${fhirResourceUrl}?${new URLSearchParams(
     params,
@@ -120,6 +123,7 @@ async function getFHIRResource<T extends FhirResource>(
 
   while (nextUrl) {
     const response = await fetch(nextUrl, {
+      signal,
       headers: {
         Authorization: `Bearer ${connectionDocument.access_token}`,
         Accept: 'application/json+fhir',
@@ -161,13 +165,25 @@ async function syncFHIRResource<T extends FhirResource>(
   fhirResourceUrl: string,
   mapper: (proc: BundleEntry<T>) => CreateClinicalDocument<BundleEntry<T>>,
   params?: Record<string, string>,
+  signal?: AbortSignal,
 ) {
   const resc = await getFHIRResource<T>(
     baseUrl,
     connectionDocument,
     fhirResourceUrl,
     params,
+    signal,
   );
+
+  if (
+    !(await connectionExists(
+      db,
+      connectionDocument.user_id,
+      connectionDocument.id,
+    ))
+  ) {
+    throw new ConnectionDeletedError(connectionDocument.id);
+  }
 
   const cds = resc
     .filter(
@@ -189,6 +205,7 @@ async function processIncludedResources(
     (entry: BundleEntry<any>) => CreateClinicalDocument<BundleEntry<any>>
   >,
   db: RxDatabase<DatabaseCollections>,
+  connectionDocument: CernerConnectionDocument,
   excludeResourceTypes: string[] = [],
 ): Promise<void> {
   const resourceTypeGroups = new Map<string, BundleEntry<any>[]>();
@@ -204,6 +221,15 @@ async function processIncludedResources(
   for (const [resourceType, groupedEntries] of resourceTypeGroups.entries()) {
     const mapper = mappers[resourceType];
     if (mapper) {
+      if (
+        !(await connectionExists(
+          db,
+          connectionDocument.user_id,
+          connectionDocument.id,
+        ))
+      ) {
+        throw new ConnectionDeletedError(connectionDocument.id);
+      }
       const cds = groupedEntries.map(mapper);
       await db.clinical_documents.bulkUpsert(
         cds as unknown as ClinicalDocument[],
@@ -223,13 +249,24 @@ async function syncFHIRResourceWithIncludes<T extends FhirResource>(
     string,
     (entry: BundleEntry<any>) => CreateClinicalDocument<BundleEntry<any>>
   >,
+  signal?: AbortSignal,
 ) {
   const resc = await getFHIRResource<T>(
     baseUrl,
     connectionDocument,
     fhirResourceUrl,
     params,
+    signal,
   );
+  if (
+    !(await connectionExists(
+      db,
+      connectionDocument.user_id,
+      connectionDocument.id,
+    ))
+  ) {
+    throw new ConnectionDeletedError(connectionDocument.id);
+  }
   const cds = resc
     .filter(
       (i) =>
@@ -238,7 +275,9 @@ async function syncFHIRResourceWithIncludes<T extends FhirResource>(
     )
     .map(mapper);
   await db.clinical_documents.bulkUpsert(cds as unknown as ClinicalDocument[]);
-  await processIncludedResources(resc, includeMappers, db, [fhirResourceUrl]);
+  await processIncludedResources(resc, includeMappers, db, connectionDocument, [
+    fhirResourceUrl,
+  ]);
 }
 
 /**
@@ -247,6 +286,7 @@ async function syncFHIRResourceWithIncludes<T extends FhirResource>(
  * @param connectionDocument
  * @param db
  * @param version FHIR version to use for mapping (defaults to DSTU2 for backward compatibility)
+ * @param signal Optional abort signal to cancel the sync
  * @returns A promise of void arrays
  */
 export async function syncAllRecords(
@@ -254,6 +294,7 @@ export async function syncAllRecords(
   connectionDocument: CernerConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   version: 'DSTU2' | 'R4' = 'DSTU2',
+  signal?: AbortSignal,
 ): Promise<PromiseSettledResult<void[]>[]> {
   const mappers = version === 'R4' ? R4 : DSTU2;
 
@@ -314,9 +355,8 @@ export async function syncAllRecords(
       db,
       'Procedure',
       procMapper as any,
-      {
-        patient: patientId,
-      },
+      { patient: patientId },
+      signal,
     ),
     syncFHIRResource<Patient>(
       baseUrl,
@@ -324,9 +364,8 @@ export async function syncAllRecords(
       db,
       'Patient',
       patientMapper as any,
-      {
-        _id: patientId,
-      },
+      { _id: patientId },
+      signal,
     ),
     syncFHIRResource<Observation>(
       baseUrl,
@@ -334,10 +373,8 @@ export async function syncAllRecords(
       db,
       'Observation',
       obsMapper as any,
-      {
-        patient: patientId,
-        category: 'laboratory',
-      },
+      { patient: patientId, category: 'laboratory' },
+      signal,
     ),
     version === 'R4'
       ? syncFHIRResourceWithIncludes<DiagnosticReport>(
@@ -346,11 +383,9 @@ export async function syncAllRecords(
           db,
           'DiagnosticReport',
           drMapper as any,
-          {
-            patient: patientId,
-            _revinclude: 'Provenance:target',
-          },
+          { patient: patientId, _revinclude: 'Provenance:target' },
           includeMappers,
+          signal,
         )
       : syncFHIRResource<DiagnosticReport>(
           baseUrl,
@@ -358,9 +393,8 @@ export async function syncAllRecords(
           db,
           'DiagnosticReport',
           drMapper as any,
-          {
-            patient: patientId,
-          },
+          { patient: patientId },
+          signal,
         ),
     version === 'R4'
       ? syncFHIRResource<any>(
@@ -369,9 +403,8 @@ export async function syncAllRecords(
           db,
           'MedicationRequest',
           medRequestMapper as any,
-          {
-            patient: patientId,
-          },
+          { patient: patientId },
+          signal,
         )
       : syncFHIRResource<MedicationStatement>(
           baseUrl,
@@ -379,9 +412,8 @@ export async function syncAllRecords(
           db,
           'MedicationStatement',
           medStatementMapper as any,
-          {
-            patient: patientId,
-          },
+          { patient: patientId },
+          signal,
         ),
     syncFHIRResource<Immunization>(
       baseUrl,
@@ -389,9 +421,8 @@ export async function syncAllRecords(
       db,
       'Immunization',
       immMapper as any,
-      {
-        patient: patientId,
-      },
+      { patient: patientId },
+      signal,
     ),
     syncFHIRResource<Condition>(
       baseUrl,
@@ -399,18 +430,16 @@ export async function syncAllRecords(
       db,
       'Condition',
       conditionMapper as any,
-      {
-        patient: patientId,
-      },
+      { patient: patientId },
+      signal,
     ),
     syncDocumentReferences(
       baseUrl,
       connectionDocument,
       db,
-      {
-        patient: patientId,
-      },
+      { patient: patientId },
       version,
+      signal,
     ),
     syncFHIRResource<Encounter>(
       baseUrl,
@@ -418,9 +447,8 @@ export async function syncAllRecords(
       db,
       'Encounter',
       encounterMapper as any,
-      {
-        patient: patientId,
-      },
+      { patient: patientId },
+      signal,
     ),
     syncFHIRResource<AllergyIntolerance>(
       baseUrl,
@@ -428,9 +456,8 @@ export async function syncAllRecords(
       db,
       'AllergyIntolerance',
       allergyIntoleranceMapper as any,
-      {
-        patient: patientId,
-      },
+      { patient: patientId },
+      signal,
     ),
     ...(version === 'R4'
       ? [
@@ -445,6 +472,7 @@ export async function syncAllRecords(
                 connectionDocument,
               )) as any,
             { patient: patientId },
+            signal,
           ),
           syncFHIRResource(
             baseUrl,
@@ -454,6 +482,7 @@ export async function syncAllRecords(
             ((item: any) =>
               R4.mapGoalToClinicalDocument(item, connectionDocument)) as any,
             { patient: patientId },
+            signal,
           ),
           syncFHIRResource(
             baseUrl,
@@ -466,6 +495,7 @@ export async function syncAllRecords(
                 connectionDocument,
               )) as any,
             { patient: patientId },
+            signal,
           ),
           syncFHIRResource(
             baseUrl,
@@ -475,6 +505,7 @@ export async function syncAllRecords(
             ((item: any) =>
               R4.mapDeviceToClinicalDocument(item, connectionDocument)) as any,
             { patient: patientId },
+            signal,
           ),
           syncFHIRResource(
             baseUrl,
@@ -487,6 +518,7 @@ export async function syncAllRecords(
                 connectionDocument,
               )) as any,
             { patient: patientId },
+            signal,
           ),
           syncFHIRResource(
             baseUrl,
@@ -499,6 +531,7 @@ export async function syncAllRecords(
                 connectionDocument,
               )) as any,
             { patient: patientId },
+            signal,
           ),
           syncFHIRResource(
             baseUrl,
@@ -511,6 +544,7 @@ export async function syncAllRecords(
                 connectionDocument,
               )) as any,
             { patient: patientId },
+            signal,
           ),
           syncFHIRResource(
             baseUrl,
@@ -523,6 +557,7 @@ export async function syncAllRecords(
                 connectionDocument,
               )) as any,
             { patient: patientId, date: 'ge1900-01-01T00:00:00Z' },
+            signal,
           ),
           syncFHIRResource(
             baseUrl,
@@ -535,6 +570,7 @@ export async function syncAllRecords(
                 connectionDocument,
               )) as any,
             { patient: patientId },
+            signal,
           ),
           syncFHIRResource(
             baseUrl,
@@ -544,6 +580,7 @@ export async function syncAllRecords(
             ((item: any) =>
               R4.mapConsentToClinicalDocument(item, connectionDocument)) as any,
             { patient: patientId },
+            signal,
           ),
           syncFHIRResource(
             baseUrl,
@@ -556,6 +593,7 @@ export async function syncAllRecords(
                 connectionDocument,
               )) as any,
             { patient: patientId },
+            signal,
           ),
           syncFHIRResource(
             baseUrl,
@@ -568,6 +606,7 @@ export async function syncAllRecords(
                 connectionDocument,
               )) as any,
             { patient: patientId },
+            signal,
           ),
         ]
       : []),
@@ -582,6 +621,7 @@ async function syncDocumentReferences(
   db: RxDatabase<DatabaseCollections>,
   params: Record<string, string>,
   version: 'DSTU2' | 'R4' = 'DSTU2',
+  signal?: AbortSignal,
 ) {
   const mappers = version === 'R4' ? R4 : DSTU2;
   const documentReferenceMapper = (dr: BundleEntry<DocumentReference>) =>
@@ -596,6 +636,7 @@ async function syncDocumentReferences(
     'DocumentReference',
     documentReferenceMapper as any,
     params,
+    signal,
   );
 
   const docs = await db.clinical_documents
@@ -640,13 +681,21 @@ async function syncDocumentReferences(
             .exec();
           if (exists.length === 0) {
             console.log('Syncing attachment: ' + attachmentUrl);
-            // attachment does not exist, sync it
             const { contentType, raw } = await fetchAttachmentData(
               attachmentUrl,
               connectionDocument,
+              signal,
             );
             if (raw && contentType) {
-              // save as CreateClinicalDocument
+              if (
+                !(await connectionExists(
+                  db,
+                  connectionDocument.user_id,
+                  connectionDocument.id,
+                ))
+              ) {
+                throw new ConnectionDeletedError(connectionDocument.id);
+              }
               const cd: CreateClinicalDocument<string | Blob> = {
                 user_id: connectionDocument.user_id,
                 connection_record_id: connectionDocument.id,
@@ -694,17 +743,20 @@ async function syncDocumentReferences(
  * @see https://docs.oracle.com/en/industries/health/millennium-platform-apis/mfrap/op-binary-id-get.html
  * @param url URL of the attachment
  * @param cd Connection document
+ * @param signal Optional abort signal
  * @returns Object containing contentType and raw data (as base64 string for PDFs)
  */
 async function fetchAttachmentData(
   url: string,
   cd: CernerConnectionDocument,
+  signal?: AbortSignal,
 ): Promise<{ contentType: string | null; raw: string | Blob | undefined }> {
   try {
     const isBinaryResource = url.includes('/Binary/');
     const acceptHeader = isBinaryResource ? 'application/fhir+json' : '*/*';
 
     const res = await fetch(url, {
+      signal,
       headers: {
         Authorization: `Bearer ${cd.access_token}`,
         Accept: acceptHeader,

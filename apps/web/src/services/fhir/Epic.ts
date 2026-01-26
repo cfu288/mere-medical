@@ -65,6 +65,8 @@ import {
 } from '../../models/clinical-document/ClinicalDocument.type';
 import { findUserById } from '../../repositories/UserRepository';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
+import { connectionExists } from '../../repositories/ClinicalDocumentRepository';
+import { ConnectionDeletedError } from '../../shared/errors';
 
 const epicClient = createEpicClient({ signJwt });
 
@@ -145,6 +147,7 @@ async function getFHIRResource<T extends FhirResource>(
   fhirResourceUrl: string,
   params?: Record<string, string | string[]>,
   useProxy = false,
+  signal?: AbortSignal,
 ): Promise<BundleEntry<T>[]> {
   const epicId = connectionDocument.tenant_id;
   const fhirVersion = connectionDocument.fhir_version || 'DSTU2';
@@ -181,6 +184,7 @@ async function getFHIRResource<T extends FhirResource>(
 
   while (nextUrl) {
     const response = await fetch(nextUrl, {
+      signal,
       headers: {
         Authorization: `Bearer ${connectionDocument.access_token}`,
         Accept: 'application/fhir+json',
@@ -224,6 +228,7 @@ async function syncFHIRResource<T extends FhirResource>(
   mapper: (proc: BundleEntry<T>) => CreateClinicalDocument<BundleEntry<T>>,
   params: Record<string, string | string[]>,
   useProxy = false,
+  signal?: AbortSignal,
 ) {
   const resc = await getFHIRResource<T>(
     config,
@@ -232,7 +237,18 @@ async function syncFHIRResource<T extends FhirResource>(
     fhirResourceUrl,
     params,
     useProxy,
+    signal,
   );
+
+  if (
+    !(await connectionExists(
+      db,
+      connectionDocument.user_id,
+      connectionDocument.id,
+    ))
+  ) {
+    throw new ConnectionDeletedError(connectionDocument.id);
+  }
 
   const cds = resc
     .filter(
@@ -254,6 +270,7 @@ async function processIncludedResources(
     (entry: BundleEntry<any>) => CreateClinicalDocument<BundleEntry<any>>
   >,
   db: RxDatabase<DatabaseCollections>,
+  connectionDocument: EpicConnectionDocument,
   excludeResourceTypes: string[] = [],
 ): Promise<void> {
   const resourceTypeGroups = new Map<string, BundleEntry<any>[]>();
@@ -271,6 +288,15 @@ async function processIncludedResources(
   for (const [resourceType, groupedEntries] of resourceTypeGroups.entries()) {
     const mapper = mappers[resourceType];
     if (mapper) {
+      if (
+        !(await connectionExists(
+          db,
+          connectionDocument.user_id,
+          connectionDocument.id,
+        ))
+      ) {
+        throw new ConnectionDeletedError(connectionDocument.id);
+      }
       const cds = groupedEntries.map(mapper);
       await db.clinical_documents.bulkUpsert(
         cds as unknown as ClinicalDocument[],
@@ -292,6 +318,7 @@ async function syncFHIRResourceWithIncludes<T extends FhirResource>(
     (entry: BundleEntry<any>) => CreateClinicalDocument<BundleEntry<any>>
   >,
   useProxy = false,
+  signal?: AbortSignal,
 ) {
   const resc = await getFHIRResource<T>(
     config,
@@ -300,7 +327,18 @@ async function syncFHIRResourceWithIncludes<T extends FhirResource>(
     fhirResourceUrl,
     params,
     useProxy,
+    signal,
   );
+
+  if (
+    !(await connectionExists(
+      db,
+      connectionDocument.user_id,
+      connectionDocument.id,
+    ))
+  ) {
+    throw new ConnectionDeletedError(connectionDocument.id);
+  }
 
   const cds = resc
     .filter(
@@ -311,7 +349,9 @@ async function syncFHIRResourceWithIncludes<T extends FhirResource>(
     .map(mapper);
   await db.clinical_documents.bulkUpsert(cds as unknown as ClinicalDocument[]);
 
-  await processIncludedResources(resc, includeMappers, db, [fhirResourceUrl]);
+  await processIncludedResources(resc, includeMappers, db, connectionDocument, [
+    fhirResourceUrl,
+  ]);
 }
 
 /**
@@ -320,6 +360,7 @@ async function syncFHIRResourceWithIncludes<T extends FhirResource>(
  * @param connectionDocument
  * @param db
  * @param useProxy
+ * @param signal Optional abort signal to cancel the sync
  * @returns A promise of void arrays
  */
 export async function syncAllRecords(
@@ -328,6 +369,7 @@ export async function syncAllRecords(
   connectionDocument: EpicConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   useProxy = false,
+  signal?: AbortSignal,
 ): Promise<PromiseSettledResult<void[]>[]> {
   const fhirVersion = connectionDocument.fhir_version || 'DSTU2';
   const mappers = fhirVersion === 'R4' ? R4 : DSTU2;
@@ -414,6 +456,7 @@ export async function syncAllRecords(
         patient: connectionDocument.patient,
       },
       useProxy,
+      signal,
     ),
     syncFHIRResource<Patient>(
       config,
@@ -426,6 +469,7 @@ export async function syncAllRecords(
         id: connectionDocument.patient,
       },
       useProxy,
+      signal,
     ),
     fhirVersion === 'R4'
       ? syncFHIRResourceWithIncludes<Observation>(
@@ -443,6 +487,7 @@ export async function syncAllRecords(
           },
           includeMappers,
           useProxy,
+          signal,
         )
       : syncFHIRResource<Observation>(
           config,
@@ -456,6 +501,7 @@ export async function syncAllRecords(
             category: 'laboratory',
           },
           useProxy,
+          signal,
         ),
     fhirVersion === 'R4'
       ? syncFHIRResourceWithIncludes<DiagnosticReport>(
@@ -472,6 +518,7 @@ export async function syncAllRecords(
           },
           includeMappers,
           useProxy,
+          signal,
         )
       : syncFHIRResource<DiagnosticReport>(
           config,
@@ -484,6 +531,7 @@ export async function syncAllRecords(
             patient: connectionDocument.patient,
           },
           useProxy,
+          signal,
         ),
     fhirVersion === 'R4'
       ? syncFHIRResource<any>(
@@ -497,6 +545,7 @@ export async function syncAllRecords(
             patient: connectionDocument.patient,
           },
           useProxy,
+          signal,
         )
       : syncFHIRResource<MedicationStatement>(
           config,
@@ -509,6 +558,7 @@ export async function syncAllRecords(
             patient: connectionDocument.patient,
           },
           useProxy,
+          signal,
         ),
     syncFHIRResource<Immunization>(
       config,
@@ -521,6 +571,7 @@ export async function syncAllRecords(
         patient: connectionDocument.patient,
       },
       useProxy,
+      signal,
     ),
     syncFHIRResource<Condition>(
       config,
@@ -533,6 +584,7 @@ export async function syncAllRecords(
         patient: connectionDocument.patient,
       },
       useProxy,
+      signal,
     ),
     syncFHIRResource<AllergyIntolerance>(
       config,
@@ -545,6 +597,7 @@ export async function syncAllRecords(
         patient: connectionDocument.patient,
       },
       useProxy,
+      signal,
     ),
     syncDocumentReferences(
       config,
@@ -556,6 +609,7 @@ export async function syncAllRecords(
       },
       useProxy,
       fhirVersion,
+      signal,
     ),
     ...(fhirVersion === 'DSTU2'
       ? [
@@ -570,6 +624,7 @@ export async function syncAllRecords(
               patient: connectionDocument.patient,
             },
             useProxy,
+            signal,
           ),
         ]
       : []),
@@ -588,6 +643,7 @@ export async function syncAllRecords(
             },
             includeMappers,
             useProxy,
+            signal,
           ),
           syncFHIRResourceWithIncludes<any>(
             config,
@@ -603,6 +659,7 @@ export async function syncAllRecords(
             },
             includeMappers,
             useProxy,
+            signal,
           ),
           syncFHIRResourceWithIncludes<any>(
             config,
@@ -617,6 +674,7 @@ export async function syncAllRecords(
             },
             includeMappers,
             useProxy,
+            signal,
           ),
           syncFHIRResourceWithIncludes<any>(
             config,
@@ -632,6 +690,7 @@ export async function syncAllRecords(
             },
             includeMappers,
             useProxy,
+            signal,
           ),
           syncFHIRResourceWithIncludes<any>(
             config,
@@ -647,6 +706,7 @@ export async function syncAllRecords(
             },
             includeMappers,
             useProxy,
+            signal,
           ),
           syncFHIRResourceWithIncludes<any>(
             config,
@@ -661,6 +721,7 @@ export async function syncAllRecords(
             },
             includeMappers,
             useProxy,
+            signal,
           ),
           syncFHIRResourceWithIncludes<any>(
             config,
@@ -680,6 +741,7 @@ export async function syncAllRecords(
             },
             includeMappers,
             useProxy,
+            signal,
           ),
         ]
       : []),
@@ -696,6 +758,7 @@ async function syncDocumentReferences(
   params: Record<string, string>,
   useProxy = false,
   fhirVersion: 'DSTU2' | 'R4' = 'DSTU2',
+  signal?: AbortSignal,
 ) {
   const documentReferenceMapper = (dr: BundleEntry<DocumentReference>) =>
     fhirVersion === 'R4'
@@ -710,6 +773,7 @@ async function syncDocumentReferences(
     documentReferenceMapper as any,
     params,
     useProxy,
+    signal,
   );
 
   const docs = await db.clinical_documents
@@ -759,9 +823,18 @@ async function syncDocumentReferences(
               attachmentUrl,
               connectionDocument,
               useProxy,
+              signal,
             );
             if (raw && contentType) {
-              // save as ClinicalDocument
+              if (
+                !(await connectionExists(
+                  db,
+                  connectionDocument.user_id,
+                  connectionDocument.id,
+                ))
+              ) {
+                throw new ConnectionDeletedError(connectionDocument.id);
+              }
               const cd: CreateClinicalDocument<string | Blob> = {
                 user_id: connectionDocument.user_id,
                 connection_record_id: connectionDocument.id,
@@ -816,6 +889,7 @@ async function fetchAttachmentData(
   url: string,
   connectionDocument: EpicConnectionDocument,
   useProxy: boolean,
+  signal?: AbortSignal,
 ): Promise<{ contentType: string | null; raw: string | undefined }> {
   try {
     const epicId = connectionDocument.tenant_id;
@@ -827,6 +901,7 @@ async function fetchAttachmentData(
     const proxyUrl = `${config.PUBLIC_URL || ''}/api/proxy?serviceId=${epicId}&target=${`${encodeURIComponent(proxyUrlExtension)}&target_type=base`}`;
     const fetchUrl = useProxy ? proxyUrl : defaultUrl;
     const res = await fetch(fetchUrl, {
+      signal,
       headers: {
         Authorization: `Bearer ${connectionDocument.access_token}`,
       },
