@@ -18,7 +18,7 @@ export function createJwtSigner(config: JwtConfig) {
     const header = {
       alg: 'RS384',
       typ: 'JWT',
-      kid: config.keyId,
+      kid: String(config.keyId),
     };
 
     const nowInSeconds = Math.floor(Date.now() / 1000);
