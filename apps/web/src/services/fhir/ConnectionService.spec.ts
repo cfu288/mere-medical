@@ -194,11 +194,26 @@ describe('ConnectionService', () => {
           connectionService.recordSyncError(db, testConn.user_id, testConn.id),
         ).resolves.not.toThrow();
       });
+
+      it('clearSyncError does not throw when connection was deleted', async () => {
+        const testConn = createTestConnection();
+        await db.connection_documents.insert(testConn);
+
+        await connectionRepo.deleteConnection(
+          db,
+          testConn.user_id,
+          testConn.id,
+        );
+
+        await expect(
+          connectionService.clearSyncError(db, testConn.user_id, testConn.id),
+        ).resolves.not.toThrow();
+      });
     });
   });
 
   describe('deleteConnectionWithCascade race condition', () => {
-    it('deleteConnectionWithCascade deletes connection first, preventing orphans from concurrent sync', async () => {
+    it('deleteConnectionWithCascade prevents subsequent upserts from creating orphans', async () => {
       const connection = createTestConnection();
       await db.connection_documents.insert(connection);
 

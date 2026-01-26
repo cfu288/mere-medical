@@ -364,7 +364,7 @@ describe('ClinicalDocumentRepository', () => {
       expect(orphanedDocs).toHaveLength(0);
     });
 
-    it('leaves no orphans when connection is deleted mid-sync with multiple document batches', async () => {
+    it('leaves no orphans when connection is deleted mid-sync with multiple documents', async () => {
       const connection = createTestConnection();
       await db.connection_documents.insert(connection);
 
