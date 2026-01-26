@@ -76,5 +76,18 @@ export async function upsertDocumentsIfConnectionValid(
   if (!(await connectionExists(db, userId, connectionId))) {
     throw new ConnectionDeletedError(connectionId);
   }
+
   await db.clinical_documents.bulkUpsert(documents);
+
+  if (!(await connectionExists(db, userId, connectionId))) {
+    await db.clinical_documents
+      .find({
+        selector: {
+          user_id: userId,
+          connection_record_id: connectionId,
+        },
+      })
+      .remove();
+    throw new ConnectionDeletedError(connectionId);
+  }
 }

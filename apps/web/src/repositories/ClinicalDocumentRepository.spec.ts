@@ -320,4 +320,204 @@ describe('ClinicalDocumentRepository', () => {
       expect(insertedDocs).toHaveLength(0);
     });
   });
+
+  describe('race condition: connection deletion during sync', () => {
+    it('cleans up documents when connection deleted after pre-check passes but before post-check', async () => {
+      const connection = createTestConnection();
+      await db.connection_documents.insert(connection);
+
+      const documents = [
+        createTestClinicalDocument({
+          user_id: connection.user_id,
+          connection_record_id: connection.id,
+        }),
+        createTestClinicalDocument({
+          user_id: connection.user_id,
+          connection_record_id: connection.id,
+        }),
+      ];
+
+      const originalBulkUpsert = db.clinical_documents.bulkUpsert.bind(
+        db.clinical_documents,
+      );
+      db.clinical_documents.bulkUpsert = async (docs: any) => {
+        const result = await originalBulkUpsert(docs);
+        await db.connection_documents
+          .findOne({ selector: { id: connection.id } })
+          .exec()
+          .then((doc) => doc?.remove());
+        return result;
+      };
+
+      await expect(
+        upsertDocumentsIfConnectionValid(
+          db,
+          connection.user_id,
+          connection.id,
+          documents,
+        ),
+      ).rejects.toThrow(ConnectionDeletedError);
+
+      const orphanedDocs = await db.clinical_documents
+        .find({ selector: { connection_record_id: connection.id } })
+        .exec();
+      expect(orphanedDocs).toHaveLength(0);
+    });
+
+    it('leaves no orphans when connection is deleted mid-sync with multiple document batches', async () => {
+      const connection = createTestConnection();
+      await db.connection_documents.insert(connection);
+
+      const documents = Array.from({ length: 10 }, () =>
+        createTestClinicalDocument({
+          user_id: connection.user_id,
+          connection_record_id: connection.id,
+        }),
+      );
+
+      const originalBulkUpsert = db.clinical_documents.bulkUpsert.bind(
+        db.clinical_documents,
+      );
+      db.clinical_documents.bulkUpsert = async (docs: any) => {
+        const result = await originalBulkUpsert(docs);
+        await db.connection_documents
+          .findOne({ selector: { id: connection.id } })
+          .exec()
+          .then((doc) => doc?.remove());
+        return result;
+      };
+
+      await expect(
+        upsertDocumentsIfConnectionValid(
+          db,
+          connection.user_id,
+          connection.id,
+          documents,
+        ),
+      ).rejects.toThrow(ConnectionDeletedError);
+
+      const orphanedDocs = await db.clinical_documents
+        .find({ selector: { connection_record_id: connection.id } })
+        .exec();
+      expect(orphanedDocs).toHaveLength(0);
+    });
+
+    it('does not affect other users documents during cleanup', async () => {
+      const connectionA = createTestConnection({ user_id: 'userA' });
+      const connectionB = createTestConnection({ user_id: 'userB' });
+      await db.connection_documents.bulkInsert([connectionA, connectionB]);
+
+      const userBDoc = createTestClinicalDocument({
+        user_id: 'userB',
+        connection_record_id: connectionB.id,
+      });
+      await db.clinical_documents.insert(userBDoc);
+
+      const userADocs = [
+        createTestClinicalDocument({
+          user_id: 'userA',
+          connection_record_id: connectionA.id,
+        }),
+      ];
+
+      const originalBulkUpsert = db.clinical_documents.bulkUpsert.bind(
+        db.clinical_documents,
+      );
+      db.clinical_documents.bulkUpsert = async (docs: any) => {
+        const result = await originalBulkUpsert(docs);
+        await db.connection_documents
+          .findOne({ selector: { id: connectionA.id } })
+          .exec()
+          .then((doc) => doc?.remove());
+        return result;
+      };
+
+      await expect(
+        upsertDocumentsIfConnectionValid(
+          db,
+          connectionA.user_id,
+          connectionA.id,
+          userADocs,
+        ),
+      ).rejects.toThrow(ConnectionDeletedError);
+
+      const userBDocs = await db.clinical_documents
+        .find({ selector: { user_id: 'userB' } })
+        .exec();
+      expect(userBDocs).toHaveLength(1);
+      expect(userBDocs[0].get('id')).toBe(userBDoc.id);
+    });
+
+    it('deleteOrphanedDocuments serves as safety net for any orphans that slip through', async () => {
+      const connection = createTestConnection();
+
+      const orphanedDocs = [
+        createTestClinicalDocument({
+          user_id: connection.user_id,
+          connection_record_id: connection.id,
+        }),
+        createTestClinicalDocument({
+          user_id: connection.user_id,
+          connection_record_id: connection.id,
+        }),
+        createTestClinicalDocument({
+          user_id: connection.user_id,
+          connection_record_id: 'another-deleted-connection',
+        }),
+      ];
+      await db.clinical_documents.bulkInsert(orphanedDocs);
+
+      const docsBefore = await db.clinical_documents
+        .find({ selector: { user_id: connection.user_id } })
+        .exec();
+      expect(docsBefore).toHaveLength(3);
+
+      const deletedCount = await deleteOrphanedDocuments(
+        db,
+        connection.user_id,
+      );
+
+      expect(deletedCount).toBe(3);
+
+      const docsAfter = await db.clinical_documents
+        .find({ selector: { user_id: connection.user_id } })
+        .exec();
+      expect(docsAfter).toHaveLength(0);
+    });
+
+    it('handles rapid successive upsert attempts after connection deletion', async () => {
+      const connection = createTestConnection();
+      await db.connection_documents.insert(connection);
+
+      await db.connection_documents
+        .findOne({ selector: { id: connection.id } })
+        .exec()
+        .then((doc) => doc?.remove());
+
+      const upsertAttempts = Array.from({ length: 5 }, () =>
+        upsertDocumentsIfConnectionValid(
+          db,
+          connection.user_id,
+          connection.id,
+          [
+            createTestClinicalDocument({
+              user_id: connection.user_id,
+              connection_record_id: connection.id,
+            }),
+          ],
+        ).catch((e) => e),
+      );
+
+      const results = await Promise.all(upsertAttempts);
+
+      results.forEach((result) => {
+        expect(result).toBeInstanceOf(ConnectionDeletedError);
+      });
+
+      const orphanedDocs = await db.clinical_documents
+        .find({ selector: { connection_record_id: connection.id } })
+        .exec();
+      expect(orphanedDocs).toHaveLength(0);
+    });
+  });
 });
