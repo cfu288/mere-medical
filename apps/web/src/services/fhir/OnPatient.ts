@@ -25,20 +25,32 @@ import {
   ClinicalDocument,
   CreateClinicalDocument,
 } from '../../models/clinical-document/ClinicalDocument.type';
+import { upsertDocumentsIfConnectionValid } from '../../repositories/ClinicalDocumentRepository';
 
 export const OnPatientBaseUrl = ONPATIENT_CONSTANTS.BASE_URL;
 export const OnPatientDSTU2Url = ONPATIENT_CONSTANTS.FHIR_URL;
 
+function throwIfAborted(signal?: AbortSignal, context?: string) {
+  if (signal?.aborted) {
+    console.log(`[OnPatient] Sync aborted${context ? `: ${context}` : ''}`);
+    const error = new DOMException('Sync was cancelled', 'AbortError');
+    throw error;
+  }
+}
+
 async function getFHIRResource<T extends FhirResource>(
   connectionDocument: ConnectionDocument,
   fhirResourcePathUrl: string,
+  signal?: AbortSignal,
 ): Promise<BundleEntry<T>[]> {
   let allEntries: BundleEntry<T>[] = [];
   let nextUrl: string | undefined =
     `${OnPatientDSTU2Url}/${fhirResourcePathUrl}`;
 
   while (nextUrl) {
+    throwIfAborted(signal, `before fetching ${fhirResourcePathUrl}`);
     const response = await fetch(nextUrl, {
+      signal,
       headers: {
         Authorization: `Bearer ${connectionDocument.access_token}`,
       },
@@ -67,11 +79,16 @@ async function syncFHIRResource<T extends FhirResource>(
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
   mapper: (proc: BundleEntry<T>) => CreateClinicalDocument<BundleEntry<T>>,
+  signal?: AbortSignal,
 ) {
   const fhirResources = await getFHIRResource<T>(
     connectionDocument,
     fhirResourceUrl,
+    signal,
   );
+
+  throwIfAborted(signal, `before upserting ${fhirResourceUrl}`);
+
   const cds = fhirResources
     .filter(
       (i) =>
@@ -79,15 +96,21 @@ async function syncFHIRResource<T extends FhirResource>(
         fhirResourceUrl.toLowerCase(),
     )
     .map(mapper);
-  const cdsmap = await db.clinical_documents.bulkUpsert(
+
+  await upsertDocumentsIfConnectionValid(
+    db,
+    connectionDocument.user_id,
+    connectionDocument.id,
     cds as unknown as ClinicalDocument[],
   );
-  return cdsmap;
+
+  return cds;
 }
 
 export async function syncAllRecords(
   connectionDocument: ConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
+  signal?: AbortSignal,
 ): Promise<PromiseSettledResult<void[]>[]> {
   const immMapper = (dr: BundleEntry<Immunization>) =>
     DSTU2.mapImmunizationToClinicalDocument(dr, connectionDocument);
@@ -113,50 +136,64 @@ export async function syncAllRecords(
       db,
       'Immunization',
       immMapper,
+      signal,
     ),
     syncFHIRResource<Procedure>(
       connectionDocument,
       db,
       'Procedure',
       procMapper,
+      signal,
     ),
     syncFHIRResource<Condition>(
       connectionDocument,
       db,
       'Condition',
       conditionMapper,
+      signal,
     ),
     syncFHIRResource<Observation>(
       connectionDocument,
       db,
       'Observation',
       obsMapper,
+      signal,
     ),
     syncFHIRResource<DiagnosticReport>(
       connectionDocument,
       db,
       'DiagnosticReport',
       drMapper,
+      signal,
     ),
     syncFHIRResource<MedicationStatement>(
       connectionDocument,
       db,
       'MedicationStatement',
       medStatementMapper,
+      signal,
     ),
     syncFHIRResource<AllergyIntolerance>(
       connectionDocument,
       db,
       'AllergyIntolerance',
       allergyMapper,
+      signal,
     ),
     syncFHIRResource<MedicationOrder>(
       connectionDocument,
       db,
       'MedicationOrder',
       medOrderMapper,
+      signal,
     ),
-    syncFHIRResource<Patient>(connectionDocument, db, 'Patient', patientMapper),
+    syncFHIRResource<Patient>(
+      connectionDocument,
+      db,
+      'Patient',
+      patientMapper,
+      signal,
+    ),
   ]);
 
   return syncJob as unknown as Promise<PromiseSettledResult<void[]>[]>;

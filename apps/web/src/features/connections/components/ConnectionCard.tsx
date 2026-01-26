@@ -69,9 +69,18 @@ export function ConnectionCard({
     user = useUser(),
     [deleting, setDeleting] = useState(false),
     userPreferences = useUserPreferences(),
+    notifyDispatch = useNotificationDispatch(),
+    sync = useSyncJobContext(),
+    syncD = useSyncJobDispatchContext(),
+    syncJobEntries = new Set(Object.keys(sync)),
+    syncing = syncJobEntries.has(item.get('id')),
     removeDocument = (document: RxDocument<ConnectionDocument>) => {
       setDeleting(true);
       const connectionId = document.get('id');
+
+      if (syncD && syncJobEntries.has(connectionId)) {
+        syncD({ type: 'remove_job', id: connectionId });
+      }
 
       deleteConnectionWithCascade(db, user.id, connectionId)
         .then(() => {
@@ -92,11 +101,6 @@ export function ConnectionCard({
           });
         });
     },
-    notifyDispatch = useNotificationDispatch(),
-    sync = useSyncJobContext(),
-    syncD = useSyncJobDispatchContext(),
-    syncJobEntries = new Set(Object.keys(sync)),
-    syncing = syncJobEntries.has(item.get('id')),
     handleFetchData = useCallback(() => {
       if (!isConfigValid(config)) {
         notifyDispatch({

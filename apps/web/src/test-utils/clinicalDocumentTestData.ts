@@ -6,10 +6,15 @@ export function createTestClinicalDocument(
   overrides?: Partial<ClinicalDocument<BundleEntry<FhirResource>>>,
 ): ClinicalDocument<BundleEntry<FhirResource>> {
   const resourceId = uuid4();
+  const connectionRecordId =
+    overrides?.connection_record_id ?? 'test-connection';
+  const userId = overrides?.user_id ?? 'test-user';
+  const id = overrides?.id ?? `${connectionRecordId}|${userId}|${resourceId}`;
+
   return {
-    id: `test-connection|test-user|${resourceId}`,
-    connection_record_id: 'test-connection',
-    user_id: 'test-user',
+    id,
+    connection_record_id: connectionRecordId,
+    user_id: userId,
     data_record: {
       raw: {
         resource: {

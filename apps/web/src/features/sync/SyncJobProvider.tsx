@@ -33,12 +33,38 @@ import {
   recordSyncSuccess,
   recordSyncError,
 } from '../../services/fhir/ConnectionService';
+import { deleteOrphanedDocuments } from '../../repositories/ClinicalDocumentRepository';
+import { useUser } from '../../app/providers/UserProvider';
+import { ConnectionDeletedError } from '../../shared/errors';
 
-type SyncJobProviderProps = PropsWithChildren<unknown>;
+export interface SyncFunctions {
+  onpatient: typeof OnPatient.syncAllRecords;
+  epic: typeof Epic.syncAllRecords;
+  cerner: typeof Cerner.syncAllRecords;
+  va: typeof VA.syncAllRecords;
+  veradigm: typeof Veradigm.syncAllRecords;
+  healow: typeof Healow.syncAllRecords;
+}
 
-const SyncJobContext = React.createContext<
-  Record<string, Subject<PromiseSettledResult<void[]>[]>>
->({});
+const defaultSyncFunctions: SyncFunctions = {
+  onpatient: OnPatient.syncAllRecords,
+  epic: Epic.syncAllRecords,
+  cerner: Cerner.syncAllRecords,
+  va: VA.syncAllRecords,
+  veradigm: Veradigm.syncAllRecords,
+  healow: Healow.syncAllRecords,
+};
+
+type SyncJobProviderProps = PropsWithChildren<{
+  syncFunctions?: Partial<SyncFunctions>;
+}>;
+
+type SyncJobEntry = {
+  subject: Subject<PromiseSettledResult<void[]>[]>;
+  abortController: AbortController;
+};
+
+const SyncJobContext = React.createContext<Record<string, SyncJobEntry>>({});
 
 const SyncJobDispatchContext = React.createContext<Dispatch | undefined>(
   undefined,
@@ -58,66 +84,116 @@ type Action =
 
 type Dispatch = (action: Action) => void;
 
-const syncJobReducer: (
-  state: Record<string, Subject<PromiseSettledResult<void[]>[]>>,
-  action: Action,
-) => Record<string, Subject<PromiseSettledResult<void[]>[]>> = (
-  state: Record<string, Subject<PromiseSettledResult<void[]>[]>>,
-  action: Action,
-) => {
-  switch (action.type) {
-    case 'add_job': {
-      const subject = new Subject<PromiseSettledResult<void[]>[]>();
-      const observable = from(
-        fetchMedicalRecords(
-          action.config,
-          action.connectionDocument,
-          action.db,
-          action.baseUrl,
-          action.useProxy,
-        ),
-      );
-      observable.subscribe(subject);
-      return {
-        ...state,
-        [action.id]: subject,
-      };
+const createSyncJobReducer =
+  (syncFunctions: SyncFunctions) =>
+  (
+    state: Record<string, SyncJobEntry>,
+    action: Action,
+  ): Record<string, SyncJobEntry> => {
+    switch (action.type) {
+      case 'add_job': {
+        const subject = new Subject<PromiseSettledResult<void[]>[]>();
+        const abortController = new AbortController();
+        const observable = from(
+          fetchMedicalRecords(
+            action.config,
+            action.connectionDocument,
+            action.db,
+            action.baseUrl,
+            action.useProxy,
+            abortController.signal,
+            syncFunctions,
+          ),
+        );
+        observable.subscribe(subject);
+        return {
+          ...state,
+          [action.id]: { subject, abortController },
+        };
+      }
+      case 'remove_job': {
+        const nState = { ...state };
+        const entry = nState[action.id];
+        if (entry) {
+          entry.abortController.abort();
+        }
+        delete nState[action.id];
+        return nState;
+      }
+      default: {
+        throw new Error(`Unhandled action type: ${action}`);
+      }
     }
-    case 'remove_job': {
-      const nState = { ...state };
-      delete nState[action.id];
-      return nState;
-    }
-    default: {
-      throw new Error(`Unhandled action type: ${action}`);
-    }
-  }
-};
+  };
 
 /**
  * A provider that handles sync jobs that manages syncing medical records for connections
  * Also provides a dispatch function to add/remove sync jobs
  */
-export function SyncJobProvider(props: SyncJobProviderProps) {
+export function SyncJobProvider({
+  children,
+  syncFunctions,
+}: SyncJobProviderProps) {
+  const mergedSyncFunctions = useMemo(
+    () => ({ ...defaultSyncFunctions, ...syncFunctions }),
+    [syncFunctions],
+  );
+
+  const reducer = useMemo(
+    () => createSyncJobReducer(mergedSyncFunctions),
+    [mergedSyncFunctions],
+  );
+
   const [state, dispatch] = React.useReducer(
-    syncJobReducer,
-    {} as Record<string, Subject<PromiseSettledResult<void[]>[]>>,
+    reducer,
+    {} as Record<string, SyncJobEntry>,
   );
 
   return (
     <SyncJobContext.Provider value={state}>
       <SyncJobDispatchContext.Provider value={dispatch}>
-        <OnHandleUnsubscribeJobs>
-          <HandleInitalSync>{props.children}</HandleInitalSync>
-        </OnHandleUnsubscribeJobs>
+        <OrphanCleanup>
+          <OnHandleUnsubscribeJobs>
+            <HandleInitalSync>{children}</HandleInitalSync>
+          </OnHandleUnsubscribeJobs>
+        </OrphanCleanup>
       </SyncJobDispatchContext.Provider>
     </SyncJobContext.Provider>
   );
 }
 
 /**
+ * Safety net that cleans up clinical documents whose parent connection no longer exists.
+ * This handles edge cases where documents were inserted but the connection was deleted
+ * before the post-upsert verification could clean them up. Once the race condition in
+ * upsertDocumentsIfConnectionValid is proven stable, this component can be removed.
+ */
+function OrphanCleanup({ children }: PropsWithChildren) {
+  const db = useRxDb();
+  const user = useUser();
+
+  useEffect(() => {
+    if (user?.id) {
+      deleteOrphanedDocuments(db, user.id)
+        .then((count) => {
+          if (count > 0) {
+            console.log(`Cleaned up ${count} orphaned clinical documents`);
+          }
+        })
+        .catch((e) => {
+          console.error('Error cleaning up orphaned documents:', e);
+        });
+    }
+  }, [db, user?.id]);
+
+  return <>{children}</>;
+}
+
+/**
  * Wrapping component that initiates a connection sync job for each connection card
- * if they have not been synced in the last week
+ * if they have not been synced in the last week. Uses a ref to ensure sync only triggers
+ * once per mount - without this guard, the useEffect would re-trigger whenever sync jobs
+ * complete or are cancelled (since dependencies change), causing an infinite sync loop.
  */
 function HandleInitalSync({ children }: PropsWithChildren) {
   const sync = useSyncJobContext(),
@@ -127,8 +203,8 @@ function HandleInitalSync({ children }: PropsWithChildren) {
     db = useRxDb(),
     { config, isLoading: isConfigLoading } = useAppConfig(),
     isDemo = IS_DEMO === 'enabled',
-    currentSyncJobLength = Object.keys(sync).length,
     syncJobEntries = useMemo(() => new Set(Object.keys(sync)), [sync]),
+    initialSyncStarted = React.useRef(false),
     handleFetchData = useCallback(
       (item: RxDocument<ConnectionDocument>) => {
         if (syncD && userPreferences) {
@@ -158,21 +234,21 @@ function HandleInitalSync({ children }: PropsWithChildren) {
   useEffect(() => {
     if (isConfigLoading) return;
     if (!isConfigValid(config)) return;
+    if (!conList) return;
+    if (!userPreferences) return;
+    if (initialSyncStarted.current) return;
     if (!isDemo) {
-      if (currentSyncJobLength === 0) {
-        console.debug(
-          'SyncJobProvider: Current Sync Jobs In Progress: ' +
-            currentSyncJobLength,
-        );
-        startSyncAllConnections();
-      }
+      initialSyncStarted.current = true;
+      console.debug('SyncJobProvider: Starting initial sync');
+      startSyncAllConnections();
     }
   }, [
     isConfigLoading,
     config,
     isDemo,
     startSyncAllConnections,
-    currentSyncJobLength,
+    conList,
+    userPreferences,
   ]);
 
   return <>{children}</>;
@@ -273,17 +349,33 @@ function OnHandleUnsubscribeJobs({ children }: PropsWithChildren) {
     syncJobs = Object.entries(sync);
 
   useEffect(() => {
-    syncJobs.forEach(([id, j]) => {
-      j.subscribe({
-        next(res) {
-          const successRes = res.filter((i) => i.status === 'fulfilled');
-          const errors = res.filter((i) => i.status === 'rejected');
-
-          console.group('Sync Errors:');
-          errors.forEach((x) =>
-            console.error((x as PromiseRejectedResult).reason),
+    syncJobs.forEach(([id, entry]) => {
+      entry.subject.subscribe({
+        next(res: PromiseSettledResult<void[]>[]) {
+          const successRes = res.filter(
+            (i: PromiseSettledResult<void[]>) => i.status === 'fulfilled',
           );
-          console.groupEnd();
+          const errors = res.filter(
+            (i: PromiseSettledResult<void[]>) => i.status === 'rejected',
+          );
+
+          const nonAbortErrors = errors.filter(
+            (x: PromiseSettledResult<void[]>) => {
+              const reason = (x as PromiseRejectedResult).reason;
+              return (
+                !(reason instanceof ConnectionDeletedError) &&
+                reason?.name !== 'AbortError'
+              );
+            },
+          );
+
+          if (nonAbortErrors.length > 0) {
+            console.group('Sync Errors:');
+            nonAbortErrors.forEach((x: PromiseSettledResult<void[]>) =>
+              console.error((x as PromiseRejectedResult).reason),
+            );
+            console.groupEnd();
+          }
 
           if (errors.length === 0) {
             notifyDispatch({
@@ -291,17 +383,13 @@ function OnHandleUnsubscribeJobs({ children }: PropsWithChildren) {
               message: `Successfully synced records`,
               variant: 'success',
             });
-          } else if (
-            // check if partial records were synced successfully
-            successRes.length > 0 &&
-            errors.length > 0
-          ) {
+          } else if (successRes.length > 0 && nonAbortErrors.length > 0) {
             notifyDispatch({
               type: 'set_notification',
               message: `Some records were unable to be synced`,
               variant: 'info',
             });
-          } else {
+          } else if (nonAbortErrors.length > 0) {
             notifyDispatch({
               type: 'set_notification',
               message: `No records were able to be synced`,
@@ -310,12 +398,16 @@ function OnHandleUnsubscribeJobs({ children }: PropsWithChildren) {
           }
         },
         error(e: Error) {
-          console.error(e);
-          notifyDispatch({
-            type: 'set_notification',
-            message: `Error syncing records: ${e.message}`,
-            variant: 'error',
-          });
+          if (e instanceof ConnectionDeletedError || e.name === 'AbortError') {
+            console.log('Sync cancelled:', e.message);
+          } else {
+            console.error(e);
+            notifyDispatch({
+              type: 'set_notification',
+              message: `Error syncing records: ${e.message}`,
+              variant: 'error',
+            });
+          }
           if (syncD) {
             syncD({ type: 'remove_job', id });
           }
@@ -355,14 +447,17 @@ async function fetchMedicalRecords(
   connectionDocument: RxDocument<ConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
   baseUrl: string,
-  useProxy = false,
+  useProxy: boolean,
+  signal: AbortSignal | undefined,
+  syncFunctions: SyncFunctions,
 ) {
   switch (connectionDocument.get('source') as ConnectionSources) {
     case 'onpatient': {
       try {
-        const syncJob = await OnPatient.syncAllRecords(
+        const syncJob = await syncFunctions.onpatient(
           connectionDocument.toMutableJSON(),
           db,
+          signal,
         );
         await updateConnectionDocumentTimestamps(
           syncJob,
@@ -371,6 +466,11 @@ async function fetchMedicalRecords(
         );
         return syncJob;
       } catch (e) {
+        if (
+          e instanceof ConnectionDeletedError ||
+          (e as Error).name === 'AbortError'
+        )
+          throw e;
         console.error(e);
         await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
         throw new Error(
@@ -388,12 +488,13 @@ async function fetchMedicalRecords(
           db,
           useProxy,
         );
-        const syncJob = await Epic.syncAllRecords(
+        const syncJob = await syncFunctions.epic(
           config,
           baseUrl,
           connectionDocument.toMutableJSON() as unknown as EpicConnectionDocument,
           db,
           useProxy,
+          signal,
         );
         await updateConnectionDocumentTimestamps(
           syncJob,
@@ -402,6 +503,11 @@ async function fetchMedicalRecords(
         );
         return syncJob;
       } catch (e) {
+        if (
+          e instanceof ConnectionDeletedError ||
+          (e as Error).name === 'AbortError'
+        )
+          throw e;
         console.error(e);
         await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
         throw new Error(
@@ -420,11 +526,12 @@ async function fetchMedicalRecords(
         );
         const cernerConnection =
           connectionDocument.toMutableJSON() as unknown as CernerConnectionDocument;
-        const syncJob = await Cerner.syncAllRecords(
+        const syncJob = await syncFunctions.cerner(
           baseUrl,
           cernerConnection,
           db,
           cernerConnection.fhir_version ?? 'DSTU2',
+          signal,
         );
         await updateConnectionDocumentTimestamps(
           syncJob,
@@ -433,6 +540,11 @@ async function fetchMedicalRecords(
         );
         return syncJob;
       } catch (e) {
+        if (
+          e instanceof ConnectionDeletedError ||
+          (e as Error).name === 'AbortError'
+        )
+          throw e;
         console.error(e);
         await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
         throw new Error(
@@ -445,10 +557,11 @@ async function fetchMedicalRecords(
     case 'va': {
       try {
         await refreshVAConnectionTokenIfNeeded(config, connectionDocument);
-        const syncJob = await VA.syncAllRecords(
+        const syncJob = await syncFunctions.va(
           baseUrl,
           connectionDocument.toMutableJSON() as unknown as VAConnectionDocument,
           db,
+          signal,
         );
         await updateConnectionDocumentTimestamps(
           syncJob,
@@ -457,6 +570,11 @@ async function fetchMedicalRecords(
         );
         return syncJob;
       } catch (e) {
+        if (
+          e instanceof ConnectionDeletedError ||
+          (e as Error).name === 'AbortError'
+        )
+          throw e;
         console.error(e);
         await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
         throw new Error(
@@ -468,10 +586,11 @@ async function fetchMedicalRecords(
     }
     case 'veradigm': {
       try {
-        const syncJob = await Veradigm.syncAllRecords(
+        const syncJob = await syncFunctions.veradigm(
           baseUrl,
           connectionDocument.toMutableJSON() as unknown as VeradigmConnectionDocument,
           db,
+          signal,
         );
         await updateConnectionDocumentTimestamps(
           syncJob,
@@ -480,6 +599,11 @@ async function fetchMedicalRecords(
         );
         return syncJob;
       } catch (e) {
+        if (
+          e instanceof ConnectionDeletedError ||
+          (e as Error).name === 'AbortError'
+        )
+          throw e;
         console.error(e);
         await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
         throw new Error(
@@ -498,12 +622,13 @@ async function fetchMedicalRecords(
           db,
           useProxy,
         );
-        const syncJob = await Healow.syncAllRecords(
+        const syncJob = await syncFunctions.healow(
           config.PUBLIC_URL || '',
           baseUrl,
           connectionDocument.toMutableJSON() as unknown as HealowConnectionDocument,
           db,
           useProxy,
+          signal,
         );
         await updateConnectionDocumentTimestamps(
           syncJob,
@@ -512,6 +637,11 @@ async function fetchMedicalRecords(
         );
         return syncJob;
       } catch (e) {
+        if (
+          e instanceof ConnectionDeletedError ||
+          (e as Error).name === 'AbortError'
+        )
+          throw e;
         console.error(e);
         await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
         throw new Error(

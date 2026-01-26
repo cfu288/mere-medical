@@ -18,9 +18,9 @@ export async function deleteConnectionWithCascade(
     return;
   }
 
-  await clinicalDocRepo.deleteDocumentsByConnectionId(db, userId, connectionId);
-
   await connectionRepo.deleteConnection(db, userId, connectionId);
+
+  await clinicalDocRepo.deleteDocumentsByConnectionId(db, userId, connectionId);
 }
 
 export async function recordSyncSuccess(
@@ -28,6 +28,15 @@ export async function recordSyncSuccess(
   userId: string,
   connectionId: string,
 ): Promise<void> {
+  const connection = await connectionRepo.findConnectionById(
+    db,
+    userId,
+    connectionId,
+  );
+  if (!connection) {
+    return;
+  }
+
   const now = new Date().toISOString();
   await connectionRepo.updateConnectionTimestamp(db, userId, connectionId, {
     last_refreshed: now,
@@ -41,6 +50,15 @@ export async function recordSyncError(
   userId: string,
   connectionId: string,
 ): Promise<void> {
+  const connection = await connectionRepo.findConnectionById(
+    db,
+    userId,
+    connectionId,
+  );
+  if (!connection) {
+    return;
+  }
+
   await connectionRepo.updateConnectionTimestamp(db, userId, connectionId, {
     last_sync_attempt: new Date().toISOString(),
     last_sync_was_error: true,
@@ -52,6 +70,15 @@ export async function clearSyncError(
   userId: string,
   connectionId: string,
 ): Promise<void> {
+  const connection = await connectionRepo.findConnectionById(
+    db,
+    userId,
+    connectionId,
+  );
+  if (!connection) {
+    return;
+  }
+
   await connectionRepo.updateConnectionTimestamp(db, userId, connectionId, {
     last_sync_was_error: false,
   });
