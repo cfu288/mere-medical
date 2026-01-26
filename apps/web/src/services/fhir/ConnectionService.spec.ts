@@ -8,8 +8,10 @@ import {
   createTestConnection,
   createConnectionWithTimestamps,
 } from '../../test-utils/connectionTestData';
+import { createTestClinicalDocument } from '../../test-utils/clinicalDocumentTestData';
 import * as connectionService from './ConnectionService';
 import * as connectionRepo from '../../repositories/ConnectionRepository';
+import { upsertDocumentsIfConnectionValid } from '../../repositories/ClinicalDocumentRepository';
 
 describe('ConnectionService', () => {
   let db: RxDatabase<DatabaseCollections>;
@@ -156,6 +158,116 @@ describe('ConnectionService', () => {
         expect(updated?.last_sync_was_error).toBe(false);
         expect(updated?.last_sync_attempt).toBe('2024-01-01T00:00:00.000Z');
       });
+    });
+
+    describe('sync recording with deleted connection', () => {
+      it('recordSyncSuccess does not throw when connection was deleted', async () => {
+        const testConn = createTestConnection();
+        await db.connection_documents.insert(testConn);
+
+        await connectionRepo.deleteConnection(
+          db,
+          testConn.user_id,
+          testConn.id,
+        );
+
+        await expect(
+          connectionService.recordSyncSuccess(
+            db,
+            testConn.user_id,
+            testConn.id,
+          ),
+        ).resolves.not.toThrow();
+      });
+
+      it('recordSyncError does not throw when connection was deleted', async () => {
+        const testConn = createTestConnection();
+        await db.connection_documents.insert(testConn);
+
+        await connectionRepo.deleteConnection(
+          db,
+          testConn.user_id,
+          testConn.id,
+        );
+
+        await expect(
+          connectionService.recordSyncError(db, testConn.user_id, testConn.id),
+        ).resolves.not.toThrow();
+      });
+    });
+  });
+
+  describe('deleteConnectionWithCascade race condition', () => {
+    it('deleteConnectionWithCascade deletes connection first, preventing orphans from concurrent sync', async () => {
+      const connection = createTestConnection();
+      await db.connection_documents.insert(connection);
+
+      const initialDocs = [
+        createTestClinicalDocument({
+          user_id: connection.user_id,
+          connection_record_id: connection.id,
+        }),
+      ];
+      await db.clinical_documents.bulkInsert(initialDocs);
+
+      await connectionService.deleteConnectionWithCascade(
+        db,
+        connection.user_id,
+        connection.id,
+      );
+
+      const docs = [
+        createTestClinicalDocument({
+          user_id: connection.user_id,
+          connection_record_id: connection.id,
+        }),
+      ];
+      await expect(
+        upsertDocumentsIfConnectionValid(
+          db,
+          connection.user_id,
+          connection.id,
+          docs,
+        ),
+      ).rejects.toThrow();
+
+      const orphanedDocs = await db.clinical_documents
+        .find({ selector: { connection_record_id: connection.id } })
+        .exec();
+
+      expect(orphanedDocs).toHaveLength(0);
+    });
+
+    it('sync fails immediately when connection is deleted first', async () => {
+      const connection = createTestConnection();
+      await db.connection_documents.insert(connection);
+
+      await connectionRepo.deleteConnection(
+        db,
+        connection.user_id,
+        connection.id,
+      );
+
+      const docs = [
+        createTestClinicalDocument({
+          user_id: connection.user_id,
+          connection_record_id: connection.id,
+        }),
+      ];
+
+      await expect(
+        upsertDocumentsIfConnectionValid(
+          db,
+          connection.user_id,
+          connection.id,
+          docs,
+        ),
+      ).rejects.toThrow();
+
+      const orphanedDocs = await db.clinical_documents
+        .find({ selector: { connection_record_id: connection.id } })
+        .exec();
+      expect(orphanedDocs).toHaveLength(0);
     });
   });
 });
