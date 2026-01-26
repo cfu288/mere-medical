@@ -65,8 +65,7 @@ import {
 } from '../../models/clinical-document/ClinicalDocument.type';
 import { findUserById } from '../../repositories/UserRepository';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
-import { connectionExists } from '../../repositories/ClinicalDocumentRepository';
-import { ConnectionDeletedError } from '../../shared/errors';
+import { upsertDocumentsIfConnectionValid } from '../../repositories/ClinicalDocumentRepository';
 
 const epicClient = createEpicClient({ signJwt });
 
@@ -240,16 +239,6 @@ async function syncFHIRResource<T extends FhirResource>(
     signal,
   );
 
-  if (
-    !(await connectionExists(
-      db,
-      connectionDocument.user_id,
-      connectionDocument.id,
-    ))
-  ) {
-    throw new ConnectionDeletedError(connectionDocument.id);
-  }
-
   const cds = resc
     .filter(
       (i) =>
@@ -257,10 +246,15 @@ async function syncFHIRResource<T extends FhirResource>(
         fhirResourceUrl.toLowerCase(),
     )
     .map(mapper);
-  const cdsmap = await db.clinical_documents.bulkUpsert(
+
+  await upsertDocumentsIfConnectionValid(
+    db,
+    connectionDocument.user_id,
+    connectionDocument.id,
     cds as unknown as ClinicalDocument[],
   );
-  return cdsmap;
+
+  return cds;
 }
 
 async function processIncludedResources(
@@ -288,17 +282,11 @@ async function processIncludedResources(
   for (const [resourceType, groupedEntries] of resourceTypeGroups.entries()) {
     const mapper = mappers[resourceType];
     if (mapper) {
-      if (
-        !(await connectionExists(
-          db,
-          connectionDocument.user_id,
-          connectionDocument.id,
-        ))
-      ) {
-        throw new ConnectionDeletedError(connectionDocument.id);
-      }
       const cds = groupedEntries.map(mapper);
-      await db.clinical_documents.bulkUpsert(
+      await upsertDocumentsIfConnectionValid(
+        db,
+        connectionDocument.user_id,
+        connectionDocument.id,
         cds as unknown as ClinicalDocument[],
       );
     }
@@ -330,16 +318,6 @@ async function syncFHIRResourceWithIncludes<T extends FhirResource>(
     signal,
   );
 
-  if (
-    !(await connectionExists(
-      db,
-      connectionDocument.user_id,
-      connectionDocument.id,
-    ))
-  ) {
-    throw new ConnectionDeletedError(connectionDocument.id);
-  }
-
   const cds = resc
     .filter(
       (i) =>
@@ -347,7 +325,13 @@ async function syncFHIRResourceWithIncludes<T extends FhirResource>(
         fhirResourceUrl.toLowerCase(),
     )
     .map(mapper);
-  await db.clinical_documents.bulkUpsert(cds as unknown as ClinicalDocument[]);
+
+  await upsertDocumentsIfConnectionValid(
+    db,
+    connectionDocument.user_id,
+    connectionDocument.id,
+    cds as unknown as ClinicalDocument[],
+  );
 
   await processIncludedResources(resc, includeMappers, db, connectionDocument, [
     fhirResourceUrl,
@@ -826,15 +810,6 @@ async function syncDocumentReferences(
               signal,
             );
             if (raw && contentType) {
-              if (
-                !(await connectionExists(
-                  db,
-                  connectionDocument.user_id,
-                  connectionDocument.id,
-                ))
-              ) {
-                throw new ConnectionDeletedError(connectionDocument.id);
-              }
               const cd: CreateClinicalDocument<string | Blob> = {
                 user_id: connectionDocument.user_id,
                 connection_record_id: connectionDocument.id,
@@ -856,8 +831,11 @@ async function syncDocumentReferences(
                 },
               };
 
-              await db.clinical_documents.insert(
-                cd as unknown as ClinicalDocument,
+              await upsertDocumentsIfConnectionValid(
+                db,
+                connectionDocument.user_id,
+                connectionDocument.id,
+                [cd as unknown as ClinicalDocument],
               );
             } else {
               console.warn(

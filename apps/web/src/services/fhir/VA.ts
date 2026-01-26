@@ -30,8 +30,7 @@ import { UserDocument } from '../../models/user-document/UserDocument.type';
 import uuid4 from '../../shared/utils/UUIDUtils';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
-import { connectionExists } from '../../repositories/ClinicalDocumentRepository';
-import { ConnectionDeletedError } from '../../shared/errors';
+import { upsertDocumentsIfConnectionValid } from '../../repositories/ClinicalDocumentRepository';
 import {
   createVAClient,
   createSessionManager,
@@ -163,16 +162,6 @@ async function syncFHIRResource<T extends FhirResource>(
     signal,
   );
 
-  if (
-    !(await connectionExists(
-      db,
-      connectionDocument.user_id,
-      connectionDocument.id,
-    ))
-  ) {
-    throw new ConnectionDeletedError(connectionDocument.id);
-  }
-
   const cds = resc
     .filter(
       (i) =>
@@ -180,10 +169,15 @@ async function syncFHIRResource<T extends FhirResource>(
         fhirResourceUrl.toLowerCase(),
     )
     .map(mapper);
-  const cdsmap = await db.clinical_documents.bulkUpsert(
+
+  await upsertDocumentsIfConnectionValid(
+    db,
+    connectionDocument.user_id,
+    connectionDocument.id,
     cds as unknown as ClinicalDocument[],
   );
-  return cdsmap;
+
+  return cds;
 }
 
 /**

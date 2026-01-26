@@ -1,5 +1,7 @@
 import { RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../app/providers/DatabaseCollections';
+import { ClinicalDocument } from '../models/clinical-document/ClinicalDocument.type';
+import { ConnectionDeletedError } from '../shared/errors';
 
 export async function deleteDocumentsByConnectionId(
   db: RxDatabase<DatabaseCollections>,
@@ -63,4 +65,16 @@ export async function deleteOrphanedDocuments(
   }
 
   return orphanedDocs.length;
+}
+
+export async function upsertDocumentsIfConnectionValid(
+  db: RxDatabase<DatabaseCollections>,
+  userId: string,
+  connectionId: string,
+  documents: ClinicalDocument[],
+): Promise<void> {
+  if (!(await connectionExists(db, userId, connectionId))) {
+    throw new ConnectionDeletedError(connectionId);
+  }
+  await db.clinical_documents.bulkUpsert(documents);
 }

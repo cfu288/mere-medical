@@ -64,8 +64,7 @@ import {
   CreateClinicalDocument,
 } from '../../models/clinical-document/ClinicalDocument.type';
 import { concatPath } from '../../shared/utils/urlUtils';
-import { connectionExists } from '../../repositories/ClinicalDocumentRepository';
-import { ConnectionDeletedError } from '../../shared/errors';
+import { upsertDocumentsIfConnectionValid } from '../../repositories/ClinicalDocumentRepository';
 import {
   getCodeVerifier,
   getCodeChallenge,
@@ -240,16 +239,6 @@ async function syncFHIRResource<T extends FhirResource>(
     signal,
   );
 
-  if (
-    !(await connectionExists(
-      db,
-      connectionDocument.user_id,
-      connectionDocument.id,
-    ))
-  ) {
-    throw new ConnectionDeletedError(connectionDocument.id);
-  }
-
   const cds = resc
     .filter(
       (i) =>
@@ -257,10 +246,15 @@ async function syncFHIRResource<T extends FhirResource>(
         fhirResourceUrl.toLowerCase(),
     )
     .map(mapper);
-  const cdsmap = await db.clinical_documents.bulkUpsert(
+
+  await upsertDocumentsIfConnectionValid(
+    db,
+    connectionDocument.user_id,
+    connectionDocument.id,
     cds as unknown as ClinicalDocument[],
   );
-  return cdsmap;
+
+  return cds;
 }
 
 export async function syncAllRecords(
@@ -576,15 +570,6 @@ async function syncDocumentReferences(
               signal,
             );
             if (raw && contentType) {
-              if (
-                !(await connectionExists(
-                  db,
-                  connectionDocument.user_id,
-                  connectionDocument.id,
-                ))
-              ) {
-                throw new ConnectionDeletedError(connectionDocument.id);
-              }
               const cd: CreateClinicalDocument<string | Blob> = {
                 user_id: connectionDocument.user_id,
                 connection_record_id: connectionDocument.id,
@@ -606,8 +591,11 @@ async function syncDocumentReferences(
                 },
               };
 
-              await db.clinical_documents.insert(
-                cd as unknown as ClinicalDocument<string | Blob>,
+              await upsertDocumentsIfConnectionValid(
+                db,
+                connectionDocument.user_id,
+                connectionDocument.id,
+                [cd as unknown as ClinicalDocument],
               );
             }
           }

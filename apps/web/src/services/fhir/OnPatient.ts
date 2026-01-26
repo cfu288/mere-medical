@@ -25,8 +25,7 @@ import {
   ClinicalDocument,
   CreateClinicalDocument,
 } from '../../models/clinical-document/ClinicalDocument.type';
-import { connectionExists } from '../../repositories/ClinicalDocumentRepository';
-import { ConnectionDeletedError } from '../../shared/errors';
+import { upsertDocumentsIfConnectionValid } from '../../repositories/ClinicalDocumentRepository';
 
 export const OnPatientBaseUrl = ONPATIENT_CONSTANTS.BASE_URL;
 export const OnPatientDSTU2Url = ONPATIENT_CONSTANTS.FHIR_URL;
@@ -79,16 +78,6 @@ async function syncFHIRResource<T extends FhirResource>(
     signal,
   );
 
-  if (
-    !(await connectionExists(
-      db,
-      connectionDocument.user_id,
-      connectionDocument.id,
-    ))
-  ) {
-    throw new ConnectionDeletedError(connectionDocument.id);
-  }
-
   const cds = fhirResources
     .filter(
       (i) =>
@@ -96,10 +85,15 @@ async function syncFHIRResource<T extends FhirResource>(
         fhirResourceUrl.toLowerCase(),
     )
     .map(mapper);
-  const cdsmap = await db.clinical_documents.bulkUpsert(
+
+  await upsertDocumentsIfConnectionValid(
+    db,
+    connectionDocument.user_id,
+    connectionDocument.id,
     cds as unknown as ClinicalDocument[],
   );
-  return cdsmap;
+
+  return cds;
 }
 
 export async function syncAllRecords(
