@@ -37,7 +37,27 @@ import { deleteOrphanedDocuments } from '../../repositories/ClinicalDocumentRepo
 import { useUser } from '../../app/providers/UserProvider';
 import { ConnectionDeletedError } from '../../shared/errors';
 
-type SyncJobProviderProps = PropsWithChildren<unknown>;
+export interface SyncFunctions {
+  onpatient: typeof OnPatient.syncAllRecords;
+  epic: typeof Epic.syncAllRecords;
+  cerner: typeof Cerner.syncAllRecords;
+  va: typeof VA.syncAllRecords;
+  veradigm: typeof Veradigm.syncAllRecords;
+  healow: typeof Healow.syncAllRecords;
+}
+
+const defaultSyncFunctions: SyncFunctions = {
+  onpatient: OnPatient.syncAllRecords,
+  epic: Epic.syncAllRecords,
+  cerner: Cerner.syncAllRecords,
+  va: VA.syncAllRecords,
+  veradigm: Veradigm.syncAllRecords,
+  healow: Healow.syncAllRecords,
+};
+
+type SyncJobProviderProps = PropsWithChildren<{
+  syncFunctions?: Partial<SyncFunctions>;
+}>;
 
 type SyncJobEntry = {
   subject: Subject<PromiseSettledResult<void[]>[]>;
@@ -64,55 +84,68 @@ type Action =
 
 type Dispatch = (action: Action) => void;
 
-const syncJobReducer: (
-  state: Record<string, SyncJobEntry>,
-  action: Action,
-) => Record<string, SyncJobEntry> = (
-  state: Record<string, SyncJobEntry>,
-  action: Action,
-) => {
-  switch (action.type) {
-    case 'add_job': {
-      const subject = new Subject<PromiseSettledResult<void[]>[]>();
-      const abortController = new AbortController();
-      const observable = from(
-        fetchMedicalRecords(
-          action.config,
-          action.connectionDocument,
-          action.db,
-          action.baseUrl,
-          action.useProxy,
-          abortController.signal,
-        ),
-      );
-      observable.subscribe(subject);
-      return {
-        ...state,
-        [action.id]: { subject, abortController },
-      };
-    }
-    case 'remove_job': {
-      const nState = { ...state };
-      const entry = nState[action.id];
-      if (entry) {
-        entry.abortController.abort();
+const createSyncJobReducer =
+  (syncFunctions: SyncFunctions) =>
+  (
+    state: Record<string, SyncJobEntry>,
+    action: Action,
+  ): Record<string, SyncJobEntry> => {
+    switch (action.type) {
+      case 'add_job': {
+        const subject = new Subject<PromiseSettledResult<void[]>[]>();
+        const abortController = new AbortController();
+        const observable = from(
+          fetchMedicalRecords(
+            action.config,
+            action.connectionDocument,
+            action.db,
+            action.baseUrl,
+            action.useProxy,
+            abortController.signal,
+            syncFunctions,
+          ),
+        );
+        observable.subscribe(subject);
+        return {
+          ...state,
+          [action.id]: { subject, abortController },
+        };
       }
-      delete nState[action.id];
-      return nState;
+      case 'remove_job': {
+        const nState = { ...state };
+        const entry = nState[action.id];
+        if (entry) {
+          entry.abortController.abort();
+        }
+        delete nState[action.id];
+        return nState;
+      }
+      default: {
+        throw new Error(`Unhandled action type: ${action}`);
+      }
     }
-    default: {
-      throw new Error(`Unhandled action type: ${action}`);
-    }
-  }
-};
+  };
 
 /**
  * A provider that handles sync jobs that manages syncing medical records for connections
  * Also provides a dispatch function to add/remove sync jobs
  */
-export function SyncJobProvider(props: SyncJobProviderProps) {
+export function SyncJobProvider({
+  children,
+  syncFunctions,
+}: SyncJobProviderProps) {
+  const mergedSyncFunctions = useMemo(
+    () => ({ ...defaultSyncFunctions, ...syncFunctions }),
+    [syncFunctions],
+  );
+
+  const reducer = useMemo(
+    () => createSyncJobReducer(mergedSyncFunctions),
+    [mergedSyncFunctions],
+  );
+
   const [state, dispatch] = React.useReducer(
-    syncJobReducer,
+    reducer,
     {} as Record<string, SyncJobEntry>,
   );
 
@@ -121,7 +154,7 @@ export function SyncJobProvider(props: SyncJobProviderProps) {
       <SyncJobDispatchContext.Provider value={dispatch}>
         <OrphanCleanup>
           <OnHandleUnsubscribeJobs>
-            <HandleInitalSync>{props.children}</HandleInitalSync>
+            <HandleInitalSync>{children}</HandleInitalSync>
           </OnHandleUnsubscribeJobs>
         </OrphanCleanup>
       </SyncJobDispatchContext.Provider>
@@ -406,13 +439,14 @@ async function fetchMedicalRecords(
   connectionDocument: RxDocument<ConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
   baseUrl: string,
-  useProxy = false,
-  signal?: AbortSignal,
+  useProxy: boolean,
+  signal: AbortSignal | undefined,
+  syncFunctions: SyncFunctions,
 ) {
   switch (connectionDocument.get('source') as ConnectionSources) {
     case 'onpatient': {
       try {
-        const syncJob = await OnPatient.syncAllRecords(
+        const syncJob = await syncFunctions.onpatient(
           connectionDocument.toMutableJSON(),
           db,
           signal,
@@ -446,7 +480,7 @@ async function fetchMedicalRecords(
           db,
           useProxy,
         );
-        const syncJob = await Epic.syncAllRecords(
+        const syncJob = await syncFunctions.epic(
           config,
           baseUrl,
           connectionDocument.toMutableJSON() as unknown as EpicConnectionDocument,
@@ -484,7 +518,7 @@ async function fetchMedicalRecords(
         );
         const cernerConnection =
           connectionDocument.toMutableJSON() as unknown as CernerConnectionDocument;
-        const syncJob = await Cerner.syncAllRecords(
+        const syncJob = await syncFunctions.cerner(
           baseUrl,
           cernerConnection,
           db,
@@ -515,7 +549,7 @@ async function fetchMedicalRecords(
     case 'va': {
       try {
         await refreshVAConnectionTokenIfNeeded(config, connectionDocument);
-        const syncJob = await VA.syncAllRecords(
+        const syncJob = await syncFunctions.va(
           baseUrl,
           connectionDocument.toMutableJSON() as unknown as VAConnectionDocument,
           db,
@@ -544,7 +578,7 @@ async function fetchMedicalRecords(
     }
     case 'veradigm': {
       try {
-        const syncJob = await Veradigm.syncAllRecords(
+        const syncJob = await syncFunctions.veradigm(
           baseUrl,
           connectionDocument.toMutableJSON() as unknown as VeradigmConnectionDocument,
           db,
@@ -580,7 +614,7 @@ async function fetchMedicalRecords(
           db,
           useProxy,
         );
-        const syncJob = await Healow.syncAllRecords(
+        const syncJob = await syncFunctions.healow(
           config.PUBLIC_URL || '',
           baseUrl,
           connectionDocument.toMutableJSON() as unknown as HealowConnectionDocument,

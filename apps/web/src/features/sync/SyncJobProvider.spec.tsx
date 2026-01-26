@@ -11,6 +11,7 @@ import { createTestConnection } from '../../test-utils/connectionTestData';
 import { createDefaultTestUser } from '../../test-utils/userTestData';
 import {
   SyncJobProvider,
+  SyncFunctions,
   useSyncJobContext,
   useSyncJobDispatchContext,
 } from './SyncJobProvider';
@@ -21,28 +22,6 @@ import { UserDocument } from '../../models/user-document/UserDocument.type';
 
 (global as unknown as { IS_DEMO: string }).IS_DEMO = 'disabled';
 
-jest.mock('../../services/fhir/Epic', () => ({
-  syncAllRecords: jest.fn(),
-  refreshEpicConnectionTokenIfNeeded: jest.fn().mockResolvedValue(undefined),
-}));
-jest.mock('../../services/fhir/Cerner', () => ({
-  syncAllRecords: jest.fn(),
-  refreshCernerConnectionTokenIfNeeded: jest.fn().mockResolvedValue(undefined),
-}));
-jest.mock('../../services/fhir/VA', () => ({
-  syncAllRecords: jest.fn(),
-  refreshVAConnectionTokenIfNeeded: jest.fn().mockResolvedValue(undefined),
-}));
-jest.mock('../../services/fhir/Veradigm', () => ({
-  syncAllRecords: jest.fn(),
-}));
-jest.mock('../../services/fhir/OnPatient', () => ({
-  syncAllRecords: jest.fn(),
-}));
-jest.mock('../../services/fhir/Healow', () => ({
-  syncAllRecords: jest.fn(),
-  refreshHealowConnectionTokenIfNeeded: jest.fn().mockResolvedValue(undefined),
-}));
 jest.mock('../../services/fhir/ConnectionService', () => ({
   recordSyncSuccess: jest.fn().mockResolvedValue(undefined),
   recordSyncError: jest.fn().mockResolvedValue(undefined),
@@ -79,20 +58,18 @@ jest.mock('../connections/hooks/useConnectionCards', () => ({
   useConnectionCards: jest.fn(() => []),
 }));
 
-import * as OnPatient from '../../services/fhir/OnPatient';
-
-const mockOnPatientSync = OnPatient.syncAllRecords as jest.Mock;
-
 interface TestProvidersProps {
   db: RxDatabase<DatabaseCollections>;
   children: React.ReactNode;
   notificationDispatchSpy?: jest.Mock;
+  syncFunctions?: Partial<SyncFunctions>;
 }
 
 function TestProviders({
   db,
   children,
   notificationDispatchSpy,
+  syncFunctions,
 }: TestProvidersProps) {
   return (
     <NotificationProvider
@@ -103,7 +80,11 @@ function TestProviders({
         message: '',
       }}
     >
-      <RxDbContext.Provider value={db}>{children}</RxDbContext.Provider>
+      <RxDbContext.Provider value={db}>
+        <SyncJobProvider syncFunctions={syncFunctions}>
+          {children}
+        </SyncJobProvider>
+      </RxDbContext.Provider>
     </NotificationProvider>
   );
 }
@@ -160,7 +141,7 @@ describe('SyncJobProvider', () => {
           syncResolve = resolve;
         },
       );
-      mockOnPatientSync.mockReturnValue(syncPromise);
+      const mockOnPatientSync = jest.fn().mockReturnValue(syncPromise);
 
       const abortSpy = jest.spyOn(AbortController.prototype, 'abort');
 
@@ -171,11 +152,9 @@ describe('SyncJobProvider', () => {
       };
 
       render(
-        <TestProviders db={db}>
-          <SyncJobProvider>
-            <CaptureDispatch />
-            <TestComponent connectionId={connection.id} />
-          </SyncJobProvider>
+        <TestProviders db={db} syncFunctions={{ onpatient: mockOnPatientSync }}>
+          <CaptureDispatch />
+          <TestComponent connectionId={connection.id} />
         </TestProviders>,
       );
 
@@ -223,9 +202,9 @@ describe('SyncJobProvider', () => {
       });
       const connectionDoc = await db.connection_documents.insert(connection);
 
-      mockOnPatientSync.mockRejectedValue(
-        new ConnectionDeletedError(connection.id),
-      );
+      const mockOnPatientSync = jest
+        .fn()
+        .mockRejectedValue(new ConnectionDeletedError(connection.id));
 
       const notificationSpy = jest.fn();
 
@@ -236,11 +215,13 @@ describe('SyncJobProvider', () => {
       };
 
       render(
-        <TestProviders db={db} notificationDispatchSpy={notificationSpy}>
-          <SyncJobProvider>
-            <CaptureDispatch />
-            <TestComponent connectionId={connection.id} />
-          </SyncJobProvider>
+        <TestProviders
+          db={db}
+          notificationDispatchSpy={notificationSpy}
+          syncFunctions={{ onpatient: mockOnPatientSync }}
+        >
+          <CaptureDispatch />
+          <TestComponent connectionId={connection.id} />
         </TestProviders>,
       );
 
@@ -272,7 +253,7 @@ describe('SyncJobProvider', () => {
 
       const abortError = new Error('The operation was aborted');
       abortError.name = 'AbortError';
-      mockOnPatientSync.mockRejectedValue(abortError);
+      const mockOnPatientSync = jest.fn().mockRejectedValue(abortError);
 
       const notificationSpy = jest.fn();
 
@@ -283,11 +264,13 @@ describe('SyncJobProvider', () => {
       };
 
       render(
-        <TestProviders db={db} notificationDispatchSpy={notificationSpy}>
-          <SyncJobProvider>
-            <CaptureDispatch />
-            <TestComponent connectionId={connection.id} />
-          </SyncJobProvider>
+        <TestProviders
+          db={db}
+          notificationDispatchSpy={notificationSpy}
+          syncFunctions={{ onpatient: mockOnPatientSync }}
+        >
+          <CaptureDispatch />
+          <TestComponent connectionId={connection.id} />
         </TestProviders>,
       );
 
@@ -317,7 +300,9 @@ describe('SyncJobProvider', () => {
       });
       const connectionDoc = await db.connection_documents.insert(connection);
 
-      mockOnPatientSync.mockResolvedValue([{ status: 'fulfilled', value: [] }]);
+      const mockOnPatientSync = jest
+        .fn()
+        .mockResolvedValue([{ status: 'fulfilled', value: [] }]);
 
       const notificationSpy = jest.fn();
 
@@ -328,11 +313,13 @@ describe('SyncJobProvider', () => {
       };
 
       render(
-        <TestProviders db={db} notificationDispatchSpy={notificationSpy}>
-          <SyncJobProvider>
-            <CaptureDispatch />
-            <TestComponent connectionId={connection.id} />
-          </SyncJobProvider>
+        <TestProviders
+          db={db}
+          notificationDispatchSpy={notificationSpy}
+          syncFunctions={{ onpatient: mockOnPatientSync }}
+        >
+          <CaptureDispatch />
+          <TestComponent connectionId={connection.id} />
         </TestProviders>,
       );
 
@@ -366,9 +353,11 @@ describe('SyncJobProvider', () => {
       });
       const connectionDoc = await db.connection_documents.insert(connection);
 
-      mockOnPatientSync.mockResolvedValue([
-        { status: 'rejected', reason: new Error('Network failure') },
-      ]);
+      const mockOnPatientSync = jest
+        .fn()
+        .mockResolvedValue([
+          { status: 'rejected', reason: new Error('Network failure') },
+        ]);
 
       const notificationSpy = jest.fn();
 
@@ -379,11 +368,13 @@ describe('SyncJobProvider', () => {
       };
 
       render(
-        <TestProviders db={db} notificationDispatchSpy={notificationSpy}>
-          <SyncJobProvider>
-            <CaptureDispatch />
-            <TestComponent connectionId={connection.id} />
-          </SyncJobProvider>
+        <TestProviders
+          db={db}
+          notificationDispatchSpy={notificationSpy}
+          syncFunctions={{ onpatient: mockOnPatientSync }}
+        >
+          <CaptureDispatch />
+          <TestComponent connectionId={connection.id} />
         </TestProviders>,
       );
 
@@ -416,7 +407,7 @@ describe('SyncJobProvider', () => {
       });
       const connectionDoc = await db.connection_documents.insert(connection);
 
-      mockOnPatientSync.mockResolvedValue([
+      const mockOnPatientSync = jest.fn().mockResolvedValue([
         { status: 'fulfilled', value: [] },
         { status: 'rejected', reason: new Error('Partial failure') },
       ]);
@@ -430,11 +421,13 @@ describe('SyncJobProvider', () => {
       };
 
       render(
-        <TestProviders db={db} notificationDispatchSpy={notificationSpy}>
-          <SyncJobProvider>
-            <CaptureDispatch />
-            <TestComponent connectionId={connection.id} />
-          </SyncJobProvider>
+        <TestProviders
+          db={db}
+          notificationDispatchSpy={notificationSpy}
+          syncFunctions={{ onpatient: mockOnPatientSync }}
+        >
+          <CaptureDispatch />
+          <TestComponent connectionId={connection.id} />
         </TestProviders>,
       );
 
@@ -461,7 +454,7 @@ describe('SyncJobProvider', () => {
       });
     });
 
-    it('filters out abort errors when counting failures', async () => {
+    it('does not show error or info notification when only abort errors occur alongside successes', async () => {
       const connection = createTestConnection({
         user_id: testUser.id,
         source: 'onpatient',
@@ -470,7 +463,7 @@ describe('SyncJobProvider', () => {
 
       const abortError = new Error('Aborted');
       abortError.name = 'AbortError';
-      mockOnPatientSync.mockResolvedValue([
+      const mockOnPatientSync = jest.fn().mockResolvedValue([
         { status: 'fulfilled', value: [] },
         { status: 'rejected', reason: abortError },
       ]);
@@ -484,11 +477,13 @@ describe('SyncJobProvider', () => {
       };
 
       render(
-        <TestProviders db={db} notificationDispatchSpy={notificationSpy}>
-          <SyncJobProvider>
-            <CaptureDispatch />
-            <TestComponent connectionId={connection.id} />
-          </SyncJobProvider>
+        <TestProviders
+          db={db}
+          notificationDispatchSpy={notificationSpy}
+          syncFunctions={{ onpatient: mockOnPatientSync }}
+        >
+          <CaptureDispatch />
+          <TestComponent connectionId={connection.id} />
         </TestProviders>,
       );
 
@@ -514,14 +509,14 @@ describe('SyncJobProvider', () => {
       });
     });
 
-    it('filters out ConnectionDeletedError when counting failures', async () => {
+    it('does not show error or info notification when only ConnectionDeletedError occurs alongside successes', async () => {
       const connection = createTestConnection({
         user_id: testUser.id,
         source: 'onpatient',
       });
       const connectionDoc = await db.connection_documents.insert(connection);
 
-      mockOnPatientSync.mockResolvedValue([
+      const mockOnPatientSync = jest.fn().mockResolvedValue([
         { status: 'fulfilled', value: [] },
         {
           status: 'rejected',
@@ -538,11 +533,13 @@ describe('SyncJobProvider', () => {
       };
 
       render(
-        <TestProviders db={db} notificationDispatchSpy={notificationSpy}>
-          <SyncJobProvider>
-            <CaptureDispatch />
-            <TestComponent connectionId={connection.id} />
-          </SyncJobProvider>
+        <TestProviders
+          db={db}
+          notificationDispatchSpy={notificationSpy}
+          syncFunctions={{ onpatient: mockOnPatientSync }}
+        >
+          <CaptureDispatch />
+          <TestComponent connectionId={connection.id} />
         </TestProviders>,
       );
 
