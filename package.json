@@ -59,7 +59,7 @@
     "@svgr/webpack": "8.1.0",
     "@swc-node/register": "1.9.2",
     "@swc/core": "1.5.7",
-    "@swc/helpers": "0.5.17",
+    "@swc/helpers": "0.5.18",
     "@tailwindcss/typography": "^0.5.10",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "16.1.0",
