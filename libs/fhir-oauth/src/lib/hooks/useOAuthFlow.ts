@@ -8,6 +8,34 @@ export interface UseOAuthFlowOptions<K extends string, T extends CoreTokenSet = 
   storage?: StorageAdapter;
 }
 
+export interface UseOAuthFlowReturn<T extends CoreTokenSet> {
+  /**
+   * Generates the authorization URL and saves session state for PKCE.
+   * Redirect the user to the returned URL to begin the OAuth flow.
+   */
+  initiateAuth: (config: OAuthConfig) => Promise<{ url: string }>;
+
+  /**
+   * Completes the OAuth flow by exchanging the authorization code for tokens.
+   * Call this on your callback page with the URL search params.
+   */
+  handleCallback: (
+    searchParams: URLSearchParams,
+    config: OAuthConfig,
+  ) => Promise<T>;
+
+  /**
+   * Manually clears the stored session state. Called automatically by handleCallback.
+   */
+  clearSession: () => Promise<void>;
+
+  /** True while initiateAuth or handleCallback is in progress. */
+  isLoading: boolean;
+
+  /** The error if the last operation failed, null otherwise. */
+  error: Error | null;
+}
+
 type State =
   | { status: 'idle'; isLoading: false; error: null }
   | { status: 'loading'; isLoading: true; error: null }
@@ -49,7 +77,7 @@ export function useOAuthFlow<K extends string, T extends CoreTokenSet = CoreToke
   client,
   vendor,
   storage,
-}: UseOAuthFlowOptions<K, T>) {
+}: UseOAuthFlowOptions<K, T>): UseOAuthFlowReturn<T> {
   const [state, dispatch] = useReducer(reducer, initialState);
   const { saveSession, loadSession, clearSession } = useOAuthorizationRequestState(vendor, { storage });
 
