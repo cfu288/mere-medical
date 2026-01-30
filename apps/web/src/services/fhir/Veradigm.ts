@@ -1,3 +1,27 @@
+/**
+ * Professional 20.1 SANDBOX FollowMyHealth
+ * Patient Access
+ * Property                   Value
+ * FHIR Base Url              https://fhir.fhirpoint.open.allscripts.com/fhirroute/open/CustProProdSand201SMART
+ * OAuth Authorization URL    https://open.allscripts.com/fhirroute/fmhpatientauth/0cd760ae-6ec5-4137-bf26-4269636b94ef/connect/authorize
+ * OAuth Token URL            https://open.allscripts.com/fhirroute/fmhpatientauth/0cd760ae-6ec5-4137-bf26-4269636b94ef/connect/token
+ * OAuth Scope                launch user/*.read
+ * Patient Username           donna.dobson_prounityfhir (Patient id is 19)
+ * Patient Password           Allscripts#1
+ */
+
+/**
+ * TouchWorks 20.0 SANDBOX Allscripts Connect
+ * Patient Access
+ * Property                   Value
+ * FHIR Base Url              https://tw181unityfhir.open.allscripts.com/open
+ * OAuth Authorization URL    https://open.allscripts.com/fhirroute/patientauth/e75746a4-7f05-4b95-9ff5-44082c988959/connect/authorize
+ * OAuth Token URL            https://open.allscripts.com/fhirroute/patientauth/e75746a4-7f05-4b95-9ff5-44082c988959/connect/token
+ * OAuth Scope                launch user/*.read
+ * Patient Username           allison.allscripts@tw181unityfhir.edu (Patient id is 19)
+ * Patient Password           Allscripts#1
+ */
+
 import * as DSTU2 from './DSTU2';
 import {
   CreateVeradigmConnectionDocument,

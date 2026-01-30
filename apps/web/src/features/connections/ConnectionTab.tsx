@@ -44,6 +44,20 @@ const epicSession = createSessionManager('epic');
 const cernerSession = createSessionManager('cerner');
 const healowSession = createSessionManager('healow');
 
+/**
+ * Initiates OAuth authorization flow for Epic MyChart connections.
+ * Generates PKCE challenge, stores session state, and returns the authorization URL.
+ * The callback page will use the stored session to complete the token exchange.
+ *
+ * @param config - App configuration containing Epic client IDs and public URL
+ * @param baseUrl - Epic FHIR server base URL
+ * @param authUrl - OAuth authorization endpoint URL
+ * @param tokenUrl - OAuth token endpoint URL
+ * @param name - Display name for the connection
+ * @param id - Epic tenant identifier
+ * @param fhirVersion - FHIR version (DSTU2 or R4)
+ * @returns Authorization URL to redirect the user to in order to initiate auth
+ */
 async function initiateEpicAuth(
   config: AppConfig,
   baseUrl: string,
@@ -82,6 +96,20 @@ async function initiateEpicAuth(
   return url;
 }
 
+/**
+ * Initiates OAuth authorization flow for Cerner connections.
+ * Generates PKCE challenge, stores session state, and returns the authorization URL.
+ * The callback page will use the stored session to complete the token exchange.
+ *
+ * @param config - App configuration containing Cerner client ID and public URL
+ * @param baseUrl - Cerner FHIR server base URL
+ * @param authUrl - OAuth authorization endpoint URL
+ * @param tokenUrl - OAuth token endpoint URL
+ * @param name - Display name for the connection
+ * @param id - Cerner tenant identifier
+ * @param fhirVersion - FHIR version (DSTU2 or R4)
+ * @returns Authorization URL to redirect the user to
+ */
 async function initiateCernerAuth(
   config: AppConfig,
   baseUrl: string,
@@ -115,6 +143,14 @@ async function initiateCernerAuth(
   return url;
 }
 
+/**
+ * Returns the OnPatient OAuth authorization URL.
+ * OnPatient uses a confidential client flow where the backend handles token exchange,
+ * so no PKCE or session storage is needed on the frontend.
+ *
+ * @param config - App configuration containing OnPatient client ID and public URL
+ * @returns Authorization URL to redirect the user to
+ */
 function initiateOnPatientAuth(config: AppConfig): string {
   if (!config.ONPATIENT_CLIENT_ID || !config.PUBLIC_URL) {
     throw new Error('OnPatient OAuth configuration is incomplete');
@@ -127,6 +163,17 @@ function initiateOnPatientAuth(config: AppConfig): string {
   });
 }
 
+/**
+ * Initiates OAuth authorization flow for Veradigm (Allscripts) connections.
+ * Veradigm does not use PKCE, so no session storage is needed.
+ *
+ * @param config - App configuration containing Veradigm client ID and public URL
+ * @param baseUrl - Veradigm FHIR server base URL
+ * @param authUrl - OAuth authorization endpoint URL
+ * @param tokenUrl - OAuth token endpoint URL
+ * @param name - Display name for the connection
+ * @returns Authorization URL to redirect the user to
+ */
 async function initiateVeradigmAuth(
   config: AppConfig,
   baseUrl: string,
@@ -155,6 +202,19 @@ async function initiateVeradigmAuth(
   return url;
 }
 
+/**
+ * Initiates OAuth authorization flow for Healow connections.
+ * Generates PKCE challenge, stores session state, and returns the authorization URL.
+ * The callback page will use the stored session to complete the token exchange.
+ *
+ * @param config - App configuration containing Healow client ID and public URL
+ * @param baseUrl - Healow FHIR server base URL
+ * @param authUrl - OAuth authorization endpoint URL
+ * @param tokenUrl - OAuth token endpoint URL
+ * @param name - Display name for the connection
+ * @param id - Healow tenant identifier
+ * @returns Authorization URL to redirect the user to
+ */
 async function initiateHealowAuth(
   config: AppConfig,
   baseUrl: string,
