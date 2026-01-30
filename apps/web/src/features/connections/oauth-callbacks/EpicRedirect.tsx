@@ -18,10 +18,7 @@ import {
   OAuthError,
 } from '@mere/fhir-oauth';
 import { signJwt, getPublicKey } from '@mere/crypto/browser';
-import {
-  useOAuthFlow,
-  useOAuthorizationRequestState,
-} from '@mere/fhir-oauth/react';
+import { useOAuthFlow } from '@mere/fhir-oauth/react';
 import {
   EpicLocalStorageKeys,
   getEpicClientId,
@@ -67,8 +64,10 @@ function useEpicOAuthCallback() {
   const enableProxy = userPreferences?.use_proxy ?? false;
   const publicUrl = config.PUBLIC_URL || '';
   const client = enableProxy ? createProxiedEpicClient(publicUrl) : epicClient;
-  const { handleCallback } = useOAuthFlow({ client, vendor: 'epic' });
-  const { clearSession } = useOAuthorizationRequestState('epic');
+  const { handleCallback, clearSession } = useOAuthFlow({
+    client,
+    vendor: 'epic',
+  });
 
   useEffect(() => {
     if (configLoading || !userPreferences || hasRun.current) return;

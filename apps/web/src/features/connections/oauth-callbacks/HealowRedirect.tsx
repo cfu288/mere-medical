@@ -14,10 +14,7 @@ import {
 } from '../../../services/fhir/Healow';
 import { concatPath } from '../../../shared/utils/urlUtils';
 import { createHealowClient, buildHealowOAuthConfig } from '@mere/fhir-oauth';
-import {
-  useOAuthFlow,
-  useOAuthorizationRequestState,
-} from '@mere/fhir-oauth/react';
+import { useOAuthFlow } from '@mere/fhir-oauth/react';
 
 function clearLocalStorage() {
   Object.values(HealowLocalStorageKeys).forEach((key) =>
@@ -62,8 +59,10 @@ function useHealowOAuthCallback() {
     [confidentialMode, publicUrl, useProxy],
   );
 
-  const { handleCallback } = useOAuthFlow({ client, vendor: 'healow' });
-  const { clearSession } = useOAuthorizationRequestState('healow');
+  const { handleCallback, clearSession } = useOAuthFlow({
+    client,
+    vendor: 'healow',
+  });
 
   useEffect(() => {
     if (isLoading || userPreferences === undefined || hasRun.current) return;
