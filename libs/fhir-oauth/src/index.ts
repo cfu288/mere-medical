@@ -29,6 +29,7 @@ export {
 export {
   createVeradigmClient,
   buildVeradigmOAuthConfig,
+  extractVeradigmPatientId,
   VERADIGM_DEFAULT_SCOPES,
   type VeradigmClient,
   type VeradigmTokenSet,

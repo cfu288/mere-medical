@@ -56,6 +56,17 @@ interface VeradigmAccessTokenPayload {
   amr: string[];
 }
 
+export function extractVeradigmPatientId(accessToken: string): string {
+  const payload = parseJwtPayload<VeradigmAccessTokenPayload>(accessToken);
+  if (!payload.local_patient_id) {
+    throw createOAuthError(
+      'missing_patient',
+      'No local_patient_id in access token JWT',
+    );
+  }
+  return payload.local_patient_id;
+}
+
 export function createVeradigmClient(): VeradigmClient {
   return {
     async initiateAuth(config) {

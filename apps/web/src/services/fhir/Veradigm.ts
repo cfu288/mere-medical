@@ -48,7 +48,10 @@ import {
   CreateClinicalDocument,
 } from '../../models/clinical-document/ClinicalDocument.type';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
-import { parseJwtPayload, type VeradigmTokenSet } from '@mere/fhir-oauth';
+import {
+  extractVeradigmPatientId,
+  type VeradigmTokenSet,
+} from '@mere/fhir-oauth';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
 import {
   createConnection,
@@ -216,27 +219,6 @@ async function syncFHIRResource<T extends FhirResource>(
   return cdsmap;
 }
 
-interface VeradigmAccessTokenPayload {
-  iss: string;
-  aud: string;
-  exp: number;
-  nbf: number;
-  sub: string;
-  fhir_api_id: string;
-  global_patient_id: string;
-  preferred_username: string;
-  local_patient_id: string;
-  client_id: string;
-  scope: string[];
-  auth_time: number;
-  idp: string;
-  amr: string[];
-}
-
-function parseAccessToken(token: string): VeradigmAccessTokenPayload {
-  return parseJwtPayload<VeradigmAccessTokenPayload>(token);
-}
-
 export async function syncAllRecords(
   baseUrl: string,
   connectionDocument: VeradigmConnectionDocument,
@@ -259,9 +241,7 @@ export async function syncAllRecords(
   const allergyIntoleranceMapper = (a: BundleEntry<AllergyIntolerance>) =>
     DSTU2.mapAllergyIntoleranceToClinicalDocument(a, connectionDocument);
 
-  const patientId = parseAccessToken(
-    connectionDocument.access_token,
-  ).local_patient_id;
+  const patientId = extractVeradigmPatientId(connectionDocument.access_token);
 
   const syncJob = await Promise.allSettled([
     syncFHIRResource<Procedure>(
