@@ -39,9 +39,7 @@ import { Routes } from '../../Routes';
 const epicClient = createEpicClient({ signJwt });
 const cernerClient = createCernerClient();
 const veradigmClient = createVeradigmClient();
-const healowClient = createHealowClient({
-  mode: 'public',
-});
+const healowClient = createHealowClient();
 const epicSession = createSessionManager('epic');
 const cernerSession = createSessionManager('cerner');
 const healowSession = createSessionManager('healow');

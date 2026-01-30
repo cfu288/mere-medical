@@ -57,6 +57,8 @@ import { concatPath } from '../../shared/utils/urlUtils';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
 import {
   createHealowClient,
+  createHealowClientWithProxy,
+  createHealowClientConfidential,
   buildHealowOAuthConfig,
   extractHealowPatientId,
   extractRelativeFhirPath,
@@ -66,11 +68,14 @@ import {
 
 export {
   createHealowClient,
+  createHealowClientWithProxy,
+  createHealowClientConfidential,
   buildHealowOAuthConfig,
   extractHealowPatientId,
   HEALOW_DEFAULT_SCOPES,
   type HealowClient,
-  type HealowClientConfig,
+  type HealowApiEndpoints,
+  type HealowProxyUrlBuilder,
   type HealowTokenSet,
   type HealowOAuthConfigOptions,
 } from '@mere/fhir-oauth';
@@ -723,19 +728,19 @@ export async function refreshHealowConnectionTokenIfNeeded(
         throw new Error(`User not found: ${userId}`);
       }
 
-      const client = createHealowClient({
-        mode: config.HEALOW_CONFIDENTIAL_MODE ? 'confidential' : 'public',
-        apiEndpoints: {
-          token: concatPath(config.PUBLIC_URL || '', '/api/v1/healow/token'),
-          refresh: concatPath(
-            config.PUBLIC_URL || '',
-            '/api/v1/healow/refresh',
-          ),
-        },
-        proxyUrlBuilder: useProxy
-          ? buildHealowProxyUrlBuilder(config.PUBLIC_URL || '')
-          : undefined,
-      });
+      const client = config.HEALOW_CONFIDENTIAL_MODE
+        ? createHealowClientConfidential({
+            token: concatPath(config.PUBLIC_URL || '', '/api/v1/healow/token'),
+            refresh: concatPath(
+              config.PUBLIC_URL || '',
+              '/api/v1/healow/refresh',
+            ),
+          })
+        : useProxy
+          ? createHealowClientWithProxy(
+              buildHealowProxyUrlBuilder(config.PUBLIC_URL || ''),
+            )
+          : createHealowClient();
 
       const oauthConfig = buildHealowOAuthConfig({
         clientId: config.HEALOW_CLIENT_ID || '',

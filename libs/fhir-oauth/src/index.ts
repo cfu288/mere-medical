@@ -37,11 +37,14 @@ export {
 
 export {
   createHealowClient,
+  createHealowClientWithProxy,
+  createHealowClientConfidential,
   buildHealowOAuthConfig,
   extractPatientIdFromIdToken as extractHealowPatientId,
   HEALOW_DEFAULT_SCOPES,
   type HealowClient,
-  type HealowClientConfig,
+  type HealowApiEndpoints,
+  type HealowProxyUrlBuilder,
   type HealowTokenSet,
   type HealowOAuthConfigOptions,
 } from './lib/vendors/healow.js';

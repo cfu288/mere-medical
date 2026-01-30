@@ -47,15 +47,6 @@ export type HealowTokenSet = CoreTokenSet &
     tenantId: string;
   };
 
-export interface HealowClientConfig {
-  mode: 'public' | 'confidential';
-  apiEndpoints?: {
-    token: string;
-    refresh: string;
-  };
-  proxyUrlBuilder?: (tenantId: string, targetType: 'token' | 'base') => string;
-}
-
 export interface HealowClient {
   initiateAuth: (
     config: OAuthConfig,
@@ -69,6 +60,13 @@ export interface HealowClient {
   isExpired: (tokens: HealowTokenSet, bufferSeconds?: number) => boolean;
   canRefresh: (tokens: HealowTokenSet) => boolean;
 }
+
+export interface HealowApiEndpoints {
+  token: string;
+  refresh: string;
+}
+
+export type HealowProxyUrlBuilder = (tenantId: string, targetType: 'token' | 'base') => string;
 
 interface HealowIdTokenPayload {
   sub: string;
@@ -91,162 +89,198 @@ export function extractPatientIdFromIdToken(idToken: string): string {
   return fhirUser.split('/').slice(-1)[0];
 }
 
-export function createHealowClient(clientConfig: HealowClientConfig): HealowClient {
-  const { mode, apiEndpoints, proxyUrlBuilder } = clientConfig;
+async function initiateAuth(
+  config: OAuthConfig,
+): Promise<{ url: string; session: AuthorizationRequestState }> {
+  const session = await generateAuthorizationRequestState({
+    usePkce: true,
+    useState: true,
+    tenant: config.tenant,
+  });
+
+  const params = new URLSearchParams({
+    client_id: config.clientId,
+    redirect_uri: config.redirectUri,
+    response_type: 'code',
+    scope: config.scopes.join(' '),
+  });
+
+  if (!config.tenant?.fhirBaseUrl) {
+    throw createOAuthError('missing_aud', 'fhirBaseUrl is required for aud parameter');
+  }
+  params.set('aud', config.tenant.fhirBaseUrl);
+
+  if (session.state) {
+    params.set('state', session.state);
+  }
+
+  if (session.codeVerifier) {
+    const challenge = await generateCodeChallenge(session.codeVerifier);
+    params.set('code_challenge', challenge);
+    params.set('code_challenge_method', 'S256');
+  }
+
+  const authUrl = config.tenant?.authUrl ?? '';
+  const url = `${authUrl}?${params}`;
+
+  return { url, session };
+}
+
+function validateAndExtractCode(
+  params: URLSearchParams,
+  config: OAuthConfig,
+  session: AuthorizationRequestState,
+): { code: string; tenantId: string; codeVerifier: string } {
+  const code = validateCallback(params, session);
+
+  if (!session.codeVerifier) {
+    throw OAuthErrors.missingCodeVerifier();
+  }
+
+  const tenantId = config.tenant?.id;
+  if (!tenantId) {
+    throw createOAuthError('missing_tenant_id', 'Tenant ID is required');
+  }
+
+  return { code, tenantId, codeVerifier: session.codeVerifier };
+}
+
+function buildTokenResult(
+  tokens: { accessToken: string; expiresAt: number; idToken?: string; refreshToken?: string; scope?: string; raw: Record<string, unknown> },
+  tenantId: string,
+): HealowTokenSet {
+  if (!tokens.idToken) {
+    throw createOAuthError('missing_id_token', 'No id_token in token response');
+  }
 
   return {
-    async initiateAuth(config) {
-      const session = await generateAuthorizationRequestState({
-        usePkce: true,
-        useState: true,
-        tenant: config.tenant,
-      });
+    accessToken: tokens.accessToken,
+    expiresAt: tokens.expiresAt,
+    idToken: tokens.idToken,
+    refreshToken: tokens.refreshToken,
+    scope: tokens.scope,
+    tenantId,
+    raw: tokens.raw,
+  };
+}
 
-      const params = new URLSearchParams({
-        client_id: config.clientId,
-        redirect_uri: config.redirectUri,
-        response_type: 'code',
-        scope: config.scopes.join(' '),
-      });
-
-      if (!config.tenant?.fhirBaseUrl) {
-        throw createOAuthError('missing_aud', 'fhirBaseUrl is required for aud parameter');
-      }
-      params.set('aud', config.tenant.fhirBaseUrl);
-
-      if (session.state) {
-        params.set('state', session.state);
-      }
-
-      if (session.codeVerifier) {
-        const challenge = await generateCodeChallenge(session.codeVerifier);
-        params.set('code_challenge', challenge);
-        params.set('code_challenge_method', 'S256');
-      }
-
-      const authUrl = config.tenant?.authUrl ?? '';
-      const url = `${authUrl}?${params}`;
-
-      return { url, session };
-    },
+export function createHealowClient(): HealowClient {
+  return {
+    initiateAuth,
 
     async handleCallback(params, config, session) {
-      const code = validateCallback(params, session);
+      const { code, tenantId, codeVerifier } = validateAndExtractCode(params, config, session);
 
-      if (!session.codeVerifier) {
-        throw OAuthErrors.missingCodeVerifier();
-      }
-
-      const tenantId = config.tenant?.id;
-      if (!tenantId) {
-        throw createOAuthError('missing_tenant_id', 'Tenant ID is required');
-      }
-
-      let tokens;
-
-      if (mode === 'confidential' && apiEndpoints?.token) {
-        const res = await fetch(apiEndpoints.token, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            code,
-            redirect_uri: config.redirectUri,
-            code_verifier: session.codeVerifier,
-            tenant_id: tenantId,
-          }),
-        });
-        tokens = await parseTokenResponse(res);
-      } else if (proxyUrlBuilder) {
-        const proxyUrl = proxyUrlBuilder(tenantId, 'token');
-        const res = await fetch(proxyUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            grant_type: 'authorization_code',
-            code,
-            redirect_uri: config.redirectUri,
-            client_id: config.clientId,
-            code_verifier: session.codeVerifier,
-          }),
-        });
-        tokens = await parseTokenResponse(res);
-      } else if (config.tenant?.tokenUrl) {
-        const res = await fetch(config.tenant.tokenUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            grant_type: 'authorization_code',
-            code,
-            redirect_uri: config.redirectUri,
-            client_id: config.clientId,
-            code_verifier: session.codeVerifier,
-          }),
-        });
-        tokens = await parseTokenResponse(res);
-      } else {
+      if (!config.tenant?.tokenUrl) {
         throw OAuthErrors.noTokenUrl();
       }
 
-      if (!tokens.idToken) {
-        throw createOAuthError('missing_id_token', 'No id_token in token response');
-      }
-
-      return {
-        accessToken: tokens.accessToken,
-        expiresAt: tokens.expiresAt,
-        idToken: tokens.idToken,
-        refreshToken: tokens.refreshToken,
-        scope: tokens.scope,
-        tenantId,
-        raw: tokens.raw,
-      };
+      const res = await fetch(config.tenant.tokenUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          code,
+          redirect_uri: config.redirectUri,
+          client_id: config.clientId,
+          code_verifier: codeVerifier,
+        }),
+      });
+      const tokens = await parseTokenResponse(res);
+      return buildTokenResult(tokens, tenantId);
     },
 
-    async refresh(tokens, config) {
+    async refresh() {
+      throw createOAuthError(
+        'refresh_not_supported',
+        'Public client mode does not support refresh tokens - user must re-authenticate',
+      );
+    },
+
+    isExpired: isTokenExpired,
+
+    canRefresh() {
+      return false;
+    },
+  };
+}
+
+export function createHealowClientWithProxy(
+  proxyUrlBuilder: HealowProxyUrlBuilder,
+): HealowClient {
+  return {
+    initiateAuth,
+
+    async handleCallback(params, config, session) {
+      const { code, tenantId, codeVerifier } = validateAndExtractCode(params, config, session);
+
+      const proxyUrl = proxyUrlBuilder(tenantId, 'token');
+      const res = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          code,
+          redirect_uri: config.redirectUri,
+          client_id: config.clientId,
+          code_verifier: codeVerifier,
+        }),
+      });
+      const tokens = await parseTokenResponse(res);
+      return buildTokenResult(tokens, tenantId);
+    },
+
+    async refresh() {
+      throw createOAuthError(
+        'refresh_not_supported',
+        'Public client mode does not support refresh tokens - user must re-authenticate',
+      );
+    },
+
+    isExpired: isTokenExpired,
+
+    canRefresh() {
+      return false;
+    },
+  };
+}
+
+export function createHealowClientConfidential(
+  apiEndpoints: HealowApiEndpoints,
+): HealowClient {
+  return {
+    initiateAuth,
+
+    async handleCallback(params, config, session) {
+      const { code, tenantId, codeVerifier } = validateAndExtractCode(params, config, session);
+
+      const res = await fetch(apiEndpoints.token, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code,
+          redirect_uri: config.redirectUri,
+          code_verifier: codeVerifier,
+          tenant_id: tenantId,
+        }),
+      });
+      const tokens = await parseTokenResponse(res);
+      return buildTokenResult(tokens, tenantId);
+    },
+
+    async refresh(tokens, _config) {
       if (!tokens.refreshToken) {
-        throw createOAuthError(
-          'refresh_not_supported',
-          mode === 'public'
-            ? 'Public client mode does not support refresh tokens - user must re-authenticate'
-            : 'No refresh token available',
-        );
+        throw createOAuthError('refresh_not_supported', 'No refresh token available');
       }
 
-      let res: Response;
-
-      if (mode === 'confidential' && apiEndpoints?.refresh) {
-        res = await fetch(apiEndpoints.refresh, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            refresh_token: tokens.refreshToken,
-            tenant_id: tokens.tenantId,
-          }),
-        });
-      } else if (proxyUrlBuilder) {
-        const proxyUrl = proxyUrlBuilder(tokens.tenantId, 'token');
-        res = await fetch(proxyUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            grant_type: 'refresh_token',
-            refresh_token: tokens.refreshToken,
-            client_id: config.clientId,
-          }),
-        });
-      } else if (config.tenant?.tokenUrl) {
-        res = await fetch(config.tenant.tokenUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            grant_type: 'refresh_token',
-            refresh_token: tokens.refreshToken,
-            client_id: config.clientId,
-          }),
-        });
-      } else {
-        throw OAuthErrors.noTokenUrl();
-      }
+      const res = await fetch(apiEndpoints.refresh, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          refresh_token: tokens.refreshToken,
+          tenant_id: tokens.tenantId,
+        }),
+      });
 
       const newTokens = await parseTokenResponse(res);
 
@@ -264,7 +298,7 @@ export function createHealowClient(clientConfig: HealowClientConfig): HealowClie
     isExpired: isTokenExpired,
 
     canRefresh(tokens) {
-      return mode === 'confidential' && !!tokens.refreshToken;
+      return !!tokens.refreshToken;
     },
   };
 }

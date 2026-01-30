@@ -13,7 +13,12 @@ import {
   saveConnectionToDb,
 } from '../../../services/fhir/Healow';
 import { concatPath } from '../../../shared/utils/urlUtils';
-import { createHealowClient, buildHealowOAuthConfig } from '@mere/fhir-oauth';
+import {
+  createHealowClient,
+  createHealowClientWithProxy,
+  createHealowClientConfidential,
+  buildHealowOAuthConfig,
+} from '@mere/fhir-oauth';
 import { useOAuthFlow } from '@mere/fhir-oauth/react';
 
 function clearLocalStorage() {
@@ -44,20 +49,18 @@ function useHealowOAuthCallback() {
   const publicUrl = config.PUBLIC_URL || '';
   const useProxy = userPreferences?.use_proxy ?? false;
 
-  const client = useMemo(
-    () =>
-      createHealowClient({
-        mode: confidentialMode ? 'confidential' : 'public',
-        apiEndpoints: {
-          token: concatPath(publicUrl, '/api/v1/healow/token'),
-          refresh: concatPath(publicUrl, '/api/v1/healow/refresh'),
-        },
-        proxyUrlBuilder: useProxy
-          ? buildHealowProxyUrlBuilder(publicUrl)
-          : undefined,
-      }),
-    [confidentialMode, publicUrl, useProxy],
-  );
+  const client = useMemo(() => {
+    if (confidentialMode) {
+      return createHealowClientConfidential({
+        token: concatPath(publicUrl, '/api/v1/healow/token'),
+        refresh: concatPath(publicUrl, '/api/v1/healow/refresh'),
+      });
+    }
+    if (useProxy) {
+      return createHealowClientWithProxy(buildHealowProxyUrlBuilder(publicUrl));
+    }
+    return createHealowClient();
+  }, [confidentialMode, publicUrl, useProxy]);
 
   const { handleCallback, clearSession } = useOAuthFlow({
     client,
