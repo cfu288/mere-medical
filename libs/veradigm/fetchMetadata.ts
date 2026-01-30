@@ -158,10 +158,30 @@ class TerminalColor {
         errors.push(...errorsRes);
       }
 
-      // add sandbox
+      /**
+       * Veradigm Sandbox Environments
+       *
+       * Documentation: https://developer.veradigm.com/Fhir/FHIR_Sandboxes
+       *
+       * NOTE: As of January 2025, both sandbox environments are non-functional:
+       *
+       * - Professional sandbox (FollowMyHealth):
+       *   Host: fhir.fhirpoint.open.allscripts.com
+       *   Auth: muauthentication.followmyhealth.com
+       *   Issue: OAuth callback (POST /api/Return) returns 500 Internal Server Error
+       *          after successful FollowMyHealth login
+       *
+       * - TouchWorks sandbox:
+       *   Host: tw181unityfhir.open.allscripts.com
+       *   Issue: DNS does not resolve (host no longer exists)
+       *
+       * Test credentials (when available):
+       * - Professional: donna.dobson_prounityfhir / Allscripts#1 (patient id: 19)
+       * - TouchWorks: allison.allscripts@tw181unityfhir.edu / Allscripts#1 (patient id: 19)
+       */
       results.push({
         id: 'sandbox_veradigm',
-        name: 'Veradigm Sandbox',
+        name: 'Veradigm Sandbox (Professional)',
         url: 'https://fhir.fhirpoint.open.allscripts.com/fhirroute/open/CustProProdSand201SMART/',
         token:
           'https://open.allscripts.com/fhirroute/fmhpatientauth/0cd760ae-6ec5-4137-bf26-4269636b94ef/connect/token/',
@@ -170,8 +190,8 @@ class TerminalColor {
       });
       results.push({
         id: 'sandbox_touchworks',
-        name: 'TouchWorks Sandbox',
-        url: 'https://tw181unityfhir.open.allscripts.com/OPEN/',
+        name: 'TouchWorks Sandbox (Offline)',
+        url: 'https://tw181unityfhir.open.allscripts.com/open/',
         token:
           'https://open.allscripts.com/fhirroute/patientauth/e75746a4-7f05-4b95-9ff5-44082c988959/connect/token/',
         authorize:

@@ -31,7 +31,10 @@ export interface VeradigmClient {
     config: OAuthConfig,
     session: AuthorizationRequestState,
   ) => Promise<VeradigmTokenSet>;
-  refresh: (tokens: VeradigmTokenSet, config: OAuthConfig) => Promise<VeradigmTokenSet>;
+  refresh: (
+    tokens: VeradigmTokenSet,
+    config: OAuthConfig,
+  ) => Promise<VeradigmTokenSet>;
   isExpired: (tokens: VeradigmTokenSet, bufferSeconds?: number) => boolean;
   canRefresh: (tokens: VeradigmTokenSet) => boolean;
 }
@@ -119,10 +122,15 @@ export function createVeradigmClient(): VeradigmClient {
       const tokens = await parseTokenResponse(res);
 
       if (!tokens.idToken) {
-        throw createOAuthError('missing_id_token', 'No id_token in token response');
+        throw createOAuthError(
+          'missing_id_token',
+          'No id_token in token response',
+        );
       }
 
-      const accessTokenPayload = parseJwtPayload<VeradigmAccessTokenPayload>(tokens.accessToken);
+      const accessTokenPayload = parseJwtPayload<VeradigmAccessTokenPayload>(
+        tokens.accessToken,
+      );
       const patientId = accessTokenPayload.local_patient_id;
 
       if (!patientId) {
@@ -170,7 +178,9 @@ export interface VeradigmOAuthConfigOptions {
   };
 }
 
-export function buildVeradigmOAuthConfig(options: VeradigmOAuthConfigOptions): OAuthConfig {
+export function buildVeradigmOAuthConfig(
+  options: VeradigmOAuthConfigOptions,
+): OAuthConfig {
   return {
     clientId: options.clientId,
     redirectUri: `${options.publicUrl}${options.redirectPath}`,
@@ -181,3 +191,14 @@ export function buildVeradigmOAuthConfig(options: VeradigmOAuthConfigOptions): O
     },
   };
 }
+
+/**
+ * References
+ * https://developer.veradigm.com/Fhir/Introduction
+ * https://developer.veradigm.com/Fhir/FHIR_Sandboxes
+ * https://developer.veradigm.com/Fhir/EndpointDirectory
+ * https://developer.veradigm.com/Fhir/SMARTonFHIR
+ * https://developer.veradigm.com/Fhir/Resources
+ * R4 endpoints: https://open.platform.veradigm.com/fhirendpoints/download/R4?endpointFilter=Patient
+ * DSTU2 endpoints: https://open.platform.veradigm.com/fhirendpoints/download/DSTU2
+ */
