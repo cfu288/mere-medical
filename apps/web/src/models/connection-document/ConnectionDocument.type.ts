@@ -15,6 +15,7 @@ export interface ConnectionDocument extends BaseDocument {
   expires_at: number;
   refresh_token?: string;
   scope?: string;
+  id_token?: string;
   source: ConnectionSources;
   name: string;
   location: string | Location;

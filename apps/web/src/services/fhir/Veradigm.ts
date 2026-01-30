@@ -50,7 +50,10 @@ import {
 import { UserDocument } from '../../models/user-document/UserDocument.type';
 import { parseJwtPayload, type VeradigmTokenSet } from '@mere/fhir-oauth';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
-import { createConnection } from '../../repositories/ConnectionRepository';
+import {
+  createConnection,
+  updateConnection,
+} from '../../repositories/ConnectionRepository';
 import uuid4 from '../../shared/utils/UUIDUtils';
 
 export {
@@ -97,27 +100,19 @@ export async function saveConnectionToDb({
   return new Promise((resolve, reject) => {
     if (tokens.accessToken && user.id) {
       if (doc) {
-        try {
-          doc
-            .update({
-              $set: {
-                access_token: tokens.accessToken,
-                expires_at: tokens.expiresAt,
-                id_token: tokens.idToken,
-                last_sync_was_error: false,
-              },
-            })
-            .then(() => {
-              resolve(true);
-            })
-            .catch((e) => {
-              console.error(e);
-              reject(new Error('Error updating connection'));
-            });
-        } catch (e) {
-          console.error(e);
-          reject(new Error('Error updating connection'));
-        }
+        updateConnection(db, user.id, doc.id, {
+          access_token: tokens.accessToken,
+          expires_at: tokens.expiresAt,
+          id_token: tokens.idToken,
+          last_sync_was_error: false,
+        })
+          .then(() => {
+            resolve(true);
+          })
+          .catch((e) => {
+            console.error(e);
+            reject(new Error('Error updating connection'));
+          });
       } else {
         const dbentry: Omit<CreateVeradigmConnectionDocument, 'patient'> = {
           id: uuid4(),

@@ -62,7 +62,6 @@ import {
   buildHealowOAuthConfig,
   extractHealowPatientId,
   extractRelativeFhirPath,
-  parseJwtPayload,
   type HealowTokenSet,
 } from '@mere/fhir-oauth';
 
@@ -86,22 +85,6 @@ export enum HealowLocalStorageKeys {
   HEALOW_TOKEN_URL = 'healowTokenUrl',
   HEALOW_NAME = 'healowName',
   HEALOW_ID = 'healowId',
-}
-
-interface HealowIdTokenPayload {
-  sub: string;
-  aud: string;
-  profile: string;
-  iss: string;
-  name: string;
-  exp: number;
-  iat: number;
-  fhirUser: string;
-  email: string;
-}
-
-function parseIdToken(token: string): HealowIdTokenPayload {
-  return parseJwtPayload<HealowIdTokenPayload>(token);
 }
 
 async function getFHIRResource<T extends FhirResource>(
@@ -218,9 +201,7 @@ export async function syncAllRecords(
   const encounterMapper = (a: BundleEntry<Encounter>) =>
     R4.mapEncounterToClinicalDocument(a, connectionDocument);
 
-  const patientId = parseIdToken(connectionDocument.id_token)
-    .fhirUser.split('/')
-    .slice(-1)[0];
+  const patientId = extractHealowPatientId(connectionDocument.id_token);
 
   const syncJob = await Promise.allSettled([
     syncFHIRResource<Procedure>(

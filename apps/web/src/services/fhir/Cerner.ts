@@ -49,6 +49,7 @@ import {
 } from '../../models/connection-document/ConnectionDocument.type';
 import { DSTU2, R4 } from '.';
 import { findUserById } from '../../repositories/UserRepository';
+import { updateConnection } from '../../repositories/ConnectionRepository';
 import { JsonWebKeySet } from '@mere/crypto';
 import {
   createCernerClient,
@@ -782,18 +783,13 @@ async function updateConnectionTokens({
   }
 
   const nowInSeconds = Math.floor(Date.now() / 1000);
-  const updateData: Record<string, unknown> = {
+  await updateConnection(db, user.id, doc.id, {
     access_token: res.access_token,
     expires_at: nowInSeconds + res.expires_in,
     scope: res.scope,
     last_sync_was_error: false,
-  };
-
-  if (res.id_token) {
-    updateData['id_token'] = res.id_token;
-  }
-
-  await doc.update({ $set: updateData });
+    ...(res.id_token && { id_token: res.id_token }),
+  });
 }
 
 /**
