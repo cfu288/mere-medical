@@ -18,6 +18,16 @@
  *   - Token refresh via /api/v1/healow/refresh endpoint
  *   - Better UX - background token refresh without re-authentication
  *
+ * The mode is automatically detected from config.HEALOW_CONFIDENTIAL_MODE
+ * which is set to true when HEALOW_CLIENT_SECRET env var is present.
+ *
+ * TODO: Healow requires proxy for all API calls due to CORS. Currently useProxy is a global
+ * user preference, but it should become a per-connection or per-integration setting so that
+ * Healow can enforce proxy usage while other integrations (e.g., Epic) can work without it.
+ *
+ * Frankly if a user tries to call healow APIs or oauth endpoints without useProxy it will
+ * fail due to CORS, so the public client mode is currently pretty useless.
+ *
  * @see https://connect4.healow.com/apps/jsp/dev/r4/fhirClinicalDocumentation.jsp#SymmetricAuthentication
  * @see https://connect4.healow.com/apps/jsp/dev/r4/fhirClinicalDocumentation.jsp#HealowSupportedScopes
  */
