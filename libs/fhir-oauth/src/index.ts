@@ -26,6 +26,30 @@ export {
   type OnPatientTokenSet,
 } from './lib/vendors/onpatient.js';
 
+export {
+  createVeradigmClient,
+  buildVeradigmOAuthConfig,
+  extractVeradigmPatientId,
+  VERADIGM_DEFAULT_SCOPES,
+  type VeradigmClient,
+  type VeradigmTokenSet,
+  type VeradigmOAuthConfigOptions,
+} from './lib/vendors/veradigm.js';
+
+export {
+  createHealowClient,
+  createHealowClientWithProxy,
+  createHealowClientConfidential,
+  buildHealowOAuthConfig,
+  extractPatientIdFromIdToken as extractHealowPatientId,
+  HEALOW_DEFAULT_SCOPES,
+  type HealowClient,
+  type HealowApiEndpoints,
+  type HealowProxyUrlBuilder,
+  type HealowTokenSet,
+  type HealowOAuthConfigOptions,
+} from './lib/vendors/healow.js';
+
 // Session management
 export {
   createSessionManager,
@@ -50,6 +74,8 @@ export {
 // Shared utilities - use when implementing custom clients
 export { validateCallback, isTokenExpired } from './lib/token-exchange.js';
 export { initiateStandardAuth } from './lib/auth-url.js';
+export { parseJwtPayload } from './lib/jwt.js';
+export { extractRelativeFhirPath } from './lib/url-utils.js';
 
 // Core types
 export type {

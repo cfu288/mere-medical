@@ -1,7 +1,32 @@
-import { AppConfig } from '../../app/providers/AppConfigProvider';
-import { Routes } from '../../Routes';
+/**
+ * Professional 20.1 SANDBOX FollowMyHealth
+ * Patient Access
+ * Property                   Value
+ * FHIR Base Url              https://fhir.fhirpoint.open.allscripts.com/fhirroute/open/CustProProdSand201SMART
+ * OAuth Authorization URL    https://open.allscripts.com/fhirroute/fmhpatientauth/0cd760ae-6ec5-4137-bf26-4269636b94ef/connect/authorize
+ * OAuth Token URL            https://open.allscripts.com/fhirroute/fmhpatientauth/0cd760ae-6ec5-4137-bf26-4269636b94ef/connect/token
+ * OAuth Scope                launch user/*.read
+ * Patient Username           donna.dobson_prounityfhir (Patient id is 19)
+ * Patient Password           Allscripts#1
+ */
+
+/**
+ * TouchWorks 20.0 SANDBOX Allscripts Connect
+ * Patient Access
+ * Property                   Value
+ * FHIR Base Url              https://tw181unityfhir.open.allscripts.com/open
+ * OAuth Authorization URL    https://open.allscripts.com/fhirroute/patientauth/e75746a4-7f05-4b95-9ff5-44082c988959/connect/authorize
+ * OAuth Token URL            https://open.allscripts.com/fhirroute/patientauth/e75746a4-7f05-4b95-9ff5-44082c988959/connect/token
+ * OAuth Scope                launch user/*.read
+ * Patient Username           allison.allscripts@tw181unityfhir.edu (Patient id is 19)
+ * Patient Password           Allscripts#1
+ */
+
 import * as DSTU2 from './DSTU2';
-import { VeradigmConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
+import {
+  CreateVeradigmConnectionDocument,
+  VeradigmConnectionDocument,
+} from '../../models/connection-document/ConnectionDocument.type';
 import {
   FhirResource,
   BundleEntry,
@@ -22,6 +47,26 @@ import {
   ClinicalDocument,
   CreateClinicalDocument,
 } from '../../models/clinical-document/ClinicalDocument.type';
+import { UserDocument } from '../../models/user-document/UserDocument.type';
+import {
+  extractVeradigmPatientId,
+  type VeradigmTokenSet,
+} from '@mere/fhir-oauth';
+import { getConnectionCardByUrl } from './getConnectionCardByUrl';
+import {
+  createConnection,
+  updateConnection,
+} from '../../repositories/ConnectionRepository';
+import uuid4 from '../../shared/utils/UUIDUtils';
+
+export {
+  createVeradigmClient,
+  buildVeradigmOAuthConfig,
+  VERADIGM_DEFAULT_SCOPES,
+  type VeradigmClient,
+  type VeradigmTokenSet,
+  type VeradigmOAuthConfigOptions,
+} from '@mere/fhir-oauth';
 
 export enum VeradigmLocalStorageKeys {
   VERADIGM_BASE_URL = 'veradigmBaseUrl',
@@ -31,80 +76,80 @@ export enum VeradigmLocalStorageKeys {
   VERADIGM_ID = 'veradigmId',
 }
 
-/** Professional 20.1 SANDBOX FollowMyHEalth
- * Patient Access
-Property	Value	Notes
-FHIR Base Url	https://fhir.fhirpoint.open.allscripts.com/fhirroute/open/CustProProdSand201SMART	Utilize the "/metadata" Conformance call to understand the resources availble in this API.
-OAuth Authorization URL	https://open.allscripts.com/fhirroute/fmhpatientauth/0cd760ae-6ec5-4137-bf26-4269636b94ef/connect/authorize	
-OAuth Token URL	https://open.allscripts.com/fhirroute/fmhpatientauth/0cd760ae-6ec5-4137-bf26-4269636b94ef/connect/token	
-OAuth Scope	One or more of the values from the Smart on FHIR Scopes	If you are unsure, use "launch user/*.read" for user access.
-Patient Username	donna.dobson_prounityfhir	Patient id is 19
-Patient Password	Allscripts#1	
- */
-
-/** TouchWorks 20.0 SANDBOX Allscripts Connect
- * Patient Access
-Property	Value	Notes
-FHIR Base Url	https://tw181unityfhir.open.allscripts.com/open	Utilize the "/metadata" Conformance call to understand the resources availble in this API.
-OAuth Authorization URL	https://open.allscripts.com/fhirroute/patientauth/e75746a4-7f05-4b95-9ff5-44082c988959/connect/authorize	
-OAuth Token URL	https://open.allscripts.com/fhirroute/patientauth/e75746a4-7f05-4b95-9ff5-44082c988959/connect/token	
-OAuth Scope	One or more of the values from the Smart on FHIR Scopes	If you are unsure, use "launch user/*.read" for user access.
-Patient Username	allison.allscripts@tw181unityfhir.edu	Patient id is 19
-Patient Password	Allscripts#1	
- */
-
-export function getLoginUrl(
-  config: AppConfig,
-  baseUrl: string,
-  authorizeUrl: string,
-): string & Location {
-  const params = {
-    client_id: `${config.VERADIGM_CLIENT_ID}`,
-    scope: [
-      'launch/patient',
-      'openid',
-      'profile',
-      'user/*.read',
-      'patient/*.read',
-    ].join(' '),
-    redirect_uri: `${config.PUBLIC_URL}${Routes.VeradigmCallback}`,
-    aud: baseUrl,
-    response_type: 'code',
-  };
-
-  if (authorizeUrl?.endsWith('/')) {
-    return `${authorizeUrl.substring(
-      0,
-      authorizeUrl.length - 1,
-    )}?${new URLSearchParams(params)}` as string & Location;
-  }
-
-  return `${authorizeUrl}?${new URLSearchParams(params)}` as string & Location;
-}
-
-export async function fetchAccessTokenWithCode(
-  config: AppConfig,
-  code: string,
-  veradigmTokenUrl: string,
-): Promise<VeradigmAuthResponse> {
-  const defaultUrl = `${veradigmTokenUrl}`;
-  const res = await fetch(defaultUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      grant_type: 'authorization_code',
-      client_id: `${config.VERADIGM_CLIENT_ID}`,
-      redirect_uri: `${config.PUBLIC_URL}${Routes.VeradigmCallback}`,
-      code: code,
-    }),
+export async function saveConnectionToDb({
+  tokens,
+  veradigmBaseUrl,
+  veradigmId,
+  db,
+  user,
+  name,
+  auth_uri,
+  token_uri,
+}: {
+  tokens: VeradigmTokenSet;
+  veradigmBaseUrl: string;
+  veradigmId: string;
+  db: RxDatabase<DatabaseCollections>;
+  user: UserDocument;
+  name: string;
+  auth_uri: string;
+  token_uri: string;
+}) {
+  const doc = await getConnectionCardByUrl<VeradigmConnectionDocument>(
+    veradigmBaseUrl,
+    db,
+    user.id,
+  );
+  return new Promise((resolve, reject) => {
+    if (tokens.accessToken && user.id) {
+      if (doc) {
+        updateConnection(db, user.id, doc.id, {
+          access_token: tokens.accessToken,
+          expires_at: tokens.expiresAt,
+          id_token: tokens.idToken,
+          last_sync_was_error: false,
+        })
+          .then(() => {
+            resolve(true);
+          })
+          .catch((e) => {
+            console.error(e);
+            reject(new Error('Error updating connection'));
+          });
+      } else {
+        const dbentry: Omit<CreateVeradigmConnectionDocument, 'patient'> = {
+          id: uuid4(),
+          user_id: user.id,
+          source: 'veradigm',
+          location: veradigmBaseUrl,
+          access_token: tokens.accessToken,
+          expires_at: tokens.expiresAt,
+          id_token: tokens.idToken,
+          name,
+          auth_uri,
+          token_uri,
+          tenant_id: veradigmId,
+        };
+        try {
+          createConnection(db, dbentry as CreateVeradigmConnectionDocument)
+            .then(() => {
+              resolve(true);
+            })
+            .catch((e) => {
+              console.error(e);
+              reject(new Error('Error updating connection'));
+            });
+        } catch (e) {
+          console.error(e);
+          reject(new Error('Error updating connection'));
+        }
+      }
+    } else {
+      reject(
+        new Error('Error completing authentication: no access token provided'),
+      );
+    }
   });
-  if (!res.ok) {
-    console.error(await res.text());
-    throw new Error('Error getting authorization token ');
-  }
-  return res.json();
 }
 
 async function getFHIRResource<T extends FhirResource>(
@@ -174,38 +219,6 @@ async function syncFHIRResource<T extends FhirResource>(
   return cdsmap;
 }
 
-function parseAccessToken(token: string) {
-  const base64Url = token.split('.')[1];
-  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-  const jsonPayload = decodeURIComponent(
-    // eslint-disable-next-line no-restricted-globals
-    self
-      .atob(base64)
-      .split('')
-      .map(function (c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      })
-      .join(''),
-  );
-
-  return JSON.parse(jsonPayload) as {
-    iss: string;
-    aud: string;
-    exp: number;
-    nbf: number;
-    sub: string;
-    fhir_api_id: string;
-    global_patient_id: string;
-    preferred_username: string;
-    local_patient_id: string;
-    client_id: string;
-    scope: string[];
-    auth_time: number;
-    idp: string;
-    amr: string[];
-  };
-}
-
 export async function syncAllRecords(
   baseUrl: string,
   connectionDocument: VeradigmConnectionDocument,
@@ -228,9 +241,7 @@ export async function syncAllRecords(
   const allergyIntoleranceMapper = (a: BundleEntry<AllergyIntolerance>) =>
     DSTU2.mapAllergyIntoleranceToClinicalDocument(a, connectionDocument);
 
-  const patientId = parseAccessToken(
-    connectionDocument.access_token,
-  ).local_patient_id;
+  const patientId = extractVeradigmPatientId(connectionDocument.access_token);
 
   const syncJob = await Promise.allSettled([
     syncFHIRResource<Procedure>(
@@ -454,11 +465,4 @@ async function fetchAttachmentData(
       'Could not get document as the user is unauthorized. Try logging in again.',
     );
   }
-}
-
-export interface VeradigmAuthResponse {
-  access_token: string;
-  expires_in: number;
-  token_type: string;
-  id_token: string;
 }

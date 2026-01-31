@@ -106,6 +106,29 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10063687/connect/authorize/"
   },
   {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10827849/",
+    "id": "e92ee771-e563-4265-b4ce-b03958cf2d18",
+    "name": "Ahoskie Medical Practice",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10827849/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10827849/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10827849/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10031501/",
+    "id": "085b4ca4-0dad-4b02-82fe-0c396550179d",
+    "name": "AIENT Management Company, LLC",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10031501/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10031501/connect/authorize/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/7339/",
+    "id": "6b65b06b-5978-4cf1-a173-85bf3735bbf2",
+    "name": "Airport Family Physicians",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/7339/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/7339/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/7339/"
+  },
+  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10021904/",
     "id": "cfa25b16-9e98-4be7-a3a5-53f7e96e0d42",
     "name": "Alabama Medical Group, P.C.",
@@ -126,14 +149,6 @@
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10359845/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10359845/connect/authorize/",
     "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10359845/"
-  },
-  {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/77532/",
-    "id": "841f68ec-5b1e-4781-be28-d12489c276d8",
-    "name": "Allen Rosenbuam Md",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/77532/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/77532/connect/authorize/",
-    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/77532/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10034273/",
@@ -309,11 +324,25 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10033746/connect/authorize/"
   },
   {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10026790/",
+    "id": "5a386bdb-dd8c-44ea-bf50-7c80dbc4da54",
+    "name": "Atlanta Neuroscience Institute, Inc",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10026790/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10026790/connect/authorize/"
+  },
+  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10031872/",
     "id": "bc91d818-fa46-456e-944b-765940afbf56",
     "name": "Atlanta Womens Specialists",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10031872/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10031872/connect/authorize/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10005594/",
+    "id": "c13c475b-7602-4b4a-b4aa-a7fc0add08f2",
+    "name": "Atlantic Orthopaedic Specialists",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10005594/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10005594/connect/authorize/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10042915/",
@@ -351,12 +380,19 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10033421/connect/authorize/"
   },
   {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/78056/",
-    "id": "82cd9cd4-38d9-4173-95cb-5a5f753562a6",
-    "name": "Barros Family Health Care Pa",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/78056/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/78056/connect/authorize/",
-    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/78056/"
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10035684/",
+    "id": "c5dc8bde-586b-49e8-b1c7-e8200151fa29",
+    "name": "Barstow Family Care",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10035684/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10035684/connect/authorize/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10043242/",
+    "id": "b4761adf-9e40-4fe5-a29f-a9fe9de038f3",
+    "name": "BC Muthappa MD PA",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10043242/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10043242/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10043242/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10045841/",
@@ -422,6 +458,14 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10027569/connect/authorize/"
   },
   {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/75246/",
+    "id": "d25df32f-13ad-4c5a-8178-ab33eca4972b",
+    "name": "Bluefied Pediatric Cardiology",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/75246/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/75246/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/75246/"
+  },
+  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10029141/",
     "id": "f5e09829-c3f7-477c-b367-876a42f5cd62",
     "name": "Bone & Joint Center",
@@ -474,8 +518,9 @@
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0006058/",
     "id": "25b034c3-6495-43c1-b0de-d80e9a99b533",
     "name": "Cape Fear Family Medical Care, P.A.",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/0006058/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/0006058/connect/authorize/"
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0006058/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0006058/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0006058/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10023765/",
@@ -483,6 +528,14 @@
     "name": "Cape Obstetrics & Gynecology PC",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10023765/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10023765/connect/authorize/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0008817/",
+    "id": "74998a5d-01cd-4391-b7cd-e2404da0ddb4",
+    "name": "Capital Family Physicians, P.A.",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0008817/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0008817/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0008817/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10016073/",
@@ -528,6 +581,14 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10019983/connect/authorize/"
   },
   {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0001894/",
+    "id": "6484d2b6-0c8b-4dfb-82bd-6e0e9b25e52b",
+    "name": "Cardiovascular Care Inc",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0001894/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0001894/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0001894/"
+  },
+  {
     "url": "https://fhir.prosuite.allscriptscloud.com/fhirroute/fhir/55946/",
     "id": "4328595d-6ecc-45ce-93e0-9f44b5e67e62",
     "name": "Cardiovascular Consultants",
@@ -535,9 +596,24 @@
     "authorize": "https://fhir.prosuite.allscriptscloud.com/fhirroute/authorization/authorize?cust=55946/"
   },
   {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10043002/",
+    "id": "ea94dc9b-c42c-4fe5-9382-4972106a642f",
+    "name": "Cardiovascular Consultants, PC",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10043002/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10043002/connect/authorize/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10084574/",
+    "id": "1f0f7758-0736-467f-a9e8-165d76a51f04",
+    "name": "Carlinville Area Hospital",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10084574/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10084574/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10084574/"
+  },
+  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10021159/",
     "id": "05dcbc8e-a970-4706-8e81-bc20caf1ce7c",
-    "name": "Carolina ENT Head and Neck Surgery Center",
+    "name": "Carolina Ear Nose & Throat-Sinus and Allergy Center",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10021159/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10021159/connect/authorize/"
   },
@@ -592,6 +668,14 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10057991/connect/authorize/"
   },
   {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10015136/",
+    "id": "0fd1a92a-3301-4ddc-822a-5307f9f8a627",
+    "name": "Castle Ortho  Sports",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10015136/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10015136/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10015136/"
+  },
+  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/CustProProdCavalry/",
     "id": "0f2bd26e-b798-4fd0-8290-00c05fddc77e",
     "name": "Cavalry Clinic",
@@ -613,6 +697,13 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10041383/connect/authorize/"
   },
   {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10033644/",
+    "id": "0bb09371-f826-4839-a75a-2d51a2c38847",
+    "name": "Center for Pulmonary and Sleep Medicine, PC",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10033644/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10033644/connect/authorize/"
+  },
+  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10034673/",
     "id": "8202a261-a1a8-4a40-acd5-fd2fa73a13f1",
     "name": "Centers for Advanced ENT Care - Siegel Bosworth and Sorensen Division",
@@ -626,6 +717,14 @@
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10039458/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10039458/connect/authorize/",
     "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10039458/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10022903/",
+    "id": "c1b440f5-8053-492f-826e-0e354a5e9e29",
+    "name": "Central Wyoming Urological",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10022903/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10022903/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10022903/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0011533/",
@@ -667,32 +766,11 @@
     "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0900078/"
   },
   {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10917848/",
-    "id": "ab9ebcd0-f953-46ce-9fcd-cf86a1494499",
-    "name": "Chattanooga Family Practice",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10917848/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10917848/connect/authorize/"
-  },
-  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10057166/",
     "id": "ae4e6873-7972-4569-b3a2-bc98f5d9b646",
     "name": "CHILD HEALTH ASSOCIATES, PC",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10057166/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10057166/connect/authorize/"
-  },
-  {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0004766/",
-    "id": "6695b9b2-ba44-4dad-b52a-36456b9195cb",
-    "name": "Childrens Medical Group",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/0004766/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/0004766/connect/authorize/"
-  },
-  {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10035446/",
-    "id": "3b4d3ace-e487-4076-b6ab-ed2dfefedda2",
-    "name": "Chippenham Pediatric and Adolescent Medicine",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10035446/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10035446/connect/authorize/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10022460/",
@@ -724,6 +802,14 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10021156/connect/authorize/"
   },
   {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/70707/",
+    "id": "54768bf4-94fe-4398-b71a-a30f8b9cd915",
+    "name": "Clinics of North Texas, LLP",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/70707/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/70707/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/70707/"
+  },
+  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10038384/",
     "id": "b62d5403-0dfd-403a-b9a3-08ca36911b13",
     "name": "Clinix Healthcare",
@@ -737,6 +823,13 @@
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0005146/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0005146/connect/authorize/",
     "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0005146/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10019619/",
+    "id": "82055d0d-2f95-414a-8809-68aa1b9c3a40",
+    "name": "Clinton Medical Clinic, Inc",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10019619/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10019619/connect/authorize/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10061847/",
@@ -777,8 +870,9 @@
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/74207/",
     "id": "a1b6a1c5-570c-4c9e-bede-be3564661c50",
     "name": "Coleman Medical Associates",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/74207/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/74207/connect/authorize/"
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/74207/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/74207/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/74207/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10035563/",
@@ -840,6 +934,14 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10032436/connect/authorize/"
   },
   {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10491841/",
+    "id": "0ab5ac6d-f7c0-4b03-bee2-6f5df817262b",
+    "name": "Compass Health",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10491841/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10491841/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10491841/"
+  },
+  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10034541/",
     "id": "754221a2-edbc-4822-85b3-1c552c839b56",
     "name": "Comprehensive Internal Medicine",
@@ -871,8 +973,9 @@
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/58689/",
     "id": "71649223-e6c8-4bbb-b01e-493abf92f827",
     "name": "Cornerstone Pediatric and Adolescent Medicine",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/58689/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/58689/connect/authorize/"
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/58689/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/58689/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/58689/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10042857Test/",
@@ -918,13 +1021,6 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10032922/connect/authorize/"
   },
   {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/56410/",
-    "id": "6de08fb7-b5eb-465a-ae31-acffedd2759d",
-    "name": "Crystal Lake Health Center",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/56410/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/56410/connect/authorize/"
-  },
-  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10166739/",
     "id": "c71c3a51-b085-48e3-bd6f-32f5f185ea57",
     "name": "CUA Opco, LLC",
@@ -937,6 +1033,14 @@
     "name": "Cumberland Valley ENT Consultants",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10044371/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10044371/connect/authorize/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10045331/",
+    "id": "9ad156c0-1b86-47b6-9e3d-4d1dbbe4c9df",
+    "name": "Cure 4 The Kids Foundation",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10045331/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10045331/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10045331/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10063631/",
@@ -1126,6 +1230,14 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10082908/connect/authorize/"
   },
   {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0008465/",
+    "id": "408de556-44be-415d-80eb-854b6093d65f",
+    "name": "Dr. Rudolph Vela",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0008465/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0008465/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0008465/"
+  },
+  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10037377/",
     "id": "f346f659-a8b7-469f-aa5b-08ce2d3883d4",
     "name": "E C Bush Md",
@@ -1197,13 +1309,6 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10211805/connect/authorize/"
   },
   {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10023673/",
-    "id": "937e5c95-3015-49bd-a02b-65fcfdb043a1",
-    "name": "ENT Consultants & Hearing Svcs",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10023673/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10023673/connect/authorize/"
-  },
-  {
     "url": "https://fhir.prosuite.allscriptscloud.com/fhirroute/fhir/8079/",
     "id": "4bce96c6-a31e-4a05-9c95-d6305d77ae15",
     "name": "Eric Carlson M D",
@@ -1236,8 +1341,9 @@
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0008445/",
     "id": "24f485a0-ae15-4b2f-997b-ad4ec6369eb1",
     "name": "Family Care of Fairview, PA",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/0008445/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/0008445/connect/authorize/"
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0008445/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0008445/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0008445/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10034504/",
@@ -1252,6 +1358,13 @@
     "name": "Family Medical Associates of Raleigh",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10403874/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10403874/connect/authorize/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10034084/",
+    "id": "45a5ca52-812d-4f78-af32-8a9f78063952",
+    "name": "Family Medical Care Associates PLLC",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10034084/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10034084/connect/authorize/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/59548/",
@@ -1303,13 +1416,6 @@
     "name": "Farhan Siddiqi MD PA",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10088478/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10088478/connect/authorize/"
-  },
-  {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/56467/",
-    "id": "f39ea077-4071-47af-9178-dd25feccee89",
-    "name": "Fauquier Family Practice",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/56467/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/56467/connect/authorize/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10038347/",
@@ -1409,6 +1515,14 @@
     "name": "Foot And Ankle Clinic Of The Virginias",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10063265/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10063265/connect/authorize/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10065611/",
+    "id": "30186f12-e7e1-4347-b460-5393979fc04e",
+    "name": "Foot Ankle Specialists Of Virginia",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10065611/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10065611/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10065611/"
   },
   {
     "url": "https://fhir.prosuite.allscriptscloud.com/fhirroute/fhir/0010710/",
@@ -1579,8 +1693,9 @@
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/56919/",
     "id": "bce13e01-d793-446c-9ea7-82850ea5aeb9",
     "name": "Granite State GI",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/56919/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/56919/connect/authorize/"
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/56919/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/56919/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/56919/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10012582/",
@@ -1595,6 +1710,14 @@
     "name": "Great Lakes Gastroenterology Pllc",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10052094/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10052094/connect/authorize/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0005438/",
+    "id": "6c9a6783-578e-4b54-98cf-39d61bb6f1f7",
+    "name": "Greater Houston Neurosurgery Center",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0005438/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0005438/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0005438/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10028052/",
@@ -1615,8 +1738,9 @@
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/57534/",
     "id": "68509a56-a87f-40f7-b052-af8935dde28e",
     "name": "Griego Family Medical Center",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/57534/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/57534/connect/authorize/"
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/57534/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/57534/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/57534/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10015945/",
@@ -1659,6 +1783,14 @@
     "name": "Hampton Roads ENT - Allergy",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10045881/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10045881/connect/authorize/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10040602/",
+    "id": "8801a4ea-055f-4aa5-ac0f-5dfad3d7caa7",
+    "name": "Hannibal Regional Healthcare System, Inc.",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10040602/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10040602/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10040602/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10033017/",
@@ -1720,8 +1852,9 @@
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10287805/",
     "id": "bb5a58ec-7eb5-4dc4-a2ba-61421257885c",
     "name": "HealthPark Pediatrics",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10287805/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10287805/connect/authorize/"
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10287805/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10287805/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10287805/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10029260/",
@@ -1729,6 +1862,13 @@
     "name": "Healthwise Medical Associates LLP",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10029260/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10029260/connect/authorize/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10043119/",
+    "id": "600f162c-1c24-48b2-9f59-6cab8af0ceea",
+    "name": "Heart and Vascular Center of Lake County",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10043119/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10043119/connect/authorize/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10045909/",
@@ -1780,6 +1920,13 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10057974/connect/authorize/"
   },
   {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10022826/",
+    "id": "bb10c92b-38c6-4f9c-adbf-4cbeec487886",
+    "name": "High Desert Neurology Diagnostic",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10022826/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10022826/connect/authorize/"
+  },
+  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10079283/",
     "id": "00e36c5e-dcf1-48b0-82e6-d9bbe2827f3c",
     "name": "Highland District Hospital Professional Service Corporation",
@@ -1815,6 +1962,14 @@
     "authorize": "https://fhir.prosuite.allscriptscloud.com/fhirroute/authorization/authorize?cust=69187/"
   },
   {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/69187/",
+    "id": "c17bcfeb-6b01-446b-9e69-6457631862d9",
+    "name": "HOAG Paul Rosenbuilt",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/69187/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/69187/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/69187/"
+  },
+  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10175745/",
     "id": "181e8241-d576-43af-8505-4ec5fc7cfc0d",
     "name": "Holmes Family Medicine",
@@ -1833,8 +1988,9 @@
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10166765/",
     "id": "49bb6b6b-34cb-448f-a0f6-5b7adddfef2e",
     "name": "Horizon Family Medical, PA",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10166765/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10166765/connect/authorize/"
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10166765/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10166765/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10166765/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10007593/",
@@ -1850,6 +2006,14 @@
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10534842/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10534842/connect/authorize/",
     "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10534842/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/74558/",
+    "id": "8eac1c3f-0dcf-4a47-9221-282d8feb0939",
+    "name": "Huron Family Medicine",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/74558/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/74558/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/74558/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10038682/",
@@ -1901,13 +2065,6 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10086572/connect/authorize/"
   },
   {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10038069/",
-    "id": "99f7b833-f79a-427a-a62b-e1723d127756",
-    "name": "Institute for Non Surgical Orthopedics",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10038069/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10038069/connect/authorize/"
-  },
-  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/57972/",
     "id": "740afd42-f47c-4a1b-aeb8-194a9012a30a",
     "name": "Integrated Medical Professionals, PLLC",
@@ -1940,8 +2097,17 @@
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/59260/",
     "id": "6dd42d61-2c5f-4574-81a7-cbff7623d3fe",
     "name": "Internal Medicine Of Yuma LLC",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/59260/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/59260/connect/authorize/"
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/59260/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/59260/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/59260/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/70435/",
+    "id": "f4605103-a90a-49d5-840a-91de8a52b6f7",
+    "name": "Interventional Cardiology",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/70435/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/70435/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/70435/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10052665/",
@@ -1972,11 +2138,12 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10049856/connect/authorize/"
   },
   {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0010782/",
-    "id": "34e838ac-f64d-4d2b-843d-856b2203d534",
-    "name": "J. Richard Lilly, M.D., Shaaron R. Towns, M.D., And Associates, P.C.",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/0010782/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/0010782/connect/authorize/"
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0008113/",
+    "id": "2ca9f10e-34ac-41ab-a9c8-2e2529ca5bc3",
+    "name": "Jackson Gastroenterology",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0008113/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0008113/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0008113/"
   },
   {
     "url": "https://fhir.prosuite.allscriptscloud.com/fhirroute/fhir/0008113/",
@@ -1993,6 +2160,14 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10036295/connect/authorize/"
   },
   {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10062220/",
+    "id": "c5f6454e-437b-48ca-b9fd-29cd906f2b2e",
+    "name": "James S Yeh MD INC",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10062220/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10062220/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10062220/"
+  },
+  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10020909/",
     "id": "6b849b10-bc22-4631-9d5d-3a54eb72a196",
     "name": "Jeffers & Mann Pediatrics",
@@ -2007,11 +2182,12 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10038292/connect/authorize/"
   },
   {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10057684/",
-    "id": "5d42052f-41c3-41cd-9d87-0c8b9b0f8ed4",
-    "name": "Jerry A. Rubin, M.D. PA",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10057684/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10057684/connect/authorize/"
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0001283/",
+    "id": "b22703f9-991c-422d-b04e-43a4abf6fc35",
+    "name": "Jefferson Internal Med",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0001283/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0001283/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0001283/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10041460/",
@@ -2031,8 +2207,9 @@
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10009541/",
     "id": "2b81565e-7bc3-456e-ac36-2885c969c855",
     "name": "Joyful Living LLC",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10009541/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10009541/connect/authorize/"
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10009541/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10009541/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10009541/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10041084/",
@@ -2054,6 +2231,14 @@
     "name": "Katy Internal Medicine Associates L.L.P",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10055480/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10055480/connect/authorize/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0011519/",
+    "id": "b5598c1b-8313-4cb1-88df-5bed138d9820",
+    "name": "Kenly Medical Associates",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0011519/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0011519/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0011519/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10059883/",
@@ -2098,6 +2283,13 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10030397/connect/authorize/"
   },
   {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10006393/",
+    "id": "4d4835ca-7fb4-4239-84af-d5a407cf1158",
+    "name": "Knee and Shoulder Institute",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10006393/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10006393/connect/authorize/"
+  },
+  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10038757/",
     "id": "d41cced1-44cd-4d35-b9d1-fd36c0494f7a",
     "name": "Lake Heart Specialists",
@@ -2105,11 +2297,20 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10038757/connect/authorize/"
   },
   {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/57922/",
+    "id": "cb59d7f3-1d07-412f-bdca-3189832ef737",
+    "name": "Lake Norman Pediatrics",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/57922/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/57922/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/57922/"
+  },
+  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10127756/",
     "id": "d05476dc-0f71-4f27-808a-5067b104813d",
     "name": "Lakeside Neurology",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10127756/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10127756/connect/authorize/"
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10127756/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10127756/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10127756/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10035187/",
@@ -2154,6 +2355,14 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10011148/connect/authorize/"
   },
   {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/58294/",
+    "id": "0df85225-ad5b-4f7e-b293-4c941faa19b9",
+    "name": "Lawrence Lipnik Md",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/58294/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/58294/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/58294/"
+  },
+  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10045120/",
     "id": "727e959a-f50b-454e-b42b-a1049b121f1b",
     "name": "Lenawee Adult & Pediatric Medicine",
@@ -2178,8 +2387,9 @@
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/11042841/",
     "id": "681724e3-8c87-4062-9926-7165dc7bad74",
     "name": "LifeWay Health",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/11042841/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/11042841/connect/authorize/"
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/11042841/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/11042841/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/11042841/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10044185/",
@@ -2194,6 +2404,14 @@
     "name": "Long Island Bone And Joint",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10048918/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10048918/connect/authorize/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10040532/",
+    "id": "2fc78358-3c50-415b-b98d-323f7b004148",
+    "name": "Long Island Neurosurgical Associates",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10040532/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10040532/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10040532/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/60317/",
@@ -2224,14 +2442,6 @@
     "name": "Lumberton Childrens Clinic Pa",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10035106/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10035106/connect/authorize/"
-  },
-  {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/70372/",
-    "id": "2d00230d-9615-46e1-aa87-6880ffec136b",
-    "name": "Lung Center Of Nevada",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/70372/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/70372/connect/authorize/",
-    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/70372/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10005688/",
@@ -2266,8 +2476,9 @@
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0005394F/",
     "id": "13ec4b78-bfb6-4318-b746-986f82c8f372",
     "name": "Marquette Internal Medicine & Pediatric Associates P.C.",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/0005394F/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/0005394F/connect/authorize/"
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0005394F/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0005394F/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0005394F/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10032031/",
@@ -2280,8 +2491,9 @@
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10097638/",
     "id": "79319e06-b8ab-495c-8ce2-6c4feb7530d6",
     "name": "Masonboro Family Medicine, P.C.",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10097638/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10097638/connect/authorize/"
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10097638/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10097638/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10097638/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10063181/",
@@ -2322,8 +2534,9 @@
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/58688/",
     "id": "114bb0e2-f293-4a1a-83be-f5121adabab6",
     "name": "Med Edge - N. Raleigh Ped. Grp",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/58688/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/58688/connect/authorize/"
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/58688/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/58688/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/58688/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10049942/",
@@ -2367,6 +2580,14 @@
     "name": "Michael G Casagrande MD, PA",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10017106/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10017106/connect/authorize/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10064575/",
+    "id": "9898a542-987d-47cd-ac94-9ea0cccc9666",
+    "name": "Michael Scott Lincoln MD",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10064575/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10064575/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10064575/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10055650/",
@@ -2425,6 +2646,13 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10031339/connect/authorize/"
   },
   {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10027823/",
+    "id": "cc3fb1c2-5918-4c4d-97eb-616e50bf2ac8",
+    "name": "Midwest Nephrology Consultants",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10027823/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10027823/connect/authorize/"
+  },
+  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10067780/",
     "id": "b31d8125-4acd-4c69-a967-b8ae4d849917",
     "name": "Midwest Surgical Assoc",
@@ -2445,6 +2673,14 @@
     "name": "Milltown Family Physicians",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10028476/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10028476/connect/authorize/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/75761/",
+    "id": "e99a8982-20ad-488d-be8c-93597510ad6b",
+    "name": "Mir Neurology Center",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/75761/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/75761/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/75761/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10032925/",
@@ -2482,6 +2718,13 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10031737/connect/authorize/"
   },
   {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10036564/",
+    "id": "49452ba9-8f37-4dbe-89bf-4d6b6c308894",
+    "name": "NASA Neuroscience & Spine Associates",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10036564/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10036564/connect/authorize/"
+  },
+  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10029706/",
     "id": "0353e20c-f151-4fd4-b1ac-bd18ef69ca9b",
     "name": "National Nursing Centers Consortium",
@@ -2510,26 +2753,18 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10034518/connect/authorize/"
   },
   {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0000397/",
-    "id": "fb5825d1-c9d8-4eaa-ae66-3535059c8e92",
-    "name": "Nephrology Assoc Of Tidewater Ltd",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/0000397/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/0000397/connect/authorize/"
-  },
-  {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10028142/",
-    "id": "1a4d5015-53f2-4f2c-82eb-c9d0c6dfc7c0",
-    "name": "Nephrology Associates of DE",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10028142/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10028142/connect/authorize/",
-    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10028142/"
-  },
-  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10039269/",
     "id": "31180838-c9b8-4209-804d-78e4737692be",
     "name": "Neurology Consultants Of Dallas, P.A.",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10039269/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10039269/connect/authorize/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10065612/",
+    "id": "ca9191fd-6c37-4340-9960-3c5667ba501b",
+    "name": "Neurology of Marshall County",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10065612/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10065612/connect/authorize/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10029988/",
@@ -2634,13 +2869,6 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/0005174/connect/authorize/"
   },
   {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0009605/",
-    "id": "6b5a833a-0e5d-4800-b8a6-7c7fe68bb340",
-    "name": "North Myrtle Beach Internal Medical",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/0009605/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/0009605/connect/authorize/"
-  },
-  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10058253/",
     "id": "ca872a54-d12d-4e76-abd2-94d3b1c1300b",
     "name": "North Valley GI Medical Group",
@@ -2712,13 +2940,6 @@
     "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10359857/"
   },
   {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10031667/",
-    "id": "4bd6a318-83a8-4d8e-9b15-21cc7969c636",
-    "name": "Northwest Louisiana Nephrology",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10031667/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10031667/connect/authorize/"
-  },
-  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10034359/",
     "id": "1524452f-37f0-4c64-8976-f0b361efa6fc",
     "name": "Northwest Neurology",
@@ -2739,13 +2960,6 @@
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/69576/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/69576/connect/authorize/",
     "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/69576/"
-  },
-  {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10029964/",
-    "id": "f1d188c8-65a1-493e-ac16-a6754a5a34ce",
-    "name": "Oakland-Macomb Obstetrics And GynecologyOakland-Macomb Obstetrics And Gynecology",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10029964/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10029964/connect/authorize/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10035911/",
@@ -2812,13 +3026,6 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10037067/connect/authorize/"
   },
   {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10070286/",
-    "id": "c5243aaf-7bd2-4177-9531-73ec52e97f9b",
-    "name": "Omni Health Care Inc",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10070286/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10070286/connect/authorize/"
-  },
-  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10078499/",
     "id": "e2214e7f-00c2-4e77-9812-8c79de1fe27c",
     "name": "Onslow Surgical Clinic, PA",
@@ -2859,6 +3066,13 @@
     "name": "Oregon Surgical Specialists PC",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10059460/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10059460/connect/authorize/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10039100/",
+    "id": "cbbbdb55-3735-447c-bc40-934a5f9b751e",
+    "name": "Orion Family Physicians",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10039100/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10039100/connect/authorize/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10388860/",
@@ -3040,6 +3254,14 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10021460/connect/authorize/"
   },
   {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10030714/",
+    "id": "c18d6cc5-8e80-43bc-8565-5890eb9b92d0",
+    "name": "Pediatric Immediate Care",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10030714/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10030714/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10030714/"
+  },
+  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10031005/",
     "id": "1ae7db32-dc19-4cdf-b12f-626b10c5117d",
     "name": "Peggyann Nowak, M.D",
@@ -3152,18 +3374,12 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10043624/connect/authorize/"
   },
   {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10048377/",
-    "id": "623af970-c046-4bd3-ab11-06765d75a11f",
-    "name": "Premier Health Assoc LLC",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10048377/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10048377/connect/authorize/"
-  },
-  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10078713/",
     "id": "3aed5207-f1ea-4b3e-8781-1037b47d7919",
     "name": "Premier Medical Housecall",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10078713/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10078713/connect/authorize/"
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10078713/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10078713/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10078713/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10028254/",
@@ -3184,8 +3400,9 @@
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10256802/",
     "id": "af2cdff1-9462-47ea-8414-eb33c2dc009e",
     "name": "Premier Women's Health of Geauga LLC",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10256802/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10256802/connect/authorize/"
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10256802/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10256802/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10256802/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10034753/",
@@ -3203,6 +3420,14 @@
     "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0007447/"
   },
   {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10082700/",
+    "id": "46e96947-2911-443c-9723-af8016d9d416",
+    "name": "Preterm Cleveland",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10082700/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10082700/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10082700/"
+  },
+  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10039134/",
     "id": "f27dc1cc-7864-4d61-8d8b-27866ece9480",
     "name": "Primary Care Physicians of Gainesville",
@@ -3215,6 +3440,13 @@
     "name": "Primary Care Specialists of Orlando",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10044665/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10044665/connect/authorize/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10050830/",
+    "id": "061af51d-77ed-4f84-9fcb-edc1cda19801",
+    "name": "PrimaryOne Health",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10050830/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10050830/connect/authorize/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10031440/",
@@ -3357,6 +3589,14 @@
     "name": "R2R4",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/R2R4CDH/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/R2R4CDH/connect/authorize/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/1700141D/",
+    "id": "dc7b54d0-8c7b-4058-9ce9-2a9a5e3e3f74",
+    "name": "Rafael E Quinonez Md",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/1700141D/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/1700141D/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/1700141D/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10035997/",
@@ -3502,20 +3742,6 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10045856/connect/authorize/"
   },
   {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10028910/",
-    "id": "1bb71af6-3b26-4c96-9440-b7c60a5ac9e0",
-    "name": "Riverbend Health Care, P. C.",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10028910/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10028910/connect/authorize/"
-  },
-  {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10039227/",
-    "id": "9cef602b-8b0c-41ab-96d4-e69c90b981ce",
-    "name": "Rocky Mountain Gastro Assoc",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10039227/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10039227/connect/authorize/"
-  },
-  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10049550/",
     "id": "f83498b1-c6a4-49d9-bdf7-c3fa13ed0471",
     "name": "Rome Orthopaedic Clinic",
@@ -3547,15 +3773,17 @@
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10032309/",
     "id": "bc05e0a8-ac54-4b4e-861f-4f2ed5d611df",
     "name": "Sama Healthcare Services",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10032309/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10032309/connect/authorize/"
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10032309/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10032309/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10032309/"
   },
   {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10038025/",
-    "id": "a75f1bbb-ab75-4de6-870c-829887f78424",
-    "name": "San Antonio Kidney",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10038025/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10038025/connect/authorize/"
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/9999002/",
+    "id": "6ea774c2-411a-4ea1-b41b-e5be2a76d7d2",
+    "name": "Sample Client 002",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/9999002/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/9999002/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/9999002/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10018737/",
@@ -3577,14 +3805,6 @@
     "name": "SCH Professional Corporation",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10043018/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10043018/connect/authorize/"
-  },
-  {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/57909/",
-    "id": "322be893-3617-4d66-984a-d103de54d532",
-    "name": "Sea Girt Medical Assoc",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/57909/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/57909/connect/authorize/",
-    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/57909/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10037822/",
@@ -3616,11 +3836,20 @@
     "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10041301/"
   },
   {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10060813/",
+    "id": "eec81380-4270-4246-a48e-c9c534057489",
+    "name": "Seashore Pediatrics",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10060813/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10060813/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10060813/"
+  },
+  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/57023B/",
     "id": "6dda9c41-464d-417f-b91a-221ab5aef263",
     "name": "Seaside Wellness of Shallotte",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/57023B/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/57023B/connect/authorize/"
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/57023B/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/57023B/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/57023B/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10036415/",
@@ -3672,13 +3901,6 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10020344/connect/authorize/"
   },
   {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10020533/",
-    "id": "b5bbec4c-3978-4ab2-a052-a7c69b90acd7",
-    "name": "Shore Orthopedics Inc dba The Orthopedic Center",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10020533/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10020533/connect/authorize/"
-  },
-  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10031459/",
     "id": "484f5599-c035-4a50-b8f1-9d8c31e286c5",
     "name": "Silver Pine Family Practice",
@@ -3722,13 +3944,6 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10037602/connect/authorize/"
   },
   {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10091597/",
-    "id": "ddba482a-262b-48ba-9922-28a73eb6e7f5",
-    "name": "Solid Rock Family Medicine",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10091597/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10091597/connect/authorize/"
-  },
-  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10035140/",
     "id": "ca9d4fa9-9069-4947-ba56-95d37466f301",
     "name": "Somerset Pain Management",
@@ -3750,27 +3965,11 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10020682/connect/authorize/"
   },
   {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10024254/",
-    "id": "b5eda061-2cc7-47b7-aa44-3fd66eaf73a9",
-    "name": "South Dayton Acute Care Consultants",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10024254/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10024254/connect/authorize/",
-    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10024254/"
-  },
-  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10037350/",
     "id": "ca815a7a-fb64-488e-b503-db5e7313c175",
     "name": "South Shore Women's Health PC",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10037350/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10037350/connect/authorize/"
-  },
-  {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10022251/",
-    "id": "588ca939-2b53-4047-9a1a-499ae18cfc23",
-    "name": "Southeast Medical Group, PC",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10022251/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10022251/connect/authorize/",
-    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10022251/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10039761/",
@@ -3787,13 +3986,6 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10033814/connect/authorize/"
   },
   {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10035042/",
-    "id": "fc860ef8-3636-4c19-81d7-e52ca182ce31",
-    "name": "Southern Indiana Community Health Care",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10035042/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10035042/connect/authorize/"
-  },
-  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10028236/",
     "id": "07e63e04-8fa9-4566-9969-fe3bf83dd1bf",
     "name": "Southern NH Internal Medicine",
@@ -3802,11 +3994,12 @@
     "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10028236/"
   },
   {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10012164/",
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0007787/",
     "id": "13eb210d-e094-481e-bea5-93754db71eff",
     "name": "Southern ObGyn Assoc",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10012164/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10012164/connect/authorize/"
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0007787/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0007787/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0007787/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10045969/",
@@ -3844,11 +4037,12 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10034830/connect/authorize/"
   },
   {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10051515/",
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0102551/",
     "id": "2c30a95f-d979-4c64-a3c5-6c1df1113132",
     "name": "Specialty Orthopedics PC",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10051515/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10051515/connect/authorize/"
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0102551/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0102551/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0102551/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10061808/",
@@ -3862,8 +4056,9 @@
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0010664/",
     "id": "5b119bed-463c-4c76-a172-664afa57b15c",
     "name": "Spindale Family Practice",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/0010664/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/0010664/connect/authorize/"
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0010664/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0010664/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0010664/"
   },
   {
     "url": "https://fhir.prosuite.allscriptscloud.com/fhirroute/fhir/59277/",
@@ -3873,26 +4068,19 @@
     "authorize": "https://fhir.prosuite.allscriptscloud.com/fhirroute/authorization/authorize?cust=59277/"
   },
   {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10038935/",
-    "id": "5b773da9-1bcc-4591-a3bc-f00adae38e20",
-    "name": "Spinecare Assoc Llc Dba Florida Spine Institute",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10038935/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10038935/connect/authorize/"
-  },
-  {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/57788/",
-    "id": "4a8706ea-9310-4d90-aca7-e683485a2800",
-    "name": "Springfield Medical Care Systems",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/57788/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/57788/connect/authorize/",
-    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/57788/"
-  },
-  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10016169/",
     "id": "fba1dd79-74a4-493d-b5fb-3e67967f66b2",
     "name": "St Clair Specialty Physicians Pc",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10016169/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10016169/connect/authorize/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/56101/",
+    "id": "331cc98c-488e-4608-9298-c6d7798ebe86",
+    "name": "St Clair Vascular",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/56101/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/56101/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/56101/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10031613/",
@@ -3914,6 +4102,13 @@
     "name": "St. Francis Healthcare",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10009746/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10009746/connect/authorize/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10029506/",
+    "id": "a5b78d60-7c38-46dd-9b13-697be96d56bf",
+    "name": "St. Louis County",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10029506/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10029506/connect/authorize/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10009634/",
@@ -3938,11 +4133,26 @@
     "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/57355/"
   },
   {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/56329/",
+    "id": "f764868f-273a-4451-ba42-3957663441bd",
+    "name": "Sterling Physicians",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/56329/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/56329/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/56329/"
+  },
+  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10074121/",
     "id": "3f7def73-04eb-4091-8e79-5df6cff715c6",
     "name": "Stone County Family Medical",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10074121/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10074121/connect/authorize/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10031143/",
+    "id": "76942a3d-a068-4bbb-84ad-6147ed5b29eb",
+    "name": "Stonebrooke Family Physicians",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10031143/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10031143/connect/authorize/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10041786/",
@@ -3977,8 +4187,9 @@
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10035087/",
     "id": "b8776265-9037-4089-8eac-1f353781795a",
     "name": "Sunflower Medical Group",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10035087/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10035087/connect/authorize/"
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10035087/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10035087/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10035087/"
   },
   {
     "url": "https://fhir.prosuite.allscriptscloud.com/fhirroute/fhir/SV1PLAY/",
@@ -4029,6 +4240,13 @@
     "name": "Suzanne E Martini MD",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10030160/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10030160/connect/authorize/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10017699/",
+    "id": "a3b47b3d-6e4f-4190-a46f-752841b73cdc",
+    "name": "SWAT Surgical Associates, L.L.P.",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10017699/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10017699/connect/authorize/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10857851/",
@@ -4095,6 +4313,29 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10010297/connect/authorize/"
   },
   {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10038480/",
+    "id": "3bf806d2-338d-49c5-9633-4f86fbb6d9c8",
+    "name": "The Family Health Centers PA",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10038480/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10038480/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10038480/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10044238/",
+    "id": "96111228-7259-492b-8cac-4f5c0d9bfc7a",
+    "name": "The Greenville Clinic",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10044238/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10044238/connect/authorize/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0009430/",
+    "id": "f2c84afa-1a4c-4229-82c8-1f8545a01d56",
+    "name": "The Hand Center",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0009430/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0009430/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0009430/"
+  },
+  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10036714/",
     "id": "90ffa391-6998-448e-8df5-5f1cbdd10537",
     "name": "The John Lawson Surgical Group",
@@ -4114,14 +4355,6 @@
     "name": "The Pediatric Group",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10056405/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10056405/connect/authorize/"
-  },
-  {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0000578/",
-    "id": "577acb23-c8b7-483f-9d43-6001e47f1706",
-    "name": "The Sypert Institute",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0000578/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0000578/connect/authorize/",
-    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0000578/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10033309/",
@@ -4304,13 +4537,6 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10019904/connect/authorize/"
   },
   {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10043088/",
-    "id": "c264b2f9-db17-41b8-b378-7b1fa645690d",
-    "name": "Urology of STL",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10043088/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10043088/connect/authorize/"
-  },
-  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10038630/",
     "id": "5c188c67-ae0d-4131-9085-68faff3e252b",
     "name": "Urology One, Inc.",
@@ -4351,6 +4577,14 @@
     "name": "Valley Area Medical Pavilion",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10040903/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10040903/connect/authorize/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10970841/",
+    "id": "4f0802b1-b965-4f24-9f14-80292b80592d",
+    "name": "Valley Oaks Medical Group",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10970841/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10970841/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10970841/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10051613/",
@@ -4432,6 +4666,14 @@
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10033732/connect/authorize/"
   },
   {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0008362/",
+    "id": "0c27690a-39a2-4e91-b827-21188ccb1e38",
+    "name": "Wake Forest Pediatric",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0008362/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0008362/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0008362/"
+  },
+  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10028335/",
     "id": "6196a949-221f-4dc1-9735-e5d1ba00c5a9",
     "name": "Wang, Md, Arthur",
@@ -4456,8 +4698,16 @@
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10657845/",
     "id": "b4cb9b38-95db-4d80-9751-1d2bb22e175e",
     "name": "Waverly Primary Care",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10657845/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10657845/connect/authorize/"
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10657845/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10657845/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10657845/"
+  },
+  {
+    "url": "https://fhir.prosuite.allscriptscloud.com/fhirroute/fhir/0000492/",
+    "id": "992dfaf2-4613-4a76-8b8f-302a03f7d317",
+    "name": "Wayne Heart  Internal Medicine",
+    "token": "https://fhir.prosuite.allscriptscloud.com/fhirroute/authorization/token?cust=0000492/",
+    "authorize": "https://fhir.prosuite.allscriptscloud.com/fhirroute/authorization/authorize?cust=0000492/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10035810/",
@@ -4465,6 +4715,14 @@
     "name": "Wendover Obgyn",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10035810/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10035810/connect/authorize/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10067926/",
+    "id": "c290f746-53e6-4030-9a91-a884fe20879b",
+    "name": "West Coast Neurology",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10067926/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10067926/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10067926/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10060405/",
@@ -4505,8 +4763,9 @@
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0006509/",
     "id": "3844b4b2-db07-4c49-801b-d66bd66aa5df",
     "name": "Westglen Gastrointestinal Consultants",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/0006509/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/0006509/connect/authorize/"
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0006509/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/0006509/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/0006509/"
   },
   {
     "url": "https://fhir.prosuite.allscriptscloud.com/fhirroute/fhir/0006509/",
@@ -4567,6 +4826,14 @@
     "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/59380/"
   },
   {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10041587/",
+    "id": "a1fa95a1-ddcb-4971-8ec2-f0ef27a1e023",
+    "name": "Woman Care",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10041587/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/10041587/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10041587/"
+  },
+  {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10359874/",
     "id": "aa3f7ea0-5bc6-4637-9b84-da440a6a756a",
     "name": "Womens Health Center of Southern Oregon",
@@ -4575,11 +4842,20 @@
     "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10359874/"
   },
   {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10035515/",
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/58227/",
     "id": "a4a70449-bd5f-4e28-8dce-c3c0ed011dbb",
     "name": "Wright & Associates Family Healthcare, PLLC",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10035515/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10035515/connect/authorize/"
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/58227/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/58227/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/58227/"
+  },
+  {
+    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/72040/",
+    "id": "ff0cda01-e7e1-4975-b33f-7ec89b699153",
+    "name": "WU Ear, Nose and Throat Center",
+    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/72040/connect/token/",
+    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorizationV2/72040/connect/authorize/",
+    "manage": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/72040/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10009801/",
@@ -4587,13 +4863,6 @@
     "name": "WVVA Healthcare Alliance",
     "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10009801/connect/token/",
     "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10009801/connect/authorize/"
-  },
-  {
-    "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10047848/",
-    "id": "6f604df2-062c-496a-be15-81c8ecde675b",
-    "name": "Wyoming Cardiopulmonary Services PC",
-    "token": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10047848/connect/token/",
-    "authorize": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/10047848/connect/authorize/"
   },
   {
     "url": "https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/10030254/",
@@ -4626,7 +4895,7 @@
   {
     "id": "sandbox_touchworks",
     "name": "TouchWorks Sandbox",
-    "url": "https://tw181unityfhir.open.allscripts.com/OPEN/",
+    "url": "https://tw181unityfhir.open.allscripts.com/open/",
     "token": "https://open.allscripts.com/fhirroute/patientauth/e75746a4-7f05-4b95-9ff5-44082c988959/connect/token/",
     "authorize": "https://open.allscripts.com/fhirroute/patientauth/e75746a4-7f05-4b95-9ff5-44082c988959/connect/authorize/"
   }

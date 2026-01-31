@@ -21,7 +21,10 @@ import {
 import { Routes } from '../../Routes';
 import { DSTU2 } from '.';
 import { AppConfig } from '../../app/providers/AppConfigProvider';
-import { createConnection } from '../../repositories/ConnectionRepository';
+import {
+  createConnection,
+  updateConnection,
+} from '../../repositories/ConnectionRepository';
 import {
   ClinicalDocument,
   CreateClinicalDocument,
@@ -214,8 +217,11 @@ export async function syncAllRecords(
       baseUrl,
       connectionDocument,
       db,
-      `Patient/${patientId}`,
+      'Patient',
       patientMapper,
+      {
+        _id: patientId,
+      },
     ),
     syncFHIRResource<Observation>(
       baseUrl,
@@ -304,13 +310,11 @@ export async function saveConnectionToDb({
   }
 
   if (doc) {
-    await doc.update({
-      $set: {
-        access_token: tokens.accessToken,
-        expires_at: tokens.expiresAt,
-        scope: tokens.scope || '',
-        last_sync_was_error: false,
-      },
+    await updateConnection(db, user.id, doc.id, {
+      access_token: tokens.accessToken,
+      expires_at: tokens.expiresAt,
+      scope: tokens.scope || '',
+      last_sync_was_error: false,
     });
     return;
   }

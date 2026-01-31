@@ -15,6 +15,7 @@ export interface ConnectionDocument extends BaseDocument {
   expires_at: number;
   refresh_token?: string;
   scope?: string;
+  id_token?: string;
   source: ConnectionSources;
   name: string;
   location: string | Location;
@@ -57,9 +58,10 @@ export type CreateCernerConnectionDocument = Omit<
 >;
 
 export interface VeradigmConnectionDocument extends ConnectionDocument {
-  id_token: string; // An OAuth ID token
-  auth_uri: string | Location; // the OAuth authorization url
-  token_uri: string | Location; // the OAuth token url
+  id_token: string;
+  auth_uri: string | Location;
+  token_uri: string | Location;
+  tenant_id?: string;
 }
 
 export type CreateVeradigmConnectionDocument = Omit<

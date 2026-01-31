@@ -5,10 +5,7 @@ import {
   buildCernerOAuthConfig,
   CERNER_DEFAULT_SCOPES,
 } from '@mere/fhir-oauth';
-import {
-  useOAuthFlow,
-  useOAuthorizationRequestState,
-} from '@mere/fhir-oauth/react';
+import { useOAuthFlow } from '@mere/fhir-oauth/react';
 import { AppPage } from '../../../shared/components/AppPage';
 import { GenericBanner } from '../../../shared/components/GenericBanner';
 import { useRxDb } from '../../../app/providers/RxDbProvider';
@@ -33,11 +30,10 @@ function useCernerOAuthCallback() {
   const hasRun = useRef(false);
   const [error, setError] = useState('');
 
-  const { handleCallback } = useOAuthFlow({
+  const { handleCallback, clearSession } = useOAuthFlow({
     client: cernerClient,
     vendor: 'cerner',
   });
-  const { clearSession } = useOAuthorizationRequestState('cerner');
 
   useEffect(() => {
     if (configLoading || hasRun.current) return;
