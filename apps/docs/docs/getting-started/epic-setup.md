@@ -1,9 +1,9 @@
 ---
-sidebar_position: 4
+sidebar_position: 3
 description: Configuring integration with Epic MyChart patient portal.
 ---
 
-# Setting up MyChart Sync
+# Setting up Epic MyChart Sync
 
 Here we'll talk about how you can get the API access needed for Mere Medical to connect to your MyChart patient portal.
 

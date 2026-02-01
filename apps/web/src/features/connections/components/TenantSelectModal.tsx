@@ -28,6 +28,8 @@ import {
 import VALogo from '../../../assets/img/va-logo.png';
 import HealowLogo from '../../../assets/img/eclinicalworks-logo.jpeg';
 import { useConfig } from '../../../app/providers/AppConfigProvider';
+import { initiateAthenaAuth } from '../ConnectionTab';
+import { AthenaLocalStorageKeys } from '../../../services/fhir/Athena';
 
 export type EMRVendor =
   | 'epic'
@@ -36,6 +38,7 @@ export type EMRVendor =
   | 'onpatient'
   | 'va'
   | 'healow'
+  | 'athena'
   | 'any';
 
 export type FhirVersion = 'DSTU2' | 'R4';
@@ -44,6 +47,7 @@ type VendorVersions = {
   epic: 'DSTU2' | 'R4';
   cerner: 'DSTU2' | 'R4';
   healow: 'R4';
+  athena: 'R4';
   veradigm: 'DSTU2';
   onpatient: 'DSTU2';
   va: 'DSTU2';
@@ -52,7 +56,14 @@ type VendorVersions = {
 };
 
 type VendorPaths = {
-  [V in keyof VendorVersions]: Record<VendorVersions[V], string>;
+  epic: { R4: string; DSTU2: string };
+  cerner: { R4: string; DSTU2: string };
+  healow: { R4: string };
+  athena: { R4: string };
+  veradigm: { DSTU2: string };
+  onpatient: { DSTU2: string };
+  va: { DSTU2: string };
+  any: { DSTU2: string };
 };
 
 const vendorPaths: VendorPaths = {
@@ -66,6 +77,9 @@ const vendorPaths: VendorPaths = {
   },
   healow: {
     R4: '/api/v1/healow/tenants?',
+  },
+  athena: {
+    R4: '',
   },
   veradigm: {
     DSTU2: '/api/v1/veradigm/tenants?',
@@ -81,11 +95,9 @@ const vendorPaths: VendorPaths = {
   },
 };
 
-function getApiPath<V extends EMRVendor>(
-  emrVendor: V,
-  fhirVersion: VendorVersions[V],
-): string {
-  return vendorPaths[emrVendor][fhirVersion];
+function getApiPath(emrVendor: EMRVendor, fhirVersion: 'DSTU2' | 'R4'): string {
+  const paths = vendorPaths[emrVendor] as Record<string, string>;
+  return paths[fhirVersion] ?? '';
 }
 
 export type UnifiedDSTU2Endpoint = CernerDSTU2Endpoint &
@@ -183,6 +195,9 @@ export function TenantSelectModal({
   const veradigmEnabled = isConfigured(config.VERADIGM_CLIENT_ID);
   const vaEnabled = isConfigured(config.VA_CLIENT_ID);
   const healowEnabled = isConfigured(config.HEALOW_CLIENT_ID);
+  const athenaProductionEnabled = isConfigured(config.ATHENA_CLIENT_ID);
+  const athenaSandboxEnabled = isConfigured(config.ATHENA_SANDBOX_CLIENT_ID);
+  const athenaEnabled = athenaProductionEnabled || athenaSandboxEnabled;
 
   const [state, dispatch] = useReducer(
     (
@@ -301,6 +316,28 @@ export function TenantSelectModal({
         fhirVersion: 'R4',
       },
       {
+        title: 'athenahealth',
+        vendor: 'athena',
+        source: '',
+        alt: athenaProductionEnabled ? undefined : 'Sandbox Only',
+        enabled: athenaEnabled,
+        disabledMessage: 'Provide ATHENA_CLIENT_ID env var to enable',
+        customHandleClick: () => {
+          const environment = athenaProductionEnabled
+            ? 'production'
+            : 'preview';
+          localStorage.setItem(
+            AthenaLocalStorageKeys.ATHENA_ENVIRONMENT,
+            environment,
+          );
+          initiateAthenaAuth(config, environment).then((url) => {
+            window.location.href = url;
+          });
+        },
+        id: 10,
+        fhirVersion: 'R4',
+      },
+      {
         title: 'Search All',
         vendor: 'any',
         source: '',
@@ -345,6 +382,8 @@ export function TenantSelectModal({
     veradigmEnabled,
     vaEnabled,
     healowEnabled,
+    athenaEnabled,
+    athenaProductionEnabled,
   ]);
 
   const mainSources = useMemo(

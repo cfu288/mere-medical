@@ -1,5 +1,5 @@
 ---
-sidebar_position: 5
+sidebar_position: 4
 description: Configuring integration with Cerner Health patient portal.
 ---
 

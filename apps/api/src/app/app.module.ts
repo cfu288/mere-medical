@@ -7,6 +7,7 @@ import { CernerModule } from './cerner/cerner.module';
 import { EpicModule } from './epic/epic.module';
 import { HealowModule } from './healow/healow.module';
 import { VeradigmModule } from './veradigm/veradigm.module';
+import { AthenaModule } from './athena/athena.module';
 import { TenantModule } from './tenant/tenant.module';
 import { ConfigModule } from './config/config.module';
 
@@ -46,6 +47,11 @@ if (veradigmConfigured.check) {
 const healowConfigured = checkIfHealowIsConfigured();
 if (healowConfigured.check) {
   imports.push(HealowModule);
+}
+
+const athenaConfigured = checkIfAthenaIsConfigured();
+if (athenaConfigured.check) {
+  imports.push(AthenaModule);
 }
 
 @Module({
@@ -210,6 +216,36 @@ function checkIfHealowIsConfigured():
     return {
       check,
       clientId: process.env.HEALOW_CLIENT_ID!,
+    };
+  }
+
+  return { check };
+}
+
+function checkIfAthenaIsConfigured():
+  | {
+      check: true;
+      clientId: string;
+    }
+  | {
+      check: false;
+    } {
+  const check =
+    !!process.env.ATHENA_CLIENT_ID || !!process.env.ATHENA_SANDBOX_CLIENT_ID;
+  if (!check) {
+    Logger.warn(
+      'ATHENA_CLIENT_ID or ATHENA_SANDBOX_CLIENT_ID was not provided: Athena services will be disabled.',
+    );
+  }
+  if (check) {
+    Logger.log(
+      'Athena client ID was provided: Athena service will be enabled.',
+    );
+
+    return {
+      check,
+      clientId:
+        process.env.ATHENA_CLIENT_ID || process.env.ATHENA_SANDBOX_CLIENT_ID!,
     };
   }
 

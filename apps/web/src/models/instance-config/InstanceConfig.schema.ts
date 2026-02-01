@@ -1,7 +1,7 @@
 export const instanceConfigSchemaLiteral = {
   title: 'Instance Config Schema',
   description: 'Stores server instance configuration fetched from the API',
-  version: 3,
+  version: 4,
   primaryKey: 'id',
   type: 'object',
   properties: {
@@ -44,6 +44,12 @@ export const instanceConfigSchemaLiteral = {
     },
     HEALOW_CONFIDENTIAL_MODE: {
       type: 'boolean',
+    },
+    ATHENA_CLIENT_ID: {
+      type: 'string',
+    },
+    ATHENA_SANDBOX_CLIENT_ID: {
+      type: 'string',
     },
     PUBLIC_URL: {
       type: 'string',

@@ -1,0 +1,535 @@
+- main [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - paragraph [ref=e6]:
+        - text: Please review our upcoming Spring 2026 API Changes
+        - link "here." [ref=e7] [cursor=pointer]:
+          - /url: /api/resources/release-notes-and-change-logs
+        - text: Users must complete Breaking Change testing by February 1st.
+      - paragraph [ref=e9]:
+        - text: Please be aware of a
+        - link "change to API Platform TLS certificates" [ref=e10] [cursor=pointer]:
+          - /url: /api/resources/26-02-04-updated-cert-for-api-platform
+        - text: on February 4, 2026.
+    - navigation [ref=e11]:
+      - generic [ref=e13]:
+        - generic [ref=e15]:
+          - img "athenahealth" [ref=e16]
+          - generic [ref=e17]: API Solutions
+        - list [ref=e19]:
+          - listitem [ref=e20]:
+            - link "Getting Started" [ref=e21] [cursor=pointer]:
+              - /url: /api/guides/overview
+          - listitem [ref=e22]:
+            - link "Documentation" [ref=e23] [cursor=pointer]:
+              - /url: /api/docs/all-apis
+          - listitem [ref=e24]:
+            - link "Sandbox" [ref=e25] [cursor=pointer]:
+              - /url: /api/sandbox
+          - listitem [ref=e26]:
+            - link "Support" [ref=e27] [cursor=pointer]:
+              - /url: /api/support
+        - generic [ref=e29]:
+          - generic [ref=e32]:
+            - textbox "Search API Solutions" [ref=e33]
+            - img "Search" [ref=e34]
+          - link "Go To Console" [ref=e41] [cursor=pointer]:
+            - /url: https://developer.api.athena.io/ams-portal/
+            - generic [ref=e42]: Go To Console
+    - generic [ref=e43]:
+      - generic [ref=e44]:
+        - navigation [ref=e47]:
+          - list [ref=e48]:
+            - listitem [ref=e49]:
+              - heading "Work with athenahealth" [level=2] [ref=e50]
+              - list [ref=e51]:
+                - listitem [ref=e52]:
+                  - link "Our Process" [ref=e53] [cursor=pointer]:
+                    - /url: /api/guides/our-process
+                    - generic [ref=e54]: Our Process
+                - listitem [ref=e55]:
+                  - link "Contracting" [ref=e56] [cursor=pointer]:
+                    - /url: /api/guides/contracting
+                    - generic [ref=e57]: Contracting
+                - listitem [ref=e58]:
+                  - link "Additional Offerings" [ref=e59] [cursor=pointer]:
+                    - /url: /api/guides/additional-offerings
+                    - generic [ref=e60]: Additional Offerings
+            - listitem [ref=e61]:
+              - heading "API Offerings" [level=2] [ref=e62]
+              - list [ref=e63]:
+                - listitem [ref=e64]:
+                  - link "Types of APIs We Offer" [ref=e65] [cursor=pointer]:
+                    - /url: /api/resources/complete_list_athena_apis
+                    - generic [ref=e66]: Types of APIs We Offer
+                - listitem [ref=e67]:
+                  - link "Certified APIs" [ref=e68] [cursor=pointer]:
+                    - /url: /api/guides/certified-apis
+                    - generic [ref=e69]: Certified APIs
+                - listitem [ref=e70]:
+                  - link "Changed Data Subscriptions" [ref=e71] [cursor=pointer]:
+                    - /url: /api/guides/changed-data-subscriptions
+                    - generic [ref=e72]: Changed Data Subscriptions
+                - listitem [ref=e73]:
+                  - link "Products Needed by API" [ref=e74] [cursor=pointer]:
+                    - /url: /api/guides/products-needed-api
+                    - generic [ref=e75]: Products Needed by API
+                - listitem [ref=e76]:
+                  - link "CDS Hooks" [ref=e77] [cursor=pointer]:
+                    - /url: /api/guides/cds-hooks-solution
+                    - generic [ref=e78]: CDS Hooks
+                - listitem [ref=e79]:
+                  - link "Event Notifications" [ref=e80] [cursor=pointer]:
+                    - /url: /api/guides/event-notifications
+                    - generic [ref=e81]: Event Notifications
+            - listitem [ref=e82]:
+              - heading "Authorization" [level=2] [ref=e83]
+              - list [ref=e84]:
+                - listitem [ref=e85]:
+                  - link "Authorization Overview" [ref=e86] [cursor=pointer]:
+                    - /url: /api/guides/authorization-overview
+                    - generic [ref=e87]: Authorization Overview
+                - listitem [ref=e88]:
+                  - link "Token Endpoint" [ref=e89] [cursor=pointer]:
+                    - /url: /api/guides/token-endpoint
+                    - generic [ref=e90]: Token Endpoint
+                - listitem [ref=e91]:
+                  - link "Authorize Endpoint" [ref=e92] [cursor=pointer]:
+                    - /url: /api/guides/authorize-endpoint
+                    - generic [ref=e93]: Authorize Endpoint
+                - listitem [ref=e94]:
+                  - link "Additional OAuth Endpoints" [ref=e95] [cursor=pointer]:
+                    - /url: /api/guides/additional-oauth-endpoints
+                    - generic [ref=e96]: Additional OAuth Endpoints
+            - listitem [ref=e97]:
+              - heading "Create an App" [level=2] [ref=e98]
+              - list [ref=e99]:
+                - listitem [ref=e100]:
+                  - link "Onboarding Overview" [ref=e101] [cursor=pointer]:
+                    - /url: /api/guides/onboarding-overview
+                    - generic [ref=e102]: Onboarding Overview
+                - listitem [ref=e103]:
+                  - link "App Naming Guidelines" [ref=e104] [cursor=pointer]:
+                    - /url: /api/guides/app-naming-guidelines
+                    - generic [ref=e105]: App Naming Guidelines
+                - listitem [ref=e106]:
+                  - link "Environment URLs" [ref=e107] [cursor=pointer]:
+                    - /url: /api/guides/environment-urls
+                    - generic [ref=e108]: Environment URLs
+                - listitem [ref=e109]:
+                  - link "FHIR Base URLs" [ref=e110] [cursor=pointer]:
+                    - /url: /api/guides/base-fhir-urls
+                    - generic [ref=e111]: FHIR Base URLs
+                - listitem [ref=e112]:
+                  - link "Best Practices" [ref=e113] [cursor=pointer]:
+                    - /url: /api/guides/best-practices
+                    - generic [ref=e114]: Best Practices
+                - listitem [ref=e115]:
+                  - link "Testing in Sandbox" [ref=e116] [cursor=pointer]:
+                    - /url: /api/guides/testing-sandbox
+                    - generic [ref=e117]: Testing in Sandbox
+                - listitem [ref=e118]:
+                  - link "Using Postman" [ref=e119] [cursor=pointer]:
+                    - /url: /api/guides/using-postman
+                    - generic [ref=e120]: Using Postman
+                - listitem [ref=e121]:
+                  - link "Embedding Your App in athenaOne" [ref=e122] [cursor=pointer]:
+                    - /url: /api/guides/embedded-apps
+                    - generic [ref=e123]: Embedding Your App in athenaOne
+            - listitem [ref=e124]:
+              - heading "CDS Hooks" [level=2] [ref=e125]
+              - list [ref=e126]:
+                - listitem [ref=e127]:
+                  - link "Onboarding and Configuration" [ref=e128] [cursor=pointer]:
+                    - /url: /api/guides/cds-hooks-onboarding-and-configuration
+                    - generic [ref=e129]: Onboarding and Configuration
+                - listitem [ref=e130]:
+                  - link "Order-select" [ref=e131] [cursor=pointer]:
+                    - /url: /api/guides/cds-hooks-order-select
+                    - generic [ref=e132]: Order-select
+                - listitem [ref=e133]:
+                  - link "Feedback" [ref=e134] [cursor=pointer]:
+                    - /url: /api/guides/cds-hooks-feedback
+                    - generic [ref=e135]: Feedback
+                - listitem [ref=e136]:
+                  - link "Security" [ref=e137] [cursor=pointer]:
+                    - /url: /api/guides/cds-hooks-security
+                    - generic [ref=e138]: Security
+                - listitem [ref=e139]:
+                  - link "SMART App Launch from CDS Cards Response" [ref=e140] [cursor=pointer]:
+                    - /url: /api/guides/smart-app-launch-from-cds-cards-response
+                    - generic [ref=e141]: SMART App Launch from CDS Cards Response
+                - listitem [ref=e142]:
+                  - link "CDS Hooks Best Practices" [ref=e143] [cursor=pointer]:
+                    - /url: /api/guides/cds-hooks-best-practices
+                    - generic [ref=e144]: CDS Hooks Best Practices
+            - listitem [ref=e145]:
+              - heading "Event Notifications" [level=2] [ref=e146]
+              - list [ref=e147]:
+                - listitem [ref=e148]:
+                  - link "Onboarding" [ref=e149] [cursor=pointer]:
+                    - /url: /api/guides/event-notifications-onboarding
+                    - generic [ref=e150]: Onboarding
+                - listitem [ref=e151]:
+                  - link "Subscription Topics" [ref=e152] [cursor=pointer]:
+                    - /url: /api/guides/event-notifications-subscription-topics
+                    - generic [ref=e153]: Subscription Topics
+                - listitem [ref=e154]:
+                  - link "Event Notifications Best Practices" [ref=e155] [cursor=pointer]:
+                    - /url: /api/guides/event-notifications-best-practices
+                    - generic [ref=e156]: Event Notifications Best Practices
+            - listitem [ref=e157]:
+              - heading "Troubleshoot" [level=2] [ref=e158]
+              - list [ref=e159]:
+                - listitem [ref=e160]:
+                  - link "API Error Messages" [ref=e161] [cursor=pointer]:
+                    - /url: /api/resources/api-error-messages
+                    - generic [ref=e162]: API Error Messages
+                - listitem [ref=e163]:
+                  - link "Checking API Status" [ref=e164] [cursor=pointer]:
+                    - /url: /api/guides/checking-api-status
+                    - generic [ref=e165]: Checking API Status
+                - listitem [ref=e166]:
+                  - link "Handling Timeouts" [ref=e167] [cursor=pointer]:
+                    - /url: /api/guides/timeouts-retries-and-backoff
+                    - generic [ref=e168]: Handling Timeouts
+                - listitem [ref=e169]:
+                  - link "API Availability" [ref=e170] [cursor=pointer]:
+                    - /url: /api/resources/api-availability
+                    - generic [ref=e171]: API Availability
+                - listitem [ref=e172]:
+                  - link "Customer Support" [ref=e173] [cursor=pointer]:
+                    - /url: /api/guides/customer-support
+                    - generic [ref=e174]: Customer Support
+            - listitem [ref=e175]:
+              - heading "Changelog" [level=2] [ref=e176]
+              - list [ref=e177]:
+                - listitem [ref=e178]:
+                  - link "2026 Release Notes" [ref=e179] [cursor=pointer]:
+                    - /url: /api/resources/release-notes-and-change-logs
+                    - generic [ref=e180]: 2026 Release Notes
+                - listitem [ref=e181]:
+                  - link "2025 Release Notes" [ref=e182] [cursor=pointer]:
+                    - /url: /api/resources/2025-release-notes-and-change-logs
+                    - generic [ref=e183]: 2025 Release Notes
+                - listitem [ref=e184]:
+                  - link "2024 Release Notes" [ref=e185] [cursor=pointer]:
+                    - /url: /api/resources/2024-release-notes
+                    - generic [ref=e186]: 2024 Release Notes
+                - listitem [ref=e187]:
+                  - link "2023 Release Notes" [ref=e188] [cursor=pointer]:
+                    - /url: /api/resources/2023-release-notes
+                    - generic [ref=e189]: 2023 Release Notes
+                - listitem [ref=e190]:
+                  - link "2022 Release Notes" [ref=e191] [cursor=pointer]:
+                    - /url: /api/resources/2022-release-notes
+                    - generic [ref=e192]: 2022 Release Notes
+                - listitem [ref=e193]:
+                  - link "2021 Release Notes" [ref=e194] [cursor=pointer]:
+                    - /url: /api/resources/2021-release-notes
+                    - generic [ref=e195]: 2021 Release Notes
+                - listitem [ref=e196]:
+                  - link "2020 Release Notes" [ref=e197] [cursor=pointer]:
+                    - /url: /api/resources/2020-release-notes
+                    - generic [ref=e198]: 2020 Release Notes
+                - listitem [ref=e199]:
+                  - link "2019 Release Notes" [ref=e200] [cursor=pointer]:
+                    - /url: /api/resources/2019-release-notes
+                    - generic [ref=e201]: 2019 Release Notes
+        - generic [ref=e207]:
+          - generic [ref=e208]:
+            - heading "Token Endpoint" [level=1] [ref=e209]
+            - generic [ref=e210]:
+              - link "POST /oauth2/v1/token" [ref=e212] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e213]: POST
+                - generic [ref=e214]: /oauth2/v1/token
+              - paragraph [ref=e215]: The OAuth token endpoint is used to obtain access tokens. An access token must be provided as a bearer token with any request to an API used to read, write, or update data in athenaOne.
+              - paragraph [ref=e216]:
+                - text: "The sequence for calling the token endpoint is different for apps using 2-legged OAuth versus 3-legged OAuth: An app using 2-legged OAuth can call the token endpoint directly to obtain an access token, while an app using 3-legged OAuth must first call the"
+                - link "authorize endpoint" [ref=e217] [cursor=pointer]:
+                  - /url: /api/guides/authorize-endpoint
+                - text: to request and obtain consent from an end user, such as a provider or patient. As a byproduct of end user authorization, the token endpoint response for 3-legged OAuth may also contain an ID token, refresh token, or launch context (see Output Parameters & Token Types section below for details), whereas only an access token is returned for 2-legged OAuth.
+              - paragraph [ref=e218]: "We support 4 methods of authenticating apps against the token endpoint, some of which are exclusive to your app’s authorization method and selected app type when registering your application. Refer to the sections below for details on token endpoint authentication using each method:"
+              - list [ref=e219]:
+                - listitem [ref=e220]:
+                  - paragraph [ref=e221]:
+                    - link "Using a client secret" [ref=e222] [cursor=pointer]:
+                      - /url: "#Token_Authentication_Using_Client_Secret_0"
+                    - text: is the simplest method, which requires you to provide your client ID and secret in a basic authorization header when calling the token API.
+                - listitem [ref=e223]:
+                  - paragraph [ref=e224]:
+                    - text: Using an
+                    - link "imported public JWKS" [ref=e225] [cursor=pointer]:
+                      - /url: "#Token_Authentication_Using_JWKS_(JSON_Web_Key_Sets)_4"
+                    - text: (JSON Web Key Set) (2-legged OAuth and 3-legged OAuth web apps only) is more complex, but also more secure. A JWT (JSON Web Token) is generated and signed with a public/private keypair by the caller and presented to the token endpoint. The call is authenticated if the JWT's signature can be verified using one of the app's public keys.
+                - listitem [ref=e226]:
+                  - paragraph [ref=e227]:
+                    - text: Using a
+                    - link "self-hosted JWKS URL" [ref=e228] [cursor=pointer]:
+                      - /url: "#Token_Authentication_Using_JWKS_(JSON_Web_Key_Sets)_4"
+                    - text: (2-legged OAuth and 3-legged OAuth web apps only) is potentially the most secure method by giving you direct control over the JWKS and key rotation. The overall pattern for JWT generation and authentication follows that of an imported public JWKS, except that JWT signature and verification references a self-hosted URL as opposed to a public one.
+                - listitem [ref=e229]:
+                  - paragraph [ref=e230]:
+                    - text: Using a
+                    - link "proof key for code exchange" [ref=e231] [cursor=pointer]:
+                      - /url: "#Token_Authentication_Using_PKCE_8"
+                    - text: ", or “PKCE” – pronounced “pixie” (3-legged OAuth only), requires you to generate your own secret for each token request that can be verified by athenahealth’s authorization server. PKCE is required by the token API for native or single-page browser apps that cannot securely store a client secret."
+              - heading "Token Authentication Using Client Secret" [level=2] [ref=e232]
+              - paragraph [ref=e233]: When using secret-based authentication, your app will have a client secret associated with its client ID. This secret will be passed in a basic authorization header on every request to the token endpoint.
+              - paragraph [ref=e234]: Please remember that as a security measure, you should never share your secret. If this happens, we will need to create another set of credentials associated with your account.
+              - heading "2-legged Token Generation" [level=3] [ref=e235]
+              - paragraph [ref=e236]: To request a token using 2-legged OAuth and foo secret-based authentication, make a request with the following parameters utilizing basic authentication to include your client ID and client secret in a basic authorization header.
+              - generic "2-legged Token Generation" [ref=e237]:
+                - code [ref=e239]: curl https://api.preview.platform.athenahealth.com/oauth2/v1/token \ -X POST \ -u "$CLIENT_ID:$CLIENT_SECRET" \ -d "grant_type=client_credentials" \ -d "scope=athena/service/Athenanet.MDP.*"
+              - heading "3-legged Token Generation" [level=3] [ref=e240]
+              - paragraph [ref=e241]: "To request a token using 3-legged OAuth and secret-based authentication, make a request with the following parameters:"
+              - generic "3-legged Token Generation" [ref=e242]:
+                - code [ref=e244]: curl https://api.preview.platform.athenahealth.com/oauth2/v1/token \ -X POST \ -d "grant_type=authorization_code&code=$CODE&redirect_uri=$REDIRECT_URI&client_id=$CLIENT_ID&client_secret=$CLIENT_SECRET"
+              - heading "Troubleshooting" [level=3] [ref=e245]
+              - paragraph [ref=e246]: There is a common error that involves POSTing the username and password. This does not work. It must use basic authentication (essentially, "$key:$secret" Base64 encoded).
+              - heading "Token Authentication Using JWKS (JSON Web Key Sets)" [level=2] [ref=e247]
+              - paragraph [ref=e248]:
+                - text: Client-assertion JWT-based (JSON Web Token) authentication uses a public/private keypair to authenticate the caller to the token endpoint (see
+                - link "here" [ref=e249] [cursor=pointer]:
+                  - /url: https://github.com/mitreid-connect/json-web-key-generator
+                - text: for information on how to generate public/private keypairs). Using this approach, your application will have no client secret. You must associate at least one public key with your application via a self-hosted JWKS (JSON Web Key Set) URL or by importing your public JWKS.
+              - paragraph [ref=e250]: "JWT-based authentication with JWKS is more involved for the end-user, requiring you to generate keypairs and sign JWT assertions to retrieve a token. The benefit of using this method is that it is more secure as the private portion of your keypair is never out of your hands (note: using the self-hosted JWKS URL provides even further control and security versus importing your public JWKS by granting you ownership of your keys and key rotation). Using JWKS also enables zero-downtime rotation of credentials. You can have multiple public keys associated with your app (recommended to have 1-5 keys) enabling you to rotate by introducing a new keypair, transitioning your code to use this new keypair, and then deleting the old keypair."
+              - heading "Forming the JWT Assertion" [level=3] [ref=e251]
+              - paragraph [ref=e252]: "Requesting a token using the client assertion JWT-method requires that you sign a JWT assertion using the private portion of a keypair associated with your app. This assertion is then provided to the token endpoint for authentication. The assertion JWT must contain the following claims:"
+              - generic [ref=e253]:
+                - table [ref=e254]:
+                  - rowgroup [ref=e255]:
+                    - row "Claim Description Type" [ref=e256]:
+                      - columnheader "Claim" [ref=e257]:
+                        - paragraph [ref=e258]: Claim
+                      - columnheader "Description" [ref=e259]:
+                        - paragraph [ref=e260]: Description
+                      - columnheader "Type" [ref=e261]:
+                        - paragraph [ref=e262]: Type
+                  - rowgroup [ref=e263]:
+                    - 'row "aud Required. The URL of the backend authorization resource. This varies by environment, listed below. Preview: https://api.preview.platform.athenahealth.com/oauth2/v1/token Production: https://api.platform.athenahealth.com/oauth2/v1/token string" [ref=e264]':
+                      - cell "aud" [ref=e265]:
+                        - paragraph [ref=e266]: aud
+                      - 'cell "Required. The URL of the backend authorization resource. This varies by environment, listed below. Preview: https://api.preview.platform.athenahealth.com/oauth2/v1/token Production: https://api.platform.athenahealth.com/oauth2/v1/token" [ref=e267]':
+                        - paragraph [ref=e268]: Required. The URL of the backend authorization resource. This varies by environment, listed below.
+                        - paragraph [ref=e269]: "Preview: https://api.preview.platform.athenahealth.com/oauth2/v1/token"
+                        - paragraph [ref=e270]: "Production: https://api.platform.athenahealth.com/oauth2/v1/token"
+                      - cell "string" [ref=e271]:
+                        - paragraph [ref=e272]: string
+                    - row "exp Required. An expiration time for this token in seconds since the epoch. Must be less than an hour into the future. The assertion token will no longer be valid after this time expires. number" [ref=e273]:
+                      - cell "exp" [ref=e274]:
+                        - paragraph [ref=e275]: exp
+                      - cell "Required. An expiration time for this token in seconds since the epoch. Must be less than an hour into the future. The assertion token will no longer be valid after this time expires." [ref=e276]:
+                        - paragraph [ref=e277]: Required. An expiration time for this token in seconds since the epoch. Must be less than an hour into the future. The assertion token will no longer be valid after this time expires.
+                      - cell "number" [ref=e278]:
+                        - paragraph [ref=e279]: number
+                    - row "iss Required. Set to the client ID of the application for which you're requesting a token. string" [ref=e280]:
+                      - cell "iss" [ref=e281]:
+                        - paragraph [ref=e282]: iss
+                      - cell "Required. Set to the client ID of the application for which you're requesting a token." [ref=e283]:
+                        - paragraph [ref=e284]: Required. Set to the client ID of the application for which you're requesting a token.
+                      - cell "string" [ref=e285]:
+                        - paragraph [ref=e286]: string
+                    - row "sub Required. Set to the client ID of the application for which you're requesting a token. string" [ref=e287]:
+                      - cell "sub" [ref=e288]:
+                        - paragraph [ref=e289]: sub
+                      - cell "Required. Set to the client ID of the application for which you're requesting a token." [ref=e290]:
+                        - paragraph [ref=e291]: Required. Set to the client ID of the application for which you're requesting a token.
+                      - cell "string" [ref=e292]:
+                        - paragraph [ref=e293]: string
+                - paragraph
+              - paragraph
+              - heading "Constructing the Client Assertion JWT" [level=3] [ref=e294]
+              - paragraph [ref=e295]:
+                - text: Generate a JWT by including the required claims as indicated above. An example is provided below in javascript using the
+                - link "njwt" [ref=e296] [cursor=pointer]:
+                  - /url: https://www.npmjs.com/package/njwt
+                - text: library. Similar libraries exist in most languages. A collection of libraries is listed on the
+                - link "jwt.io" [ref=e297] [cursor=pointer]:
+                  - /url: https://jwt.io/
+                - text: site. Take care when considering the use of a third-party package.
+              - generic "Constructing the Client Assertion JWT" [ref=e298]:
+                - code [ref=e300]:
+                  - text: "const njwt = require(\"njwt\"); const fs = require(\"fs\"); // Some packages require the key in pem format, you can use a package such as // pem-jwk to convert. const privateKey = fs.readFileSync(\"private.pem\"); const clientId = \"<Your Client ID>\"; const now = Math.floor(new Date().getTime() / 1000); const expire = new Date((now + 300) * 1000); // Set the environment-appropriate audience claim to the appropriate URL. const claims = { aud: \"<Environment-Appropriate URL>\","
+                  - text: "}; const jwt = njwt // Provide the algorithm you configured your key with. .create(claims, privateKey, \"RS256\") .setHeader(\"kid\", \"<The kid of the key used in signing>\") .setIssuedAt(now) .setExpiration(expire) .setIssuer(clientId) .setSubject(clientId) .compact();"
+              - heading "Requesting the Token" [level=3] [ref=e301]
+              - paragraph [ref=e302]: "To request a token with the JWT you've generated, include the JWT along with the other parameters as demonstrated below:"
+              - generic "Requesting the Token" [ref=e303]:
+                - code [ref=e305]:
+                  - text: "# Construct the client assertion JWT using a script like the above."
+                  - text: JWT=$(node generate-jwt.js)
+                  - text: "# Include the JWT in a token request with the appropriate parameters for the"
+                  - text: "# environment."
+                  - text: "curl -X POST \"https://api.preview.platform.athenahealth.com/oauth2/v1/token\" \\ -H \"Accept: application/json\" \\ -H \"Content-Type: application/x-www-form-urlencoded\" \\ -d \"grant_type=client_credentials\" \\ -d \"scope=athena/service/Athenanet.MDP.*\" \\ -d \"client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer\" \\ -d \"client_assertion=$JWT\""
+              - heading "Token Authentication Using PKCE" [level=2] [ref=e306]
+              - paragraph [ref=e307]:
+                - text: Consistent with
+                - link "OAuth best practice" [ref=e308] [cursor=pointer]:
+                  - /url: https://datatracker.ietf.org/doc/html/rfc9700
+                - text: and
+                - link "SMART App Launch v2.0.0 proposals" [ref=e309] [cursor=pointer]:
+                  - /url: https://build.fhir.org/ig/HL7/smart-app-launch/app-launch.html
+                - text: ", token authentication using PKCE is required by athenahealth’s authorization server for native or single-page browser apps using 3-legged OAuth that cannot securely store a client secret. PKCE is an enhancement to the OAuth 2.0 Authorization Code Flow that requires your app to generate its own secret for each token request (called a “code verifier”) that can be verified by athenahealth’s authorization server (using a transformed value of the code verifier called a “code challenge”, which is passed in the authorize request along with the transformation method, or “code challenge method”). The code challenge and code challenge method must be provided in your app's"
+                - link "authorize request" [ref=e310] [cursor=pointer]:
+                  - /url: /api/guides/authorize-endpoint#Input_Parameters_6
+                - text: and the code verifier sent in the
+                - link "token request" [ref=e311] [cursor=pointer]:
+                  - /url: /api/guides/token-endpoint#Input_Parameters_9
+                - text: .
+              - paragraph [ref=e312]:
+                - text: To leverage PKCE for your app, please refer to the
+                - link "IETF’s official PKCE overview" [ref=e313] [cursor=pointer]:
+                  - /url: https://www.rfc-editor.org/rfc/rfc7636
+                - text: and
+                - link "Okta’s implementation documentation" [ref=e314] [cursor=pointer]:
+                  - /url: https://developer.okta.com/docs/guides/implement-grant-type/authcodepkce/main/#create-the-proof-key-for-code-exchange
+                - text: for details and restrictions of the code verifier, code challenge, and code challenge method parameters.
+              - heading "Input Parameters" [level=2] [ref=e315]
+              - paragraph [ref=e316]: "IMPORTANT: Endpoint requires client authentication. Refer to samples in sections above for token authentication method applicable to your app."
+              - generic [ref=e317]:
+                - paragraph [ref=e318]: "* = required"
+                - table [ref=e319]:
+                  - rowgroup [ref=e320]:
+                    - row "Parameter Type Notes" [ref=e321]:
+                      - columnheader "Parameter" [ref=e322]:
+                        - paragraph [ref=e323]: Parameter
+                      - columnheader "Type" [ref=e324]:
+                        - paragraph [ref=e325]: Type
+                      - columnheader "Notes" [ref=e326]:
+                        - paragraph [ref=e327]: Notes
+                  - rowgroup [ref=e328]:
+                    - row "grant_type* string For 2-legged OAuth, the value is always client_credentials. For 3-legged OAuth, either the value is authorization_code to initially request an access token, or the value is refresh_token to obtain a new access token from a refresh token." [ref=e329]:
+                      - cell "grant_type*" [ref=e330]:
+                        - paragraph [ref=e331]: grant_type*
+                      - cell "string" [ref=e332]:
+                        - paragraph [ref=e333]: string
+                      - cell "For 2-legged OAuth, the value is always client_credentials. For 3-legged OAuth, either the value is authorization_code to initially request an access token, or the value is refresh_token to obtain a new access token from a refresh token." [ref=e334]:
+                        - paragraph [ref=e335]: For 2-legged OAuth, the value is always client_credentials. For 3-legged OAuth, either the value is authorization_code to initially request an access token, or the value is refresh_token to obtain a new access token from a refresh token.
+                    - row "redirect_uri string Required if grant_type is authorization_code (3-legged OAuth only). The value is the post-login redirect URI for your app and must match the value for redirect_uri provided to the authorize endpoint." [ref=e336]:
+                      - cell "redirect_uri" [ref=e337]:
+                        - paragraph [ref=e338]: redirect_uri
+                      - cell "string" [ref=e339]:
+                        - paragraph [ref=e340]: string
+                      - cell "Required if grant_type is authorization_code (3-legged OAuth only). The value is the post-login redirect URI for your app and must match the value for redirect_uri provided to the authorize endpoint." [ref=e341]:
+                        - paragraph [ref=e342]: Required if grant_type is authorization_code (3-legged OAuth only). The value is the post-login redirect URI for your app and must match the value for redirect_uri provided to the authorize endpoint.
+                    - row "code string Required if grant_type is authorization code (3-legged OAuth only). The value is the code parameter returned by the authorize endpoint." [ref=e343]:
+                      - cell "code" [ref=e344]:
+                        - paragraph [ref=e345]: code
+                      - cell "string" [ref=e346]:
+                        - paragraph [ref=e347]: string
+                      - cell "Required if grant_type is authorization code (3-legged OAuth only). The value is the code parameter returned by the authorize endpoint." [ref=e348]:
+                        - paragraph [ref=e349]: Required if grant_type is authorization code (3-legged OAuth only). The value is the code parameter returned by the authorize endpoint.
+                    - row "code_verifier string Required for token authentication using PKCE if grant_type is authorization_code (3-legged OAuth only) and your app cannot securely store or does not have a client secret. The value is a one-time use, unique string generated by your app, conforming to Okta’s code verifier requirements and for which the transformed value (code challenge) and transformation method (code challenge method) were provided to the authorize endpoint." [ref=e350]:
+                      - cell "code_verifier" [ref=e351]:
+                        - paragraph [ref=e352]: code_verifier
+                      - cell "string" [ref=e353]:
+                        - paragraph [ref=e354]: string
+                      - cell "Required for token authentication using PKCE if grant_type is authorization_code (3-legged OAuth only) and your app cannot securely store or does not have a client secret. The value is a one-time use, unique string generated by your app, conforming to Okta’s code verifier requirements and for which the transformed value (code challenge) and transformation method (code challenge method) were provided to the authorize endpoint." [ref=e355]:
+                        - paragraph [ref=e356]:
+                          - text: Required for
+                          - link "token authentication using PKCE" [ref=e357] [cursor=pointer]:
+                            - /url: /api/guides/token-endpoint#Token%5FAuthentication%5FUsing%5FPKCE%5F8
+                          - text: if grant_type is authorization_code (3-legged OAuth only) and your app cannot securely store or does not have a client secret. The value is a one-time use, unique string generated by your app, conforming to
+                          - link "Okta’s code verifier requirements" [ref=e358] [cursor=pointer]:
+                            - /url: https://developer.okta.com/docs/guides/implement-auth-code-pkce/use-flow/
+                          - text: and for which the transformed value (code challenge) and transformation method (code challenge method) were provided to the authorize endpoint.
+                    - row "refresh_token string Required if grant_type is refresh_token. The value is the refresh token returned by the authorize endpoint." [ref=e359]:
+                      - cell "refresh_token" [ref=e360]:
+                        - paragraph [ref=e361]: refresh_token
+                      - cell "string" [ref=e362]:
+                        - paragraph [ref=e363]: string
+                      - cell "Required if grant_type is refresh_token. The value is the refresh token returned by the authorize endpoint." [ref=e364]:
+                        - paragraph [ref=e365]: Required if grant_type is refresh_token. The value is the refresh token returned by the authorize endpoint.
+                    - row "scope string Required if grant_type is client_credentials (2-legged OAuth) or refresh_token (3-legged OAuth only). The value is a space-delimited, case-sensitive string of requested scopes. If grant_type is refresh_token, the requested scopes must be a subset of those provided to the authorize endpoint when the refresh token was originally generated." [ref=e366]:
+                      - cell "scope" [ref=e367]:
+                        - paragraph [ref=e368]: scope
+                      - cell "string" [ref=e369]:
+                        - paragraph [ref=e370]: string
+                      - cell "Required if grant_type is client_credentials (2-legged OAuth) or refresh_token (3-legged OAuth only). The value is a space-delimited, case-sensitive string of requested scopes. If grant_type is refresh_token, the requested scopes must be a subset of those provided to the authorize endpoint when the refresh token was originally generated." [ref=e371]:
+                        - paragraph [ref=e372]: Required if grant_type is client_credentials (2-legged OAuth) or refresh_token (3-legged OAuth only). The value is a space-delimited, case-sensitive string of requested scopes. If grant_type is refresh_token, the requested scopes must be a subset of those provided to the authorize endpoint when the refresh token was originally generated.
+                - paragraph
+              - heading "Output Parameters & Token Types" [level=2] [ref=e373]
+              - paragraph [ref=e374]: "The token endpoint returns a JSON object including up to 3 types of JWTs and associated information:"
+              - list [ref=e375]:
+                - listitem [ref=e376]:
+                  - paragraph [ref=e377]: access_token - JWT to be used as a bearer token in subsequent API requests
+                - listitem [ref=e378]:
+                  - paragraph [ref=e379]: token_type – describes the access token; value is always “Bearer”
+                - listitem [ref=e380]:
+                  - paragraph [ref=e381]: expires_in - represents the lifetime of the access token in seconds (default is 60 minutes for 2-legged OAuth and 3-legged OAuth apps)
+                - listitem [ref=e382]:
+                  - paragraph [ref=e383]: id_token – JWT containing information on the authenticated end user (3-legged OAuth only)
+                - listitem [ref=e384]:
+                  - paragraph [ref=e385]: refresh_token – JWT used to obtain a new access token without requiring re-authentication by an end user (3-legged OAuth only; default expiration is 90 days from the most recent token request that used or generated that refresh token)
+              - paragraph [ref=e386]: "If using 2-legged OAuth, the token response has the following format:"
+              - generic "2 Legged Okta Token Response" [ref=e387]:
+                - code [ref=e389]:
+                  - text: "{ \"access_token\": \"bSQeVaRd47Tnof8GWbDZTud9ghLP\", \"expires_in\": \"300\""
+                  - text: "}"
+              - paragraph [ref=e390]: "If using 3-legged OAuth, the token response has the following format:"
+              - generic "3 Legged Okta Response" [ref=e391]:
+                - code [ref=e393]:
+                  - text: "{ \"token_type\":\"Bearer\", \"expires_in\":300, \"access_token\":\"N09411aa6CiXmdNnkp6l7V6lk5UH\", \"scope\":\"openid fhirUser offline_access launch/patient patient/AllergyIntolerance.read patient/CarePlan.read patient/CareTeam.read patient/Condition.read patient/Device.read patient/DiagnosticReport.read patient/DocumentReference.read patient/Encounter.read patient/Goal.read patient/Immunization.read patient/Location.read patient/Medication.read patient/MedicationRequest.read patient/Observation.read patient/Organization.read patient/Patient.read patient/Practitioner.read patient/Procedure.read patient/Provenance.read\", \"refresh_token\":\"uw-4cwXncULPI5skwLhdIntJAVc8WeEvPpYcSZDj6PU\", \"id_token\":\"eyJraWQiOiJ1Z09JUjBWSWNtVnBUejdzeFNPNmpzVk1LQXVPY3ZSOHVnY0ZsbUxMNXFRIiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiIwMHVibXVjem96bmFMcGFhVzI5NyIsInZlciI6MSwiaXNzIjoiaHR0cHM6Ly9hdGhlbmEub2t0YS5jb20vb2F1dGgyL2F1czJoZmY1ZXFGYjdXcWZoMjk3IiwiYXVkIjoiMG9hYXQxZHpkc3dFZ2JjSHkyOTciLCJpYXQiOjE2NTA1NTgxNDEsImV4cCI6MTY1MDU2MTc0MSwianRpIjoiSUQudmpRQmJ1N0U4b0tzUUtZMXg1bVNnczN2aVRISXdSeWNhclRHRTVYOFIxSSIsImFtciI6WyJwd2QiXSwiaWRwIjoiMDBvNnd6c2F2ZjdVNXpsNFMyOTYiLCJhdXRoX3RpbWUiOjE2NTA1NTgxMjIsImF0X2hhc2giOiJ0WEFFTTdKdF9zaC1rcE50d011cWlRIiwiZmhpclVzZXIiOiJodHRwczovL2FwaS5wbGF0Zm9ybS5hdGhlbmFoZWFsdGguY29tL2ZoaXIvcjQvUGF0aWVudC9hLTEyMy5FLTQ1Njc4OTAifQ.oSmOlQ41imNhulLhYUYAIXzu-nHukethXIuZNaOGrptCjKbcMzIghSo63tR_KW2ROgwgkQ_xhmrjo3NwoIt9eMSDArPb_zvM94RofP0SpcF5p0K-GedWC6HKEFFsB2rwoy9BZ5405Upp6MpY1Xd-nKxaxjXaiNjmwB2qIyt7LrhfZpbPHkYdnma88IYA7AQCIvHRcUZmQ4OK_6RTxIacsp54Rhuc2hcPpUNNKrTxgdCdfXmLhLtB_LlP2kAMKvNlC-MBsvHRrlDUvIhbjioFniY7gEkx1o7M1ezfqAQXwDwMmlbLuTO4ry48Oz4fkOHeGhb-VBoHHrkx-VMyI2K-ag\", \"patient\":\"a-123.E-4567890\""
+                  - text: "}"
+              - paragraph [ref=e394]: The “patient” object at the end of the sample 3-legged response is referred to as the launch context and is exclusive to token requests made as part of a SMART App Launch sequence. To learn more about the launch context, refer to the section below.
+              - heading "Launch Context" [level=3] [ref=e395]
+              - paragraph [ref=e396]: The token endpoint response from a SMART App Launch sequence will also return a launch context, which is an additional object specifying from where or for whom the app was launched. Note that the launch context is returned alongside, and not within, any JWTs returned by the token endpoint.
+              - paragraph [ref=e397]: In a Patient Standalone SMART App Launch sequence, the launch context is simply a “patient” object containing the patient ID specified for access by the end user.
+              - paragraph [ref=e398]:
+                - text: In a Provider EHR SMART App Launch sequence, the launch context specifies information on the location in the EHR from which the app was launched, in addition to SMART styling information. For more information on provider launch context, please refer to the
+                - link "Embedded Apps reference documentation" [ref=e399] [cursor=pointer]:
+                  - /url: /api/guides/embedded-apps
+                - text: .
+              - heading "Use an Access Token as a Bearer Token" [level=2] [ref=e400]
+              - paragraph [ref=e401]: "Your app must parse the token API response for the access token to include in the header of subsequent requests to API endpoints used to read, write, or update athenaOne data. For example:"
+              - generic "Access Token as Bearer Token" [ref=e402]:
+                - code [ref=e404]: "curl “https://api.preview.platform.athenahealth.com/v1/195900/ping” \\ -H”Authorization: Bearer {access_token}”"
+              - heading "Refresh a Token" [level=2] [ref=e405]
+              - paragraph [ref=e406]:
+                - text: Due to the short-lived nature of access tokens, apps using 3-legged OAuth may want to request these tokens periodically without repeatedly requiring the end user (patient or provider) to log in and approve the request. This is possible using a refresh token, which is returned by the authorize endpoint when the offline_access scope is requested and obtained with the user’s authorization. To get an access token from a refresh token, you will need to form a new token request providing the refresh token in the refresh_token parameter and refresh_token as the value for the grant_type parameter. Your app will also need to specify in the scope parameter which of the previously granted scopes your app would like included in the new access token. You can view which scopes were previously granted with an access token using
+                - link "introspection" [ref=e407] [cursor=pointer]:
+                  - /url: /api/guides/additional-oauth-endpoints#Introspect%5F1
+                - text: .
+          - generic [ref=e409]:
+            - heading "On This Page" [level=5] [ref=e410]
+            - link "Token Authentication Using Client Secret" [ref=e411] [cursor=pointer]:
+              - /url: "#Token_Authentication_Using_Client_Secret_0"
+            - link "2-legged Token Generation" [ref=e412] [cursor=pointer]:
+              - /url: "#2legged_Token_Generation_1"
+            - link "3-legged Token Generation" [ref=e413] [cursor=pointer]:
+              - /url: "#3legged_Token_Generation_2"
+            - link "Troubleshooting" [ref=e414] [cursor=pointer]:
+              - /url: "#Troubleshooting_3"
+            - link "Token Authentication Using JWKS (JSON Web Key Sets)" [ref=e415] [cursor=pointer]:
+              - /url: "#Token_Authentication_Using_JWKS_JSON_Web_Key_Sets)_4"
+            - link "Forming the JWT Assertion" [ref=e416] [cursor=pointer]:
+              - /url: "#Forming_the_JWT_Assertion_5"
+            - link "Constructing the Client Assertion JWT" [ref=e417] [cursor=pointer]:
+              - /url: "#Constructing_the_Client_Assertion_JWT_6"
+            - link "Requesting the Token" [ref=e418] [cursor=pointer]:
+              - /url: "#Requesting_the_Token_7"
+            - link "Token Authentication Using PKCE" [ref=e419] [cursor=pointer]:
+              - /url: "#Token_Authentication_Using_PKCE_8"
+            - link "Input Parameters" [ref=e420] [cursor=pointer]:
+              - /url: "#Input_Parameters_9"
+            - link "Output Parameters & Token Types" [ref=e421] [cursor=pointer]:
+              - /url: "#Output_Parameters__Token_Types_10"
+            - link "Launch Context" [ref=e422] [cursor=pointer]:
+              - /url: "#Launch_Context_11"
+            - link "Use an Access Token as a Bearer Token" [ref=e423] [cursor=pointer]:
+              - /url: "#Use_an_Access_Token_as_a_Bearer_Token_12"
+            - link "Refresh a Token" [ref=e424] [cursor=pointer]:
+              - /url: "#Refresh_a_Token_13"
+      - generic [ref=e427]:
+        - link "Privacy Policy" [ref=e428] [cursor=pointer]:
+          - /url: https://www.athenahealth.com/privacy-rights
+        - link "Terms of Use" [ref=e429] [cursor=pointer]:
+          - /url: https://www.athenahealth.com/terms-and-conditions/terms-of-use
+        - link "Disclaimer" [ref=e430] [cursor=pointer]:
+          - /url: https://www.athenahealth.com/terms-and-conditions
+        - link "Code of Conduct" [ref=e431] [cursor=pointer]:
+          - /url: https://www.athenahealth.com/sites/default/files/media_docs/athenahealth%20Code%20of%20Conduct_1.pdf
+        - link "Developer Portal Terms and Conditions" [ref=e432] [cursor=pointer]:
+          - /url: /api/guides/termsofservice
+        - generic [ref=e433]: © 2026 athenahealth. All rights reserved.

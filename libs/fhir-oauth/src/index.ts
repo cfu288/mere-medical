@@ -50,6 +50,16 @@ export {
   type HealowOAuthConfigOptions,
 } from './lib/vendors/healow.js';
 
+export {
+  createAthenaClient,
+  buildAthenaOAuthConfig,
+  getAthenaEnvironmentConfig,
+  ATHENA_DEFAULT_SCOPES,
+  type AthenaClient,
+  type AthenaTokenSet,
+  type AthenaOAuthConfigOptions,
+} from './lib/vendors/athena.js';
+
 // Session management
 export {
   createSessionManager,
