@@ -10,4 +10,5 @@ export enum Routes {
   VeradigmCallback = '/veradigm/callback',
   VACallback = '/va/callback',
   HealowCallback = '/healow/callback',
+  AthenaCallback = '/athena/callback',
 }

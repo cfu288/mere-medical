@@ -22,6 +22,7 @@ import VectorProvider from '../features/vectors';
 import { AppConfigProvider } from '../app/providers/AppConfigProvider';
 import { TabWrapper } from '../shared/components/TabWrapper';
 import { TutorialOverlay } from '../features/tutorial/TutorialOverlay';
+import AthenaRedirect from '../features/connections/oauth-callbacks/AthenaRedirect';
 import CernerRedirect from '../features/connections/oauth-callbacks/CernerRedirect';
 import ConnectionTab from '../features/connections/ConnectionTab';
 import EpicRedirect from '../features/connections/oauth-callbacks/EpicRedirect';
@@ -114,6 +115,10 @@ const routes = [
       {
         path: AppRoutes.HealowCallback,
         element: <HealowRedirect />,
+      },
+      {
+        path: AppRoutes.AthenaCallback,
+        element: <AthenaRedirect />,
       },
       {
         path: '*',

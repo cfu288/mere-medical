@@ -1,0 +1,412 @@
+- main [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - paragraph [ref=e6]:
+        - text: Please review our upcoming Spring 2026 API Changes
+        - link "here." [ref=e7] [cursor=pointer]:
+          - /url: /api/resources/release-notes-and-change-logs
+        - text: Users must complete Breaking Change testing by February 1st.
+      - paragraph [ref=e9]:
+        - text: Please be aware of a
+        - link "change to API Platform TLS certificates" [ref=e10] [cursor=pointer]:
+          - /url: /api/resources/26-02-04-updated-cert-for-api-platform
+        - text: on February 4, 2026.
+    - navigation [ref=e11]:
+      - generic [ref=e13]:
+        - generic [ref=e15]:
+          - img "athenahealth" [ref=e16]
+          - generic [ref=e17]: API Solutions
+        - list [ref=e19]:
+          - listitem [ref=e20]:
+            - link "Getting Started" [ref=e21] [cursor=pointer]:
+              - /url: /api/guides/overview
+          - listitem [ref=e22]:
+            - link "Documentation" [ref=e23] [cursor=pointer]:
+              - /url: /api/docs/all-apis
+          - listitem [ref=e24]:
+            - link "Sandbox" [ref=e25] [cursor=pointer]:
+              - /url: /api/sandbox
+          - listitem [ref=e26]:
+            - link "Support" [ref=e27] [cursor=pointer]:
+              - /url: /api/support
+        - generic [ref=e29]:
+          - generic [ref=e32]:
+            - textbox "Search API Solutions" [ref=e33]
+            - img "Search" [ref=e34]
+          - link "Go To Console" [ref=e41] [cursor=pointer]:
+            - /url: https://developer.api.athena.io/ams-portal/
+            - generic [ref=e42]: Go To Console
+    - generic [ref=e43]:
+      - generic [ref=e44]:
+        - navigation [ref=e47]:
+          - list [ref=e48]:
+            - listitem [ref=e49]:
+              - heading "Work with athenahealth" [level=2] [ref=e50]
+              - list [ref=e51]:
+                - listitem [ref=e52]:
+                  - link "Our Process" [ref=e53] [cursor=pointer]:
+                    - /url: /api/guides/our-process
+                    - generic [ref=e54]: Our Process
+                - listitem [ref=e55]:
+                  - link "Contracting" [ref=e56] [cursor=pointer]:
+                    - /url: /api/guides/contracting
+                    - generic [ref=e57]: Contracting
+                - listitem [ref=e58]:
+                  - link "Additional Offerings" [ref=e59] [cursor=pointer]:
+                    - /url: /api/guides/additional-offerings
+                    - generic [ref=e60]: Additional Offerings
+            - listitem [ref=e61]:
+              - heading "API Offerings" [level=2] [ref=e62]
+              - list [ref=e63]:
+                - listitem [ref=e64]:
+                  - link "Types of APIs We Offer" [ref=e65] [cursor=pointer]:
+                    - /url: /api/resources/complete_list_athena_apis
+                    - generic [ref=e66]: Types of APIs We Offer
+                - listitem [ref=e67]:
+                  - link "Certified APIs" [ref=e68] [cursor=pointer]:
+                    - /url: /api/guides/certified-apis
+                    - generic [ref=e69]: Certified APIs
+                - listitem [ref=e70]:
+                  - link "Changed Data Subscriptions" [ref=e71] [cursor=pointer]:
+                    - /url: /api/guides/changed-data-subscriptions
+                    - generic [ref=e72]: Changed Data Subscriptions
+                - listitem [ref=e73]:
+                  - link "Products Needed by API" [ref=e74] [cursor=pointer]:
+                    - /url: /api/guides/products-needed-api
+                    - generic [ref=e75]: Products Needed by API
+                - listitem [ref=e76]:
+                  - link "CDS Hooks" [ref=e77] [cursor=pointer]:
+                    - /url: /api/guides/cds-hooks-solution
+                    - generic [ref=e78]: CDS Hooks
+                - listitem [ref=e79]:
+                  - link "Event Notifications" [ref=e80] [cursor=pointer]:
+                    - /url: /api/guides/event-notifications
+                    - generic [ref=e81]: Event Notifications
+            - listitem [ref=e82]:
+              - heading "Authorization" [level=2] [ref=e83]
+              - list [ref=e84]:
+                - listitem [ref=e85]:
+                  - link "Authorization Overview" [ref=e86] [cursor=pointer]:
+                    - /url: /api/guides/authorization-overview
+                    - generic [ref=e87]: Authorization Overview
+                - listitem [ref=e88]:
+                  - link "Token Endpoint" [ref=e89] [cursor=pointer]:
+                    - /url: /api/guides/token-endpoint
+                    - generic [ref=e90]: Token Endpoint
+                - listitem [ref=e91]:
+                  - link "Authorize Endpoint" [ref=e92] [cursor=pointer]:
+                    - /url: /api/guides/authorize-endpoint
+                    - generic [ref=e93]: Authorize Endpoint
+                - listitem [ref=e94]:
+                  - link "Additional OAuth Endpoints" [ref=e95] [cursor=pointer]:
+                    - /url: /api/guides/additional-oauth-endpoints
+                    - generic [ref=e96]: Additional OAuth Endpoints
+            - listitem [ref=e97]:
+              - heading "Create an App" [level=2] [ref=e98]
+              - list [ref=e99]:
+                - listitem [ref=e100]:
+                  - link "Onboarding Overview" [ref=e101] [cursor=pointer]:
+                    - /url: /api/guides/onboarding-overview
+                    - generic [ref=e102]: Onboarding Overview
+                - listitem [ref=e103]:
+                  - link "App Naming Guidelines" [ref=e104] [cursor=pointer]:
+                    - /url: /api/guides/app-naming-guidelines
+                    - generic [ref=e105]: App Naming Guidelines
+                - listitem [ref=e106]:
+                  - link "Environment URLs" [ref=e107] [cursor=pointer]:
+                    - /url: /api/guides/environment-urls
+                    - generic [ref=e108]: Environment URLs
+                - listitem [ref=e109]:
+                  - link "FHIR Base URLs" [ref=e110] [cursor=pointer]:
+                    - /url: /api/guides/base-fhir-urls
+                    - generic [ref=e111]: FHIR Base URLs
+                - listitem [ref=e112]:
+                  - link "Best Practices" [ref=e113] [cursor=pointer]:
+                    - /url: /api/guides/best-practices
+                    - generic [ref=e114]: Best Practices
+                - listitem [ref=e115]:
+                  - link "Testing in Sandbox" [ref=e116] [cursor=pointer]:
+                    - /url: /api/guides/testing-sandbox
+                    - generic [ref=e117]: Testing in Sandbox
+                - listitem [ref=e118]:
+                  - link "Using Postman" [ref=e119] [cursor=pointer]:
+                    - /url: /api/guides/using-postman
+                    - generic [ref=e120]: Using Postman
+                - listitem [ref=e121]:
+                  - link "Embedding Your App in athenaOne" [ref=e122] [cursor=pointer]:
+                    - /url: /api/guides/embedded-apps
+                    - generic [ref=e123]: Embedding Your App in athenaOne
+            - listitem [ref=e124]:
+              - heading "CDS Hooks" [level=2] [ref=e125]
+              - list [ref=e126]:
+                - listitem [ref=e127]:
+                  - link "Onboarding and Configuration" [ref=e128] [cursor=pointer]:
+                    - /url: /api/guides/cds-hooks-onboarding-and-configuration
+                    - generic [ref=e129]: Onboarding and Configuration
+                - listitem [ref=e130]:
+                  - link "Order-select" [ref=e131] [cursor=pointer]:
+                    - /url: /api/guides/cds-hooks-order-select
+                    - generic [ref=e132]: Order-select
+                - listitem [ref=e133]:
+                  - link "Feedback" [ref=e134] [cursor=pointer]:
+                    - /url: /api/guides/cds-hooks-feedback
+                    - generic [ref=e135]: Feedback
+                - listitem [ref=e136]:
+                  - link "Security" [ref=e137] [cursor=pointer]:
+                    - /url: /api/guides/cds-hooks-security
+                    - generic [ref=e138]: Security
+                - listitem [ref=e139]:
+                  - link "SMART App Launch from CDS Cards Response" [ref=e140] [cursor=pointer]:
+                    - /url: /api/guides/smart-app-launch-from-cds-cards-response
+                    - generic [ref=e141]: SMART App Launch from CDS Cards Response
+                - listitem [ref=e142]:
+                  - link "CDS Hooks Best Practices" [ref=e143] [cursor=pointer]:
+                    - /url: /api/guides/cds-hooks-best-practices
+                    - generic [ref=e144]: CDS Hooks Best Practices
+            - listitem [ref=e145]:
+              - heading "Event Notifications" [level=2] [ref=e146]
+              - list [ref=e147]:
+                - listitem [ref=e148]:
+                  - link "Onboarding" [ref=e149] [cursor=pointer]:
+                    - /url: /api/guides/event-notifications-onboarding
+                    - generic [ref=e150]: Onboarding
+                - listitem [ref=e151]:
+                  - link "Subscription Topics" [ref=e152] [cursor=pointer]:
+                    - /url: /api/guides/event-notifications-subscription-topics
+                    - generic [ref=e153]: Subscription Topics
+                - listitem [ref=e154]:
+                  - link "Event Notifications Best Practices" [ref=e155] [cursor=pointer]:
+                    - /url: /api/guides/event-notifications-best-practices
+                    - generic [ref=e156]: Event Notifications Best Practices
+            - listitem [ref=e157]:
+              - heading "Troubleshoot" [level=2] [ref=e158]
+              - list [ref=e159]:
+                - listitem [ref=e160]:
+                  - link "API Error Messages" [ref=e161] [cursor=pointer]:
+                    - /url: /api/resources/api-error-messages
+                    - generic [ref=e162]: API Error Messages
+                - listitem [ref=e163]:
+                  - link "Checking API Status" [ref=e164] [cursor=pointer]:
+                    - /url: /api/guides/checking-api-status
+                    - generic [ref=e165]: Checking API Status
+                - listitem [ref=e166]:
+                  - link "Handling Timeouts" [ref=e167] [cursor=pointer]:
+                    - /url: /api/guides/timeouts-retries-and-backoff
+                    - generic [ref=e168]: Handling Timeouts
+                - listitem [ref=e169]:
+                  - link "API Availability" [ref=e170] [cursor=pointer]:
+                    - /url: /api/resources/api-availability
+                    - generic [ref=e171]: API Availability
+                - listitem [ref=e172]:
+                  - link "Customer Support" [ref=e173] [cursor=pointer]:
+                    - /url: /api/guides/customer-support
+                    - generic [ref=e174]: Customer Support
+            - listitem [ref=e175]:
+              - heading "Changelog" [level=2] [ref=e176]
+              - list [ref=e177]:
+                - listitem [ref=e178]:
+                  - link "2026 Release Notes" [ref=e179] [cursor=pointer]:
+                    - /url: /api/resources/release-notes-and-change-logs
+                    - generic [ref=e180]: 2026 Release Notes
+                - listitem [ref=e181]:
+                  - link "2025 Release Notes" [ref=e182] [cursor=pointer]:
+                    - /url: /api/resources/2025-release-notes-and-change-logs
+                    - generic [ref=e183]: 2025 Release Notes
+                - listitem [ref=e184]:
+                  - link "2024 Release Notes" [ref=e185] [cursor=pointer]:
+                    - /url: /api/resources/2024-release-notes
+                    - generic [ref=e186]: 2024 Release Notes
+                - listitem [ref=e187]:
+                  - link "2023 Release Notes" [ref=e188] [cursor=pointer]:
+                    - /url: /api/resources/2023-release-notes
+                    - generic [ref=e189]: 2023 Release Notes
+                - listitem [ref=e190]:
+                  - link "2022 Release Notes" [ref=e191] [cursor=pointer]:
+                    - /url: /api/resources/2022-release-notes
+                    - generic [ref=e192]: 2022 Release Notes
+                - listitem [ref=e193]:
+                  - link "2021 Release Notes" [ref=e194] [cursor=pointer]:
+                    - /url: /api/resources/2021-release-notes
+                    - generic [ref=e195]: 2021 Release Notes
+                - listitem [ref=e196]:
+                  - link "2020 Release Notes" [ref=e197] [cursor=pointer]:
+                    - /url: /api/resources/2020-release-notes
+                    - generic [ref=e198]: 2020 Release Notes
+                - listitem [ref=e199]:
+                  - link "2019 Release Notes" [ref=e200] [cursor=pointer]:
+                    - /url: /api/resources/2019-release-notes
+                    - generic [ref=e201]: 2019 Release Notes
+        - generic [ref=e207]:
+          - generic [ref=e208]:
+            - heading "FHIR Base URLs" [level=1] [ref=e209]
+            - generic [ref=e210]:
+              - heading "For app developers:" [level=2] [ref=e211]
+              - paragraph [ref=e212]:
+                - text: The API paths of athenahealth's FHIR endpoints are constructed from FHIR base URLs, of which there are multiple supported formats stated below. Please note that athenahealth customers may also deploy
+                - link "their own FHIR APIs" [ref=e213] [cursor=pointer]:
+                  - /url: /api/base-fhir-urls#Non-athenahealth_FHIR_Base_URLs_3
+                - text: for accessing EHI from athenaOne. PHR app developers may retrieve a machine-readable list of FHIR base URLs certified to the ONC’s Cures Act Final Rule (g)(10) criterion, along with the names associated with those URLs of organizations using athenaClinicals product, using the download link in the section below.
+              - heading "FHIR R4 Base URLs" [level=3] [ref=e214]
+              - paragraph [ref=e215]:
+                - text: The athenahealth FHIR R4 server offers a global base URL that serves data for every practice within the athenahealth network. This is also the base URL for athenahealth’s
+                - link "FHIR R4 APIs certified to the ONC’s Cures Act Final Rule (g)(10) criterion" [ref=e216] [cursor=pointer]:
+                  - /url: /api/resources/complete_list_athena_apis
+                - text: ". The global base URLs for our supported athenaOne environments are:"
+              - generic [ref=e217]:
+                - paragraph
+                - list [ref=e218]:
+                  - listitem [ref=e219]:
+                    - paragraph [ref=e220]:
+                      - text: "Preview:"
+                      - link "https://api.preview.platform.athenahealth.com/fhir/r4" [ref=e221] [cursor=pointer]:
+                        - /url: https://api.preview.platform.athenahealth.com/fhir/r4%22%20/t%20%22_blank
+                  - listitem [ref=e222]:
+                    - paragraph [ref=e223]:
+                      - text: "Production:"
+                      - link "https://api.platform.athenahealth.com/fhir/r4" [ref=e224] [cursor=pointer]:
+                        - /url: https://api.platform.athenahealth.com/fhir/r4%22%20/t%20%22_blank
+                - paragraph
+              - paragraph [ref=e225]: "athenahealth also makes FHIR R4 APIs accessible via site-specific base URLs. These site-specific URLs require the appropriate practice ID(s), brand ID(s), and chart sharing group ID(s) for that organization. The format of these site-specific URLs for our supported athenaOne environments are:"
+              - generic [ref=e226]:
+                - paragraph
+                - list [ref=e227]:
+                  - listitem [ref=e228]:
+                    - paragraph [ref=e229]:
+                      - text: "Preview:"
+                      - 'link "https://api.preview.platform.athenahealth.com/{practiceid}/brand/{brandid}/csg/{chartsharinggroupid}/fhir/r4" [ref=e230] [cursor=pointer]':
+                        - /url: "https://api.preview.platform.athenahealth.com/{practiceid}/brand/{brandid}/csg/{chartsharinggroupid}/fhir/r4"
+                  - listitem [ref=e231]:
+                    - paragraph [ref=e232]:
+                      - text: "Production:"
+                      - 'link "https://api.platform.athenahealth.com/{practiceid}/brand/{brandid}/csg/{chartsharinggroupid}/fhir/r4" [ref=e233] [cursor=pointer]':
+                        - /url: "https://api.platform.athenahealth.com/{practiceid}/brand/{brandid}/csg/{chartsharinggroupid}/fhir/r4"
+                - paragraph
+              - heading "FHIR DSTU2 Base URLs" [level=3] [ref=e234]
+              - paragraph [ref=e235]:
+                - text: athenahealth's FHIR DSTU2 APIs can only be accessed through site-specific base URLs, requiring the appropriate practice ID(s), brand ID(s), and chart sharing group ID(s) for that organization. These are the base URLs for athenahealth’s
+                - link "FHIR DSTU2 APIs certified to 2015 Edition CEHRT Criteria" [ref=e236] [cursor=pointer]:
+                  - /url: /api/resources/complete_list_athena_apis
+                - text: ". The site-specific base URL formats for our supported athenaOne environments are:"
+              - generic [ref=e237]:
+                - paragraph
+                - list [ref=e238]:
+                  - listitem [ref=e239]:
+                    - paragraph [ref=e240]:
+                      - text: "Preview:"
+                      - 'link "https://api.preview.platform.athenahealth.com/v1/{practiceid}/{brandid}/{chartsharinggroupid}/fhir/dstu2" [ref=e241] [cursor=pointer]':
+                        - /url: https://api.preview.platform.athenahealth.com/v1/%7bpracticeid%7d/%7bbrandid%7d/%7bchartsharinggroupid%7d/fhir/dstu2
+                  - listitem [ref=e242]:
+                    - paragraph [ref=e243]:
+                      - text: "Production:"
+                      - 'link "https://api.platform.athenahealth.com/v1/{practiceid}/{brandid}/{chartsharinggroupid}/fhir/dstu2" [ref=e244] [cursor=pointer]':
+                        - /url: https://api.platform.athenahealth.com/v1/%7bpracticeid%7d/%7bbrandid%7d/%7bchartsharinggroupid%7d/fhir/dstu2
+                - paragraph
+              - heading "Non-athenahealth FHIR Base URLs" [level=3] [ref=e245]
+              - paragraph [ref=e246]:
+                - text: Although rare, some athenahealth customers using athenaClinicals may manage and deploy their own FHIR APIs and authorization servers for accessing EHI from athenaOne. Please note access to these endpoints is managed separately from onboarding processes, OAuth credentials, and patient login credentials (Login with athenahealth) covered in the athenahealth Developer Portal. Base URLs for customer-deployed FHIR sever and endpoints certified to the ONC’s Cures Act Final Rule (g)(10) criterion do not use the athenahealth platform domain (
+                - link "https://api.platform.athenahealth.com" [ref=e247] [cursor=pointer]:
+                  - /url: https://api.platform.athenahealth.com/
+                - text: ) in the downloadable FHIR R4 Base URL list below.
+              - heading "Download the List of FHIR R4 Base URLs" [level=3] [ref=e248]
+              - heading "FHIR Resource Bundle" [level=4] [ref=e249]
+              - paragraph [ref=e250]:
+                - link "Click here to download a FHIR Resource Bundle" [ref=e251] [cursor=pointer]:
+                  - /url: https://service-base-urls.api.fhir.athena.io/athena-fhir-service-base-urls.json
+                - text: "containing the global FHIR R4 base URL as well as all site-specific FHIR R4 base URLs for all of athenahealth's live customers. This format is conformant to the requirements specified in ASTP/ONC's HTI-1 Final Rule (g)(10) criterion. This file contains the following information:"
+              - list [ref=e252]:
+                - listitem [ref=e253]:
+                  - paragraph [ref=e254]: Live practice locations for athenahealth customers, formatted as a FHIR R4 Organization Resource
+                  - list [ref=e255]:
+                    - listitem [ref=e256]:
+                      - paragraph [ref=e257]:
+                        - text: The location's name, as configured by the athenahealth customer in their
+                        - link "Patient Communication Content Management" [ref=e258] [cursor=pointer]:
+                          - /url: https://help.athenahealth.com/ohelp/Content/aCom_Patient_Communication_Content_Management_PH.htm
+                        - text: settings
+                    - listitem [ref=e259]:
+                      - paragraph [ref=e260]: A unique identifier for that location's FHIR R4 Base URL information
+                - listitem [ref=e261]:
+                  - paragraph [ref=e262]: The associated athenahealth FHIR R4 Organization Resource ID
+                - listitem [ref=e263]:
+                  - paragraph [ref=e264]: The associated "Brand" ID
+                - listitem [ref=e265]:
+                  - paragraph [ref=e266]: The address of the practice location
+                - listitem [ref=e267]:
+                  - paragraph [ref=e268]: Any associated industry identifiers (NPI, CLIA, and/or CCN)
+                - listitem [ref=e269]:
+                  - paragraph [ref=e270]: The global FHIR R4 Base URL, formatted as a FHIR R4 Endpoint Resource
+                - listitem [ref=e271]:
+                  - paragraph [ref=e272]: Any associated site-specific FHIR R4 Base URLs, formatted as FHIR R4 Endpoint Resources
+              - heading "Machine-Readable CSV Files" [level=4] [ref=e273]
+              - paragraph [ref=e274]: "athenahealth's global FHIR R4 Base URLs:"
+              - paragraph [ref=e275]:
+                - link "Click here to download a machine-readable CSV file" [ref=e276] [cursor=pointer]:
+                  - /url: https://fhir.athena.io/athena-fhir-urls/athenanet-fhir-base-urls.csv
+                - text: "of all athenahealth's global FHIR R4 Base URLs and non-athenahealth FHIR R4 base URLs certified to the ONC’s Cures Act Final Rule (g)(10) criterion. This CSV file is updated daily and contains the following information for athenaOne contexts that have previously gone live, not marked deleted and where Clinicals is marked enabled:"
+              - list [ref=e277]:
+                - listitem [ref=e278]:
+                  - paragraph [ref=e279]: "Release Date: The Date of the file was last updated."
+                - listitem [ref=e280]:
+                  - paragraph [ref=e281]: "Name: The name of the associated organization, which is the athenaCommunicator brand name or the Context name if Brand name is not available."
+                - listitem [ref=e282]:
+                  - paragraph [ref=e283]: "Organization: The FHIR R4 Organization ID."
+                - listitem [ref=e284]:
+                  - paragraph [ref=e285]: "URL: The Production FHIR R4 Base Service URL."
+              - paragraph [ref=e286]: "athenahealth's site-specific FHIR R4 and DSTU2 Base URLs:"
+              - paragraph [ref=e287]: "The list of all athenahealth’s site-specific FHIR Base URLs is below:"
+              - list [ref=e288]:
+                - listitem [ref=e289]:
+                  - paragraph [ref=e290]:
+                    - text: "DSTU2:"
+                    - link "Click here to download a machine-readable CSV file" [ref=e291] [cursor=pointer]:
+                      - /url: https://external.fhir.athena.io/athena-fhir-urls/athenanet-fhir-brand-dstu2-urls-zipcode.csv
+                - listitem [ref=e292]:
+                  - paragraph [ref=e293]:
+                    - text: "R4:"
+                    - link "Click here to download a machine-readable CSV file" [ref=e294] [cursor=pointer]:
+                      - /url: https://external.fhir.athena.io/athena-fhir-urls/athenanet-fhir-brand-r4-urls-zipcode.csv
+              - paragraph [ref=e295]: "These files are updated daily and contain the following information for athenaOne contexts that have previously gone live, not marked deleted and where Clinicals is marked enabled:"
+              - list [ref=e296]:
+                - listitem [ref=e297]:
+                  - paragraph [ref=e298]: "Release Date: The Date of the file was last updated."
+                - listitem [ref=e299]:
+                  - paragraph [ref=e300]: "Name: The name of the associated organization, which is the athenaCommunicator brand name or the Context name."
+                - listitem [ref=e301]:
+                  - paragraph [ref=e302]: "Zip code: Zip code (if available) of all departments within the context."
+                - listitem [ref=e303]:
+                  - paragraph [ref=e304]: "Organization: The FHIR Organization ID (only applicable to R4, not DSTU2)."
+                - listitem [ref=e305]:
+                  - paragraph [ref=e306]: "URL: The Production FHIR R4 or FHIR DSTU2 Base Service URLs."
+              - heading "For athenahealth customers using athenaClinicals:" [level=2] [ref=e307]
+              - paragraph [ref=e308]: If your organization offers FHIR R4 endpoints (deployed by your organization or through a third party) for PHR apps to access EHI stored in athenaClinicals, and if those endpoints are certified to the ONC’s Cures Act Final Rule (g)(10) criterion, per the rule, we must publish those endpoints’ base URLs in addition to our own.
+              - paragraph [ref=e309]:
+                - text: Please complete this
+                - link "form" [ref=e310] [cursor=pointer]:
+                  - /url: https://forms.office.com/r/kVcucasdcQ
+                - text: to submit the base URLs you would like us to list.
+          - generic [ref=e312]:
+            - heading "On This Page" [level=5] [ref=e313]
+            - link "For app developers:" [ref=e314] [cursor=pointer]:
+              - /url: "#For_app_developers_0"
+            - link "FHIR R4 Base URLs" [ref=e315] [cursor=pointer]:
+              - /url: "#FHIR_R4_Base_URLs_1"
+            - link "FHIR DSTU2 Base URLs" [ref=e316] [cursor=pointer]:
+              - /url: "#FHIR_DSTU2_Base_URLs_2"
+            - link "Non-athenahealth FHIR Base URLs" [ref=e317] [cursor=pointer]:
+              - /url: "#Nonathenahealth_FHIR_Base_URLs_3"
+            - link "Download the List of FHIR R4 Base URLs" [ref=e318] [cursor=pointer]:
+              - /url: "#Download_the_List_of_FHIR_R4_Base_URLs_4"
+            - link "For athenahealth customers using athenaClinicals:" [ref=e319] [cursor=pointer]:
+              - /url: "#For_athenahealth_customers_using_athenaClinicals_5"
+      - generic [ref=e322]:
+        - link "Privacy Policy" [ref=e323] [cursor=pointer]:
+          - /url: https://www.athenahealth.com/privacy-rights
+        - link "Terms of Use" [ref=e324] [cursor=pointer]:
+          - /url: https://www.athenahealth.com/terms-and-conditions/terms-of-use
+        - link "Disclaimer" [ref=e325] [cursor=pointer]:
+          - /url: https://www.athenahealth.com/terms-and-conditions
+        - link "Code of Conduct" [ref=e326] [cursor=pointer]:
+          - /url: https://www.athenahealth.com/sites/default/files/media_docs/athenahealth%20Code%20of%20Conduct_1.pdf
+        - link "Developer Portal Terms and Conditions" [ref=e327] [cursor=pointer]:
+          - /url: /api/guides/termsofservice
+        - generic [ref=e328]: © 2026 athenahealth. All rights reserved.

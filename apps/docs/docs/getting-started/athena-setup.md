@@ -63,5 +63,11 @@ After clicking Create Application, a popup will display your Client ID. Save thi
 Add your Client ID to your Mere Medical instance:
 
 ```
+# For production use (real patient data)
 ATHENA_CLIENT_ID=your-client-id-here
+
+# For testing with the Preview environment only
+ATHENA_SANDBOX_CLIENT_ID=your-preview-client-id-here
 ```
+
+If you only provide `ATHENA_SANDBOX_CLIENT_ID`, the app will only be able to connect to Athena's Preview environment for testing. For production use with real patient data, you'll need to go through Athena's app certification process and provide `ATHENA_CLIENT_ID`.
