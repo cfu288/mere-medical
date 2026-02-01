@@ -70,6 +70,7 @@ async function initiateAuth(
   const session = await generateAuthorizationRequestState({
     usePkce: true,
     useState: true,
+    useNonce: true,
     tenant: config.tenant,
   });
 
@@ -89,6 +90,10 @@ async function initiateAuth(
     params.set('state', session.state);
   }
 
+  if (session.nonce) {
+    params.set('nonce', session.nonce);
+  }
+
   if (session.codeVerifier) {
     const challenge = await generateCodeChallenge(session.codeVerifier);
     params.set('code_challenge', challenge);
@@ -103,7 +108,7 @@ async function initiateAuth(
 
 function validateAndExtractCode(
   params: URLSearchParams,
-  config: OAuthConfig,
+  _config: OAuthConfig,
   session: AuthorizationRequestState,
 ): { code: string; codeVerifier: string } {
   const code = validateCallback(params, session);
@@ -171,6 +176,10 @@ export function createAthenaClient(): AthenaClient {
         throw OAuthErrors.noTokenUrl();
       }
 
+      if (!tokens.scope) {
+        throw createOAuthError('missing_scope', 'Scope is required for token refresh');
+      }
+
       const res = await fetch(_config.tenant.tokenUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -178,6 +187,7 @@ export function createAthenaClient(): AthenaClient {
           grant_type: 'refresh_token',
           refresh_token: tokens.refreshToken,
           client_id: _config.clientId,
+          scope: tokens.scope,
         }),
       });
 

@@ -23,6 +23,7 @@ export interface OAuthConfig {
 export interface AuthorizationRequestState {
   codeVerifier?: string;
   state?: string;
+  nonce?: string;
   tenant?: TenantConfig;
   startedAt: number;
 }
