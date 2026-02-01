@@ -14,6 +14,8 @@ import {
   buildVeradigmOAuthConfig,
   createHealowClient,
   buildHealowOAuthConfig,
+  createAthenaClient,
+  buildAthenaOAuthConfig,
 } from '@mere/fhir-oauth';
 import { signJwt } from '@mere/crypto/browser';
 import { isEpicSandbox } from '../../services/fhir/EpicUtils';
@@ -40,9 +42,11 @@ const epicClient = createEpicClient({ signJwt });
 const cernerClient = createCernerClient();
 const veradigmClient = createVeradigmClient();
 const healowClient = createHealowClient();
+const athenaClient = createAthenaClient();
 const epicSession = createSessionManager('epic');
 const cernerSession = createSessionManager('cerner');
 const healowSession = createSessionManager('healow');
+const athenaSession = createSessionManager('athena');
 
 /**
  * Initiates OAuth authorization flow for Epic MyChart connections.
@@ -246,6 +250,40 @@ async function initiateHealowAuth(
   return url;
 }
 
+/**
+ * Initiates OAuth authorization flow for Athena Health connections.
+ * Athena uses a single global FHIR R4 endpoint, so no tenant selection is needed.
+ * Uses PKCE and supports refresh tokens via offline_access scope.
+ *
+ * @param config - App configuration containing Athena client ID and public URL
+ * @param environment - 'preview' for sandbox testing, 'production' for real patient data
+ * @returns Authorization URL to redirect the user to
+ */
+export async function initiateAthenaAuth(
+  config: AppConfig,
+  environment: 'preview' | 'production',
+): Promise<string> {
+  const clientId =
+    environment === 'preview'
+      ? config.ATHENA_SANDBOX_CLIENT_ID
+      : config.ATHENA_CLIENT_ID;
+
+  if (!clientId || !config.PUBLIC_URL) {
+    throw new Error('Athena OAuth configuration is incomplete');
+  }
+
+  const oauthConfig = buildAthenaOAuthConfig({
+    clientId,
+    publicUrl: config.PUBLIC_URL,
+    redirectPath: Routes.AthenaCallback,
+    environment,
+  });
+
+  const { url, session } = await athenaClient.initiateAuth(oauthConfig);
+  await athenaSession.save(session);
+  return url;
+}
+
 export async function getLoginUrlBySource(
   config: AppConfig,
   item: RxDocument<ConnectionDocument>,
@@ -329,6 +367,12 @@ export async function getLoginUrlBySource(
         item.get('name'),
         item.get('tenant_id'),
       ).then((url) => url as string & Location);
+    }
+    case 'athena': {
+      const environment = item.get('environment') as 'preview' | 'production';
+      return initiateAthenaAuth(config, environment).then(
+        (url) => url as string & Location,
+      );
     }
     default: {
       return '' as string & Location;

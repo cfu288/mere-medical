@@ -23,6 +23,8 @@ export interface AppConfig {
   VA_CLIENT_ID?: string;
   HEALOW_CLIENT_ID?: string;
   HEALOW_CONFIDENTIAL_MODE?: boolean;
+  ATHENA_CLIENT_ID?: string;
+  ATHENA_SANDBOX_CLIENT_ID?: string;
   PUBLIC_URL?: string;
 }
 
@@ -132,6 +134,8 @@ export function AppConfigProvider({
           VA_CLIENT_ID: doc.VA_CLIENT_ID,
           HEALOW_CLIENT_ID: doc.HEALOW_CLIENT_ID,
           HEALOW_CONFIDENTIAL_MODE: doc.HEALOW_CONFIDENTIAL_MODE,
+          ATHENA_CLIENT_ID: doc.ATHENA_CLIENT_ID,
+          ATHENA_SANDBOX_CLIENT_ID: doc.ATHENA_SANDBOX_CLIENT_ID,
           PUBLIC_URL: doc.PUBLIC_URL,
         };
       }

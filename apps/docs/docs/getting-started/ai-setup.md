@@ -1,5 +1,5 @@
 ---
-sidebar_position: 5
+sidebar_position: 99
 description: Set up AI-powered features with OpenAI or Ollama
 ---
 
