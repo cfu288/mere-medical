@@ -8,7 +8,12 @@ import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import { DSTU2Endpoint as CernerDSTU2Endpoint } from '@mere/cerner';
 import { DSTU2Endpoint as EpicDSTU2Endpoint } from '@mere/epic';
 import { DSTU2Endpoint as VeradigmDSTU2Endpoint } from '@mere/veradigm';
-import { buildOnPatientAuthUrl } from '@mere/fhir-oauth';
+import {
+  buildOnPatientAuthUrl,
+  createAthenaClient,
+  buildAthenaOAuthConfig,
+  createSessionManager,
+} from '@mere/fhir-oauth';
 
 import VeradigmLogo from '../../../assets/img/allscripts-logo.png';
 import CernerLogo from '../../../assets/img/cerner-logo.png';
@@ -27,9 +32,36 @@ import {
 } from './TenantSelectModelResultItem';
 import VALogo from '../../../assets/img/va-logo.png';
 import HealowLogo from '../../../assets/img/eclinicalworks-logo.jpeg';
-import { useConfig } from '../../../app/providers/AppConfigProvider';
-import { initiateAthenaAuth } from '../ConnectionTab';
+import { AppConfig, useConfig } from '../../../app/providers/AppConfigProvider';
 import { AthenaLocalStorageKeys } from '../../../services/fhir/Athena';
+
+const athenaClient = createAthenaClient();
+const athenaSession = createSessionManager('athena');
+
+async function initiateAthenaAuth(
+  config: AppConfig,
+  environment: 'preview' | 'production',
+): Promise<string> {
+  const clientId =
+    environment === 'preview'
+      ? config.ATHENA_SANDBOX_CLIENT_ID
+      : config.ATHENA_CLIENT_ID;
+
+  if (!clientId || !config.PUBLIC_URL) {
+    throw new Error('Athena OAuth configuration is incomplete');
+  }
+
+  const oauthConfig = buildAthenaOAuthConfig({
+    clientId,
+    publicUrl: config.PUBLIC_URL,
+    redirectPath: Routes.AthenaCallback,
+    environment,
+  });
+
+  const { url, session } = await athenaClient.initiateAuth(oauthConfig);
+  await athenaSession.save(session);
+  return url;
+}
 
 export type EMRVendor =
   | 'epic'
@@ -303,7 +335,7 @@ export function TenantSelectModal({
         href: vaUrl,
         enabled: vaEnabled,
         disabledMessage: 'Provide VA_CLIENT_ID env var to enable',
-        id: 4,
+        id: 7,
       },
       {
         title: 'Healow',
@@ -478,7 +510,7 @@ export function TenantSelectModal({
                 className="grid w-full grid-cols-2 gap-x-4 gap-y-8 px-4 py-8 sm:grid-cols-3 sm:gap-x-8 sm:px-4 sm:py-12" // lg:grid-cols-4 xl:gap-x-8"
               >
                 {mainSources.map((file) => (
-                  <li key={file.source} className="relative">
+                  <li key={file.id} className="relative">
                     {file.href ? (
                       <div
                         className={
@@ -647,7 +679,7 @@ export function TenantSelectModal({
                     <Disclosure.Panel>
                       <ul className="grid w-full grid-cols-2 gap-x-4 gap-y-8 px-4 pb-8 sm:grid-cols-3 sm:gap-x-8 sm:px-4">
                         {legacySources.map((file) => (
-                          <li key={file.source} className="relative">
+                          <li key={file.id} className="relative">
                             <div
                               className={`aspect-h-7 aspect-w-10 focus-within:ring-primary-500 group block w-full overflow-hidden rounded-lg transition-all focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 ${
                                 file.enabled

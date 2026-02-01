@@ -259,7 +259,7 @@ async function initiateHealowAuth(
  * @param environment - 'preview' for sandbox testing, 'production' for real patient data
  * @returns Authorization URL to redirect the user to
  */
-export async function initiateAthenaAuth(
+async function initiateAthenaAuth(
   config: AppConfig,
   environment: 'preview' | 'production',
 ): Promise<string> {

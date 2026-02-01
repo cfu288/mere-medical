@@ -3,6 +3,7 @@ import type { AuthorizationRequestState, TenantConfig } from './types.js';
 export interface SessionOptions {
   usePkce: boolean;
   useState: boolean;
+  useNonce?: boolean;
   tenant?: TenantConfig;
 }
 
@@ -36,6 +37,7 @@ export async function generateAuthorizationRequestState(
   return {
     codeVerifier: options.usePkce ? generateCodeVerifier() : undefined,
     state: options.useState ? crypto.randomUUID() : undefined,
+    nonce: options.useNonce ? crypto.randomUUID() : undefined,
     tenant: options.tenant,
     startedAt: Date.now(),
   };
