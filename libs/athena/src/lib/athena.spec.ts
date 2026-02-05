@@ -1,7 +1,7 @@
-import { athena } from './athena';
+import { AthenaOrganizations } from './athena';
 
-describe('athena', () => {
-  it('should work', () => {
-    expect(athena()).toEqual('athena');
+describe('AthenaOrganizations', () => {
+  it('should be a non-empty record', () => {
+    expect(Object.keys(AthenaOrganizations).length).toBeGreaterThan(0);
   });
 });
