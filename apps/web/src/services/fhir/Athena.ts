@@ -39,6 +39,7 @@ import {
   buildAthenaOAuthConfig,
   getAthenaEnvironmentConfig,
   createSessionManager,
+  parseJwtPayload,
   type AthenaTokenSet,
 } from '@mere/fhir-oauth';
 
@@ -82,18 +83,6 @@ export async function getLoginUrl(
   const { url, session } = await athenaClient.initiateAuth(oauthConfig);
   await athenaSession.save(session);
   return url;
-}
-
-function parseJwtPayload<T>(token: string): T {
-  const base64Url = token.split('.')[1];
-  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-  const jsonPayload = decodeURIComponent(
-    atob(base64)
-      .split('')
-      .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-      .join(''),
-  );
-  return JSON.parse(jsonPayload);
 }
 
 function getAhPracticeFromToken(accessToken: string): string | undefined {
