@@ -50,9 +50,47 @@ After creating your app, you need to configure the API scopes. Click on your new
 
 ![Scopes Tab](/img/Athena-4.1-Scopes.jpeg)
 
-Select **FHIR R4 SMART V2** from the left sidebar, then check all **Read** scopes to allow Mere Medical to access your health data. Click **Confirm Scopes** when done.
+Select all available scopes from each of the following categories:
 
-![FHIR R4 SMART V2 Scopes](/img/Athena-4.2-r4Scopes.jpeg)
+- **FHIR DSTU2** (16 scopes) - Standards-based FHIR APIs in DSTU2 format
+- **FHIR R4 SMART V1** (21 scopes) - Standards-based FHIR APIs in R4 format
+- **FHIR R4 SMART V2** (36 scopes) - Standards-based FHIR APIs in R4 format
+
+Click **Confirm Scopes** when done.
+
+![FHIR Scopes Selection](/img/Athena-4.2-dstu2andr4scopes.jpeg)
+
+:::note
+Mere Medical uses **FHIR R4 SMART V1** scopes (`.read` format). The other scope categories are selected for completeness but are not currently used by the application.
+:::
+
+### FHIR R4 SMART V1 Scopes Used by Mere Medical
+
+The following patient-context scopes with `.read` suffix are used:
+
+| Scope | Description |
+|-------|-------------|
+| `patient/AllergyIntolerance.read` | Allergy and intolerance records |
+| `patient/Binary.read` | Binary data (attachments) |
+| `patient/CarePlan.read` | Care plans |
+| `patient/CareTeam.read` | Care team members |
+| `patient/Condition.read` | Conditions and diagnoses |
+| `patient/Device.read` | Implanted devices |
+| `patient/DiagnosticReport.read` | Diagnostic reports |
+| `patient/DocumentReference.read` | Clinical documents |
+| `patient/Encounter.read` | Encounters and visits |
+| `patient/Goal.read` | Patient goals |
+| `patient/Immunization.read` | Immunization records |
+| `patient/Location.read` | Locations |
+| `patient/Medication.read` | Medications |
+| `patient/MedicationRequest.read` | Medication prescriptions |
+| `patient/Observation.read` | Observations (vitals, labs, etc.) |
+| `patient/Organization.read` | Organizations |
+| `patient/Patient.read` | Patient demographics |
+| `patient/Practitioner.read` | Practitioners |
+| `patient/Procedure.read` | Procedures |
+| `patient/Provenance.read` | Provenance records |
+| `patient/ServiceRequest.read` | Service requests |
 
 ## Get Your Client ID
 
