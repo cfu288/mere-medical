@@ -8,12 +8,7 @@ import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import { DSTU2Endpoint as CernerDSTU2Endpoint } from '@mere/cerner';
 import { DSTU2Endpoint as EpicDSTU2Endpoint } from '@mere/epic';
 import { DSTU2Endpoint as VeradigmDSTU2Endpoint } from '@mere/veradigm';
-import {
-  buildOnPatientAuthUrl,
-  createAthenaClient,
-  buildAthenaOAuthConfig,
-  createSessionManager,
-} from '@mere/fhir-oauth';
+import { buildOnPatientAuthUrl } from '@mere/fhir-oauth';
 
 import VeradigmLogo from '../../../assets/img/allscripts-logo.png';
 import CernerLogo from '../../../assets/img/cerner-logo.png';
@@ -33,36 +28,11 @@ import {
 import VALogo from '../../../assets/img/va-logo.png';
 import HealowLogo from '../../../assets/img/eclinicalworks-logo.jpeg';
 import AthenaLogo from '../../../assets/img/athena-logo.jpeg';
-import { AppConfig, useConfig } from '../../../app/providers/AppConfigProvider';
-import { AthenaLocalStorageKeys } from '../../../services/fhir/Athena';
-
-const athenaClient = createAthenaClient();
-const athenaSession = createSessionManager('athena');
-
-async function initiateAthenaAuth(
-  config: AppConfig,
-  environment: 'preview' | 'production',
-): Promise<string> {
-  const clientId =
-    environment === 'preview'
-      ? config.ATHENA_SANDBOX_CLIENT_ID
-      : config.ATHENA_CLIENT_ID;
-
-  if (!clientId || !config.PUBLIC_URL) {
-    throw new Error('Athena OAuth configuration is incomplete');
-  }
-
-  const oauthConfig = buildAthenaOAuthConfig({
-    clientId,
-    publicUrl: config.PUBLIC_URL,
-    redirectPath: Routes.AthenaCallback,
-    environment,
-  });
-
-  const { url, session } = await athenaClient.initiateAuth(oauthConfig);
-  await athenaSession.save(session);
-  return url;
-}
+import { useConfig } from '../../../app/providers/AppConfigProvider';
+import {
+  AthenaLocalStorageKeys,
+  getLoginUrl as getAthenaLoginUrl,
+} from '../../../services/fhir/Athena';
 
 export type EMRVendor =
   | 'epic'
@@ -363,7 +333,7 @@ export function TenantSelectModal({
             AthenaLocalStorageKeys.ATHENA_ENVIRONMENT,
             environment,
           );
-          initiateAthenaAuth(config, environment).then((url) => {
+          getAthenaLoginUrl(config, environment).then((url) => {
             window.location.href = url;
           });
         },

@@ -38,6 +38,7 @@ import {
   createAthenaClient,
   buildAthenaOAuthConfig,
   getAthenaEnvironmentConfig,
+  createSessionManager,
   type AthenaTokenSet,
 } from '@mere/fhir-oauth';
 
@@ -51,8 +52,36 @@ export {
   type AthenaOAuthConfigOptions,
 } from '@mere/fhir-oauth';
 
+const athenaClient = createAthenaClient();
+const athenaSession = createSessionManager('athena');
+
 export enum AthenaLocalStorageKeys {
   ATHENA_ENVIRONMENT = 'athenaEnvironment',
+}
+
+export async function getLoginUrl(
+  config: AppConfig,
+  environment: 'preview' | 'production',
+): Promise<string> {
+  const clientId =
+    environment === 'preview'
+      ? config.ATHENA_SANDBOX_CLIENT_ID
+      : config.ATHENA_CLIENT_ID;
+
+  if (!clientId || !config.PUBLIC_URL) {
+    throw new Error('Athena OAuth configuration is incomplete');
+  }
+
+  const oauthConfig = buildAthenaOAuthConfig({
+    clientId,
+    publicUrl: config.PUBLIC_URL,
+    redirectPath: Routes.AthenaCallback,
+    environment,
+  });
+
+  const { url, session } = await athenaClient.initiateAuth(oauthConfig);
+  await athenaSession.save(session);
+  return url;
 }
 
 function parseJwtPayload<T>(token: string): T {
