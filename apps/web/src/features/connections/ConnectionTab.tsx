@@ -14,8 +14,6 @@ import {
   buildVeradigmOAuthConfig,
   createHealowClient,
   buildHealowOAuthConfig,
-  createAthenaClient,
-  buildAthenaOAuthConfig,
 } from '@mere/fhir-oauth';
 import { signJwt } from '@mere/crypto/browser';
 import { isEpicSandbox } from '../../services/fhir/EpicUtils';
@@ -34,6 +32,7 @@ import {
   getR4Url,
 } from '../../services/fhir/Epic';
 import { getLoginUrl as getVaLoginUrl } from '../../services/fhir/VA';
+import { getLoginUrl as getAthenaLoginUrl } from '../../services/fhir/Athena';
 import { VeradigmLocalStorageKeys } from '../../services/fhir/Veradigm';
 import { HealowLocalStorageKeys } from '../../services/fhir/Healow';
 import { Routes } from '../../Routes';
@@ -42,11 +41,9 @@ const epicClient = createEpicClient({ signJwt });
 const cernerClient = createCernerClient();
 const veradigmClient = createVeradigmClient();
 const healowClient = createHealowClient();
-const athenaClient = createAthenaClient();
 const epicSession = createSessionManager('epic');
 const cernerSession = createSessionManager('cerner');
 const healowSession = createSessionManager('healow');
-const athenaSession = createSessionManager('athena');
 
 /**
  * Initiates OAuth authorization flow for Epic MyChart connections.
@@ -250,40 +247,6 @@ async function initiateHealowAuth(
   return url;
 }
 
-/**
- * Initiates OAuth authorization flow for Athena Health connections.
- * Athena uses a single global FHIR R4 endpoint, so no tenant selection is needed.
- * Uses PKCE and supports refresh tokens via offline_access scope.
- *
- * @param config - App configuration containing Athena client ID and public URL
- * @param environment - 'preview' for sandbox testing, 'production' for real patient data
- * @returns Authorization URL to redirect the user to
- */
-async function initiateAthenaAuth(
-  config: AppConfig,
-  environment: 'preview' | 'production',
-): Promise<string> {
-  const clientId =
-    environment === 'preview'
-      ? config.ATHENA_SANDBOX_CLIENT_ID
-      : config.ATHENA_CLIENT_ID;
-
-  if (!clientId || !config.PUBLIC_URL) {
-    throw new Error('Athena OAuth configuration is incomplete');
-  }
-
-  const oauthConfig = buildAthenaOAuthConfig({
-    clientId,
-    publicUrl: config.PUBLIC_URL,
-    redirectPath: Routes.AthenaCallback,
-    environment,
-  });
-
-  const { url, session } = await athenaClient.initiateAuth(oauthConfig);
-  await athenaSession.save(session);
-  return url;
-}
-
 export async function getLoginUrlBySource(
   config: AppConfig,
   item: RxDocument<ConnectionDocument>,
@@ -376,7 +339,7 @@ export async function getLoginUrlBySource(
       if (!environment) {
         throw new Error('Connection missing environment - please reconnect');
       }
-      return initiateAthenaAuth(config, environment).then(
+      return getAthenaLoginUrl(config, environment).then(
         (url) => url as string & Location,
       );
     }
