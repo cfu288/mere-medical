@@ -99,6 +99,7 @@ export type CreateHealowConnectionDocument = Omit<
 export interface AthenaConnectionDocument extends ConnectionDocument {
   source: 'athena';
   patient: string;
+  tenant_id: string;
   environment: 'preview' | 'production';
   auth_uri: string;
   token_uri: string;

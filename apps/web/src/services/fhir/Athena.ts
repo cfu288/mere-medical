@@ -22,7 +22,11 @@ import {
 import { Routes } from '../../Routes';
 import { R4 } from '.';
 import { AppConfig } from '../../app/providers/AppConfigProvider';
-import { createConnection } from '../../repositories/ConnectionRepository';
+import {
+  createConnection,
+  findConnectionByTenant,
+  updateConnection,
+} from '../../repositories/ConnectionRepository';
 import { findUserById } from '../../repositories/UserRepository';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
 import uuid4 from '../../shared/utils/UUIDUtils';
@@ -30,7 +34,6 @@ import {
   ClinicalDocument,
   CreateClinicalDocument,
 } from '../../models/clinical-document/ClinicalDocument.type';
-import { getConnectionCardByUrl } from './getConnectionCardByUrl';
 import {
   createAthenaClient,
   buildAthenaOAuthConfig,
@@ -532,11 +535,30 @@ export async function saveConnectionToDb({
   db: RxDatabase<DatabaseCollections>;
   user: UserDocument;
 }) {
+  if (!tokens?.accessToken) {
+    throw new Error(
+      'Error completing authentication: no access token provided',
+    );
+  }
+
+  const ahPractice =
+    (tokens.raw?.['ah_practice'] as string | undefined) ??
+    getAhPracticeFromToken(tokens.accessToken);
+
+  if (!ahPractice) {
+    throw new Error(
+      'Missing ah_practice claim — cannot identify Athena practice',
+    );
+  }
+
   const envConfig = getAthenaEnvironmentConfig(environment);
-  const doc = await getConnectionCardByUrl<AthenaConnectionDocument>(
-    envConfig.fhirBaseUrl,
+
+  const existing = await findConnectionByTenant(
     db,
     user.id,
+    'athena',
+    ahPractice,
+    envConfig.fhirBaseUrl,
   );
 
   const organizationName = await fetchOrganizationName(
@@ -545,82 +567,45 @@ export async function saveConnectionToDb({
     tokens.patientId,
   );
 
-  return new Promise((resolve, reject) => {
-    if (tokens?.accessToken) {
-      if (doc) {
-        try {
-          const updateData: Record<string, unknown> = {
-            access_token: tokens.accessToken,
-            expires_at: tokens.expiresAt,
-            scope: tokens.scope,
-            patient: tokens.patientId,
-            last_sync_was_error: false,
-            name: organizationName,
-            environment,
-            auth_uri: envConfig.authUrl,
-            token_uri: envConfig.tokenUrl,
-          };
+  if (existing) {
+    const updateData: Partial<AthenaConnectionDocument> = {
+      access_token: tokens.accessToken,
+      expires_at: tokens.expiresAt,
+      scope: tokens.scope,
+      patient: tokens.patientId,
+      last_sync_was_error: false,
+      name: organizationName,
+    };
 
-          if (tokens.idToken) {
-            updateData['id_token'] = tokens.idToken;
-          }
-
-          if (tokens.refreshToken) {
-            updateData['refresh_token'] = tokens.refreshToken;
-          }
-
-          doc
-            .update({
-              $set: updateData,
-            })
-            .then(() => {
-              resolve(true);
-            })
-            .catch((e) => {
-              console.error(e);
-              reject(new Error('Error updating connection'));
-            });
-        } catch (e) {
-          console.error(e);
-          reject(new Error('Error updating connection'));
-        }
-      } else {
-        const dbentry: CreateAthenaConnectionDocument = {
-          id: uuid4(),
-          user_id: user.id,
-          source: 'athena',
-          location: envConfig.fhirBaseUrl,
-          name: organizationName,
-          access_token: tokens.accessToken,
-          expires_at: tokens.expiresAt,
-          scope: tokens.scope,
-          id_token: tokens.idToken,
-          refresh_token: tokens.refreshToken,
-          patient: tokens.patientId,
-          environment,
-          auth_uri: envConfig.authUrl,
-          token_uri: envConfig.tokenUrl,
-        };
-        try {
-          createConnection(db, dbentry as ConnectionDocument)
-            .then(() => {
-              resolve(true);
-            })
-            .catch((e) => {
-              console.error(e);
-              reject(new Error('Error updating connection'));
-            });
-        } catch (e) {
-          console.error(e);
-          reject(new Error('Error updating connection'));
-        }
-      }
-    } else {
-      reject(
-        new Error('Error completing authentication: no access token provided'),
-      );
+    if (tokens.idToken) {
+      updateData.id_token = tokens.idToken;
     }
-  });
+
+    if (tokens.refreshToken) {
+      updateData.refresh_token = tokens.refreshToken;
+    }
+
+    await updateConnection(db, user.id, existing.id, updateData);
+  } else {
+    const dbentry: CreateAthenaConnectionDocument = {
+      id: uuid4(),
+      user_id: user.id,
+      source: 'athena',
+      location: envConfig.fhirBaseUrl,
+      name: organizationName,
+      access_token: tokens.accessToken,
+      expires_at: tokens.expiresAt,
+      scope: tokens.scope,
+      id_token: tokens.idToken,
+      refresh_token: tokens.refreshToken,
+      patient: tokens.patientId,
+      tenant_id: ahPractice,
+      environment,
+      auth_uri: envConfig.authUrl,
+      token_uri: envConfig.tokenUrl,
+    };
+    await createConnection(db, dbentry as ConnectionDocument);
+  }
 }
 
 export async function refreshAthenaConnectionTokenIfNeeded(
@@ -686,6 +671,16 @@ export async function refreshAthenaConnectionTokenIfNeeded(
       };
 
       const newTokens = await client.refresh(currentTokens, oauthConfig);
+
+      if (!newTokens.raw?.['ah_practice']) {
+        const existingTenantId = connectionDocument.get('tenant_id');
+        if (existingTenantId) {
+          newTokens.raw = {
+            ...newTokens.raw,
+            ah_practice: existingTenantId,
+          };
+        }
+      }
 
       return await saveConnectionToDb({
         tokens: newTokens,
