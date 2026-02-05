@@ -369,7 +369,13 @@ export async function getLoginUrlBySource(
       ).then((url) => url as string & Location);
     }
     case 'athena': {
-      const environment = item.get('environment') as 'preview' | 'production';
+      const environment = item.get('environment') as
+        | 'preview'
+        | 'production'
+        | undefined;
+      if (!environment) {
+        throw new Error('Connection missing environment - please reconnect');
+      }
       return initiateAthenaAuth(config, environment).then(
         (url) => url as string & Location,
       );

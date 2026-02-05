@@ -28,6 +28,7 @@ export function createSessionManager(
 
   const verifierKey = `${vendor}_code_verifier`;
   const stateKey = `${vendor}_oauth_state`;
+  const nonceKey = `${vendor}_oauth_nonce`;
 
   return {
     async save(session: AuthorizationRequestState): Promise<void> {
@@ -37,15 +38,20 @@ export function createSessionManager(
       if (session.state) {
         await resolvedStorage.setItem(stateKey, session.state);
       }
+      if (session.nonce) {
+        await resolvedStorage.setItem(nonceKey, session.nonce);
+      }
     },
 
     async load(): Promise<AuthorizationRequestState | null> {
       const verifier = await resolvedStorage.getItem(verifierKey);
       const state = await resolvedStorage.getItem(stateKey);
-      if (!verifier && !state) return null;
+      const nonce = await resolvedStorage.getItem(nonceKey);
+      if (!verifier && !state && !nonce) return null;
       return {
         codeVerifier: verifier ?? undefined,
         state: state ?? undefined,
+        nonce: nonce ?? undefined,
         startedAt: 0,
       };
     },
@@ -53,6 +59,7 @@ export function createSessionManager(
     async clear(): Promise<void> {
       await resolvedStorage.removeItem(verifierKey);
       await resolvedStorage.removeItem(stateKey);
+      await resolvedStorage.removeItem(nonceKey);
     },
   };
 }

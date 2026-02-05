@@ -52,14 +52,66 @@ export enum AthenaLocalStorageKeys {
   ATHENA_ENVIRONMENT = 'athenaEnvironment',
 }
 
+function parseJwtPayload<T>(token: string): T {
+  const base64Url = token.split('.')[1];
+  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  const jsonPayload = decodeURIComponent(
+    atob(base64)
+      .split('')
+      .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+      .join(''),
+  );
+  return JSON.parse(jsonPayload);
+}
+
+function getAhPracticeFromToken(accessToken: string): string | undefined {
+  try {
+    const payload = parseJwtPayload<{ ah_practice?: string }>(accessToken);
+    return payload.ah_practice;
+  } catch {
+    return undefined;
+  }
+}
+
+function buildAhPracticeParam(accessToken?: string): string | undefined {
+  if (!accessToken) return undefined;
+  const ahPractice = getAhPracticeFromToken(accessToken);
+  if (!ahPractice) return undefined;
+  return `Organization/${ahPractice}`;
+}
+
+/**
+ * Fetches FHIR resources from Athena's API using the global URL with ah-practice parameter.
+ *
+ * The ah-practice parameter format is: Organization/a-1.Practice-{practiceId}
+ * The `/` in the value must NOT be URL-encoded.
+ *
+ * @see https://docs.athenahealth.com/api/guides/base-fhir-urls
+ * @see https://docs.athenahealth.com/api/guides/testing-sandbox
+ */
 async function getFHIRResource<T extends FhirResource>(
   connectionDocument: AthenaConnectionDocument,
   fhirResourceUrl: string,
   params?: Record<string, string>,
 ): Promise<BundleEntry<T>[]> {
   const baseUrl = connectionDocument.location as string;
+  const ahPractice = buildAhPracticeParam(connectionDocument.access_token);
+
   const searchParams = new URLSearchParams(params);
-  const defaultUrl = `${baseUrl}/${fhirResourceUrl}?${searchParams}`;
+  let defaultUrl = `${baseUrl}/${fhirResourceUrl}`;
+
+  const existingParams = searchParams.toString();
+  if (existingParams || ahPractice) {
+    defaultUrl += '?';
+    if (existingParams) {
+      defaultUrl += existingParams;
+    }
+    if (ahPractice) {
+      defaultUrl += existingParams
+        ? `&ah-practice=${ahPractice}`
+        : `ah-practice=${ahPractice}`;
+    }
+  }
 
   let allEntries: BundleEntry<T>[] = [];
   let nextUrl: string | undefined = defaultUrl;
@@ -139,7 +191,7 @@ export async function syncAllRecords(
   const encounterMapper = (a: BundleEntry<Encounter>) =>
     R4.mapEncounterToClinicalDocument(a, connectionDocument);
 
-  const patientId = connectionDocument.patient_id;
+  const patientId = connectionDocument.patient;
 
   const syncJob = await Promise.allSettled([
     syncFHIRResource<Procedure>(
@@ -369,7 +421,13 @@ async function fetchAttachmentData(
     const isRelativeUrl =
       !url.startsWith('http://') && !url.startsWith('https://');
     const baseUrl = cd.location as string;
-    const fullUrl = isRelativeUrl ? `${baseUrl}/${url}` : url;
+    let fullUrl = isRelativeUrl ? `${baseUrl}/${url}` : url;
+
+    const ahPractice = buildAhPracticeParam(cd.access_token);
+    if (ahPractice) {
+      const separator = fullUrl.includes('?') ? '&' : '?';
+      fullUrl += `${separator}ah-practice=${ahPractice}`;
+    }
 
     const res = await fetch(fullUrl, {
       headers: {
@@ -419,6 +477,50 @@ async function fetchAttachmentData(
   }
 }
 
+async function fetchOrganizationName(
+  accessToken: string,
+  fhirBaseUrl: string,
+  patientId: string,
+): Promise<string> {
+  const ahPractice = getAhPracticeFromToken(accessToken);
+  if (!ahPractice) return 'Athena Health';
+
+  const practiceId = ahPractice.split('Practice-')[1];
+  if (practiceId) {
+    try {
+      const response = await fetch(
+        `/api/v1/athena/organizations/${practiceId}`,
+      );
+      if (response.ok) {
+        const org = await response.json();
+        if (org?.name) {
+          return org.name;
+        }
+      }
+    } catch (e) {
+      console.warn(
+        'Failed to fetch organization from API, trying Patient resource',
+        e,
+      );
+    }
+  }
+
+  try {
+    const url = `${fhirBaseUrl}/Patient/${patientId}?ah-practice=Organization/${ahPractice}`;
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/fhir+json',
+      },
+    });
+    if (!response.ok) return 'Athena Health';
+    const patient = await response.json();
+    return patient.managingOrganization?.display || 'Athena Health';
+  } catch {
+    return 'Athena Health';
+  }
+}
+
 export async function saveConnectionToDb({
   tokens,
   environment,
@@ -436,6 +538,13 @@ export async function saveConnectionToDb({
     db,
     user.id,
   );
+
+  const organizationName = await fetchOrganizationName(
+    tokens.accessToken,
+    envConfig.fhirBaseUrl,
+    tokens.patientId,
+  );
+
   return new Promise((resolve, reject) => {
     if (tokens?.accessToken) {
       if (doc) {
@@ -444,8 +553,12 @@ export async function saveConnectionToDb({
             access_token: tokens.accessToken,
             expires_at: tokens.expiresAt,
             scope: tokens.scope,
-            patient_id: tokens.patientId,
+            patient: tokens.patientId,
             last_sync_was_error: false,
+            name: organizationName,
+            environment,
+            auth_uri: envConfig.authUrl,
+            token_uri: envConfig.tokenUrl,
           };
 
           if (tokens.idToken) {
@@ -477,14 +590,16 @@ export async function saveConnectionToDb({
           user_id: user.id,
           source: 'athena',
           location: envConfig.fhirBaseUrl,
-          name: 'athenahealth',
+          name: organizationName,
           access_token: tokens.accessToken,
           expires_at: tokens.expiresAt,
           scope: tokens.scope,
           id_token: tokens.idToken,
           refresh_token: tokens.refreshToken,
-          patient_id: tokens.patientId,
+          patient: tokens.patientId,
           environment,
+          auth_uri: envConfig.authUrl,
+          token_uri: envConfig.tokenUrl,
         };
         try {
           createConnection(db, dbentry as ConnectionDocument)
@@ -521,13 +636,20 @@ export async function refreshAthenaConnectionTokenIfNeeded(
     }
 
     try {
-      const environment = connectionDocument.get('environment') as
-        | 'preview'
-        | 'production';
       const userId = connectionDocument.get('user_id');
-      const patientId = connectionDocument.get('patient_id');
+      const patientId = connectionDocument.get('patient');
       const scope = connectionDocument.get('scope');
       const idToken = connectionDocument.get('id_token');
+      const environment = connectionDocument.get('environment') as
+        | 'preview'
+        | 'production'
+        | undefined;
+
+      if (!environment) {
+        throw new Error(
+          'Connection missing environment field - please reconnect',
+        );
+      }
 
       const userObject = await findUserById(db, userId);
 

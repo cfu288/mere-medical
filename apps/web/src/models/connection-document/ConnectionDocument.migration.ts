@@ -13,7 +13,6 @@ export const ConnectionDocumentMigrations: MigrationStrategies = {
     return oldDoc;
   },
   3: function (oldDoc) {
-    // handle new fields last_sync_was_error, last_sync_attempt
     oldDoc.last_sync_was_error = false;
     oldDoc.last_sync_attempt = oldDoc.last_refreshed;
     return oldDoc;
@@ -23,6 +22,16 @@ export const ConnectionDocumentMigrations: MigrationStrategies = {
       oldDoc as ConnectionDocument & { expires_in: number }
     ).expires_in;
     delete (oldDoc as ConnectionDocument & { expires_in?: number }).expires_in;
+    return oldDoc;
+  },
+  5: (oldDoc: Record<string, unknown>) => oldDoc,
+  6: function (oldDoc: Record<string, unknown>) {
+    if (oldDoc['source'] === 'athena' && oldDoc['location']) {
+      const location = oldDoc['location'] as string;
+      oldDoc['environment'] = location.includes('preview')
+        ? 'preview'
+        : 'production';
+    }
     return oldDoc;
   },
 };
