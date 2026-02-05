@@ -94,6 +94,7 @@ export function createOAuthError(
 export const OAuthErrors = {
   noTokenUrl: () => new OAuthError('no_token_url', 'No token URL provided'),
   stateMismatch: () => new OAuthError('state_mismatch', 'OAuth state validation failed'),
+  nonceMismatch: () => new OAuthError('nonce_mismatch', 'ID token nonce does not match session nonce'),
   missingCode: () => new OAuthError('missing_code', 'No authorization code in callback'),
   missingCodeVerifier: () => new OAuthError('missing_code_verifier', 'PKCE code verifier not found in session'),
   missingAccessToken: () => new OAuthError('missing_access_token', 'No access_token in token response'),

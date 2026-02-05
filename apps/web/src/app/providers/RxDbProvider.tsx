@@ -90,6 +90,11 @@ export const databaseCollections = {
       1: (oldDoc: Record<string, unknown>) => oldDoc,
       2: (oldDoc: Record<string, unknown>) => oldDoc,
       3: (oldDoc: Record<string, unknown>) => oldDoc,
+      4: (oldDoc: Record<string, unknown>) => {
+        oldDoc['ATHENA_CLIENT_ID'] = '';
+        oldDoc['ATHENA_SANDBOX_CLIENT_ID'] = '';
+        return oldDoc;
+      },
     },
   },
 };

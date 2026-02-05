@@ -1,3 +1,20 @@
+/**
+ * Athena Health OAuth 2.0 + FHIR client implementation.
+ *
+ * Athena uses a global FHIR endpoint but requires practice context via the `ah-practice`
+ * query parameter on FHIR API calls: `?ah-practice=Organization/{ahPractice}`
+ *
+ * Preview (Sandbox) Test Patient Login:
+ * - Practice ID: 80000
+ * - Patient ID: 14545
+ * - Email: phrtest_preview@mailinator.com
+ * - Password: Password1
+ *
+ * @see https://docs.athenahealth.com/api/guides/authorize-endpoint
+ * @see https://docs.athenahealth.com/api/guides/token-endpoint
+ * @see https://docs.athenahealth.com/api/guides/base-fhir-urls
+ * @see https://docs.athenahealth.com/api/guides/testing-sandbox
+ */
 import type {
   OAuthConfig,
   AuthorizationRequestState,
@@ -10,37 +27,34 @@ import {
   generateCodeChallenge,
 } from '../session.js';
 import { parseTokenResponse, validateCallback, isTokenExpired } from '../token-exchange.js';
+import { parseJwtPayload } from '../jwt.js';
 
 export const ATHENA_DEFAULT_SCOPES = [
   'openid',
   'fhirUser',
   'offline_access',
   'launch/patient',
-  'patient/AllergyIntolerance.r',
-  'patient/Binary.r',
-  'patient/CarePlan.r',
-  'patient/CareTeam.r',
-  'patient/Condition.r',
-  'patient/Coverage.r',
-  'patient/Device.r',
-  'patient/DiagnosticReport.r',
-  'patient/DocumentReference.r',
-  'patient/Encounter.r',
-  'patient/Goal.r',
-  'patient/Immunization.r',
-  'patient/Location.r',
-  'patient/Medication.r',
-  'patient/MedicationDispense.r',
-  'patient/MedicationRequest.r',
-  'patient/Observation.r',
-  'patient/Organization.r',
-  'patient/Patient.r',
-  'patient/Practitioner.r',
-  'patient/Procedure.r',
-  'patient/Provenance.r',
-  'patient/RelatedPerson.r',
-  'patient/ServiceRequest.r',
-  'patient/Specimen.r',
+  'patient/AllergyIntolerance.read',
+  'patient/Binary.read',
+  'patient/CarePlan.read',
+  'patient/CareTeam.read',
+  'patient/Condition.read',
+  'patient/Device.read',
+  'patient/DiagnosticReport.read',
+  'patient/DocumentReference.read',
+  'patient/Encounter.read',
+  'patient/Goal.read',
+  'patient/Immunization.read',
+  'patient/Location.read',
+  'patient/Medication.read',
+  'patient/MedicationRequest.read',
+  'patient/Observation.read',
+  'patient/Organization.read',
+  'patient/Patient.read',
+  'patient/Practitioner.read',
+  'patient/Procedure.read',
+  'patient/Provenance.read',
+  'patient/ServiceRequest.read',
 ];
 
 export type AthenaTokenSet = CoreTokenSet &
@@ -64,9 +78,26 @@ export interface AthenaClient {
   canRefresh: (tokens: AthenaTokenSet) => boolean;
 }
 
+/**
+ * Builds the authorization URL for Athena OAuth flow.
+ *
+ * Authorization Request Parameters (sent as query string):
+ * - client_id: Application client ID
+ * - redirect_uri: Callback URL for authorization code
+ * - response_type: 'code' for authorization code flow
+ * - scope: Space-delimited list of requested scopes
+ * - aud: FHIR base URL (required by Athena)
+ * - state: CSRF protection token
+ * - nonce: Replay protection for ID token (required with openid scope)
+ * - code_challenge: PKCE challenge (S256)
+ * - code_challenge_method: 'S256'
+ *
+ * @see https://docs.athenahealth.com/api/guides/authorize-endpoint
+ */
 async function initiateAuth(
   config: OAuthConfig,
 ): Promise<{ url: string; session: AuthorizationRequestState }> {
+  // Nonce is required when requesting the openid scope per OpenID Connect spec.
   const session = await generateAuthorizationRequestState({
     usePkce: true,
     useState: true,
@@ -81,6 +112,7 @@ async function initiateAuth(
     scope: config.scopes.join(' '),
   });
 
+  // Athena requires the aud parameter to be the FHIR base URL.
   if (!config.tenant?.fhirBaseUrl) {
     throw createOAuthError('missing_aud', 'fhirBaseUrl is required for aud parameter');
   }
@@ -139,6 +171,28 @@ export function createAthenaClient(): AthenaClient {
   return {
     initiateAuth,
 
+    /**
+     * Exchanges authorization code for tokens.
+     *
+     * Token Request (application/x-www-form-urlencoded):
+     * - grant_type: 'authorization_code'
+     * - code: Authorization code from callback
+     * - redirect_uri: Must match the original authorization request
+     * - client_id: Application client ID
+     * - code_verifier: PKCE code verifier
+     *
+     * Token Response:
+     * - access_token: Bearer token for FHIR API requests
+     * - token_type: 'Bearer'
+     * - expires_in: Token lifetime in seconds
+     * - scope: Granted scopes (space-delimited)
+     * - id_token: OpenID Connect ID token (contains nonce claim)
+     * - refresh_token: Token for obtaining new access tokens (if offline_access scope granted)
+     * - patient: Patient FHIR ID for the authorized context
+     * - ah_practice: Practice context required for FHIR API calls (e.g., "a-1.Practice-80000")
+     *
+     * @see https://docs.athenahealth.com/api/guides/token-endpoint
+     */
     async handleCallback(params, config, session) {
       const { code, codeVerifier } = validateAndExtractCode(params, config, session);
 
@@ -159,6 +213,19 @@ export function createAthenaClient(): AthenaClient {
       });
       const tokens = await parseTokenResponse(res);
 
+      if (!tokens.idToken) {
+        throw createOAuthError('missing_id_token', 'No ID token in response');
+      }
+
+      if (!session.nonce) {
+        throw createOAuthError('missing_nonce', 'Nonce was not set in session');
+      }
+
+      const payload = parseJwtPayload<{ nonce?: string }>(tokens.idToken);
+      if (payload.nonce !== session.nonce) {
+        throw OAuthErrors.nonceMismatch();
+      }
+
       const patientId = tokens.raw['patient'] as string | undefined;
       if (!patientId) {
         throw createOAuthError('missing_patient', 'No patient ID in token response');
@@ -167,6 +234,24 @@ export function createAthenaClient(): AthenaClient {
       return buildTokenResult(tokens, patientId);
     },
 
+    /**
+     * Refreshes an expired access token.
+     *
+     * Refresh Token Request (application/x-www-form-urlencoded):
+     * - grant_type: 'refresh_token'
+     * - refresh_token: The refresh token from the original token response
+     * - client_id: Application client ID
+     * - scope: Originally granted scopes (required by Athena)
+     *
+     * Refresh Token Response:
+     * - access_token: New bearer token
+     * - token_type: 'Bearer'
+     * - expires_in: Token lifetime in seconds
+     * - scope: Granted scopes
+     * - refresh_token: New refresh token (if provided, replaces the old one)
+     *
+     * @see https://docs.athenahealth.com/api/guides/token-endpoint
+     */
     async refresh(tokens, _config) {
       if (!tokens.refreshToken) {
         throw createOAuthError('refresh_not_supported', 'No refresh token available');
@@ -176,6 +261,7 @@ export function createAthenaClient(): AthenaClient {
         throw OAuthErrors.noTokenUrl();
       }
 
+      // Athena requires scope in refresh requests.
       if (!tokens.scope) {
         throw createOAuthError('missing_scope', 'Scope is required for token refresh');
       }
@@ -220,6 +306,9 @@ export interface AthenaOAuthConfigOptions {
   environment: 'preview' | 'production';
 }
 
+/**
+ * @see https://docs.athenahealth.com/api/guides/base-fhir-urls
+ */
 const ATHENA_ENVIRONMENTS = {
   preview: {
     authUrl: 'https://api.preview.platform.athenahealth.com/oauth2/v1/authorize',

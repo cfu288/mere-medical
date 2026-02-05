@@ -3,7 +3,7 @@ export const connectionSchemaLiteral = {
   name: 'connection_documents',
   description:
     'Metadata used to describe a connection to an external health data provider server, usually FHIR server. Also contains OAuth metadata needed to fetch or refresh access tokens (if possible).',
-  version: 4,
+  version: 6,
   primaryKey: 'id',
   type: 'object',
   properties: {
@@ -79,8 +79,7 @@ export const connectionSchemaLiteral = {
     },
     tenant_id: {
       type: 'string',
-      description:
-        'A client id specifically provided on dynamic registration - used in Epic connections',
+      description: 'Tenant or practice identifier for the connection',
     },
     auth_uri: {
       type: 'string',
@@ -93,6 +92,11 @@ export const connectionSchemaLiteral = {
     id_token: {
       type: 'string',
       description: 'An OAuth ID token',
+    },
+    environment: {
+      type: 'string',
+      description:
+        'Environment identifier (e.g., preview, production, sandbox) for vendors with multiple environments',
     },
   },
   indexes: ['last_refreshed', 'user_id'],

@@ -1,4 +1,4 @@
-import { Controller, Get, Res } from '@nestjs/common';
+import { Controller, Get, Param, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { AthenaService } from './athena.service';
 
@@ -6,11 +6,12 @@ import { AthenaService } from './athena.service';
 export class AthenaController {
   constructor(private readonly athenaService: AthenaService) {}
 
-  @Get('config')
-  getConfig(@Res() response: Response) {
-    response.json({
-      preview: this.athenaService.getEnvironmentConfig('preview'),
-      production: this.athenaService.getEnvironmentConfig('production'),
-    });
+  @Get('organizations/:practiceId')
+  getOrganization(
+    @Res() response: Response,
+    @Param('practiceId') practiceId: string,
+  ) {
+    const name = this.athenaService.getOrganizationName(practiceId);
+    response.json({ name: name ?? null });
   }
 }

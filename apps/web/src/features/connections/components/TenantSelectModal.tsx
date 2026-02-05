@@ -32,6 +32,7 @@ import {
 } from './TenantSelectModelResultItem';
 import VALogo from '../../../assets/img/va-logo.png';
 import HealowLogo from '../../../assets/img/eclinicalworks-logo.jpeg';
+import AthenaLogo from '../../../assets/img/athena-logo.jpeg';
 import { AppConfig, useConfig } from '../../../app/providers/AppConfigProvider';
 import { AthenaLocalStorageKeys } from '../../../services/fhir/Athena';
 
@@ -348,9 +349,9 @@ export function TenantSelectModal({
         fhirVersion: 'R4',
       },
       {
-        title: 'athenahealth',
+        title: 'Athena Health',
         vendor: 'athena',
-        source: '',
+        source: AthenaLogo,
         alt: athenaProductionEnabled ? undefined : 'Sandbox Only',
         enabled: athenaEnabled,
         disabledMessage: 'Provide ATHENA_CLIENT_ID env var to enable',
