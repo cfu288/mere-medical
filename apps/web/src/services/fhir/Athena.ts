@@ -669,8 +669,6 @@ export async function refreshAthenaConnectionTokenIfNeeded(
         throw new Error('Athena client ID not configured');
       }
 
-      const client = createAthenaClient();
-
       const oauthConfig = buildAthenaOAuthConfig({
         clientId,
         publicUrl: config.PUBLIC_URL || '',
@@ -688,7 +686,7 @@ export async function refreshAthenaConnectionTokenIfNeeded(
         raw: {},
       };
 
-      const newTokens = await client.refresh(currentTokens, oauthConfig);
+      const newTokens = await athenaClient.refresh(currentTokens, oauthConfig);
 
       if (!newTokens.raw?.['ah_practice']) {
         const existingTenantId = connectionDocument.get('tenant_id');

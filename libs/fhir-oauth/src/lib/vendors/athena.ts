@@ -252,12 +252,12 @@ export function createAthenaClient(): AthenaClient {
      *
      * @see https://docs.athenahealth.com/api/guides/token-endpoint
      */
-    async refresh(tokens, _config) {
+    async refresh(tokens, config) {
       if (!tokens.refreshToken) {
         throw createOAuthError('refresh_not_supported', 'No refresh token available');
       }
 
-      if (!_config.tenant?.tokenUrl) {
+      if (!config.tenant?.tokenUrl) {
         throw OAuthErrors.noTokenUrl();
       }
 
@@ -266,13 +266,13 @@ export function createAthenaClient(): AthenaClient {
         throw createOAuthError('missing_scope', 'Scope is required for token refresh');
       }
 
-      const res = await fetch(_config.tenant.tokenUrl, {
+      const res = await fetch(config.tenant.tokenUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
           grant_type: 'refresh_token',
           refresh_token: tokens.refreshToken,
-          client_id: _config.clientId,
+          client_id: config.clientId,
           scope: tokens.scope,
         }),
       });
