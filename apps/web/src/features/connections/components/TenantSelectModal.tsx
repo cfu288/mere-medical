@@ -59,14 +59,7 @@ type VendorVersions = {
 };
 
 type VendorPaths = {
-  epic: { R4: string; DSTU2: string };
-  cerner: { R4: string; DSTU2: string };
-  healow: { R4: string };
-  athena: { R4: string };
-  veradigm: { DSTU2: string };
-  onpatient: { DSTU2: string };
-  va: { DSTU2: string };
-  any: { DSTU2: string };
+  [V in keyof VendorVersions]: Record<VendorVersions[V], string>;
 };
 
 const vendorPaths: VendorPaths = {
@@ -98,9 +91,11 @@ const vendorPaths: VendorPaths = {
   },
 };
 
-function getApiPath(emrVendor: EMRVendor, fhirVersion: 'DSTU2' | 'R4'): string {
-  const paths = vendorPaths[emrVendor] as Record<string, string>;
-  return paths[fhirVersion] ?? '';
+function getApiPath<V extends EMRVendor>(
+  emrVendor: V,
+  fhirVersion: VendorVersions[V],
+): string {
+  return vendorPaths[emrVendor][fhirVersion];
 }
 
 export type UnifiedDSTU2Endpoint = CernerDSTU2Endpoint &
@@ -306,7 +301,7 @@ export function TenantSelectModal({
         href: vaUrl,
         enabled: vaEnabled,
         disabledMessage: 'Provide VA_CLIENT_ID env var to enable',
-        id: 7,
+        id: 4,
       },
       {
         title: 'Healow',

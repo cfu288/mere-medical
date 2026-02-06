@@ -222,31 +222,17 @@ function checkIfHealowIsConfigured():
   return { check };
 }
 
-function checkIfAthenaIsConfigured():
-  | {
-      check: true;
-      clientId: string;
-    }
-  | {
-      check: false;
-    } {
+function checkIfAthenaIsConfigured(): { check: boolean } {
   const check =
     !!process.env.ATHENA_CLIENT_ID || !!process.env.ATHENA_SANDBOX_CLIENT_ID;
   if (!check) {
     Logger.warn(
       'ATHENA_CLIENT_ID or ATHENA_SANDBOX_CLIENT_ID was not provided: Athena services will be disabled.',
     );
-  }
-  if (check) {
+  } else {
     Logger.log(
       'Athena client ID was provided: Athena service will be enabled.',
     );
-
-    return {
-      check,
-      clientId:
-        process.env.ATHENA_CLIENT_ID || process.env.ATHENA_SANDBOX_CLIENT_ID!,
-    };
   }
 
   return { check };
