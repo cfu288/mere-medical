@@ -17,6 +17,7 @@
  */
 import type {
   OAuthConfig,
+  OAuthClient,
   AuthorizationRequestState,
   CoreTokenSet,
   WithRefreshToken,
@@ -64,17 +65,7 @@ export type AthenaTokenSet = CoreTokenSet &
     scope?: string;
   };
 
-export interface AthenaClient {
-  initiateAuth: (
-    config: OAuthConfig,
-  ) => Promise<{ url: string; session: AuthorizationRequestState }>;
-  handleCallback: (
-    params: URLSearchParams,
-    config: OAuthConfig,
-    session: AuthorizationRequestState,
-  ) => Promise<AthenaTokenSet>;
-  refresh: (tokens: AthenaTokenSet, config: OAuthConfig) => Promise<AthenaTokenSet>;
-  isExpired: (tokens: AthenaTokenSet, bufferSeconds?: number) => boolean;
+export interface AthenaClient extends OAuthClient<AthenaTokenSet> {
   canRefresh: (tokens: AthenaTokenSet) => boolean;
 }
 

@@ -9,3 +9,7 @@ export interface R4Endpoint {
 }
 
 export const HealowR4TenantEndpoints: R4Endpoint[] = Array.from(HealowEndpoints);
+
+export function getUniqueTenantCount(): number {
+  return HealowR4TenantEndpoints.length;
+}

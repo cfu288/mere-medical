@@ -32,7 +32,10 @@ import {
   getR4Url,
 } from '../../services/fhir/Epic';
 import { getLoginUrl as getVaLoginUrl } from '../../services/fhir/VA';
-import { getLoginUrl as getAthenaLoginUrl } from '../../services/fhir/Athena';
+import {
+  AthenaLocalStorageKeys,
+  getLoginUrl as getAthenaLoginUrl,
+} from '../../services/fhir/Athena';
 import { VeradigmLocalStorageKeys } from '../../services/fhir/Veradigm';
 import { HealowLocalStorageKeys } from '../../services/fhir/Healow';
 import { Routes } from '../../Routes';
@@ -416,6 +419,16 @@ export function setTenantUrlBySource(
         item.get('name'),
         item.get('tenant_id'),
       );
+      break;
+    }
+    case 'athena': {
+      const environment = item.get('environment');
+      if (environment) {
+        localStorage.setItem(
+          AthenaLocalStorageKeys.ATHENA_ENVIRONMENT,
+          environment,
+        );
+      }
       break;
     }
     default: {
