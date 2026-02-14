@@ -23,9 +23,6 @@
   </a>
 </p>
 <p align="center">
-  <a href="https://discord.gg/FjtQ84qADe">
-    <img src="https://img.shields.io/badge/Discord-7289DA?style=flat&logo=discord&logoColor=white" alt="Discord">
-  </a>
   <a href="https://github.com/cfu288/mere-medical/actions/workflows/staging.yaml">
     <img src="https://img.shields.io/github/actions/workflow/status/cfu288/mere-medical/staging.yaml" alt="Build Status">
   </a>
@@ -50,9 +47,6 @@ Mere Medical is a self-hosted web app to aggregate and sync all of your medical 
 >
 > This project is supported by a single developer who is also a full-time medical resident. If you would like to support this project, please consider [donating](https://github.com/sponsors/cfu288) to help with hosting costs or help by tackling one of the open [issues](https://github.com/cfu288/mere-medical/issues).
 
-> [!NOTE]
-> If Mere doesn't fit your needs, another great open-source PHR is [Fasten Health](https://www.fastenhealth.com/)
-
 ## Getting Started
 
 Here are some ways to get Mere Medical running on your local computer
@@ -60,8 +54,6 @@ Here are some ways to get Mere Medical running on your local computer
 ### Docker Compose
 
 ```yaml
-version: '3.9'
-
 services:
   app:
     image: cfu288/mere-medical:latest
