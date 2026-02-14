@@ -94,10 +94,23 @@ function getAhPracticeFromToken(accessToken: string): string | undefined {
   }
 }
 
+const AH_PRACTICE_PATTERN = /^a-\d+\.Practice-\d+$/;
+
+function validateAhPracticeFormat(value: string): boolean {
+  if (!AH_PRACTICE_PATTERN.test(value)) {
+    console.warn(
+      `Unexpected ah_practice format: "${value}" — expected pattern: a-{num}.Practice-{num}`,
+    );
+    return false;
+  }
+  return true;
+}
+
 function buildAhPracticeParam(accessToken?: string): string | undefined {
   if (!accessToken) return undefined;
   const ahPractice = getAhPracticeFromToken(accessToken);
   if (!ahPractice) return undefined;
+  validateAhPracticeFormat(ahPractice);
   return `Organization/${ahPractice}`;
 }
 
@@ -534,10 +547,16 @@ async function fetchOrganizationName(
         Accept: 'application/fhir+json',
       },
     });
-    if (!response.ok) return 'Athena Health';
+    if (!response.ok) {
+      console.warn(
+        `Failed to fetch Patient resource for org name: ${response.status}`,
+      );
+      return 'Athena Health';
+    }
     const patient = await response.json();
     return patient.managingOrganization?.display || 'Athena Health';
-  } catch {
+  } catch (e) {
+    console.warn('Failed to fetch organization name from Patient resource', e);
     return 'Athena Health';
   }
 }
@@ -547,11 +566,13 @@ export async function saveConnectionToDb({
   environment,
   db,
   user,
+  ahPractice: ahPracticeOverride,
 }: {
   tokens: AthenaTokenSet;
   environment: 'preview' | 'production';
   db: RxDatabase<DatabaseCollections>;
   user: UserDocument;
+  ahPractice?: string;
 }) {
   if (!tokens?.accessToken) {
     throw new Error(
@@ -560,6 +581,7 @@ export async function saveConnectionToDb({
   }
 
   const ahPractice =
+    ahPracticeOverride ??
     (tokens.raw?.['ah_practice'] as string | undefined) ??
     getAhPracticeFromToken(tokens.accessToken);
 
@@ -568,6 +590,8 @@ export async function saveConnectionToDb({
       'Missing ah_practice claim — cannot identify Athena practice',
     );
   }
+
+  validateAhPracticeFormat(ahPractice);
 
   const envConfig = getAthenaEnvironmentConfig(environment);
 
@@ -648,6 +672,10 @@ export async function refreshAthenaConnectionTokenIfNeeded(
         | 'production'
         | undefined;
 
+      if (!patientId) {
+        throw new Error('Connection missing patient ID — please reconnect');
+      }
+
       if (!environment) {
         throw new Error(
           'Connection missing environment field - please reconnect',
@@ -688,21 +716,12 @@ export async function refreshAthenaConnectionTokenIfNeeded(
 
       const newTokens = await athenaClient.refresh(currentTokens, oauthConfig);
 
-      if (!newTokens.raw?.['ah_practice']) {
-        const existingTenantId = connectionDocument.get('tenant_id');
-        if (existingTenantId) {
-          newTokens.raw = {
-            ...newTokens.raw,
-            ah_practice: existingTenantId,
-          };
-        }
-      }
-
       return await saveConnectionToDb({
         tokens: newTokens,
         environment,
         db,
         user: userObject,
+        ahPractice: connectionDocument.get('tenant_id') as string | undefined,
       });
     } catch (e) {
       console.error(e);
