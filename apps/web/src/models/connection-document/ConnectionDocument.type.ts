@@ -104,6 +104,7 @@ export interface AthenaConnectionDocument extends ConnectionDocument {
   auth_uri: string;
   token_uri: string;
   id_token?: string;
+  fhir_version: 'R4';
 }
 
 export type CreateAthenaConnectionDocument = Omit<

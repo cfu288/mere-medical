@@ -8,6 +8,7 @@ import {
   Encounter,
   FhirResource,
   Immunization,
+  MedicationRequest,
   Observation,
   Patient,
   Procedure,
@@ -214,7 +215,7 @@ export async function syncAllRecords(
     R4.mapObservationToClinicalDocument(imm, connectionDocument);
   const drMapper = (dr: BundleEntry<DiagnosticReport>) =>
     R4.mapDiagnosticReportToClinicalDocument(dr, connectionDocument);
-  const medRequestMapper = (dr: BundleEntry<any>) =>
+  const medRequestMapper = (dr: BundleEntry<MedicationRequest>) =>
     R4.mapMedicationRequestToClinicalDocument(dr, connectionDocument);
   const immMapper = (dr: BundleEntry<Immunization>) =>
     R4.mapImmunizationToClinicalDocument(dr, connectionDocument);
@@ -256,7 +257,7 @@ export async function syncAllRecords(
       drMapper as any,
       { patient: patientId },
     ),
-    syncFHIRResource<any>(
+    syncFHIRResource<MedicationRequest>(
       connectionDocument,
       db,
       'MedicationRequest',
@@ -405,7 +406,6 @@ async function syncDocumentReferences(
             })
             .exec();
           if (exists.length === 0) {
-            console.log('Syncing attachment: ' + attachmentUrl);
             const { contentType, raw } = await fetchAttachmentData(
               attachmentUrl,
               connectionDocument,
@@ -642,6 +642,7 @@ export async function saveConnectionToDb({
       refresh_token: tokens.refreshToken,
       patient: tokens.patientId,
       tenant_id: ahPractice,
+      fhir_version: 'R4',
       environment,
       auth_uri: envConfig.authUrl,
       token_uri: envConfig.tokenUrl,

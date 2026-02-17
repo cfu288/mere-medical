@@ -10,8 +10,9 @@ import { useAppConfig } from '../../../app/providers/AppConfigProvider';
 import {
   AthenaLocalStorageKeys,
   saveConnectionToDb,
+  createAthenaClient,
+  buildAthenaOAuthConfig,
 } from '../../../services/fhir/Athena';
-import { createAthenaClient, buildAthenaOAuthConfig } from '@mere/fhir-oauth';
 import { useOAuthFlow } from '@mere/fhir-oauth/react';
 
 function clearLocalStorage() {
