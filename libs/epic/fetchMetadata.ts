@@ -95,9 +95,7 @@ const runBatched = async (
       }
     });
 
-    const successCount = settled.filter(
-      (s) => s.status === 'fulfilled',
-    ).length;
+    const successCount = settled.filter((s) => s.status === 'fulfilled').length;
     const errorCount = settled.length - successCount;
     console.log(
       `BATCH ${TerminalColor.bgBlue(`${iter}`)}: Processed ${successCount} of ${batch.length} in batch. ` +
