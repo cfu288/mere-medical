@@ -48,7 +48,7 @@ const serializeError = (error: unknown) => {
   return error;
 };
 
-const fetchMeta = async (item: EndpointItem): Promise<EndpointMeta> => {
+const fetchMeta = async (item: EndpointItem): Promise<EndpointMeta | null> => {
   const meta_url = `${item.url}metadata`;
   const res = await (
     await fetch(meta_url, {
@@ -56,9 +56,15 @@ const fetchMeta = async (item: EndpointItem): Promise<EndpointMeta> => {
     })
   ).json();
 
-  const sec_ext = res?.rest?.[0].security.extension?.[0].extension;
+  // Some Epic tenants return OperationOutcome (e.g. "No command was found")
+  // or a CapabilityStatement with no SMART security block. They're dead
+  // endpoints, not transient failures — skip silently rather than retry.
+  if (res?.resourceType === 'OperationOutcome') return null;
+  const sec_ext = res?.rest?.[0]?.security?.extension?.[0]?.extension;
+  if (!sec_ext) return null;
+
   const pickValueUri = (key: string) =>
-    sec_ext?.filter((x: { url: string }) => x.url === key)?.[0]?.valueUri;
+    sec_ext.filter((x: { url: string }) => x.url === key)?.[0]?.valueUri;
 
   console.log('- ' + meta_url);
   return {
@@ -75,7 +81,11 @@ const fetchMeta = async (item: EndpointItem): Promise<EndpointMeta> => {
 
 const runBatched = async (
   items: EndpointItem[],
-): Promise<{ results: EndpointMeta[]; failures: Failure[] }> => {
+): Promise<{
+  results: EndpointMeta[];
+  failures: Failure[];
+  skipped: number;
+}> => {
   const batches: EndpointItem[][] = [];
   for (let i = 0; i < items.length; i += BATCH_SIZE) {
     batches.push(items.slice(i, i + BATCH_SIZE));
@@ -83,27 +93,36 @@ const runBatched = async (
 
   const results: EndpointMeta[] = [];
   const failures: Failure[] = [];
+  let skipped = 0;
 
   for (const [iter, batch] of batches.entries()) {
     const settled = await Promise.allSettled(batch.map(fetchMeta));
 
+    let successCount = 0;
+    let skipCount = 0;
     settled.forEach((s, idx) => {
       if (s.status === 'fulfilled') {
-        results.push(s.value);
+        if (s.value === null) {
+          skipCount++;
+        } else {
+          results.push(s.value);
+          successCount++;
+        }
       } else {
         failures.push({ item: batch[idx], error: s.reason });
       }
     });
+    skipped += skipCount;
 
-    const successCount = settled.filter((s) => s.status === 'fulfilled').length;
-    const errorCount = settled.length - successCount;
+    const errorCount = settled.length - successCount - skipCount;
     console.log(
       `BATCH ${TerminalColor.bgBlue(`${iter}`)}: Processed ${successCount} of ${batch.length} in batch. ` +
+        (skipCount ? `${skipCount} skipped. ` : '') +
         TerminalColor.red(`${errorCount} error(s) when processing.`),
     );
   }
 
-  return { results, failures };
+  return { results, failures, skipped };
 };
 
 (async () => {
@@ -143,6 +162,7 @@ const runBatched = async (
     const initial = await runBatched(urls);
     const results: EndpointMeta[] = [...initial.results];
     let failures: Failure[] = initial.failures;
+    let totalSkipped = initial.skipped;
 
     for (
       let attempt = 1;
@@ -159,6 +179,13 @@ const runBatched = async (
       const retry = await runBatched(failures.map((f) => f.item));
       results.push(...retry.results);
       failures = retry.failures;
+      totalSkipped += retry.skipped;
+    }
+
+    if (totalSkipped) {
+      console.log(
+        `Skipped ${totalSkipped} endpoint(s) returning OperationOutcome or no SMART security block`,
+      );
     }
 
     if (fhirVersion === 'R4') {
@@ -185,7 +212,16 @@ const runBatched = async (
       fhirVersion === 'R4'
         ? './src/lib/data/R4Endpoints.json'
         : './src/lib/data/DSTU2Endpoints.json';
-    fs.writeFileSync(outputPath, JSON.stringify(results, null, 2));
+    const usable = results.filter((r) => r.token && r.authorize);
+    const dropped = results.length - usable.length;
+    if (dropped) {
+      console.log(
+        TerminalColor.red(
+          `Dropping ${dropped} endpoint(s) missing token/authorize (unusable for SMART login)`,
+        ),
+      );
+    }
+    fs.writeFileSync(outputPath, JSON.stringify(usable, null, 2));
 
     const errorLogPath =
       fhirVersion === 'R4' ? './errorlog-r4.json' : './errorlog-dstu2.json';

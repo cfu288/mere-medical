@@ -1600,12 +1600,6 @@
     "managingOrganization": "RZzjHGi0/JGWKOKqTi3X6578W9oDVdhhHfE5L2001C8="
   },
   {
-    "url": "https://fhirprod.musc.edu/fhirprod/TIDELANDS/api/FHIR/R4/",
-    "id": "48957985-e7d0-ee11-9169-001dd8b73101",
-    "name": "Tidelands Health",
-    "managingOrganization": "RZzjHGi0/JGWKOKqTi3X6578W9oDVdhhHfE5L2001C8="
-  },
-  {
     "url": "https://ocsoapprd.nebraskamed.com/FHIR-PRD/api/FHIR/R4/",
     "id": "4c6c39dd-ba0c-ec11-914d-001dd8b71f19",
     "name": "Nebraska Medicine",
@@ -1748,18 +1742,6 @@
     "token": "https://fhir.hfhs.org/fhirproxy/oauth2/token",
     "authorize": "https://fhir.hfhs.org/fhirproxy/oauth2/authorize",
     "managingOrganization": "FJoTN1Kj1V1ysEIP7jC4TP5k4mfF4UUy21SfkNQ9qxE="
-  },
-  {
-    "url": "https://rpsouth.catholichealth.net/fhir/FHIRMCT/api/FHIR/R4/",
-    "id": "842ab6ba-cf40-ed11-9156-001dd8b71f1a",
-    "name": "CHI Memorial",
-    "managingOrganization": "/qvL/iZKI/k+0B5XEpWSmGtwPrXhT7NB7sq0WgR331Y="
-  },
-  {
-    "url": "https://rpsouth.catholichealth.net/fhir/FHIRKY/api/FHIR/R4/",
-    "id": "00962025-d040-ed11-9156-001dd8b71f1a",
-    "name": "CHI Saint Joseph Health",
-    "managingOrganization": "/qvL/iZKI/k+0B5XEpWSmGtwPrXhT7NB7sq0WgR331Y="
   },
   {
     "url": "https://rpsouth.catholichealth.net/fhir/api/FHIR/R4/",
