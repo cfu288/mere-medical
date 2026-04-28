@@ -1,17 +1,200 @@
 [
-  {},
-  {},
-  {},
-  {},
-  {},
-  {},
-  {},
-  {},
-  {},
-  {},
-  {},
-  {},
-  {},
-  {},
-  {}
+  {
+    "id": "55c316f0-49d0-eb11-9149-001dd8b71f19",
+    "name": "Contra Costa",
+    "url": "https://icproxy.mycclink.org/proxy-FHIR/api/FHIR/R4/",
+    "managingOrganization": "fmBN0+MvMM0FMTbG3R6tcKKZDinpLeuONpx1bGHnLhY=",
+    "error": {
+      "name": "TypeError",
+      "message": "fetch failed",
+      "stack": "TypeError: fetch failed\n    at node:internal/deps/undici/undici:14900:13\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runNextTicks (node:internal/process/task_queues:69:3)\n    at process.processImmediate (node:internal/timers:453:9)\n    at async fetchMeta (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:906)\n    at async Promise.allSettled (index 0)\n    at async runBatched (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:1634)\n    at async file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:3254"
+    }
+  },
+  {
+    "id": "4bb665c7-0c38-ec11-9155-001dd8b71f19",
+    "name": "Methodist Hospitals",
+    "url": "https://mychart.methodisthospitals.org/FHIR-ARR/api/FHIR/R4/",
+    "managingOrganization": "dVthT4A5z8hNs6FEpXgtI4t9cr9p8ibTuDZ0+/+b/I4=",
+    "error": {
+      "name": "TypeError",
+      "message": "fetch failed",
+      "stack": "TypeError: fetch failed\n    at node:internal/deps/undici/undici:14900:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async fetchMeta (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:906)\n    at async Promise.allSettled (index 1)\n    at async runBatched (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:1634)\n    at async file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:3254"
+    }
+  },
+  {
+    "id": "ea973520-f685-eb11-9144-001dd8b71f19",
+    "name": "Bon Secours Health System",
+    "url": "https://haiku.bshsi.org/fhir/BSHSI_OAUTH/api/FHIR/R4/",
+    "managingOrganization": "ON6t4s0kNFXjDM2Qyv8FI1t9cTNm86082/rD+WgsyhI=",
+    "error": {
+      "name": "TypeError",
+      "message": "fetch failed",
+      "stack": "TypeError: fetch failed\n    at node:internal/deps/undici/undici:14900:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async fetchMeta (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:906)\n    at async Promise.allSettled (index 2)\n    at async runBatched (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:1634)\n    at async file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:3254"
+    }
+  },
+  {
+    "id": "b1764137-f685-eb11-9144-001dd8b71f19",
+    "name": "Chesapeake Regional Medical Center",
+    "url": "https://haiku.bshsi.org/fhir/CRMC_OAUTH/api/FHIR/R4/",
+    "managingOrganization": "ON6t4s0kNFXjDM2Qyv8FI1t9cTNm86082/rD+WgsyhI=",
+    "error": {
+      "name": "TypeError",
+      "message": "fetch failed",
+      "stack": "TypeError: fetch failed\n    at node:internal/deps/undici/undici:14900:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async fetchMeta (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:906)\n    at async Promise.allSettled (index 3)\n    at async runBatched (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:1634)\n    at async file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:3254"
+    }
+  },
+  {
+    "id": "678f8851-f685-eb11-9144-001dd8b71f19",
+    "name": "Covenant Health",
+    "url": "https://haiku.bshsi.org/fhir/COV_OAUTH/api/FHIR/R4/",
+    "managingOrganization": "ON6t4s0kNFXjDM2Qyv8FI1t9cTNm86082/rD+WgsyhI=",
+    "error": {
+      "name": "TypeError",
+      "message": "fetch failed",
+      "stack": "TypeError: fetch failed\n    at node:internal/deps/undici/undici:14900:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async fetchMeta (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:906)\n    at async Promise.allSettled (index 4)\n    at async runBatched (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:1634)\n    at async file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:3254"
+    }
+  },
+  {
+    "id": "0bc93f0e-c3cb-ec11-9155-001dd8b71f1a",
+    "name": "Spectrum Health Lakeland",
+    "url": "https://fhir.lakelandregional.org/fhirproxy/api/FHIR/R4/",
+    "managingOrganization": "4aSETAn5rEopmRfSaowVaeSejh8fSNoSURTcs6fBSoQ=",
+    "error": {
+      "name": "SyntaxError",
+      "message": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "stack": "SyntaxError: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at parseJSONFromBytes (node:internal/deps/undici/undici:5852:19)\n    at successSteps (node:internal/deps/undici/undici:5833:27)\n    at fullyReadBody (node:internal/deps/undici/undici:4725:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async consumeBody (node:internal/deps/undici/undici:5842:7)\n    at async fetchMeta (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:900)\n    at async Promise.allSettled (index 5)\n    at async runBatched (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:1634)\n    at async file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:3254"
+    }
+  },
+  {
+    "id": "6b54288b-7437-ec11-9155-001dd8b71f19",
+    "name": "Infirmary Health",
+    "url": "https://ssproxyprod.infirmaryhealth.org/epicFHIR/api/FHIR/R4/",
+    "managingOrganization": "KJcfvEjncxda+wpDvMIEUa6LTPG5BQrQ0EuNKDfuGtM=",
+    "error": {
+      "name": "TypeError",
+      "message": "fetch failed",
+      "stack": "TypeError: fetch failed\n    at node:internal/deps/undici/undici:14900:13\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runNextTicks (node:internal/process/task_queues:69:3)\n    at process.processImmediate (node:internal/timers:453:9)\n    at async fetchMeta (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:906)\n    at async Promise.allSettled (index 6)\n    at async runBatched (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:1634)\n    at async file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:3254"
+    }
+  },
+  {
+    "id": "45e89e1e-f61d-eb11-9135-001dd8b71f1a",
+    "name": "Spectrum Health",
+    "url": "https://epicarr02.spectrumhealth.org/EpicFHIR/api/FHIR/R4/",
+    "managingOrganization": "+vulMifhA5fMzdx5AT3G/coJ4ime2yZvZkcrKXIa1cM=",
+    "error": {
+      "name": "TypeError",
+      "message": "fetch failed",
+      "stack": "TypeError: fetch failed\n    at node:internal/deps/undici/undici:14900:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async fetchMeta (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:906)\n    at async Promise.allSettled (index 7)\n    at async runBatched (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:1634)\n    at async file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:3254"
+    }
+  },
+  {
+    "id": "4e7fddc0-3f19-eb11-9135-001dd8b71f1a",
+    "name": "Baptist Health (Arkansas)",
+    "url": "https://api.baptist-health.org/Interconnect-FHIR/api/FHIR/R4/",
+    "managingOrganization": "9Hh/qJk2V4kmmzZxjen0yxnYEAjSC5oRJ4j14bsKQB4=",
+    "error": {
+      "name": "TypeError",
+      "message": "fetch failed",
+      "stack": "TypeError: fetch failed\n    at node:internal/deps/undici/undici:14900:13\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runNextTicks (node:internal/process/task_queues:69:3)\n    at process.processImmediate (node:internal/timers:453:9)\n    at async fetchMeta (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:906)\n    at async Promise.allSettled (index 8)\n    at async runBatched (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:1634)\n    at async file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:3254"
+    }
+  },
+  {
+    "id": "cdb665c7-0c38-ec11-9155-001dd8b71f19",
+    "name": "University Health Care System",
+    "url": "https://soap.uhcs.org/IC-FHIR/api/FHIR/R4/",
+    "managingOrganization": "UWnN5XkWjiKdLh33+JxyaKpKdSF37rC15ibOjn4dFMM=",
+    "error": {
+      "name": "TypeError",
+      "message": "fetch failed",
+      "stack": "TypeError: fetch failed\n    at node:internal/deps/undici/undici:14900:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async fetchMeta (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:906)\n    at async Promise.allSettled (index 9)\n    at async runBatched (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:1634)\n    at async file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:3254"
+    }
+  },
+  {
+    "id": "72bfe8a6-d040-ed11-9156-001dd8b71f1a",
+    "name": "CHI St. Alexius Health",
+    "url": "https://rp.chihealth.com/fhir/FHIRSTA/api/FHIR/R4",
+    "managingOrganization": "dN6+JCKicdek8CAMNfuoS43rZXWRG1VYUBJKKKDmO/8=",
+    "error": {
+      "name": "SyntaxError",
+      "message": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "stack": "SyntaxError: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at parseJSONFromBytes (node:internal/deps/undici/undici:5852:19)\n    at successSteps (node:internal/deps/undici/undici:5833:27)\n    at fullyReadBody (node:internal/deps/undici/undici:4725:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async consumeBody (node:internal/deps/undici/undici:5842:7)\n    at async fetchMeta (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:900)\n    at async Promise.allSettled (index 0)\n    at async runBatched (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:1634)\n    at async file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:3254"
+    }
+  },
+  {
+    "id": "01b765c7-0c38-ec11-9155-001dd8b71f19",
+    "name": "Mercy Health Services (MD)",
+    "url": "https://surescripts.mdmercy.com/fhir-prd/api/FHIR/R4/",
+    "managingOrganization": "BIDJgNiW5TnyGkcv9MqhcStd9tfabtymP5h/baeyT9U=",
+    "error": {
+      "name": "TypeError",
+      "message": "fetch failed",
+      "stack": "TypeError: fetch failed\n    at node:internal/deps/undici/undici:14900:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async fetchMeta (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:906)\n    at async Promise.allSettled (index 1)\n    at async runBatched (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:1634)\n    at async file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:3254"
+    }
+  },
+  {
+    "id": "f0d01e27-6426-ec11-9152-001dd8b71f19",
+    "name": "Atlantic Health",
+    "url": "https://soapproxy.atlantichealth.org/FHIRPrd/api/FHIR/R4/",
+    "managingOrganization": "w3d8TjvNy+oR90uLaazJLfQwCf7KKRCDbs9lsBCMEJ0=",
+    "error": {
+      "name": "TypeError",
+      "message": "fetch failed",
+      "stack": "TypeError: fetch failed\n    at node:internal/deps/undici/undici:14900:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async fetchMeta (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:906)\n    at async Promise.allSettled (index 2)\n    at async runBatched (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:1634)\n    at async file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:3254"
+    }
+  },
+  {
+    "id": "78efa6a7-e090-eb11-9144-001dd8b71f19",
+    "name": "Hartford HealthCare",
+    "url": "https://epicproxy.hhchealth.org/FHIR/api/FHIR/R4/",
+    "managingOrganization": "F5MxXglOfl6SP6sGW73ow6eFFW6VHBFcCV78a214S80=",
+    "error": {
+      "name": "TypeError",
+      "message": "fetch failed",
+      "stack": "TypeError: fetch failed\n    at node:internal/deps/undici/undici:14900:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async fetchMeta (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:906)\n    at async Promise.allSettled (index 3)\n    at async runBatched (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:1634)\n    at async file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:3254"
+    }
+  },
+  {
+    "id": "8bf9a956-5dc5-eb11-913d-001dd8b71f1a",
+    "name": "Scripps Health",
+    "url": "https://haiku.scrippshealth.org/ARR-PRD-FHIR/api/FHIR/R4/",
+    "managingOrganization": "yWDgoN6N7Yx5+TjxdktMytHnRhSqyjy5xyoAQwdTBk4=",
+    "error": {
+      "name": "TypeError",
+      "message": "fetch failed",
+      "stack": "TypeError: fetch failed\n    at node:internal/deps/undici/undici:14900:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async fetchMeta (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:906)\n    at async Promise.allSettled (index 4)\n    at async runBatched (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:1634)\n    at async file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:3254"
+    }
+  },
+  {
+    "id": "db2fa901-5dc5-eb11-913d-001dd8b71f1a",
+    "name": "Pediatric Physicians Organization at Children's",
+    "url": "https://fhir.chppoc.org/Fhir-External/api/FHIR/R4/",
+    "managingOrganization": "aK2s2GGueHDKmQ+pk5PZfryeDYOiXvruiBm9iP+fndc=",
+    "error": {
+      "name": "TypeError",
+      "message": "fetch failed",
+      "stack": "TypeError: fetch failed\n    at node:internal/deps/undici/undici:14900:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async fetchMeta (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:906)\n    at async Promise.allSettled (index 5)\n    at async runBatched (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:1634)\n    at async file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:3254"
+    }
+  },
+  {
+    "id": "08a3596d-671a-ed11-9156-001dd8b71f1a",
+    "name": "EvergreenHealth",
+    "url": "https://epicproxy.et1270.epichosted.com/apiproxyprd/api/FHIR/R4",
+    "managingOrganization": "BisFIYglac7IEkMQuyunTcq/Xi9jFBN72WBBAu7jmuU=",
+    "error": {
+      "name": "SyntaxError",
+      "message": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "stack": "SyntaxError: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at parseJSONFromBytes (node:internal/deps/undici/undici:5852:19)\n    at successSteps (node:internal/deps/undici/undici:5833:27)\n    at fullyReadBody (node:internal/deps/undici/undici:4725:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async consumeBody (node:internal/deps/undici/undici:5842:7)\n    at async fetchMeta (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:900)\n    at async Promise.allSettled (index 6)\n    at async runBatched (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:1634)\n    at async file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:3254"
+    }
+  },
+  {
+    "id": "96b6c3a8-49e8-ee11-9169-001dd8b73101",
+    "name": "Baton Rouge General",
+    "url": "https://interconnect.brgeneral.org/oauth/api/FHIR/R4",
+    "managingOrganization": "Qh9JH8EYBPOgZflgP9W/7+Pccfv8aa6deANmVu9DRm4=",
+    "error": {
+      "name": "SyntaxError",
+      "message": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "stack": "SyntaxError: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at parseJSONFromBytes (node:internal/deps/undici/undici:5852:19)\n    at successSteps (node:internal/deps/undici/undici:5833:27)\n    at fullyReadBody (node:internal/deps/undici/undici:4725:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async consumeBody (node:internal/deps/undici/undici:5842:7)\n    at async fetchMeta (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:900)\n    at async Promise.allSettled (index 7)\n    at async runBatched (file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:1634)\n    at async file:///Users/FuC.local/Documents/mere-medical/libs/epic/fetchMetadata.ts:1:3254"
+    }
+  }
 ]

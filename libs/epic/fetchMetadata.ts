@@ -15,6 +15,99 @@ class TerminalColor {
     `${TerminalColor.Red}${str}${TerminalColor.Reset}`;
 }
 
+type EndpointItem = {
+  id: string;
+  name: string;
+  url: string;
+  managingOrganization: string;
+};
+
+type EndpointMeta = {
+  id: string;
+  name: string;
+  url: string;
+  token?: string;
+  authorize?: string;
+  introspect?: string;
+  manage?: string;
+  managingOrganization?: string;
+};
+
+type Failure = { item: EndpointItem; error: unknown };
+
+const BATCH_SIZE = 10;
+const RETRY_ATTEMPTS = 3;
+const RETRY_BASE_DELAY_MS = 1000;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+const serializeError = (error: unknown) => {
+  if (error instanceof Error) {
+    return { name: error.name, message: error.message, stack: error.stack };
+  }
+  return error;
+};
+
+const fetchMeta = async (item: EndpointItem): Promise<EndpointMeta> => {
+  const meta_url = `${item.url}metadata`;
+  const res = await (
+    await fetch(meta_url, {
+      headers: { Accept: 'application/json+fhir' },
+    })
+  ).json();
+
+  const sec_ext = res?.rest?.[0].security.extension?.[0].extension;
+  const pickValueUri = (key: string) =>
+    sec_ext?.filter((x: { url: string }) => x.url === key)?.[0]?.valueUri;
+
+  console.log('- ' + meta_url);
+  return {
+    url: item.url,
+    id: item.id,
+    name: item.name,
+    token: pickValueUri('token'),
+    authorize: pickValueUri('authorize'),
+    introspect: pickValueUri('introspect'),
+    manage: pickValueUri('manage'),
+    managingOrganization: item.managingOrganization,
+  };
+};
+
+const runBatched = async (
+  items: EndpointItem[],
+): Promise<{ results: EndpointMeta[]; failures: Failure[] }> => {
+  const batches: EndpointItem[][] = [];
+  for (let i = 0; i < items.length; i += BATCH_SIZE) {
+    batches.push(items.slice(i, i + BATCH_SIZE));
+  }
+
+  const results: EndpointMeta[] = [];
+  const failures: Failure[] = [];
+
+  for (const [iter, batch] of batches.entries()) {
+    const settled = await Promise.allSettled(batch.map(fetchMeta));
+
+    settled.forEach((s, idx) => {
+      if (s.status === 'fulfilled') {
+        results.push(s.value);
+      } else {
+        failures.push({ item: batch[idx], error: s.reason });
+      }
+    });
+
+    const successCount = settled.filter(
+      (s) => s.status === 'fulfilled',
+    ).length;
+    const errorCount = settled.length - successCount;
+    console.log(
+      `BATCH ${TerminalColor.bgBlue(`${iter}`)}: Processed ${successCount} of ${batch.length} in batch. ` +
+        TerminalColor.red(`${errorCount} error(s) when processing.`),
+    );
+  }
+
+  return { results, failures };
+};
+
 (async () => {
   try {
     const args = process.argv.slice(2);
@@ -35,143 +128,93 @@ class TerminalColor {
     console.log(`Using URL: ${endpointsUrl}`);
 
     const data = await fetch(endpointsUrl, {
-      headers: {
-        Accept: 'application/json+fhir',
-      },
+      headers: { Accept: 'application/json+fhir' },
     }).then((res) => res.json());
 
-    const urls: {
-      id: string;
-      name: string;
-      url: string;
-      managingOrganization: string;
-    }[] = data?.entry.map((i: any) => {
-      return {
-        id: i.resource?.id,
-        name: i.resource?.name,
-        url: i.resource?.address,
-        managingOrganization: i.resource?.managingOrganization?.reference,
-      };
-    });
+    const urls: EndpointItem[] = data?.entry.map((i: any) => ({
+      id: i.resource?.id,
+      name: i.resource?.name,
+      url: i.resource?.address,
+      managingOrganization: i.resource?.managingOrganization?.reference,
+    }));
 
     if (!urls || !urls.length) {
       throw new Error('No content found');
     }
 
-    const fetchMeta = async (item: {
-      id: string;
-      name: string;
-      url: string;
-      managingOrganization: string;
-    }) => {
-      const meta_url = `${item.url}metadata`;
-      const res = await (
-        await fetch(meta_url, {
-          headers: {
-            Accept: 'application/json+fhir',
-          },
-        })
-      ).json();
+    const initial = await runBatched(urls);
+    const results: EndpointMeta[] = [...initial.results];
+    let failures: Failure[] = initial.failures;
 
-      const sec_ext = res?.rest?.[0].security.extension?.[0].extension,
-        token = sec_ext.filter(
-          (x: { url: string & Location }) => x.url === 'token',
-        )?.[0]?.valueUri,
-        authorize = sec_ext.filter(
-          (x: { url: string & Location }) => x.url === 'authorize',
-        )?.[0]?.valueUri,
-        introspect = sec_ext.filter(
-          (x: { url: string & Location }) => x.url === 'introspect',
-        )?.[0]?.valueUri,
-        manage = sec_ext.filter(
-          (x: { url: string & Location }) => x.url === 'manage',
-        )?.[0]?.valueUrik;
-
-      console.log('- ' + meta_url);
-      return {
-        url: item.url,
-        id: item.id,
-        name: item.name,
-        token,
-        authorize,
-        introspect,
-        manage,
-        managingOrganization: item.managingOrganization,
-      };
-    };
-
-    try {
-      const batches = [];
-      const batchSize = 10;
-      for (let i = 0; i < urls.length; i += batchSize) {
-        batches.push(urls.slice(i, i + batchSize));
-      }
-
-      const results = [];
-      const errors = [];
-      for (const [iter, batch] of batches.entries()) {
-        const metaPromises = batch.map(fetchMeta);
-        const res = await Promise.allSettled(metaPromises);
-
-        const successRes = res
-          .filter((i) => i.status === 'fulfilled')
-          .map((i) => (i as PromiseFulfilledResult<any>).value);
-        const errorsRes = res
-          .filter((i) => i.status === 'rejected')
-          .map((i) => (i as PromiseRejectedResult).reason);
-
-        results.push(...successRes);
-        console.log(
-          `BATCH ${TerminalColor.bgBlue(`${iter}`)}: Processed ${
-            successRes.length
-          } of ${batch.length} in batch. ` +
-            TerminalColor.red(`${errorsRes.length} error(s) when processing.`),
-        );
-        errors.push(...errorsRes);
-      }
-
-      if (fhirVersion === 'R4') {
-        results.push({
-          id: 'sandbox_epic_r4',
-          name: 'Epic MyChart Sandbox (R4)',
-          url: 'https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4/',
-          token: 'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/token',
-          authorize:
-            'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/authorize',
-        });
-      } else {
-        results.push({
-          id: 'sandbox_epic',
-          name: 'Epic MyChart Sandbox',
-          url: 'https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/DSTU2/',
-          token: 'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/token',
-          authorize:
-            'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/authorize',
-        });
-      }
-
-      const outputPath =
-        fhirVersion === 'R4'
-          ? './src/lib/data/R4Endpoints.json'
-          : './src/lib/data/DSTU2Endpoints.json';
-
-      fs.writeFileSync(outputPath, JSON.stringify(results, null, 2));
-
-      if (errors.length) {
-        const errorLogPath =
-          fhirVersion === 'R4'
-            ? './errorlog-r4.json'
-            : './errorlog-dstu2.json';
-        console.log(
-          TerminalColor.red(
-            `${errors.length} error(s) when processing. Check the errorlog for more details`,
-          ),
-        );
-        fs.writeFileSync(errorLogPath, JSON.stringify(errors, null, 2));
-      }
-    } catch (e) {
-      console.error(e);
+    for (
+      let attempt = 1;
+      attempt <= RETRY_ATTEMPTS && failures.length;
+      attempt++
+    ) {
+      const delay = RETRY_BASE_DELAY_MS * 2 ** (attempt - 1);
+      console.log(
+        TerminalColor.bgBlue(
+          `RETRY ${attempt}/${RETRY_ATTEMPTS}: ${failures.length} item(s) after ${delay}ms`,
+        ),
+      );
+      await sleep(delay);
+      const retry = await runBatched(failures.map((f) => f.item));
+      results.push(...retry.results);
+      failures = retry.failures;
     }
+
+    if (fhirVersion === 'R4') {
+      results.push({
+        id: 'sandbox_epic_r4',
+        name: 'Epic MyChart Sandbox (R4)',
+        url: 'https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4/',
+        token: 'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/token',
+        authorize:
+          'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/authorize',
+      });
+    } else {
+      results.push({
+        id: 'sandbox_epic',
+        name: 'Epic MyChart Sandbox',
+        url: 'https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/DSTU2/',
+        token: 'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/token',
+        authorize:
+          'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/authorize',
+      });
+    }
+
+    const outputPath =
+      fhirVersion === 'R4'
+        ? './src/lib/data/R4Endpoints.json'
+        : './src/lib/data/DSTU2Endpoints.json';
+    fs.writeFileSync(outputPath, JSON.stringify(results, null, 2));
+
+    const errorLogPath =
+      fhirVersion === 'R4' ? './errorlog-r4.json' : './errorlog-dstu2.json';
+    if (failures.length) {
+      console.log(
+        TerminalColor.red(
+          `${failures.length} error(s) remained after ${RETRY_ATTEMPTS} retries. See ${errorLogPath}`,
+        ),
+      );
+      fs.writeFileSync(
+        errorLogPath,
+        JSON.stringify(
+          failures.map((f) => ({
+            id: f.item.id,
+            name: f.item.name,
+            url: f.item.url,
+            managingOrganization: f.item.managingOrganization,
+            error: serializeError(f.error),
+          })),
+          null,
+          2,
+        ),
+      );
+    } else {
+      fs.writeFileSync(errorLogPath, '[]');
+    }
+
     console.log(TerminalColor.green('Done'));
   } catch (e) {
     console.error(e);
