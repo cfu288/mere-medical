@@ -688,6 +688,14 @@
     "managingOrganization": "Mercy"
   },
   {
+    "url": "https://revproxy.bh.bozemanhealth.org/Interconnect-OAuth2-PRD/api/FHIR/R4/",
+    "id": "e43ea0fa-c5ea-4469-93d1-8052ed326ac1",
+    "name": "Bozeman Health",
+    "token": "https://revproxy.bh.bozemanhealth.org/Interconnect-OAuth2-PRD/oauth2/token",
+    "authorize": "https://revproxy.bh.bozemanhealth.org/Interconnect-OAuth2-PRD/oauth2/authorize",
+    "managingOrganization": "Bozeman Health"
+  },
+  {
     "url": "https://minerva.northmemorial.com/fhir/api/FHIR/R4/",
     "id": "4cf63ab3-a7a2-4cf7-8ab5-f5aebaf64e9b",
     "name": "Broadway",
@@ -990,6 +998,14 @@
     "token": "https://webprd.ochin.org/prd-fhir/centraloutreach/oauth2/token",
     "authorize": "https://webprd.ochin.org/prd-fhir/centraloutreach/oauth2/authorize",
     "managingOrganization": "OCHIN"
+  },
+  {
+    "url": "https://rxedi.bmhcc.org/prd-fhir/CSA/api/FHIR/R4/",
+    "id": "afcde821-ef8b-4a1c-8177-03f7a6c26638",
+    "name": "Central Surgical Associates",
+    "token": "https://rxedi.bmhcc.org/prd-fhir/CSA/oauth2/token",
+    "authorize": "https://rxedi.bmhcc.org/prd-fhir/CSA/oauth2/authorize",
+    "managingOrganization": "Baptist Memorial Health Care"
   },
   {
     "url": "https://epicrpprd.xtensys.com/oauth2-prd/api/FHIR/R4/",
@@ -5568,6 +5584,14 @@
     "managingOrganization": "University of Miami Health System"
   },
   {
+    "url": "https://mcproxyprd.med.umich.edu/FHIR-PRD/UMICH/api/FHIR/R4/",
+    "id": "35005e55-d848-4cff-a133-87d3262f1aa7",
+    "name": "University of Michigan Health",
+    "token": "https://mcproxyprd.med.umich.edu/FHIR-PRD/UMICH/oauth2/token",
+    "authorize": "https://mcproxyprd.med.umich.edu/FHIR-PRD/UMICH/oauth2/authorize",
+    "managingOrganization": "Michigan Medicine"
+  },
+  {
     "url": "https://haiku.sparrow.org/fhir-prd/api/FHIR/R4/",
     "id": "cb766f4a-82ce-46cd-8958-644b538cbc59",
     "name": "University of Michigan Health-Sparrow",
@@ -5614,6 +5638,14 @@
     "token": "https://icon.utoledo.edu/ic-oa2-prd/oauth2/token",
     "authorize": "https://icon.utoledo.edu/ic-oa2-prd/oauth2/authorize",
     "managingOrganization": "University of Toledo"
+  },
+  {
+    "url": "https://epicproxy.uvmhealth.org/FHIR-ARR/UVMMYCHART/api/FHIR/R4/",
+    "id": "3c70dccb-f3de-4cca-83a2-d6f2e69f5ec3",
+    "name": "University of Vermont Health Network",
+    "token": "https://epicproxy.uvmhealth.org/FHIR-ARR/UVMMYCHART/oauth2/token",
+    "authorize": "https://epicproxy.uvmhealth.org/FHIR-ARR/UVMMYCHART/oauth2/authorize",
+    "managingOrganization": "University of Vermont Health"
   },
   {
     "url": "https://hscsesoap.hscs.virginia.edu/oauth2/UVAHEALTH/api/FHIR/R4/",
@@ -6022,30 +6054,6 @@
     "token": "https://patientfhirapis.ynhh.org/PFF/oauth2/token",
     "authorize": "https://patientfhirapis.ynhh.org/PFF/oauth2/authorize",
     "managingOrganization": "Yale New Haven Health System and Yale University"
-  },
-  {
-    "url": "https://mcproxyprd.med.umich.edu/FHIR-PRD/UMICH/api/FHIR/R4/",
-    "id": "35005e55-d848-4cff-a133-87d3262f1aa7",
-    "name": "University of Michigan Health",
-    "token": "https://mcproxyprd.med.umich.edu/FHIR-PRD/UMICH/oauth2/token",
-    "authorize": "https://mcproxyprd.med.umich.edu/FHIR-PRD/UMICH/oauth2/authorize",
-    "managingOrganization": "Michigan Medicine"
-  },
-  {
-    "url": "https://epicproxy.uvmhealth.org/FHIR-ARR/UVMMYCHART/api/FHIR/R4/",
-    "id": "3c70dccb-f3de-4cca-83a2-d6f2e69f5ec3",
-    "name": "University of Vermont Health Network",
-    "token": "https://epicproxy.uvmhealth.org/FHIR-ARR/UVMMYCHART/oauth2/token",
-    "authorize": "https://epicproxy.uvmhealth.org/FHIR-ARR/UVMMYCHART/oauth2/authorize",
-    "managingOrganization": "University of Vermont Health"
-  },
-  {
-    "url": "https://rxedi.bmhcc.org/prd-fhir/CSA/api/FHIR/R4/",
-    "id": "afcde821-ef8b-4a1c-8177-03f7a6c26638",
-    "name": "Central Surgical Associates",
-    "token": "https://rxedi.bmhcc.org/prd-fhir/CSA/oauth2/token",
-    "authorize": "https://rxedi.bmhcc.org/prd-fhir/CSA/oauth2/authorize",
-    "managingOrganization": "Baptist Memorial Health Care"
   },
   {
     "id": "sandbox_epic_r4",
