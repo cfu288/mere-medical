@@ -83,8 +83,8 @@
     "url": "https://interconapps.uchospitals.edu/PRD-FHIR-Proxy/api/FHIR/DSTU2/",
     "id": "7c9c0f4c-9813-e911-9126-001dd8b71f19",
     "name": "UChicago Medicine",
-    "token": "https://interconapps.uchospitals.edu/PRD-FHIR-Proxy/oauth2/token",
-    "authorize": "https://interconapps.uchospitals.edu/PRD-FHIR-Proxy/oauth2/authorize",
+    "token": "https://epicproxy.et0169.epichosted.com/APIProxyPRD/oauth2/token",
+    "authorize": "https://epicproxy.et0169.epichosted.com/APIProxyPRD/oauth2/authorize",
     "managingOrganization": "hSRFVeCV5f5TT4OgDdWT9MpqsrqUv84XTLYEIR6aKxc="
   },
   {
@@ -267,8 +267,8 @@
     "url": "https://epicproxyprd.solutionhealth.org/FHIR_PROD/api/FHIR/DSTU2/",
     "id": "b69c0f4c-9813-e911-9126-001dd8b71f19",
     "name": "SolutionHealth",
-    "token": "https://epicproxyprd.solutionhealth.org/FHIR_PROD/oauth2/token",
-    "authorize": "https://epicproxyprd.solutionhealth.org/FHIR_PROD/oauth2/authorize",
+    "token": "https://epicproxyprd.solutionhealth.org/FHIR_PRD/oauth2/token",
+    "authorize": "https://epicproxyprd.solutionhealth.org/FHIR_PRD/oauth2/authorize",
     "managingOrganization": "LImroyJCetTurHeTQmiiQqLVRSL7BW6BdqPursOv8RU="
   },
   {
@@ -336,14 +336,6 @@
     "managingOrganization": "fmBN0+MvMM0FMTbG3R6tcKKZDinpLeuONpx1bGHnLhY="
   },
   {
-    "url": "https://stofo.providence-waco.org/FHIRProxy/api/FHIR/DSTU2/",
-    "id": "d19c0f4c-9813-e911-9126-001dd8b71f19",
-    "name": "Ascension Providence",
-    "token": "https://stofo.providence-waco.org/FHIRProxy/oauth2/token",
-    "authorize": "https://stofo.providence-waco.org/FHIRProxy/oauth2/authorize",
-    "managingOrganization": "eIwSF77OkKIts+3CwtaR1e+gFclBPlkE5cKntWH4wMc="
-  },
-  {
     "url": "https://epicscripts.trihealth.com/fhirproxy/api/FHIR/DSTU2/",
     "id": "635de7d5-6dbc-ee11-9169-001dd8b73101",
     "name": "Highland District Hospital",
@@ -363,8 +355,8 @@
     "url": "https://haiku.northshore.org/Interconnect-FHIR/api/FHIR/DSTU2/",
     "id": "d59c0f4c-9813-e911-9126-001dd8b71f19",
     "name": "NorthShore University Health System",
-    "token": "https://haiku.northshore.org/Interconnect-FHIR/oauth2/token",
-    "authorize": "https://haiku.northshore.org/Interconnect-FHIR/oauth2/authorize",
+    "token": "https://epicproxy.et0431.epichosted.com/FHIRProxyPRD/oauth2/token",
+    "authorize": "https://epicproxy.et0431.epichosted.com/FHIRProxyPRD/oauth2/authorize",
     "managingOrganization": "RfJiKGnbUO6/oUdKSQQuQ2MSdtYsvKpNabDGGgYDeTA="
   },
   {
@@ -387,8 +379,8 @@
     "url": "https://fhir.kp.org/Interconnect-FHIR-PRD/api/FHIR/DSTU2/",
     "id": "5129dd6d-25a7-e911-9122-001dd8b71f1a",
     "name": "Kaiser Permanente - Washington",
-    "token": "https://fhir.kp.org/Interconnect-FHIR-PRD/oauth2/token",
-    "authorize": "https://fhir.kp.org/Interconnect-FHIR-PRD/oauth2/authorize",
+    "token": "https://fhir.kp.org/KPPolarisPortal/esb-envlbl/750/oauth2/token",
+    "authorize": "https://fhir.kp.org/KPPolarisPortal/esb-envlbl/750/oauth2/authorize",
     "managingOrganization": "BwFmerKYvN0SngKm3X/jcxV+8Ar4HYUeF+xY5g0EuTc="
   },
   {
@@ -438,14 +430,6 @@
     "token": "https://emrrp.ucdmc.ucdavis.edu/FHIR/oauth2/token",
     "authorize": "https://emrrp.ucdmc.ucdavis.edu/FHIR/oauth2/authorize",
     "managingOrganization": "P8A2OjoLXbfjexV9vixmxaccWkO3Eaz46Z8LwZOTob0="
-  },
-  {
-    "url": "https://webproxyprd.monroeclinic.org/FHIR-PRD/api/FHIR/DSTU2/",
-    "id": "f19c0f4c-9813-e911-9126-001dd8b71f19",
-    "name": "Monroe Clinic",
-    "token": "https://webproxyprd.monroeclinic.org/FHIR-PRD/oauth2/token",
-    "authorize": "https://webproxyprd.monroeclinic.org/FHIR-PRD/oauth2/authorize",
-    "managingOrganization": "W9pxj/IgNfLwv2O4J4LkJTMLvwtQ6hx4Lm4pEv5RoF0="
   },
   {
     "url": "https://epicserviceGW.froedtert.com/FHIRProxyPRD/api/FHIR/DSTU2/",
@@ -534,14 +518,6 @@
     "token": "https://fhir.kp.org/KPPolarisPortal/esb-envlbl/226/oauth2/token",
     "authorize": "https://fhir.kp.org/KPPolarisPortal/esb-envlbl/226/oauth2/authorize",
     "managingOrganization": "faKGNZ1FiGGji7G5Kuwe5dfF/33v79leP/ac3B7k0YE="
-  },
-  {
-    "url": "https://moc.beaumont.org/FHIR/api/FHIR/DSTU2/",
-    "id": "5a9d0f4c-9813-e911-9126-001dd8b71f19",
-    "name": "Beaumont Health",
-    "token": "https://moc.beaumont.org/FHIR/oauth2/token",
-    "authorize": "https://moc.beaumont.org/FHIR/oauth2/authorize",
-    "managingOrganization": "hsz0aJNJXA0q0dT13Go/Q1juurC1H24nMFZSflNQDzE="
   },
   {
     "url": "https://epproxy.texashealth.org/FHIR/api/FHIR/DSTU2/",
@@ -667,8 +643,8 @@
     "url": "https://prd.salemhealth.org/fhir/api/FHIR/DSTU2/",
     "id": "779d0f4c-9813-e911-9126-001dd8b71f19",
     "name": "Salem Health",
-    "token": "https://prd.salemhealth.org/fhir/oauth2/token",
-    "authorize": "https://prd.salemhealth.org/fhir/oauth2/authorize",
+    "token": "https://epicproxy.et0516.epichosted.com/APIProxyPRD/oauth2/token",
+    "authorize": "https://epicproxy.et0516.epichosted.com/APIProxyPRD/oauth2/authorize",
     "managingOrganization": "uWLq9zLjbGbuLn4xm5RP4vp7l0zoeHJ23P74b2Ws94Y="
   },
   {
@@ -683,8 +659,8 @@
     "url": "https://epicedi.leememorial.org/FHIR-prd/api/FHIR/DSTU2/",
     "id": "7b9d0f4c-9813-e911-9126-001dd8b71f19",
     "name": "Lee Health",
-    "token": "https://epicedi.leememorial.org/FHIR-prd/oauth2/token",
-    "authorize": "https://epicedi.leememorial.org/FHIR-prd/oauth2/authorize",
+    "token": "https://epicproxy.et0523.epichosted.com/FHIRProxyPRD/oauth2/token",
+    "authorize": "https://epicproxy.et0523.epichosted.com/FHIRProxyPRD/oauth2/authorize",
     "managingOrganization": "sW7H/rLwgzGVzbNYYgilLoataAR+mDSVFmpi7njSzrM="
   },
   {
@@ -902,6 +878,14 @@
     "token": "https://prodinterconnect.leonmedicalcenters.com/FHIR-PRD/oauth2/token",
     "authorize": "https://prodinterconnect.leonmedicalcenters.com/FHIR-PRD/oauth2/authorize",
     "managingOrganization": "MsezxRjvcwLRpUjKyGPymQEs742ry9PxNdC3wFxIYEI="
+  },
+  {
+    "url": "https://fhir.carilionclinic.org/fhir/api/FHIR/DSTU2/",
+    "id": "b89d0f4c-9813-e911-9126-001dd8b71f19",
+    "name": "Carilion Clinic",
+    "token": "https://epicproxy.et0600.epichosted.com/APIProxyPRD/oauth2/token",
+    "authorize": "https://epicproxy.et0600.epichosted.com/APIProxyPRD/oauth2/authorize",
+    "managingOrganization": "tInMXgzV7x82M1qZx7Q1IWFEhzlTLtihFxj53LvlRdc="
   },
   {
     "url": "https://scproxy.gundersenhealth.org/FHIRARR/api/FHIR/DSTU2/",
@@ -1456,14 +1440,6 @@
     "managingOrganization": "UUkLuHRf81IEejvelG0Izv0lJFy2ItL9ALv7+ALCPUo="
   },
   {
-    "url": "https://soapprod.hattiesburgclinic.com/FHIR/api/FHIR/DSTU2/",
-    "id": "5e9e0f4c-9813-e911-9126-001dd8b71f19",
-    "name": "Hattiesburg Clinic and Forrest General Hospital",
-    "token": "https://soapprod.hattiesburgclinic.com/OAuth2/oauth2/token",
-    "authorize": "https://soapprod.hattiesburgclinic.com/OAuth2/oauth2/authorize",
-    "managingOrganization": "xagDPbejszgjDnn58rDTLscmeADQURH6+BJ/HHiWXkM="
-  },
-  {
     "url": "https://myc.ochsner.org/FHIR/api/FHIR/DSTU2/",
     "id": "5f9e0f4c-9813-e911-9126-001dd8b71f19",
     "name": "Ochsner Health System",
@@ -1622,14 +1598,6 @@
     "token": "https://epicproxy.et0819.epichosted.com/APIPROXYPRD/oauth2/token",
     "authorize": "https://epicproxy.et0819.epichosted.com/APIPROXYPRD/oauth2/authorize",
     "managingOrganization": "BQhjBOuzA+tyHOuMvFoJ4/8E29xauY+boCSZrKZq66U="
-  },
-  {
-    "url": "https://tpc-shield.tpcllp.com/FHIR/api/FHIR/DSTU2/",
-    "id": "7d9e0f4c-9813-e911-9126-001dd8b71f19",
-    "name": "The Portland Clinic",
-    "token": "https://tpc-shield.tpcllp.com/FHIR/oauth2/token",
-    "authorize": "https://tpc-shield.tpcllp.com/FHIR/oauth2/authorize",
-    "managingOrganization": "4h+RslOJGA2C5WvLb8NHUJTJkNP3aDi0yZy3RO1hZQs="
   },
   {
     "url": "https://arr.mysrhs.com/FHIR/api/FHIR/DSTU2/",
@@ -1952,6 +1920,14 @@
     "managingOrganization": "dN6+JCKicdek8CAMNfuoS43rZXWRG1VYUBJKKKDmO/8="
   },
   {
+    "url": "https://ws-interconnect-fhir.partners.org/Interconnect-FHIR-MU-PRD/api/FHIR/DSTU2/",
+    "id": "cf9e0f4c-9813-e911-9126-001dd8b71f19",
+    "name": "Mass General Brigham",
+    "token": "https://ws-interconnect-fhir.partners.org/Interconnect-FHIR-MU-PRD/oauth2/token",
+    "authorize": "https://ws-interconnect-fhir.partners.org/Interconnect-FHIR-MU-PRD/oauth2/authorize",
+    "managingOrganization": "RuOdv11cCv3ozgGArBjqRDLBJrN/lhR19nfbJSaF4Cg="
+  },
+  {
     "url": "https://rxedi.bmhcc.org/prd-fhir/api/FHIR/DSTU2/",
     "id": "d39e0f4c-9813-e911-9126-001dd8b71f19",
     "name": "Baptist Memorial Health Care",
@@ -1973,6 +1949,14 @@
     "name": "Trinity Health Of New England",
     "token": "https://epicprdext.stfranciscare.org/FhirProxy/oauth2/token",
     "authorize": "https://epicprdext.stfranciscare.org/FhirProxy/oauth2/authorize",
+    "managingOrganization": "EP+2bpIRjLhzYhJTQQrb8++g6zGAQjzZ+WCrYgqFkfw="
+  },
+  {
+    "url": "https://rmgpxy.riverbendmedical.com/fhir_proxy/api/FHIR/DSTU2/",
+    "id": "da9e0f4c-9813-e911-9126-001dd8b71f19",
+    "name": "Trinity Health Of New England Medical Group Springfield",
+    "token": "https://rmgpxy.riverbendmedical.com/fhir_proxy/oauth2/token",
+    "authorize": "https://rmgpxy.riverbendmedical.com/fhir_proxy/oauth2/authorize",
     "managingOrganization": "EP+2bpIRjLhzYhJTQQrb8++g6zGAQjzZ+WCrYgqFkfw="
   },
   {
@@ -2166,14 +2150,6 @@
     "token": "https://stdavidsfhirprd.app.medcity.net/fhir-proxy/oauth2/token",
     "authorize": "https://stdavidsfhirprd.app.medcity.net/fhir-proxy/oauth2/authorize",
     "managingOrganization": "g9A7tCBtCe5in34ehxAG4DqtEFxCCYqiKF9I88QfSZQ="
-  },
-  {
-    "url": "https://soapproxy.atlantichealth.org/FHIRPrd/api/FHIR/DSTU2/",
-    "id": "0f9f0f4c-9813-e911-9126-001dd8b71f19",
-    "name": "Atlantic Health",
-    "token": "https://epicproxy.et0907.epichosted.com/FHIRProxyPRD/oauth2/token",
-    "authorize": "https://epicproxy.et0907.epichosted.com/FHIRProxyPRD/oauth2/authorize",
-    "managingOrganization": "w3d8TjvNy+oR90uLaazJLfQwCf7KKRCDbs9lsBCMEJ0="
   },
   {
     "url": "https://EpicProxy.hhchealth.org/FHIR/api/FHIR/DSTU2/",
@@ -2384,14 +2360,6 @@
     "managingOrganization": "ZIk7fMfg+8jAqe7DfyqtnzqoZDRV4KdVoqMS0qzhEpI="
   },
   {
-    "url": "https://mcc.api.mayo.edu/epic-fhir/api/FHIR/DSTU2/",
-    "id": "d8d5f9ee-6f3e-ec11-9155-001dd8b71f19",
-    "name": "Mayo Clinic",
-    "token": "https://mcc.api.mayo.edu/epic-fhir/oauth2/token",
-    "authorize": "https://mcc.api.mayo.edu/epic-fhir/oauth2/authorize",
-    "managingOrganization": "u7YeCyrx9wwq2Wx3rjca2rKTPOpGYYYTTrIAMaR2+hE="
-  },
-  {
     "url": "https://Epic-Arr.pinnaclehealth.org/PRD-FHIR-ARR/api/FHIR/DSTU2/",
     "id": "23c7f614-2c2e-e911-911f-001dd8b71f1a",
     "name": "UPMC Pinnacle",
@@ -2411,8 +2379,8 @@
     "url": "https://fhir.conemaugh.org/arr-fhir-prd/api/FHIR/DSTU2/",
     "id": "cde755f5-5435-e911-911f-001dd8b71f1a",
     "name": "Conemaugh Health System",
-    "token": "https://fhir.conemaugh.org/arr-fhir-prd/oauth2/token",
-    "authorize": "https://fhir.conemaugh.org/arr-fhir-prd/oauth2/authorize",
+    "token": "https://epicproxy.et0962.epichosted.com/APIPROXYPRD/oauth2/token",
+    "authorize": "https://epicproxy.et0962.epichosted.com/APIPROXYPRD/oauth2/authorize",
     "managingOrganization": "QcZC8Bs9JhGd2Hxvnefcptj2MYom6IfjzpijfEEX3Ws="
   },
   {
@@ -2422,14 +2390,6 @@
     "token": "https://proxy.eskenazihealth.edu/FHIR-Proxy/oauth2/token",
     "authorize": "https://proxy.eskenazihealth.edu/FHIR-Proxy/oauth2/authorize",
     "managingOrganization": "c8pWOYlTCfjZjBHlM64CMbHdBbTXrnFD5pk44tdVz3g="
-  },
-  {
-    "url": "https://haiku.scrippshealth.org/ARR-PRD-FHIR/api/FHIR/DSTU2/",
-    "id": "599f0f4c-9813-e911-9126-001dd8b71f19",
-    "name": "Scripps Health",
-    "token": "https://haiku.scrippshealth.org/ARR-PRD-FHIR/oauth2/token",
-    "authorize": "https://haiku.scrippshealth.org/ARR-PRD-FHIR/oauth2/authorize",
-    "managingOrganization": "yWDgoN6N7Yx5+TjxdktMytHnRhSqyjy5xyoAQwdTBk4="
   },
   {
     "url": "https://epicproxy.et0965.epichosted.com/FHIRProxy/api/FHIR/DSTU2/",
@@ -2510,14 +2470,6 @@
     "token": "https://epicproxy.et0986.epichosted.com/FHIRProxy/oauth2/token",
     "authorize": "https://epicproxy.et0986.epichosted.com/FHIRProxy/oauth2/authorize",
     "managingOrganization": "CmV1cgjzhfuXVtoF8FGg9rqt/ZfJXNq4SfZ76Ts8fBM="
-  },
-  {
-    "url": "https://fhir.chppoc.org/Fhir-External/api/FHIR/DSTU2/",
-    "id": "3e118ad6-e5ba-e911-9125-001dd8b71f1a",
-    "name": "Pediatric Physicians Organization at Children's",
-    "token": "https://ppocrp.chppoc.org/fhir-external-prd/oauth2/token",
-    "authorize": "https://ppocrp.chppoc.org/fhir-external-prd/oauth2/authorize",
-    "managingOrganization": "aK2s2GGueHDKmQ+pk5PZfryeDYOiXvruiBm9iP+fndc="
   },
   {
     "url": "https://epicrp.firsthealth.org/FHIR-PRD/api/FHIR/DSTU2/",
@@ -3782,6 +3734,14 @@
     "token": "https://epicproxy.et4001.epichosted.com/APIProxyPRD/oauth2/token",
     "authorize": "https://epicproxy.et4001.epichosted.com/APIProxyPRD/oauth2/authorize",
     "managingOrganization": "aPomW4dS6MbV+635Uc5+uR0DDgymCLs2T+tJ5BKNZb0="
+  },
+  {
+    "url": "https://stofo.providence-waco.org/FHIRProxy/api/FHIR/DSTU2/",
+    "id": "d19c0f4c-9813-e911-9126-001dd8b71f19",
+    "name": "Ascension Providence",
+    "token": "https://stofo.providence-waco.org/FHIRProxy/oauth2/token",
+    "authorize": "https://stofo.providence-waco.org/FHIRProxy/oauth2/authorize",
+    "managingOrganization": "eIwSF77OkKIts+3CwtaR1e+gFclBPlkE5cKntWH4wMc="
   },
   {
     "id": "sandbox_epic",
