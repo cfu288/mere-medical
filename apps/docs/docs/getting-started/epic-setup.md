@@ -114,6 +114,12 @@ Specimen.Read (Patient Chart) (R4)
 Specimen.Search (Patient Chart) (R4)
 ```
 
+:::tip Speed up API selection
+
+Manually selecting every endpoint is tedious, and selecting the wrong set (for example, adding all available APIs) will trigger an OAuth error during sign-in. A community member has shared a browser console helper script that selects all of the required R4 endpoints above in one step. See [this GitHub issue](https://github.com/cfu288/mere-medical/issues/311) for the script and usage instructions.
+
+:::
+
 Make sure that under the `I accept the terms of use of open.epic.` line that the following line is there: **Client IDs for this app _will_ be automatically downloaded to certain customer systems upon marking it ready for production.** If it does not say _will_, authentication will not work.
 
 You'll now need to set the redirect URI to redirect to Mere Medical. By default this is served at `https://localhost:4200/epic/callback` but depending on what your public url is will generally be in the format `{PUBLIC_URL}/epic/callback`.
