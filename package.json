@@ -52,7 +52,7 @@
     "@nx/node": "21.4.1",
     "@nx/react": "21.4.1",
     "@nx/web": "21.4.1",
-    "@nx/webpack": "21.4.1",
+    "@nx/webpack": "22.5.2",
     "@nx/workspace": "21.4.1",
     "@playwright/test": "^1.37.0",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
