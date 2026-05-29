@@ -15,7 +15,7 @@
     "prepare": "[ -d .git ] && husky && git config blame.ignoreRevsFile .git-blame-ignore-revs || true"
   },
   "engines": {
-    "node": "20.11.0"
+    "node": ">=20.19.0"
   },
   "browser": {
     "assert": false
