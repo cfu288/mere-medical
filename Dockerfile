@@ -1,8 +1,12 @@
-FROM node:20.11.0 as build-api-stage
+FROM node:20.19.0 AS deps
 
 WORKDIR /app
 COPY package*.json /app/
-RUN npm ci 
+RUN npm ci
+
+
+FROM deps AS build-api-stage
+
 COPY . /app/
 # Increase Node memory limit for production build
 ENV NODE_OPTIONS="--max-old-space-size=4096"
@@ -15,22 +19,13 @@ RUN npm prune --production
 RUN node-prune
 
 
-FROM node:20.11.0 as build-web-base
-
-WORKDIR /app
-COPY package*.json /app/
-RUN npm ci
-COPY ./ /app/
-COPY ./nginx.conf /nginx.conf
-
-
-FROM node:20.11.0 as build-web-stage
+FROM deps AS build-web-stage
 
 ARG IS_DEMO=disabled
 ENV IS_DEMO=${IS_DEMO}
 
-COPY --from=build-web-base . .
-WORKDIR /app
+COPY . /app/
+COPY ./nginx.conf /nginx.conf
 # Increase Node memory limit for production build
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 # Disable Nx daemon in Docker builds
