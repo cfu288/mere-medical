@@ -103,10 +103,9 @@ export function ProfileImageModal({
     defaultValues: { profilePhoto: ppIn },
   });
   const [crop, setCrop] = useState<any>({
-    unit: 'px',
-    aspect: 1 / 1,
-    x: 5,
-    y: 5,
+    unit: '%',
+    x: 0,
+    y: 0,
     width: 100,
     height: 100,
   });
