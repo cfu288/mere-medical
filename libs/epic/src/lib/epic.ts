@@ -26,3 +26,11 @@ export const EpicDSTU2TenantEndpoints: DSTU2Endpoint[] = Array.from(
 export const EpicR4TenantEndpoints: R4Endpoint[] = Array.from(
   EpicR4EndpointsData,
 );
+
+export function getUniqueTenantCount(): number {
+  const names = new Set([
+    ...EpicDSTU2TenantEndpoints.map((e) => e.name),
+    ...EpicR4TenantEndpoints.map((e) => e.name),
+  ]);
+  return names.size;
+}

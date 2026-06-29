@@ -22,3 +22,11 @@ export const CernerDSTU2TenantEndpoints: DSTU2Endpoint[] =
 
 export const CernerR4TenantEndpoints: R4Endpoint[] =
   Array.from(CernerR4Endpoints);
+
+export function getUniqueTenantCount(): number {
+  const ids = new Set([
+    ...CernerDSTU2TenantEndpoints.map((e) => e.id),
+    ...CernerR4TenantEndpoints.map((e) => e.id),
+  ]);
+  return ids.size;
+}

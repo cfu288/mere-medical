@@ -7,7 +7,8 @@ export type ConnectionSources =
   | 'cerner'
   | 'veradigm'
   | 'va'
-  | 'healow';
+  | 'healow'
+  | 'athena';
 
 export interface ConnectionDocument extends BaseDocument {
   user_id: string;
@@ -92,5 +93,21 @@ export interface HealowConnectionDocument extends ConnectionDocument {
 
 export type CreateHealowConnectionDocument = Omit<
   HealowConnectionDocument,
+  'last_refreshed' | 'last_sync_attempt' | 'last_sync_was_error'
+>;
+
+export interface AthenaConnectionDocument extends ConnectionDocument {
+  source: 'athena';
+  patient: string;
+  tenant_id: string;
+  environment: 'preview' | 'production';
+  auth_uri: string;
+  token_uri: string;
+  id_token?: string;
+  fhir_version: 'R4';
+}
+
+export type CreateAthenaConnectionDocument = Omit<
+  AthenaConnectionDocument,
   'last_refreshed' | 'last_sync_attempt' | 'last_sync_was_error'
 >;

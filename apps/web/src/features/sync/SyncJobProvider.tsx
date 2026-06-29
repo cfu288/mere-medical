@@ -8,6 +8,7 @@ import {
   ConnectionSources,
   VeradigmConnectionDocument,
   VAConnectionDocument,
+  AthenaConnectionDocument,
 } from '../../models/connection-document/ConnectionDocument.type';
 import { useRxDb } from '../../app/providers/RxDbProvider';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
@@ -17,6 +18,7 @@ import * as Cerner from '../../services/fhir/Cerner';
 import * as Veradigm from '../../services/fhir/Veradigm';
 import * as VA from '../../services/fhir/VA';
 import * as Healow from '../../services/fhir/Healow';
+import * as Athena from '../../services/fhir/Athena';
 import { HealowConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
 import { from, Subject } from 'rxjs';
 import { useNotificationDispatch } from '../../app/providers/NotificationProvider';
@@ -504,6 +506,34 @@ async function fetchMedicalRecords(
           connectionDocument.toMutableJSON() as unknown as HealowConnectionDocument,
           db,
           useProxy,
+        );
+        await updateConnectionDocumentTimestamps(
+          syncJob,
+          connectionDocument,
+          db,
+        );
+        return syncJob;
+      } catch (e) {
+        console.error(e);
+        await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
+        throw new Error(
+          `Error refreshing ${connectionDocument.get(
+            'name',
+          )} access - try logging in again`,
+        );
+      }
+    }
+
+    case 'athena': {
+      try {
+        await Athena.refreshAthenaConnectionTokenIfNeeded(
+          config,
+          connectionDocument,
+          db,
+        );
+        const syncJob = await Athena.syncAllRecords(
+          connectionDocument.toMutableJSON() as unknown as AthenaConnectionDocument,
+          db,
         );
         await updateConnectionDocumentTimestamps(
           syncJob,

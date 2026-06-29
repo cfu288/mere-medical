@@ -32,6 +32,10 @@ import {
   getR4Url,
 } from '../../services/fhir/Epic';
 import { getLoginUrl as getVaLoginUrl } from '../../services/fhir/VA';
+import {
+  AthenaLocalStorageKeys,
+  getLoginUrl as getAthenaLoginUrl,
+} from '../../services/fhir/Athena';
 import { VeradigmLocalStorageKeys } from '../../services/fhir/Veradigm';
 import { HealowLocalStorageKeys } from '../../services/fhir/Healow';
 import { Routes } from '../../Routes';
@@ -330,6 +334,18 @@ export async function getLoginUrlBySource(
         item.get('tenant_id'),
       ).then((url) => url as string & Location);
     }
+    case 'athena': {
+      const environment = item.get('environment') as
+        | 'preview'
+        | 'production'
+        | undefined;
+      if (!environment) {
+        throw new Error('Connection missing environment - please reconnect');
+      }
+      return getAthenaLoginUrl(config, environment).then(
+        (url) => url as string & Location,
+      );
+    }
     default: {
       return '' as string & Location;
     }
@@ -403,6 +419,16 @@ export function setTenantUrlBySource(
         item.get('name'),
         item.get('tenant_id'),
       );
+      break;
+    }
+    case 'athena': {
+      const environment = item.get('environment');
+      if (environment) {
+        localStorage.setItem(
+          AthenaLocalStorageKeys.ATHENA_ENVIRONMENT,
+          environment,
+        );
+      }
       break;
     }
     default: {

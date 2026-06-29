@@ -27,7 +27,12 @@ import {
 } from './TenantSelectModelResultItem';
 import VALogo from '../../../assets/img/va-logo.png';
 import HealowLogo from '../../../assets/img/eclinicalworks-logo.jpeg';
+import AthenaLogo from '../../../assets/img/athena-logo.jpeg';
 import { useConfig } from '../../../app/providers/AppConfigProvider';
+import {
+  AthenaLocalStorageKeys,
+  getLoginUrl as getAthenaLoginUrl,
+} from '../../../services/fhir/Athena';
 
 export type EMRVendor =
   | 'epic'
@@ -36,6 +41,7 @@ export type EMRVendor =
   | 'onpatient'
   | 'va'
   | 'healow'
+  | 'athena'
   | 'any';
 
 export type FhirVersion = 'DSTU2' | 'R4';
@@ -44,6 +50,7 @@ type VendorVersions = {
   epic: 'DSTU2' | 'R4';
   cerner: 'DSTU2' | 'R4';
   healow: 'R4';
+  athena: 'R4';
   veradigm: 'DSTU2';
   onpatient: 'DSTU2';
   va: 'DSTU2';
@@ -66,6 +73,9 @@ const vendorPaths: VendorPaths = {
   },
   healow: {
     R4: '/api/v1/healow/tenants?',
+  },
+  athena: {
+    R4: '',
   },
   veradigm: {
     DSTU2: '/api/v1/veradigm/tenants?',
@@ -129,7 +139,6 @@ type SourceItem = {
   enabled: boolean;
   disabledMessage?: string;
   customHandleClick?: () => void;
-  id: number;
   fhirVersion?: 'DSTU2' | 'R4';
 };
 
@@ -183,6 +192,9 @@ export function TenantSelectModal({
   const veradigmEnabled = isConfigured(config.VERADIGM_CLIENT_ID);
   const vaEnabled = isConfigured(config.VA_CLIENT_ID);
   const healowEnabled = isConfigured(config.HEALOW_CLIENT_ID);
+  const athenaProductionEnabled = isConfigured(config.ATHENA_CLIENT_ID);
+  const athenaSandboxEnabled = isConfigured(config.ATHENA_SANDBOX_CLIENT_ID);
+  const athenaEnabled = athenaProductionEnabled || athenaSandboxEnabled;
 
   const [state, dispatch] = useReducer(
     (
@@ -241,7 +253,6 @@ export function TenantSelectModal({
         enabled: epicR4Enabled,
         disabledMessage:
           'Provide EPIC_CLIENT_ID_R4 or EPIC_SANDBOX_CLIENT_ID_R4 env var to enable',
-        id: 1,
         fhirVersion: 'R4',
       },
       {
@@ -250,7 +261,6 @@ export function TenantSelectModal({
         source: CernerLogo,
         enabled: cernerEnabled,
         disabledMessage: 'Provide CERNER_CLIENT_ID env var to enable',
-        id: 2,
         fhirVersion: 'R4',
       },
       {
@@ -260,7 +270,6 @@ export function TenantSelectModal({
         alt: 'Veradigm',
         enabled: veradigmEnabled,
         disabledMessage: 'Provide VERADIGM_CLIENT_ID env var to enable',
-        id: 3,
       },
       {
         title: 'OnPatient',
@@ -278,7 +287,6 @@ export function TenantSelectModal({
         disabledMessage: !isConfigured(config.ONPATIENT_CLIENT_ID)
           ? 'Provide ONPATIENT_CLIENT_ID env var to enable'
           : undefined,
-        id: 4,
       },
       {
         title: 'Veterans Affairs',
@@ -288,7 +296,6 @@ export function TenantSelectModal({
         href: vaUrl,
         enabled: vaEnabled,
         disabledMessage: 'Provide VA_CLIENT_ID env var to enable',
-        id: 4,
       },
       {
         title: 'Healow',
@@ -297,7 +304,27 @@ export function TenantSelectModal({
         alt: 'eClinicalWorks',
         enabled: healowEnabled,
         disabledMessage: 'Provide HEALOW_CLIENT_ID env var to enable',
-        id: 9,
+        fhirVersion: 'R4',
+      },
+      {
+        title: 'Athena Health',
+        vendor: 'athena',
+        source: AthenaLogo,
+        alt: athenaProductionEnabled ? undefined : 'Sandbox Only',
+        enabled: athenaEnabled,
+        disabledMessage: 'Provide ATHENA_CLIENT_ID env var to enable',
+        customHandleClick: () => {
+          const environment = athenaProductionEnabled
+            ? 'production'
+            : 'preview';
+          localStorage.setItem(
+            AthenaLocalStorageKeys.ATHENA_ENVIRONMENT,
+            environment,
+          );
+          getAthenaLoginUrl(config, environment).then((url) => {
+            window.location.href = url;
+          });
+        },
         fhirVersion: 'R4',
       },
       {
@@ -306,7 +333,6 @@ export function TenantSelectModal({
         source: '',
         alt: 'Search all supported health systems',
         enabled: true,
-        id: 5,
       },
       {
         title: 'Cerner Legacy',
@@ -314,7 +340,6 @@ export function TenantSelectModal({
         source: CernerLogo,
         enabled: cernerEnabled,
         disabledMessage: 'Provide CERNER_CLIENT_ID env var to enable',
-        id: 6,
         fhirVersion: 'DSTU2',
       },
       {
@@ -327,7 +352,6 @@ export function TenantSelectModal({
         enabled: epicDstu2Enabled,
         disabledMessage:
           'Provide EPIC_CLIENT_ID_DSTU2 or EPIC_SANDBOX_CLIENT_ID_DSTU2 env var to enable',
-        id: 8,
         fhirVersion: 'DSTU2',
       },
     ];
@@ -345,6 +369,8 @@ export function TenantSelectModal({
     veradigmEnabled,
     vaEnabled,
     healowEnabled,
+    athenaEnabled,
+    athenaProductionEnabled,
   ]);
 
   const mainSources = useMemo(
@@ -439,7 +465,7 @@ export function TenantSelectModal({
                 className="grid w-full grid-cols-2 gap-x-4 gap-y-8 px-4 py-8 sm:grid-cols-3 sm:gap-x-8 sm:px-4 sm:py-12" // lg:grid-cols-4 xl:gap-x-8"
               >
                 {mainSources.map((file) => (
-                  <li key={file.source} className="relative">
+                  <li key={file.title} className="relative">
                     {file.href ? (
                       <div
                         className={
@@ -608,7 +634,7 @@ export function TenantSelectModal({
                     <Disclosure.Panel>
                       <ul className="grid w-full grid-cols-2 gap-x-4 gap-y-8 px-4 pb-8 sm:grid-cols-3 sm:gap-x-8 sm:px-4">
                         {legacySources.map((file) => (
-                          <li key={file.source} className="relative">
+                          <li key={file.title} className="relative">
                             <div
                               className={`aspect-h-7 aspect-w-10 focus-within:ring-primary-500 group block w-full overflow-hidden rounded-lg transition-all focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 ${
                                 file.enabled

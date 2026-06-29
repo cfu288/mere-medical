@@ -10,3 +10,7 @@ export interface DSTU2Endpoint {
 
 export const VeradigmDSTU2TenantEndpoints: DSTU2Endpoint[] =
   Array.from(VeradigmEndpoints);
+
+export function getUniqueTenantCount(): number {
+  return VeradigmDSTU2TenantEndpoints.length;
+}
