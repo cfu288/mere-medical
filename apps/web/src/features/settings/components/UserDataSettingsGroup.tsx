@@ -129,9 +129,9 @@ export function UserDataSettingsGroup() {
 
   useEffect(() => {
     if (backupFile) {
-      formref.current?.dispatchEvent(new Event('submit', { cancelable: true }));
+      handleSubmit(importData)();
     }
-  }, [backupFile]);
+  }, [backupFile, handleSubmit, importData]);
 
   useEffect(() => {
     if (checkIfPersistentStorageAvailable()) {
