@@ -17,6 +17,8 @@ Give the app a name of `Mere Patient App`.
 
 Application Audience will be `Patients`.
 
+After selecting `Patients`, an `Automatic Client Distribution` option will appear. Select `USCDI v3`. Leave the `Use Case` as `General`. Once USCDI v3 is selected, a banner should appear that says **This app will be automatically downloaded to all qualifying customers upon marking it ready for production.** If this banner does not appear (or later disappears after changing your API selections), authentication will not work at most health systems.
+
 For Incoming API's, search for and select all the endpoints shown below with `left click + shift`. With all the endpoints selected, click on the `>>` button to add them to your selected list.
 
 Make sure you've selected the following:
@@ -34,8 +36,8 @@ CarePlan.Read (Encounter) (R4)
 CarePlan.Read (Longitudinal) (R4)
 CarePlan.Search (Encounter) (R4)
 CarePlan.Search (Longitudinal) (R4)
-CareTeam.Read (Longitudinal) (R4)
-CareTeam.Search (Longitudinal) (R4)
+CareTeam.Read (Longitudinal CareTeam) (R4)
+CareTeam.Search (Longitudinal CareTeam) (R4)
 Condition.Read (Care Plan Problem) (R4)
 Condition.Read (Encounter Diagnosis) (R4)
 Condition.Read (Health Concerns) (R4)
@@ -44,8 +46,8 @@ Condition.Search (Care Plan Problem) (R4)
 Condition.Search (Encounter Diagnosis) (R4)
 Condition.Search (Health Concerns) (R4)
 Condition.Search (Problems) (R4)
-Coverage.Read (R4)
-Coverage.Search (R4)
+Coverage.Read (Patient Insurance Information) (R4)
+Coverage.Search (Patient Insurance Information) (R4)
 Device.Read (Implants) (R4)
 Device.Search (Implants) (R4)
 DiagnosticReport.Read (Results) (R4)
@@ -64,12 +66,16 @@ Goal.Search (Care Plan Goal) (R4)
 Goal.Search (Patient) (R4)
 Immunization.Read (Patient Chart) (R4)
 Immunization.Search (Patient Chart) (R4)
-Location.Read (R4)
-Location.Search (R4)
+Location.Read (Organizational Directory) (R4)
+Location.Read (Outside Record) (R4)
+Location.Search (Organizational Directory) (R4)
+Location.Search (Outside Record) (R4)
 Media.Read (Study) (R4)
 Media.Search (Study) (R4)
-Medication.Read (R4)
-Medication.Search (R4)
+Medication.Read (Organization Med List) (R4)
+Medication.Read (Outside Record) (R4)
+Medication.Search (Organization Med List) (R4)
+Medication.Search (Outside Record) (R4)
 MedicationDispense.Read (Fill Status) (R4)
 MedicationDispense.Search (Fill Status) (R4)
 MedicationRequest.Read (Signed Medication Order) (R4)
@@ -85,14 +91,19 @@ Observation.Search (Assessments) (R4)
 Observation.Search (Labs) (R4)
 Observation.Search (SDOH Assessments) (R4)
 Observation.Search (SmartData Elements) (R4)
+Observation.Search (Social History) (R4)
 Observation.Search (Study Finding) (R4)
 Observation.Search (Vital Signs) (R4)
-Organization.Read (R4)
-Organization.Search (R4)
+Organization.Read (Organizational Directory) (R4)
+Organization.Read (Outside Record) (R4)
+Organization.Search (Organizational Directory) (R4)
+Organization.Search (Outside Record) (R4)
 Patient.Read (Demographics) (R4)
 Patient.Search (Demographics) (R4)
-Practitioner.Read (R4)
-Practitioner.Search (R4)
+Practitioner.Read (Organizational Directory) (R4)
+Practitioner.Read (Outside Record) (R4)
+Practitioner.Search (Organizational Directory) (R4)
+Practitioner.Search (Outside Record) (R4)
 PractitionerRole.Read (Organizational Directory) (R4)
 PractitionerRole.Search (Organizational Directory) (R4)
 Procedure.Read (Orders) (R4)
@@ -116,15 +127,178 @@ Specimen.Search (Patient Chart) (R4)
 
 :::tip Speed up API selection
 
-Manually selecting every endpoint is tedious, and selecting the wrong set (for example, adding all available APIs) will trigger an OAuth error during sign-in. A community member has shared a browser console helper script that selects all of the required R4 endpoints above in one step. See [this GitHub issue](https://github.com/cfu288/mere-medical/issues/311) for the script and usage instructions.
+Manually selecting every endpoint is tedious, and selecting the wrong set (for example, adding all available APIs) will trigger an OAuth error during sign-in. Instead of clicking each item, you can paste the helper script below into your browser's Developer Console (F12, `Console` tab) while on the app create/edit page (after selecting the Application Audience). It selects all of the required R4 endpoints above in one step, moves them to the Selected list, and verifies the result — it will log an error for any API it can't find, which usually means Epic has renamed it. The script is safe to re-run and skips APIs that are already selected. Based on a community contribution in [this GitHub issue](https://github.com/cfu288/mere-medical/issues/311); the API list was last verified against the portal in August 2026.
+
+<details>
+<summary>Console helper script to select all required R4 APIs</summary>
+
+```js
+(function () {
+  const REQUIRED_APIS = [
+    'AllergyIntolerance.Read (Patient Chart) (R4)',
+    'AllergyIntolerance.Search (Patient Chart) (R4)',
+    'Binary.Read (Clinical Notes) (R4)',
+    'Binary.Read (Generated CDAs) (R4)',
+    'Binary.Read (Labs) (R4)',
+    'Binary.Search (Clinical Notes) (R4)',
+    'Binary.Search (Generated CDAs) (R4)',
+    'Binary.Search (Labs) (R4)',
+    'CarePlan.Read (Encounter) (R4)',
+    'CarePlan.Read (Longitudinal) (R4)',
+    'CarePlan.Search (Encounter) (R4)',
+    'CarePlan.Search (Longitudinal) (R4)',
+    'CareTeam.Read (Longitudinal CareTeam) (R4)',
+    'CareTeam.Search (Longitudinal CareTeam) (R4)',
+    'Condition.Read (Care Plan Problem) (R4)',
+    'Condition.Read (Encounter Diagnosis) (R4)',
+    'Condition.Read (Health Concerns) (R4)',
+    'Condition.Read (Problems) (R4)',
+    'Condition.Search (Care Plan Problem) (R4)',
+    'Condition.Search (Encounter Diagnosis) (R4)',
+    'Condition.Search (Health Concerns) (R4)',
+    'Condition.Search (Problems) (R4)',
+    'Coverage.Read (Patient Insurance Information) (R4)',
+    'Coverage.Search (Patient Insurance Information) (R4)',
+    'Device.Read (Implants) (R4)',
+    'Device.Search (Implants) (R4)',
+    'DiagnosticReport.Read (Results) (R4)',
+    'DiagnosticReport.Search (Results) (R4)',
+    'DocumentReference.Read (Clinical Notes) (R4)',
+    'DocumentReference.Read (Generated CDAs) (R4)',
+    'DocumentReference.Read (Labs) (R4)',
+    'DocumentReference.Search (Clinical Notes) (R4)',
+    'DocumentReference.Search (Generated CDAs) (R4)',
+    'DocumentReference.Search (Labs) (R4)',
+    'Encounter.Read (Patient Chart) (R4)',
+    'Encounter.Search (Patient Chart) (R4)',
+    'Goal.Read (Care Plan Goal) (R4)',
+    'Goal.Read (Patient) (R4)',
+    'Goal.Search (Care Plan Goal) (R4)',
+    'Goal.Search (Patient) (R4)',
+    'Immunization.Read (Patient Chart) (R4)',
+    'Immunization.Search (Patient Chart) (R4)',
+    'Location.Read (Organizational Directory) (R4)',
+    'Location.Read (Outside Record) (R4)',
+    'Location.Search (Organizational Directory) (R4)',
+    'Location.Search (Outside Record) (R4)',
+    'Media.Read (Study) (R4)',
+    'Media.Search (Study) (R4)',
+    'Medication.Read (Organization Med List) (R4)',
+    'Medication.Read (Outside Record) (R4)',
+    'Medication.Search (Organization Med List) (R4)',
+    'Medication.Search (Outside Record) (R4)',
+    'MedicationDispense.Read (Fill Status) (R4)',
+    'MedicationDispense.Search (Fill Status) (R4)',
+    'MedicationRequest.Read (Signed Medication Order) (R4)',
+    'MedicationRequest.Search (Signed Medication Order) (R4)',
+    'Observation.Read (Assessments) (R4)',
+    'Observation.Read (Labs) (R4)',
+    'Observation.Read (SDOH Assessments) (R4)',
+    'Observation.Read (SmartData Elements) (R4)',
+    'Observation.Read (Social History) (R4)',
+    'Observation.Read (Study Finding) (R4)',
+    'Observation.Read (Vital Signs) (R4)',
+    'Observation.Search (Assessments) (R4)',
+    'Observation.Search (Labs) (R4)',
+    'Observation.Search (SDOH Assessments) (R4)',
+    'Observation.Search (SmartData Elements) (R4)',
+    'Observation.Search (Social History) (R4)',
+    'Observation.Search (Study Finding) (R4)',
+    'Observation.Search (Vital Signs) (R4)',
+    'Organization.Read (Organizational Directory) (R4)',
+    'Organization.Read (Outside Record) (R4)',
+    'Organization.Search (Organizational Directory) (R4)',
+    'Organization.Search (Outside Record) (R4)',
+    'Patient.Read (Demographics) (R4)',
+    'Patient.Search (Demographics) (R4)',
+    'Practitioner.Read (Organizational Directory) (R4)',
+    'Practitioner.Read (Outside Record) (R4)',
+    'Practitioner.Search (Organizational Directory) (R4)',
+    'Practitioner.Search (Outside Record) (R4)',
+    'PractitionerRole.Read (Organizational Directory) (R4)',
+    'PractitionerRole.Search (Organizational Directory) (R4)',
+    'Procedure.Read (Orders) (R4)',
+    'Procedure.Read (SDOH Intervention) (R4)',
+    'Procedure.Read (Surgeries) (R4)',
+    'Procedure.Search (Orders) (R4)',
+    'Procedure.Search (SDOH Intervention) (R4)',
+    'Procedure.Search (Surgeries) (R4)',
+    'Provenance.Read (R4)',
+    'RelatedPerson.Read (Friends and Family) (R4)',
+    'RelatedPerson.Read (Proxy) (R4)',
+    'RelatedPerson.Search (Friends and Family) (R4)',
+    'RelatedPerson.Search (Proxy) (R4)',
+    'ServiceRequest.Read (Community Resource ServiceRequest) (R4)',
+    'ServiceRequest.Read (Orders) (R4)',
+    'ServiceRequest.Search (Community Resource ServiceRequest) (R4)',
+    'ServiceRequest.Search (Orders) (R4)',
+    'Specimen.Read (Patient Chart) (R4)',
+    'Specimen.Search (Patient Chart) (R4)',
+  ];
+
+  const availList = document.getElementById('availableWebServices');
+  const selList = document.getElementById('selectedWebServices');
+  if (!availList || !selList) {
+    console.error("Could not find the Incoming APIs lists. Open your app's create/edit page and select an Application Audience first.");
+    return;
+  }
+
+  const norm = (s) => s.trim().toLowerCase();
+  const selected = () => Array.from(selList.getElementsByTagName('li'), (li) => norm(li.innerText));
+
+  function verify() {
+    const sel = new Set(selected());
+    const missing = REQUIRED_APIS.filter((n) => !sel.has(norm(n)));
+    const extra = [...sel].filter((s) => !REQUIRED_APIS.some((n) => norm(n) === s));
+    if (!missing.length && !extra.length) {
+      console.log(`Success: all ${REQUIRED_APIS.length} required APIs are selected, and nothing else.`);
+    } else {
+      missing.forEach((m) => console.error('Missing (Epic may have renamed it): ' + m));
+      extra.forEach((e) => console.warn('Extra API selected that is not in the required list: ' + e));
+    }
+  }
+
+  const already = new Set(selected());
+  const toSelect = REQUIRED_APIS.filter((n) => !already.has(norm(n)));
+  if (!toSelect.length) {
+    console.log('All required APIs are already selected.');
+    verify();
+    return;
+  }
+
+  const items = Array.from(availList.getElementsByTagName('li'));
+  let first = true;
+  let found = 0;
+  for (const name of toSelect) {
+    const item = items.find((li) => norm(li.innerText) === norm(name));
+    if (!item) {
+      console.warn('Not found in Available list: ' + name);
+      continue;
+    }
+    item.dispatchEvent(new MouseEvent('click', { view: window, bubbles: true, cancelable: true, ctrlKey: !first, metaKey: !first }));
+    first = false;
+    found++;
+  }
+  console.log(`Highlighted ${found} of ${toSelect.length} APIs. Moving them to Selected...`);
+
+  setTimeout(() => {
+    if (typeof window.Epic$USCDI$App$AddServices === 'function') {
+      window.Epic$USCDI$App$AddServices(0);
+      setTimeout(verify, 1500);
+    } else {
+      console.error('Could not find the portal\'s move function. Click the >> button manually, then re-run this script to verify.');
+    }
+  }, 1500);
+})();
+```
+
+</details>
 
 :::
 
-Make sure that under the `I accept the terms of use of open.epic.` line that the following line is there: **Client IDs for this app _will_ be automatically downloaded to certain customer systems upon marking it ready for production.** If it does not say _will_, authentication will not work.
+You'll now need to set the `Endpoint URI` to redirect back to Mere Medical. By default this is served at `https://localhost:4200/epic/callback` but depending on what your public url is will generally be in the format `{PUBLIC_URL}/epic/callback`.
 
-You'll now need to set the redirect URI to redirect to Mere Medical. By default this is served at `https://localhost:4200/epic/callback` but depending on what your public url is will generally be in the format `{PUBLIC_URL}/epic/callback`.
-
-Make sure that `Can Register Dynamic Clients` is selected and that `JWT Bearer grant type` is selected.
+Check `Can Register Dynamic Clients`, then make sure `JWT Bearer Grant Type` is selected for how dynamic clients request an access token (it is the default).
 
 Leave `Is this app a confidential client?` unchecked.
 
@@ -136,9 +310,11 @@ After you hit save, you should now see several new options appear. Configure the
 - **SMART Scope Version**: Select `SMART v2`
 - **FHIR ID Generation Scheme**: Select `Use 64-Character-Limited FHIR IDs for USCDI FHIR Resources`
 
-Skip the `Open Data Use Questionnare` - This is only needed right before we submit to production. We'll need to test our config in sandbox to make sure it is working first.
+A yellow notice may appear saying the app qualifies for autodownload but that the FHIR ID generation scheme will be automatically changed to `Use Unconstrained FHIR IDs` for customers that don't support it — this is expected and fine.
 
-Accept the terms of use and click `Save & Ready for Sandbox`. You should now have access to a Non-Production Client ID, which we will refer to as a sandbox Client ID. Note that Epic can take several hours to fully activate your Client ID for sandbox and up to 48 hours to activate for production.
+Skip the `Open Data Use Questionnare` - This is only needed right before we submit to production. We'll need to test our config in sandbox to make sure it is working first. The same goes for the `Summary` and `Description` fields — they are required before marking the app ready for production, but not for sandbox.
+
+Click `Save & Ready for Sandbox` (accepting the open.epic terms of use is only required later, when marking the app ready for production). You should now have access to a Non-Production Client ID, which we will refer to as a sandbox Client ID. Note that Epic can take several hours to fully activate your Client ID for sandbox and up to 48 hours to activate for production.
 
 # Verifying Your Sandbox Config in Mere
 
