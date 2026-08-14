@@ -7,6 +7,14 @@ description: Get up and running with Docker
 
 These instructions will tell you how to get Mere Medical up and running on your machine with Docker or Docker Compose.
 
+:::warning Mere must be served over HTTPS (or accessed via localhost)
+
+Mere relies on browser Web Crypto APIs (such as `crypto.randomUUID`), which browsers only enable on **secure origins** — `https://` URLs or `localhost`. If you access Mere over plain HTTP from any other address (e.g. `http://192.168.1.50:4200` from another device on your network), the app cannot start and you will see a **white screen**.
+
+Either open Mere at `http://localhost:<port>` on the machine running it, or put it behind a reverse proxy that terminates SSL — the [local SSL setup below](#setting-up-with-docker-compose--local-ssl-with-mkcert--nginx) walks you through this.
+
+:::
+
 If you're looking to get Mere up and running on your local computer, we'd recommend following [these Docker Compose setup instructions](#setting-up-with-docker-compose--local-ssl-with-mkcert--nginx) as it will take you through step by step and help you set up local SSL.
 
 If you want to run Mere on an external server and already have a reverse proxy with SSL set up, you can follow these [Docker](#setting-up-with-docker) instructions or [these Docker Compose instructions](#setting-up-with-docker-compose).
@@ -245,6 +253,16 @@ Note that this will not set up SSL for you, which is needed for some patient por
 | `HEALOW_CLIENT_SECRET` | No | Client secret for Healow confidential client (enables refresh tokens) | See [Healow setup](./healow-setup) |
 
 ## Troubleshooting
+
+### White screen when opening Mere from another device (or a LAN IP)
+
+If Mere works at `http://localhost:4200` but shows a blank white page when accessed via your machine's network address (e.g. `http://192.168.1.50:4200`), you are hitting the secure-origin requirement described at the top of this page. The browser console will show an error like:
+
+```
+Uncaught TypeError: window.crypto.randomUUID is not a function
+```
+
+Browsers only expose the Web Crypto APIs Mere needs on `https://` origins or `localhost`, so plain-HTTP access from any other address cannot work — this is a browser security restriction, not a configuration bug. Serve Mere through a reverse proxy with SSL ([local SSL setup instructions](#setting-up-with-docker-compose--local-ssl-with-mkcert--nginx)), or access it from the host machine via `localhost`.
 
 ### "Unable to search for healthcare systems"
 

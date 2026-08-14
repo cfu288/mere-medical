@@ -22,5 +22,21 @@
   </head>
   <body>
     <div id="root" className="bg-white"></div>
+    <script>
+      // Mere depends on Web Crypto APIs (crypto.randomUUID, crypto.subtle)
+      // that browsers only expose in secure contexts (HTTPS or localhost).
+      // Without this guard the app crashes during startup with a white screen.
+      if (!window.isSecureContext) {
+        document.getElementById('root').innerHTML =
+          '<div style="max-width:36rem;margin:15vh auto 0;padding:0 1.5rem;font-family:system-ui,-apple-system,sans-serif;color:#1f2937">' +
+          '<h1 style="font-size:1.4rem;color:#00527A">Mere Medical requires a secure connection</h1>' +
+          '<p style="line-height:1.6">You are accessing Mere over plain HTTP at <code>' +
+          location.host +
+          '</code>. Browsers disable the Web&nbsp;Crypto features Mere depends on unless the page is served over <strong>HTTPS</strong> or from <strong>localhost</strong>.</p>' +
+          '<p style="line-height:1.6">To fix this, either open Mere at <code>http://localhost:&lt;port&gt;</code> on the machine running it, or serve it through a reverse proxy with SSL.</p>' +
+          '<p style="line-height:1.6"><a style="color:#0284c7" href="https://meremedical.co/docs/getting-started/docker#setting-up-with-docker-compose--local-ssl-with-mkcert--nginx">Read the setup guide for local SSL &rarr;</a></p>' +
+          '</div>';
+      }
+    </script>
   </body>
 </html>
