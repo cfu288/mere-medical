@@ -243,17 +243,17 @@ export function ObservationResultRow({
                             }`}
                           >
                             <p>
-                              {getValueQuantity(item) !== undefined
-                                ? `  ${getValueQuantity(item)}`
+                              {getValueQuantity(rl) !== undefined
+                                ? `  ${getValueQuantity(rl)}`
                                 : ''}
-                              {getValueUnit(item)}
+                              {getValueUnit(rl)}
                             </p>
                             <p
-                              className={`text-xs font-light ${isOutOfRangeResult(item) ? 'text-red-700' : 'text-primary-700'}`}
+                              className={`text-xs font-light ${isOutOfRangeResult(rl) ? 'text-red-700' : 'text-primary-700'}`}
                             >
-                              {getInterpretationText(item) ||
-                                (getValueString(item) &&
-                                  `${getValueString(item)}`)}
+                              {getInterpretationText(rl) ||
+                                (getValueString(rl) &&
+                                  `${getValueString(rl)}`)}
                             </p>
                           </div>
                         </Fragment>
