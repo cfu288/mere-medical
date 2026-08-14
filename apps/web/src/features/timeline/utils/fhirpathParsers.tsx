@@ -2,13 +2,42 @@ import { BundleEntry, Observation } from 'fhir/r2';
 import * as fhirpath from 'fhirpath';
 import { ClinicalDocument } from '../../../models/clinical-document/ClinicalDocument.type';
 
+type ReferenceRangeShape = 'text' | 'bounded' | 'low-only' | 'high-only' | 'empty';
+
 export function getReferenceRangeString(
   item: ClinicalDocument<BundleEntry<Observation>>,
-) {
-  return fhirpath.evaluate(
+): string | undefined {
+  const text = fhirpath.evaluate(
     item.data_record.raw.resource,
     'referenceRange.text',
   )?.[0];
+  const low = getReferenceRangeLow(item);
+  const high = getReferenceRangeHigh(item);
+  const unit = low?.unit ?? high?.unit;
+  const unitSuffix = unit ? ` ${unit}` : '';
+
+  const shape: ReferenceRangeShape = text
+    ? 'text'
+    : low?.value !== undefined && high?.value !== undefined
+      ? 'bounded'
+      : low?.value !== undefined
+        ? 'low-only'
+        : high?.value !== undefined
+          ? 'high-only'
+          : 'empty';
+
+  switch (shape) {
+    case 'text':
+      return text;
+    case 'bounded':
+      return `${low.value} - ${high.value}${unitSuffix}`;
+    case 'low-only':
+      return `>= ${low.value}${unitSuffix}`;
+    case 'high-only':
+      return `<= ${high.value}${unitSuffix}`;
+    case 'empty':
+      return undefined;
+  }
 }
 
 export function getReferenceRangeLow(
