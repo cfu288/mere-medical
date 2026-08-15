@@ -1,5 +1,6 @@
 import type {
   OAuthConfig,
+  OAuthClient,
   AuthorizationRequestState,
   CoreTokenSet,
   WithIdToken,
@@ -47,17 +48,7 @@ export type HealowTokenSet = CoreTokenSet &
     tenantId: string;
   };
 
-export interface HealowClient {
-  initiateAuth: (
-    config: OAuthConfig,
-  ) => Promise<{ url: string; session: AuthorizationRequestState }>;
-  handleCallback: (
-    params: URLSearchParams,
-    config: OAuthConfig,
-    session: AuthorizationRequestState,
-  ) => Promise<HealowTokenSet>;
-  refresh: (tokens: HealowTokenSet, config: OAuthConfig) => Promise<HealowTokenSet>;
-  isExpired: (tokens: HealowTokenSet, bufferSeconds?: number) => boolean;
+export interface HealowClient extends OAuthClient<HealowTokenSet> {
   canRefresh: (tokens: HealowTokenSet) => boolean;
 }
 

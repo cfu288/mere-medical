@@ -17,6 +17,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@mere/athena": ["libs/athena/src/index.ts"],
       "@mere/cerner": ["libs/cerner/src/index.ts"],
       "@mere/crypto": ["libs/crypto/src/index.ts"],
       "@mere/crypto/browser": ["libs/crypto/src/browser.ts"],

@@ -1,24 +1,37 @@
 import { Combobox } from '@headlessui/react';
 import { classNames } from '../../../shared/utils/StyleUtils';
 
+export type TenantWireVendor = 'EPIC' | 'CERNER' | 'VERADIGM' | 'HEALOW';
+
+export interface SelectOption {
+  id: string;
+  name: string;
+  baseUrl: string & Location;
+  authUrl: string & Location;
+  tokenUrl: string & Location;
+  vendor?: TenantWireVendor;
+}
+
 export function TenantSelectModelResultItem({
   id,
   name,
   baseUrl,
   tokenUrl,
   authUrl,
+  vendor,
 }: {
   id: string;
   name: string;
   baseUrl: string;
   tokenUrl: string;
   authUrl: string;
+  vendor?: string;
 }) {
   return (
     <Combobox.Option
       tabIndex={0}
       key={id}
-      value={{ id, name, baseUrl, tokenUrl, authUrl }}
+      value={{ id, name, baseUrl, tokenUrl, authUrl, vendor }}
       className={({ active }) =>
         classNames(
           active ? 'bg-gray-100' : '',

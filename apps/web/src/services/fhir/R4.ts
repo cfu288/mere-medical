@@ -163,7 +163,11 @@ export function mapObservationToClinicalDocument(
     metadata: {
       id: parseId(bundleItem),
       date: bundleItem.resource?.effectiveDateTime || new Date(0).toISOString(),
-      display_name: (bundleItem.resource?.code?.text || '')
+      display_name: (
+        bundleItem.resource?.code?.text ||
+        bundleItem.resource?.code?.coding?.[0]?.display ||
+        ''
+      )
         ?.replace(/- final result/gi, '')
         .replace(/- final/gi, ''),
       loinc_coding:
@@ -381,7 +385,9 @@ export function mapDocumentReferenceToClinicalDocument(
     metadata: {
       id: parseId(bundleItem),
       date: bundleItem.resource?.date || new Date(0).toISOString(),
-      display_name: bundleItem.resource?.type?.text,
+      display_name:
+        bundleItem.resource?.type?.text ||
+        bundleItem.resource?.type?.coding?.[0]?.display,
     },
   };
   return cd;
@@ -404,7 +410,10 @@ export function mapCarePlanToClinicalDocument(
     metadata: {
       id: parseId(bundleItem),
       date: bundleItem.resource?.period?.start || new Date(0).toISOString(),
-      display_name: bundleItem.resource?.description,
+      display_name:
+        bundleItem.resource?.description ||
+        bundleItem.resource?.category?.[0]?.coding?.[0]?.display ||
+        bundleItem.resource?.category?.[0]?.coding?.[0]?.code,
     },
   };
   return cd;
