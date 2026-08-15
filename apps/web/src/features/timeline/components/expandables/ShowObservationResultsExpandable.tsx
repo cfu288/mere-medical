@@ -4,6 +4,10 @@ import {
   ClinicalDocument,
   MergeClinicalDocument,
 } from '../../../../models/clinical-document/ClinicalDocument.type';
+import {
+  formatValueRange,
+  formatValueRatio,
+} from '../../utils/fhirpathParsers';
 
 export function ShowObservationResultsExpandable({
   item,
@@ -54,7 +58,9 @@ export function ShowObservationResultsExpandable({
                 <div>{list_item.resource?.category?.text} result: </div>
                 <div>
                   {(list_item.resource as Observation)?.interpretation?.text ||
-                    (list_item.resource as Observation)?.valueString}
+                    (list_item.resource as Observation)?.valueString ||
+                    formatValueRange(list_item.resource as Observation) ||
+                    formatValueRatio(list_item.resource as Observation)}
                 </div>
                 <div>
                   {(list_item.resource as Observation)?.valueQuantity?.value}

@@ -2,7 +2,12 @@ import { BundleEntry, Observation } from 'fhir/r2';
 import * as fhirpath from 'fhirpath';
 import { ClinicalDocument } from '../../../models/clinical-document/ClinicalDocument.type';
 
-type ReferenceRangeShape = 'text' | 'bounded' | 'low-only' | 'high-only' | 'empty';
+type ReferenceRangeShape =
+  | 'text'
+  | 'bounded'
+  | 'low-only'
+  | 'high-only'
+  | 'empty';
 
 export function getReferenceRangeString(
   item: ClinicalDocument<BundleEntry<Observation>>,
@@ -92,6 +97,49 @@ export function getValueString(
   item: ClinicalDocument<BundleEntry<Observation>>,
 ) {
   return fhirpath.evaluate(item.data_record.raw.resource, 'valueString')?.[0];
+}
+
+export function formatValueRange(
+  observation: Observation | undefined,
+): string | undefined {
+  const low = observation?.valueRange?.low;
+  const high = observation?.valueRange?.high;
+  if (low?.value === undefined && high?.value === undefined) {
+    return undefined;
+  }
+  const unit = low?.unit ?? high?.unit;
+  const unitSuffix = unit ? ` ${unit}` : '';
+  if (low?.value !== undefined && high?.value !== undefined) {
+    return `${low.value} - ${high.value}${unitSuffix}`;
+  }
+  return low?.value !== undefined
+    ? `>= ${low.value}${unitSuffix}`
+    : `<= ${high?.value}${unitSuffix}`;
+}
+
+export function formatValueRatio(
+  observation: Observation | undefined,
+): string | undefined {
+  const numerator = observation?.valueRatio?.numerator;
+  const denominator = observation?.valueRatio?.denominator;
+  if (numerator?.value === undefined || denominator?.value === undefined) {
+    return undefined;
+  }
+  const unit = numerator.unit ?? denominator.unit;
+  const unitSuffix = unit ? ` ${unit}` : '';
+  return `${numerator.value}:${denominator.value}${unitSuffix}`;
+}
+
+export function getValueRangeString(
+  item: ClinicalDocument<BundleEntry<Observation>>,
+): string | undefined {
+  return formatValueRange(item.data_record.raw.resource);
+}
+
+export function getValueRatioString(
+  item: ClinicalDocument<BundleEntry<Observation>>,
+): string | undefined {
+  return formatValueRatio(item.data_record.raw.resource);
 }
 
 export function getComments(item: ClinicalDocument<BundleEntry<Observation>>) {

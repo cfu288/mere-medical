@@ -33,6 +33,8 @@ import {
   isOutOfRangeResult,
   getInterpretationText,
   getValueString,
+  getValueRangeString,
+  getValueRatioString,
   getComments,
 } from '../utils/fhirpathParsers';
 import { UserDocument } from '../../../models/user-document/UserDocument.type';
@@ -134,7 +136,9 @@ export function ObservationResultRow({
                   >
                     {getValueQuantity(item) !== undefined
                       ? `${getValueQuantity(item)}`
-                      : getInterpretationText(item) ||
+                      : getValueRangeString(item) ||
+                        getValueRatioString(item) ||
+                        getInterpretationText(item) ||
                         (getValueString(item) && `${getValueString(item)}`)}
                     <span className={`pl-1 inline text-xs font-light`}>
                       {getValueUnit(item)}
@@ -245,15 +249,16 @@ export function ObservationResultRow({
                             <p>
                               {getValueQuantity(rl) !== undefined
                                 ? `  ${getValueQuantity(rl)}`
-                                : ''}
+                                : getValueRangeString(rl) ||
+                                  getValueRatioString(rl) ||
+                                  ''}
                               {getValueUnit(rl)}
                             </p>
                             <p
                               className={`text-xs font-light ${isOutOfRangeResult(rl) ? 'text-red-700' : 'text-primary-700'}`}
                             >
                               {getInterpretationText(rl) ||
-                                (getValueString(rl) &&
-                                  `${getValueString(rl)}`)}
+                                (getValueString(rl) && `${getValueString(rl)}`)}
                             </p>
                           </div>
                         </Fragment>

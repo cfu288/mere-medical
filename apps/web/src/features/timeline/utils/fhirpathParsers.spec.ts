@@ -1,7 +1,11 @@
 import { BundleEntry, Observation } from 'fhir/r2';
 
 import { ClinicalDocument } from '../../../models/clinical-document/ClinicalDocument.type';
-import { getReferenceRangeString } from './fhirpathParsers';
+import {
+  getReferenceRangeString,
+  getValueRangeString,
+  getValueRatioString,
+} from './fhirpathParsers';
 
 function makeObservation(
   resource: Partial<Observation>,
@@ -76,5 +80,65 @@ describe('getReferenceRangeString', () => {
   it('returns undefined when there is no referenceRange', () => {
     const item = makeObservation({});
     expect(getReferenceRangeString(item)).toBeUndefined();
+  });
+});
+
+describe('getValueRangeString', () => {
+  it('builds a range string from low and high', () => {
+    const item = makeObservation({
+      valueRange: {
+        low: { value: 1, unit: 'mg/dL' },
+        high: { value: 5, unit: 'mg/dL' },
+      },
+    });
+    expect(getValueRangeString(item)).toEqual('1 - 5 mg/dL');
+  });
+
+  it('builds a lower-bound-only string when only low is present', () => {
+    const item = makeObservation({
+      valueRange: { low: { value: 1, unit: 'mg/dL' } },
+    });
+    expect(getValueRangeString(item)).toEqual('>= 1 mg/dL');
+  });
+
+  it('builds an upper-bound-only string when only high is present', () => {
+    const item = makeObservation({
+      valueRange: { high: { value: 5 } },
+    });
+    expect(getValueRangeString(item)).toEqual('<= 5');
+  });
+
+  it('returns undefined when there is no valueRange', () => {
+    const item = makeObservation({});
+    expect(getValueRangeString(item)).toBeUndefined();
+  });
+});
+
+describe('getValueRatioString', () => {
+  it('builds a ratio string from numerator and denominator', () => {
+    const item = makeObservation({
+      valueRatio: {
+        numerator: { value: 1 },
+        denominator: { value: 64 },
+      },
+    });
+    expect(getValueRatioString(item)).toEqual('1:64');
+  });
+
+  it('includes the unit when present', () => {
+    const item = makeObservation({
+      valueRatio: {
+        numerator: { value: 50, unit: 'mg' },
+        denominator: { value: 1 },
+      },
+    });
+    expect(getValueRatioString(item)).toEqual('50:1 mg');
+  });
+
+  it('returns undefined when either side is missing', () => {
+    const item = makeObservation({
+      valueRatio: { numerator: { value: 1 } },
+    });
+    expect(getValueRatioString(item)).toBeUndefined();
   });
 });
