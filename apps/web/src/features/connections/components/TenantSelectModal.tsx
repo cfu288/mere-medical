@@ -14,7 +14,6 @@ import VeradigmLogo from '../../../assets/img/allscripts-logo.png';
 import CernerLogo from '../../../assets/img/cerner-logo.png';
 import EpicLogo from '../../../assets/img/mychart-logo.png';
 import OnpatientLogo from '../../../assets/img/onpatient-logo-full.webp';
-import { SelectOption } from '../ConnectionTab';
 import { Routes } from '../../../Routes';
 import { Modal } from '../../../shared/components/Modal';
 import { ModalHeader } from '../../../shared/components/ModalHeader';
@@ -22,8 +21,10 @@ import { useNotificationDispatch } from '../../../app/providers/NotificationProv
 import { useUserPreferences } from '../../../app/providers/UserPreferencesProvider';
 import { getLoginUrl as getVaLoginUrl } from '../../../services/fhir/VA';
 import {
+  SelectOption,
   SkeletonTenantSelectModalResultItem,
   TenantSelectModelResultItem,
+  TenantWireVendor,
 } from './TenantSelectModelResultItem';
 import VALogo from '../../../assets/img/va-logo.png';
 import HealowLogo from '../../../assets/img/eclinicalworks-logo.jpeg';
@@ -34,35 +35,9 @@ import {
   getLoginUrl as getAthenaLoginUrl,
 } from '../../../services/fhir/Athena';
 
-export type EMRVendor =
-  | 'epic'
-  | 'cerner'
-  | 'veradigm'
-  | 'onpatient'
-  | 'va'
-  | 'healow'
-  | 'athena'
-  | 'any';
-
 export type FhirVersion = 'DSTU2' | 'R4';
 
-type VendorVersions = {
-  epic: 'DSTU2' | 'R4';
-  cerner: 'DSTU2' | 'R4';
-  healow: 'R4';
-  athena: 'R4';
-  veradigm: 'DSTU2';
-  onpatient: 'DSTU2';
-  va: 'DSTU2';
-  // TODO: 'any' only searches DSTU2 endpoints, excluding R4-only vendors like Healow
-  any: 'DSTU2';
-};
-
-type VendorPaths = {
-  [V in keyof VendorVersions]: Record<VendorVersions[V], string>;
-};
-
-const vendorPaths: VendorPaths = {
+const vendorPaths = {
   epic: {
     R4: '/api/v1/epic/r4/tenants?',
     DSTU2: '/api/v1/epic/tenants?',
@@ -74,9 +49,6 @@ const vendorPaths: VendorPaths = {
   healow: {
     R4: '/api/v1/healow/tenants?',
   },
-  athena: {
-    R4: '',
-  },
   veradigm: {
     DSTU2: '/api/v1/veradigm/tenants?',
   },
@@ -87,60 +59,87 @@ const vendorPaths: VendorPaths = {
     DSTU2: '/api/v1/va/tenants?',
   },
   any: {
+    R4: '/api/v1/r4/tenants?',
     DSTU2: '/api/v1/dstu2/tenants?',
   },
-};
+} as const;
 
-function getApiPath<V extends EMRVendor>(
-  emrVendor: V,
-  fhirVersion: VendorVersions[V],
-): string {
-  return vendorPaths[emrVendor][fhirVersion];
+type SearchableVendor = keyof typeof vendorPaths;
+
+export type EMRVendor = SearchableVendor | 'athena';
+
+type SearchSelection = {
+  [V in SearchableVendor]: {
+    vendor: V;
+    version: keyof (typeof vendorPaths)[V];
+  };
+}[SearchableVendor];
+
+function getApiPath(selection: SearchSelection): string {
+  switch (selection.vendor) {
+    case 'epic':
+      return vendorPaths.epic[selection.version];
+    case 'cerner':
+      return vendorPaths.cerner[selection.version];
+    case 'healow':
+      return vendorPaths.healow[selection.version];
+    case 'veradigm':
+      return vendorPaths.veradigm[selection.version];
+    case 'onpatient':
+      return vendorPaths.onpatient[selection.version];
+    case 'va':
+      return vendorPaths.va[selection.version];
+    case 'any': // Search All
+      return vendorPaths.any[selection.version];
+  }
 }
+
+const wireVendorMap: Record<TenantWireVendor, EMRVendor> = {
+  EPIC: 'epic',
+  CERNER: 'cerner',
+  VERADIGM: 'veradigm',
+  HEALOW: 'healow',
+};
 
 export type UnifiedDSTU2Endpoint = CernerDSTU2Endpoint &
   EpicDSTU2Endpoint &
-  VeradigmDSTU2Endpoint & { vendor: EMRVendor };
+  VeradigmDSTU2Endpoint & { vendor: TenantWireVendor };
 
-type TenantSelectState = {
-  query: string;
-  items: UnifiedDSTU2Endpoint[];
-  emrVendor: EMRVendor;
-  fhirVersion?: 'DSTU2' | 'R4';
-  hasSelectedEmrVendor: boolean;
-  isLoadingResults: boolean;
-};
+type RemoteData<T> =
+  | { status: 'loading' }
+  | { status: 'ok'; value: T }
+  | { status: 'error' };
+
+type TenantSelectState =
+  | { step: 'pickVendor' }
+  | {
+      step: 'search';
+      selection: SearchSelection;
+      query: string;
+      results: RemoteData<UnifiedDSTU2Endpoint[]>;
+    };
 
 type TenantSelectAction =
+  | { type: 'selectVendor'; payload: SearchSelection }
   | { type: 'setQuery'; payload: string }
-  | { type: 'setItems'; payload: UnifiedDSTU2Endpoint[] }
-  | {
-      type: 'setEmrVendor';
-      payload: { vendor: EMRVendor; fhirVersion?: 'DSTU2' | 'R4' };
-    }
-  | { type: 'goBackToEMRVendorSelect' }
-  | { type: 'hasClosedModal' }
-  | { type: 'isLoadingResults'; payload: boolean };
+  | { type: 'setResults'; payload: UnifiedDSTU2Endpoint[] }
+  | { type: 'searchFailed' }
+  | { type: 'reset' };
 
-const defaultState = {
-  query: '',
-  items: [],
-  emrVendor: 'any',
-  hasSelectedEmrVendor: false,
-  isLoadingResults: false,
-} as TenantSelectState;
+const defaultState: TenantSelectState = { step: 'pickVendor' };
 
 type SourceItem = {
   title: string;
-  vendor: EMRVendor;
   source: string;
   alt?: string;
-  href?: string;
   enabled: boolean;
   disabledMessage?: string;
-  customHandleClick?: () => void;
-  fhirVersion?: 'DSTU2' | 'R4';
-};
+  legacy?: boolean;
+} & (
+  | { kind: 'search'; selection: SearchSelection }
+  | { kind: 'link'; href: string }
+  | { kind: 'direct'; onSelect: () => void }
+);
 
 function isConfigured(value: string | undefined): boolean {
   return !!value && !value.startsWith('$');
@@ -202,33 +201,29 @@ export function TenantSelectModal({
       action: TenantSelectAction,
     ): TenantSelectState => {
       switch (action.type) {
-        case 'setQuery':
-          return { ...state, query: action.payload };
-        case 'setItems':
-          return { ...state, items: action.payload, isLoadingResults: false };
-        case 'setEmrVendor':
+        case 'selectVendor':
           return {
-            ...state,
-            emrVendor: action.payload.vendor,
-            fhirVersion: action.payload.fhirVersion,
-            hasSelectedEmrVendor: true,
-            isLoadingResults: true,
+            step: 'search',
+            selection: action.payload,
+            query: '',
+            results: { status: 'loading' },
           };
-        case 'goBackToEMRVendorSelect':
+        case 'setQuery':
+          if (state.step !== 'search') return state;
+          return { ...state, query: action.payload };
+        case 'setResults':
+          if (state.step !== 'search') return state;
+          return { ...state, results: { status: 'ok', value: action.payload } };
+        case 'searchFailed':
+          if (state.step !== 'search') return state;
+          return { ...state, results: { status: 'error' } };
+        case 'reset':
           return defaultState;
-        case 'hasClosedModal':
-          return { ...state, hasSelectedEmrVendor: false, query: '' };
         default:
           return state;
       }
     },
-    {
-      query: '',
-      items: [],
-      emrVendor: 'any',
-      hasSelectedEmrVendor: false,
-      isLoadingResults: false,
-    },
+    defaultState,
   );
 
   const [vaUrl, setVaUrl] = useState<string & Location>(
@@ -242,10 +237,11 @@ export function TenantSelectModal({
   }, [config]);
 
   const ConnectionSources: SourceItem[] = useMemo(() => {
-    const sources = [
+    const sources: SourceItem[] = [
       {
         title: 'MyChart',
-        vendor: 'epic',
+        kind: 'search',
+        selection: { vendor: 'epic', version: 'R4' },
         source: EpicLogo,
         alt: epicR4SandboxOnly
           ? 'Sandbox only - set EPIC_CLIENT_ID_R4 for production'
@@ -253,19 +249,19 @@ export function TenantSelectModal({
         enabled: epicR4Enabled,
         disabledMessage:
           'Provide EPIC_CLIENT_ID_R4 or EPIC_SANDBOX_CLIENT_ID_R4 env var to enable',
-        fhirVersion: 'R4',
       },
       {
         title: 'Cerner',
-        vendor: 'cerner',
+        kind: 'search',
+        selection: { vendor: 'cerner', version: 'R4' },
         source: CernerLogo,
         enabled: cernerEnabled,
         disabledMessage: 'Provide CERNER_CLIENT_ID env var to enable',
-        fhirVersion: 'R4',
       },
       {
         title: 'Allscripts',
-        vendor: 'veradigm',
+        kind: 'search',
+        selection: { vendor: 'veradigm', version: 'DSTU2' },
         source: VeradigmLogo,
         alt: 'Veradigm',
         enabled: veradigmEnabled,
@@ -273,7 +269,7 @@ export function TenantSelectModal({
       },
       {
         title: 'OnPatient',
-        vendor: 'onpatient',
+        kind: 'link',
         source: OnpatientLogo,
         alt: 'Dr. Chrono',
         href: buildOnPatientAuthUrl({
@@ -290,7 +286,7 @@ export function TenantSelectModal({
       },
       {
         title: 'Veterans Affairs',
-        vendor: 'va',
+        kind: 'link',
         source: VALogo,
         alt: 'Sandbox Only',
         href: vaUrl,
@@ -299,21 +295,21 @@ export function TenantSelectModal({
       },
       {
         title: 'Healow',
-        vendor: 'healow',
+        kind: 'search',
+        selection: { vendor: 'healow', version: 'R4' },
         source: HealowLogo,
         alt: 'eClinicalWorks',
         enabled: healowEnabled,
         disabledMessage: 'Provide HEALOW_CLIENT_ID env var to enable',
-        fhirVersion: 'R4',
       },
       {
         title: 'Athena Health',
-        vendor: 'athena',
+        kind: 'direct',
         source: AthenaLogo,
         alt: athenaProductionEnabled ? undefined : 'Sandbox Only',
         enabled: athenaEnabled,
         disabledMessage: 'Provide ATHENA_CLIENT_ID env var to enable',
-        customHandleClick: () => {
+        onSelect: () => {
           const environment = athenaProductionEnabled
             ? 'production'
             : 'preview';
@@ -325,26 +321,37 @@ export function TenantSelectModal({
             window.location.href = url;
           });
         },
-        fhirVersion: 'R4',
       },
       {
         title: 'Search All',
-        vendor: 'any',
+        kind: 'search',
+        selection: { vendor: 'any', version: 'R4' },
         source: '',
         alt: 'Search all supported health systems',
         enabled: true,
       },
       {
+        title: 'Search All Legacy',
+        kind: 'search',
+        selection: { vendor: 'any', version: 'DSTU2' },
+        source: '',
+        alt: 'Search all supported legacy health systems',
+        enabled: true,
+        legacy: true,
+      },
+      {
         title: 'Cerner Legacy',
-        vendor: 'cerner',
+        kind: 'search',
+        selection: { vendor: 'cerner', version: 'DSTU2' },
         source: CernerLogo,
         enabled: cernerEnabled,
         disabledMessage: 'Provide CERNER_CLIENT_ID env var to enable',
-        fhirVersion: 'DSTU2',
+        legacy: true,
       },
       {
         title: 'MyChart Legacy',
-        vendor: 'epic',
+        kind: 'search',
+        selection: { vendor: 'epic', version: 'DSTU2' },
         source: EpicLogo,
         alt: epicDstu2SandboxOnly
           ? 'Sandbox only - set EPIC_CLIENT_ID_DSTU2 for production'
@@ -352,11 +359,11 @@ export function TenantSelectModal({
         enabled: epicDstu2Enabled,
         disabledMessage:
           'Provide EPIC_CLIENT_ID_DSTU2 or EPIC_SANDBOX_CLIENT_ID_DSTU2 env var to enable',
-        fhirVersion: 'DSTU2',
+        legacy: true,
       },
     ];
 
-    return sources as SourceItem[];
+    return sources;
   }, [
     config,
     userPreferences?.use_proxy,
@@ -374,70 +381,67 @@ export function TenantSelectModal({
   ]);
 
   const mainSources = useMemo(
-    () => ConnectionSources.filter((s) => s.fhirVersion !== 'DSTU2'),
+    () => ConnectionSources.filter((s) => !s.legacy),
     [ConnectionSources],
   );
 
   const legacySources = useMemo(
-    () => ConnectionSources.filter((s) => s.fhirVersion === 'DSTU2'),
+    () => ConnectionSources.filter((s) => s.legacy),
     [ConnectionSources],
   );
 
-  useEffect(() => {
-    const abortController = new AbortController();
+  const selection = state.step === 'search' ? state.selection : null;
+  const query = state.step === 'search' ? state.query : '';
 
-    if (state.hasSelectedEmrVendor) {
-      if (!config.PUBLIC_URL) {
+  useEffect(() => {
+    if (!selection) return;
+
+    if (!config.PUBLIC_URL) {
+      notifyDispatch({
+        type: 'set_notification',
+        message: 'Configuration not loaded. Please try again.',
+        variant: 'error',
+      });
+      dispatch({ type: 'searchFailed' });
+      return;
+    }
+
+    // Epic provides separate client ids for sandbox only, we detect it here so we can provide conditional rendering later depending on which env variables are provided
+    const epicSandboxOnly =
+      selection.vendor === 'epic' &&
+      (selection.version === 'R4' ? epicR4SandboxOnly : epicDstu2SandboxOnly);
+
+    const params: Record<string, string> = { query };
+    if (epicSandboxOnly) {
+      params['sandboxOnly'] = 'true';
+    }
+
+    const abortController = new AbortController();
+    fetch(
+      config.PUBLIC_URL + getApiPath(selection) + new URLSearchParams(params),
+      {
+        signal: abortController.signal,
+      },
+    )
+      .then((x) => x.json())
+      .then((x) => dispatch({ type: 'setResults', payload: x }))
+      .catch((e) => {
+        if (e instanceof DOMException && e.name === 'AbortError') return;
         notifyDispatch({
           type: 'set_notification',
-          message: 'Configuration not loaded. Please try again.',
+          message: `Unable to search for health systems`,
           variant: 'error',
         });
-        dispatch({ type: 'setItems', payload: [] });
-        return;
-      }
-
-      const fhirVersion = state.fhirVersion ?? 'DSTU2';
-      const apiPath = getApiPath(
-        state.emrVendor,
-        fhirVersion as VendorVersions[typeof state.emrVendor],
-      );
-
-      // Epic provides separate client ids for sandbox only, we detect it here so we can provide conditional rendering later depending on which env variables are provided
-      const epicSandboxOnly =
-        state.emrVendor === 'epic' &&
-        ((state.fhirVersion === 'R4' && epicR4SandboxOnly) ||
-          (state.fhirVersion === 'DSTU2' && epicDstu2SandboxOnly));
-
-      const params: Record<string, string> = { query: state.query };
-      if (epicSandboxOnly) {
-        params['sandboxOnly'] = 'true';
-      }
-
-      fetch(config.PUBLIC_URL + apiPath + new URLSearchParams(params), {
-        signal: abortController.signal,
-      })
-        .then((x) => x.json())
-        .then((x) => dispatch({ type: 'setItems', payload: x }))
-        .catch(() => {
-          notifyDispatch({
-            type: 'set_notification',
-            message: `Unable to search for health systems`,
-            variant: 'error',
-          });
-          dispatch({ type: 'setItems', payload: [] });
-        });
-    }
+        dispatch({ type: 'searchFailed' });
+      });
 
     return () => {
       abortController.abort();
     };
   }, [
-    state.emrVendor,
-    state.query,
+    selection,
+    query,
     notifyDispatch,
-    state.hasSelectedEmrVendor,
-    state.fhirVersion,
     config.PUBLIC_URL,
     epicR4SandboxOnly,
     epicDstu2SandboxOnly,
@@ -448,13 +452,13 @@ export function TenantSelectModal({
       open={open}
       setOpen={setOpen}
       afterLeave={() => {
-        dispatch({ type: 'hasClosedModal' });
+        dispatch({ type: 'reset' });
       }}
       overflowXHidden
       flex
     >
       <>
-        {!state.hasSelectedEmrVendor ? (
+        {state.step === 'pickVendor' ? (
           <>
             <ModalHeader
               title={'Which patient portal do you use?'}
@@ -466,7 +470,7 @@ export function TenantSelectModal({
               >
                 {mainSources.map((file) => (
                   <li key={file.title} className="relative">
-                    {file.href ? (
+                    {file.kind === 'link' ? (
                       <div
                         className={
                           file.enabled ? 'cursor-pointer' : 'cursor-not-allowed'
@@ -482,9 +486,7 @@ export function TenantSelectModal({
                             });
                             return;
                           }
-                          if (file.href) {
-                            window.location.href = file.href;
-                          }
+                          window.location.href = file.href;
                         }}
                       >
                         <div
@@ -562,15 +564,12 @@ export function TenantSelectModal({
                               });
                               return;
                             }
-                            if (file.customHandleClick) {
-                              file.customHandleClick();
+                            if (file.kind === 'direct') {
+                              file.onSelect();
                             } else {
                               dispatch({
-                                type: 'setEmrVendor',
-                                payload: {
-                                  vendor: file.vendor,
-                                  fhirVersion: file.fhirVersion,
-                                },
+                                type: 'selectVendor',
+                                payload: file.selection,
                               });
                             }
                           }}
@@ -652,20 +651,24 @@ export function TenantSelectModal({
                                   });
                                   return;
                                 }
+                                if (file.kind !== 'search') return;
                                 dispatch({
-                                  type: 'setEmrVendor',
-                                  payload: {
-                                    vendor: file.vendor,
-                                    fhirVersion: file.fhirVersion,
-                                  },
+                                  type: 'selectVendor',
+                                  payload: file.selection,
                                 });
                               }}
                             >
-                              <img
-                                src={file.source}
-                                alt={file.title}
-                                className={`pointer-events-none object-cover ${file.enabled ? 'group-hover:opacity-75' : 'opacity-50'}`}
-                              />
+                              {file.source !== '' ? (
+                                <img
+                                  src={file.source}
+                                  alt={file.title}
+                                  className={`pointer-events-none object-cover ${file.enabled ? 'group-hover:opacity-75' : 'opacity-50'}`}
+                                />
+                              ) : (
+                                <div className="text-primary-100 pointer-events-none flex items-center justify-center text-3xl font-bold">
+                                  {file.title}
+                                </div>
+                              )}
                               <button
                                 type="button"
                                 className="absolute inset-0 focus:outline-none"
@@ -702,10 +705,10 @@ export function TenantSelectModal({
               title={`Select your healthcare institution to log in`}
               setClose={() => setOpen((x) => !x)}
               back={() => {
-                dispatch({ type: 'goBackToEMRVendorSelect' });
+                dispatch({ type: 'reset' });
               }}
             />
-            {state.isLoadingResults ? (
+            {state.results.status === 'loading' ? (
               <Combobox>
                 <Combobox.Options
                   static
@@ -728,14 +731,28 @@ export function TenantSelectModal({
               <>
                 <Combobox
                   onChange={(s: SelectOption) => {
+                    // Cross-vendor searches resolve the concrete vendor from
+                    // the selected tenant itself
+                    const vendor =
+                      state.selection.vendor === 'any'
+                        ? s.vendor && wireVendorMap[s.vendor]
+                        : state.selection.vendor;
+                    if (!vendor) {
+                      notifyDispatch({
+                        type: 'set_notification',
+                        message: 'Unable to connect to this health system',
+                        variant: 'error',
+                      });
+                      return;
+                    }
                     onClick(
                       s.baseUrl,
                       s.authUrl,
                       s.tokenUrl,
                       s.name,
                       s.id,
-                      state.emrVendor,
-                      state.fhirVersion,
+                      vendor,
+                      state.selection.version,
                     );
                     setOpen(false);
                   }}
@@ -758,39 +775,44 @@ export function TenantSelectModal({
                       autoFocus={true}
                     />
                   </div>
-                  {state.items.length > 0 && (
-                    <Combobox.Options
-                      static
-                      className="max-h-full scroll-py-3 overflow-y-scroll p-3 sm:max-h-96"
-                    >
-                      {state.items.map((item) => (
-                        <MemoizedResultItem
-                          key={item.id}
-                          id={item.id}
-                          name={item.name}
-                          baseUrl={item.url}
-                          tokenUrl={item.token}
-                          authUrl={item.authorize}
+                  {state.results.status === 'ok' &&
+                    state.results.value.length > 0 && (
+                      <Combobox.Options
+                        static
+                        className="max-h-full scroll-py-3 overflow-y-scroll p-3 sm:max-h-96"
+                      >
+                        {state.results.value.map((item) => (
+                          <MemoizedResultItem
+                            key={item.id}
+                            id={item.id}
+                            name={item.name}
+                            baseUrl={item.url}
+                            tokenUrl={item.token}
+                            authUrl={item.authorize}
+                            vendor={item.vendor}
+                          />
+                        ))}
+                      </Combobox.Options>
+                    )}
+                  {state.query !== '' &&
+                    (state.results.status === 'error' ||
+                      (state.results.status === 'ok' &&
+                        state.results.value.length === 0)) && (
+                      <div className="px-6 py-14 text-center text-sm sm:px-14">
+                        <ExclamationCircleIcon
+                          type="outline"
+                          name="exclamation-circle"
+                          className="mx-auto h-6 w-6 text-gray-700"
                         />
-                      ))}
-                    </Combobox.Options>
-                  )}
-                  {state.query !== '' && state.items.length === 0 && (
-                    <div className="px-6 py-14 text-center text-sm sm:px-14">
-                      <ExclamationCircleIcon
-                        type="outline"
-                        name="exclamation-circle"
-                        className="mx-auto h-6 w-6 text-gray-700"
-                      />
-                      <p className="mt-4 font-semibold text-gray-900">
-                        No results found
-                      </p>
-                      <p className="mt-2 text-gray-800">
-                        No health system found for this search term. Please try
-                        again.
-                      </p>
-                    </div>
-                  )}
+                        <p className="mt-4 font-semibold text-gray-900">
+                          No results found
+                        </p>
+                        <p className="mt-2 text-gray-800">
+                          No health system found for this search term. Please
+                          try again.
+                        </p>
+                      </div>
+                    )}
                 </Combobox>
               </>
             )}

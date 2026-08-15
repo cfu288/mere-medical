@@ -623,11 +623,3 @@ const ConnectionTab: React.FC = () => {
 };
 
 export default ConnectionTab;
-
-export interface SelectOption {
-  id: string;
-  name: string;
-  baseUrl: string & Location;
-  authUrl: string & Location;
-  tokenUrl: string & Location;
-}
