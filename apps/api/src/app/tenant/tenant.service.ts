@@ -15,6 +15,7 @@ import {
   VeradigmDSTU2TenantEndpoints,
   DSTU2Endpoint as VeradigmDSTU2Endpoint,
 } from '@mere/veradigm';
+import { HealowR4TenantEndpoints } from '@mere/healow';
 import { stringSimilarity } from '@mere/shared';
 
 type UnifiedTenantEndpoint = {
@@ -23,7 +24,7 @@ type UnifiedTenantEndpoint = {
   name: string;
   token: string;
   authorize: string;
-  vendor: 'EPIC' | 'CERNER' | 'VERADIGM';
+  vendor: 'EPIC' | 'CERNER' | 'VERADIGM' | 'HEALOW';
   version: 'DSTU2' | 'R4';
 };
 
@@ -58,9 +59,6 @@ const searchDSTU2Items: UnifiedTenantEndpoint[] = (
     ),
   );
 
-// TODO: Add Healow R4 endpoints to searchR4Items so they appear in unified search.
-// Healow currently has its own /api/v1/healow/tenants endpoint but is excluded from
-// the combined "Search All" results.
 const searchR4Items: UnifiedTenantEndpoint[] = ([] as UnifiedTenantEndpoint[])
   .concat(
     (EpicR4TenantEndpoints as unknown as UnifiedTenantEndpoint[]).map((i) => {
@@ -72,6 +70,13 @@ const searchR4Items: UnifiedTenantEndpoint[] = ([] as UnifiedTenantEndpoint[])
   .concat(
     (CernerR4TenantEndpoints as unknown as UnifiedTenantEndpoint[]).map((i) => {
       i.vendor = 'CERNER';
+      i.version = 'R4';
+      return i;
+    }),
+  )
+  .concat(
+    (HealowR4TenantEndpoints as unknown as UnifiedTenantEndpoint[]).map((i) => {
+      i.vendor = 'HEALOW';
       i.version = 'R4';
       return i;
     }),
