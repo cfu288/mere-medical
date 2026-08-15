@@ -1,5 +1,6 @@
 import {
   AllergyIntolerance,
+  Attachment,
   Bundle,
   BundleEntry,
   Condition,
@@ -203,6 +204,63 @@ async function syncFHIRResource<T extends FhirResource>(
   return cdsmap;
 }
 
+async function processIncludedResources(
+  entries: BundleEntry<any>[],
+  mappers: Record<
+    string,
+    (entry: BundleEntry<any>) => CreateClinicalDocument<BundleEntry<any>>
+  >,
+  db: RxDatabase<DatabaseCollections>,
+  excludeResourceTypes: string[] = [],
+): Promise<void> {
+  const resourceTypeGroups = new Map<string, BundleEntry<any>[]>();
+  for (const entry of entries) {
+    const resourceType = entry.resource?.resourceType;
+    if (resourceType && !excludeResourceTypes.includes(resourceType)) {
+      if (!resourceTypeGroups.has(resourceType)) {
+        resourceTypeGroups.set(resourceType, []);
+      }
+      resourceTypeGroups.get(resourceType)!.push(entry);
+    }
+  }
+  for (const [resourceType, groupedEntries] of resourceTypeGroups.entries()) {
+    const mapper = mappers[resourceType];
+    if (mapper) {
+      const cds = groupedEntries.map(mapper);
+      await db.clinical_documents.bulkUpsert(
+        cds as unknown as ClinicalDocument[],
+      );
+    }
+  }
+}
+
+async function syncFHIRResourceWithIncludes<T extends FhirResource>(
+  connectionDocument: AthenaConnectionDocument,
+  db: RxDatabase<DatabaseCollections>,
+  fhirResourceUrl: string,
+  mapper: (proc: BundleEntry<T>) => CreateClinicalDocument<BundleEntry<T>>,
+  params: Record<string, string>,
+  includeMappers: Record<
+    string,
+    (entry: BundleEntry<any>) => CreateClinicalDocument<BundleEntry<any>>
+  >,
+) {
+  const resc = await getFHIRResource<T>(
+    connectionDocument,
+    fhirResourceUrl,
+    params,
+  );
+  const cds = resc
+    .filter(
+      (i) =>
+        i.resource?.resourceType.toLowerCase() ===
+        fhirResourceUrl.toLowerCase(),
+    )
+    .map(mapper);
+  await db.clinical_documents.bulkUpsert(cds as unknown as ClinicalDocument[]);
+  await processIncludedResources(resc, includeMappers, db, [fhirResourceUrl]);
+}
+
 export async function syncAllRecords(
   connectionDocument: AthenaConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
@@ -262,7 +320,8 @@ export async function syncAllRecords(
       db,
       'MedicationRequest',
       medRequestMapper as any,
-      { patient: patientId },
+      // Athena requires [patient, intent] or [_id] per {baseUrl}/metadata
+      { patient: patientId, intent: 'order' },
     ),
     syncFHIRResource<Immunization>(
       connectionDocument,
@@ -279,12 +338,18 @@ export async function syncAllRecords(
       { patient: patientId },
     ),
     syncDocumentReferences(connectionDocument, db, { patient: patientId }),
-    syncFHIRResource<Encounter>(
+    // Athena only supports searching Provenance by target per {baseUrl}/metadata,
+    // so Provenance records are pulled in via _revinclude instead
+    syncFHIRResourceWithIncludes<Encounter>(
       connectionDocument,
       db,
       'Encounter',
       encounterMapper as any,
-      { patient: patientId },
+      { patient: patientId, _revinclude: 'Provenance:target' },
+      {
+        Provenance: ((item: any) =>
+          R4.mapProvenanceToClinicalDocument(item, connectionDocument)) as any,
+      },
     ),
     syncFHIRResource<AllergyIntolerance>(
       connectionDocument,
@@ -339,19 +404,23 @@ export async function syncAllRecords(
       obsMapper as any,
       { patient: patientId, category: 'social-history' },
     ),
-    syncFHIRResource(
-      connectionDocument,
-      db,
-      'Provenance',
-      ((item: any) =>
-        R4.mapProvenanceToClinicalDocument(item, connectionDocument)) as any,
-      { patient: patientId },
-    ),
   ]);
 
   return syncJob as unknown as Promise<PromiseSettledResult<void[]>[]>;
 }
 
+/**
+ * Syncs DocumentReferences and stores their attachment content as
+ * documentreference_attachment documents. Athena delivers content to
+ * patient-access apps inline as base64 Attachment.data rather than a
+ * fetchable url (Binary retrieval requires system scopes, and documents not
+ * published to the Patient Portal come back with a data-absent-reason).
+ * Inline attachments are keyed by `{DocumentReference metadata.id}/attachment`
+ * since the DocumentReference itself already claims its own metadata.id.
+ *
+ * @see https://docs.athenahealth.com/api/workflows/fhir-r4-lab-and-imaging-documentation-retrieval
+ * @see https://docs.athenahealth.com/api/workflows/fhir-r4-api-patient-portal-access-to-documents-sensitive-result-filtering
+ */
 async function syncDocumentReferences(
   connectionDocument: AthenaConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
@@ -386,62 +455,92 @@ async function syncDocumentReferences(
       >,
   );
   const cdsmap = docRefItems.map(async (docRefItem) => {
-    const attachmentUrls = docRefItem.data_record.raw.resource?.content.map(
-      (a) => a.attachment.url,
-    );
-    if (attachmentUrls) {
-      for (const attachmentUrl of attachmentUrls) {
-        if (attachmentUrl) {
-          const exists = await db.clinical_documents
-            .find({
-              selector: {
-                $and: [
-                  { user_id: connectionDocument.user_id },
-                  { 'metadata.id': `${attachmentUrl}` },
-                  {
-                    connection_record_id: `${docRefItem.connection_record_id}`,
-                  },
-                ],
+    const attachments =
+      docRefItem.data_record.raw.resource?.content.map((a) => a.attachment) ||
+      [];
+    for (const attachment of attachments) {
+      const attachmentUrl = attachment.url;
+      const attachmentId =
+        attachmentUrl ||
+        (attachment.data && docRefItem.metadata?.id
+          ? `${docRefItem.metadata.id}/attachment`
+          : null);
+      if (attachmentId) {
+        const exists = await db.clinical_documents
+          .find({
+            selector: {
+              $and: [
+                { user_id: connectionDocument.user_id },
+                { 'metadata.id': `${attachmentId}` },
+                {
+                  connection_record_id: `${docRefItem.connection_record_id}`,
+                },
+              ],
+            },
+          })
+          .exec();
+        if (exists.length === 0) {
+          const { contentType, raw } = attachmentUrl
+            ? await fetchAttachmentData(attachmentUrl, connectionDocument)
+            : decodeInlineAttachmentData(attachment);
+          if (raw && contentType) {
+            const cd: CreateClinicalDocument<string | Blob> = {
+              user_id: connectionDocument.user_id,
+              connection_record_id: connectionDocument.id,
+              data_record: {
+                raw: raw,
+                format: 'FHIR.R4',
+                content_type: contentType,
+                resource_type: 'documentreference_attachment',
+                version_history: [],
               },
-            })
-            .exec();
-          if (exists.length === 0) {
-            const { contentType, raw } = await fetchAttachmentData(
-              attachmentUrl,
-              connectionDocument,
-            );
-            if (raw && contentType) {
-              const cd: CreateClinicalDocument<string | Blob> = {
-                user_id: connectionDocument.user_id,
-                connection_record_id: connectionDocument.id,
-                data_record: {
-                  raw: raw,
-                  format: 'FHIR.R4',
-                  content_type: contentType,
-                  resource_type: 'documentreference_attachment',
-                  version_history: [],
-                },
-                metadata: {
-                  id: attachmentUrl,
-                  date:
-                    docRefItem.data_record.raw.resource?.date ||
-                    docRefItem.data_record.raw.resource?.context?.period?.start,
-                  display_name:
-                    docRefItem.data_record.raw.resource?.type?.text ||
-                    docRefItem.metadata?.display_name,
-                },
-              };
+              metadata: {
+                id: attachmentId,
+                date:
+                  docRefItem.data_record.raw.resource?.date ||
+                  docRefItem.data_record.raw.resource?.context?.period?.start,
+                display_name:
+                  docRefItem.data_record.raw.resource?.type?.text ||
+                  docRefItem.metadata?.display_name,
+              },
+            };
 
-              await db.clinical_documents.insert(
-                cd as unknown as ClinicalDocument<string | Blob>,
-              );
-            }
+            await db.clinical_documents.insert(
+              cd as unknown as ClinicalDocument<string | Blob>,
+            );
           }
         }
       }
     }
   });
   return await Promise.all(cdsmap);
+}
+
+/**
+ * Decodes inline base64 Attachment.data, following the same storage
+ * conventions as fetchAttachmentData: PDFs stay base64-encoded, XML and
+ * text content is decoded to plain strings.
+ */
+function decodeInlineAttachmentData(attachment: Attachment): {
+  contentType: string | null;
+  raw: string | undefined;
+} {
+  const contentType = attachment.contentType || null;
+  if (!attachment.data || !contentType) {
+    return { contentType, raw: undefined };
+  }
+  try {
+    if (
+      contentType.includes('application/xml') ||
+      contentType.includes('text')
+    ) {
+      return { contentType, raw: atob(attachment.data) };
+    }
+    return { contentType, raw: attachment.data };
+  } catch (e) {
+    console.error('Error decoding inline attachment data', e);
+    return { contentType, raw: undefined };
+  }
 }
 
 async function fetchAttachmentData(

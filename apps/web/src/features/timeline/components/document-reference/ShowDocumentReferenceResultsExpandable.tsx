@@ -45,7 +45,12 @@ export function ShowDocumentResultsExpandable({
     >(undefined),
     attachmentUrl =
       item.data_record.raw.resource?.content?.[0]?.attachment?.url,
-    attachment = useClinicalDoc(attachmentUrl),
+    // Url-fetched attachments are stored under their url, inline
+    // Attachment.data content under `{DocumentReference metadata.id}/attachment`
+    attachment = useClinicalDoc(
+      attachmentUrl ||
+        (item.metadata?.id ? `${item.metadata.id}/attachment` : undefined),
+    ),
     [hasLoadedDocument, setHasLoadedDocument] = useState(false),
     [pdfUrl, setPdfUrl] = useState<string | undefined>(undefined),
     [html, setHtml] = useState<
@@ -102,6 +107,16 @@ export function ShowDocumentResultsExpandable({
           DOMPurify.sanitize(attachment.get('data_record.raw')),
         );
         setHtml(sanitizedData);
+        setHasLoadedDocument(true);
+      } else if (
+        attachment.get('data_record.content_type')?.includes('text/plain') &&
+        typeof attachment.get('data_record.raw') === 'string'
+      ) {
+        setHtml(
+          <pre className="whitespace-pre-wrap">
+            {attachment.get('data_record.raw')}
+          </pre>,
+        );
         setHasLoadedDocument(true);
       } else {
         console.error(
