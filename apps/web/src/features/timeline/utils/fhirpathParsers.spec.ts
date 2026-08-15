@@ -3,8 +3,10 @@ import { BundleEntry, Observation } from 'fhir/r2';
 import { ClinicalDocument } from '../../../models/clinical-document/ClinicalDocument.type';
 import {
   getReferenceRangeString,
+  getValueQuantityString,
   getValueRangeString,
   getValueRatioString,
+  isOutOfRangeResult,
 } from './fhirpathParsers';
 
 function makeObservation(
@@ -140,5 +142,98 @@ describe('getValueRatioString', () => {
       valueRatio: { numerator: { value: 1 } },
     });
     expect(getValueRatioString(item)).toBeUndefined();
+  });
+});
+
+describe('getValueQuantityString', () => {
+  it('renders a plain quantity as its value', () => {
+    const item = makeObservation({ valueQuantity: { value: 7.4 } });
+    expect(getValueQuantityString(item)).toEqual('7.4');
+  });
+
+  it('renders a value of zero', () => {
+    const item = makeObservation({ valueQuantity: { value: 0 } });
+    expect(getValueQuantityString(item)).toEqual('0');
+  });
+
+  it('prefixes the comparator when present', () => {
+    const item = makeObservation({
+      valueQuantity: { value: 1000, comparator: '>' },
+    });
+    expect(getValueQuantityString(item)).toEqual('>1000');
+  });
+
+  it('prefixes a below-detection-limit comparator', () => {
+    const item = makeObservation({
+      valueQuantity: { value: 0.1, comparator: '<' },
+    });
+    expect(getValueQuantityString(item)).toEqual('<0.1');
+  });
+
+  it('returns undefined when there is no valueQuantity', () => {
+    const item = makeObservation({ valueString: 'Negative' });
+    expect(getValueQuantityString(item)).toBeUndefined();
+  });
+});
+
+describe('isOutOfRangeResult with comparators', () => {
+  const range = (low: number, high: number) => ({
+    referenceRange: [{ low: { value: low }, high: { value: high } }],
+  });
+
+  it('flags ">" values at or above the high bound', () => {
+    const item = makeObservation({
+      ...range(0.5, 9),
+      valueQuantity: { value: 10, comparator: '>' },
+    });
+    expect(isOutOfRangeResult(item)).toBe(true);
+  });
+
+  it('flags "<" values at or below the low bound', () => {
+    const item = makeObservation({
+      ...range(0.45, 4.5),
+      valueQuantity: { value: 0.1, comparator: '<' },
+    });
+    expect(isOutOfRangeResult(item)).toBe(true);
+  });
+
+  it('does not flag "<" values that are indeterminate', () => {
+    const item = makeObservation({
+      ...range(1, 2),
+      valueQuantity: { value: 5, comparator: '<' },
+    });
+    expect(isOutOfRangeResult(item)).toBe(false);
+  });
+
+  it('does not flag ">" values that are indeterminate', () => {
+    const item = makeObservation({
+      ...range(20, 40),
+      valueQuantity: { value: 10, comparator: '>' },
+    });
+    expect(isOutOfRangeResult(item)).toBe(false);
+  });
+
+  it('still flags plain values outside the range', () => {
+    const item = makeObservation({
+      ...range(0.45, 4.5),
+      valueQuantity: { value: 5 },
+    });
+    expect(isOutOfRangeResult(item)).toBe(true);
+  });
+
+  it('handles a low bound of zero', () => {
+    const item = makeObservation({
+      ...range(0, 0.9),
+      valueQuantity: { value: 5 },
+    });
+    expect(isOutOfRangeResult(item)).toBe(true);
+  });
+
+  it('handles a value of zero below the low bound', () => {
+    const item = makeObservation({
+      ...range(1, 5),
+      valueQuantity: { value: 0 },
+    });
+    expect(isOutOfRangeResult(item)).toBe(true);
   });
 });

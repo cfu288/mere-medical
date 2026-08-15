@@ -83,14 +83,20 @@ export function getValueQuantity(
   return val;
 }
 
-function formatValueQuantity(
+export function formatValueQuantity(
+  observation: Observation | undefined,
+): string | undefined {
+  const quantity = observation?.valueQuantity;
+  if (quantity?.value === undefined) {
+    return undefined;
+  }
+  return `${quantity.comparator ?? ''}${quantity.value}`;
+}
+
+export function getValueQuantityString(
   item: ClinicalDocument<BundleEntry<Observation>>,
 ): string | undefined {
-  const val: number | undefined = getValueQuantity(item);
-  if (val && val?.toString().length > 5) {
-    return Number.isInteger(val) ? `${val}` : val?.toPrecision(5);
-  }
-  return undefined;
+  return formatValueQuantity(item.data_record.raw.resource);
 }
 
 export function getValueString(
@@ -154,20 +160,33 @@ export function getInterpretationText(
     'interpretation.text',
   )?.[0];
 }
-/**
- * Takes a RxDocument of type ClinicalDocument<Observation> and returns true if the value is out of reference range
- * @param item
- */
-
 export function isOutOfRangeResult(
   item: ClinicalDocument<BundleEntry<Observation>>,
 ): boolean {
   const low = item.data_record.raw.resource?.referenceRange?.[0]?.low?.value;
   const high = item.data_record.raw.resource?.referenceRange?.[0]?.high?.value;
-  const value = item.data_record.raw.resource?.valueQuantity?.value;
+  const quantity = item.data_record.raw.resource?.valueQuantity;
+  const value = quantity?.value;
 
-  if (low && high && value && !isNaN(low) && !isNaN(high) && !isNaN(value)) {
-    return value < low || value > high;
+  if (
+    low === undefined ||
+    high === undefined ||
+    value === undefined ||
+    isNaN(low) ||
+    isNaN(high) ||
+    isNaN(value)
+  ) {
+    return false;
   }
-  return false;
+
+  // A comparator bounds the value on one side, so only flag results that
+  // are certainly out of range
+  const comparator = quantity?.comparator;
+  if (comparator === '<' || comparator === '<=') {
+    return value <= low;
+  }
+  if (comparator === '>' || comparator === '>=') {
+    return value >= high;
+  }
+  return value < low || value > high;
 }

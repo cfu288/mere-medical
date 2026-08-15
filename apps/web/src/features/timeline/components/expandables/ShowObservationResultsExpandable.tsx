@@ -5,6 +5,7 @@ import {
   MergeClinicalDocument,
 } from '../../../../models/clinical-document/ClinicalDocument.type';
 import {
+  formatValueQuantity,
   formatValueRange,
   formatValueRatio,
 } from '../../utils/fhirpathParsers';
@@ -63,7 +64,7 @@ export function ShowObservationResultsExpandable({
                     formatValueRatio(list_item.resource as Observation)}
                 </div>
                 <div>
-                  {(list_item.resource as Observation)?.valueQuantity?.value}
+                  {formatValueQuantity(list_item.resource as Observation)}
                   {(list_item.resource as Observation)?.valueQuantity?.unit}
                 </div>
               </>
