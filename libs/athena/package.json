@@ -12,8 +12,8 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
+    "@types/fhir": "^0.0.41",
     "@types/node": "^20.10.5",
-    "tsx": "^4.7.0",
-    "fhir": "^4.11.1"
+    "tsx": "^4.7.0"
   }
 }
