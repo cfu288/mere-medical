@@ -33,6 +33,7 @@ import {
   isOutOfRangeResult,
   getInterpretationText,
   getValueString,
+  getValueQuantityString,
   getValueRangeString,
   getValueRatioString,
   getComments,
@@ -134,12 +135,11 @@ export function ObservationResultRow({
                       isOutOfRangeResult(item) && 'text-red-700'
                     }`}
                   >
-                    {getValueQuantity(item) !== undefined
-                      ? `${getValueQuantity(item)}`
-                      : getValueRangeString(item) ||
-                        getValueRatioString(item) ||
-                        getInterpretationText(item) ||
-                        (getValueString(item) && `${getValueString(item)}`)}
+                    {getValueQuantityString(item) ||
+                      getValueRangeString(item) ||
+                      getValueRatioString(item) ||
+                      getInterpretationText(item) ||
+                      (getValueString(item) && `${getValueString(item)}`)}
                     <span className={`pl-1 inline text-xs font-light`}>
                       {getValueUnit(item)}
                     </span>
@@ -147,7 +147,9 @@ export function ObservationResultRow({
                   <p
                     className={`text-xs font-light ${isOutOfRangeResult(item) ? 'text-red-700' : 'text-primary-700'}`}
                   >
-                    {getValueQuantity(item) !== undefined
+                    {getValueQuantityString(item) ||
+                    getValueRangeString(item) ||
+                    getValueRatioString(item)
                       ? getInterpretationText(item) ||
                         (getValueString(item) && `${getValueString(item)}`)
                       : ''}
@@ -247,11 +249,10 @@ export function ObservationResultRow({
                             }`}
                           >
                             <p>
-                              {getValueQuantity(rl) !== undefined
-                                ? `  ${getValueQuantity(rl)}`
-                                : getValueRangeString(rl) ||
-                                  getValueRatioString(rl) ||
-                                  ''}
+                              {getValueQuantityString(rl) ||
+                                getValueRangeString(rl) ||
+                                getValueRatioString(rl) ||
+                                ''}
                               {getValueUnit(rl)}
                             </p>
                             <p
