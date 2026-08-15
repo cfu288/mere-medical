@@ -128,7 +128,7 @@ export function ObservationResultRow({
                       : ''}
                   </p>
                 </div>
-                {/* Value string */}
+                {/* Value */}
                 <div className={`col-span-2 flex flex-col self-center`}>
                   <span
                     className={`text-sm ${

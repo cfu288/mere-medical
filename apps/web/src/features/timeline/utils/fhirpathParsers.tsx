@@ -160,11 +160,6 @@ export function getInterpretationText(
     'interpretation.text',
   )?.[0];
 }
-/**
- * Takes a RxDocument of type ClinicalDocument<Observation> and returns true if the value is out of reference range
- * @param item
- */
-
 export function isOutOfRangeResult(
   item: ClinicalDocument<BundleEntry<Observation>>,
 ): boolean {
@@ -184,8 +179,8 @@ export function isOutOfRangeResult(
     return false;
   }
 
-  // A comparator bounds the actual value on one side only, so flag only
-  // when the result is certainly outside the range
+  // A comparator bounds the value on one side, so only flag results that
+  // are certainly out of range
   const comparator = quantity?.comparator;
   if (comparator === '<' || comparator === '<=') {
     return value <= low;
