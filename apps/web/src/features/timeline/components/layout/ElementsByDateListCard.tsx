@@ -21,6 +21,7 @@ import {
   Goal,
   Appointment,
   Specimen,
+  Device,
 } from 'fhir/r4';
 import React, { memo, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -60,6 +61,7 @@ import { MedicationRequestCard } from '../cards/MedicationRequestCard';
 import { ObservationCard } from '../cards/ObservationCard';
 import { ProcedureCard } from '../cards/ProcedureCard';
 import { SpecimenCard } from '../cards/SpecimenCard';
+import { DeviceCard } from '../cards/DeviceCard';
 import { TimelineCardCategoryTitle } from '../TimelineCardCategoryTitle';
 import { TimelineCardTitle } from '../TimelineCardTitle';
 import { useClinicalDoc } from '../../../../shared/hooks/useClinicalDoc';
@@ -442,6 +444,20 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
             return 0;
           }) as ClinicalDocument<BundleEntry<MedicationOrder>>[],
       [itemList],
+    ),
+    devices = useMemo(
+      () =>
+        itemList
+          .filter((item) => item.data_record.resource_type === 'device')
+          .sort((a, b) => {
+            if (a.metadata?.display_name && b.metadata?.display_name) {
+              return a.metadata.display_name.localeCompare(
+                b.metadata.display_name,
+              );
+            }
+            return 0;
+          }) as ClinicalDocument<R4BundleEntry<Device>>[],
+      [itemList],
     );
 
   const [expanded, setExpanded] = React.useState(false);
@@ -470,6 +486,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
         appointments.length > 0 ? 'Appointments' : '',
         specimens.length > 0 ? 'Specimens' : '',
         allergyIntolerances.length > 0 ? 'Allergies' : '',
+        devices.length > 0 ? 'Devices' : '',
       ].filter(Boolean),
     [
       conditions.length,
@@ -490,6 +507,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
       appointments.length,
       specimens.length,
       allergyIntolerances.length,
+      devices.length,
     ],
   );
 
@@ -735,6 +753,24 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
             />
             <ul className="list-disc list-inside">
               {coverages.map((item) => (
+                <li
+                  className="text-xs font-medium md:text-sm text-gray-900"
+                  key={item.id}
+                >
+                  {item.metadata?.display_name}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {devices.length > 0 && (
+          <div className="mb-2 ml-2">
+            <TimelineCardCategoryTitle
+              title={'Devices'}
+              color="text-teal-600"
+            />
+            <ul className="list-disc list-inside">
+              {devices.map((item) => (
                 <li
                   className="text-xs font-medium md:text-sm text-gray-900"
                   key={item.id}
@@ -1011,6 +1047,11 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
             {allergyIntolerances.map((item) => (
               <div key={item.id} className="my-2">
                 <AllergyIntoleranceCard key={item.id} item={item} />
+              </div>
+            ))}
+            {devices.map((item) => (
+              <div key={item.id} className="my-2">
+                <DeviceCard key={item.id} item={item} />
               </div>
             ))}
           </div>
