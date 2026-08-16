@@ -20,89 +20,73 @@ export interface VendorConfigModel {
   athena: VendorChannel;
 }
 
-function credential(
-  config: AppConfig,
-  ...envVars: (keyof AppConfig & string)[]
-): string | undefined {
-  for (const envVar of envVars) {
-    const value = config[envVar];
-    if (typeof value === 'string' && isConfigured(value)) {
-      return envVar;
-    }
-  }
-  return undefined;
-}
+type EnvVar = keyof AppConfig & string;
 
 function channel(
-  production: string | undefined,
-  sandbox: string | undefined,
-  enableWith: string[],
+  config: AppConfig,
+  candidates: { production?: EnvVar[]; sandbox?: EnvVar[] },
 ): VendorChannel {
+  const firstConfigured = (envVars: EnvVar[] = []) =>
+    envVars.find((envVar) => {
+      const value = config[envVar];
+      return typeof value === 'string' && isConfigured(value);
+    });
+
+  const production = firstConfigured(candidates.production);
+  const sandbox = firstConfigured(candidates.sandbox);
   if (production) {
     return { status: 'production', production, sandbox };
   }
   if (sandbox) {
     return { status: 'sandbox-only', sandbox };
   }
-  return { status: 'disabled', enableWith };
+  return {
+    status: 'disabled',
+    enableWith: [candidates.production?.[0], candidates.sandbox?.[0]].filter(
+      (envVar): envVar is EnvVar => !!envVar,
+    ),
+  };
 }
 
 function onPatientChannel(config: AppConfig): VendorChannel {
-  const clientId = credential(config, 'ONPATIENT_CLIENT_ID');
-  const hasSecret = !!config.ONPATIENT_SECRET_CONFIGURED;
-  if (clientId && hasSecret) {
-    return { status: 'production', production: clientId };
+  const base = channel(config, { production: ['ONPATIENT_CLIENT_ID'] });
+  if (base.status === 'production' && config.ONPATIENT_SECRET_CONFIGURED) {
+    return base;
   }
   const missing = [
-    ...(clientId ? [] : ['ONPATIENT_CLIENT_ID']),
-    ...(hasSecret ? [] : ['ONPATIENT_CLIENT_SECRET (on the server)']),
+    ...(base.status === 'production' ? [] : ['ONPATIENT_CLIENT_ID']),
+    ...(config.ONPATIENT_SECRET_CONFIGURED
+      ? []
+      : ['ONPATIENT_CLIENT_SECRET (on the server)']),
   ];
   return { status: 'disabled', enableWith: [missing.join(' and ')] };
 }
 
 function athenaChannel(config: AppConfig): VendorChannel {
-  const production = credential(config, 'ATHENA_CLIENT_ID');
-  const sandbox = credential(config, 'ATHENA_SANDBOX_CLIENT_ID');
+  const base = channel(config, {
+    production: ['ATHENA_CLIENT_ID'],
+    sandbox: ['ATHENA_SANDBOX_CLIENT_ID'],
+  });
   // athena login always uses production when configured, making a sandbox id unreachable alongside it
-  if (production) {
-    return { status: 'production', production };
-  }
-  return channel(undefined, sandbox, [
-    'ATHENA_CLIENT_ID',
-    'ATHENA_SANDBOX_CLIENT_ID',
-  ]);
+  return base.status === 'production' ? { ...base, sandbox: undefined } : base;
 }
 
 export function parseVendorConfig(config: AppConfig): VendorConfigModel {
   return {
-    epicR4: channel(
-      credential(config, 'EPIC_CLIENT_ID_R4', 'EPIC_CLIENT_ID'),
-      credential(config, 'EPIC_SANDBOX_CLIENT_ID_R4', 'EPIC_SANDBOX_CLIENT_ID'),
-      ['EPIC_CLIENT_ID_R4', 'EPIC_SANDBOX_CLIENT_ID_R4'],
-    ),
-    epicDstu2: channel(
-      credential(config, 'EPIC_CLIENT_ID_DSTU2', 'EPIC_CLIENT_ID'),
-      credential(
-        config,
-        'EPIC_SANDBOX_CLIENT_ID_DSTU2',
-        'EPIC_SANDBOX_CLIENT_ID',
-      ),
-      ['EPIC_CLIENT_ID_DSTU2', 'EPIC_SANDBOX_CLIENT_ID_DSTU2'],
-    ),
-    cerner: channel(credential(config, 'CERNER_CLIENT_ID'), undefined, [
-      'CERNER_CLIENT_ID',
-    ]),
-    veradigm: channel(credential(config, 'VERADIGM_CLIENT_ID'), undefined, [
-      'VERADIGM_CLIENT_ID',
-    ]),
+    epicR4: channel(config, {
+      production: ['EPIC_CLIENT_ID_R4', 'EPIC_CLIENT_ID'],
+      sandbox: ['EPIC_SANDBOX_CLIENT_ID_R4', 'EPIC_SANDBOX_CLIENT_ID'],
+    }),
+    epicDstu2: channel(config, {
+      production: ['EPIC_CLIENT_ID_DSTU2', 'EPIC_CLIENT_ID'],
+      sandbox: ['EPIC_SANDBOX_CLIENT_ID_DSTU2', 'EPIC_SANDBOX_CLIENT_ID'],
+    }),
+    cerner: channel(config, { production: ['CERNER_CLIENT_ID'] }),
+    veradigm: channel(config, { production: ['VERADIGM_CLIENT_ID'] }),
     onpatient: onPatientChannel(config),
     // The VA integration only supports their sandbox environment
-    va: channel(undefined, credential(config, 'VA_CLIENT_ID'), [
-      'VA_CLIENT_ID',
-    ]),
-    healow: channel(credential(config, 'HEALOW_CLIENT_ID'), undefined, [
-      'HEALOW_CLIENT_ID',
-    ]),
+    va: channel(config, { sandbox: ['VA_CLIENT_ID'] }),
+    healow: channel(config, { production: ['HEALOW_CLIENT_ID'] }),
     athena: athenaChannel(config),
   };
 }
