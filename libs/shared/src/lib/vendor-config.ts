@@ -44,10 +44,11 @@ const publicUrlField = z
     if (!isConfigured(value)) {
       return { status: 'missing' };
     }
-    if (!z.string().url().safeParse(value).success) {
+    try {
+      return { status: 'configured', value, origin: new URL(value).origin };
+    } catch {
       return { status: 'invalid', value };
     }
-    return { status: 'configured', value, origin: new URL(value).origin };
   });
 
 const vendorEnvSchema = z.object({
