@@ -1,12 +1,15 @@
-import { AppConfig } from './AppConfigProvider';
-import { parseVendorConfig, VendorConfigModel } from './vendorConfig';
+import {
+  parseVendorConfig,
+  VendorConfigModel,
+  VendorEnv,
+} from './vendor-config';
 
 const ID = 'client-id';
 
 describe('parseVendorConfig', () => {
   const cases: [
     string,
-    AppConfig,
+    VendorEnv,
     Partial<{
       [K in keyof VendorConfigModel]: {
         status: VendorConfigModel[K]['status'];

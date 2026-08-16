@@ -1,4 +1,5 @@
 import { Logger, Module, ModuleMetadata } from '@nestjs/common';
+import { parseVendorConfig, VendorChannel } from '@mere/shared';
 import { OnPatientModule } from './onpatient/onpatient.module';
 import { AppController } from './app.controller';
 import { StaticModule } from './static/static.module';
@@ -11,6 +12,36 @@ import { AthenaModule } from './athena/athena.module';
 import { TenantModule } from './tenant/tenant.module';
 import { ConfigModule } from './config/config.module';
 
+const vendors = parseVendorConfig({
+  ...process.env,
+  ONPATIENT_SECRET_CONFIGURED: !!process.env.ONPATIENT_CLIENT_SECRET,
+});
+
+function logChannel(name: string, channel: VendorChannel) {
+  if (channel.status === 'disabled') {
+    Logger.warn(
+      `${name} service disabled: set ${channel.enableWith.join(' or ')} to enable.`,
+    );
+  } else {
+    Logger.log(`${name} service enabled (${channel.status}).`);
+  }
+}
+
+logChannel('Epic R4', vendors.epicR4);
+logChannel('Epic DSTU2', vendors.epicDstu2);
+logChannel('Cerner', vendors.cerner);
+logChannel('Veradigm', vendors.veradigm);
+logChannel('OnPatient', vendors.onpatient);
+logChannel('Healow', vendors.healow);
+logChannel('Athena', vendors.athena);
+if (vendors.healow.status !== 'disabled') {
+  Logger.log(
+    process.env.HEALOW_CLIENT_SECRET
+      ? 'HEALOW_CLIENT_SECRET was provided: Healow confidential client mode enabled with refresh token support.'
+      : 'HEALOW_CLIENT_SECRET was not provided: Healow public client mode enabled (no refresh tokens).',
+  );
+}
+
 const imports: ModuleMetadata['imports'] = [
   StaticModule,
   LoginProxyModule,
@@ -18,39 +49,36 @@ const imports: ModuleMetadata['imports'] = [
   ConfigModule,
 ];
 
-const opConfigured = checkIfOnPatientConfigured();
-if (opConfigured.check) {
+if (vendors.onpatient.status === 'production') {
   imports.push(
     OnPatientModule.register({
-      clientId: opConfigured.clientId,
-      clientSecret: opConfigured.clientSecret,
+      clientId: process.env.ONPATIENT_CLIENT_ID!,
+      clientSecret: process.env.ONPATIENT_CLIENT_SECRET!,
       redirectUri: `${process.env.PUBLIC_URL}/api/v1/onpatient/callback`,
     }),
   );
 }
 
-const epicConfigured = checkIfEpicConfigured();
-if (epicConfigured.check) {
+if (
+  vendors.epicR4.status !== 'disabled' ||
+  vendors.epicDstu2.status !== 'disabled'
+) {
   imports.push(EpicModule);
 }
 
-const cernerConfigured = checkIfCernerIsConfigured();
-if (cernerConfigured.check) {
+if (vendors.cerner.status !== 'disabled') {
   imports.push(CernerModule);
 }
 
-const veradigmConfigured = checkIfVeradigmIsConfigured();
-if (veradigmConfigured.check) {
+if (vendors.veradigm.status !== 'disabled') {
   imports.push(VeradigmModule);
 }
 
-const healowConfigured = checkIfHealowIsConfigured();
-if (healowConfigured.check) {
+if (vendors.healow.status !== 'disabled') {
   imports.push(HealowModule);
 }
 
-const athenaConfigured = checkIfAthenaIsConfigured();
-if (athenaConfigured.check) {
+if (vendors.athena.status !== 'disabled') {
   imports.push(AthenaModule);
 }
 
@@ -59,188 +87,3 @@ if (athenaConfigured.check) {
   controllers: [AppController],
 })
 export class AppModule {}
-
-// --- Helper functions ---
-
-function checkIfOnPatientConfigured():
-  | {
-      check: true;
-      clientId: string;
-      clientSecret: string;
-    }
-  | { check: false } {
-  const check =
-    !!process.env.ONPATIENT_CLIENT_ID && !!process.env.ONPATIENT_CLIENT_SECRET;
-  if (!process.env.ONPATIENT_CLIENT_ID) {
-    Logger.warn(
-      'ONPATIENT_CLIENT_ID was not provided: OnPatient services will be disabled.',
-    );
-  }
-  if (!process.env.ONPATIENT_CLIENT_SECRET) {
-    Logger.warn(
-      'ONPATIENT_CLIENT_SECRET was not provided: OnPatient services will be disabled.',
-    );
-  }
-  if (check) {
-    Logger.log(
-      'ONPATIENT_CLIENT_ID and ONPATIENT_CLIENT_SECRET were provided: OnPatient service will be enabled.',
-    );
-
-    return {
-      check,
-      clientId: process.env.ONPATIENT_CLIENT_ID!,
-      clientSecret: process.env.ONPATIENT_CLIENT_SECRET!,
-    };
-  }
-
-  return { check };
-}
-
-function checkIfEpicConfigured(): { check: boolean } {
-  const hasDstu2 =
-    !!process.env.EPIC_CLIENT_ID_DSTU2 ||
-    !!process.env.EPIC_CLIENT_ID ||
-    !!process.env.EPIC_SANDBOX_CLIENT_ID_DSTU2 ||
-    !!process.env.EPIC_SANDBOX_CLIENT_ID;
-  const hasR4 =
-    !!process.env.EPIC_CLIENT_ID_R4 ||
-    !!process.env.EPIC_CLIENT_ID ||
-    !!process.env.EPIC_SANDBOX_CLIENT_ID_R4 ||
-    !!process.env.EPIC_SANDBOX_CLIENT_ID;
-  const check = hasDstu2 || hasR4;
-
-  if (!check) {
-    Logger.warn(
-      'No Epic client IDs provided (EPIC_CLIENT_ID, EPIC_CLIENT_ID_DSTU2, EPIC_CLIENT_ID_R4, or their EPIC_SANDBOX_* variants): Epic services will be disabled.',
-    );
-  } else {
-    if (hasDstu2) {
-      Logger.log(
-        'Epic DSTU2 client ID configured: Epic DSTU2 service enabled.',
-      );
-    } else {
-      Logger.warn(
-        'No Epic DSTU2 client ID (EPIC_CLIENT_ID_DSTU2, EPIC_CLIENT_ID, or their EPIC_SANDBOX_* variants): Epic DSTU2 service disabled.',
-      );
-    }
-    if (hasR4) {
-      Logger.log('Epic R4 client ID configured: Epic R4 service enabled.');
-    } else {
-      Logger.warn(
-        'No Epic R4 client ID (EPIC_CLIENT_ID_R4, EPIC_CLIENT_ID, or their EPIC_SANDBOX_* variants): Epic R4 service disabled.',
-      );
-    }
-  }
-
-  return { check };
-}
-
-function checkIfCernerIsConfigured():
-  | {
-      check: true;
-      clientId: string;
-    }
-  | {
-      check: false;
-    } {
-  const check = !!process.env.CERNER_CLIENT_ID;
-  if (!process.env.CERNER_CLIENT_ID) {
-    Logger.warn(
-      'CERNER_CLIENT_ID was not provided: Cerner services will be disabled.',
-    );
-  }
-  if (check) {
-    Logger.log(
-      'CERNER_CLIENT_ID was provided: Cerner service will be enabled.',
-    );
-
-    return {
-      check,
-      clientId: process.env.CERNER_CLIENT_ID!,
-    };
-  }
-
-  return { check };
-}
-
-function checkIfVeradigmIsConfigured():
-  | {
-      check: true;
-      clientId: string;
-    }
-  | {
-      check: false;
-    } {
-  const check = !!process.env.VERADIGM_CLIENT_ID;
-  if (!process.env.VERADIGM_CLIENT_ID) {
-    Logger.warn(
-      'VERADIGM_CLIENT_ID was not provided: Veradigm services will be disabled.',
-    );
-  }
-  if (check) {
-    Logger.log(
-      'VERADIGM_CLIENT_ID was provided: Veradigm service will be enabled.',
-    );
-
-    return {
-      check,
-      clientId: process.env.VERADIGM_CLIENT_ID!,
-    };
-  }
-
-  return { check };
-}
-
-function checkIfHealowIsConfigured():
-  | {
-      check: true;
-      clientId: string;
-    }
-  | {
-      check: false;
-    } {
-  const check = !!process.env.HEALOW_CLIENT_ID;
-  if (!process.env.HEALOW_CLIENT_ID) {
-    Logger.warn(
-      'HEALOW_CLIENT_ID was not provided: Healow services will be disabled.',
-    );
-  }
-  if (check) {
-    Logger.log(
-      'HEALOW_CLIENT_ID was provided: Healow service will be enabled.',
-    );
-
-    if (process.env.HEALOW_CLIENT_SECRET) {
-      Logger.log(
-        'HEALOW_CLIENT_SECRET was provided: Healow confidential client mode enabled with refresh token support.',
-      );
-    } else {
-      Logger.log(
-        'HEALOW_CLIENT_SECRET was not provided: Healow public client mode enabled (no refresh tokens).',
-      );
-    }
-
-    return {
-      check,
-      clientId: process.env.HEALOW_CLIENT_ID!,
-    };
-  }
-
-  return { check };
-}
-
-function checkIfAthenaIsConfigured(): { check: boolean } {
-  const check =
-    !!process.env.ATHENA_CLIENT_ID || !!process.env.ATHENA_SANDBOX_CLIENT_ID;
-  if (!check) {
-    Logger.warn(
-      'ATHENA_CLIENT_ID or ATHENA_SANDBOX_CLIENT_ID was not provided: Athena services will be disabled.',
-    );
-  } else {
-    Logger.log(
-      'Athena client ID was provided: Athena service will be enabled.',
-    );
-  }
-
-  return { check };
-}

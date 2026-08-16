@@ -7,7 +7,7 @@ import {
   parseVendorConfig,
   vendorStatusEntries,
   VendorChannel,
-} from '../../../app/providers/vendorConfig';
+} from '@mere/shared';
 
 function channelStatus(channel: VendorChannel) {
   switch (channel.status) {

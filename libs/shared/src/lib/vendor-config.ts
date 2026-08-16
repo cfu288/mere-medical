@@ -1,4 +1,19 @@
-import { AppConfig } from './AppConfigProvider';
+export interface VendorEnv {
+  EPIC_CLIENT_ID?: string;
+  EPIC_CLIENT_ID_DSTU2?: string;
+  EPIC_CLIENT_ID_R4?: string;
+  EPIC_SANDBOX_CLIENT_ID?: string;
+  EPIC_SANDBOX_CLIENT_ID_DSTU2?: string;
+  EPIC_SANDBOX_CLIENT_ID_R4?: string;
+  CERNER_CLIENT_ID?: string;
+  VERADIGM_CLIENT_ID?: string;
+  ONPATIENT_CLIENT_ID?: string;
+  ONPATIENT_SECRET_CONFIGURED?: boolean;
+  VA_CLIENT_ID?: string;
+  HEALOW_CLIENT_ID?: string;
+  ATHENA_CLIENT_ID?: string;
+  ATHENA_SANDBOX_CLIENT_ID?: string;
+}
 
 export function isConfigured(value: string | undefined): value is string {
   return !!value && !value.startsWith('$');
@@ -20,10 +35,10 @@ export interface VendorConfigModel {
   athena: VendorChannel;
 }
 
-type EnvVar = keyof AppConfig & string;
+type EnvVar = keyof VendorEnv & string;
 
 function channel(
-  config: AppConfig,
+  config: VendorEnv,
   candidates: { production?: EnvVar[]; sandbox?: EnvVar[] },
 ): VendorChannel {
   const firstConfigured = (envVars: EnvVar[] = []) =>
@@ -48,7 +63,7 @@ function channel(
   };
 }
 
-function onPatientChannel(config: AppConfig): VendorChannel {
+function onPatientChannel(config: VendorEnv): VendorChannel {
   const base = channel(config, { production: ['ONPATIENT_CLIENT_ID'] });
   if (base.status === 'production' && config.ONPATIENT_SECRET_CONFIGURED) {
     return base;
@@ -62,7 +77,7 @@ function onPatientChannel(config: AppConfig): VendorChannel {
   return { status: 'disabled', enableWith: [missing.join(' and ')] };
 }
 
-function athenaChannel(config: AppConfig): VendorChannel {
+function athenaChannel(config: VendorEnv): VendorChannel {
   const base = channel(config, {
     production: ['ATHENA_CLIENT_ID'],
     sandbox: ['ATHENA_SANDBOX_CLIENT_ID'],
@@ -71,7 +86,7 @@ function athenaChannel(config: AppConfig): VendorChannel {
   return base.status === 'production' ? { ...base, sandbox: undefined } : base;
 }
 
-export function parseVendorConfig(config: AppConfig): VendorConfigModel {
+export function parseVendorConfig(config: VendorEnv): VendorConfigModel {
   return {
     epicR4: channel(config, {
       production: ['EPIC_CLIENT_ID_R4', 'EPIC_CLIENT_ID'],

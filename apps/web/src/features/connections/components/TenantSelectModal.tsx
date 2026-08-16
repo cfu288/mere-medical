@@ -30,7 +30,7 @@ import VALogo from '../../../assets/img/va-logo.png';
 import HealowLogo from '../../../assets/img/eclinicalworks-logo.jpeg';
 import AthenaLogo from '../../../assets/img/athena-logo.jpeg';
 import { useConfig } from '../../../app/providers/AppConfigProvider';
-import { parseVendorConfig } from '../../../app/providers/vendorConfig';
+import { parseVendorConfig } from '@mere/shared';
 import {
   AthenaLocalStorageKeys,
   getLoginUrl as getAthenaLoginUrl,
