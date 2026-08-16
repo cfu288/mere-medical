@@ -8,6 +8,7 @@ export interface DSTU2Endpoint {
   name: string;
   token: string;
   authorize: string;
+  managingOrganization?: string;
 }
 
 /* eslint-disable-next-line */
@@ -17,6 +18,7 @@ export interface R4Endpoint {
   name: string;
   token: string;
   authorize: string;
+  managingOrganization?: string;
 }
 
 export const EpicDSTU2TenantEndpoints: DSTU2Endpoint[] = Array.from(

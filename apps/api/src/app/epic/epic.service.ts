@@ -35,16 +35,17 @@ export class EpicService {
   }
 }
 
-function filteredItemsWithQuery<T extends { name: string }>(
-  items: T[],
-  query: string,
-): T[] {
+function filteredItemsWithQuery<
+  T extends { name: string; managingOrganization?: string },
+>(items: T[], query: string): T[] {
   if (query === '' || query === undefined) {
     return items.sort((x, y) => x.name.localeCompare(y.name)).slice(0, 100);
   }
   return items
     .map((item) => {
-      const vals = item.name
+      const vals = [item.name, item.managingOrganization]
+        .filter(Boolean)
+        .join(' ')
         .split(' ')
         .map((token) => stringSimilarity(token, query));
       const rating = Math.max(...vals);

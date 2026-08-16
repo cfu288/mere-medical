@@ -24,6 +24,7 @@ type UnifiedTenantEndpoint = {
   name: string;
   token: string;
   authorize: string;
+  managingOrganization?: string;
   vendor: 'EPIC' | 'CERNER' | 'VERADIGM' | 'HEALOW';
   version: 'DSTU2' | 'R4';
 };
@@ -124,10 +125,12 @@ function filteredItemsWithQuery(
   }
   return items
     .map((item) => {
-      const vals = item.name
-        ?.split(' ')
+      const vals = [item.name, item.managingOrganization]
+        .filter(Boolean)
+        .join(' ')
+        .split(' ')
         .map((token) => stringSimilarity(token, query));
-      const rating = vals ? Math.max(...vals) : 0;
+      const rating = vals.length ? Math.max(...vals) : 0;
       return { rating, item };
     })
     .filter((item) => item.rating > 0.05)

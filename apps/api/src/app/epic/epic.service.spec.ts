@@ -81,6 +81,15 @@ describe('EpicService', () => {
       expect(hasMatchingName).toBe(true);
     });
 
+    it('should match endpoints by managingOrganization when the endpoint name differs', async () => {
+      // Intermountain Health's endpoint is published under the name "Billings OBGYN"
+      const result = await service.queryR4Tenants('Intermountain');
+
+      expect(
+        result.some((t) => t.managingOrganization === 'Intermountain Health'),
+      ).toBe(true);
+    });
+
     describe('sandboxOnly parameter', () => {
       it('should return only sandbox R4 endpoint when sandboxOnly is true', async () => {
         const result = await service.queryR4Tenants('', true);
