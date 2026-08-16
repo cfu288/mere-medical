@@ -9,7 +9,6 @@ import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import { AboutMereSettingsGroup } from './components/AboutMereSettingsGroup';
 import { DeveloperSettingsGroup } from './components/DeveloperSettingsGroup';
 import { PrivacyAndSecuritySettingsGroup } from './components/PrivacyAndSecuritySettingsGroup';
-import { ProviderStatusSettingsGroup } from './components/ProviderStatusSettingsGroup';
 import { UserCard } from './components/UserCard';
 import { UserDataSettingsGroup } from './components/UserDataSettingsGroup';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
@@ -121,7 +120,6 @@ const SettingsTab: React.FC = () => {
       <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pb-20 pt-2 sm:px-6 sm:pb-6 lg:px-8">
         <PrivacyAndSecuritySettingsGroup />
         <UserDataSettingsGroup />
-        <ProviderStatusSettingsGroup />
         <AboutMereSettingsGroup />
         <ExperimentalSettingsGroup />
         <DeveloperSettingsGroup />

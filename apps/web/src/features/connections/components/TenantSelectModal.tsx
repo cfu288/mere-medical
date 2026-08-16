@@ -263,7 +263,7 @@ export function TenantSelectModal({
           !!userPreferences?.use_proxy,
         disabledMessage:
           vendors.onpatient.status === 'disabled'
-            ? 'Provide ONPATIENT_CLIENT_ID env var to enable'
+            ? `Provide ${vendors.onpatient.enableWith.join(' or ')} to enable`
             : undefined,
       },
       {

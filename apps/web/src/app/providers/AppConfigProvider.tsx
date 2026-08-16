@@ -23,6 +23,7 @@ export interface AppConfig {
   VA_CLIENT_ID?: string;
   HEALOW_CLIENT_ID?: string;
   HEALOW_CONFIDENTIAL_MODE?: boolean;
+  ONPATIENT_SECRET_CONFIGURED?: boolean;
   ATHENA_CLIENT_ID?: string;
   ATHENA_SANDBOX_CLIENT_ID?: string;
   PUBLIC_URL?: string;

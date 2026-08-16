@@ -4,19 +4,10 @@ export function isConfigured(value: string | undefined): value is string {
   return !!value && !value.startsWith('$');
 }
 
-export interface CredentialSource {
-  envVar: string;
-  value: string;
-}
-
 export type VendorChannel =
   | { status: 'disabled'; enableWith: string[] }
-  | { status: 'sandbox-only'; sandbox: CredentialSource }
-  | {
-      status: 'production';
-      production: CredentialSource;
-      sandbox?: CredentialSource;
-    };
+  | { status: 'sandbox-only'; sandbox: string }
+  | { status: 'production'; production: string; sandbox?: string };
 
 export interface VendorConfigModel {
   epicR4: VendorChannel;
@@ -32,19 +23,19 @@ export interface VendorConfigModel {
 function credential(
   config: AppConfig,
   ...envVars: (keyof AppConfig & string)[]
-): CredentialSource | undefined {
+): string | undefined {
   for (const envVar of envVars) {
     const value = config[envVar];
     if (typeof value === 'string' && isConfigured(value)) {
-      return { envVar, value };
+      return envVar;
     }
   }
   return undefined;
 }
 
 function channel(
-  production: CredentialSource | undefined,
-  sandbox: CredentialSource | undefined,
+  production: string | undefined,
+  sandbox: string | undefined,
   enableWith: string[],
 ): VendorChannel {
   if (production) {
@@ -54,6 +45,32 @@ function channel(
     return { status: 'sandbox-only', sandbox };
   }
   return { status: 'disabled', enableWith };
+}
+
+function onPatientChannel(config: AppConfig): VendorChannel {
+  const clientId = credential(config, 'ONPATIENT_CLIENT_ID');
+  const hasSecret = !!config.ONPATIENT_SECRET_CONFIGURED;
+  if (clientId && hasSecret) {
+    return { status: 'production', production: clientId };
+  }
+  const missing = [
+    ...(clientId ? [] : ['ONPATIENT_CLIENT_ID']),
+    ...(hasSecret ? [] : ['ONPATIENT_CLIENT_SECRET (on the server)']),
+  ];
+  return { status: 'disabled', enableWith: [missing.join(' and ')] };
+}
+
+function athenaChannel(config: AppConfig): VendorChannel {
+  const production = credential(config, 'ATHENA_CLIENT_ID');
+  const sandbox = credential(config, 'ATHENA_SANDBOX_CLIENT_ID');
+  // athena login always uses production when configured, making a sandbox id unreachable alongside it
+  if (production) {
+    return { status: 'production', production };
+  }
+  return channel(undefined, sandbox, [
+    'ATHENA_CLIENT_ID',
+    'ATHENA_SANDBOX_CLIENT_ID',
+  ]);
 }
 
 export function parseVendorConfig(config: AppConfig): VendorConfigModel {
@@ -78,9 +95,7 @@ export function parseVendorConfig(config: AppConfig): VendorConfigModel {
     veradigm: channel(credential(config, 'VERADIGM_CLIENT_ID'), undefined, [
       'VERADIGM_CLIENT_ID',
     ]),
-    onpatient: channel(credential(config, 'ONPATIENT_CLIENT_ID'), undefined, [
-      'ONPATIENT_CLIENT_ID',
-    ]),
+    onpatient: onPatientChannel(config),
     // The VA integration only supports their sandbox environment
     va: channel(undefined, credential(config, 'VA_CLIENT_ID'), [
       'VA_CLIENT_ID',
@@ -88,11 +103,7 @@ export function parseVendorConfig(config: AppConfig): VendorConfigModel {
     healow: channel(credential(config, 'HEALOW_CLIENT_ID'), undefined, [
       'HEALOW_CLIENT_ID',
     ]),
-    athena: channel(
-      credential(config, 'ATHENA_CLIENT_ID'),
-      credential(config, 'ATHENA_SANDBOX_CLIENT_ID'),
-      ['ATHENA_CLIENT_ID', 'ATHENA_SANDBOX_CLIENT_ID'],
-    ),
+    athena: athenaChannel(config),
   };
 }
 
@@ -104,7 +115,7 @@ export interface VendorStatusEntry {
 
 export function vendorStatusEntries(
   model: VendorConfigModel,
-  config: AppConfig,
+  options: { healowConfidentialMode?: boolean } = {},
 ): VendorStatusEntry[] {
   return [
     { label: 'MyChart (Epic, R4)', channel: model.epicR4 },
@@ -114,13 +125,13 @@ export function vendorStatusEntries(
     {
       label: 'OnPatient',
       channel: model.onpatient,
-      note: 'Also requires ONPATIENT_CLIENT_SECRET on the server and the use proxy setting',
+      note: 'Also requires the use proxy setting',
     },
     { label: 'Veterans Affairs', channel: model.va },
     {
       label: 'Healow (eClinicalWorks)',
       channel: model.healow,
-      note: config.HEALOW_CONFIDENTIAL_MODE
+      note: options.healowConfidentialMode
         ? 'Confidential mode (HEALOW_CLIENT_SECRET is set on the server)'
         : undefined,
     },

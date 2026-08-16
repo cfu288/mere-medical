@@ -29,6 +29,7 @@ export interface PublicConfig {
   VA_CLIENT_ID?: string;
   HEALOW_CLIENT_ID?: string;
   HEALOW_CONFIDENTIAL_MODE?: boolean;
+  ONPATIENT_SECRET_CONFIGURED?: boolean;
   ATHENA_CLIENT_ID?: string;
   ATHENA_SANDBOX_CLIENT_ID?: string;
   PUBLIC_URL?: string;
@@ -50,6 +51,7 @@ export class ConfigService {
       VA_CLIENT_ID: process.env.VA_CLIENT_ID,
       HEALOW_CLIENT_ID: process.env.HEALOW_CLIENT_ID,
       HEALOW_CONFIDENTIAL_MODE: !!process.env.HEALOW_CLIENT_SECRET,
+      ONPATIENT_SECRET_CONFIGURED: !!process.env.ONPATIENT_CLIENT_SECRET,
       ATHENA_CLIENT_ID: process.env.ATHENA_CLIENT_ID,
       ATHENA_SANDBOX_CLIENT_ID: process.env.ATHENA_SANDBOX_CLIENT_ID,
       PUBLIC_URL: process.env.PUBLIC_URL,
