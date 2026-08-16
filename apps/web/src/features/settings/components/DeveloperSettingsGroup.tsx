@@ -24,10 +24,10 @@ function channelDetail(channel: VendorChannel): string {
   switch (channel.status) {
     case 'production':
       return channel.sandbox
-        ? `via ${channel.production}, sandbox via ${channel.sandbox}`
-        : `via ${channel.production}`;
+        ? `via ${channel.production.envVar}, sandbox via ${channel.sandbox.envVar}`
+        : `via ${channel.production.envVar}`;
     case 'sandbox-only':
-      return `via ${channel.sandbox}`;
+      return `via ${channel.sandbox.envVar}`;
     case 'disabled':
       return `set ${channel.enableWith.join(' or ')} to enable`;
   }

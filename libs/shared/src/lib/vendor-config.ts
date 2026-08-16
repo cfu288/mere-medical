@@ -19,10 +19,15 @@ export function isConfigured(value: string | undefined): value is string {
   return !!value && !value.startsWith('$');
 }
 
+export interface Credential {
+  envVar: string;
+  value: string;
+}
+
 export type VendorChannel =
   | { status: 'disabled'; enableWith: string[] }
-  | { status: 'sandbox-only'; sandbox: string }
-  | { status: 'production'; production: string; sandbox?: string };
+  | { status: 'sandbox-only'; sandbox: Credential }
+  | { status: 'production'; production: Credential; sandbox?: Credential };
 
 export interface VendorConfigModel {
   epicR4: VendorChannel;
@@ -41,11 +46,15 @@ function channel(
   config: VendorEnv,
   candidates: { production?: EnvVar[]; sandbox?: EnvVar[] },
 ): VendorChannel {
-  const firstConfigured = (envVars: EnvVar[] = []) =>
-    envVars.find((envVar) => {
+  const firstConfigured = (envVars: EnvVar[] = []): Credential | undefined => {
+    for (const envVar of envVars) {
       const value = config[envVar];
-      return typeof value === 'string' && isConfigured(value);
-    });
+      if (typeof value === 'string' && isConfigured(value)) {
+        return { envVar, value };
+      }
+    }
+    return undefined;
+  };
 
   const production = firstConfigured(candidates.production);
   const sandbox = firstConfigured(candidates.sandbox);

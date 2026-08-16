@@ -128,12 +128,14 @@ describe('parseVendorConfig', () => {
       expect(channel.status).toBe(expectation.status);
       if ('via' in expectation) {
         expect(
-          channel.status === 'production' ? channel.production : undefined,
+          channel.status === 'production'
+            ? channel.production.envVar
+            : undefined,
         ).toBe(expectation.via);
       }
       if ('sandboxVia' in expectation) {
         expect(
-          channel.status === 'disabled' ? undefined : channel.sandbox,
+          channel.status === 'disabled' ? undefined : channel.sandbox?.envVar,
         ).toBe(expectation.sandboxVia);
       }
     }

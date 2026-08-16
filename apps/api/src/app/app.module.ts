@@ -12,9 +12,11 @@ import { AthenaModule } from './athena/athena.module';
 import { TenantModule } from './tenant/tenant.module';
 import { ConfigModule } from './config/config.module';
 
+const onPatientSecret = process.env.ONPATIENT_CLIENT_SECRET;
+
 const vendors = parseVendorConfig({
   ...process.env,
-  ONPATIENT_SECRET_CONFIGURED: !!process.env.ONPATIENT_CLIENT_SECRET,
+  ONPATIENT_SECRET_CONFIGURED: !!onPatientSecret,
 });
 
 function logChannel(name: string, channel: VendorChannel) {
@@ -49,11 +51,11 @@ const imports: ModuleMetadata['imports'] = [
   ConfigModule,
 ];
 
-if (vendors.onpatient.status === 'production') {
+if (vendors.onpatient.status === 'production' && onPatientSecret) {
   imports.push(
     OnPatientModule.register({
-      clientId: process.env.ONPATIENT_CLIENT_ID!,
-      clientSecret: process.env.ONPATIENT_CLIENT_SECRET!,
+      clientId: vendors.onpatient.production.value,
+      clientSecret: onPatientSecret,
       redirectUri: `${process.env.PUBLIC_URL}/api/v1/onpatient/callback`,
     }),
   );
