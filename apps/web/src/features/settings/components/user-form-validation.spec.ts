@@ -78,6 +78,24 @@ describe('user form validation schema', () => {
     expect(errors['birthday']?.message).toBe('Birthday is invalid');
   });
 
+  it('accepts a Date instance for birthday, as NewUserFormFields allows', async () => {
+    const date = new Date(1990, 4, 1);
+    const { values, errors } = await resolve({ ...validForm, birthday: date });
+    expect(errors).toEqual({});
+    expect((values as { birthday: Date }).birthday.getTime()).toBe(
+      date.getTime(),
+    );
+  });
+
+  it('keeps low years literal instead of applying the 1900 mapping yup inherited from new Date(99, ...)', async () => {
+    const { values, errors } = await resolve({
+      ...validForm,
+      birthday: '0099-05-01',
+    });
+    expect(errors).toEqual({});
+    expect((values as { birthday: Date }).birthday.getFullYear()).toBe(99);
+  });
+
   it('accepts gender as optional and preserves an entered value', async () => {
     const filled = await resolve({ ...validForm, gender: 'Female' });
     expect(filled.errors).toEqual({});

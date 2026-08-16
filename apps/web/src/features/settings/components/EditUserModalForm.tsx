@@ -42,22 +42,28 @@ export const validSchema = z
       .string()
       .min(1, 'Email is required')
       .regex(EMAIL_PATTERN, 'Email must be valid'),
-    birthday: z
-      .string()
-      .min(1, 'Birthday is required')
-      .transform((value, ctx) => {
-        // a time suffix keeps date-only strings in local time; bare yyyy-MM-dd
-        // parses as UTC midnight, which shifts the date a day back west of UTC
-        const date = new Date(`${value}T00:00:00`);
-        if (Number.isNaN(date.getTime())) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: 'Birthday is invalid',
-          });
-          return z.NEVER;
-        }
-        return date;
-      }),
+    // the string branch must come first: the resolver reports the first union
+    // branch's message, and Date instances (allowed by NewUserFormFields) only
+    // arrive programmatically
+    birthday: z.union([
+      z
+        .string()
+        .min(1, 'Birthday is required')
+        .transform((value, ctx) => {
+          // a time suffix keeps date-only strings in local time; bare yyyy-MM-dd
+          // parses as UTC midnight, which shifts the date a day back west of UTC
+          const date = new Date(`${value}T00:00:00`);
+          if (Number.isNaN(date.getTime())) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'Birthday is invalid',
+            });
+            return z.NEVER;
+          }
+          return date;
+        }),
+      z.date(),
+    ]),
     gender: z.string().optional(),
   })
   .passthrough();
