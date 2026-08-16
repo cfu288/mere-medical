@@ -30,6 +30,7 @@ import VALogo from '../../../assets/img/va-logo.png';
 import HealowLogo from '../../../assets/img/eclinicalworks-logo.jpeg';
 import AthenaLogo from '../../../assets/img/athena-logo.jpeg';
 import { useConfig } from '../../../app/providers/AppConfigProvider';
+import { parseVendorConfig } from '../../../app/providers/vendorConfig';
 import {
   AthenaLocalStorageKeys,
   getLoginUrl as getAthenaLoginUrl,
@@ -141,10 +142,6 @@ type SourceItem = {
   | { kind: 'direct'; onSelect: () => void }
 );
 
-function isConfigured(value: string | undefined): boolean {
-  return !!value && !value.startsWith('$');
-}
-
 export function TenantSelectModal({
   open,
   setOpen,
@@ -166,34 +163,18 @@ export function TenantSelectModal({
     notifyDispatch = useNotificationDispatch();
   const config = useConfig();
 
-  const epicR4ProductionConfigured =
-    isConfigured(config.EPIC_CLIENT_ID_R4) ||
-    isConfigured(config.EPIC_CLIENT_ID);
-  const epicR4SandboxConfigured =
-    isConfigured(config.EPIC_SANDBOX_CLIENT_ID_R4) ||
-    isConfigured(config.EPIC_SANDBOX_CLIENT_ID);
-  const epicR4Enabled = epicR4ProductionConfigured || epicR4SandboxConfigured;
-  const epicR4SandboxOnly =
-    epicR4SandboxConfigured && !epicR4ProductionConfigured;
+  const vendors = useMemo(() => parseVendorConfig(config), [config]);
 
-  const epicDstu2ProductionConfigured =
-    isConfigured(config.EPIC_CLIENT_ID_DSTU2) ||
-    isConfigured(config.EPIC_CLIENT_ID);
-  const epicDstu2SandboxConfigured =
-    isConfigured(config.EPIC_SANDBOX_CLIENT_ID_DSTU2) ||
-    isConfigured(config.EPIC_SANDBOX_CLIENT_ID);
-  const epicDstu2Enabled =
-    epicDstu2ProductionConfigured || epicDstu2SandboxConfigured;
-  const epicDstu2SandboxOnly =
-    epicDstu2SandboxConfigured && !epicDstu2ProductionConfigured;
-
-  const cernerEnabled = isConfigured(config.CERNER_CLIENT_ID);
-  const veradigmEnabled = isConfigured(config.VERADIGM_CLIENT_ID);
-  const vaEnabled = isConfigured(config.VA_CLIENT_ID);
-  const healowEnabled = isConfigured(config.HEALOW_CLIENT_ID);
-  const athenaProductionEnabled = isConfigured(config.ATHENA_CLIENT_ID);
-  const athenaSandboxEnabled = isConfigured(config.ATHENA_SANDBOX_CLIENT_ID);
-  const athenaEnabled = athenaProductionEnabled || athenaSandboxEnabled;
+  const epicR4Enabled = vendors.epicR4.status !== 'disabled';
+  const epicR4SandboxOnly = vendors.epicR4.status === 'sandbox-only';
+  const epicDstu2Enabled = vendors.epicDstu2.status !== 'disabled';
+  const epicDstu2SandboxOnly = vendors.epicDstu2.status === 'sandbox-only';
+  const cernerEnabled = vendors.cerner.status !== 'disabled';
+  const veradigmEnabled = vendors.veradigm.status !== 'disabled';
+  const vaEnabled = vendors.va.status !== 'disabled';
+  const healowEnabled = vendors.healow.status !== 'disabled';
+  const athenaProductionEnabled = vendors.athena.status === 'production';
+  const athenaEnabled = vendors.athena.status !== 'disabled';
 
   const [state, dispatch] = useReducer(
     (
@@ -278,11 +259,12 @@ export function TenantSelectModal({
           redirectPath: '/api/v1/onpatient/callback',
         }),
         enabled:
-          isConfigured(config.ONPATIENT_CLIENT_ID) &&
+          vendors.onpatient.status !== 'disabled' &&
           !!userPreferences?.use_proxy,
-        disabledMessage: !isConfigured(config.ONPATIENT_CLIENT_ID)
-          ? 'Provide ONPATIENT_CLIENT_ID env var to enable'
-          : undefined,
+        disabledMessage:
+          vendors.onpatient.status === 'disabled'
+            ? 'Provide ONPATIENT_CLIENT_ID env var to enable'
+            : undefined,
       },
       {
         title: 'Veterans Affairs',
@@ -368,6 +350,7 @@ export function TenantSelectModal({
     config,
     userPreferences?.use_proxy,
     vaUrl,
+    vendors,
     epicR4Enabled,
     epicR4SandboxOnly,
     epicDstu2Enabled,

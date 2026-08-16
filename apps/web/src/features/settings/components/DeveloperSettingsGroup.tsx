@@ -2,10 +2,7 @@ import { useLocalConfig } from '../../../app/providers/LocalConfigProvider';
 import { useDeveloperLogs } from '../../../app/providers/DeveloperLogsProvider';
 import { Console } from 'console-feed';
 import { useConfig } from '../../../app/providers/AppConfigProvider';
-
-function isConfigured(value: string | undefined): boolean {
-  return !!value && !value.startsWith('$');
-}
+import { isConfigured } from '../../../app/providers/vendorConfig';
 
 export function DeveloperSettingsGroup() {
   const localConfig = useLocalConfig();
@@ -35,6 +32,11 @@ export function DeveloperSettingsGroup() {
     { name: 'VA_CLIENT_ID', value: config.VA_CLIENT_ID },
     { name: 'ONPATIENT_CLIENT_ID', value: config.ONPATIENT_CLIENT_ID },
     { name: 'HEALOW_CLIENT_ID', value: config.HEALOW_CLIENT_ID },
+    { name: 'ATHENA_CLIENT_ID', value: config.ATHENA_CLIENT_ID },
+    {
+      name: 'ATHENA_SANDBOX_CLIENT_ID',
+      value: config.ATHENA_SANDBOX_CLIENT_ID,
+    },
   ];
 
   if (!localConfig.developer_mode_enabled) {
