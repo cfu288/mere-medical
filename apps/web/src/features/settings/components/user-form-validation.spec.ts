@@ -78,6 +78,15 @@ describe('user form validation schema', () => {
     expect(errors['birthday']?.message).toBe('Birthday is invalid');
   });
 
+  it('accepts gender as optional and preserves an entered value', async () => {
+    const filled = await resolve({ ...validForm, gender: 'Female' });
+    expect(filled.errors).toEqual({});
+    expect((filled.values as { gender: string }).gender).toBe('Female');
+
+    const absent = await resolve({ ...validForm, gender: undefined });
+    expect(absent.errors).toEqual({});
+  });
+
   it('passes unknown fields like profilePhoto through to the submit handler', async () => {
     const { values } = await resolve({
       ...validForm,
