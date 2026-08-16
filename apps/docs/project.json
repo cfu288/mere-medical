@@ -3,13 +3,19 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/docs/src",
   "projectType": "application",
+  "tags": [],
   "targets": {
     "build": {
-      "command": "npx docusaurus build"
+      "command": "npx docusaurus build",
+      "options": {
+        "cwd": "apps/docs"
+      }
     },
     "serve": {
-      "command": "npx docusaurus start"
+      "command": "npx docusaurus start",
+      "options": {
+        "cwd": "apps/docs"
+      }
     }
-  },
-  "tags": []
+  }
 }

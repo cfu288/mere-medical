@@ -3,6 +3,8 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/web-e2e/src",
   "projectType": "application",
+  "tags": [],
+  "implicitDependencies": ["web"],
   "targets": {
     "e2e": {
       "executor": "@mands/nx-playwright:playwright-executor",
@@ -29,6 +31,12 @@
         }
       }
     },
+    "e2e-demo": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "IS_DEMO=enabled E2E_DEMO=enabled npx nx run web-e2e:e2e"
+      }
+    },
     "ts-check": {
       "executor": "nx:run-commands",
       "options": {
@@ -43,7 +51,5 @@
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]
     }
-  },
-  "tags": [],
-  "implicitDependencies": ["web"]
+  }
 }

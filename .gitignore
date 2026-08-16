@@ -57,3 +57,5 @@ Thumbs.db
 .github/instructions/nx.instructions.md
 
 errorlog*
+
+.claude/worktrees

@@ -47,7 +47,7 @@
     "targets": {
       "build": {
         "outputs": [
-          "apps/docs/build"
+          "{projectRoot}/build"
         ]
       }
     }

@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   displayName: 'athena',
   preset: '../../jest.preset.js',
   testEnvironment: 'node',
