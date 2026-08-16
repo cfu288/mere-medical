@@ -4,7 +4,7 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useUserManagement } from '../../../app/providers/UserProvider';
 import { useNotificationDispatch } from '../../../app/providers/NotificationProvider';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Modal } from '../../../shared/components/Modal';
 import {
   NewUserFormFields,
@@ -43,7 +43,7 @@ export function AddUserModal({
     reset,
   } = useForm<NewUserFormFields>({
     defaultValues: parseDefaultValues({}),
-    resolver: yupResolver(validSchema),
+    resolver: zodResolver(validSchema),
   });
 
   const pp = getFileFromFileList(watch('profilePhoto'));
@@ -149,9 +149,9 @@ export function AddUserModal({
                     {...register('firstName')}
                     aria-invalid={!!errors.firstName}
                   />
-                  {errors.firstName?.type === 'required' && (
+                  {errors.firstName && (
                     <p className="text-sm text-red-500 sm:max-w-xs">
-                      First name is required
+                      {errors.firstName.message}
                     </p>
                   )}
                 </div>
@@ -172,9 +172,9 @@ export function AddUserModal({
                     {...register('lastName')}
                     aria-invalid={!!errors.lastName}
                   />
-                  {errors.lastName?.type === 'required' && (
+                  {errors.lastName && (
                     <p className="text-sm text-red-500 sm:max-w-xs">
-                      Last name is required
+                      {errors.lastName.message}
                     </p>
                   )}
                 </div>
@@ -195,14 +195,9 @@ export function AddUserModal({
                     {...register('email')}
                     aria-invalid={!!errors.email}
                   />
-                  {errors.email?.type === 'required' && (
+                  {errors.email && (
                     <p className="text-sm text-red-500 sm:max-w-xs">
-                      Email is required
-                    </p>
-                  )}
-                  {errors.email && errors.email?.type !== 'required' && (
-                    <p className="text-sm text-red-500 sm:max-w-xs">
-                      Email must be valid
+                      {errors.email.message}
                     </p>
                   )}
                 </div>
@@ -223,14 +218,9 @@ export function AddUserModal({
                     {...register('birthday')}
                     aria-invalid={!!errors.birthday}
                   />
-                  {errors.birthday?.type === 'required' && (
+                  {errors.birthday && (
                     <p className="text-sm text-red-500 sm:max-w-xs">
-                      Birthday is required
-                    </p>
-                  )}
-                  {errors.birthday && errors.birthday?.type !== 'required' && (
-                    <p className="text-sm text-red-500 sm:max-w-xs">
-                      Birthday is invalid
+                      {errors.birthday.message}
                     </p>
                   )}
                 </div>
@@ -251,9 +241,9 @@ export function AddUserModal({
                     {...register('gender')}
                     aria-invalid={!!errors.gender}
                   />
-                  {errors.gender?.type === 'required' && (
+                  {errors.gender && (
                     <p className="text-sm text-red-500 sm:max-w-xs">
-                      Gender is required
+                      {errors.gender.message}
                     </p>
                   )}
                 </div>

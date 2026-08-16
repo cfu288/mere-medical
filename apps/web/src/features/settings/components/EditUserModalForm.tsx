@@ -5,8 +5,8 @@ import 'react-image-crop/dist/ReactCrop.css';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useRxUserDocument } from '../../../app/providers/UserProvider';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { format } from 'date-fns';
 import { RxDocument } from 'rxdb';
 import { UserDocument } from '../../../models/user-document/UserDocument.type';
@@ -28,13 +28,20 @@ export type NewUserFormFields = {
   profilePhoto?: FileList | string | undefined;
 };
 
-export const validSchema = yup.object({
-  firstName: yup.string().required(),
-  lastName: yup.string().required(),
-  email: yup.string().email().required(),
-  birthday: yup.date().required(),
-  gender: yup.string(),
-});
+export const validSchema = z
+  .object({
+    firstName: z.string().min(1, 'First name is required'),
+    lastName: z.string().min(1, 'Last name is required'),
+    email: z.string().min(1, 'Email is required').email('Email must be valid'),
+    birthday: z
+      .string()
+      .min(1, 'Birthday is required')
+      .pipe(
+        z.coerce.date({ errorMap: () => ({ message: 'Birthday is invalid' }) }),
+      ),
+    gender: z.string().optional(),
+  })
+  .passthrough();
 
 export function parseDefaultValues(defaultValues?: NewUserFormFields) {
   const bd =
@@ -248,7 +255,7 @@ export function EditUserForm({
     setValue,
   } = useForm({
     defaultValues: parseDefaultValues(defaultValues),
-    resolver: yupResolver(validSchema),
+    resolver: zodResolver(validSchema),
   });
   const [togglePhotoModal, setTogglePhotoModal] = useState(false);
   const pp = getFileFromFileList(watch('profilePhoto') || undefined);
@@ -327,9 +334,9 @@ export function EditUserForm({
                   {...register('firstName')}
                   aria-invalid={errors.firstName ? 'true' : 'false'}
                 />
-                {errors.firstName?.type === 'required' && (
+                {errors.firstName && (
                   <p className="text-sm text-red-500 sm:max-w-xs">
-                    First name is required
+                    {errors.firstName.message}
                   </p>
                 )}
               </div>
@@ -350,9 +357,9 @@ export function EditUserForm({
                   {...register('lastName')}
                   aria-invalid={errors.lastName ? 'true' : 'false'}
                 />
-                {errors.lastName?.type === 'required' && (
+                {errors.lastName && (
                   <p className="text-sm text-red-500 sm:max-w-xs">
-                    Last name is required
+                    {errors.lastName.message}
                   </p>
                 )}
               </div>
@@ -373,14 +380,9 @@ export function EditUserForm({
                   {...register('email')}
                   aria-invalid={errors.email ? 'true' : 'false'}
                 />
-                {errors.email?.type === 'required' && (
+                {errors.email && (
                   <p className="text-sm text-red-500 sm:max-w-xs">
-                    Email is required
-                  </p>
-                )}
-                {errors.email && errors.email?.type !== 'required' && (
-                  <p className="text-sm text-red-500 sm:max-w-xs">
-                    Email must be valid
+                    {errors.email.message}
                   </p>
                 )}
               </div>
@@ -401,14 +403,9 @@ export function EditUserForm({
                   {...register('birthday')}
                   aria-invalid={errors.birthday ? 'true' : 'false'}
                 />
-                {errors.birthday?.type === 'required' && (
+                {errors.birthday && (
                   <p className="text-sm text-red-500 sm:max-w-xs">
-                    Birthday is required
-                  </p>
-                )}
-                {errors.birthday && errors.birthday?.type !== 'required' && (
-                  <p className="text-sm text-red-500 sm:max-w-xs">
-                    Birthday is invalid
+                    {errors.birthday.message}
                   </p>
                 )}
               </div>
@@ -429,9 +426,9 @@ export function EditUserForm({
                   {...register('gender')}
                   aria-invalid={errors.gender ? 'true' : 'false'}
                 />
-                {errors.birthday?.type === 'required' && (
+                {errors.gender && (
                   <p className="text-sm text-red-500 sm:max-w-xs">
-                    Gender is required
+                    {errors.gender.message}
                   </p>
                 )}
               </div>
