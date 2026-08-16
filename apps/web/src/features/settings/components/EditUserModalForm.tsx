@@ -28,17 +28,36 @@ export type NewUserFormFields = {
   profilePhoto?: FileList | string | undefined;
 };
 
+// WHATWG HTML5 email pattern, ported verbatim from yup 1.3 (yup's rEmail) so the
+// zod swap accepts exactly the same addresses (zod's .email() rejects dotless
+// domains like user@localhost that yup accepted)
+const EMAIL_PATTERN =
+  /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+
 export const validSchema = z
   .object({
     firstName: z.string().min(1, 'First name is required'),
     lastName: z.string().min(1, 'Last name is required'),
-    email: z.string().min(1, 'Email is required').email('Email must be valid'),
+    email: z
+      .string()
+      .min(1, 'Email is required')
+      .regex(EMAIL_PATTERN, 'Email must be valid'),
     birthday: z
       .string()
       .min(1, 'Birthday is required')
-      .pipe(
-        z.coerce.date({ errorMap: () => ({ message: 'Birthday is invalid' }) }),
-      ),
+      .transform((value, ctx) => {
+        // a time suffix keeps date-only strings in local time; bare yyyy-MM-dd
+        // parses as UTC midnight, which shifts the date a day back west of UTC
+        const date = new Date(`${value}T00:00:00`);
+        if (Number.isNaN(date.getTime())) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Birthday is invalid',
+          });
+          return z.NEVER;
+        }
+        return date;
+      }),
     gender: z.string().optional(),
   })
   .passthrough();
