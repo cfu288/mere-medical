@@ -3,6 +3,7 @@ import { useDeveloperLogs } from '../../../app/providers/DeveloperLogsProvider';
 import { Console } from 'console-feed';
 import { useConfig } from '../../../app/providers/AppConfigProvider';
 import {
+  describeRequirement,
   isConfigured,
   parseVendorConfig,
   vendorStatusEntries,
@@ -29,23 +30,21 @@ function channelDetail(channel: VendorChannel): string {
     case 'sandbox-only':
       return `via ${channel.sandbox.envVar}`;
     case 'disabled':
-      return `set ${channel.enableWith.join(' or ')} to enable`;
+      return `set ${describeRequirement(channel.enableWith)} to enable`;
   }
 }
 
 export function DeveloperSettingsGroup() {
   const localConfig = useLocalConfig();
   const config = useConfig();
-  const providerEntries = vendorStatusEntries(parseVendorConfig(config), {
-    healowConfidentialMode: config.HEALOW_CONFIDENTIAL_MODE,
-  });
+  const providerEntries = vendorStatusEntries(parseVendorConfig(config));
 
   const buildVars = [
     { name: 'IS_DEMO', value: IS_DEMO },
     { name: 'MERE_APP_VERSION', value: MERE_APP_VERSION },
   ];
 
-  const envVars = [
+  const envVarValues = [
     { name: 'PUBLIC_URL', value: config.PUBLIC_URL },
     { name: 'EPIC_CLIENT_ID', value: config.EPIC_CLIENT_ID },
     { name: 'EPIC_CLIENT_ID_DSTU2', value: config.EPIC_CLIENT_ID_DSTU2 },
@@ -70,6 +69,16 @@ export function DeveloperSettingsGroup() {
       value: config.ATHENA_SANDBOX_CLIENT_ID,
     },
   ];
+
+  const envVars = envVarValues.map(({ name, value }) =>
+    isConfigured(value)
+      ? {
+          name,
+          configured: true,
+          display: value.length > 20 ? `${value.substring(0, 20)}...` : value,
+        }
+      : { name, configured: false, display: value || '(not set)' },
+  );
 
   if (!localConfig.developer_mode_enabled) {
     return null;
@@ -120,17 +129,14 @@ export function DeveloperSettingsGroup() {
               >
                 <td className="py-2 font-mono text-xs">{env.name}</td>
                 <td className="py-2">
-                  {isConfigured(env.value) ? (
+                  {env.configured ? (
                     <span className="text-green-600">✓</span>
                   ) : (
                     <span className="text-red-500">✗</span>
                   )}
                 </td>
                 <td className="py-2 font-mono text-xs text-gray-600">
-                  {isConfigured(env.value)
-                    ? env.value?.substring(0, 20) +
-                      (env.value && env.value.length > 20 ? '...' : '')
-                    : env.value || '(not set)'}
+                  {env.display}
                 </td>
               </tr>
             ))}

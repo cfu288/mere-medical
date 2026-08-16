@@ -509,18 +509,11 @@ const ConnectionTab: React.FC = () => {
         name: string,
         id: string,
         vendor: EMRVendor,
-        fhirVersion?: 'DSTU2' | 'R4',
+        fhirVersion: 'DSTU2' | 'R4',
       ) => {
         switch (vendor) {
           case 'epic': {
-            setTenantEpicUrl(
-              base,
-              auth,
-              token,
-              name,
-              id,
-              fhirVersion || 'DSTU2',
-            );
+            setTenantEpicUrl(base, auth, token, name, id, fhirVersion);
             setOpenSelectModal((x) => !x);
             initiateEpicAuth(
               config,
@@ -529,21 +522,14 @@ const ConnectionTab: React.FC = () => {
               token,
               name,
               id,
-              fhirVersion || 'DSTU2',
+              fhirVersion,
             ).then((url) => {
               window.location.href = url;
             });
             break;
           }
           case 'cerner': {
-            setTenantCernerUrl(
-              base,
-              auth,
-              token,
-              name,
-              id,
-              fhirVersion || 'DSTU2',
-            );
+            setTenantCernerUrl(base, auth, token, name, id, fhirVersion);
             setOpenSelectModal((x) => !x);
             initiateCernerAuth(
               config,
@@ -552,7 +538,7 @@ const ConnectionTab: React.FC = () => {
               token,
               name,
               id,
-              fhirVersion || 'DSTU2',
+              fhirVersion,
             ).then((url) => {
               window.location.href = url;
             });

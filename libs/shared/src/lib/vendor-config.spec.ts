@@ -7,43 +7,78 @@ import {
 const ID = 'client-id';
 
 describe('parseVendorConfig', () => {
-  const cases: [
-    string,
-    VendorEnv,
-    Partial<{
-      [K in keyof VendorConfigModel]: {
-        status: VendorConfigModel[K]['status'];
-        via?: string;
-        sandboxVia?: string;
-      };
-    }>,
-  ][] = [
+  const cases: [string, VendorEnv, Partial<VendorConfigModel>][] = [
     [
       'empty config disables everything',
       {},
       {
-        epicR4: { status: 'disabled' },
-        epicDstu2: { status: 'disabled' },
-        cerner: { status: 'disabled' },
-        veradigm: { status: 'disabled' },
-        onpatient: { status: 'disabled' },
-        va: { status: 'disabled' },
-        healow: { status: 'disabled' },
-        athena: { status: 'disabled' },
+        publicUrl: { status: 'missing' },
+        epicR4: {
+          status: 'disabled',
+          enableWith: {
+            anyOf: ['EPIC_CLIENT_ID_R4', 'EPIC_SANDBOX_CLIENT_ID_R4'],
+          },
+        },
+        epicDstu2: {
+          status: 'disabled',
+          enableWith: {
+            anyOf: ['EPIC_CLIENT_ID_DSTU2', 'EPIC_SANDBOX_CLIENT_ID_DSTU2'],
+          },
+        },
+        cerner: {
+          status: 'disabled',
+          enableWith: { anyOf: ['CERNER_CLIENT_ID'] },
+        },
+        veradigm: {
+          status: 'disabled',
+          enableWith: { anyOf: ['VERADIGM_CLIENT_ID'] },
+        },
+        onpatient: {
+          status: 'disabled',
+          enableWith: {
+            allOf: [
+              'ONPATIENT_CLIENT_ID',
+              'ONPATIENT_CLIENT_SECRET (on the server)',
+              'PUBLIC_URL',
+            ],
+          },
+        },
+        va: { status: 'disabled', enableWith: { anyOf: ['VA_CLIENT_ID'] } },
+        healow: {
+          status: 'disabled',
+          enableWith: { anyOf: ['HEALOW_CLIENT_ID'] },
+        },
+        athena: {
+          status: 'disabled',
+          enableWith: {
+            anyOf: ['ATHENA_CLIENT_ID', 'ATHENA_SANDBOX_CLIENT_ID'],
+          },
+        },
       },
     ],
     [
       'legacy EPIC_CLIENT_ID enables production for both versions',
       { EPIC_CLIENT_ID: ID },
       {
-        epicR4: { status: 'production', via: 'EPIC_CLIENT_ID' },
-        epicDstu2: { status: 'production', via: 'EPIC_CLIENT_ID' },
+        epicR4: {
+          status: 'production',
+          production: { envVar: 'EPIC_CLIENT_ID', value: ID },
+        },
+        epicDstu2: {
+          status: 'production',
+          production: { envVar: 'EPIC_CLIENT_ID', value: ID },
+        },
       },
     ],
     [
       'version-specific production id wins over the legacy id',
       { EPIC_CLIENT_ID: ID, EPIC_CLIENT_ID_R4: 'r4-id' },
-      { epicR4: { status: 'production', via: 'EPIC_CLIENT_ID_R4' } },
+      {
+        epicR4: {
+          status: 'production',
+          production: { envVar: 'EPIC_CLIENT_ID_R4', value: 'r4-id' },
+        },
+      },
     ],
     [
       'legacy EPIC_SANDBOX_CLIENT_ID enables sandbox-only for both versions',
@@ -51,11 +86,11 @@ describe('parseVendorConfig', () => {
       {
         epicR4: {
           status: 'sandbox-only',
-          sandboxVia: 'EPIC_SANDBOX_CLIENT_ID',
+          sandbox: { envVar: 'EPIC_SANDBOX_CLIENT_ID', value: ID },
         },
         epicDstu2: {
           status: 'sandbox-only',
-          sandboxVia: 'EPIC_SANDBOX_CLIENT_ID',
+          sandbox: { envVar: 'EPIC_SANDBOX_CLIENT_ID', value: ID },
         },
       },
     ],
@@ -65,8 +100,8 @@ describe('parseVendorConfig', () => {
       {
         epicR4: {
           status: 'production',
-          via: 'EPIC_CLIENT_ID_R4',
-          sandboxVia: 'EPIC_SANDBOX_CLIENT_ID_R4',
+          production: { envVar: 'EPIC_CLIENT_ID_R4', value: ID },
+          sandbox: { envVar: 'EPIC_SANDBOX_CLIENT_ID_R4', value: ID },
         },
       },
     ],
@@ -79,7 +114,7 @@ describe('parseVendorConfig', () => {
       {
         epicR4: {
           status: 'sandbox-only',
-          sandboxVia: 'EPIC_SANDBOX_CLIENT_ID_R4',
+          sandbox: { envVar: 'EPIC_SANDBOX_CLIENT_ID_R4', value: ID },
         },
       },
     ],
@@ -89,7 +124,7 @@ describe('parseVendorConfig', () => {
       {
         athena: {
           status: 'sandbox-only',
-          sandboxVia: 'ATHENA_SANDBOX_CLIENT_ID',
+          sandbox: { envVar: 'ATHENA_SANDBOX_CLIENT_ID', value: ID },
         },
       },
     ],
@@ -99,57 +134,88 @@ describe('parseVendorConfig', () => {
       {
         athena: {
           status: 'production',
-          via: 'ATHENA_CLIENT_ID',
-          sandboxVia: undefined,
+          production: { envVar: 'ATHENA_CLIENT_ID', value: ID },
         },
       },
     ],
     [
       'va id is inherently sandbox-only',
       { VA_CLIENT_ID: ID },
-      { va: { status: 'sandbox-only', sandboxVia: 'VA_CLIENT_ID' } },
+      {
+        va: {
+          status: 'sandbox-only',
+          sandbox: { envVar: 'VA_CLIENT_ID', value: ID },
+        },
+      },
     ],
     [
       'onpatient requires the server secret, not just the client id',
-      { ONPATIENT_CLIENT_ID: ID },
-      { onpatient: { status: 'disabled' } },
+      { ONPATIENT_CLIENT_ID: ID, PUBLIC_URL: 'https://mere.example' },
+      {
+        onpatient: {
+          status: 'disabled',
+          enableWith: { allOf: ['ONPATIENT_CLIENT_SECRET (on the server)'] },
+        },
+      },
     ],
     [
-      'onpatient with client id and server secret is production',
+      'onpatient with client id, server secret, and public url is production',
+      {
+        ONPATIENT_CLIENT_ID: ID,
+        ONPATIENT_SECRET_CONFIGURED: true,
+        PUBLIC_URL: 'https://mere.example',
+      },
+      {
+        publicUrl: {
+          status: 'configured',
+          value: 'https://mere.example',
+          origin: 'https://mere.example',
+        },
+        onpatient: {
+          status: 'production',
+          production: { envVar: 'ONPATIENT_CLIENT_ID', value: ID },
+          publicUrl: 'https://mere.example',
+        },
+      },
+    ],
+    [
+      'onpatient without a public url cannot build its auth flow',
       { ONPATIENT_CLIENT_ID: ID, ONPATIENT_SECRET_CONFIGURED: true },
-      { onpatient: { status: 'production', via: 'ONPATIENT_CLIENT_ID' } },
+      {
+        onpatient: {
+          status: 'disabled',
+          enableWith: { allOf: ['PUBLIC_URL'] },
+        },
+      },
+    ],
+    [
+      'healow reports confidential mode when the server holds a secret',
+      { HEALOW_CLIENT_ID: ID, HEALOW_CONFIDENTIAL_MODE: true },
+      {
+        healow: {
+          status: 'production',
+          production: { envVar: 'HEALOW_CLIENT_ID', value: ID },
+          mode: 'confidential',
+        },
+      },
+    ],
+    [
+      'healow without a server secret is a public client',
+      { HEALOW_CLIENT_ID: ID },
+      {
+        healow: {
+          status: 'production',
+          production: { envVar: 'HEALOW_CLIENT_ID', value: ID },
+          mode: 'public',
+        },
+      },
     ],
   ];
 
   it.each(cases)('%s', (_name, config, expected) => {
     const model = parseVendorConfig(config);
-    for (const [key, expectation] of Object.entries(expected)) {
-      const channel = model[key as keyof VendorConfigModel];
-      expect(channel.status).toBe(expectation.status);
-      if ('via' in expectation) {
-        expect(
-          channel.status === 'production'
-            ? channel.production.envVar
-            : undefined,
-        ).toBe(expectation.via);
-      }
-      if ('sandboxVia' in expectation) {
-        expect(
-          channel.status === 'disabled' ? undefined : channel.sandbox?.envVar,
-        ).toBe(expectation.sandboxVia);
-      }
+    for (const [key, channel] of Object.entries(expected)) {
+      expect(model[key as keyof VendorConfigModel]).toEqual(channel);
     }
-  });
-
-  it('reports what enables a disabled channel', () => {
-    const model = parseVendorConfig({});
-    expect(
-      model.epicR4.status === 'disabled' ? model.epicR4.enableWith : [],
-    ).toEqual(['EPIC_CLIENT_ID_R4', 'EPIC_SANDBOX_CLIENT_ID_R4']);
-    expect(
-      model.onpatient.status === 'disabled' ? model.onpatient.enableWith : [],
-    ).toEqual([
-      'ONPATIENT_CLIENT_ID and ONPATIENT_CLIENT_SECRET (on the server)',
-    ]);
   });
 });

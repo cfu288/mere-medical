@@ -1,10 +1,13 @@
-import { Controller, Get, Logger, Query, Res } from '@nestjs/common';
+import { Controller, Get, Inject, Logger, Query, Res } from '@nestjs/common';
 import { Response } from 'express';
-import { OnPatientService } from './onpatient.service';
+import { OnPatientService, OnPatientServiceConfig } from './onpatient.service';
 
 @Controller('v1/onpatient')
 export class OnPatientController {
-  constructor(private readonly onPatientService: OnPatientService) {}
+  constructor(
+    private readonly onPatientService: OnPatientService,
+    @Inject('CONFIG') private readonly config: OnPatientServiceConfig,
+  ) {}
 
   @Get('callback')
   async callback(@Res() response: Response, @Query('code') code: string) {
@@ -12,7 +15,7 @@ export class OnPatientController {
       const tokens = await this.onPatientService.getAuthCode(code);
       const sessionId = this.onPatientService.storeTokens(tokens);
       response.redirect(
-        `${process.env.PUBLIC_URL}/onpatient/callback?session=${sessionId}`,
+        `${this.config.publicUrl}/onpatient/callback?session=${sessionId}`,
       );
     } catch (e) {
       Logger.error(e);

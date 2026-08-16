@@ -7,7 +7,7 @@ import { randomUUID } from 'crypto';
 export interface OnPatientServiceConfig {
   clientId: string;
   clientSecret: string;
-  redirectUri: string;
+  publicUrl: string;
 }
 
 interface TokenCacheEntry {
@@ -26,15 +26,12 @@ interface TokenCacheEntry {
  */
 @Injectable()
 export class OnPatientService {
-  private readonly envConfig: OnPatientServiceConfig;
   private tokenCache = new Map<string, TokenCacheEntry>();
 
   constructor(
-    @Inject('CONFIG') private options: OnPatientServiceConfig,
+    @Inject('CONFIG') private readonly config: OnPatientServiceConfig,
     private readonly httpService: HttpService,
-  ) {
-    this.envConfig = options;
-  }
+  ) {}
 
   storeTokens(tokens: OnPatientTokenResponse): string {
     const sessionId = randomUUID();
@@ -65,9 +62,9 @@ export class OnPatientService {
 
     const params = new URLSearchParams({
       grant_type: 'authorization_code',
-      client_id: this.envConfig.clientId,
-      client_secret: this.envConfig.clientSecret,
-      redirect_uri: this.envConfig.redirectUri,
+      client_id: this.config.clientId,
+      client_secret: this.config.clientSecret,
+      redirect_uri: `${this.config.publicUrl}/api/v1/onpatient/callback`,
       code: code,
     });
 

@@ -1,5 +1,4 @@
 import { Logger, Module, ModuleMetadata } from '@nestjs/common';
-import { parseVendorConfig, VendorChannel } from '@mere/shared';
 import { OnPatientModule } from './onpatient/onpatient.module';
 import { AppController } from './app.controller';
 import { StaticModule } from './static/static.module';
@@ -11,18 +10,20 @@ import { VeradigmModule } from './veradigm/veradigm.module';
 import { AthenaModule } from './athena/athena.module';
 import { TenantModule } from './tenant/tenant.module';
 import { ConfigModule } from './config/config.module';
+import { describeRequirement, EnableRequirement } from '@mere/shared';
+import { serverVendorConfig } from './vendor-config.server';
 
-const onPatientSecret = process.env.ONPATIENT_CLIENT_SECRET;
+const vendors = serverVendorConfig();
 
-const vendors = parseVendorConfig({
-  ...process.env,
-  ONPATIENT_SECRET_CONFIGURED: !!onPatientSecret,
-});
-
-function logChannel(name: string, channel: VendorChannel) {
+function logChannel(
+  name: string,
+  channel:
+    | { status: 'disabled'; enableWith: EnableRequirement }
+    | { status: 'production' | 'sandbox-only' },
+) {
   if (channel.status === 'disabled') {
     Logger.warn(
-      `${name} service disabled: set ${channel.enableWith.join(' or ')} to enable.`,
+      `${name} service disabled: set ${describeRequirement(channel.enableWith)} to enable.`,
     );
   } else {
     Logger.log(`${name} service enabled (${channel.status}).`);
@@ -36,9 +37,9 @@ logChannel('Veradigm', vendors.veradigm);
 logChannel('OnPatient', vendors.onpatient);
 logChannel('Healow', vendors.healow);
 logChannel('Athena', vendors.athena);
-if (vendors.healow.status !== 'disabled') {
+if (vendors.healow.status === 'production') {
   Logger.log(
-    process.env.HEALOW_CLIENT_SECRET
+    vendors.healow.mode === 'confidential'
       ? 'HEALOW_CLIENT_SECRET was provided: Healow confidential client mode enabled with refresh token support.'
       : 'HEALOW_CLIENT_SECRET was not provided: Healow public client mode enabled (no refresh tokens).',
   );
@@ -51,14 +52,8 @@ const imports: ModuleMetadata['imports'] = [
   ConfigModule,
 ];
 
-if (vendors.onpatient.status === 'production' && onPatientSecret) {
-  imports.push(
-    OnPatientModule.register({
-      clientId: vendors.onpatient.production.value,
-      clientSecret: onPatientSecret,
-      redirectUri: `${process.env.PUBLIC_URL}/api/v1/onpatient/callback`,
-    }),
-  );
+if (vendors.onpatient.status === 'production') {
+  imports.push(OnPatientModule.register(vendors.onpatient.registration));
 }
 
 if (
