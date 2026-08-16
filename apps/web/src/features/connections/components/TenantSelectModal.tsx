@@ -224,11 +224,17 @@ export function TenantSelectModal({
       if (channel && channel.status === 'disabled') {
         return { ...base, enabled: false, reason: missingConfig(channel) };
       }
-      if (vendors.publicUrl.status === 'missing') {
+      if (vendors.publicUrl.status !== 'configured') {
         return {
           ...base,
           enabled: false,
-          reason: { kind: 'message', text: 'Provide PUBLIC_URL to enable' },
+          reason: {
+            kind: 'message',
+            text:
+              vendors.publicUrl.status === 'invalid'
+                ? 'PUBLIC_URL is set but is not a valid URL'
+                : 'Provide PUBLIC_URL to enable',
+          },
         };
       }
       const search: SearchContext = {

@@ -18,7 +18,7 @@ export class OriginGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<Request>();
     const origin = request.headers.origin || request.headers.referer;
 
-    if (!origin || this.allowedOrigin.status === 'missing') {
+    if (!origin || this.allowedOrigin.status !== 'configured') {
       return false;
     }
 

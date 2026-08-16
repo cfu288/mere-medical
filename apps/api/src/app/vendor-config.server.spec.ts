@@ -47,10 +47,10 @@ describe('parseServerVendorConfig', () => {
       ONPATIENT_CLIENT_SECRET: 'shh',
       PUBLIC_URL: 'mereapp.com',
     });
-    expect(publicUrl).toEqual({ status: 'missing' });
+    expect(publicUrl).toEqual({ status: 'invalid', value: 'mereapp.com' });
     expect(onpatient).toEqual({
       status: 'disabled',
-      enableWith: { allOf: ['PUBLIC_URL'] },
+      enableWith: { allOf: ['a valid PUBLIC_URL'] },
     });
   });
 

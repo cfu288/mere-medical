@@ -3,6 +3,7 @@ import {
   isConfigured,
   parseVendorConfig,
   PublicUrlConfig,
+  publicUrlRequirement,
   VendorConfigModel,
 } from '@mere/shared';
 import { OnPatientServiceConfig } from './onpatient/onpatient.service';
@@ -46,7 +47,9 @@ function onPatientServerChannel(
     ? []
     : (['ONPATIENT_CLIENT_SECRET'] as const);
   const publicUrlMissing =
-    publicUrl.status === 'configured' ? [] : (['PUBLIC_URL'] as const);
+    publicUrl.status === 'configured'
+      ? []
+      : ([publicUrlRequirement(publicUrl)] as const);
   if (!isConfigured(clientId)) {
     return {
       status: 'disabled',
@@ -61,8 +64,11 @@ function onPatientServerChannel(
       enableWith: { allOf: ['ONPATIENT_CLIENT_SECRET', ...publicUrlMissing] },
     };
   }
-  if (publicUrl.status === 'missing') {
-    return { status: 'disabled', enableWith: { allOf: ['PUBLIC_URL'] } };
+  if (publicUrl.status !== 'configured') {
+    return {
+      status: 'disabled',
+      enableWith: { allOf: [publicUrlRequirement(publicUrl)] },
+    };
   }
   return {
     status: 'production',

@@ -189,6 +189,32 @@ describe('parseVendorConfig', () => {
       },
     ],
     [
+      'a public url that is not a valid url is rejected, not used',
+      {
+        ONPATIENT_CLIENT_ID: ID,
+        ONPATIENT_SECRET_CONFIGURED: true,
+        PUBLIC_URL: 'mereapp.com',
+      },
+      {
+        publicUrl: { status: 'invalid', value: 'mereapp.com' },
+        onpatient: {
+          status: 'disabled',
+          enableWith: { allOf: ['a valid PUBLIC_URL'] },
+        },
+      },
+    ],
+    [
+      'non-string wire values are treated as unconfigured, not a crash',
+      { CERNER_CLIENT_ID: 123, PUBLIC_URL: false } as unknown as VendorEnv,
+      {
+        publicUrl: { status: 'missing' },
+        cerner: {
+          status: 'disabled',
+          enableWith: { anyOf: ['CERNER_CLIENT_ID'] },
+        },
+      },
+    ],
+    [
       'healow reports confidential mode when the server holds a secret',
       { HEALOW_CLIENT_ID: ID, HEALOW_CONFIDENTIAL_MODE: true },
       {

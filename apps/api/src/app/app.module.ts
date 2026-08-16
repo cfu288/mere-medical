@@ -30,6 +30,14 @@ function logChannel(
   }
 }
 
+if (vendors.publicUrl.status !== 'configured') {
+  Logger.error(
+    vendors.publicUrl.status === 'invalid'
+      ? `PUBLIC_URL is set to "${vendors.publicUrl.value}" but is not a valid URL: logins, tenant search, and the API proxy will not work until it is a full URL (including https://) for this instance.`
+      : 'PUBLIC_URL is not set: logins, tenant search, and the API proxy will not work until it is set to the URL this instance is served from.',
+  );
+}
+
 logChannel('Epic R4', vendors.epicR4);
 logChannel('Epic DSTU2', vendors.epicDstu2);
 logChannel('Cerner', vendors.cerner);

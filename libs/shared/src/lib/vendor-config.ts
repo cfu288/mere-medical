@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 export interface VendorEnv {
   PUBLIC_URL?: string;
   EPIC_CLIENT_ID?: string;
@@ -20,6 +22,54 @@ export interface VendorEnv {
 export function isConfigured(value: string | undefined): value is string {
   return !!value && !value.startsWith('$');
 }
+
+export type PublicUrlConfig =
+  | { status: 'configured'; value: string; origin: string }
+  | { status: 'invalid'; value: string }
+  | { status: 'missing' };
+
+const configuredString = z
+  .string()
+  .optional()
+  .catch(undefined)
+  .transform((value) => (isConfigured(value) ? value : undefined));
+
+const configuredFlag = z.boolean().optional().catch(undefined);
+
+const publicUrlField = z
+  .string()
+  .optional()
+  .catch(undefined)
+  .transform((value): PublicUrlConfig => {
+    if (!isConfigured(value)) {
+      return { status: 'missing' };
+    }
+    if (!z.string().url().safeParse(value).success) {
+      return { status: 'invalid', value };
+    }
+    return { status: 'configured', value, origin: new URL(value).origin };
+  });
+
+const vendorEnvSchema = z.object({
+  PUBLIC_URL: publicUrlField,
+  EPIC_CLIENT_ID: configuredString,
+  EPIC_CLIENT_ID_DSTU2: configuredString,
+  EPIC_CLIENT_ID_R4: configuredString,
+  EPIC_SANDBOX_CLIENT_ID: configuredString,
+  EPIC_SANDBOX_CLIENT_ID_DSTU2: configuredString,
+  EPIC_SANDBOX_CLIENT_ID_R4: configuredString,
+  CERNER_CLIENT_ID: configuredString,
+  VERADIGM_CLIENT_ID: configuredString,
+  ONPATIENT_CLIENT_ID: configuredString,
+  ONPATIENT_SECRET_CONFIGURED: configuredFlag,
+  VA_CLIENT_ID: configuredString,
+  HEALOW_CLIENT_ID: configuredString,
+  HEALOW_CONFIDENTIAL_MODE: configuredFlag,
+  ATHENA_CLIENT_ID: configuredString,
+  ATHENA_SANDBOX_CLIENT_ID: configuredString,
+});
+
+type ParsedVendorEnv = z.infer<typeof vendorEnvSchema>;
 
 export interface Credential {
   envVar: string;
@@ -61,10 +111,6 @@ export type OnPatientChannel =
   | { status: 'disabled'; enableWith: EnableRequirement }
   | { status: 'production'; production: Credential; publicUrl: string };
 
-export type PublicUrlConfig =
-  | { status: 'configured'; value: string; origin: string }
-  | { status: 'missing' };
-
 export interface VendorConfigModel {
   publicUrl: PublicUrlConfig;
   epicR4: VendorChannel;
@@ -78,24 +124,26 @@ export interface VendorConfigModel {
 }
 
 type EnvVar = {
-  [K in keyof VendorEnv]-?: VendorEnv[K] extends string | undefined ? K : never;
-}[keyof VendorEnv];
+  [K in keyof ParsedVendorEnv]-?: ParsedVendorEnv[K] extends string | undefined
+    ? K
+    : never;
+}[keyof ParsedVendorEnv];
 type EnvVarCandidates = [EnvVar, ...EnvVar[]];
 
 function channel(
-  config: VendorEnv,
+  env: ParsedVendorEnv,
   candidates: { production: EnvVarCandidates; sandbox: EnvVarCandidates },
 ): VendorChannel;
 function channel(
-  config: VendorEnv,
+  env: ParsedVendorEnv,
   candidates: { production: EnvVarCandidates },
 ): ProductionOnlyChannel;
 function channel(
-  config: VendorEnv,
+  env: ParsedVendorEnv,
   candidates: { sandbox: EnvVarCandidates },
 ): SandboxOnlyChannel;
 function channel(
-  config: VendorEnv,
+  env: ParsedVendorEnv,
   candidates:
     | { production: EnvVarCandidates; sandbox: EnvVarCandidates }
     | { production: EnvVarCandidates; sandbox?: undefined }
@@ -103,8 +151,8 @@ function channel(
 ): VendorChannel {
   const firstConfigured = (envVars: EnvVar[] = []): Credential | undefined => {
     for (const envVar of envVars) {
-      const value = config[envVar];
-      if (isConfigured(value)) {
+      const value = env[envVar];
+      if (value !== undefined) {
         return { envVar, value };
       }
     }
@@ -131,32 +179,24 @@ function channel(
   };
 }
 
-function publicUrlConfig(config: VendorEnv): PublicUrlConfig {
-  if (!isConfigured(config.PUBLIC_URL)) {
-    return { status: 'missing' };
-  }
-  try {
-    return {
-      status: 'configured',
-      value: config.PUBLIC_URL,
-      origin: new URL(config.PUBLIC_URL).origin,
-    };
-  } catch {
-    // a PUBLIC_URL that cannot parse as a URL is as unusable as an absent one
-    return { status: 'missing' };
-  }
+export function publicUrlRequirement(
+  publicUrl: { status: 'invalid' } | { status: 'missing' },
+): string {
+  return publicUrl.status === 'invalid' ? 'a valid PUBLIC_URL' : 'PUBLIC_URL';
 }
 
 function onPatientChannel(
-  config: VendorEnv,
+  env: ParsedVendorEnv,
   publicUrl: PublicUrlConfig,
 ): OnPatientChannel {
-  const base = channel(config, { production: ['ONPATIENT_CLIENT_ID'] });
-  const secretMissing = config.ONPATIENT_SECRET_CONFIGURED
+  const base = channel(env, { production: ['ONPATIENT_CLIENT_ID'] });
+  const secretMissing = env.ONPATIENT_SECRET_CONFIGURED
     ? []
     : (['ONPATIENT_CLIENT_SECRET (on the server)'] as const);
   const publicUrlMissing =
-    publicUrl.status === 'configured' ? [] : (['PUBLIC_URL'] as const);
+    publicUrl.status === 'configured'
+      ? []
+      : ([publicUrlRequirement(publicUrl)] as const);
   if (base.status === 'disabled') {
     return {
       status: 'disabled',
@@ -165,7 +205,7 @@ function onPatientChannel(
       },
     };
   }
-  if (!config.ONPATIENT_SECRET_CONFIGURED) {
+  if (!env.ONPATIENT_SECRET_CONFIGURED) {
     return {
       status: 'disabled',
       enableWith: {
@@ -173,8 +213,11 @@ function onPatientChannel(
       },
     };
   }
-  if (publicUrl.status === 'missing') {
-    return { status: 'disabled', enableWith: { allOf: ['PUBLIC_URL'] } };
+  if (publicUrl.status !== 'configured') {
+    return {
+      status: 'disabled',
+      enableWith: { allOf: [publicUrlRequirement(publicUrl)] },
+    };
   }
   return {
     status: 'production',
@@ -183,20 +226,20 @@ function onPatientChannel(
   };
 }
 
-function healowChannel(config: VendorEnv): HealowChannel {
-  const base = channel(config, { production: ['HEALOW_CLIENT_ID'] });
+function healowChannel(env: ParsedVendorEnv): HealowChannel {
+  const base = channel(env, { production: ['HEALOW_CLIENT_ID'] });
   return base.status === 'production'
     ? {
         ...base,
-        mode: config.HEALOW_CONFIDENTIAL_MODE ? 'confidential' : 'public',
+        mode: env.HEALOW_CONFIDENTIAL_MODE ? 'confidential' : 'public',
       }
     : base;
 }
 
 function athenaChannel(
-  config: VendorEnv,
+  env: ParsedVendorEnv,
 ): ProductionOnlyChannel | SandboxOnlyChannel {
-  const base = channel(config, {
+  const base = channel(env, {
     production: ['ATHENA_CLIENT_ID'],
     sandbox: ['ATHENA_SANDBOX_CLIENT_ID'],
   });
@@ -207,24 +250,25 @@ function athenaChannel(
 }
 
 export function parseVendorConfig(config: VendorEnv): VendorConfigModel {
-  const publicUrl = publicUrlConfig(config);
+  const env = vendorEnvSchema.parse(config);
+  const publicUrl = env.PUBLIC_URL;
   return {
     publicUrl,
-    epicR4: channel(config, {
+    epicR4: channel(env, {
       production: ['EPIC_CLIENT_ID_R4', 'EPIC_CLIENT_ID'],
       sandbox: ['EPIC_SANDBOX_CLIENT_ID_R4', 'EPIC_SANDBOX_CLIENT_ID'],
     }),
-    epicDstu2: channel(config, {
+    epicDstu2: channel(env, {
       production: ['EPIC_CLIENT_ID_DSTU2', 'EPIC_CLIENT_ID'],
       sandbox: ['EPIC_SANDBOX_CLIENT_ID_DSTU2', 'EPIC_SANDBOX_CLIENT_ID'],
     }),
-    cerner: channel(config, { production: ['CERNER_CLIENT_ID'] }),
-    veradigm: channel(config, { production: ['VERADIGM_CLIENT_ID'] }),
-    onpatient: onPatientChannel(config, publicUrl),
+    cerner: channel(env, { production: ['CERNER_CLIENT_ID'] }),
+    veradigm: channel(env, { production: ['VERADIGM_CLIENT_ID'] }),
+    onpatient: onPatientChannel(env, publicUrl),
     // The VA integration only supports their sandbox environment
-    va: channel(config, { sandbox: ['VA_CLIENT_ID'] }),
-    healow: healowChannel(config),
-    athena: athenaChannel(config),
+    va: channel(env, { sandbox: ['VA_CLIENT_ID'] }),
+    healow: healowChannel(env),
+    athena: athenaChannel(env),
   };
 }
 
