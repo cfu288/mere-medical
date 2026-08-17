@@ -58,7 +58,7 @@ services:
   app:
     image: cfu288/mere-medical:latest
     ports:
-      - '4200:80'
+      - '4200:8080'
     environment:
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
       - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
@@ -156,7 +156,7 @@ services:
 
    ```bash
    docker build -t mere-medical .
-   docker run -p 4200:80 -i -t \
+   docker run -p 4200:8080 -i -t \
      --name mere-medical \
      -e ONPATIENT_CLIENT_ID=<ID_HERE> \
      -e ONPATIENT_CLIENT_SECRET=<ID_HERE> \

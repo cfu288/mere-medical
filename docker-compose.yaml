@@ -1,16 +1,22 @@
-version: '3.9'
-
 services:
   app:
     image: cfu288/mere-medical:latest
     ports:
-      - '4200:80'
-    healthcheck:
-      test: ['CMD', 'node', '/app/healthcheck.js']
-      interval: 5s # Interval between health checks.
-      timeout: 5s # Timeout for each health checking.
-      retries: 12 # How many times retries.
-      start_period: 5s # Estimated time to boot.
+      - '4200:8080'
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          pids: 200
     environment:
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
       - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
@@ -27,17 +33,39 @@ services:
   docs:
     image: cfu288/mere-medical-docs:latest
     ports:
-      - '4202:80'
+      - '4202:8080'
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          pids: 200
   demo:
     image: cfu288/mere-medical:latest
     ports:
-      - '3366:80'
-    healthcheck:
-      test: ['CMD', 'node', '/app/healthcheck.js']
-      interval: 5s # Interval between health checks.
-      timeout: 5s # Timeout for each health checking.
-      retries: 12 # How many times retries.
-      start_period: 5s # Estimated time to boot.
+      - '3366:8080'
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          pids: 200
     environment:
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
       - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}

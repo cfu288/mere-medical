@@ -33,21 +33,36 @@ You can grab the required files for the following steps [here](https://github.co
 If not, then you can create a new directory and copy the following a docker compose file into it.
 
 ```yaml title="mere-medical/docker-compose.yaml"
-version: '3.9'
-
 services:
   nginx:
-    image: nginx:latest
+    image: nginx:1.30-alpine
     ports:
-      - 443:443
+      - '443:443'
     volumes:
-      - ./nginx/certs/:/etc/nginx/ssl
-      - ./nginx/conf/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/certs/:/etc/nginx/ssl:ro
+      - ./nginx/conf/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
     depends_on:
-      - app
+      app:
+        condition: service_healthy
   app:
     image: cfu288/mere-medical:latest
     container_name: mere-medical-app
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
     environment:
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
       - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
@@ -63,7 +78,12 @@ services:
       - HEALOW_CLIENT_ID=${HEALOW_CLIENT_ID}
       - HEALOW_CLIENT_SECRET=${HEALOW_CLIENT_SECRET}
       - PUBLIC_URL=https://meremedical.local
+
+networks:
+  proxy: {}
 ```
+
+The app container is only reachable through nginx on the shared `proxy` network — no ports are published on it directly.
 
 Note that the directory name becomes the prefix for the container, we suggest naming the folder `mere-medical`. Create a nginx subdirectory, which contains folders `conf` and `certs`. Your folder directory should look something like this:
 
@@ -109,7 +129,7 @@ server {
   ssl_protocols TLSv1.2;
 
   location / {
-    proxy_pass http://mere-medical-app/;
+    proxy_pass http://mere-medical-app:8080/;
   }
 }
 ```
@@ -145,7 +165,7 @@ Then open [https://meremedical.local](https://meremedical.local) in a browser to
 Run the following in your command prompt:
 
 ```
-docker run -p 4200:80 -i -t \
+docker run -p 4200:8080 -i -t \
   --name mere-medical \
   -e ONPATIENT_CLIENT_ID=<ID_HERE> \
   -e ONPATIENT_CLIENT_SECRET=<SECRET_HERE> \
@@ -169,7 +189,7 @@ Then open [http://localhost:4200](http://localhost:4200) in a browser to see Mer
 If you'd like to run Mere Medical as background process instead:
 
 ```
-docker run -p 4200:80 \
+docker run -p 4200:8080 \
   --name mere-medical \
   --detach \
   --restart unless-stopped \
@@ -199,13 +219,20 @@ Copy the following a docker compose file in a new directory. Note that the direc
 To get the env variables needed for OnPatient functionality, [see our documentation here](./onpatient-setup).
 
 ```yaml title="docker-compose.yaml"
-version: '3.9'
-
 services:
   app:
     image: cfu288/mere-medical:latest
     ports:
-      - '4200:80'
+      - '4200:8080'
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     environment:
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
       - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}

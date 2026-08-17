@@ -3,6 +3,9 @@ name: build production
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 env:
   username: cfu288
   PASSWORD: ${{ secrets.registry_password }}
@@ -20,7 +23,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
 
@@ -32,20 +35,24 @@ jobs:
         run: echo "version=$(git describe --tags)" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+        with:
+          version: v0.36.1
 
       - name: Log in to DockerHub
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           username: ${{ env.username }}
           password: ${{ env.PASSWORD }}
 
       - name: Build and push by platform
         id: build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
           platforms: ${{ matrix.platform }}
+          provenance: mode=max
+          sbom: true
           cache-from: type=gha,scope=app-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
           cache-to: type=gha,mode=max,scope=app-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
           build-args: |
@@ -60,7 +67,7 @@ jobs:
           echo "RELEASE_CALVER_VERSION=${{ env.RELEASE_CALVER_VERSION }}" >> /tmp/digests/version.txt
 
       - name: Upload digest
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: app-digests-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
           path: /tmp/digests/*
@@ -72,9 +79,11 @@ jobs:
     needs:
       - app-multiplatform
     if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
     steps:
       - name: Download digests
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           path: /tmp/digests
           pattern: app-digests-*
@@ -86,10 +95,12 @@ jobs:
           rm /tmp/digests/version.txt
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+        with:
+          version: v0.36.1
 
       - name: Log in to DockerHub
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           username: ${{ env.username }}
           password: ${{ env.PASSWORD }}
@@ -103,7 +114,7 @@ jobs:
             $(printf 'cfu288/mere-medical@sha256:%s ' *)
 
       - name: Create a GitHub release
-        uses: ncipollo/release-action@v1
+        uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1.21.0
         with:
           tag: ${{ env.RELEASE_CALVER_VERSION }}
           name: Release ${{ env.RELEASE_CALVER_VERSION }}
@@ -115,7 +126,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
 
@@ -127,20 +138,24 @@ jobs:
         run: echo "version=$(git describe --tags)" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+        with:
+          version: v0.36.1
 
       - name: Log in to DockerHub
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           username: ${{ env.username }}
           password: ${{ env.PASSWORD }}
 
       - name: Build and push demo
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
           push: true
           platforms: linux/amd64
+          provenance: mode=max
+          sbom: true
           cache-from: type=gha,scope=app-demo
           cache-to: type=gha,mode=max,scope=app-demo
           build-args: |
@@ -155,23 +170,27 @@ jobs:
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+        with:
+          version: v0.36.1
 
       - name: Log in to DockerHub
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           username: ${{ env.username }}
           password: ${{ env.PASSWORD }}
 
       - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
           push: true
           file: Dockerfile-docs
+          provenance: mode=max
+          sbom: true
           cache-from: type=gha,scope=docs
           cache-to: type=gha,mode=max,scope=docs
           tags: cfu288/mere-medical-docs:latest

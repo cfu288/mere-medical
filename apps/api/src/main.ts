@@ -8,7 +8,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
 import { NestApplicationOptions } from '@nestjs/common/interfaces/nest-application-options.interface';
 
-const DEFAULT_PORT = 80;
+const DEFAULT_PORT = 8080;
 const GLOBAL_PREFIX = 'api';
 const DEV_SSL_KEY_PATH = '../../../.dev/certs/localhost-key.pem';
 const DEV_SSL_CERT_PATH = '../../../.dev/certs/localhost.pem';

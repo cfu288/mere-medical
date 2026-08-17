@@ -1,18 +1,38 @@
-version: '3.9'
-
 services:
   nginx:
-    image: nginx:latest
+    image: nginx:1.30-alpine@sha256:97d490c12ba55b4946b01546d1c3ed324e8d41ab1c9fcb2a616aa470620e5b46
     ports:
-      - 443:443
+      - '443:443'
     volumes:
-      - ./nginx/certs/:/etc/nginx/ssl
-      - ./nginx/conf/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/certs/:/etc/nginx/ssl:ro
+      - ./nginx/conf/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
     depends_on:
-      - app
+      app:
+        condition: service_healthy
   app:
     image: cfu288/mere-medical:latest
     container_name: mere-medical-app
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          pids: 200
+    networks:
+      - proxy
     environment:
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
       - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
@@ -29,3 +49,6 @@ services:
       - HEALOW_CLIENT_ID=${HEALOW_CLIENT_ID}
       - HEALOW_CLIENT_SECRET=${HEALOW_CLIENT_SECRET}
       - PUBLIC_URL=https://meremedical.local
+
+networks:
+  proxy: {}
