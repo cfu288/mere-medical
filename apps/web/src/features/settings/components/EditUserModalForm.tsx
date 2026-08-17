@@ -39,19 +39,9 @@ export const validSchema = z
     birthday: z.union([
       z
         .string()
-        .min(1)
-        .transform((value, ctx) => {
-          // append T00:00:00 so the date parses in local time, not UTC
-          const date = new Date(`${value}T00:00:00`);
-          if (Number.isNaN(date.getTime())) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              message: 'Birthday is invalid',
-            });
-            return z.NEVER;
-          }
-          return date;
-        }),
+        .date('Birthday is invalid')
+        // append T00:00:00 so the date parses in local time, not UTC
+        .transform((value) => new Date(`${value}T00:00:00`)),
       z.literal('').transform(() => undefined),
       z.date().optional(),
     ]),

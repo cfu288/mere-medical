@@ -56,13 +56,10 @@ describe('user form validation schema', () => {
     ['no-at-sign', false],
     ['spaces in@x.com', false],
     ['a@-bad.com', false],
-  ])(
-    "email %s accepted: %s (zod's .email() is stricter than the old yup rule)",
-    async (email, accepted) => {
-      const { errors } = await resolve({ ...validForm, email });
-      expect(!errors['email']).toBe(accepted);
-    },
-  );
+  ])('email %s is accepted: %s', async (email, accepted) => {
+    const { errors } = await resolve({ ...validForm, email });
+    expect(!errors['email']).toBe(accepted);
+  });
 
   it('parses the birthday as local time, not UTC', async () => {
     const { values, errors } = await resolve(validForm);
@@ -81,7 +78,7 @@ describe('user form validation schema', () => {
     expect(errors['birthday']?.message).toBe('Birthday is invalid');
   });
 
-  it('accepts a Date instance for birthday, as NewUserFormFields allows', async () => {
+  it('accepts a Date instance for birthday', async () => {
     const date = new Date(1990, 4, 1);
     const { values, errors } = await resolve({ ...validForm, birthday: date });
     expect(errors).toEqual({});
@@ -90,7 +87,7 @@ describe('user form validation schema', () => {
     );
   });
 
-  it('keeps low years literal instead of applying the 1900 mapping yup inherited from new Date(99, ...)', async () => {
+  it('keeps low birthday years like 0099 literal', async () => {
     const { values, errors } = await resolve({
       ...validForm,
       birthday: '0099-05-01',
