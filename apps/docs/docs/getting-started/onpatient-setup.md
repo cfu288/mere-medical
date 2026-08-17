@@ -23,6 +23,6 @@ You'll need to get a client secret and client id value from the OnPatient patien
 
 You'll now need to set the redirect URI to redirect to Mere Medical. By default this is served at `https://localhost:4200/api/v1/onpatient/callback` but depending on what your public url is will generally be in the format `{PUBLIC_URL}/api/v1/onpatient/callback`. Note that the url schema must be HTTPS and not HTTP or OnPatient will not complete user logins.
 
-If you're setting up Mere Medical on your local machine and need to set up SSL certs, look into using `mkcert` and/or a reverse proxy like `nginx` to set up localhost certificates.
+If you're setting up Mere Medical on your local machine and need to set up SSL certs, follow the [local SSL with Caddy setup](./docker#setting-up-with-docker-compose--local-ssl-with-caddy).
 
 After creating your app, you should be able to see the Client ID and Client Secret. Provide those to your docker compose file.

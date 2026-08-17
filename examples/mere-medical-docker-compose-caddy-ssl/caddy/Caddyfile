@@ -1,0 +1,4 @@
+meremedical.local {
+	tls internal
+	reverse_proxy mere-medical-app:8080
+}

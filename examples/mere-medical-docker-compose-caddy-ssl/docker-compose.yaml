@@ -1,12 +1,21 @@
 services:
-  nginx:
-    image: nginx:1.30-alpine@sha256:97d490c12ba55b4946b01546d1c3ed324e8d41ab1c9fcb2a616aa470620e5b46
+  caddy:
+    image: caddy:2.11.4-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648
     ports:
       - '443:443'
+      - '443:443/udp'
     volumes:
-      - ./nginx/certs/:/etc/nginx/ssl:ro
-      - ./nginx/conf/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
     restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
     security_opt:
       - no-new-privileges:true
     networks:
@@ -52,3 +61,7 @@ services:
 
 networks:
   proxy: {}
+
+volumes:
+  caddy-data:
+  caddy-config:

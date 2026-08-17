@@ -11,11 +11,11 @@ These instructions will tell you how to get Mere Medical up and running on your 
 
 Mere relies on browser Web Crypto APIs (such as `crypto.randomUUID`), which browsers only enable on **secure origins** — `https://` URLs or `localhost`. If you access Mere over plain HTTP from any other address (e.g. `http://192.168.1.50:4200` from another device on your network), the app cannot start and you will see a **white screen**.
 
-Either open Mere at `http://localhost:<port>` on the machine running it, or put it behind a reverse proxy that terminates SSL — the [local SSL setup below](#setting-up-with-docker-compose--local-ssl-with-mkcert--nginx) walks you through this.
+Either open Mere at `http://localhost:<port>` on the machine running it, or put it behind a reverse proxy that terminates SSL — the [local SSL setup below](#setting-up-with-docker-compose--local-ssl-with-caddy) walks you through this.
 
 :::
 
-If you're looking to get Mere up and running on your local computer, we'd recommend following [these Docker Compose setup instructions](#setting-up-with-docker-compose--local-ssl-with-mkcert--nginx) as it will take you through step by step and help you set up local SSL.
+If you're looking to get Mere up and running on your local computer, we'd recommend following [these Docker Compose setup instructions](#setting-up-with-docker-compose--local-ssl-with-caddy) as it will take you through step by step and help you set up local SSL.
 
 If you want to run Mere on an external server and already have a reverse proxy with SSL set up, you can follow these [Docker](#setting-up-with-docker) instructions or [these Docker Compose instructions](#setting-up-with-docker-compose).
 
@@ -24,24 +24,32 @@ If you'd rather deploy to a cloud instance instead of your own computer, check o
 ## What you'll need
 
 - [Docker](https://docs.docker.com/get-docker/)
-- [mkcert](https://github.com/FiloSottile/mkcert#installation) (if you want to run Mere Medical locally with SSL)
 
-### Setting Up with Docker Compose & Local SSL with mkcert + NGINX
+### Setting Up with Docker Compose & Local SSL with Caddy
 
-You can grab the required files for the following steps [here](https://github.com/cfu288/mere-medical/tree/main/examples/mere-medical-docker-compose-nginx-ssl).
+You can grab the required files for the following steps [here](https://github.com/cfu288/mere-medical/tree/main/examples/mere-medical-docker-compose-caddy-ssl).
 
 If not, then you can create a new directory and copy the following a docker compose file into it.
 
 ```yaml title="mere-medical/docker-compose.yaml"
 services:
-  nginx:
-    image: nginx:1.30-alpine
+  caddy:
+    image: caddy:2-alpine
     ports:
       - '443:443'
+      - '443:443/udp'
     volumes:
-      - ./nginx/certs/:/etc/nginx/ssl:ro
-      - ./nginx/conf/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
     restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
     security_opt:
       - no-new-privileges:true
     networks:
@@ -81,27 +89,33 @@ services:
 
 networks:
   proxy: {}
+
+volumes:
+  caddy-data:
+  caddy-config:
 ```
 
-The app container is only reachable through nginx on the shared `proxy` network — no ports are published on it directly.
+The app container is only reachable through Caddy on the shared `proxy` network — no ports are published on it directly.
 
-Note that the directory name becomes the prefix for the container, we suggest naming the folder `mere-medical`. Create a nginx subdirectory, which contains folders `conf` and `certs`. Your folder directory should look something like this:
+Note that the directory name becomes the prefix for the container, we suggest naming the folder `mere-medical`. Create a `caddy` subdirectory next to the compose file:
 
 ```
 mere-medical
   docker-compose.yaml
-  nginx/
-    conf/
-    certs/
+  caddy/
+    Caddyfile
 ```
 
-From the root folder, run the following command to set up local certs:
+Create a Caddyfile in the caddy folder with the following contents:
 
-```bash
-mkcert -key-file nginx/certs/ssl.key -cert-file nginx/certs/ssl.crt meremedical.local
+```text title="mere-medical/caddy/Caddyfile"
+meremedical.local {
+	tls internal
+	reverse_proxy mere-medical-app:8080
+}
 ```
 
-Run `mkcert -install` if prompted to.
+`tls internal` makes Caddy issue a certificate for `meremedical.local` from its own local certificate authority — no separate cert generation step is needed. If you have a real public domain instead, replace `meremedical.local` with it and delete the `tls internal` line; Caddy will fetch and renew Let's Encrypt certificates automatically.
 
 Add the following entry to your `/etc/hosts` file:
 
@@ -115,23 +129,6 @@ Add the following entry to your `/etc/hosts` file:
 127.0.0.1	localhost
 ## Add this new line below
 127.0.0.1	meremedical.local
-```
-
-Create a nginx.conf in the conf folder with the following contents:
-
-```conf title="mere-medical/nginx/conf/nginx.conf"
-server {
-  listen 443 ssl http2;
-  listen [::]:443 ssl http2;
-
-  ssl_certificate /etc/nginx/ssl/ssl.crt;
-  ssl_certificate_key /etc/nginx/ssl/ssl.key;
-  ssl_protocols TLSv1.2;
-
-  location / {
-    proxy_pass http://mere-medical-app:8080/;
-  }
-}
 ```
 
 Create an `.env' file with the following format:
@@ -154,9 +151,29 @@ HEALOW_CLIENT_SECRET=
 
 `cd` into the directory of the `docker-compose.yaml` , and then run
 
-`docker compose --env-file .env up docker-compose up`
+`docker compose --env-file .env up --detach`
 
 to start Mere Medical.
+
+Finally, trust Caddy's local certificate authority so your browser accepts the certificate. Export the root certificate:
+
+```bash
+docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt caddy-local-ca.crt
+```
+
+Then trust it — on macOS:
+
+```bash
+sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain caddy-local-ca.crt
+```
+
+or on Linux:
+
+```bash
+sudo cp caddy-local-ca.crt /usr/local/share/ca-certificates/ && sudo update-ca-certificates
+```
+
+(Firefox keeps its own certificate store — import `caddy-local-ca.crt` under Settings → Certificates if needed. This trust step is only for the local `tls internal` setup; with a real domain and Let's Encrypt there is nothing to trust manually.)
 
 Then open [https://meremedical.local](https://meremedical.local) in a browser to see Mere Medical running!
 
@@ -258,7 +275,7 @@ to start Mere Medical as a background process.
 
 Then open [http://localhost:4200](http://localhost:4200) in a browser to see Mere Medical running!
 
-Note that this will not set up SSL for you, which is needed for some patient portal syncing/authentication flows. If you are running this on a server with reverse proxy already set up, it is recommended to have your reverse proxy handle SSL and forward requests to Mere Medical. If you are running this on your local machine and need local SSL set up, [follow the instructions here](/docs/getting-started/docker#setting-up-with-docker-compose--local-ssl-with-mkcert--nginx).
+Note that this will not set up SSL for you, which is needed for some patient portal syncing/authentication flows. If you are running this on a server with reverse proxy already set up, it is recommended to have your reverse proxy handle SSL and forward requests to Mere Medical. If you are running this on your local machine and need local SSL set up, [follow the instructions here](/docs/getting-started/docker#setting-up-with-docker-compose--local-ssl-with-caddy).
 
 ## Environment Variables Reference
 
@@ -289,7 +306,7 @@ If Mere works at `http://localhost:4200` but shows a blank white page when acces
 Uncaught TypeError: window.crypto.randomUUID is not a function
 ```
 
-Browsers only expose the Web Crypto APIs Mere needs on `https://` origins or `localhost`, so plain-HTTP access from any other address cannot work — this is a browser security restriction, not a configuration bug. Serve Mere through a reverse proxy with SSL ([local SSL setup instructions](#setting-up-with-docker-compose--local-ssl-with-mkcert--nginx)), or access it from the host machine via `localhost`.
+Browsers only expose the Web Crypto APIs Mere needs on `https://` origins or `localhost`, so plain-HTTP access from any other address cannot work — this is a browser security restriction, not a configuration bug. Serve Mere through a reverse proxy with SSL ([local SSL setup instructions](#setting-up-with-docker-compose--local-ssl-with-caddy)), or access it from the host machine via `localhost`.
 
 ### "Unable to search for healthcare systems"
 
