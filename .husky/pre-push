@@ -1,0 +1,12 @@
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$remote_ref" in refs/heads/*) ;; *) continue ;; esac
+  [ "$local_sha" = "0000000000000000000000000000000000000000" ] && continue
+  branch="${remote_ref#refs/heads/}"
+  case "$branch" in
+    main | feat/* | fix/* | chore/* | ci/* | docs/* | test/* | refactor/* | build/* | perf/* | explore/*) ;;
+    *)
+      echo "pre-push: branch '$branch' must be <type>/<name> with type: feat fix chore ci docs test refactor build perf explore" >&2
+      exit 1
+      ;;
+  esac
+done
