@@ -19,7 +19,7 @@ function getAppVersion() {
   }
 }
 
-const commitHash = getAppVersion();
+const appVersion = getAppVersion();
 
 function myCustomPlugin() {
   // `options` and `context` are the target options and
@@ -41,7 +41,7 @@ function myCustomPlugin() {
         devtool: 'source-map', // Source map generation must be turned on
         plugins: [
           new DefinePlugin({
-            MERE_APP_VERSION: JSON.stringify(commitHash),
+            MERE_APP_VERSION: JSON.stringify(appVersion),
             IS_DEMO: JSON.stringify(process.env.IS_DEMO || 'disabled'),
           }),
         ],

@@ -25,7 +25,6 @@ services:
         condition: service_healthy
   app:
     image: cfu288/mere-medical:latest
-    container_name: mere-medical-app
     restart: unless-stopped
     init: true
     read_only: true

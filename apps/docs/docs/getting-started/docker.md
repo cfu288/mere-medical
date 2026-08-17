@@ -59,7 +59,6 @@ services:
         condition: service_healthy
   app:
     image: cfu288/mere-medical:latest
-    container_name: mere-medical-app
     restart: unless-stopped
     init: true
     read_only: true
@@ -111,7 +110,7 @@ Create a Caddyfile in the caddy folder with the following contents:
 ```text title="mere-medical/caddy/Caddyfile"
 meremedical.local {
 	tls internal
-	reverse_proxy mere-medical-app:8080
+	reverse_proxy app:8080
 }
 ```
 
