@@ -40,8 +40,12 @@ export const validSchema = z
       z
         .string()
         .date('Birthday is invalid')
-        // append T00:00:00 so the date parses in local time, not UTC
-        .transform((value) => new Date(`${value}T00:00:00`)),
+        .transform((value) => {
+          const [year, month, day] = value.split('-').map(Number);
+          const date = new Date(year, month - 1, day);
+          date.setFullYear(year);
+          return date;
+        }),
       z.literal('').transform(() => undefined),
       z.date().optional(),
     ]),
