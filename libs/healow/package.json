@@ -6,7 +6,7 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "scripts": {
-    "fetch-endpoints": "tsx fetchMetadata.ts --openssl-config=openssl.cnf --no-experimental-fetch"
+    "fetch-endpoints": "tsx fetchMetadata.ts"
   },
   "dependencies": {
     "tslib": "^2.3.0"

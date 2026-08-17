@@ -7,7 +7,7 @@
     "tsx": "^4.7.0"
   },
   "scripts": {
-    "fetch-endpoints": "tsx fetchMetadata.ts --openssl-config=openssl.cnf --no-experimental-fetch"
+    "fetch-endpoints": "tsx fetchMetadata.ts"
   },
   "dependencies": {
     "dotenv": "^16.3.1"
