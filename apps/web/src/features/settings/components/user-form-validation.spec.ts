@@ -39,6 +39,24 @@ describe('user form validation schema', () => {
     expect((values as { firstName: string }).firstName).toBe('Ada');
   });
 
+  it('trims whitespace from entered fields before validating', async () => {
+    const { values, errors } = await resolve({
+      ...validForm,
+      firstName: '  Ada ',
+      email: ' ada@example.com ',
+    });
+    expect(errors).toEqual({});
+    const v = values as { firstName: string; email: string };
+    expect(v.firstName).toBe('Ada');
+    expect(v.email).toBe('ada@example.com');
+  });
+
+  it('treats whitespace-only email as blank', async () => {
+    const { values, errors } = await resolve({ ...validForm, email: '   ' });
+    expect(errors).toEqual({});
+    expect((values as { email: string }).email).toBe('');
+  });
+
   it('rejects a malformed email with the visible message', async () => {
     const { errors } = await resolve({ ...validForm, email: 'not-an-email' });
     expect(Object.keys(errors)).toEqual(['email']);

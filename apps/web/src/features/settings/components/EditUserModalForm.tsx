@@ -31,10 +31,13 @@ export type NewUserFormFields = {
 // only fire validation on fields where the user has entered text
 export const validSchema = z
   .object({
-    firstName: z.string().optional(),
-    lastName: z.string().optional(),
+    firstName: z.string().trim().optional(),
+    lastName: z.string().trim().optional(),
     email: z
-      .union([z.string().email('Email must be valid'), z.literal('')])
+      .union([
+        z.string().trim().email('Email must be valid'),
+        z.string().trim().max(0),
+      ])
       .optional(),
     birthday: z.union([
       z
@@ -49,7 +52,7 @@ export const validSchema = z
       z.literal('').transform(() => undefined),
       z.date().optional(),
     ]),
-    gender: z.string().optional(),
+    gender: z.string().trim().optional(),
   })
   .passthrough();
 
