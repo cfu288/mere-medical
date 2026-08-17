@@ -1,2 +1,7 @@
 node_modules
+**/node_modules
 npm-debug.log
+dist
+.nx
+apps/docs/build
+apps/docs/.docusaurus

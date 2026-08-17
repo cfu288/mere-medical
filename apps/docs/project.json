@@ -9,7 +9,8 @@
       "command": "npx docusaurus build",
       "options": {
         "cwd": "apps/docs"
-      }
+      },
+      "outputs": ["{projectRoot}/build"]
     },
     "serve": {
       "command": "npx docusaurus start",
