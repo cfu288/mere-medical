@@ -49,7 +49,7 @@ COPY --from=build-web-stage /app/dist/apps/web/ /app/web/
 COPY --from=build-api-stage /app/dist/apps/api/ /app/api/
 COPY ./healthcheck.js /app/healthcheck.js
 
-USER node
+USER 1000
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
