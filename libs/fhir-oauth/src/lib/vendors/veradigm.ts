@@ -5,21 +5,29 @@ import type {
   WithIdToken,
 } from '../types.js';
 import { createOAuthError, OAuthErrors } from '../types.js';
-import { generateAuthorizationRequestState } from '../session.js';
-import { parseTokenResponse, isTokenExpired } from '../token-exchange.js';
+import {
+  generateAuthorizationRequestState,
+  generateCodeChallenge,
+} from '../session.js';
+import {
+  parseTokenResponse,
+  validateCallback,
+  isTokenExpired,
+} from '../token-exchange.js';
 import { parseJwtPayload } from '../jwt.js';
 
 export const VERADIGM_DEFAULT_SCOPES = [
   'launch/patient',
   'openid',
   'profile',
-  'user/*.read',
-  'patient/*.read',
+  'offline_access',
+  'patient/*.rs',
 ];
 
 export type VeradigmTokenSet = CoreTokenSet &
   WithIdToken & {
     patientId: string;
+    refreshToken?: string;
   };
 
 export interface VeradigmClient {
@@ -71,8 +79,8 @@ export function createVeradigmClient(): VeradigmClient {
   return {
     async initiateAuth(config) {
       const session = await generateAuthorizationRequestState({
-        usePkce: false,
-        useState: false,
+        usePkce: true,
+        useState: true,
         tenant: config.tenant,
       });
 
@@ -87,6 +95,16 @@ export function createVeradigmClient(): VeradigmClient {
         params.set('aud', config.tenant.fhirBaseUrl);
       }
 
+      if (session.state) {
+        params.set('state', session.state);
+      }
+
+      if (session.codeVerifier) {
+        const challenge = await generateCodeChallenge(session.codeVerifier);
+        params.set('code_challenge', challenge);
+        params.set('code_challenge_method', 'S256');
+      }
+
       let authUrl = config.tenant?.authUrl ?? '';
       if (authUrl.endsWith('/')) {
         authUrl = authUrl.slice(0, -1);
@@ -96,18 +114,11 @@ export function createVeradigmClient(): VeradigmClient {
       return { url, session };
     },
 
-    async handleCallback(params, config) {
-      const error = params.get('error');
-      if (error) {
-        throw createOAuthError(
-          error,
-          params.get('error_description') ?? 'OAuth error',
-        );
-      }
+    async handleCallback(params, config, session) {
+      const code = validateCallback(params, session);
 
-      const code = params.get('code');
-      if (!code) {
-        throw OAuthErrors.missingCode();
+      if (!session.codeVerifier) {
+        throw OAuthErrors.missingCodeVerifier();
       }
 
       if (!config.tenant?.tokenUrl) {
@@ -127,6 +138,7 @@ export function createVeradigmClient(): VeradigmClient {
           client_id: config.clientId,
           redirect_uri: config.redirectUri,
           code,
+          code_verifier: session.codeVerifier,
         }),
       });
 
@@ -139,38 +151,64 @@ export function createVeradigmClient(): VeradigmClient {
         );
       }
 
-      const accessTokenPayload = parseJwtPayload<VeradigmAccessTokenPayload>(
-        tokens.accessToken,
-      );
-      const patientId = accessTokenPayload.local_patient_id;
-
-      if (!patientId) {
-        throw createOAuthError(
-          'missing_patient',
-          'No local_patient_id in access token JWT',
-        );
-      }
+      const patientId =
+        typeof tokens.raw['patient'] === 'string'
+          ? tokens.raw['patient']
+          : extractVeradigmPatientId(tokens.accessToken);
 
       return {
         accessToken: tokens.accessToken,
         expiresAt: tokens.expiresAt,
         idToken: tokens.idToken,
+        refreshToken: tokens.refreshToken,
         patientId,
         raw: tokens.raw,
       };
     },
 
-    async refresh() {
-      throw createOAuthError(
-        'refresh_not_supported',
-        'Veradigm does not support refresh tokens - user must re-authenticate',
-      );
+    async refresh(tokens, config) {
+      if (!tokens.refreshToken) {
+        throw createOAuthError(
+          'missing_refresh_token',
+          'No refresh token available - user must re-authenticate',
+        );
+      }
+
+      if (!config.tenant?.tokenUrl) {
+        throw OAuthErrors.noTokenUrl();
+      }
+
+      let tokenUrl = config.tenant.tokenUrl;
+      if (tokenUrl.endsWith('/')) {
+        tokenUrl = tokenUrl.slice(0, -1);
+      }
+
+      const res = await fetch(tokenUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: tokens.refreshToken,
+          client_id: config.clientId,
+        }),
+      });
+
+      const newTokens = await parseTokenResponse(res);
+
+      return {
+        accessToken: newTokens.accessToken,
+        expiresAt: newTokens.expiresAt,
+        idToken: newTokens.idToken ?? tokens.idToken,
+        refreshToken: newTokens.refreshToken ?? tokens.refreshToken,
+        patientId: tokens.patientId,
+        raw: newTokens.raw,
+      };
     },
 
     isExpired: isTokenExpired,
 
-    canRefresh() {
-      return false;
+    canRefresh(tokens) {
+      return !!tokens.refreshToken;
     },
   };
 }
@@ -198,7 +236,7 @@ export function buildVeradigmOAuthConfig(
     scopes: options.scopes ?? VERADIGM_DEFAULT_SCOPES,
     tenant: {
       ...options.tenant,
-      fhirVersion: 'DSTU2',
+      fhirVersion: 'R4',
     },
   };
 }
@@ -211,5 +249,4 @@ export function buildVeradigmOAuthConfig(
  * https://developer.veradigm.com/Fhir/SMARTonFHIR
  * https://developer.veradigm.com/Fhir/Resources
  * R4 endpoints: https://open.platform.veradigm.com/fhirendpoints/download/R4?endpointFilter=Patient
- * DSTU2 endpoints: https://open.platform.veradigm.com/fhirendpoints/download/DSTU2
  */

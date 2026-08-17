@@ -214,11 +214,11 @@ export async function createConnection(
   return doc as RxDocument<AnyConnectionDocument>;
 }
 
-export async function updateConnection(
+export async function updateConnection<T extends ConnectionDocument>(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
   connectionId: string,
-  updates: Partial<ConnectionDocument>,
+  updates: Partial<T>,
 ): Promise<void> {
   const doc = await db.connection_documents
     .findOne({

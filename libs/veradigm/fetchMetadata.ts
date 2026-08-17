@@ -15,34 +15,41 @@ class TerminalColor {
     `${TerminalColor.Red}${str}${TerminalColor.Reset}`;
 }
 
+const ENDPOINTS_URL =
+  process.env['R4_ENDPOINTS_URL'] ??
+  'https://open.platform.veradigm.com/fhirendpoints/download/R4?endpointFilter=Patient';
+
 /**
- * This script is used to fetch the metadata for all of the DSTU2 endpoints listed by Epic.
+ * Fetches the Veradigm R4 patient endpoint directory
+ * (https://developer.veradigm.com/Fhir → Endpoint Directory) and each
+ * endpoint's CapabilityStatement to extract its OAuth URLs.
  */
 (async () => {
   try {
-    const URL = process.env['DSTU2_ENDPOINTS_URL'];
-    console.log('Starting DSTU2 Endpoint Metadata Fetcher for VERADIGM');
-    console.log(`Using URL: ${URL}`);
+    console.log('Starting R4 Endpoint Metadata Fetcher for VERADIGM');
+    console.log(`Using URL: ${ENDPOINTS_URL}`);
 
-    const data = await fetch(URL as string, {
+    const data = await fetch(ENDPOINTS_URL, {
       headers: {
-        Accept: 'application/json+fhir',
+        Accept: 'application/fhir+json',
       },
+      signal: AbortSignal.timeout(120_000),
     }).then((res) => res.json());
 
     let urls: {
       id: string;
       name: string;
       url: string;
-    }[] = data?.entry.map((i: any) => {
-      return {
-        id: i.resource.contained?.[0]?.id,
-        name: i.resource.contained?.[0]?.name,
-        url: i.resource?.address,
-      };
-    });
+    }[] = data?.entry
+      .filter((i: any) => i.resource?.resourceType === 'Endpoint')
+      .map((i: any) => {
+        return {
+          id: i.resource.id,
+          name: i.resource.contained?.[0]?.name ?? i.resource.name,
+          url: i.resource?.address,
+        };
+      });
 
-    // dedupe urls
     urls = urls.reduce((acc, current) => {
       const x = acc.find((item) => item.url === current.url);
       if (!x) {
@@ -67,8 +74,10 @@ class TerminalColor {
       const res = await (
         await fetch(meta_url, {
           headers: {
-            Accept: 'application/json+fhir',
+            // Versionless endpoints default to DSTU2: developer.veradigm.com/Fhir/EndpointDirectory
+            Accept: 'application/fhir+json; fhirVersion=4.0',
           },
+          signal: AbortSignal.timeout(30_000),
         })
       ).json();
 
@@ -145,7 +154,6 @@ class TerminalColor {
         const errorsRes = res
           .filter((i) => i.status === 'rejected')
           .map((i) => (i as PromiseRejectedResult).reason);
-        // print errors
         errorsRes.forEach((e) => console.error(e));
 
         results.push(...successRes);
@@ -158,48 +166,18 @@ class TerminalColor {
         errors.push(...errorsRes);
       }
 
-      /**
-       * Veradigm Sandbox Environments
-       *
-       * Documentation: https://developer.veradigm.com/Fhir/FHIR_Sandboxes
-       *
-       * NOTE: As of January 2025, both sandbox environments are non-functional:
-       *
-       * - Professional sandbox (FollowMyHealth):
-       *   Host: fhir.fhirpoint.open.allscripts.com
-       *   Auth: muauthentication.followmyhealth.com
-       *   Issue: OAuth callback (POST /api/Return) returns 500 Internal Server Error
-       *          after successful FollowMyHealth login
-       *
-       * - TouchWorks sandbox:
-       *   Host: tw181unityfhir.open.allscripts.com
-       *   Issue: DNS does not resolve (host no longer exists)
-       *
-       * Test credentials (when available):
-       * - Professional: donna.dobson_prounityfhir / Allscripts#1 (patient id: 19)
-       * - TouchWorks: allison.allscripts@tw181unityfhir.edu / Allscripts#1 (patient id: 19)
-       */
       results.push({
         id: 'sandbox_veradigm',
-        name: 'Veradigm Sandbox (Professional)',
-        url: 'https://fhir.fhirpoint.open.allscripts.com/fhirroute/open/CustProProdSand201SMART/',
+        name: 'Veradigm Sandbox',
+        url: 'https://fhir.fhirpoint.open.allscripts.com/fhirroute/open/CP00101/',
         token:
-          'https://open.allscripts.com/fhirroute/fmhpatientauth/0cd760ae-6ec5-4137-bf26-4269636b94ef/connect/token/',
+          'https://open.allscripts.com/fhirroute/patientauthv2/afdc1f7b-b362-4777-8ab3-83472abd0b8a/connect/token/',
         authorize:
-          'https://open.allscripts.com/fhirroute/fmhpatientauth/0cd760ae-6ec5-4137-bf26-4269636b94ef/connect/authorize/',
-      });
-      results.push({
-        id: 'sandbox_touchworks',
-        name: 'TouchWorks Sandbox (Offline)',
-        url: 'https://tw181unityfhir.open.allscripts.com/open/',
-        token:
-          'https://open.allscripts.com/fhirroute/patientauth/e75746a4-7f05-4b95-9ff5-44082c988959/connect/token/',
-        authorize:
-          'https://open.allscripts.com/fhirroute/patientauth/e75746a4-7f05-4b95-9ff5-44082c988959/connect/authorize/',
+          'https://open.allscripts.com/fhirroute/patientauthv2/afdc1f7b-b362-4777-8ab3-83472abd0b8a/connect/authorize/',
       });
 
       fs.writeFileSync(
-        './src/lib/data/DSTU2Endpoints.json',
+        './src/lib/data/R4Endpoints.json',
         JSON.stringify(results, null, 2),
       );
 
@@ -218,4 +196,4 @@ class TerminalColor {
   } catch (e) {
     console.error(e);
   }
-})().catch((e) => console.error(e));
+})();

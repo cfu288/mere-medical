@@ -51,6 +51,7 @@ const veradigmClient = createVeradigmClient();
 const healowClient = createHealowClient();
 const epicSession = createSessionManager('epic');
 const cernerSession = createSessionManager('cerner');
+const veradigmSession = createSessionManager('veradigm');
 const healowSession = createSessionManager('healow');
 
 /**
@@ -179,7 +180,7 @@ function initiateOnPatientAuth(config: AppConfig): string {
 
 /**
  * Initiates OAuth authorization flow for Veradigm (Allscripts) connections.
- * Veradigm does not use PKCE, so no session storage is needed.
+ * Generates PKCE challenge, stores session state, and returns the authorization URL.
  *
  * @param config - App configuration containing Veradigm client ID and public URL
  * @param baseUrl - Veradigm FHIR server base URL
@@ -212,7 +213,8 @@ async function initiateVeradigmAuth(
     },
   });
 
-  const { url } = await veradigmClient.initiateAuth(oauthConfig);
+  const { url, session } = await veradigmClient.initiateAuth(oauthConfig);
+  await veradigmSession.save(session);
   return url;
 }
 
