@@ -15,6 +15,7 @@ import {
   createVeradigmClient,
   buildVeradigmOAuthConfig,
 } from '@mere/fhir-oauth';
+import { useOAuthFlow } from '@mere/fhir-oauth/react';
 
 const veradigmClient = createVeradigmClient();
 
@@ -33,6 +34,10 @@ const VeradigmRedirect: React.FC = () => {
   const [error, setError] = useState('');
   const hasRun = useRef(false);
   const { search } = useLocation();
+  const { handleCallback, clearSession } = useOAuthFlow({
+    client: veradigmClient,
+    vendor: 'veradigm',
+  });
 
   useEffect(() => {
     if (isLoading || hasRun.current) return;
@@ -60,6 +65,7 @@ const VeradigmRedirect: React.FC = () => {
 
     if (errorMsg) {
       clearLocalStorage();
+      clearSession();
       setError(`${errorMsg}: ${errorMsgDescription || 'Unknown error'}`);
       return;
     }
@@ -73,6 +79,7 @@ const VeradigmRedirect: React.FC = () => {
       !user?.id
     ) {
       clearLocalStorage();
+      clearSession();
       notifyDispatch({
         type: 'set_notification',
         message: `Error adding connection: missing required parameters`,
@@ -84,6 +91,7 @@ const VeradigmRedirect: React.FC = () => {
 
     if (!config.VERADIGM_CLIENT_ID || !config.PUBLIC_URL) {
       clearLocalStorage();
+      clearSession();
       notifyDispatch({
         type: 'set_notification',
         message: 'Veradigm OAuth configuration is incomplete',
@@ -106,8 +114,7 @@ const VeradigmRedirect: React.FC = () => {
       },
     });
 
-    veradigmClient
-      .handleCallback(searchParams, oauthConfig, { startedAt: 0 })
+    handleCallback(searchParams, oauthConfig)
       .then((tokens) => {
         saveConnectionToDb({
           tokens,
@@ -143,7 +150,17 @@ const VeradigmRedirect: React.FC = () => {
           variant: 'error',
         });
       });
-  }, [config, isLoading, db, navigate, notifyDispatch, search, user]);
+  }, [
+    config,
+    isLoading,
+    db,
+    navigate,
+    notifyDispatch,
+    search,
+    user,
+    handleCallback,
+    clearSession,
+  ]);
 
   return (
     <AppPage

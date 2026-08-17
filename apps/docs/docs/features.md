@@ -48,7 +48,7 @@ Clicking on cards with lab results will show you the results of that card as wel
 
 ## Connect to Major Health Providers
 
-You can already log in with several major health providers like Epic MyChart, Cerner, Allscripts, and DrChrono/Onpatient. More coming soon!
+You can already log in with several major health providers like Epic MyChart, Cerner, Veradigm (formerly Allscripts), and DrChrono/Onpatient. More coming soon!
 <video controls width="100%">
 
   <source src="/vid/add-connection.webm" type="video/webm"/>

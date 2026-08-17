@@ -63,15 +63,12 @@ export interface VeradigmConnectionDocument extends ConnectionDocument {
   auth_uri: string | Location;
   token_uri: string | Location;
   tenant_id?: string;
+  patient?: string;
 }
 
 export type CreateVeradigmConnectionDocument = Omit<
   VeradigmConnectionDocument,
-  | 'last_refreshed'
-  | 'refresh_token'
-  | 'scope'
-  | 'last_sync_attempt'
-  | 'last_sync_was_error'
+  'last_refreshed' | 'scope' | 'last_sync_attempt' | 'last_sync_was_error'
 >;
 
 export type CreateEpicConnectionDocument = Omit<

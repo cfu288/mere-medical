@@ -1,6 +1,6 @@
-import VeradigmEndpoints from './data/DSTU2Endpoints.json';
+import VeradigmEndpoints from './data/R4Endpoints.json';
 
-export interface DSTU2Endpoint {
+export interface VeradigmEndpoint {
   id: string;
   url: string;
   name: string;
@@ -8,9 +8,9 @@ export interface DSTU2Endpoint {
   authorize?: string;
 }
 
-export const VeradigmDSTU2TenantEndpoints: DSTU2Endpoint[] =
+export const VeradigmR4TenantEndpoints: VeradigmEndpoint[] =
   Array.from(VeradigmEndpoints);
 
 export function getUniqueTenantCount(): number {
-  return VeradigmDSTU2TenantEndpoints.length;
+  return VeradigmR4TenantEndpoints.length;
 }

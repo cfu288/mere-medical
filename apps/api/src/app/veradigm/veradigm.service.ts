@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { VeradigmDSTU2TenantEndpoints, DSTU2Endpoint } from '@mere/veradigm';
+import { VeradigmR4TenantEndpoints, VeradigmEndpoint } from '@mere/veradigm';
 import { stringSimilarity } from '@mere/shared';
 
 @Injectable()
 export class VeradigmService {
-  private readonly items = VeradigmDSTU2TenantEndpoints;
+  private readonly items = VeradigmR4TenantEndpoints;
 
-  async queryTenants(query: string): Promise<DSTU2Endpoint[]> {
+  async queryTenants(query: string): Promise<VeradigmEndpoint[]> {
     return filteredItemsWithQuery(this.items, query);
   }
 }
 
-function filteredItemsWithQuery(items: DSTU2Endpoint[], query: string) {
+function filteredItemsWithQuery(items: VeradigmEndpoint[], query: string) {
   if (query === '' || query === undefined) {
     return items
       .filter(
