@@ -7,6 +7,12 @@ import {
 import { Request } from 'express';
 import { PublicUrlConfig } from '@mere/shared';
 import { ALLOWED_ORIGIN } from '../proxy.constants';
+import { serverVendorConfig } from '../../vendor-config.server';
+
+export const allowedOriginProvider = {
+  provide: ALLOWED_ORIGIN,
+  useFactory: () => serverVendorConfig().publicUrl,
+};
 
 @Injectable()
 export class OriginGuard implements CanActivate {

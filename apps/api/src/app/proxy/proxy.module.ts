@@ -13,15 +13,13 @@ import {
   ProxyModuleOptionsFactory,
 } from './interfaces';
 import {
-  ALLOWED_ORIGIN,
   defaultProxyOptions,
   HTTP_PROXY,
   PROXY_MODULE_OPTIONS,
 } from './proxy.constants';
-import { serverVendorConfig } from '../vendor-config.server';
 import { ProxyService } from './services';
 import { concatPath } from './utils';
-import { OriginGuard } from './guards';
+import { allowedOriginProvider, OriginGuard } from './guards';
 
 const proxyFactory = {
   provide: HTTP_PROXY,
@@ -126,10 +124,7 @@ const proxyFactory = {
     ProxyService,
     proxyFactory,
     OriginGuard,
-    {
-      provide: ALLOWED_ORIGIN,
-      useFactory: () => serverVendorConfig().publicUrl,
-    },
+    allowedOriginProvider,
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
   controllers: [ProxyController],
