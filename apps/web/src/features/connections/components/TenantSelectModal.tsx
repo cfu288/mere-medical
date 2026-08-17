@@ -31,6 +31,12 @@ import HealowLogo from '../../../assets/img/eclinicalworks-logo.jpeg';
 import AthenaLogo from '../../../assets/img/athena-logo.jpeg';
 import { useConfig } from '../../../app/providers/AppConfigProvider';
 import {
+  describeRequirement,
+  EnableRequirement,
+  parseVendorConfig,
+  VendorChannel,
+} from '@mere/shared';
+import {
   AthenaLocalStorageKeys,
   getLoginUrl as getAthenaLoginUrl,
 } from '../../../services/fhir/Athena';
@@ -52,12 +58,6 @@ const vendorPaths = {
   veradigm: {
     DSTU2: '/api/v1/veradigm/tenants?',
   },
-  onpatient: {
-    DSTU2: '/api/v1/onpatient/tenants?',
-  },
-  va: {
-    DSTU2: '/api/v1/va/tenants?',
-  },
   any: {
     R4: '/api/v1/r4/tenants?',
     DSTU2: '/api/v1/dstu2/tenants?',
@@ -66,7 +66,7 @@ const vendorPaths = {
 
 type SearchableVendor = keyof typeof vendorPaths;
 
-export type EMRVendor = SearchableVendor | 'athena';
+export type EMRVendor = Exclude<SearchableVendor, 'any'>;
 
 type SearchSelection = {
   [V in SearchableVendor]: {
@@ -85,10 +85,6 @@ function getApiPath(selection: SearchSelection): string {
       return vendorPaths.healow[selection.version];
     case 'veradigm':
       return vendorPaths.veradigm[selection.version];
-    case 'onpatient':
-      return vendorPaths.onpatient[selection.version];
-    case 'va':
-      return vendorPaths.va[selection.version];
     case 'any': // Search All
       return vendorPaths.any[selection.version];
   }
@@ -110,17 +106,23 @@ type RemoteData<T> =
   | { status: 'ok'; value: T }
   | { status: 'error' };
 
+type SearchContext = {
+  selection: SearchSelection;
+  publicUrl: string;
+  sandboxOnly: boolean;
+};
+
 type TenantSelectState =
   | { step: 'pickVendor' }
   | {
       step: 'search';
-      selection: SearchSelection;
+      search: SearchContext;
       query: string;
       results: RemoteData<UnifiedDSTU2Endpoint[]>;
     };
 
 type TenantSelectAction =
-  | { type: 'selectVendor'; payload: SearchSelection }
+  | { type: 'selectVendor'; payload: SearchContext }
   | { type: 'setQuery'; payload: string }
   | { type: 'setResults'; payload: UnifiedDSTU2Endpoint[] }
   | { type: 'searchFailed' }
@@ -128,22 +130,19 @@ type TenantSelectAction =
 
 const defaultState: TenantSelectState = { step: 'pickVendor' };
 
+type DisabledReason =
+  | { kind: 'message'; text: string }
+  | { kind: 'needsProxy' };
+
 type SourceItem = {
   title: string;
   source: string;
   alt?: string;
-  enabled: boolean;
-  disabledMessage?: string;
   legacy?: boolean;
 } & (
-  | { kind: 'search'; selection: SearchSelection }
-  | { kind: 'link'; href: string }
-  | { kind: 'direct'; onSelect: () => void }
+  | { enabled: true; activate: () => void }
+  | { enabled: false; reason: DisabledReason }
 );
-
-function isConfigured(value: string | undefined): boolean {
-  return !!value && !value.startsWith('$');
-}
 
 export function TenantSelectModal({
   open,
@@ -159,41 +158,14 @@ export function TenantSelectModal({
     name: string,
     id: string,
     vendor: EMRVendor,
-    fhirVersion?: 'DSTU2' | 'R4',
+    fhirVersion: 'DSTU2' | 'R4',
   ) => void;
 }) {
   const userPreferences = useUserPreferences(),
     notifyDispatch = useNotificationDispatch();
   const config = useConfig();
 
-  const epicR4ProductionConfigured =
-    isConfigured(config.EPIC_CLIENT_ID_R4) ||
-    isConfigured(config.EPIC_CLIENT_ID);
-  const epicR4SandboxConfigured =
-    isConfigured(config.EPIC_SANDBOX_CLIENT_ID_R4) ||
-    isConfigured(config.EPIC_SANDBOX_CLIENT_ID);
-  const epicR4Enabled = epicR4ProductionConfigured || epicR4SandboxConfigured;
-  const epicR4SandboxOnly =
-    epicR4SandboxConfigured && !epicR4ProductionConfigured;
-
-  const epicDstu2ProductionConfigured =
-    isConfigured(config.EPIC_CLIENT_ID_DSTU2) ||
-    isConfigured(config.EPIC_CLIENT_ID);
-  const epicDstu2SandboxConfigured =
-    isConfigured(config.EPIC_SANDBOX_CLIENT_ID_DSTU2) ||
-    isConfigured(config.EPIC_SANDBOX_CLIENT_ID);
-  const epicDstu2Enabled =
-    epicDstu2ProductionConfigured || epicDstu2SandboxConfigured;
-  const epicDstu2SandboxOnly =
-    epicDstu2SandboxConfigured && !epicDstu2ProductionConfigured;
-
-  const cernerEnabled = isConfigured(config.CERNER_CLIENT_ID);
-  const veradigmEnabled = isConfigured(config.VERADIGM_CLIENT_ID);
-  const vaEnabled = isConfigured(config.VA_CLIENT_ID);
-  const healowEnabled = isConfigured(config.HEALOW_CLIENT_ID);
-  const athenaProductionEnabled = isConfigured(config.ATHENA_CLIENT_ID);
-  const athenaSandboxEnabled = isConfigured(config.ATHENA_SANDBOX_CLIENT_ID);
-  const athenaEnabled = athenaProductionEnabled || athenaSandboxEnabled;
+  const vendors = useMemo(() => parseVendorConfig(config), [config]);
 
   const [state, dispatch] = useReducer(
     (
@@ -204,7 +176,7 @@ export function TenantSelectModal({
         case 'selectVendor':
           return {
             step: 'search',
-            selection: action.payload,
+            search: action.payload,
             query: '',
             results: { status: 'loading' },
           };
@@ -226,93 +198,135 @@ export function TenantSelectModal({
     defaultState,
   );
 
-  const [vaUrl, setVaUrl] = useState<string & Location>(
-    '' as string & Location,
-  );
+  const [vaUrl, setVaUrl] = useState<RemoteData<string>>({
+    status: 'loading',
+  });
 
   useEffect(() => {
-    getVaLoginUrl(config).then((url) => {
-      setVaUrl(url);
-    });
+    getVaLoginUrl(config)
+      .then((url) => setVaUrl({ status: 'ok', value: url }))
+      .catch(() => setVaUrl({ status: 'error' }));
   }, [config]);
 
   const ConnectionSources: SourceItem[] = useMemo(() => {
-    const sources: SourceItem[] = [
-      {
-        title: 'MyChart',
-        kind: 'search',
-        selection: { vendor: 'epic', version: 'R4' },
-        source: EpicLogo,
-        alt: epicR4SandboxOnly
-          ? 'Sandbox only - set EPIC_CLIENT_ID_R4 for production'
-          : undefined,
-        enabled: epicR4Enabled,
-        disabledMessage:
-          'Provide EPIC_CLIENT_ID_R4 or EPIC_SANDBOX_CLIENT_ID_R4 env var to enable',
-      },
-      {
-        title: 'Cerner',
-        kind: 'search',
-        selection: { vendor: 'cerner', version: 'R4' },
-        source: CernerLogo,
-        enabled: cernerEnabled,
-        disabledMessage: 'Provide CERNER_CLIENT_ID env var to enable',
-      },
-      {
-        title: 'Allscripts',
-        kind: 'search',
-        selection: { vendor: 'veradigm', version: 'DSTU2' },
-        source: VeradigmLogo,
-        alt: 'Veradigm',
-        enabled: veradigmEnabled,
-        disabledMessage: 'Provide VERADIGM_CLIENT_ID env var to enable',
-      },
-      {
+    const missingConfig = (channel: {
+      enableWith: EnableRequirement;
+    }): DisabledReason => ({
+      kind: 'message',
+      text: `Provide ${describeRequirement(channel.enableWith)} env var to enable`,
+    });
+
+    const searchItem = (
+      base: { title: string; source: string; alt?: string; legacy?: boolean },
+      selection: SearchSelection,
+      channel?: VendorChannel,
+    ): SourceItem => {
+      if (channel && channel.status === 'disabled') {
+        return { ...base, enabled: false, reason: missingConfig(channel) };
+      }
+      if (vendors.publicUrl.status !== 'configured') {
+        return {
+          ...base,
+          enabled: false,
+          reason: {
+            kind: 'message',
+            text:
+              vendors.publicUrl.status === 'invalid'
+                ? 'PUBLIC_URL is set but is not a valid URL'
+                : 'Provide PUBLIC_URL to enable',
+          },
+        };
+      }
+      const search: SearchContext = {
+        selection,
+        publicUrl: vendors.publicUrl.value,
+        sandboxOnly: channel?.status === 'sandbox-only',
+      };
+      return {
+        ...base,
+        enabled: true,
+        activate: () => dispatch({ type: 'selectVendor', payload: search }),
+      };
+    };
+
+    const onPatientItem = ((): SourceItem => {
+      const base = {
         title: 'OnPatient',
-        kind: 'link',
         source: OnpatientLogo,
         alt: 'Dr. Chrono',
-        href: buildOnPatientAuthUrl({
-          clientId: config.ONPATIENT_CLIENT_ID || '',
-          publicUrl: config.PUBLIC_URL || '',
-          redirectPath: '/api/v1/onpatient/callback',
-        }),
-        enabled:
-          isConfigured(config.ONPATIENT_CLIENT_ID) &&
-          !!userPreferences?.use_proxy,
-        disabledMessage: !isConfigured(config.ONPATIENT_CLIENT_ID)
-          ? 'Provide ONPATIENT_CLIENT_ID env var to enable'
-          : undefined,
-      },
-      {
+      };
+      if (vendors.onpatient.status === 'disabled') {
+        return {
+          ...base,
+          enabled: false,
+          reason: missingConfig(vendors.onpatient),
+        };
+      }
+      if (!userPreferences?.use_proxy) {
+        return { ...base, enabled: false, reason: { kind: 'needsProxy' } };
+      }
+      const href = buildOnPatientAuthUrl({
+        clientId: vendors.onpatient.production.value,
+        publicUrl: vendors.onpatient.publicUrl,
+        redirectPath: '/api/v1/onpatient/callback',
+      });
+      return {
+        ...base,
+        enabled: true,
+        activate: () => {
+          window.location.href = href;
+        },
+      };
+    })();
+
+    const vaItem = ((): SourceItem => {
+      const base = {
         title: 'Veterans Affairs',
-        kind: 'link',
         source: VALogo,
         alt: 'Sandbox Only',
-        href: vaUrl,
-        enabled: vaEnabled,
-        disabledMessage: 'Provide VA_CLIENT_ID env var to enable',
-      },
-      {
-        title: 'Healow',
-        kind: 'search',
-        selection: { vendor: 'healow', version: 'R4' },
-        source: HealowLogo,
-        alt: 'eClinicalWorks',
-        enabled: healowEnabled,
-        disabledMessage: 'Provide HEALOW_CLIENT_ID env var to enable',
-      },
-      {
-        title: 'Athena Health',
-        kind: 'direct',
-        source: AthenaLogo,
-        alt: athenaProductionEnabled ? undefined : 'Sandbox Only',
-        enabled: athenaEnabled,
-        disabledMessage: 'Provide ATHENA_CLIENT_ID env var to enable',
-        onSelect: () => {
-          const environment = athenaProductionEnabled
-            ? 'production'
-            : 'preview';
+      };
+      if (vendors.va.status === 'disabled') {
+        return { ...base, enabled: false, reason: missingConfig(vendors.va) };
+      }
+      if (vaUrl.status !== 'ok') {
+        return {
+          ...base,
+          enabled: false,
+          reason: {
+            kind: 'message',
+            text:
+              vaUrl.status === 'loading'
+                ? 'Preparing VA login...'
+                : 'Unable to prepare the VA login',
+          },
+        };
+      }
+      const href = vaUrl.value;
+      return {
+        ...base,
+        enabled: true,
+        activate: () => {
+          window.location.href = href;
+        },
+      };
+    })();
+
+    const athenaItem = ((): SourceItem => {
+      const base = { title: 'Athena Health', source: AthenaLogo };
+      if (vendors.athena.status === 'disabled') {
+        return {
+          ...base,
+          enabled: false,
+          reason: missingConfig(vendors.athena),
+        };
+      }
+      const environment =
+        vendors.athena.status === 'production' ? 'production' : 'preview';
+      return {
+        ...base,
+        alt: environment === 'production' ? undefined : 'Sandbox Only',
+        enabled: true,
+        activate: () => {
           localStorage.setItem(
             AthenaLocalStorageKeys.ATHENA_ENVIRONMENT,
             environment,
@@ -321,64 +335,77 @@ export function TenantSelectModal({
             window.location.href = url;
           });
         },
-      },
-      {
-        title: 'Search All',
-        kind: 'search',
-        selection: { vendor: 'any', version: 'R4' },
-        source: '',
-        alt: 'Search all supported health systems',
-        enabled: true,
-      },
-      {
-        title: 'Search All Legacy',
-        kind: 'search',
-        selection: { vendor: 'any', version: 'DSTU2' },
-        source: '',
-        alt: 'Search all supported legacy health systems',
-        enabled: true,
-        legacy: true,
-      },
-      {
-        title: 'Cerner Legacy',
-        kind: 'search',
-        selection: { vendor: 'cerner', version: 'DSTU2' },
-        source: CernerLogo,
-        enabled: cernerEnabled,
-        disabledMessage: 'Provide CERNER_CLIENT_ID env var to enable',
-        legacy: true,
-      },
-      {
-        title: 'MyChart Legacy',
-        kind: 'search',
-        selection: { vendor: 'epic', version: 'DSTU2' },
-        source: EpicLogo,
-        alt: epicDstu2SandboxOnly
-          ? 'Sandbox only - set EPIC_CLIENT_ID_DSTU2 for production'
-          : undefined,
-        enabled: epicDstu2Enabled,
-        disabledMessage:
-          'Provide EPIC_CLIENT_ID_DSTU2 or EPIC_SANDBOX_CLIENT_ID_DSTU2 env var to enable',
-        legacy: true,
-      },
-    ];
+      };
+    })();
 
-    return sources;
-  }, [
-    config,
-    userPreferences?.use_proxy,
-    vaUrl,
-    epicR4Enabled,
-    epicR4SandboxOnly,
-    epicDstu2Enabled,
-    epicDstu2SandboxOnly,
-    cernerEnabled,
-    veradigmEnabled,
-    vaEnabled,
-    healowEnabled,
-    athenaEnabled,
-    athenaProductionEnabled,
-  ]);
+    return [
+      searchItem(
+        {
+          title: 'MyChart',
+          source: EpicLogo,
+          alt:
+            vendors.epicR4.status === 'sandbox-only'
+              ? 'Sandbox only - set EPIC_CLIENT_ID_R4 for production'
+              : undefined,
+        },
+        { vendor: 'epic', version: 'R4' },
+        vendors.epicR4,
+      ),
+      searchItem(
+        { title: 'Cerner', source: CernerLogo },
+        { vendor: 'cerner', version: 'R4' },
+        vendors.cerner,
+      ),
+      searchItem(
+        { title: 'Allscripts', source: VeradigmLogo, alt: 'Veradigm' },
+        { vendor: 'veradigm', version: 'DSTU2' },
+        vendors.veradigm,
+      ),
+      onPatientItem,
+      vaItem,
+      searchItem(
+        { title: 'Healow', source: HealowLogo, alt: 'eClinicalWorks' },
+        { vendor: 'healow', version: 'R4' },
+        vendors.healow,
+      ),
+      athenaItem,
+      searchItem(
+        {
+          title: 'Search All',
+          source: '',
+          alt: 'Search all supported health systems',
+        },
+        { vendor: 'any', version: 'R4' },
+      ),
+      searchItem(
+        {
+          title: 'Search All Legacy',
+          source: '',
+          alt: 'Search all supported legacy health systems',
+          legacy: true,
+        },
+        { vendor: 'any', version: 'DSTU2' },
+      ),
+      searchItem(
+        { title: 'Cerner Legacy', source: CernerLogo, legacy: true },
+        { vendor: 'cerner', version: 'DSTU2' },
+        vendors.cerner,
+      ),
+      searchItem(
+        {
+          title: 'MyChart Legacy',
+          source: EpicLogo,
+          legacy: true,
+          alt:
+            vendors.epicDstu2.status === 'sandbox-only'
+              ? 'Sandbox only - set EPIC_CLIENT_ID_DSTU2 for production'
+              : undefined,
+        },
+        { vendor: 'epic', version: 'DSTU2' },
+        vendors.epicDstu2,
+      ),
+    ];
+  }, [config, userPreferences?.use_proxy, vaUrl, vendors]);
 
   const mainSources = useMemo(
     () => ConnectionSources.filter((s) => !s.legacy),
@@ -390,35 +417,22 @@ export function TenantSelectModal({
     [ConnectionSources],
   );
 
-  const selection = state.step === 'search' ? state.selection : null;
+  const search = state.step === 'search' ? state.search : null;
   const query = state.step === 'search' ? state.query : '';
 
   useEffect(() => {
-    if (!selection) return;
-
-    if (!config.PUBLIC_URL) {
-      notifyDispatch({
-        type: 'set_notification',
-        message: 'Configuration not loaded. Please try again.',
-        variant: 'error',
-      });
-      dispatch({ type: 'searchFailed' });
-      return;
-    }
-
-    // Epic provides separate client ids for sandbox only, we detect it here so we can provide conditional rendering later depending on which env variables are provided
-    const epicSandboxOnly =
-      selection.vendor === 'epic' &&
-      (selection.version === 'R4' ? epicR4SandboxOnly : epicDstu2SandboxOnly);
+    if (!search) return;
 
     const params: Record<string, string> = { query };
-    if (epicSandboxOnly) {
+    if (search.sandboxOnly) {
       params['sandboxOnly'] = 'true';
     }
 
     const abortController = new AbortController();
     fetch(
-      config.PUBLIC_URL + getApiPath(selection) + new URLSearchParams(params),
+      search.publicUrl +
+        getApiPath(search.selection) +
+        new URLSearchParams(params),
       {
         signal: abortController.signal,
       },
@@ -438,14 +452,7 @@ export function TenantSelectModal({
     return () => {
       abortController.abort();
     };
-  }, [
-    selection,
-    query,
-    notifyDispatch,
-    config.PUBLIC_URL,
-    epicR4SandboxOnly,
-    epicDstu2SandboxOnly,
-  ]);
+  }, [search, query, notifyDispatch]);
 
   return (
     <Modal
@@ -470,143 +477,71 @@ export function TenantSelectModal({
               >
                 {mainSources.map((file) => (
                   <li key={file.title} className="relative">
-                    {file.kind === 'link' ? (
-                      <div
-                        className={
-                          file.enabled ? 'cursor-pointer' : 'cursor-not-allowed'
+                    <div
+                      className={`aspect-h-7 aspect-w-10 focus-within:ring-primary-500 group block w-full overflow-hidden rounded-lg transition-all focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 ${
+                        file.enabled
+                          ? 'bg-primary-700 hover:bg-primary-600 cursor-pointer'
+                          : 'bg-gray-400 cursor-not-allowed'
+                      }`}
+                      onClick={() => {
+                        if (!file.enabled) return;
+                        if (IS_DEMO === 'enabled') {
+                          notifyDispatch({
+                            type: 'set_notification',
+                            message:
+                              'Adding new connections is disabled in demo mode',
+                            variant: 'error',
+                          });
+                          return;
                         }
-                        onClick={() => {
-                          if (!file.enabled) return;
-                          if (IS_DEMO === 'enabled') {
-                            notifyDispatch({
-                              type: 'set_notification',
-                              message:
-                                'Adding new connections is disabled in demo mode',
-                              variant: 'error',
-                            });
-                            return;
-                          }
-                          window.location.href = file.href;
-                        }}
+                        file.activate();
+                      }}
+                    >
+                      {file.source !== '' ? (
+                        <img
+                          src={file.source}
+                          alt={file.title}
+                          className={`pointer-events-none object-cover ${file.enabled ? 'group-hover:opacity-75' : 'opacity-50'}`}
+                        />
+                      ) : (
+                        <div className="text-primary-100 pointer-events-none flex items-center justify-center text-3xl font-bold">
+                          {file.title}
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        className="absolute inset-0 focus:outline-none"
                       >
-                        <div
-                          className={`aspect-h-7 aspect-w-10 focus-within:ring-primary-500 group block w-full overflow-hidden rounded-lg transition-all focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 ${
-                            file.enabled
-                              ? 'bg-primary-700 hover:bg-primary-600'
-                              : 'bg-gray-400'
-                          }`}
-                        >
-                          {file.source !== '' ? (
-                            <img
-                              src={file.source}
-                              alt={file.title}
-                              className={`pointer-events-none object-cover ${file.enabled ? 'group-hover:opacity-75' : 'opacity-50'}`}
-                            />
-                          ) : (
-                            <div className="text-primary-100 pointer-events-none flex items-center justify-center text-3xl font-bold">
-                              {file.title}
-                            </div>
-                          )}
-                          <button
-                            type="button"
-                            className="absolute inset-0 focus:outline-none"
-                          >
-                            <span className="sr-only">{`Select ${file.title}`}</span>
-                          </button>
-                        </div>
-                        <p className="pointer-events-none mt-2 block truncate text-sm font-medium text-gray-900">
-                          {file.title}
+                        <span className="sr-only">{`Select ${file.title}`}</span>
+                      </button>
+                    </div>
+                    <p className="pointer-events-none mt-2 block truncate text-sm font-medium text-gray-900">
+                      {file.title}
+                    </p>
+                    {!file.enabled ? (
+                      file.reason.kind === 'message' ? (
+                        <p className="block text-sm font-medium text-gray-500">
+                          {file.reason.text}
                         </p>
-                        {!file.enabled ? (
-                          file.disabledMessage ? (
-                            <p className="block text-sm font-medium text-gray-500">
-                              {file.disabledMessage}
-                            </p>
-                          ) : (
-                            <p className="pointer-events-auto relative z-10 block text-sm font-medium text-gray-700">
-                              To enable, go to{' '}
-                              <Link
-                                className="text-primary hover:text-primary-500 w-full text-center underline"
-                                to={`${Routes.Settings}#use_proxy`}
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                the settings page
-                              </Link>{' '}
-                              and enable the <code>use proxy</code> setting.
-                            </p>
-                          )
-                        ) : (
-                          <>
-                            {file.alt && (
-                              <p className="pointer-events-none block text-sm font-medium text-gray-700">
-                                {file.alt}
-                              </p>
-                            )}
-                          </>
-                        )}
-                      </div>
+                      ) : (
+                        <p className="pointer-events-auto relative z-10 block text-sm font-medium text-gray-700">
+                          To enable, go to{' '}
+                          <Link
+                            className="text-primary hover:text-primary-500 w-full text-center underline"
+                            to={`${Routes.Settings}#use_proxy`}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            the settings page
+                          </Link>{' '}
+                          and enable the <code>use proxy</code> setting.
+                        </p>
+                      )
                     ) : (
-                      <>
-                        <div
-                          className={`aspect-h-7 aspect-w-10 focus-within:ring-primary-500 group block w-full overflow-hidden rounded-lg transition-all focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 ${
-                            file.enabled
-                              ? 'bg-primary-700 hover:bg-primary-600 cursor-pointer'
-                              : 'bg-gray-400 cursor-not-allowed'
-                          }`}
-                          onClick={() => {
-                            if (!file.enabled) return;
-                            if (IS_DEMO === 'enabled') {
-                              notifyDispatch({
-                                type: 'set_notification',
-                                message:
-                                  'Adding new connections is disabled in demo mode',
-                                variant: 'error',
-                              });
-                              return;
-                            }
-                            if (file.kind === 'direct') {
-                              file.onSelect();
-                            } else {
-                              dispatch({
-                                type: 'selectVendor',
-                                payload: file.selection,
-                              });
-                            }
-                          }}
-                        >
-                          {file.source !== '' ? (
-                            <img
-                              src={file.source}
-                              alt={file.title}
-                              className={`pointer-events-none object-cover ${file.enabled ? 'group-hover:opacity-75' : 'opacity-50'}`}
-                            />
-                          ) : (
-                            <div className="text-primary-100 pointer-events-none flex items-center justify-center text-3xl font-bold">
-                              {file.title}
-                            </div>
-                          )}
-                          <button
-                            type="button"
-                            className="absolute inset-0 focus:outline-none"
-                          >
-                            <span className="sr-only">{`Select ${file.title}`}</span>
-                          </button>
-                        </div>
-                        <p className="pointer-events-none mt-2 block truncate text-sm font-medium text-gray-900">
-                          {file.title}
+                      file.alt && (
+                        <p className="pointer-events-none block text-sm font-medium text-gray-700">
+                          {file.alt}
                         </p>
-                        {!file.enabled && file.disabledMessage ? (
-                          <p className="block text-sm font-medium text-gray-500">
-                            {file.disabledMessage}
-                          </p>
-                        ) : (
-                          file.alt && (
-                            <p className="pointer-events-none block text-sm font-medium text-gray-700">
-                              {file.alt}
-                            </p>
-                          )
-                        )}
-                      </>
+                      )
                     )}
                   </li>
                 ))}
@@ -651,11 +586,7 @@ export function TenantSelectModal({
                                   });
                                   return;
                                 }
-                                if (file.kind !== 'search') return;
-                                dispatch({
-                                  type: 'selectVendor',
-                                  payload: file.selection,
-                                });
+                                file.activate();
                               }}
                             >
                               {file.source !== '' ? (
@@ -679,17 +610,17 @@ export function TenantSelectModal({
                             <p className="pointer-events-none mt-2 block truncate text-sm font-medium text-gray-900">
                               {file.title}
                             </p>
-                            {!file.enabled && file.disabledMessage ? (
-                              <p className="block text-sm font-medium text-gray-500">
-                                {file.disabledMessage}
-                              </p>
-                            ) : (
-                              file.alt && (
-                                <p className="pointer-events-none block text-sm font-medium text-gray-700">
-                                  {file.alt}
-                                </p>
-                              )
-                            )}
+                            {!file.enabled
+                              ? file.reason.kind === 'message' && (
+                                  <p className="block text-sm font-medium text-gray-500">
+                                    {file.reason.text}
+                                  </p>
+                                )
+                              : file.alt && (
+                                  <p className="pointer-events-none block text-sm font-medium text-gray-700">
+                                    {file.alt}
+                                  </p>
+                                )}
                           </li>
                         ))}
                       </ul>
@@ -734,9 +665,9 @@ export function TenantSelectModal({
                     // Cross-vendor searches resolve the concrete vendor from
                     // the selected tenant itself
                     const vendor =
-                      state.selection.vendor === 'any'
+                      state.search.selection.vendor === 'any'
                         ? s.vendor && wireVendorMap[s.vendor]
-                        : state.selection.vendor;
+                        : state.search.selection.vendor;
                     if (!vendor) {
                       notifyDispatch({
                         type: 'set_notification',
@@ -752,7 +683,7 @@ export function TenantSelectModal({
                       s.name,
                       s.id,
                       vendor,
-                      state.selection.version,
+                      state.search.selection.version,
                     );
                     setOpen(false);
                   }}

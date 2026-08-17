@@ -2,21 +2,49 @@ import { useLocalConfig } from '../../../app/providers/LocalConfigProvider';
 import { useDeveloperLogs } from '../../../app/providers/DeveloperLogsProvider';
 import { Console } from 'console-feed';
 import { useConfig } from '../../../app/providers/AppConfigProvider';
+import {
+  describeRequirement,
+  isConfigured,
+  parseVendorConfig,
+  vendorStatusEntries,
+  VendorChannel,
+} from '@mere/shared';
 
-function isConfigured(value: string | undefined): boolean {
-  return !!value && !value.startsWith('$');
+function channelStatus(channel: VendorChannel) {
+  switch (channel.status) {
+    case 'production':
+      return <span className="text-green-600">Production</span>;
+    case 'sandbox-only':
+      return <span className="text-yellow-600">Sandbox only</span>;
+    case 'disabled':
+      return <span className="text-red-500">Not configured</span>;
+  }
+}
+
+function channelDetail(channel: VendorChannel): string {
+  switch (channel.status) {
+    case 'production':
+      return channel.sandbox
+        ? `via ${channel.production.envVar}, sandbox via ${channel.sandbox.envVar}`
+        : `via ${channel.production.envVar}`;
+    case 'sandbox-only':
+      return `via ${channel.sandbox.envVar}`;
+    case 'disabled':
+      return `set ${describeRequirement(channel.enableWith)} to enable`;
+  }
 }
 
 export function DeveloperSettingsGroup() {
   const localConfig = useLocalConfig();
   const config = useConfig();
+  const providerEntries = vendorStatusEntries(parseVendorConfig(config));
 
   const buildVars = [
     { name: 'IS_DEMO', value: IS_DEMO },
     { name: 'MERE_APP_VERSION', value: MERE_APP_VERSION },
   ];
 
-  const envVars = [
+  const envVarValues = [
     { name: 'PUBLIC_URL', value: config.PUBLIC_URL },
     { name: 'EPIC_CLIENT_ID', value: config.EPIC_CLIENT_ID },
     { name: 'EPIC_CLIENT_ID_DSTU2', value: config.EPIC_CLIENT_ID_DSTU2 },
@@ -35,7 +63,22 @@ export function DeveloperSettingsGroup() {
     { name: 'VA_CLIENT_ID', value: config.VA_CLIENT_ID },
     { name: 'ONPATIENT_CLIENT_ID', value: config.ONPATIENT_CLIENT_ID },
     { name: 'HEALOW_CLIENT_ID', value: config.HEALOW_CLIENT_ID },
+    { name: 'ATHENA_CLIENT_ID', value: config.ATHENA_CLIENT_ID },
+    {
+      name: 'ATHENA_SANDBOX_CLIENT_ID',
+      value: config.ATHENA_SANDBOX_CLIENT_ID,
+    },
   ];
+
+  const envVars = envVarValues.map(({ name, value }) =>
+    isConfigured(value)
+      ? {
+          name,
+          configured: true,
+          display: value.length > 20 ? `${value.substring(0, 20)}...` : value,
+        }
+      : { name, configured: false, display: value || '(not set)' },
+  );
 
   if (!localConfig.developer_mode_enabled) {
     return null;
@@ -86,17 +129,41 @@ export function DeveloperSettingsGroup() {
               >
                 <td className="py-2 font-mono text-xs">{env.name}</td>
                 <td className="py-2">
-                  {isConfigured(env.value) ? (
+                  {env.configured ? (
                     <span className="text-green-600">✓</span>
                   ) : (
                     <span className="text-red-500">✗</span>
                   )}
                 </td>
                 <td className="py-2 font-mono text-xs text-gray-600">
-                  {isConfigured(env.value)
-                    ? env.value?.substring(0, 20) +
-                      (env.value && env.value.length > 20 ? '...' : '')
-                    : env.value || '(not set)'}
+                  {env.display}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="pb-2 text-lg font-bold">Provider Status</div>
+      <div className="mb-4 rounded border border-gray-200 bg-gray-50 p-4">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-gray-200">
+              <th className="pb-2 text-left font-medium">Provider</th>
+              <th className="pb-2 text-left font-medium">Status</th>
+              <th className="pb-2 text-left font-medium">Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            {providerEntries.map((entry) => (
+              <tr
+                key={entry.label}
+                className="border-b border-gray-100 last:border-0"
+              >
+                <td className="py-2 text-xs">{entry.label}</td>
+                <td className="py-2 text-xs">{channelStatus(entry.channel)}</td>
+                <td className="py-2 font-mono text-xs text-gray-600">
+                  {channelDetail(entry.channel)}
+                  {entry.note ? ` — ${entry.note}` : ''}
                 </td>
               </tr>
             ))}

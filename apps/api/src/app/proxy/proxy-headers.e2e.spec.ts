@@ -8,6 +8,7 @@ import { ProxyController } from './controllers/proxy.controller';
 import { ProxyService } from './services/proxy.service';
 import { OriginGuard } from './guards/origin.guard';
 import {
+  ALLOWED_ORIGIN,
   HTTP_PROXY,
   PROXY_MODULE_OPTIONS,
   defaultProxyOptions,
@@ -120,6 +121,14 @@ describe('Proxy Header Filtering E2E', () => {
           },
         },
         OriginGuard,
+        {
+          provide: ALLOWED_ORIGIN,
+          useValue: {
+            status: 'configured',
+            value: 'https://app.example.com',
+            origin: 'https://app.example.com',
+          },
+        },
         { provide: APP_GUARD, useClass: ThrottlerGuard },
       ],
     }).compile();

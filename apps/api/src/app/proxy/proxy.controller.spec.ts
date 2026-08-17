@@ -6,7 +6,11 @@ import request from 'supertest';
 import { ProxyController } from './controllers/proxy.controller';
 import { ProxyService } from './services/proxy.service';
 import { OriginGuard } from './guards/origin.guard';
-import { HTTP_PROXY, PROXY_MODULE_OPTIONS } from './proxy.constants';
+import {
+  ALLOWED_ORIGIN,
+  HTTP_PROXY,
+  PROXY_MODULE_OPTIONS,
+} from './proxy.constants';
 
 describe('ProxyController Origin Validation', () => {
   let app: INestApplication;
@@ -31,6 +35,14 @@ describe('ProxyController Origin Validation', () => {
         { provide: HTTP_PROXY, useValue: mockProxy },
         { provide: PROXY_MODULE_OPTIONS, useValue: { services: [] } },
         OriginGuard,
+        {
+          provide: ALLOWED_ORIGIN,
+          useValue: {
+            status: 'configured',
+            value: 'https://app.example.com',
+            origin: 'https://app.example.com',
+          },
+        },
         { provide: APP_GUARD, useClass: ThrottlerGuard },
       ],
     }).compile();
@@ -161,6 +173,7 @@ describe('ProxyController Origin Validation - Missing PUBLIC_URL', () => {
         { provide: HTTP_PROXY, useValue: mockProxy },
         { provide: PROXY_MODULE_OPTIONS, useValue: { services: [] } },
         OriginGuard,
+        { provide: ALLOWED_ORIGIN, useValue: { status: 'missing' } },
         { provide: APP_GUARD, useClass: ThrottlerGuard },
       ],
     }).compile();
@@ -210,6 +223,14 @@ describe('ProxyController Rate Limiting', () => {
         { provide: HTTP_PROXY, useValue: mockProxy },
         { provide: PROXY_MODULE_OPTIONS, useValue: { services: [] } },
         OriginGuard,
+        {
+          provide: ALLOWED_ORIGIN,
+          useValue: {
+            status: 'configured',
+            value: 'https://app.example.com',
+            origin: 'https://app.example.com',
+          },
+        },
         { provide: APP_GUARD, useClass: ThrottlerGuard },
       ],
     }).compile();
@@ -276,6 +297,14 @@ describe('ProxyController Rate Limiting - Medium Window', () => {
         { provide: HTTP_PROXY, useValue: mockProxy },
         { provide: PROXY_MODULE_OPTIONS, useValue: { services: [] } },
         OriginGuard,
+        {
+          provide: ALLOWED_ORIGIN,
+          useValue: {
+            status: 'configured',
+            value: 'https://app.example.com',
+            origin: 'https://app.example.com',
+          },
+        },
         { provide: APP_GUARD, useClass: ThrottlerGuard },
       ],
     }).compile();

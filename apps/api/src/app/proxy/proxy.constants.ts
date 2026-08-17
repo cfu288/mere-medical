@@ -2,6 +2,7 @@ import * as server from 'http-proxy';
 
 export const PROXY_MODULE_OPTIONS = 'ProxyModuleOptions';
 export const HTTP_PROXY = 'httpProxy';
+export const ALLOWED_ORIGIN = 'allowedOrigin';
 
 export const defaultProxyOptions: server.ServerOptions = {
   changeOrigin: true,
