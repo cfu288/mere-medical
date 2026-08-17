@@ -24,18 +24,19 @@ const validForm = {
 };
 
 describe('user form validation schema', () => {
-  it('reports a message for every missing required field', async () => {
-    const { errors } = await resolve(emptyForm);
-    expect(
-      Object.fromEntries(
-        Object.entries(errors).map(([k, v]) => [k, v?.message]),
-      ),
-    ).toEqual({
-      firstName: 'First name is required',
-      lastName: 'Last name is required',
-      email: 'Email is required',
-      birthday: 'Birthday is required',
+  it('accepts a completely blank form', async () => {
+    const { values, errors } = await resolve(emptyForm);
+    expect(errors).toEqual({});
+    expect((values as { birthday?: Date }).birthday).toBeUndefined();
+  });
+
+  it('accepts a single filled field with everything else blank', async () => {
+    const { values, errors } = await resolve({
+      ...emptyForm,
+      firstName: 'Ada',
     });
+    expect(errors).toEqual({});
+    expect((values as { firstName: string }).firstName).toBe('Ada');
   });
 
   it('rejects a malformed email with the visible message', async () => {

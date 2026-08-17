@@ -28,16 +28,20 @@ export type NewUserFormFields = {
   profilePhoto?: FileList | string | undefined;
 };
 
+// every field is optional; a field only validates once the user fills it in.
+// the message-bearing branch comes first in each union: the resolver reports
+// the first union branch's message when all branches fail
 export const validSchema = z
   .object({
-    firstName: z.string().min(1, 'First name is required'),
-    lastName: z.string().min(1, 'Last name is required'),
-    email: z.string().min(1, 'Email is required').email('Email must be valid'),
-    // string branch first: the resolver reports the first union branch's message
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+    email: z
+      .union([z.string().email('Email must be valid'), z.literal('')])
+      .optional(),
     birthday: z.union([
       z
         .string()
-        .min(1, 'Birthday is required')
+        .min(1)
         .transform((value, ctx) => {
           // T00:00:00 keeps the date local; bare yyyy-MM-dd parses as UTC and shifts a day west of UTC
           const date = new Date(`${value}T00:00:00`);
@@ -50,7 +54,8 @@ export const validSchema = z
           }
           return date;
         }),
-      z.date(),
+      z.literal('').transform(() => undefined),
+      z.date().optional(),
     ]),
     gender: z.string().optional(),
   })
