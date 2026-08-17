@@ -100,7 +100,7 @@
           }
         ],
         "parallel": true,
-        "readyWhen": "No errors found."
+        "readyWhen": "No typescript errors found."
       }
     }
   }
