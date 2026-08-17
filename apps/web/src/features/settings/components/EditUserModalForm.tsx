@@ -28,9 +28,7 @@ export type NewUserFormFields = {
   profilePhoto?: FileList | string | undefined;
 };
 
-// every field is optional; a field only validates once the user fills it in.
-// the message-bearing branch comes first in each union: the resolver reports
-// the first union branch's message when all branches fail
+// only fire validation on fields where the user has entered text
 export const validSchema = z
   .object({
     firstName: z.string().optional(),
@@ -43,7 +41,7 @@ export const validSchema = z
         .string()
         .min(1)
         .transform((value, ctx) => {
-          // T00:00:00 keeps the date local; bare yyyy-MM-dd parses as UTC and shifts a day west of UTC
+          // append T00:00:00 so the date parses in local time, not UTC
           const date = new Date(`${value}T00:00:00`);
           if (Number.isNaN(date.getTime())) {
             ctx.addIssue({
