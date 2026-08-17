@@ -11,10 +11,7 @@ import {
   EpicR4TenantEndpoints,
   R4Endpoint as EpicR4Endpoint,
 } from '@mere/epic';
-import {
-  VeradigmDSTU2TenantEndpoints,
-  DSTU2Endpoint as VeradigmDSTU2Endpoint,
-} from '@mere/veradigm';
+import { VeradigmR4TenantEndpoints } from '@mere/veradigm';
 import { HealowR4TenantEndpoints } from '@mere/healow';
 import { stringSimilarity } from '@mere/shared';
 
@@ -49,15 +46,6 @@ const searchDSTU2Items: UnifiedTenantEndpoint[] = (
         return i;
       },
     ),
-  )
-  .concat(
-    (VeradigmDSTU2TenantEndpoints as unknown as UnifiedTenantEndpoint[]).map(
-      (i) => {
-        i.vendor = 'VERADIGM';
-        i.version = 'DSTU2';
-        return i;
-      },
-    ),
   );
 
 const searchR4Items: UnifiedTenantEndpoint[] = ([] as UnifiedTenantEndpoint[])
@@ -81,6 +69,15 @@ const searchR4Items: UnifiedTenantEndpoint[] = ([] as UnifiedTenantEndpoint[])
       i.version = 'R4';
       return i;
     }),
+  )
+  .concat(
+    (VeradigmR4TenantEndpoints as unknown as UnifiedTenantEndpoint[]).map(
+      (i) => {
+        i.vendor = 'VERADIGM';
+        i.version = 'R4';
+        return i;
+      },
+    ),
   );
 
 @Injectable()

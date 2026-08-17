@@ -247,7 +247,7 @@ Note that this will not set up SSL for you, which is needed for some patient por
 | `EPIC_SANDBOX_CLIENT_ID` | No | Client ID for Epic MyChart sandbox (legacy DSTU2, for backwards compatibility) | See [Epic setup](./epic-setup) |
 | `EPIC_SANDBOX_CLIENT_ID_DSTU2` | No | Client ID for Epic MyChart sandbox (legacy DSTU2) | See [Epic setup](./epic-setup) |
 | `CERNER_CLIENT_ID` | No | Client ID for Cerner Health (supports both R4 and DSTU2) | See [Cerner setup](./cerner-setup) |
-| `VERADIGM_CLIENT_ID` | No | Client ID for Veradigm | |
+| `VERADIGM_CLIENT_ID` | No | Client ID for Veradigm (formerly Allscripts) | See [Veradigm setup](./veradigm-setup) |
 | `VA_CLIENT_ID` | No | Client ID for VA (Veterans Affairs). **Note: Only works with VA sandbox, not production access at this time.** | |
 | `HEALOW_CLIENT_ID` | No | Client ID for Healow (eClinicalWorks) | See [Healow setup](./healow-setup) |
 | `HEALOW_CLIENT_SECRET` | No | Client secret for Healow confidential client (enables refresh tokens) | See [Healow setup](./healow-setup) |

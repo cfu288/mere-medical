@@ -10,8 +10,11 @@ Currently, only the following patient portals are supported:
 
 - MyChart/Epic
 - Cerner Health
-- Allscripts Connect
+- Veradigm (formerly Allscripts Connect)
 - DrChrono/OnPatient
+- Athena Health
+- Healow (eClinicalWorks)
+- VA (Veterans Affairs, sandbox only)
 
 Support for more patient portals is coming soon.
 

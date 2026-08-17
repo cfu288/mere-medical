@@ -470,6 +470,11 @@ async function fetchMedicalRecords(
     }
     case 'veradigm': {
       try {
+        await Veradigm.refreshVeradigmConnectionTokenIfNeeded(
+          config,
+          connectionDocument,
+          db,
+        );
         const syncJob = await Veradigm.syncAllRecords(
           baseUrl,
           connectionDocument.toMutableJSON() as unknown as VeradigmConnectionDocument,

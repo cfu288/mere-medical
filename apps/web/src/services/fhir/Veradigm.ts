@@ -1,28 +1,15 @@
 /**
- * Professional 20.1 SANDBOX FollowMyHealth
+ * Partner Training Environment CP00101 SANDBOX (R4) Veradigm Connect
  * Patient Access
  * Property                   Value
- * FHIR Base Url              https://fhir.fhirpoint.open.allscripts.com/fhirroute/open/CustProProdSand201SMART
- * OAuth Authorization URL    https://open.allscripts.com/fhirroute/fmhpatientauth/0cd760ae-6ec5-4137-bf26-4269636b94ef/connect/authorize
- * OAuth Token URL            https://open.allscripts.com/fhirroute/fmhpatientauth/0cd760ae-6ec5-4137-bf26-4269636b94ef/connect/token
- * OAuth Scope                launch user/*.read
- * Patient Username           donna.dobson_prounityfhir (Patient id is 19)
- * Patient Password           Allscripts#1
+ * FHIR Base Url              https://fhir.fhirpoint.open.allscripts.com/fhirroute/open/CP00101/
+ * OAuth Authorization URL    https://open.allscripts.com/fhirroute/patientauthv2/afdc1f7b-b362-4777-8ab3-83472abd0b8a/connect/authorize
+ * OAuth Token URL            https://open.allscripts.com/fhirroute/patientauthv2/afdc1f7b-b362-4777-8ab3-83472abd0b8a/connect/token
+ * OAuth Scope                SMART v1 (.read) or v2 (.rs), mixing unsupported
+ * Test credentials           not published; request via https://developer.veradigm.com/Fhir/FHIR_Sandboxes
  */
 
-/**
- * TouchWorks 20.0 SANDBOX Allscripts Connect
- * Patient Access
- * Property                   Value
- * FHIR Base Url              https://tw181unityfhir.open.allscripts.com/open
- * OAuth Authorization URL    https://open.allscripts.com/fhirroute/patientauth/e75746a4-7f05-4b95-9ff5-44082c988959/connect/authorize
- * OAuth Token URL            https://open.allscripts.com/fhirroute/patientauth/e75746a4-7f05-4b95-9ff5-44082c988959/connect/token
- * OAuth Scope                launch user/*.read
- * Patient Username           allison.allscripts@tw181unityfhir.edu (Patient id is 19)
- * Patient Password           Allscripts#1
- */
-
-import * as DSTU2 from './DSTU2';
+import * as R4 from './R4';
 import {
   CreateVeradigmConnectionDocument,
   VeradigmConnectionDocument,
@@ -35,12 +22,13 @@ import {
   Patient,
   Observation,
   DiagnosticReport,
+  MedicationRequest,
   MedicationStatement,
   Immunization,
   Condition,
   AllergyIntolerance,
   DocumentReference,
-} from 'fhir/r2';
+} from 'fhir/r4';
 import { RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import {
@@ -49,6 +37,8 @@ import {
 } from '../../models/clinical-document/ClinicalDocument.type';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
 import {
+  createVeradigmClient,
+  buildVeradigmOAuthConfig,
   extractVeradigmPatientId,
   type VeradigmTokenSet,
 } from '@mere/fhir-oauth';
@@ -56,8 +46,13 @@ import { getConnectionCardByUrl } from './getConnectionCardByUrl';
 import {
   createConnection,
   updateConnection,
+  updateConnectionToken,
 } from '../../repositories/ConnectionRepository';
 import uuid4 from '../../shared/utils/UUIDUtils';
+import { RxDocument } from 'rxdb';
+import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
+import { AppConfig } from '../../app/providers/AppConfigProvider';
+import { Routes } from '../../Routes';
 
 export {
   createVeradigmClient,
@@ -103,11 +98,13 @@ export async function saveConnectionToDb({
   return new Promise((resolve, reject) => {
     if (tokens.accessToken && user.id) {
       if (doc) {
-        updateConnection(db, user.id, doc.id, {
+        updateConnection<VeradigmConnectionDocument>(db, user.id, doc.id, {
           access_token: tokens.accessToken,
           expires_at: tokens.expiresAt,
           id_token: tokens.idToken,
+          patient: tokens.patientId,
           last_sync_was_error: false,
+          ...(tokens.refreshToken && { refresh_token: tokens.refreshToken }),
         })
           .then(() => {
             resolve(true);
@@ -117,7 +114,7 @@ export async function saveConnectionToDb({
             reject(new Error('Error updating connection'));
           });
       } else {
-        const dbentry: Omit<CreateVeradigmConnectionDocument, 'patient'> = {
+        const dbentry: CreateVeradigmConnectionDocument = {
           id: uuid4(),
           user_id: user.id,
           source: 'veradigm',
@@ -125,13 +122,15 @@ export async function saveConnectionToDb({
           access_token: tokens.accessToken,
           expires_at: tokens.expiresAt,
           id_token: tokens.idToken,
+          patient: tokens.patientId,
           name,
+          ...(tokens.refreshToken && { refresh_token: tokens.refreshToken }),
           auth_uri,
           token_uri,
           tenant_id: veradigmId,
         };
         try {
-          createConnection(db, dbentry as CreateVeradigmConnectionDocument)
+          createConnection(db, dbentry)
             .then(() => {
               resolve(true);
             })
@@ -152,6 +151,70 @@ export async function saveConnectionToDb({
   });
 }
 
+const veradigmClient = createVeradigmClient();
+
+export async function refreshVeradigmConnectionTokenIfNeeded(
+  config: AppConfig,
+  connectionDocument: RxDocument<ConnectionDocument>,
+  db: RxDatabase<DatabaseCollections>,
+) {
+  const currentTokens: VeradigmTokenSet = {
+    accessToken: connectionDocument.get('access_token'),
+    expiresAt: connectionDocument.get('expires_at'),
+    idToken: connectionDocument.get('id_token'),
+    refreshToken: connectionDocument.get('refresh_token'),
+    patientId: connectionDocument.get('patient') ?? '',
+    raw: {},
+  };
+
+  if (!veradigmClient.isExpired(currentTokens, 0)) {
+    return;
+  }
+
+  if (!veradigmClient.canRefresh(currentTokens)) {
+    throw new Error('No refresh token available - try logging in again');
+  }
+
+  if (!config.VERADIGM_CLIENT_ID || !config.PUBLIC_URL) {
+    throw new Error('Veradigm OAuth configuration is incomplete');
+  }
+
+  try {
+    const baseUrl = connectionDocument.get('location');
+    const oauthConfig = buildVeradigmOAuthConfig({
+      clientId: config.VERADIGM_CLIENT_ID,
+      publicUrl: config.PUBLIC_URL,
+      redirectPath: Routes.VeradigmCallback,
+      tenant: {
+        id: connectionDocument.get('tenant_id') ?? baseUrl,
+        name: connectionDocument.get('name'),
+        authUrl: connectionDocument.get('auth_uri'),
+        tokenUrl: connectionDocument.get('token_uri'),
+        fhirBaseUrl: baseUrl,
+      },
+    });
+
+    const newTokens = await veradigmClient.refresh(currentTokens, oauthConfig);
+
+    await updateConnectionToken(
+      db,
+      connectionDocument.get('user_id'),
+      connectionDocument.get('id'),
+      {
+        access_token: newTokens.accessToken,
+        expires_at: newTokens.expiresAt,
+        id_token: newTokens.idToken,
+        ...(newTokens.refreshToken && {
+          refresh_token: newTokens.refreshToken,
+        }),
+      },
+    );
+  } catch (e) {
+    console.error(e);
+    throw new Error('Error refreshing token - try logging in again');
+  }
+}
+
 async function getFHIRResource<T extends FhirResource>(
   baseUrl: string,
   connectionDocument: VeradigmConnectionDocument,
@@ -169,7 +232,8 @@ async function getFHIRResource<T extends FhirResource>(
     const response = await fetch(nextUrl, {
       headers: {
         Authorization: `Bearer ${connectionDocument.access_token}`,
-        Accept: 'application/json+fhir',
+        // Versionless endpoints default to DSTU2: developer.veradigm.com/Fhir/EndpointDirectory
+        Accept: 'application/fhir+json; fhirVersion=4.0',
       },
     });
     if (!response.ok) {
@@ -225,23 +289,27 @@ export async function syncAllRecords(
   db: RxDatabase<DatabaseCollections>,
 ): Promise<PromiseSettledResult<void[]>[]> {
   const procMapper = (proc: BundleEntry<Procedure>) =>
-    DSTU2.mapProcedureToClinicalDocument(proc, connectionDocument);
+    R4.mapProcedureToClinicalDocument(proc, connectionDocument);
   const patientMapper = (pt: BundleEntry<Patient>) =>
-    DSTU2.mapPatientToClinicalDocument(pt, connectionDocument);
+    R4.mapPatientToClinicalDocument(pt, connectionDocument);
   const obsMapper = (imm: BundleEntry<Observation>) =>
-    DSTU2.mapObservationToClinicalDocument(imm, connectionDocument);
+    R4.mapObservationToClinicalDocument(imm, connectionDocument);
   const drMapper = (dr: BundleEntry<DiagnosticReport>) =>
-    DSTU2.mapDiagnosticReportToClinicalDocument(dr, connectionDocument);
-  const medStatementMapper = (dr: BundleEntry<MedicationStatement>) =>
-    DSTU2.mapMedicationStatementToClinicalDocument(dr, connectionDocument);
+    R4.mapDiagnosticReportToClinicalDocument(dr, connectionDocument);
+  const medRequestMapper = (mr: BundleEntry<MedicationRequest>) =>
+    R4.mapMedicationRequestToClinicalDocument(mr, connectionDocument);
+  const medStatementMapper = (ms: BundleEntry<MedicationStatement>) =>
+    R4.mapMedicationStatementToClinicalDocument(ms, connectionDocument);
   const immMapper = (dr: BundleEntry<Immunization>) =>
-    DSTU2.mapImmunizationToClinicalDocument(dr, connectionDocument);
+    R4.mapImmunizationToClinicalDocument(dr, connectionDocument);
   const conditionMapper = (dr: BundleEntry<Condition>) =>
-    DSTU2.mapConditionToClinicalDocument(dr, connectionDocument);
+    R4.mapConditionToClinicalDocument(dr, connectionDocument);
   const allergyIntoleranceMapper = (a: BundleEntry<AllergyIntolerance>) =>
-    DSTU2.mapAllergyIntoleranceToClinicalDocument(a, connectionDocument);
+    R4.mapAllergyIntoleranceToClinicalDocument(a, connectionDocument);
 
-  const patientId = extractVeradigmPatientId(connectionDocument.access_token);
+  const patientId =
+    connectionDocument.patient ??
+    extractVeradigmPatientId(connectionDocument.access_token);
 
   const syncJob = await Promise.allSettled([
     syncFHIRResource<Procedure>(
@@ -281,6 +349,16 @@ export async function syncAllRecords(
       db,
       'DiagnosticReport',
       drMapper,
+      {
+        patient: patientId,
+      },
+    ),
+    syncFHIRResource<MedicationRequest>(
+      baseUrl,
+      connectionDocument,
+      db,
+      'MedicationRequest',
+      medRequestMapper,
       {
         patient: patientId,
       },
@@ -340,7 +418,7 @@ async function syncDocumentReferences(
   params: Record<string, string>,
 ) {
   const documentReferenceMapper = (dr: BundleEntry<DocumentReference>) =>
-    DSTU2.mapDocumentReferenceToClinicalDocument(dr, connectionDocument);
+    R4.mapDocumentReferenceToClinicalDocument(dr, connectionDocument);
   // Sync document references and return them
   await syncFHIRResource<DocumentReference>(
     baseUrl,
@@ -404,7 +482,7 @@ async function syncDocumentReferences(
                 connection_record_id: connectionDocument.id,
                 data_record: {
                   raw: raw,
-                  format: 'FHIR.DSTU2',
+                  format: 'FHIR.R4',
                   content_type: contentType,
                   resource_type: 'documentreference_attachment',
                   version_history: [],
@@ -412,7 +490,7 @@ async function syncDocumentReferences(
                 metadata: {
                   id: attachmentUrl,
                   date:
-                    docRefItem.data_record.raw.resource?.created ||
+                    docRefItem.data_record.raw.resource?.date ||
                     docRefItem.data_record.raw.resource?.context?.period?.start,
                   display_name:
                     docRefItem.data_record.raw.resource?.type?.text ||
