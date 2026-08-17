@@ -2,7 +2,10 @@ import { Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AthenaService } from './athena.service';
 import { AthenaController } from './athena.controller';
-import { OriginGuard } from '../proxy/guards/origin.guard';
+import {
+  allowedOriginProvider,
+  OriginGuard,
+} from '../proxy/guards/origin.guard';
 
 @Module({
   imports: [
@@ -12,6 +15,6 @@ import { OriginGuard } from '../proxy/guards/origin.guard';
     ]),
   ],
   controllers: [AthenaController],
-  providers: [AthenaService, OriginGuard],
+  providers: [AthenaService, OriginGuard, allowedOriginProvider],
 })
 export class AthenaModule {}

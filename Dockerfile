@@ -12,6 +12,7 @@ COPY . /app/
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 # Disable Nx daemon in Docker builds
 ENV NX_DAEMON=false
+RUN npx nx test api --configuration=ci
 RUN npx nx run api:build:production
 
 RUN curl -sf https://gobinaries.com/tj/node-prune | sh
