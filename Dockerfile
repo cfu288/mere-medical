@@ -14,9 +14,6 @@ ENV NODE_OPTIONS="--max-old-space-size=4096"
 ENV NX_DAEMON=false
 RUN npx nx run api:build:production
 
-RUN npm prune --omit=dev
-RUN sh tools/prune-node-modules.sh
-
 
 FROM deps AS build-web-stage
 
@@ -50,7 +47,6 @@ WORKDIR /app
 
 COPY --from=build-web-stage /app/dist/apps/web/ /app/web/
 COPY --from=build-api-stage /app/dist/apps/api/ /app/api/
-COPY --from=build-api-stage /app/node_modules/ /app/node_modules/
 COPY ./healthcheck.js /app/healthcheck.js
 
 USER node
