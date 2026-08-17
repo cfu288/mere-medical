@@ -5,18 +5,8 @@ services:
       - '4200:8080'
     restart: unless-stopped
     init: true
-    read_only: true
-    tmpfs:
-      - /tmp
-    cap_drop:
-      - ALL
     security_opt:
       - no-new-privileges:true
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-          pids: 200
     environment:
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
       - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
@@ -36,36 +26,16 @@ services:
       - '4202:8080'
     restart: unless-stopped
     init: true
-    read_only: true
-    tmpfs:
-      - /tmp
-    cap_drop:
-      - ALL
     security_opt:
       - no-new-privileges:true
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-          pids: 200
   demo:
     image: cfu288/mere-medical:latest
     ports:
       - '3366:8080'
     restart: unless-stopped
     init: true
-    read_only: true
-    tmpfs:
-      - /tmp
-    cap_drop:
-      - ALL
     security_opt:
       - no-new-privileges:true
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-          pids: 200
     environment:
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
       - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}

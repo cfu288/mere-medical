@@ -1,6 +1,6 @@
 services:
   caddy:
-    image: caddy:2.11.4-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648
+    image: caddy:2-alpine
     ports:
       - '443:443'
       - '443:443/udp'
@@ -9,13 +9,6 @@ services:
       - caddy-data:/data
       - caddy-config:/config
     restart: unless-stopped
-    read_only: true
-    tmpfs:
-      - /tmp
-    cap_drop:
-      - ALL
-    cap_add:
-      - NET_BIND_SERVICE
     security_opt:
       - no-new-privileges:true
     networks:
@@ -27,18 +20,8 @@ services:
     image: cfu288/mere-medical:latest
     restart: unless-stopped
     init: true
-    read_only: true
-    tmpfs:
-      - /tmp
-    cap_drop:
-      - ALL
     security_opt:
       - no-new-privileges:true
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-          pids: 200
     networks:
       - proxy
     environment:

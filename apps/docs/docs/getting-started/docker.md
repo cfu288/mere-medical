@@ -43,13 +43,6 @@ services:
       - caddy-data:/data
       - caddy-config:/config
     restart: unless-stopped
-    read_only: true
-    tmpfs:
-      - /tmp
-    cap_drop:
-      - ALL
-    cap_add:
-      - NET_BIND_SERVICE
     security_opt:
       - no-new-privileges:true
     networks:
@@ -61,11 +54,6 @@ services:
     image: cfu288/mere-medical:latest
     restart: unless-stopped
     init: true
-    read_only: true
-    tmpfs:
-      - /tmp
-    cap_drop:
-      - ALL
     security_opt:
       - no-new-privileges:true
     networks:
@@ -176,6 +164,23 @@ sudo cp caddy-local-ca.crt /usr/local/share/ca-certificates/ && sudo update-ca-c
 
 Then open [https://meremedical.local](https://meremedical.local) in a browser to see Mere Medical running!
 
+#### Optional container hardening
+
+The defaults above are all Mere needs. Because the app container is stateless and runs as a non-root user, it also works under Docker's strictest settings — if you want to lock it down further, add any of these to the `app` service:
+
+```yaml
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          pids: 200
+```
+
 ### Setting Up with Docker
 
 Run the following in your command prompt:
@@ -242,11 +247,6 @@ services:
       - '4200:8080'
     restart: unless-stopped
     init: true
-    read_only: true
-    tmpfs:
-      - /tmp
-    cap_drop:
-      - ALL
     security_opt:
       - no-new-privileges:true
     environment:
