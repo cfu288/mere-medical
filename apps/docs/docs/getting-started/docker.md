@@ -29,7 +29,7 @@ If you'd rather deploy to a cloud instance instead of your own computer, check o
 
 You can grab the required files for the following steps [here](https://github.com/cfu288/mere-medical/tree/main/examples/mere-medical-docker-compose-caddy-ssl).
 
-If not, then you can create a new directory and copy the following a docker compose file into it.
+If not, then you can create a new directory and copy the following docker compose file into it.
 
 ```yaml title="mere-medical/docker-compose.yaml"
 services:
@@ -118,7 +118,7 @@ Add the following entry to your `/etc/hosts` file:
 127.0.0.1	meremedical.local
 ```
 
-Create an `.env' file with the following format:
+Create a `.env` file with the following format:
 
 ```
 ONPATIENT_CLIENT_ID=
@@ -235,7 +235,7 @@ Note that neither of these will set up SSL for you, which is needed for some pat
 
 ### Setting Up with Docker Compose
 
-Copy the following a docker compose file in a new directory. Note that the directory name becomes the prefix for the container. You'll need to replace items in the file that have the format `${VARIABLE_NAME}` with the actual value. Check out the [docker documentation](https://docs.docker.com/compose/environment-variables/#substitute-environment-variables-in-compose-files) for more information on how to do this securely.
+Copy the following docker compose file into a new directory. Note that the directory name becomes the prefix for the container. You'll need to replace items in the file that have the format `${VARIABLE_NAME}` with the actual value. Check out the [docker documentation](https://docs.docker.com/compose/environment-variables/#substitute-environment-variables-in-compose-files) for more information on how to do this securely.
 
 To get the env variables needed for OnPatient functionality, [see our documentation here](./onpatient-setup).
 
