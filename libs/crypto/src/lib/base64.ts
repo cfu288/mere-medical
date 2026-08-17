@@ -10,7 +10,7 @@ export function base64StringToArrayBuffer(base64String: string): ArrayBuffer {
     bytes[i] = binaryString.charCodeAt(i);
   }
 
-  return bytes;
+  return bytes.buffer;
 }
 
 export function base64UrlStringToBase64String(base64UrlString: string): string {
@@ -40,7 +40,7 @@ export function base64UrlStringToArrayBuffer(base64UrlString: string): ArrayBuff
     bytes[i] = binaryString.charCodeAt(i);
   }
 
-  return bytes;
+  return bytes.buffer;
 }
 
 export function arrayBufferToBase64String(arrayBuffer: ArrayBuffer): string {
