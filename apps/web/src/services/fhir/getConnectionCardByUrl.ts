@@ -28,12 +28,19 @@ export async function getConnectionCardByTenant<T extends ConnectionDocument>(
   return rawConnection as unknown as RxDocument<T> | null;
 }
 
+// TODO: retire once every vendor deduplicates by tenant instead of by url
 export async function getConnectionCardByUrl<T extends ConnectionDocument>(
+  source: string,
   url: string,
   db: RxDatabase<DatabaseCollections>,
   userId: string,
 ): Promise<RxDocument<T> | null> {
-  const connection = await connectionRepo.findConnectionByUrl(db, userId, url);
+  const connection = await connectionRepo.findConnectionByUrl(
+    db,
+    userId,
+    source,
+    url,
+  );
   if (!connection) {
     return null;
   }

@@ -514,7 +514,9 @@ export async function saveConnectionToDb({
   db: RxDatabase<DatabaseCollections>;
   user: UserDocument;
 }) {
+  // TODO: look up by healowId, once sandbox_healow is canonicalized to JAFJCD
   const doc = await getConnectionCardByUrl<HealowConnectionDocument>(
+    'healow',
     healowBaseUrl,
     db,
     user.id,
