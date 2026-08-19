@@ -16,8 +16,14 @@ export type SyncContext = {
   fetch: typeof globalThis.fetch;
 };
 
+/**
+ * Token refresh goes through the vendor's OAuth client rather than the sync
+ * transport, so `fetch` is not offered here.
+ */
+export type TokenRefreshContext = Omit<SyncContext, 'fetch'>;
+
 export type VendorSync = {
-  refreshToken?: (ctx: SyncContext) => Promise<unknown>;
+  refreshToken: ((ctx: TokenRefreshContext) => Promise<unknown>) | null;
   syncAllRecords: (
     ctx: SyncContext,
   ) => Promise<PromiseSettledResult<unknown>[]>;

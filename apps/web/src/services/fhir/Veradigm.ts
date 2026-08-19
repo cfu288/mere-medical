@@ -217,6 +217,7 @@ async function syncFHIRResource<T extends FhirResource>(
 }
 
 export const sync: VendorSync = {
+  refreshToken: null,
   syncAllRecords: ({ baseUrl, connection, db, fetch }) => {
     const cd =
       connection.toMutableJSON() as unknown as VeradigmConnectionDocument;

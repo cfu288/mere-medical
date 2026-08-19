@@ -40,8 +40,7 @@ const VENDORS: Record<ConnectionSources, VendorSync> = {
   athena: Athena.sync,
 };
 
-const defaultFetch: typeof globalThis.fetch = (...args) =>
-  globalThis.fetch(...args);
+const defaultFetch = globalThis.fetch.bind(globalThis);
 
 type SyncJobProviderProps = PropsWithChildren<unknown>;
 
@@ -382,7 +381,9 @@ async function fetchMedicalRecords(
   };
 
   try {
-    await vendor.refreshToken?.(ctx);
+    if (vendor.refreshToken) {
+      await vendor.refreshToken(ctx);
+    }
     const syncJob = await vendor.syncAllRecords(ctx);
     await updateConnectionDocumentTimestamps(syncJob, connectionDocument, db);
     return syncJob;
