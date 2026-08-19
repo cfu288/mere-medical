@@ -18,6 +18,7 @@ import * as Veradigm from '../../services/fhir/Veradigm';
 import * as VA from '../../services/fhir/VA';
 import * as Healow from '../../services/fhir/Healow';
 import * as Athena from '../../services/fhir/Athena';
+import * as NextGen from '../../services/fhir/NextGen';
 import { SyncContext, VendorSync } from '../../services/fhir/sync';
 import { from, Subject } from 'rxjs';
 import { useNotificationDispatch } from '../../app/providers/NotificationProvider';
@@ -61,6 +62,9 @@ async function refreshIfNeeded(ctx: SyncContext): Promise<SyncContext> {
     case 'onpatient':
       await OnPatient.sync.refreshToken?.({ ...ctx, document });
       break;
+    case 'nextgen':
+      await NextGen.sync.refreshToken?.({ ...ctx, document });
+      break;
     default:
       return assertNever(document);
   }
@@ -87,6 +91,8 @@ async function syncWithVendor(
       return VA.sync.syncAllRecords({ ...refreshed, document });
     case 'onpatient':
       return OnPatient.sync.syncAllRecords({ ...refreshed, document });
+    case 'nextgen':
+      return NextGen.sync.syncAllRecords({ ...refreshed, document });
     default:
       return assertNever(document);
   }

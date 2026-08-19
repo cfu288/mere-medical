@@ -8,7 +8,8 @@ export type ConnectionSources =
   | 'veradigm'
   | 'va'
   | 'healow'
-  | 'athena';
+  | 'athena'
+  | 'nextgen';
 
 export interface ConnectionDocument extends BaseDocument {
   user_id: string;
@@ -122,6 +123,20 @@ export type CreateAthenaConnectionDocument = Omit<
   'last_refreshed' | 'last_sync_attempt' | 'last_sync_was_error'
 >;
 
+export interface NextGenConnectionDocument extends ConnectionDocument {
+  source: 'nextgen';
+  patient: string;
+  tenant_id: string;
+  auth_uri: string;
+  token_uri: string;
+  fhir_version: 'R4';
+}
+
+export type CreateNextGenConnectionDocument = Omit<
+  NextGenConnectionDocument,
+  'last_refreshed' | 'last_sync_attempt' | 'last_sync_was_error'
+>;
+
 export type AnyConnectionDocument =
   | EpicConnectionDocument
   | CernerConnectionDocument
@@ -129,4 +144,5 @@ export type AnyConnectionDocument =
   | VeradigmConnectionDocument
   | AthenaConnectionDocument
   | VAConnectionDocument
-  | OnPatientConnectionDocument;
+  | OnPatientConnectionDocument
+  | NextGenConnectionDocument;

@@ -17,6 +17,8 @@ export interface VendorEnv {
   HEALOW_CONFIDENTIAL_MODE?: boolean;
   ATHENA_CLIENT_ID?: string;
   ATHENA_SANDBOX_CLIENT_ID?: string;
+  NEXTGEN_CLIENT_ID?: string;
+  NEXTGEN_SECRET_CONFIGURED?: boolean;
 }
 
 export function isConfigured(value: string | undefined): value is string {
@@ -68,6 +70,8 @@ const vendorEnvSchema = z.object({
   HEALOW_CONFIDENTIAL_MODE: configuredFlag,
   ATHENA_CLIENT_ID: configuredString,
   ATHENA_SANDBOX_CLIENT_ID: configuredString,
+  NEXTGEN_CLIENT_ID: configuredString,
+  NEXTGEN_SECRET_CONFIGURED: configuredFlag,
 });
 
 type ParsedVendorEnv = z.infer<typeof vendorEnvSchema>;
@@ -112,6 +116,10 @@ export type OnPatientChannel =
   | { status: 'disabled'; enableWith: EnableRequirement }
   | { status: 'production'; production: Credential; publicUrl: string };
 
+export type NextGenChannel =
+  | { status: 'disabled'; enableWith: EnableRequirement }
+  | { status: 'production'; production: Credential; publicUrl: string };
+
 export interface VendorConfigModel {
   publicUrl: PublicUrlConfig;
   epicR4: VendorChannel;
@@ -122,6 +130,7 @@ export interface VendorConfigModel {
   va: SandboxOnlyChannel;
   healow: HealowChannel;
   athena: ProductionOnlyChannel | SandboxOnlyChannel;
+  nextgen: NextGenChannel;
 }
 
 type EnvVar = {
@@ -250,6 +259,47 @@ function athenaChannel(
     : base;
 }
 
+function nextGenChannel(
+  env: ParsedVendorEnv,
+  publicUrl: PublicUrlConfig,
+): NextGenChannel {
+  const base = channel(env, { production: ['NEXTGEN_CLIENT_ID'] });
+  const secretMissing = env.NEXTGEN_SECRET_CONFIGURED
+    ? []
+    : (['NEXTGEN_CLIENT_SECRET (on the server)'] as const);
+  const publicUrlMissing =
+    publicUrl.status === 'configured'
+      ? []
+      : ([publicUrlRequirement(publicUrl)] as const);
+  if (base.status === 'disabled') {
+    return {
+      status: 'disabled',
+      enableWith: {
+        allOf: ['NEXTGEN_CLIENT_ID', ...secretMissing, ...publicUrlMissing],
+      },
+    };
+  }
+  if (!env.NEXTGEN_SECRET_CONFIGURED) {
+    return {
+      status: 'disabled',
+      enableWith: {
+        allOf: ['NEXTGEN_CLIENT_SECRET (on the server)', ...publicUrlMissing],
+      },
+    };
+  }
+  if (publicUrl.status !== 'configured') {
+    return {
+      status: 'disabled',
+      enableWith: { allOf: [publicUrlRequirement(publicUrl)] },
+    };
+  }
+  return {
+    status: 'production',
+    production: base.production,
+    publicUrl: publicUrl.value,
+  };
+}
+
 export function parseVendorConfig(config: VendorEnv): VendorConfigModel {
   const env = vendorEnvSchema.parse(config);
   const publicUrl = env.PUBLIC_URL;
@@ -270,6 +320,7 @@ export function parseVendorConfig(config: VendorEnv): VendorConfigModel {
     va: channel(env, { sandbox: ['VA_CLIENT_ID'] }),
     healow: healowChannel(env),
     athena: athenaChannel(env),
+    nextgen: nextGenChannel(env, publicUrl),
   };
 }
 
@@ -303,5 +354,6 @@ export function vendorStatusEntries(
           : undefined,
     },
     { label: 'Athena Health', channel: model.athena },
+    { label: 'NextGen Enterprise', channel: model.nextgen },
   ];
 }

@@ -54,6 +54,34 @@ describe('parseServerVendorConfig', () => {
     });
   });
 
+  it('produces a nextgen registration only when the secret is present', () => {
+    const withSecret = parseServerVendorConfig({
+      NEXTGEN_CLIENT_ID: ID,
+      NEXTGEN_CLIENT_SECRET: 'shh',
+    });
+    expect(withSecret.nextgen).toEqual({
+      status: 'production',
+      registration: { clientId: ID, clientSecret: 'shh' },
+    });
+
+    const withoutSecret = parseServerVendorConfig({ NEXTGEN_CLIENT_ID: ID });
+    expect(withoutSecret.nextgen).toEqual({
+      status: 'disabled',
+      enableWith: { allOf: ['NEXTGEN_CLIENT_SECRET'] },
+    });
+  });
+
+  it('treats an unsubstituted nextgen secret placeholder as missing', () => {
+    const { nextgen } = parseServerVendorConfig({
+      NEXTGEN_CLIENT_ID: ID,
+      NEXTGEN_CLIENT_SECRET: '$NEXTGEN_CLIENT_SECRET',
+    });
+    expect(nextgen).toEqual({
+      status: 'disabled',
+      enableWith: { allOf: ['NEXTGEN_CLIENT_SECRET'] },
+    });
+  });
+
   it('derives healow client mode from the server secret', () => {
     const withSecret = parseServerVendorConfig({
       HEALOW_CLIENT_ID: ID,
