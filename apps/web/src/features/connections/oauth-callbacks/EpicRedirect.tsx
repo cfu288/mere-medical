@@ -16,14 +16,14 @@ import {
   EPIC_DEFAULT_SCOPES,
   type EpicTokenSet,
   OAuthError,
+  deriveRegistrationUrl,
 } from '@mere/fhir-oauth';
+import { findEpicTenantById } from '@mere/epic';
 import { signJwt, getPublicKey } from '@mere/crypto/browser';
 import { useOAuthFlow } from '@mere/fhir-oauth/react';
 import {
   EpicLocalStorageKeys,
   getEpicClientId,
-  getDSTU2Url,
-  getR4Url,
   saveConnectionToDb,
 } from '../../../services/fhir/Epic';
 import { isEpicSandbox } from '../../../services/fhir/EpicUtils';
@@ -114,11 +114,9 @@ function useEpicOAuthCallback() {
     }
 
     hasRun.current = true;
-    const fhirVersion =
-      storedFhirVersion ||
-      (epicBaseUrl.toUpperCase().includes('/R4') ? 'R4' : 'DSTU2');
-    const fhirBaseUrl =
-      fhirVersion === 'R4' ? getR4Url(epicBaseUrl) : getDSTU2Url(epicBaseUrl);
+    const tenant = findEpicTenantById(epicId);
+    const fhirVersion = tenant?.fhirVersion ?? storedFhirVersion ?? 'DSTU2';
+    const fhirBaseUrl = tenant?.url ?? epicBaseUrl;
     const isSandbox = isEpicSandbox(epicId);
     const clientId = getEpicClientId(config, fhirVersion, isSandbox);
 
@@ -153,16 +151,15 @@ function useEpicOAuthCallback() {
 
         try {
           const publicKey = await getPublicKey();
-          const proxyUrl = enableProxy
+          const registrationUrl = enableProxy
             ? `${publicUrl}/api/proxy?serviceId=${epicId}&target_type=register`
-            : undefined;
+            : deriveRegistrationUrl(tenant?.authorize ?? epicAuthUrl);
 
           const dcr = await registerEpicDynamicClient(
             tokens.accessToken,
-            epicBaseUrl,
+            registrationUrl,
             oauthConfig.clientId,
             publicKey,
-            { useProxy: enableProxy, proxyUrl },
           );
           dynamicClientId = dcr.clientId;
 

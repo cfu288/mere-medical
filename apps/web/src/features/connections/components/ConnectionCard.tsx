@@ -235,8 +235,17 @@ export function ConnectionCard({
                   });
                   return;
                 }
-                setTenantUrlBySource(item);
-                window.location = await getLoginUrlBySource(config, item);
+                try {
+                  setTenantUrlBySource(item);
+                  window.location = await getLoginUrlBySource(config, item);
+                } catch (e) {
+                  notifyDispatch({
+                    type: 'set_notification',
+                    message:
+                      e instanceof Error ? e.message : 'Unable to reconnect',
+                    variant: 'error',
+                  });
+                }
               }}
             >
               <div className="relative inline-flex h-full flex-initial items-center justify-center rounded-br-lg border border-transparent py-4 text-sm font-bold text-red-500 hover:text-gray-800">

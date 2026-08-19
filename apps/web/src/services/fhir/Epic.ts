@@ -3,7 +3,8 @@
  */
 
 /* eslint-disable no-inner-declarations */
-import { isEpicSandbox } from './EpicUtils';
+import { isEpicSandbox, resolveEpicFhirBaseUrl } from './EpicUtils';
+import { findEpicTenantById } from '@mere/epic';
 import { Bundle, BundleEntry, DocumentReference } from 'fhir/r2';
 import { RxDocument, RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
@@ -17,21 +18,21 @@ import { DSTU2, R4 } from '.';
 import { AppConfig } from '../../app/providers/AppConfigProvider';
 import { createConnection } from '../../repositories/ConnectionRepository';
 import uuid4 from '../../shared/utils/UUIDUtils';
-import { concatPath } from '../../shared/utils/urlUtils';
 import { signJwt } from '@mere/crypto/browser';
 import type { JsonWebKeySet } from '@mere/crypto';
 import {
   createEpicClient,
   createEpicClientWithProxy,
   EPIC_DEFAULT_SCOPES,
-  extractRelativeFhirPath,
+  relativeFhirPathWithin,
+  resolveFhirUrl,
   type OAuthConfig,
   type EpicTokenSet,
 } from '@mere/fhir-oauth';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
 import { CreateClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { findUserById } from '../../repositories/UserRepository';
-import { getConnectionCardByUrl } from './getConnectionCardByUrl';
+import { getConnectionCardByTenant } from './getConnectionCardByUrl';
 import {
   mapSearchedResources,
   mapCompanionResources,
@@ -55,34 +56,20 @@ const createProxiedEpicClient = (publicUrl: string) =>
       `${publicUrl}/api/proxy?serviceId=${tenantId}&target_type=${targetType}`,
   );
 
-const URLJoin = (...args: string[]) =>
-  args
-    .join('/')
-    .replace(/[\/]+/g, '/')
-    .replace(/^(.+):\//, '$1://')
-    .replace(/^file:/, 'file:/')
-    .replace(/\/(\?|&|#[^!])/g, '$1')
-    .replace(/\?/g, '&')
-    .replace('&', '?');
-
-export function getDSTU2Url(baseUrl: string) {
-  return isDSTU2Url(baseUrl)
-    ? new URL(baseUrl).toString()
-    : new URL('/api/FHIR/DSTU2/', baseUrl).toString();
-}
-
-export function isDSTU2Url(url: string) {
-  return url.includes('/api/FHIR/DSTU2');
-}
-
-export function getR4Url(baseUrl: string) {
-  return isR4Url(baseUrl)
-    ? new URL(baseUrl).toString()
-    : new URL('/api/FHIR/R4/', baseUrl).toString();
-}
-
-export function isR4Url(url: string) {
-  return url.includes('/api/FHIR/R4');
+function buildProxyUrl(
+  publicUrl: string,
+  serviceId: string | undefined,
+  target: string,
+): string {
+  if (!publicUrl) {
+    throw new Error('Cannot proxy a request without PUBLIC_URL configured');
+  }
+  const base = publicUrl.endsWith('/') ? publicUrl : `${publicUrl}/`;
+  const url = new URL('api/proxy', base);
+  url.searchParams.set('serviceId', serviceId || '');
+  url.searchParams.set('target', target);
+  url.searchParams.set('target_type', 'base');
+  return url.toString();
 }
 
 export function getEpicClientId(
@@ -127,9 +114,7 @@ async function getFHIRResource<E extends FhirBundleEntry>(
   useProxy = false,
 ): Promise<E[]> {
   const epicId = connectionDocument.tenant_id;
-  const fhirVersion = connectionDocument.fhir_version || 'DSTU2';
-  const fhirUrl =
-    fhirVersion === 'R4' ? getR4Url(baseUrl) : getDSTU2Url(baseUrl);
+  const fhirUrl = baseUrl;
 
   const searchParams = new URLSearchParams();
   if (params) {
@@ -142,22 +127,16 @@ async function getFHIRResource<E extends FhirBundleEntry>(
     });
   }
 
-  const defaultUrl = `${URLJoin(
-    fhirUrl,
-    fhirResourceUrl,
-    `?${searchParams.toString()}`,
-  )}`;
-  const proxyUrl = URLJoin(
-    config.PUBLIC_URL || '',
-    '/api/proxy',
-    `?serviceId=${epicId}`,
-    `&target=${encodeURIComponent(
-      `${fhirResourceUrl}?${searchParams.toString()}`,
-    )}&target_type=base`,
-  );
+  const query = searchParams.toString();
 
   let allEntries: E[] = [];
-  let nextUrl: string | undefined = useProxy ? proxyUrl : defaultUrl;
+  let nextUrl: string | undefined = useProxy
+    ? buildProxyUrl(
+        config.PUBLIC_URL || '',
+        epicId,
+        query ? `${fhirResourceUrl}?${query}` : fhirResourceUrl,
+      )
+    : resolveFhirUrl(fhirUrl, fhirResourceUrl, searchParams);
 
   while (nextUrl) {
     const response = await fetch(nextUrl, {
@@ -180,13 +159,13 @@ async function getFHIRResource<E extends FhirBundleEntry>(
       (link: { relation?: string; url?: string }) => link.relation === 'next',
     );
     if (nextLink?.url && useProxy) {
-      const relativePath = extractRelativeFhirPath(nextLink.url, fhirUrl);
-      nextUrl = URLJoin(
-        config.PUBLIC_URL || '',
-        '/api/proxy',
-        `?serviceId=${epicId}`,
-        `&target=${encodeURIComponent(relativePath)}&target_type=base`,
-      );
+      const relativePath = relativeFhirPathWithin(nextLink.url, fhirUrl);
+      if (relativePath === null) {
+        throw new Error(
+          `Pagination link points outside the FHIR server: ${nextLink.url}`,
+        );
+      }
+      nextUrl = buildProxyUrl(config.PUBLIC_URL || '', epicId, relativePath);
     } else {
       nextUrl = nextLink?.url;
     }
@@ -268,8 +247,9 @@ async function syncFHIRResourceWithIncludes<E extends FhirBundleEntry>(
 export const sync: VendorSync = {
   refreshToken: ({ config, connection, db, useProxy }) =>
     refreshEpicConnectionTokenIfNeeded(config, connection, db, useProxy),
-  syncAllRecords: ({ config, baseUrl, connection, db, useProxy }) => {
+  syncAllRecords: ({ config, connection, db, useProxy }) => {
     const cd = connection.toMutableJSON() as unknown as EpicConnectionDocument;
+    const baseUrl = resolveEpicFhirBaseUrl(cd);
     const patient = cd.patient;
     const version = cd.fhir_version || 'DSTU2';
 
@@ -698,15 +678,14 @@ async function fetchAttachmentData(
     const epicId = connectionDocument.tenant_id;
     const isRelativeUrl =
       !url.startsWith('http://') && !url.startsWith('https://');
-    const fullUrl = isRelativeUrl ? concatPath(baseUrl, url) : url;
-    const defaultUrl = fullUrl;
-    const proxyUrlExtension = fullUrl.replace(baseUrl, '');
-    const proxyUrl = `${config.PUBLIC_URL || ''}/api/proxy?serviceId=${epicId}&target=${`${encodeURIComponent(proxyUrlExtension)}&target_type=base`}`;
-    const fetchUrl = useProxy ? proxyUrl : defaultUrl;
+    const defaultUrl = isRelativeUrl ? resolveFhirUrl(baseUrl, url) : url;
+    const relativePath = relativeFhirPathWithin(defaultUrl, baseUrl);
+    const fetchUrl =
+      useProxy && relativePath !== null
+        ? buildProxyUrl(config.PUBLIC_URL || '', epicId, relativePath)
+        : defaultUrl;
     const res = await fetch(fetchUrl, {
-      headers: {
-        Authorization: `Bearer ${connectionDocument.access_token}`,
-      },
+      headers: { Authorization: `Bearer ${connectionDocument.access_token}` },
     });
 
     if (!res.ok) {
@@ -780,26 +759,17 @@ export async function saveConnectionToDb({
   user: UserDocument;
   fhirVersion?: 'DSTU2' | 'R4';
 }) {
-  const doc = await getConnectionCardByUrl<EpicConnectionDocument>(
-    epicUrl,
-    db,
-    user.id,
-  );
-  // handle when epicUrl used to only have the base, but now has 'api/FHIR/DSTU2' appended, can remove this in the future
-  // added on 12/29/2023
-  const docLegacy = await getConnectionCardByUrl<EpicConnectionDocument>(
-    (epicUrl.replace('/api/FHIR/DSTU2/', '') || '').replace(
-      'api/FHIR/DSTU2',
-      '',
-    ),
+  // TODO: a second patient at the same tenant overwrites the first - key on patient too
+  const currentDoc = await getConnectionCardByTenant<EpicConnectionDocument>(
+    'epic',
+    epicId,
     db,
     user.id,
   );
   return new Promise((resolve, reject) => {
     if (res?.access_token && res?.expires_in && res?.patient) {
-      const currentDoc = doc || docLegacy;
       if (currentDoc) {
-        // If we already have a connection card for this URL, update it
+        // If we already have a connection card for this tenant, update it
         try {
           const nowInSeconds = Math.floor(Date.now() / 1000);
           currentDoc
@@ -916,6 +886,7 @@ export async function refreshEpicConnectionTokenIfNeeded(
         throw new Error(`User not found: ${userId}`);
       }
 
+      const tenant = findEpicTenantById(epicId);
       const oauthConfig: OAuthConfig = {
         clientId: getEpicClientId(config, fhirVersion, isEpicSandbox(epicId)),
         redirectUri: `${config.PUBLIC_URL}${Routes.EpicCallback}`,
@@ -923,9 +894,9 @@ export async function refreshEpicConnectionTokenIfNeeded(
         tenant: {
           id: epicId,
           name: epicName,
-          authUrl: epicAuthUrl,
-          tokenUrl: epicTokenUrl,
-          fhirBaseUrl: epicUrl,
+          authUrl: tenant?.authorize ?? epicAuthUrl,
+          tokenUrl: tenant?.token ?? epicTokenUrl,
+          fhirBaseUrl: tenant?.url ?? epicUrl,
           fhirVersion,
         },
       };

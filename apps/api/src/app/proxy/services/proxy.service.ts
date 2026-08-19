@@ -4,8 +4,28 @@ import * as server from 'http-proxy';
 import { ProxyModuleOptions, Service } from '../interfaces';
 import { HTTP_PROXY, PROXY_MODULE_OPTIONS } from '../proxy.constants';
 import { concatPath, getBaseURL } from '../utils';
+import { deriveRegistrationUrl } from '@mere/fhir-oauth';
 
 const ALLOWED_PROXY_HEADERS = ['accept', 'content-type', 'content-length'];
+
+/**
+ * Picks which of a tenant's published endpoints a proxied request targets.
+ */
+export function resolveProxyTarget(
+  service: Pick<Service, 'url' | 'authorize' | 'token'>,
+  targetType: string | undefined,
+): string {
+  switch (targetType) {
+    case 'authorize':
+      return service.authorize;
+    case 'token':
+      return service.token;
+    case 'register':
+      return deriveRegistrationUrl(service.authorize);
+    default:
+      return service.url;
+  }
+}
 
 @Injectable()
 export class ProxyService {
@@ -129,23 +149,7 @@ export class ProxyService {
       this.logger.debug(
         `Proxying ${req.method} ${req.url} to ${vendor ? `${vendor}/` : ''}${serviceId}`,
       );
-      const baseUrl = service.url;
-      const authUrl = service.authorize;
-      const tokenUrl = service.token;
-      let urlToProxy = baseUrl;
-
-      if (target_type === 'authorize') {
-        urlToProxy = authUrl;
-      } else if (target_type === 'token') {
-        urlToProxy = tokenUrl;
-      } else if (target_type === 'register') {
-        urlToProxy =
-          baseUrl
-            .replace('/api/FHIR/DSTU2/', '')
-            .replace('/api/FHIR/DSTU2', '')
-            .replace('/api/FHIR/R4/', '')
-            .replace('/api/FHIR/R4', '') + '/oauth2/register';
-      }
+      const urlToProxy = resolveProxyTarget(service, target_type);
 
       return this.doProxy(
         req,

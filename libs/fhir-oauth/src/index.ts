@@ -85,7 +85,12 @@ export {
 export { validateCallback, isTokenExpired } from './lib/token-exchange.js';
 export { initiateStandardAuth } from './lib/auth-url.js';
 export { parseJwtPayload } from './lib/jwt.js';
-export { extractRelativeFhirPath } from './lib/url-utils.js';
+export {
+  extractRelativeFhirPath,
+  relativeFhirPathWithin,
+  resolveFhirUrl,
+  deriveRegistrationUrl,
+} from './lib/url-utils.js';
 
 // Core types
 export type {

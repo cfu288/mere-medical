@@ -118,13 +118,13 @@ function epicContext(fhirVersion: string | undefined) {
       user_id: 'user-1',
       source: 'epic',
       name: 'Epic',
-      location: 'https://epic.example',
+      location: 'https://epic.example/api/FHIR/DSTU2/',
       access_token: 'epic-token',
       patient: 'patient-1',
       tenant_id: 'tenant-1',
       fhir_version: fhirVersion,
     }),
-    baseUrl: 'https://epic.example',
+    baseUrl: 'https://epic.example/api/FHIR/DSTU2/',
     useProxy: false,
   } as any;
 }
@@ -224,6 +224,26 @@ describe('vendor sync fetch', () => {
     await Epic.sync.syncAllRecords(epicContext(undefined));
 
     expect(fetch).toHaveBeenCalledTimes(10);
+    expect(fetch).toHaveBeenNthCalledWith(
+      5,
+      'https://epic.example/api/FHIR/DSTU2/MedicationStatement?patient=patient-1',
+      {
+        headers: {
+          Authorization: 'Bearer epic-token',
+          Accept: 'application/fhir+json',
+        },
+      },
+    );
+  });
+
+  it('fetches Epic records directly when no public url is configured', async () => {
+    const fetch = emptyBundleFetch();
+    globalThis.fetch = fetch;
+    const context = epicContext(undefined);
+    context.config = {};
+
+    await Epic.sync.syncAllRecords(context);
+
     expect(fetch).toHaveBeenNthCalledWith(
       5,
       'https://epic.example/api/FHIR/DSTU2/MedicationStatement?patient=patient-1',

@@ -26,8 +26,8 @@ export function extractRelativeFhirPath(
 
   if (fullPath.startsWith(basePath)) {
     fullPath = fullPath.slice(basePath.length);
-  } else if (fullPath.startsWith(basePath.slice(0, -1))) {
-    fullPath = fullPath.slice(basePath.length - 1);
+  } else if (fullPath === basePath.slice(0, -1)) {
+    fullPath = '';
   }
 
   if (fullPath.startsWith('/')) {
@@ -35,4 +35,69 @@ export function extractRelativeFhirPath(
   }
 
   return fullPath + parsedFull.search;
+}
+
+/**
+ * Returns the resource path of a URL relative to a FHIR base, or null when the
+ * URL points somewhere else entirely and so cannot be expressed as a proxy
+ * target under that base.
+ */
+export function relativeFhirPathWithin(
+  fullUrl: string,
+  fhirBaseUrl: string,
+): string | null {
+  const parsedBase = new URL(fhirBaseUrl);
+  const parsedFull = new URL(fullUrl, fhirBaseUrl);
+
+  if (parsedFull.origin !== parsedBase.origin) {
+    return null;
+  }
+
+  const basePath = parsedBase.pathname.endsWith('/')
+    ? parsedBase.pathname
+    : `${parsedBase.pathname}/`;
+
+  if (
+    !parsedFull.pathname.startsWith(basePath) &&
+    parsedFull.pathname !== basePath.slice(0, -1)
+  ) {
+    return null;
+  }
+
+  return extractRelativeFhirPath(fullUrl, fhirBaseUrl);
+}
+
+/**
+ * Resolves a FHIR resource path against a server's base URL.
+ *
+ * The resource path is always resolved relative to the full base URL, so path
+ * prefixes above the FHIR base (proxies, per-tenant mount points) survive.
+ */
+export function resolveFhirUrl(
+  fhirBaseUrl: string,
+  resourcePath: string,
+  params?: URLSearchParams,
+): string {
+  const base = fhirBaseUrl.endsWith('/') ? fhirBaseUrl : `${fhirBaseUrl}/`;
+  const relativePath = resourcePath.startsWith('/')
+    ? resourcePath.slice(1)
+    : resourcePath;
+
+  const url = new URL(relativePath, base);
+  const query = params?.toString();
+  if (query) {
+    url.search = query;
+  }
+
+  return url.toString();
+}
+
+/**
+ * Derives a SMART dynamic client registration endpoint from an authorization
+ * endpoint, which sits alongside it on the same authorization server.
+ */
+export function deriveRegistrationUrl(authorizeUrl: string): string {
+  const url = new URL('register', authorizeUrl);
+  url.search = '';
+  return url.toString();
 }
