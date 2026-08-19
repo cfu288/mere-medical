@@ -12,11 +12,6 @@ export type ResourceMapper<E, C> = (
   connection: C,
 ) => CreateClinicalDocument<E>;
 
-/**
- * Map the entries matching `resourceType` and write them to the database.
- * Bundles routinely carry entries of other types (OperationOutcome, _include
- * results), so anything that does not match is left for the caller to handle.
- */
 export async function upsertEntries<E extends FhirBundleEntry, C>(
   db: RxDatabase<DatabaseCollections>,
   entries: E[],
@@ -34,11 +29,6 @@ export async function upsertEntries<E extends FhirBundleEntry, C>(
   return db.clinical_documents.bulkUpsert(cds as unknown as ClinicalDocument[]);
 }
 
-/**
- * Write the `_include` / `_revinclude` entries of a bundle, grouped by resource
- * type. The searched-for resource is skipped because {@link upsertEntries} has
- * already written it, as is any type with no mapper.
- */
 export async function upsertIncludedEntries<E extends FhirBundleEntry, C>(
   db: RxDatabase<DatabaseCollections>,
   entries: E[],
