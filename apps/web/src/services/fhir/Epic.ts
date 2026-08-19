@@ -29,10 +29,7 @@ import {
   type EpicTokenSet,
 } from '@mere/fhir-oauth';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
-import {
-  ClinicalDocument,
-  CreateClinicalDocument,
-} from '../../models/clinical-document/ClinicalDocument.type';
+import { CreateClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { findUserById } from '../../repositories/UserRepository';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
 import {
@@ -42,6 +39,11 @@ import {
   ResourceMapper,
   VendorSync,
 } from './sync';
+import {
+  createDocument,
+  documentExistsByMetadataId,
+  findDocumentsByResourceType,
+} from '../../repositories/ClinicalDocumentRepository';
 
 const epicClient = createEpicClient({ signJwt });
 
@@ -605,25 +607,10 @@ async function syncDocumentReferences(
     useProxy,
   );
 
-  const docs = await db.clinical_documents
-    .find({
-      selector: {
-        user_id: connectionDocument.user_id,
-        'data_record.resource_type': {
-          $eq: 'documentreference',
-        },
-        connection_record_id: `${connectionDocument.id}`,
-      },
-    })
-    .exec();
-
   // format all the document references
-  const docRefItems = docs.map(
-    (doc) =>
-      doc.toMutableJSON() as unknown as ClinicalDocument<
-        BundleEntry<DocumentReference>
-      >,
-  );
+  const docRefItems = await findDocumentsByResourceType<
+    BundleEntry<DocumentReference>
+  >(db, connectionDocument.user_id, connectionDocument.id, 'documentreference');
   // for each docref, get attachments and sync them
   const cdsmap = docRefItems.map(async (docRefItem) => {
     const attachmentUrls = docRefItem.data_record.raw.resource?.content.map(
@@ -632,20 +619,13 @@ async function syncDocumentReferences(
     if (attachmentUrls) {
       for (const attachmentUrl of attachmentUrls) {
         if (attachmentUrl) {
-          const exists = await db.clinical_documents
-            .find({
-              selector: {
-                $and: [
-                  { user_id: connectionDocument.user_id },
-                  { 'metadata.id': `${attachmentUrl}` },
-                  {
-                    connection_record_id: `${docRefItem.connection_record_id}`,
-                  },
-                ],
-              },
-            })
-            .exec();
-          if (exists.length === 0) {
+          const exists = await documentExistsByMetadataId(
+            db,
+            connectionDocument.user_id,
+            docRefItem.connection_record_id,
+            attachmentUrl,
+          );
+          if (!exists) {
             const { contentType, raw } = await fetchAttachmentData(
               config,
               baseUrl,
@@ -676,9 +656,7 @@ async function syncDocumentReferences(
                 },
               };
 
-              await db.clinical_documents.insert(
-                cd as unknown as ClinicalDocument,
-              );
+              await createDocument(db, cd);
             } else {
               console.warn(
                 '[syncDocumentReferences] Skipping attachment save - missing raw or contentType:',

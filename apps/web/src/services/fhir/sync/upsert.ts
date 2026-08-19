@@ -1,9 +1,7 @@
 import { RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../../../app/providers/DatabaseCollections';
-import {
-  ClinicalDocument,
-  CreateClinicalDocument,
-} from '../../../models/clinical-document/ClinicalDocument.type';
+import { CreateClinicalDocument } from '../../../models/clinical-document/ClinicalDocument.type';
+import { bulkUpsertDocuments } from '../../../repositories/ClinicalDocumentRepository';
 
 export type FhirBundleEntry = { resource?: { resourceType: string } };
 
@@ -26,7 +24,7 @@ export async function upsertEntries<E extends FhirBundleEntry, C>(
     )
     .map((entry) => mapper(entry, connection));
 
-  return db.clinical_documents.bulkUpsert(cds as unknown as ClinicalDocument[]);
+  return bulkUpsertDocuments(db, cds);
 }
 
 export async function upsertIncludedEntries<E extends FhirBundleEntry, C>(
@@ -52,9 +50,9 @@ export async function upsertIncludedEntries<E extends FhirBundleEntry, C>(
   for (const [resourceType, grouped] of groups.entries()) {
     const mapper = mappers[resourceType];
     if (mapper) {
-      const cds = grouped.map((entry) => mapper(entry, connection));
-      await db.clinical_documents.bulkUpsert(
-        cds as unknown as ClinicalDocument[],
+      await bulkUpsertDocuments(
+        db,
+        grouped.map((entry) => mapper(entry, connection)),
       );
     }
   }

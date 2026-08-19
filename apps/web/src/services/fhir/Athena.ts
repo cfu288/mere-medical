@@ -24,10 +24,7 @@ import {
 import { findUserById } from '../../repositories/UserRepository';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
 import uuid4 from '../../shared/utils/UUIDUtils';
-import {
-  ClinicalDocument,
-  CreateClinicalDocument,
-} from '../../models/clinical-document/ClinicalDocument.type';
+import { CreateClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import {
   createAthenaClient,
   buildAthenaOAuthConfig,
@@ -52,6 +49,11 @@ export {
   type AthenaTokenSet,
   type AthenaOAuthConfigOptions,
 } from '@mere/fhir-oauth';
+import {
+  createDocument,
+  documentExistsByMetadataId,
+  findDocumentsByResourceType,
+} from '../../repositories/ClinicalDocumentRepository';
 
 const athenaClient = createAthenaClient();
 const athenaSession = createSessionManager('athena');
@@ -338,24 +340,9 @@ async function syncDocumentReferences(
     params,
   );
 
-  const docs = await db.clinical_documents
-    .find({
-      selector: {
-        user_id: connectionDocument.user_id,
-        'data_record.resource_type': {
-          $eq: 'documentreference',
-        },
-        connection_record_id: `${connectionDocument.id}`,
-      },
-    })
-    .exec();
-
-  const docRefItems = docs.map(
-    (doc) =>
-      doc.toMutableJSON() as unknown as CreateClinicalDocument<
-        BundleEntry<DocumentReference>
-      >,
-  );
+  const docRefItems = await findDocumentsByResourceType<
+    BundleEntry<DocumentReference>
+  >(db, connectionDocument.user_id, connectionDocument.id, 'documentreference');
   const cdsmap = docRefItems.map(async (docRefItem) => {
     const attachments =
       docRefItem.data_record.raw.resource?.content.map((a) => a.attachment) ||
@@ -368,20 +355,13 @@ async function syncDocumentReferences(
           ? `${docRefItem.metadata.id}/attachment`
           : null);
       if (attachmentId) {
-        const exists = await db.clinical_documents
-          .find({
-            selector: {
-              $and: [
-                { user_id: connectionDocument.user_id },
-                { 'metadata.id': `${attachmentId}` },
-                {
-                  connection_record_id: `${docRefItem.connection_record_id}`,
-                },
-              ],
-            },
-          })
-          .exec();
-        if (exists.length === 0) {
+        const exists = await documentExistsByMetadataId(
+          db,
+          connectionDocument.user_id,
+          docRefItem.connection_record_id,
+          attachmentId,
+        );
+        if (!exists) {
           const { contentType, raw } = attachmentUrl
             ? await fetchAttachmentData(attachmentUrl, connectionDocument)
             : decodeInlineAttachmentData(attachment);
@@ -407,9 +387,7 @@ async function syncDocumentReferences(
               },
             };
 
-            await db.clinical_documents.insert(
-              cd as unknown as ClinicalDocument<string | Blob>,
-            );
+            await createDocument(db, cd);
           }
         }
       }

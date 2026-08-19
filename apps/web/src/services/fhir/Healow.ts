@@ -46,10 +46,7 @@ import { createConnection } from '../../repositories/ConnectionRepository';
 import { findUserById } from '../../repositories/UserRepository';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
 import uuid4 from '../../shared/utils/UUIDUtils';
-import {
-  ClinicalDocument,
-  CreateClinicalDocument,
-} from '../../models/clinical-document/ClinicalDocument.type';
+import { CreateClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { concatPath } from '../../shared/utils/urlUtils';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
 import { ResourceMapper, VendorSync, upsertEntries } from './sync';
@@ -76,6 +73,11 @@ export {
   type HealowTokenSet,
   type HealowOAuthConfigOptions,
 } from '@mere/fhir-oauth';
+import {
+  createDocument,
+  documentExistsByMetadataId,
+  findDocumentsByResourceType,
+} from '../../repositories/ClinicalDocumentRepository';
 
 export enum HealowLocalStorageKeys {
   HEALOW_BASE_URL = 'healowBaseUrl',
@@ -366,24 +368,9 @@ async function syncDocumentReferences(
     useProxy,
   );
 
-  const docs = await db.clinical_documents
-    .find({
-      selector: {
-        user_id: connectionDocument.user_id,
-        'data_record.resource_type': {
-          $eq: 'documentreference',
-        },
-        connection_record_id: `${connectionDocument.id}`,
-      },
-    })
-    .exec();
-
-  const docRefItems = docs.map(
-    (doc) =>
-      doc.toMutableJSON() as unknown as CreateClinicalDocument<
-        BundleEntry<DocumentReference>
-      >,
-  );
+  const docRefItems = await findDocumentsByResourceType<
+    BundleEntry<DocumentReference>
+  >(db, connectionDocument.user_id, connectionDocument.id, 'documentreference');
   const cdsmap = docRefItems.map(async (docRefItem) => {
     const attachmentUrls = docRefItem.data_record.raw.resource?.content.map(
       (a) => a.attachment.url,
@@ -391,20 +378,13 @@ async function syncDocumentReferences(
     if (attachmentUrls) {
       for (const attachmentUrl of attachmentUrls) {
         if (attachmentUrl) {
-          const exists = await db.clinical_documents
-            .find({
-              selector: {
-                $and: [
-                  { user_id: connectionDocument.user_id },
-                  { 'metadata.id': `${attachmentUrl}` },
-                  {
-                    connection_record_id: `${docRefItem.connection_record_id}`,
-                  },
-                ],
-              },
-            })
-            .exec();
-          if (exists.length === 0) {
+          const exists = await documentExistsByMetadataId(
+            db,
+            connectionDocument.user_id,
+            docRefItem.connection_record_id,
+            attachmentUrl,
+          );
+          if (!exists) {
             console.log('Syncing attachment: ' + attachmentUrl);
             const { contentType, raw } = await fetchAttachmentData(
               publicUrl,
@@ -434,9 +414,7 @@ async function syncDocumentReferences(
                 },
               };
 
-              await db.clinical_documents.insert(
-                cd as unknown as ClinicalDocument<string | Blob>,
-              );
+              await createDocument(db, cd);
             }
           }
         }

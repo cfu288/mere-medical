@@ -30,10 +30,7 @@ import {
 import { FhirResource, BundleEntry, Bundle, DocumentReference } from 'fhir/r2';
 import { RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
-import {
-  ClinicalDocument,
-  CreateClinicalDocument,
-} from '../../models/clinical-document/ClinicalDocument.type';
+import { CreateClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
 import {
   extractVeradigmPatientId,
@@ -55,6 +52,11 @@ export {
   type VeradigmTokenSet,
   type VeradigmOAuthConfigOptions,
 } from '@mere/fhir-oauth';
+import {
+  createDocument,
+  documentExistsByMetadataId,
+  findDocumentsByResourceType,
+} from '../../repositories/ClinicalDocumentRepository';
 
 export enum VeradigmLocalStorageKeys {
   VERADIGM_BASE_URL = 'veradigmBaseUrl',
@@ -289,25 +291,10 @@ async function syncDocumentReferences(
     params,
   );
 
-  const docs = await db.clinical_documents
-    .find({
-      selector: {
-        user_id: connectionDocument.user_id,
-        'data_record.resource_type': {
-          $eq: 'documentreference',
-        },
-        connection_record_id: `${connectionDocument.id}`,
-      },
-    })
-    .exec();
-
   // format all the document references
-  const docRefItems = docs.map(
-    (doc) =>
-      doc.toMutableJSON() as unknown as ClinicalDocument<
-        BundleEntry<DocumentReference>
-      >,
-  );
+  const docRefItems = await findDocumentsByResourceType<
+    BundleEntry<DocumentReference>
+  >(db, connectionDocument.user_id, connectionDocument.id, 'documentreference');
   // for each docref, get attachments and sync them
   const cdsmap = docRefItems.map(async (docRefItem) => {
     const attachmentUrls = (
@@ -316,20 +303,13 @@ async function syncDocumentReferences(
     if (attachmentUrls) {
       for (const attachmentUrl of attachmentUrls) {
         if (attachmentUrl) {
-          const exists = await db.clinical_documents
-            .find({
-              selector: {
-                $and: [
-                  { user_id: connectionDocument.user_id },
-                  { 'metadata.id': `${attachmentUrl}` },
-                  {
-                    connection_record_id: `${docRefItem.connection_record_id}`,
-                  },
-                ],
-              },
-            })
-            .exec();
-          if (exists.length === 0) {
+          const exists = await documentExistsByMetadataId(
+            db,
+            connectionDocument.user_id,
+            docRefItem.connection_record_id,
+            attachmentUrl,
+          );
+          if (!exists) {
             console.log('Syncing attachment: ' + attachmentUrl);
             // attachment does not exist, sync it
             const { contentType, raw } = await fetchAttachmentData(
@@ -358,9 +338,7 @@ async function syncDocumentReferences(
                 },
               };
 
-              await db.clinical_documents.insert(
-                cd as unknown as ClinicalDocument,
-              );
+              await createDocument(db, cd);
             }
           } else {
             console.log('Attachment already synced: ' + attachmentUrl);
