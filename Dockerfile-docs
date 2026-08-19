@@ -1,4 +1,4 @@
-FROM node:20.19.0 AS build-stage
+FROM node:24.19.0-bookworm@sha256:934240a162082fd8b8a2f90cd5114446443f1eba1c5378f6687167ca405e6584 AS build-stage
 
 WORKDIR /app
 COPY package*.json /app/
@@ -8,8 +8,7 @@ COPY . /app/
 ENV NX_DAEMON=false
 RUN npx nx build docs
 
-FROM nginx:1.23
+FROM nginxinc/nginx-unprivileged:1.30-alpine@sha256:44e36330f74d4f3a1d4e222acca9e23b401fb87811a7597024502bb759c4dd49
 
 COPY --from=build-stage /app/apps/docs/build /usr/share/nginx/html
 COPY --from=build-stage /app/default.conf /etc/nginx/conf.d/default.conf
-COPY --from=build-stage /app/nginx.conf /etc/nginx/nginx.conf

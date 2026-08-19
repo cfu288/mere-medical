@@ -1,18 +1,30 @@
-version: '3.9'
-
 services:
-  nginx:
-    image: nginx:latest
+  caddy:
+    image: caddy:2-alpine
     ports:
-      - 443:443
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
     volumes:
-      - ./nginx/certs/:/etc/nginx/ssl
-      - ./nginx/conf/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
     depends_on:
-      - app
+      app:
+        condition: service_healthy
   app:
     image: cfu288/mere-medical:latest
-    container_name: mere-medical-app
+    restart: unless-stopped
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
     environment:
       - ONPATIENT_CLIENT_ID=${ONPATIENT_CLIENT_ID}
       - ONPATIENT_CLIENT_SECRET=${ONPATIENT_CLIENT_SECRET}
@@ -28,4 +40,11 @@ services:
       - VA_CLIENT_ID=${VA_CLIENT_ID}
       - HEALOW_CLIENT_ID=${HEALOW_CLIENT_ID}
       - HEALOW_CLIENT_SECRET=${HEALOW_CLIENT_SECRET}
-      - PUBLIC_URL=https://meremedical.local
+      - PUBLIC_URL=https://mere.example.com
+
+networks:
+  proxy: {}
+
+volumes:
+  caddy-data:
+  caddy-config:

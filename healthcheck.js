@@ -2,7 +2,7 @@ var http = require('http');
 
 var options = {
   host: 'localhost',
-  port: '80',
+  port: process.env.PORT || '8080',
   timeout: 2000,
 };
 

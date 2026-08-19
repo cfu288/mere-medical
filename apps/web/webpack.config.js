@@ -5,10 +5,24 @@ const { merge } = require('webpack-merge');
 const { InjectManifest } = require('workbox-webpack-plugin');
 const path = require('path');
 
-const commitHash = require('child_process')
-  .execSync('git describe --tag')
-  .toString()
-  .trim();
+function getAppVersion() {
+  if (process.env.MERE_APP_VERSION) {
+    return process.env.MERE_APP_VERSION;
+  }
+  try {
+    const { execSync } = require('child_process');
+    const date = execSync('git show -s --format=%cs HEAD')
+      .toString()
+      .trim()
+      .replace(/-/g, '.');
+    const hash = execSync('git rev-parse --short HEAD').toString().trim();
+    return `${date}+${hash}`;
+  } catch {
+    return 'unknown';
+  }
+}
+
+const appVersion = getAppVersion();
 
 function myCustomPlugin() {
   // `options` and `context` are the target options and
@@ -30,7 +44,7 @@ function myCustomPlugin() {
         devtool: 'source-map', // Source map generation must be turned on
         plugins: [
           new DefinePlugin({
-            MERE_APP_VERSION: JSON.stringify(commitHash),
+            MERE_APP_VERSION: JSON.stringify(appVersion),
             IS_DEMO: JSON.stringify(process.env.IS_DEMO || 'disabled'),
           }),
         ],

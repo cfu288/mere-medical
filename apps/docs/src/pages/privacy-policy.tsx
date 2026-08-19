@@ -256,7 +256,7 @@ of the app or technology.
       </div>
     </div>    
     to encrypt your data while it is transmitted?</strong></td>
-    <td>   Yes - when you take certain steps while self-hosting (<a target='_blank' href='https://meremedical.co/docs/getting-started/docker#setting-up-with-docker-compose--local-ssl-with-mkcert--nginx'>click to learn how</a>)</td>
+    <td>   Yes - when you take certain steps while self-hosting (<a target='_blank' href='https://meremedical.co/docs/getting-started/docker#running-behind-a-reverse-proxy'>click to learn how</a>)</td>
   </tr>
 </table>
 <p>
