@@ -1,4 +1,4 @@
-import { mapEntries, mapIncludedResources } from './mapEntries';
+import { mapEntries, mapCompanionResources } from './mapEntries';
 
 describe('mapEntries', () => {
   it('maps only entries with the requested resource type', () => {
@@ -21,7 +21,7 @@ describe('mapEntries', () => {
   });
 });
 
-describe('mapIncludedResources', () => {
+describe('mapCompanionResources', () => {
   it('maps each included resource type with the connection', () => {
     const connection = { id: 'connection-1' };
     const specimen = { resource: { resourceType: 'Specimen', id: 's1' } };
@@ -31,7 +31,7 @@ describe('mapIncludedResources', () => {
       .fn()
       .mockReturnValue({ id: 'mapped-provenance' });
 
-    const documents = mapIncludedResources(
+    const documents = mapCompanionResources(
       [specimen, provenance],
       { Specimen: specimenMapper, Provenance: provenanceMapper },
       connection,
@@ -56,7 +56,7 @@ describe('mapIncludedResources', () => {
       .fn()
       .mockReturnValue({ id: 'mapped-report' });
 
-    const documents = mapIncludedResources(
+    const documents = mapCompanionResources(
       [diagnosticReport, media, {}],
       { DiagnosticReport: diagnosticReportMapper },
       connection,

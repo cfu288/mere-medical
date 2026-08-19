@@ -34,7 +34,7 @@ import { findUserById } from '../../repositories/UserRepository';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
 import {
   mapEntries,
-  mapIncludedResources,
+  mapCompanionResources,
   FhirBundleEntry,
   ResourceMapper,
   VendorSync,
@@ -256,7 +256,7 @@ async function syncFHIRResourceWithIncludes<E extends FhirBundleEntry>(
   );
   await bulkUpsertDocuments(
     db,
-    mapIncludedResources(
+    mapCompanionResources(
       resc,
       includeMappers,
       connectionDocument,
