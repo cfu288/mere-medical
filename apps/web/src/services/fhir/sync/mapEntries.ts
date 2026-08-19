@@ -21,6 +21,11 @@ export function mapEntries<E extends FhirBundleEntry, C>(
     .map((entry) => mapper(entry, connection));
 }
 
+/**
+ * A search using `_include` or `_revinclude` returns the searched resource and
+ * its companions in one bundle. Maps the companions, each with the mapper
+ * registered for its own resource type.
+ */
 export function mapCompanionResources<E extends FhirBundleEntry, C>(
   entries: E[],
   mappers: Record<string, ResourceMapper<E, C>>,
