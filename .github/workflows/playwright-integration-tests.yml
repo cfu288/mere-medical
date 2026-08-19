@@ -5,12 +5,18 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
 
 permissions:
   contents: read
 
 jobs:
   test:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     timeout-minutes: 60
     runs-on: ubuntu-22.04
     steps:
