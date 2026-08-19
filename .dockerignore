@@ -21,6 +21,15 @@ docker-compose*.yml
 .vscode
 .idea
 .claude
+.cursor
+.cursorrules
+.aider*
+.continue
+.windsurf
+.gemini
+.opencode
+AGENTS.md
+CLAUDE.md
 .dev
 examples
 apps/docs/build
