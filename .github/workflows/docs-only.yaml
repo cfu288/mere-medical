@@ -34,6 +34,5 @@ jobs:
           context: .
           push: true
           file: Dockerfile-docs
-          provenance: mode=max
           sbom: true
           tags: cfu288/mere-medical-docs:latest

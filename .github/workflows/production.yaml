@@ -51,7 +51,6 @@ jobs:
         with:
           context: .
           platforms: ${{ matrix.platform }}
-          provenance: mode=max
           sbom: true
           cache-from: type=gha,scope=app-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
           cache-to: type=gha,mode=max,scope=app-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
@@ -154,7 +153,6 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64
-          provenance: mode=max
           sbom: true
           cache-from: type=gha,scope=app-demo
           cache-to: type=gha,mode=max,scope=app-demo
@@ -189,7 +187,6 @@ jobs:
           context: .
           push: true
           file: Dockerfile-docs
-          provenance: mode=max
           sbom: true
           cache-from: type=gha,scope=docs
           cache-to: type=gha,mode=max,scope=docs

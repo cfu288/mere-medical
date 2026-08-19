@@ -111,10 +111,11 @@ services:
 13. **SHA-pin all actions** (`uses: docker/build-push-action@<sha> # v6.x.y`) and add
     top-level `permissions: contents: read` to every workflow (widen per-job). Renovate
     keeps pins fresh. Optionally run zizmor on the workflows and add OpenSSF Scorecard.
-14. **Attestations:** `provenance: mode=max` + `sbom: true` on the per-arch build jobs.
-    The push-by-digest → `imagetools create` merge preserves attestations on current
-    buildx, but pin `version:` in `docker/setup-buildx-action` (buildx 0.31.1 briefly
-    broke this exact merge flow — docker/buildx#3708).
+14. **Attestations:** `sbom: true` on the per-arch build jobs. Provenance stays at
+    BuildKit's default `mode=min`, which omits build-arg values; `mode=max` would
+    publish them. The push-by-digest → `imagetools create` merge preserves attestations
+    on current buildx, but pin `version:` in `docker/setup-buildx-action` (buildx 0.31.1
+    briefly broke this exact merge flow — docker/buildx#3708).
 15. **Scanning:** Trivy report-only (SARIF → Security tab) after push, plus a weekly
     scheduled scan of `:latest` and a weekly scheduled rebuild so base-image CVE fixes
     reach `latest` without a release. Don't gate releases on CVE counts initially.
