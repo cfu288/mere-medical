@@ -622,11 +622,12 @@ async function syncDocumentReferences(
   >(db, connectionDocument.user_id, connectionDocument.id, 'documentreference');
   // for each docref, get attachments and sync them
   const cdsmap = docRefItems.map(async (docRefItem) => {
-    const attachmentUrls = docRefItem.data_record.raw.resource?.content.map(
-      (a) => a.attachment.url,
+    const attachments = docRefItem.data_record.raw.resource?.content.map(
+      (a) => a.attachment,
     );
-    if (attachmentUrls) {
-      for (const attachmentUrl of attachmentUrls) {
+    if (attachments) {
+      for (const attachment of attachments) {
+        const attachmentUrl = attachment?.url;
         if (attachmentUrl) {
           const exists = await documentExistsByMetadataId(
             db,
@@ -656,12 +657,8 @@ async function syncDocumentReferences(
                 },
                 metadata: {
                   id: attachmentUrl,
-                  date:
-                    docRefItem.data_record.raw.resource?.created ||
-                    docRefItem.data_record.raw.resource?.context?.period?.start,
-                  display_name:
-                    docRefItem.data_record.raw.resource?.type?.text ||
-                    docRefItem.metadata?.display_name,
+                  date: attachment?.creation || docRefItem.metadata?.date,
+                  display_name: docRefItem.metadata?.display_name,
                 },
               };
 
