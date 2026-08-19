@@ -110,7 +110,7 @@
     "eslint-plugin-jsx-a11y": "6.10.2",
     "eslint-plugin-playwright": "^0.18.0",
     "eslint-plugin-react": "7.31.11",
-    "eslint-plugin-react-hooks": "5.0.0",
+    "eslint-plugin-react-hooks": "7.1.1",
     "exitzero": "^1.0.1",
     "fhirpath": "^3.5.0",
     "framer-motion": "^10.16.4",
