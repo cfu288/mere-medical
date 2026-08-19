@@ -21,7 +21,7 @@ export function mapEntries<E extends FhirBundleEntry, C>(
     .map((entry) => mapper(entry, connection));
 }
 
-export function mapIncludedEntries<E extends FhirBundleEntry, C>(
+export function mapIncludedResources<E extends FhirBundleEntry, C>(
   entries: E[],
   mappers: Record<string, ResourceMapper<E, C>>,
   connection: C,

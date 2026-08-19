@@ -27,7 +27,7 @@ import { Routes } from '../../Routes';
 import { AppConfig } from '../../app/providers/AppConfigProvider';
 import {
   mapEntries,
-  mapIncludedEntries,
+  mapIncludedResources,
   FhirBundleEntry,
   ResourceMapper,
   VendorSync,
@@ -171,7 +171,7 @@ async function syncFHIRResourceWithIncludes<E extends FhirBundleEntry>(
   );
   await bulkUpsertDocuments(
     db,
-    mapIncludedEntries(
+    mapIncludedResources(
       resc,
       includeMappers,
       connectionDocument,

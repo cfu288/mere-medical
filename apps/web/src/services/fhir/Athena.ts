@@ -35,7 +35,7 @@ import {
 } from '@mere/fhir-oauth';
 import {
   mapEntries,
-  mapIncludedEntries,
+  mapIncludedResources,
   ResourceMapper,
   VendorSync,
 } from './sync';
@@ -221,7 +221,7 @@ async function syncFHIRResourceWithIncludes<T extends FhirResource>(
   );
   await bulkUpsertDocuments(
     db,
-    mapIncludedEntries(
+    mapIncludedResources(
       resc,
       includeMappers,
       connectionDocument,
