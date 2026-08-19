@@ -9,7 +9,7 @@ These instructions will tell you how to get Mere Medical up and running on your 
 
 :::warning Mere must be served over HTTPS (or accessed via localhost)
 
-Mere relies on browser Web Crypto APIs (such as `crypto.randomUUID`), which browsers only enable on **secure origins** — `https://` URLs or `localhost`. If you access Mere over plain HTTP from any other address (e.g. `http://192.168.1.50:4200` from another device on your network), the app cannot start and you will see a **white screen**.
+Mere relies on browser Web Crypto APIs (such as `crypto.randomUUID`), which browsers only enable on **secure origins**: `https://` URLs or `localhost`. If you access Mere over plain HTTP from any other address (e.g. `http://192.168.1.50:4200` from another device on your network), the app cannot start and you will see a **white screen**.
 
 Either open Mere at `http://localhost:<port>` on the machine running it, or put it behind a [reverse proxy that terminates SSL](#running-behind-a-reverse-proxy).
 
@@ -17,7 +17,7 @@ Either open Mere at `http://localhost:<port>` on the machine running it, or put 
 
 If you just want Mere running on your own computer, follow the [Docker](#setting-up-with-docker) or [Docker Compose](#setting-up-with-docker-compose) instructions and open it at `http://localhost:4200`. That is a secure origin, so everything works with no certificate setup.
 
-To connect Mere to patient portals such as OnPatient, Epic, or Healow, you will need a real domain name and HTTPS — most portals only accept `https://` redirect URLs, and some reject `localhost` entirely. See [running behind a reverse proxy](#running-behind-a-reverse-proxy).
+To connect Mere to patient portals such as OnPatient, Epic, or Healow, you will need a real domain name and HTTPS. Most portals only accept `https://` redirect URLs, and some reject `localhost` entirely. See [running behind a reverse proxy](#running-behind-a-reverse-proxy).
 
 If you'd rather deploy to a cloud instance instead of your own computer, check out our [one click Digital Ocean deploy](./deploy-to-do.md).
 
@@ -126,7 +126,7 @@ You need this if you want to open Mere from another device, or connect it to a p
 
 If you already run a reverse proxy, point it at the app container's port `8080` and set `PUBLIC_URL` to the URL your users visit. If you don't, the example below uses [Caddy](https://caddyserver.com/), which obtains and renews Let's Encrypt certificates automatically. Ready-made files are [here](https://github.com/cfu288/mere-medical/tree/main/examples/mere-medical-docker-compose-caddy-ssl).
 
-Replace `mere.example.com` with your own domain in both files below, and make sure it resolves to this server and that ports 80 and 443 are reachable from the internet — Let's Encrypt needs both to issue the certificate.
+Replace `mere.example.com` with your own domain in both files below, and make sure it resolves to this server and that ports 80 and 443 are reachable from the internet. Let's Encrypt needs both to issue the certificate.
 
 ```text title="mere-medical/caddy/Caddyfile"
 mere.example.com {
@@ -184,7 +184,7 @@ volumes:
   caddy-config:
 ```
 
-The app container is only reachable through Caddy on the shared `proxy` network — no ports are published on it directly. The directory name becomes the container name prefix, so we suggest naming the folder `mere-medical`:
+The app container is only reachable through Caddy on the shared `proxy` network, because no ports are published on it directly. The directory name becomes the container name prefix, so we suggest naming the folder `mere-medical`:
 
 ```
 mere-medical
@@ -224,7 +224,7 @@ If Mere works at `http://localhost:4200` but shows a blank white page when acces
 Uncaught TypeError: window.crypto.randomUUID is not a function
 ```
 
-Browsers only expose the Web Crypto APIs Mere needs on `https://` origins or `localhost`, so plain-HTTP access from any other address cannot work — this is a browser security restriction, not a configuration bug. Access Mere from the host machine via `localhost`, or serve it through a [reverse proxy with SSL](#running-behind-a-reverse-proxy).
+Browsers only expose the Web Crypto APIs Mere needs on `https://` origins or `localhost`, so plain-HTTP access from any other address cannot work. This is a browser security restriction, not a configuration bug. Access Mere from the host machine via `localhost`, or serve it through a [reverse proxy with SSL](#running-behind-a-reverse-proxy).
 
 ### "Unable to search for healthcare systems"
 
