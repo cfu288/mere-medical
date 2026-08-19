@@ -2,6 +2,7 @@ services:
   caddy:
     image: caddy:2-alpine
     ports:
+      - '80:80'
       - '443:443'
       - '443:443/udp'
     volumes:
@@ -39,7 +40,7 @@ services:
       - VA_CLIENT_ID=${VA_CLIENT_ID}
       - HEALOW_CLIENT_ID=${HEALOW_CLIENT_ID}
       - HEALOW_CLIENT_SECRET=${HEALOW_CLIENT_SECRET}
-      - PUBLIC_URL=https://meremedical.local
+      - PUBLIC_URL=https://mere.example.com
 
 networks:
   proxy: {}
