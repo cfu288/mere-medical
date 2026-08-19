@@ -3,20 +3,7 @@
  */
 
 /* eslint-disable no-inner-declarations */
-import {
-  AllergyIntolerance,
-  Bundle,
-  BundleEntry,
-  Condition,
-  DiagnosticReport,
-  DocumentReference,
-  Encounter,
-  Immunization,
-  MedicationStatement,
-  Observation,
-  Patient,
-  Procedure,
-} from 'fhir/r2';
+import { Bundle, BundleEntry, DocumentReference } from 'fhir/r2';
 import {
   MedicationRequest,
   CarePlan,
@@ -215,27 +202,35 @@ export const sync: VendorSync = {
     const version = cd.fhir_version ?? 'DSTU2';
     const patient = parseIdToken(cd.id_token).fhirUser.split('/').slice(-1)[0];
 
-    const get =
-      <E extends FhirBundleEntry>(
-        path: string,
-        mapper: ResourceMapper<E, CernerConnectionDocument>,
-        params: Record<string, string>,
-      ) =>
-      () =>
-        syncFHIRResource<E>(baseUrl, cd, db, path, mapper, params);
-
     if (version === 'R4') {
       return runSync({
-        Procedure: get('Procedure', R4.mapProcedureToClinicalDocument, {
-          patient,
-        }),
-        Patient: get('Patient', R4.mapPatientToClinicalDocument, {
-          _id: patient,
-        }),
-        Observation: get('Observation', R4.mapObservationToClinicalDocument, {
-          patient,
-          category: 'laboratory',
-        }),
+        Procedure: () =>
+          syncFHIRResource(
+            baseUrl,
+            cd,
+            db,
+            'Procedure',
+            R4.mapProcedureToClinicalDocument,
+            { patient },
+          ),
+        Patient: () =>
+          syncFHIRResource(
+            baseUrl,
+            cd,
+            db,
+            'Patient',
+            R4.mapPatientToClinicalDocument,
+            { _id: patient },
+          ),
+        Observation: () =>
+          syncFHIRResource(
+            baseUrl,
+            cd,
+            db,
+            'Observation',
+            R4.mapObservationToClinicalDocument,
+            { patient, category: 'laboratory' },
+          ),
         DiagnosticReport: () =>
           syncFHIRResourceWithIncludes(
             baseUrl,
@@ -250,116 +245,248 @@ export const sync: VendorSync = {
               Provenance: R4.mapProvenanceToClinicalDocument,
             },
           ),
-        MedicationRequest: get(
-          'MedicationRequest',
-          R4.mapMedicationRequestToClinicalDocument,
-          { patient },
-        ),
-        Immunization: get(
-          'Immunization',
-          R4.mapImmunizationToClinicalDocument,
-          {
-            patient,
-          },
-        ),
-        Condition: get('Condition', R4.mapConditionToClinicalDocument, {
-          patient,
-        }),
+        MedicationRequest: () =>
+          syncFHIRResource(
+            baseUrl,
+            cd,
+            db,
+            'MedicationRequest',
+            R4.mapMedicationRequestToClinicalDocument,
+            { patient },
+          ),
+        Immunization: () =>
+          syncFHIRResource(
+            baseUrl,
+            cd,
+            db,
+            'Immunization',
+            R4.mapImmunizationToClinicalDocument,
+            { patient },
+          ),
+        Condition: () =>
+          syncFHIRResource(
+            baseUrl,
+            cd,
+            db,
+            'Condition',
+            R4.mapConditionToClinicalDocument,
+            { patient },
+          ),
         DocumentReference: () =>
           syncDocumentReferences(baseUrl, cd, db, { patient }, 'R4'),
-        Encounter: get('Encounter', R4.mapEncounterToClinicalDocument, {
-          patient,
-        }),
-        AllergyIntolerance: get(
-          'AllergyIntolerance',
-          R4.mapAllergyIntoleranceToClinicalDocument,
-          { patient },
-        ),
-        CareTeam: get('CareTeam', R4.mapCareTeamToClinicalDocument, {
-          patient,
-        }),
-        Goal: get('Goal', R4.mapGoalToClinicalDocument, { patient }),
-        Coverage: get('Coverage', R4.mapCoverageToClinicalDocument, {
-          patient,
-        }),
-        Device: get('Device', R4.mapDeviceToClinicalDocument, { patient }),
-        ServiceRequest: get(
-          'ServiceRequest',
-          R4.mapServiceRequestToClinicalDocument,
-          { patient },
-        ),
-        MedicationDispense: get(
-          'MedicationDispense',
-          R4.mapMedicationDispenseToClinicalDocument,
-          { patient },
-        ),
-        MedicationAdministration: get(
-          'MedicationAdministration',
-          R4.mapMedicationAdministrationToClinicalDocument,
-          { patient },
-        ),
-        Appointment: get('Appointment', R4.mapAppointmentToClinicalDocument, {
-          patient,
-          date: 'ge1900-01-01T00:00:00Z',
-        }),
-        FamilyMemberHistory: get(
-          'FamilyMemberHistory',
-          R4.mapFamilyMemberHistoryToClinicalDocument,
-          { patient },
-        ),
-        Consent: get('Consent', R4.mapConsentToClinicalDocument, { patient }),
-        NutritionOrder: get(
-          'NutritionOrder',
-          R4.mapNutritionOrderToClinicalDocument,
-          { patient },
-        ),
-        QuestionnaireResponse: get(
-          'QuestionnaireResponse',
-          R4.mapQuestionnaireResponseToClinicalDocument,
-          { patient },
-        ),
+        Encounter: () =>
+          syncFHIRResource(
+            baseUrl,
+            cd,
+            db,
+            'Encounter',
+            R4.mapEncounterToClinicalDocument,
+            { patient },
+          ),
+        AllergyIntolerance: () =>
+          syncFHIRResource(
+            baseUrl,
+            cd,
+            db,
+            'AllergyIntolerance',
+            R4.mapAllergyIntoleranceToClinicalDocument,
+            { patient },
+          ),
+        CareTeam: () =>
+          syncFHIRResource(
+            baseUrl,
+            cd,
+            db,
+            'CareTeam',
+            R4.mapCareTeamToClinicalDocument,
+            { patient },
+          ),
+        Goal: () =>
+          syncFHIRResource(
+            baseUrl,
+            cd,
+            db,
+            'Goal',
+            R4.mapGoalToClinicalDocument,
+            { patient },
+          ),
+        Coverage: () =>
+          syncFHIRResource(
+            baseUrl,
+            cd,
+            db,
+            'Coverage',
+            R4.mapCoverageToClinicalDocument,
+            { patient },
+          ),
+        Device: () =>
+          syncFHIRResource(
+            baseUrl,
+            cd,
+            db,
+            'Device',
+            R4.mapDeviceToClinicalDocument,
+            { patient },
+          ),
+        ServiceRequest: () =>
+          syncFHIRResource(
+            baseUrl,
+            cd,
+            db,
+            'ServiceRequest',
+            R4.mapServiceRequestToClinicalDocument,
+            { patient },
+          ),
+        MedicationDispense: () =>
+          syncFHIRResource(
+            baseUrl,
+            cd,
+            db,
+            'MedicationDispense',
+            R4.mapMedicationDispenseToClinicalDocument,
+            { patient },
+          ),
+        MedicationAdministration: () =>
+          syncFHIRResource(
+            baseUrl,
+            cd,
+            db,
+            'MedicationAdministration',
+            R4.mapMedicationAdministrationToClinicalDocument,
+            { patient },
+          ),
+        Appointment: () =>
+          syncFHIRResource(
+            baseUrl,
+            cd,
+            db,
+            'Appointment',
+            R4.mapAppointmentToClinicalDocument,
+            { patient, date: 'ge1900-01-01T00:00:00Z' },
+          ),
+        FamilyMemberHistory: () =>
+          syncFHIRResource(
+            baseUrl,
+            cd,
+            db,
+            'FamilyMemberHistory',
+            R4.mapFamilyMemberHistoryToClinicalDocument,
+            { patient },
+          ),
+        Consent: () =>
+          syncFHIRResource(
+            baseUrl,
+            cd,
+            db,
+            'Consent',
+            R4.mapConsentToClinicalDocument,
+            { patient },
+          ),
+        NutritionOrder: () =>
+          syncFHIRResource(
+            baseUrl,
+            cd,
+            db,
+            'NutritionOrder',
+            R4.mapNutritionOrderToClinicalDocument,
+            { patient },
+          ),
+        QuestionnaireResponse: () =>
+          syncFHIRResource(
+            baseUrl,
+            cd,
+            db,
+            'QuestionnaireResponse',
+            R4.mapQuestionnaireResponseToClinicalDocument,
+            { patient },
+          ),
       });
     }
 
     return runSync({
-      Procedure: get('Procedure', DSTU2.mapProcedureToClinicalDocument, {
-        patient,
-      }),
-      Patient: get('Patient', DSTU2.mapPatientToClinicalDocument, {
-        _id: patient,
-      }),
-      Observation: get('Observation', DSTU2.mapObservationToClinicalDocument, {
-        patient,
-        category: 'laboratory',
-      }),
-      DiagnosticReport: get(
-        'DiagnosticReport',
-        DSTU2.mapDiagnosticReportToClinicalDocument,
-        { patient },
-      ),
-      MedicationStatement: get(
-        'MedicationStatement',
-        DSTU2.mapMedicationStatementToClinicalDocument,
-        { patient },
-      ),
-      Immunization: get(
-        'Immunization',
-        DSTU2.mapImmunizationToClinicalDocument,
-        { patient },
-      ),
-      Condition: get('Condition', DSTU2.mapConditionToClinicalDocument, {
-        patient,
-      }),
+      Procedure: () =>
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'Procedure',
+          DSTU2.mapProcedureToClinicalDocument,
+          { patient },
+        ),
+      Patient: () =>
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'Patient',
+          DSTU2.mapPatientToClinicalDocument,
+          { _id: patient },
+        ),
+      Observation: () =>
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'Observation',
+          DSTU2.mapObservationToClinicalDocument,
+          { patient, category: 'laboratory' },
+        ),
+      DiagnosticReport: () =>
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'DiagnosticReport',
+          DSTU2.mapDiagnosticReportToClinicalDocument,
+          { patient },
+        ),
+      MedicationStatement: () =>
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'MedicationStatement',
+          DSTU2.mapMedicationStatementToClinicalDocument,
+          { patient },
+        ),
+      Immunization: () =>
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'Immunization',
+          DSTU2.mapImmunizationToClinicalDocument,
+          { patient },
+        ),
+      Condition: () =>
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'Condition',
+          DSTU2.mapConditionToClinicalDocument,
+          { patient },
+        ),
       DocumentReference: () =>
         syncDocumentReferences(baseUrl, cd, db, { patient }, 'DSTU2'),
-      Encounter: get('Encounter', DSTU2.mapEncounterToClinicalDocument, {
-        patient,
-      }),
-      AllergyIntolerance: get(
-        'AllergyIntolerance',
-        DSTU2.mapAllergyIntoleranceToClinicalDocument,
-        { patient },
-      ),
+      Encounter: () =>
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'Encounter',
+          DSTU2.mapEncounterToClinicalDocument,
+          { patient },
+        ),
+      AllergyIntolerance: () =>
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'AllergyIntolerance',
+          DSTU2.mapAllergyIntoleranceToClinicalDocument,
+          { patient },
+        ),
     });
   },
 };

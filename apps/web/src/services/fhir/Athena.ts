@@ -1,18 +1,10 @@
 import {
-  AllergyIntolerance,
   Attachment,
   Bundle,
   BundleEntry,
-  Condition,
-  DiagnosticReport,
   DocumentReference,
   Encounter,
   FhirResource,
-  Immunization,
-  MedicationRequest,
-  Observation,
-  Patient,
-  Procedure,
 } from 'fhir/r4';
 import { RxDocument, RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
@@ -189,10 +181,7 @@ async function syncFHIRResource<T extends FhirResource>(
   connectionDocument: AthenaConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
-  mapper: (
-    entry: BundleEntry<T>,
-    connection: AthenaConnectionDocument,
-  ) => CreateClinicalDocument<BundleEntry<T>>,
+  mapper: ResourceMapper<BundleEntry<T>, AthenaConnectionDocument>,
   params?: Record<string, string>,
 ) {
   const resc = await getFHIRResource<T>(
@@ -208,10 +197,7 @@ async function syncFHIRResourceWithIncludes<T extends FhirResource>(
   connectionDocument: AthenaConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
-  mapper: (
-    entry: BundleEntry<T>,
-    connection: AthenaConnectionDocument,
-  ) => CreateClinicalDocument<BundleEntry<T>>,
+  mapper: ResourceMapper<BundleEntry<T>, AthenaConnectionDocument>,
   params: Record<string, string>,
   includeMappers: Record<
     string,
@@ -241,46 +227,60 @@ export const sync: VendorSync = {
     const cd =
       connection.toMutableJSON() as unknown as AthenaConnectionDocument;
     const patient = cd.patient;
-    const get =
-      <T extends FhirResource>(
-        path: string,
-        mapper: (
-          entry: BundleEntry<T>,
-          connection: AthenaConnectionDocument,
-        ) => CreateClinicalDocument<BundleEntry<T>>,
-        params: Record<string, string>,
-      ) =>
-      () =>
-        syncFHIRResource<T>(cd, db, path, mapper, params);
-
     return runSync({
-      Procedure: get('Procedure', R4.mapProcedureToClinicalDocument, {
-        patient,
-      }),
-      Patient: get('Patient', R4.mapPatientToClinicalDocument, {
-        _id: patient,
-      }),
-      Observation: get('Observation', R4.mapObservationToClinicalDocument, {
-        patient,
-        category: 'laboratory',
-      }),
-      DiagnosticReport: get(
-        'DiagnosticReport',
-        R4.mapDiagnosticReportToClinicalDocument,
-        { patient },
-      ),
+      Procedure: () =>
+        syncFHIRResource(
+          cd,
+          db,
+          'Procedure',
+          R4.mapProcedureToClinicalDocument,
+          { patient },
+        ),
+      Patient: () =>
+        syncFHIRResource(cd, db, 'Patient', R4.mapPatientToClinicalDocument, {
+          _id: patient,
+        }),
+      Observation: () =>
+        syncFHIRResource(
+          cd,
+          db,
+          'Observation',
+          R4.mapObservationToClinicalDocument,
+          { patient, category: 'laboratory' },
+        ),
+      DiagnosticReport: () =>
+        syncFHIRResource(
+          cd,
+          db,
+          'DiagnosticReport',
+          R4.mapDiagnosticReportToClinicalDocument,
+          { patient },
+        ),
       // Athena requires [patient, intent] or [_id] per {baseUrl}/metadata
-      MedicationRequest: get(
-        'MedicationRequest',
-        R4.mapMedicationRequestToClinicalDocument,
-        { patient, intent: 'order' },
-      ),
-      Immunization: get('Immunization', R4.mapImmunizationToClinicalDocument, {
-        patient,
-      }),
-      Condition: get('Condition', R4.mapConditionToClinicalDocument, {
-        patient,
-      }),
+      MedicationRequest: () =>
+        syncFHIRResource(
+          cd,
+          db,
+          'MedicationRequest',
+          R4.mapMedicationRequestToClinicalDocument,
+          { patient, intent: 'order' },
+        ),
+      Immunization: () =>
+        syncFHIRResource(
+          cd,
+          db,
+          'Immunization',
+          R4.mapImmunizationToClinicalDocument,
+          { patient },
+        ),
+      Condition: () =>
+        syncFHIRResource(
+          cd,
+          db,
+          'Condition',
+          R4.mapConditionToClinicalDocument,
+          { patient },
+        ),
       DocumentReference: () => syncDocumentReferences(cd, db, { patient }),
       // Athena only supports searching Provenance by target per {baseUrl}/metadata,
       // so Provenance records are pulled in via _revinclude instead
@@ -293,25 +293,46 @@ export const sync: VendorSync = {
           { patient, _revinclude: 'Provenance:target' },
           { Provenance: R4.mapProvenanceToClinicalDocument },
         ),
-      AllergyIntolerance: get(
-        'AllergyIntolerance',
-        R4.mapAllergyIntoleranceToClinicalDocument,
-        { patient },
-      ),
-      CareTeam: get('CareTeam', R4.mapCareTeamToClinicalDocument, { patient }),
-      Goal: get('Goal', R4.mapGoalToClinicalDocument, { patient }),
-      CarePlan: get('CarePlan', R4.mapCarePlanToClinicalDocument, { patient }),
-      Device: get('Device', R4.mapDeviceToClinicalDocument, { patient }),
-      ObservationVitalSigns: get(
-        'Observation',
-        R4.mapObservationToClinicalDocument,
-        { patient, category: 'vital-signs' },
-      ),
-      ObservationSocialHistory: get(
-        'Observation',
-        R4.mapObservationToClinicalDocument,
-        { patient, category: 'social-history' },
-      ),
+      AllergyIntolerance: () =>
+        syncFHIRResource(
+          cd,
+          db,
+          'AllergyIntolerance',
+          R4.mapAllergyIntoleranceToClinicalDocument,
+          { patient },
+        ),
+      CareTeam: () =>
+        syncFHIRResource(cd, db, 'CareTeam', R4.mapCareTeamToClinicalDocument, {
+          patient,
+        }),
+      Goal: () =>
+        syncFHIRResource(cd, db, 'Goal', R4.mapGoalToClinicalDocument, {
+          patient,
+        }),
+      CarePlan: () =>
+        syncFHIRResource(cd, db, 'CarePlan', R4.mapCarePlanToClinicalDocument, {
+          patient,
+        }),
+      Device: () =>
+        syncFHIRResource(cd, db, 'Device', R4.mapDeviceToClinicalDocument, {
+          patient,
+        }),
+      ObservationVitalSigns: () =>
+        syncFHIRResource(
+          cd,
+          db,
+          'Observation',
+          R4.mapObservationToClinicalDocument,
+          { patient, category: 'vital-signs' },
+        ),
+      ObservationSocialHistory: () =>
+        syncFHIRResource(
+          cd,
+          db,
+          'Observation',
+          R4.mapObservationToClinicalDocument,
+          { patient, category: 'social-history' },
+        ),
     });
   },
 };

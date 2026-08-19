@@ -1,17 +1,5 @@
 /* eslint-disable no-inner-declarations */
-import {
-  AllergyIntolerance,
-  Bundle,
-  BundleEntry,
-  Condition,
-  DiagnosticReport,
-  FhirResource,
-  Immunization,
-  MedicationStatement,
-  Observation,
-  Patient,
-  Procedure,
-} from 'fhir/r2';
+import { Bundle, BundleEntry, FhirResource } from 'fhir/r2';
 import { RxDocument, RxDatabase } from 'rxdb';
 import {
   ConnectionDocument,
@@ -25,12 +13,11 @@ import {
   createConnection,
   updateConnection,
 } from '../../repositories/ConnectionRepository';
-import { CreateClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
 import uuid4 from '../../shared/utils/UUIDUtils';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
-import { runSync, upsertEntries, VendorSync } from './sync';
+import { ResourceMapper, VendorSync, runSync, upsertEntries } from './sync';
 import {
   createVAClient,
   createSessionManager,
@@ -146,10 +133,7 @@ async function syncFHIRResource<T extends FhirResource>(
   connectionDocument: VAConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
-  mapper: (
-    entry: BundleEntry<T>,
-    connection: VAConnectionDocument,
-  ) => CreateClinicalDocument<BundleEntry<T>>,
+  mapper: ResourceMapper<BundleEntry<T>, VAConnectionDocument>,
   params?: Record<string, string>,
 ) {
   const resc = await getAllFHIRResourcesWithPaging<T>(
@@ -168,57 +152,79 @@ export const sync: VendorSync = {
   syncAllRecords: ({ baseUrl, connection, db }) => {
     const cd = connection.toMutableJSON() as unknown as VAConnectionDocument;
     const patient = cd.patient;
-    const get =
-      <T extends FhirResource>(
-        path: string,
-        mapper: (
-          entry: BundleEntry<T>,
-          connection: VAConnectionDocument,
-        ) => CreateClinicalDocument<BundleEntry<T>>,
-        params?: Record<string, string>,
-      ) =>
-      () =>
-        syncFHIRResource<T>(baseUrl, cd, db, path, mapper, params);
-
     return runSync({
-      Procedure: get<Procedure>(
-        'Procedure',
-        DSTU2.mapProcedureToClinicalDocument,
-        { patient },
-      ),
-      Patient: get<Patient>('Patient', DSTU2.mapPatientToClinicalDocument, {
-        _id: patient,
-      }),
-      Observation: get<Observation>(
-        'Observation',
-        DSTU2.mapObservationToClinicalDocument,
-        { patient },
-      ),
-      DiagnosticReport: get<DiagnosticReport>(
-        'DiagnosticReport',
-        DSTU2.mapDiagnosticReportToClinicalDocument,
-        { patient },
-      ),
-      MedicationStatement: get<MedicationStatement>(
-        'MedicationStatement',
-        DSTU2.mapMedicationStatementToClinicalDocument,
-        { patient },
-      ),
-      Immunization: get<Immunization>(
-        'Immunization',
-        DSTU2.mapImmunizationToClinicalDocument,
-        { patient },
-      ),
-      Condition: get<Condition>(
-        'Condition',
-        DSTU2.mapConditionToClinicalDocument,
-        { patient },
-      ),
-      AllergyIntolerance: get<AllergyIntolerance>(
-        'AllergyIntolerance',
-        DSTU2.mapAllergyIntoleranceToClinicalDocument,
-        { patient },
-      ),
+      Procedure: () =>
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'Procedure',
+          DSTU2.mapProcedureToClinicalDocument,
+          { patient },
+        ),
+      Patient: () =>
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'Patient',
+          DSTU2.mapPatientToClinicalDocument,
+          { _id: patient },
+        ),
+      Observation: () =>
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'Observation',
+          DSTU2.mapObservationToClinicalDocument,
+          { patient },
+        ),
+      DiagnosticReport: () =>
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'DiagnosticReport',
+          DSTU2.mapDiagnosticReportToClinicalDocument,
+          { patient },
+        ),
+      MedicationStatement: () =>
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'MedicationStatement',
+          DSTU2.mapMedicationStatementToClinicalDocument,
+          { patient },
+        ),
+      Immunization: () =>
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'Immunization',
+          DSTU2.mapImmunizationToClinicalDocument,
+          { patient },
+        ),
+      Condition: () =>
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'Condition',
+          DSTU2.mapConditionToClinicalDocument,
+          { patient },
+        ),
+      AllergyIntolerance: () =>
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'AllergyIntolerance',
+          DSTU2.mapAllergyIntoleranceToClinicalDocument,
+          { patient },
+        ),
     });
   },
 };
