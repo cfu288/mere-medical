@@ -100,6 +100,57 @@ describe('document reference attachments', () => {
       }),
     );
   });
+
+  it('prefers the attachment creation date over the document date', async () => {
+    const documentReference = {
+      resourceType: 'DocumentReference',
+      id: 'document-2',
+      date: '2024-03-04T05:06:07.000Z',
+      type: { text: 'Clinical document' },
+      content: [
+        {
+          attachment: {
+            url: 'https://files.example/report.xml',
+            creation: '2024-03-04T05:00:00.000Z',
+          },
+        },
+      ],
+    };
+    const stored = {
+      toMutableJSON: jest
+        .fn()
+        .mockReturnValue(
+          R4.mapDocumentReferenceToClinicalDocument(
+            { resource: documentReference } as any,
+            connection,
+          ),
+        ),
+    };
+    const db = database(stored);
+    globalThis.fetch = routedFetch({
+      'https://cerner.example/DocumentReference?patient=123': () =>
+        response(
+          { resourceType: 'Bundle', entry: [{ resource: documentReference }] },
+          'application/fhir+json',
+        ),
+      'https://files.example/report.xml': () => response({}, 'application/xml'),
+    });
+
+    await Cerner.syncAllRecords(
+      'https://cerner.example/',
+      connection,
+      db,
+      'R4',
+    );
+
+    expect(db.clinical_documents.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          date: '2024-03-04T05:00:00.000Z',
+        }),
+      }),
+    );
+  });
 });
 
 describe('R4 mapDocumentReferenceToClinicalDocument', () => {

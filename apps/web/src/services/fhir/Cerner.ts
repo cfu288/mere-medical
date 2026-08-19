@@ -620,11 +620,12 @@ async function syncDocumentReferences(
   );
   // for each docref, get attachments and sync them
   const cdsmap = docRefItems.map(async (docRefItem) => {
-    const attachmentUrls = docRefItem.data_record.raw.resource?.content.map(
-      (a) => a.attachment.url,
+    const attachments = docRefItem.data_record.raw.resource?.content.map(
+      (a) => a.attachment,
     );
-    if (attachmentUrls) {
-      for (const attachmentUrl of attachmentUrls) {
+    if (attachments) {
+      for (const attachment of attachments) {
+        const attachmentUrl = attachment?.url;
         if (attachmentUrl) {
           const exists = await db.clinical_documents
             .find({
@@ -660,7 +661,7 @@ async function syncDocumentReferences(
                 },
                 metadata: {
                   id: attachmentUrl,
-                  date: docRefItem.metadata?.date,
+                  date: attachment?.creation || docRefItem.metadata?.date,
                   display_name: docRefItem.metadata?.display_name,
                 },
               };

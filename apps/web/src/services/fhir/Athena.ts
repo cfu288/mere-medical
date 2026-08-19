@@ -496,7 +496,7 @@ async function syncDocumentReferences(
               },
               metadata: {
                 id: attachmentId,
-                date: docRefItem.metadata?.date,
+                date: attachment.creation || docRefItem.metadata?.date,
                 display_name: docRefItem.metadata?.display_name,
               },
             };
