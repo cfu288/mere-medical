@@ -6,8 +6,6 @@ const optionalLazyImports = [
   '@nestjs/microservices/microservices-module',
   '@nestjs/websockets/socket-module',
   '@fastify/static',
-  'class-transformer',
-  'class-validator',
   'supports-color',
 ];
 
