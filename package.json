@@ -176,7 +176,7 @@
     "@nestjs/axios": "^3.0.2",
     "@nestjs/common": "10.3.3",
     "@nestjs/core": "^10.3.3",
-    "@nestjs/platform-express": "^10.3.3",
+    "@nestjs/platform-express": "^10.4.22",
     "@nestjs/serve-static": "^4.0.1",
     "@nestjs/throttler": "^6.5.0",
     "compression": "^1.8.1",
