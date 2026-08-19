@@ -41,6 +41,8 @@ import {
   AthenaLocalStorageKeys,
   getLoginUrl as getAthenaLoginUrl,
 } from '../../services/fhir/Athena';
+import { getLoginUrl as getNextGenLoginUrl } from '../../services/fhir/NextGen';
+import { describeRequirement, parseVendorConfig } from '@mere/shared';
 import { VeradigmLocalStorageKeys } from '../../services/fhir/Veradigm';
 import { HealowLocalStorageKeys } from '../../services/fhir/Healow';
 import { Routes } from '../../Routes';
@@ -335,6 +337,18 @@ export async function getLoginUrlBySource(
       return getAthenaLoginUrl(config, environment).then(
         (url) => url as string & Location,
       );
+    }
+    case 'nextgen': {
+      const { nextgen } = parseVendorConfig(config);
+      if (nextgen.status !== 'production') {
+        throw new Error(
+          `NextGen is not configured: provide ${describeRequirement(nextgen.enableWith)}`,
+        );
+      }
+      return getNextGenLoginUrl(
+        nextgen.production.value,
+        nextgen.publicUrl,
+      ).then((url) => url as string & Location);
     }
     default: {
       return '' as string & Location;

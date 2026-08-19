@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { isConfigured } from '@mere/shared';
 
 /**
  * Healow supports two OAuth modes depending on environment configuration:
@@ -32,6 +33,8 @@ export interface PublicConfig {
   ONPATIENT_SECRET_CONFIGURED?: boolean;
   ATHENA_CLIENT_ID?: string;
   ATHENA_SANDBOX_CLIENT_ID?: string;
+  NEXTGEN_CLIENT_ID?: string;
+  NEXTGEN_SECRET_CONFIGURED?: boolean;
   PUBLIC_URL?: string;
 }
 
@@ -54,6 +57,10 @@ export class ConfigService {
       ONPATIENT_SECRET_CONFIGURED: !!process.env.ONPATIENT_CLIENT_SECRET,
       ATHENA_CLIENT_ID: process.env.ATHENA_CLIENT_ID,
       ATHENA_SANDBOX_CLIENT_ID: process.env.ATHENA_SANDBOX_CLIENT_ID,
+      NEXTGEN_CLIENT_ID: process.env.NEXTGEN_CLIENT_ID,
+      NEXTGEN_SECRET_CONFIGURED: isConfigured(
+        process.env.NEXTGEN_CLIENT_SECRET,
+      ),
       PUBLIC_URL: process.env.PUBLIC_URL,
     };
   }

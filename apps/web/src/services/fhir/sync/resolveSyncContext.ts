@@ -8,6 +8,7 @@ import {
   CernerConnectionDocument,
   EpicConnectionDocument,
   HealowConnectionDocument,
+  NextGenConnectionDocument,
   VAConnectionDocument,
   VeradigmConnectionDocument,
 } from '../../../models/connection-document/ConnectionDocument.type';
@@ -65,6 +66,12 @@ function parseVADocument(document: VAConnectionDocument): FhirBaseUrl {
   return parseStoredUrl(document.location);
 }
 
+function parseNextGenDocument(
+  document: NextGenConnectionDocument,
+): FhirBaseUrl {
+  return parseStoredUrl(document.location);
+}
+
 function parseOnPatientDocument(): FhirBaseUrl {
   return ONPATIENT_CONSTANTS.FHIR_URL as FhirBaseUrl;
 }
@@ -83,6 +90,8 @@ function parseVendorDocument(document: AnyConnectionDocument): FhirBaseUrl {
       return parseAthenaDocument(document);
     case 'va':
       return parseVADocument(document);
+    case 'nextgen':
+      return parseNextGenDocument(document);
     case 'onpatient':
       return parseOnPatientDocument();
     default:

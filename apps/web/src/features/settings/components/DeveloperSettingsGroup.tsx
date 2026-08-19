@@ -68,6 +68,7 @@ export function DeveloperSettingsGroup() {
       name: 'ATHENA_SANDBOX_CLIENT_ID',
       value: config.ATHENA_SANDBOX_CLIENT_ID,
     },
+    { name: 'NEXTGEN_CLIENT_ID', value: config.NEXTGEN_CLIENT_ID },
   ];
 
   const envVars = envVarValues.map(({ name, value }) =>

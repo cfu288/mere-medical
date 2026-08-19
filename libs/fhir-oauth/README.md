@@ -10,6 +10,7 @@ OAuth clients for SMART on FHIR servers. Handles patient standalone launch flows
 | Cerner    | Public       | Frontend       | Yes  | refresh_token grant |
 | VA        | Public       | Frontend       | Yes  | refresh_token grant |
 | OnPatient | Confidential | Backend        | No   | Not supported       |
+| NextGen   | Confidential | Backend        | No   | refresh_token grant |
 
 ## Quick Start (React)
 

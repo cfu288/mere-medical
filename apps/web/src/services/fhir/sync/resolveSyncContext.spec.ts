@@ -76,6 +76,23 @@ describe('resolveSyncContext', () => {
     expect(result.ok && result.ctx.fhirBaseUrl).toBe('https://cerner.example/');
   });
 
+  it('uses the stored location for a NextGen connection', () => {
+    const result = resolve({
+      id: 'c10',
+      user_id: 'u1',
+      source: 'nextgen',
+      name: 'NextGen Enterprise',
+      location: 'https://fhir.nextgen.com/nge/prod/fhir-api-r4/fhir/r4/',
+      access_token: 'token',
+      expires_at: 1893456000,
+      patient: 'patient-1',
+    });
+
+    expect(result.ok && result.ctx.fhirBaseUrl).toBe(
+      'https://fhir.nextgen.com/nge/prod/fhir-api-r4/fhir/r4/',
+    );
+  });
+
   it('fails when an Epic connection has no tenant id', () => {
     const result = resolve({
       ...epicBase,
