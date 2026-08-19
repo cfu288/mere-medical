@@ -54,6 +54,16 @@ function database(storedDocumentReference: unknown) {
   } as any;
 }
 
+function cernerContext(db: unknown) {
+  return {
+    config: {},
+    db,
+    connection: { toMutableJSON: jest.fn().mockReturnValue(connection) },
+    baseUrl: 'https://cerner.example/',
+    useProxy: false,
+  } as any;
+}
+
 describe('document reference attachments', () => {
   afterEach(() => {
     delete (globalThis as { fetch?: unknown }).fetch;
@@ -83,12 +93,7 @@ describe('document reference attachments', () => {
       'https://files.example/report.xml': () => response({}, 'application/xml'),
     });
 
-    await Cerner.syncAllRecords(
-      'https://cerner.example/',
-      connection,
-      db,
-      'R4',
-    );
+    await Cerner.sync.syncAllRecords(cernerContext(db));
 
     expect(db.clinical_documents.insert).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -136,12 +141,7 @@ describe('document reference attachments', () => {
       'https://files.example/report.xml': () => response({}, 'application/xml'),
     });
 
-    await Cerner.syncAllRecords(
-      'https://cerner.example/',
-      connection,
-      db,
-      'R4',
-    );
+    await Cerner.sync.syncAllRecords(cernerContext(db));
 
     expect(db.clinical_documents.insert).toHaveBeenCalledWith(
       expect.objectContaining({
