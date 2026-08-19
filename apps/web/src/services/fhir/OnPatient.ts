@@ -8,7 +8,7 @@ import { ONPATIENT_CONSTANTS } from '@mere/fhir-oauth';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import { DSTU2 } from '.';
 import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
-import { ResourceMapper, VendorSync, runSync, upsertEntries } from './sync';
+import { ResourceMapper, VendorSync, upsertEntries } from './sync';
 
 export const OnPatientBaseUrl = ONPATIENT_CONSTANTS.BASE_URL;
 export const OnPatientDSTU2Url = ONPATIENT_CONSTANTS.FHIR_URL;
@@ -70,65 +70,56 @@ export const sync: VendorSync = {
   refreshToken: null,
   syncAllRecords: ({ connection, db }) => {
     const cd = connection.toMutableJSON() as ConnectionDocument;
-    return runSync({
-      Immunization: () =>
-        syncFHIRResource(
-          cd,
-          db,
-          'Immunization',
-          DSTU2.mapImmunizationToClinicalDocument,
-        ),
-      Procedure: () =>
-        syncFHIRResource(
-          cd,
-          db,
-          'Procedure',
-          DSTU2.mapProcedureToClinicalDocument,
-        ),
-      Condition: () =>
-        syncFHIRResource(
-          cd,
-          db,
-          'Condition',
-          DSTU2.mapConditionToClinicalDocument,
-        ),
-      Observation: () =>
-        syncFHIRResource(
-          cd,
-          db,
-          'Observation',
-          DSTU2.mapObservationToClinicalDocument,
-        ),
-      DiagnosticReport: () =>
-        syncFHIRResource(
-          cd,
-          db,
-          'DiagnosticReport',
-          DSTU2.mapDiagnosticReportToClinicalDocument,
-        ),
-      MedicationStatement: () =>
-        syncFHIRResource(
-          cd,
-          db,
-          'MedicationStatement',
-          DSTU2.mapMedicationStatementToClinicalDocument,
-        ),
-      AllergyIntolerance: () =>
-        syncFHIRResource(
-          cd,
-          db,
-          'AllergyIntolerance',
-          DSTU2.mapAllergyIntoleranceToClinicalDocument,
-        ),
-      MedicationOrder: () =>
-        syncFHIRResource(
-          cd,
-          db,
-          'MedicationOrder',
-          DSTU2.mapMedicationOrderToClinicalDocument,
-        ),
-      Patient: () =>
-        syncFHIRResource(cd, db, 'Patient', DSTU2.mapPatientToClinicalDocument),
-    });
+    return Promise.allSettled([
+      syncFHIRResource(
+        cd,
+        db,
+        'Immunization',
+        DSTU2.mapImmunizationToClinicalDocument,
+      ),
+      syncFHIRResource(
+        cd,
+        db,
+        'Procedure',
+        DSTU2.mapProcedureToClinicalDocument,
+      ),
+      syncFHIRResource(
+        cd,
+        db,
+        'Condition',
+        DSTU2.mapConditionToClinicalDocument,
+      ),
+      syncFHIRResource(
+        cd,
+        db,
+        'Observation',
+        DSTU2.mapObservationToClinicalDocument,
+      ),
+      syncFHIRResource(
+        cd,
+        db,
+        'DiagnosticReport',
+        DSTU2.mapDiagnosticReportToClinicalDocument,
+      ),
+      syncFHIRResource(
+        cd,
+        db,
+        'MedicationStatement',
+        DSTU2.mapMedicationStatementToClinicalDocument,
+      ),
+      syncFHIRResource(
+        cd,
+        db,
+        'AllergyIntolerance',
+        DSTU2.mapAllergyIntoleranceToClinicalDocument,
+      ),
+      syncFHIRResource(
+        cd,
+        db,
+        'MedicationOrder',
+        DSTU2.mapMedicationOrderToClinicalDocument,
+      ),
+      syncFHIRResource(cd, db, 'Patient', DSTU2.mapPatientToClinicalDocument),
+    ]);
   },
 };

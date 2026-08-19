@@ -37,7 +37,6 @@ import {
   type AthenaTokenSet,
 } from '@mere/fhir-oauth';
 import {
-  runSync,
   upsertEntries,
   upsertIncludedEntries,
   ResourceMapper,
@@ -227,113 +226,90 @@ export const sync: VendorSync = {
     const cd =
       connection.toMutableJSON() as unknown as AthenaConnectionDocument;
     const patient = cd.patient;
-    return runSync({
-      Procedure: () =>
-        syncFHIRResource(
-          cd,
-          db,
-          'Procedure',
-          R4.mapProcedureToClinicalDocument,
-          { patient },
-        ),
-      Patient: () =>
-        syncFHIRResource(cd, db, 'Patient', R4.mapPatientToClinicalDocument, {
-          _id: patient,
-        }),
-      Observation: () =>
-        syncFHIRResource(
-          cd,
-          db,
-          'Observation',
-          R4.mapObservationToClinicalDocument,
-          { patient, category: 'laboratory' },
-        ),
-      DiagnosticReport: () =>
-        syncFHIRResource(
-          cd,
-          db,
-          'DiagnosticReport',
-          R4.mapDiagnosticReportToClinicalDocument,
-          { patient },
-        ),
+    return Promise.allSettled([
+      syncFHIRResource(cd, db, 'Procedure', R4.mapProcedureToClinicalDocument, {
+        patient,
+      }),
+      syncFHIRResource(cd, db, 'Patient', R4.mapPatientToClinicalDocument, {
+        _id: patient,
+      }),
+      syncFHIRResource(
+        cd,
+        db,
+        'Observation',
+        R4.mapObservationToClinicalDocument,
+        { patient, category: 'laboratory' },
+      ),
+      syncFHIRResource(
+        cd,
+        db,
+        'DiagnosticReport',
+        R4.mapDiagnosticReportToClinicalDocument,
+        { patient },
+      ),
       // Athena requires [patient, intent] or [_id] per {baseUrl}/metadata
-      MedicationRequest: () =>
-        syncFHIRResource(
-          cd,
-          db,
-          'MedicationRequest',
-          R4.mapMedicationRequestToClinicalDocument,
-          { patient, intent: 'order' },
-        ),
-      Immunization: () =>
-        syncFHIRResource(
-          cd,
-          db,
-          'Immunization',
-          R4.mapImmunizationToClinicalDocument,
-          { patient },
-        ),
-      Condition: () =>
-        syncFHIRResource(
-          cd,
-          db,
-          'Condition',
-          R4.mapConditionToClinicalDocument,
-          { patient },
-        ),
-      DocumentReference: () => syncDocumentReferences(cd, db, { patient }),
+      syncFHIRResource(
+        cd,
+        db,
+        'MedicationRequest',
+        R4.mapMedicationRequestToClinicalDocument,
+        { patient, intent: 'order' },
+      ),
+      syncFHIRResource(
+        cd,
+        db,
+        'Immunization',
+        R4.mapImmunizationToClinicalDocument,
+        { patient },
+      ),
+      syncFHIRResource(cd, db, 'Condition', R4.mapConditionToClinicalDocument, {
+        patient,
+      }),
+      syncDocumentReferences(cd, db, { patient }),
       // Athena only supports searching Provenance by target per {baseUrl}/metadata,
       // so Provenance records are pulled in via _revinclude instead
-      Encounter: () =>
-        syncFHIRResourceWithIncludes<Encounter>(
-          cd,
-          db,
-          'Encounter',
-          R4.mapEncounterToClinicalDocument,
-          { patient, _revinclude: 'Provenance:target' },
-          { Provenance: R4.mapProvenanceToClinicalDocument },
-        ),
-      AllergyIntolerance: () =>
-        syncFHIRResource(
-          cd,
-          db,
-          'AllergyIntolerance',
-          R4.mapAllergyIntoleranceToClinicalDocument,
-          { patient },
-        ),
-      CareTeam: () =>
-        syncFHIRResource(cd, db, 'CareTeam', R4.mapCareTeamToClinicalDocument, {
-          patient,
-        }),
-      Goal: () =>
-        syncFHIRResource(cd, db, 'Goal', R4.mapGoalToClinicalDocument, {
-          patient,
-        }),
-      CarePlan: () =>
-        syncFHIRResource(cd, db, 'CarePlan', R4.mapCarePlanToClinicalDocument, {
-          patient,
-        }),
-      Device: () =>
-        syncFHIRResource(cd, db, 'Device', R4.mapDeviceToClinicalDocument, {
-          patient,
-        }),
-      ObservationVitalSigns: () =>
-        syncFHIRResource(
-          cd,
-          db,
-          'Observation',
-          R4.mapObservationToClinicalDocument,
-          { patient, category: 'vital-signs' },
-        ),
-      ObservationSocialHistory: () =>
-        syncFHIRResource(
-          cd,
-          db,
-          'Observation',
-          R4.mapObservationToClinicalDocument,
-          { patient, category: 'social-history' },
-        ),
-    });
+      syncFHIRResourceWithIncludes<Encounter>(
+        cd,
+        db,
+        'Encounter',
+        R4.mapEncounterToClinicalDocument,
+        { patient, _revinclude: 'Provenance:target' },
+        { Provenance: R4.mapProvenanceToClinicalDocument },
+      ),
+      syncFHIRResource(
+        cd,
+        db,
+        'AllergyIntolerance',
+        R4.mapAllergyIntoleranceToClinicalDocument,
+        { patient },
+      ),
+      syncFHIRResource(cd, db, 'CareTeam', R4.mapCareTeamToClinicalDocument, {
+        patient,
+      }),
+      syncFHIRResource(cd, db, 'Goal', R4.mapGoalToClinicalDocument, {
+        patient,
+      }),
+      syncFHIRResource(cd, db, 'CarePlan', R4.mapCarePlanToClinicalDocument, {
+        patient,
+      }),
+      syncFHIRResource(cd, db, 'Device', R4.mapDeviceToClinicalDocument, {
+        patient,
+      }),
+      syncFHIRResource(
+        cd,
+        db,
+        'Observation',
+        R4.mapObservationToClinicalDocument,
+        { patient, category: 'vital-signs' },
+      ),
+      syncFHIRResource(
+        cd,
+        db,
+        'Observation',
+        R4.mapObservationToClinicalDocument,
+        { patient, category: 'social-history' },
+      ),
+    ]);
   },
 };
 
