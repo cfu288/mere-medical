@@ -30,7 +30,6 @@ export const OnPatientDSTU2Url = ONPATIENT_CONSTANTS.FHIR_URL;
 async function getFHIRResource<T extends FhirResource>(
   connectionDocument: ConnectionDocument,
   fhirResourcePathUrl: string,
-  fetch: typeof globalThis.fetch,
 ): Promise<BundleEntry<T>[]> {
   let allEntries: BundleEntry<T>[] = [];
   let nextUrl: string | undefined =
@@ -69,12 +68,10 @@ async function syncFHIRResource<T extends FhirResource>(
     entry: BundleEntry<T>,
     connection: ConnectionDocument,
   ) => CreateClinicalDocument<BundleEntry<T>>,
-  fetch: typeof globalThis.fetch,
 ) {
   const fhirResources = await getFHIRResource<T>(
     connectionDocument,
     fhirResourceUrl,
-    fetch,
   );
 
   return upsertEntries(
@@ -88,7 +85,7 @@ async function syncFHIRResource<T extends FhirResource>(
 
 export const sync: VendorSync = {
   refreshToken: null,
-  syncAllRecords: ({ connection, db, fetch }) => {
+  syncAllRecords: ({ connection, db }) => {
     const cd = connection.toMutableJSON() as ConnectionDocument;
     const get =
       <T extends FhirResource>(
@@ -99,7 +96,7 @@ export const sync: VendorSync = {
         ) => CreateClinicalDocument<BundleEntry<T>>,
       ) =>
       () =>
-        syncFHIRResource<T>(cd, db, path, mapper, fetch);
+        syncFHIRResource<T>(cd, db, path, mapper);
 
     return runSync({
       Immunization: get<Immunization>(

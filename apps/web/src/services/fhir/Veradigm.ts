@@ -157,7 +157,6 @@ async function getFHIRResource<T extends FhirResource>(
   baseUrl: string,
   connectionDocument: VeradigmConnectionDocument,
   fhirResourceUrl: string,
-  fetch: typeof globalThis.fetch,
   params?: Record<string, string>,
 ): Promise<BundleEntry<T>[]> {
   const defaultUrl = params
@@ -202,14 +201,12 @@ async function syncFHIRResource<T extends FhirResource>(
     entry: BundleEntry<T>,
     connection: VeradigmConnectionDocument,
   ) => CreateClinicalDocument<BundleEntry<T>>,
-  fetch: typeof globalThis.fetch,
   params?: Record<string, string>,
 ) {
   const resc = await getFHIRResource<T>(
     baseUrl,
     connectionDocument,
     fhirResourceUrl,
-    fetch,
     params,
   );
 
@@ -218,7 +215,7 @@ async function syncFHIRResource<T extends FhirResource>(
 
 export const sync: VendorSync = {
   refreshToken: null,
-  syncAllRecords: ({ baseUrl, connection, db, fetch }) => {
+  syncAllRecords: ({ baseUrl, connection, db }) => {
     const cd =
       connection.toMutableJSON() as unknown as VeradigmConnectionDocument;
     const patient = extractVeradigmPatientId(cd.access_token);
@@ -232,7 +229,7 @@ export const sync: VendorSync = {
         params?: Record<string, string>,
       ) =>
       () =>
-        syncFHIRResource<T>(baseUrl, cd, db, path, mapper, fetch, params);
+        syncFHIRResource<T>(baseUrl, cd, db, path, mapper, params);
 
     return runSync({
       Procedure: get<Procedure>(
@@ -269,7 +266,7 @@ export const sync: VendorSync = {
         { patient },
       ),
       DocumentReference: () =>
-        syncDocumentReferences(baseUrl, cd, db, { patient }, fetch),
+        syncDocumentReferences(baseUrl, cd, db, { patient }),
       AllergyIntolerance: get<AllergyIntolerance>(
         'AllergyIntolerance',
         DSTU2.mapAllergyIntoleranceToClinicalDocument,
@@ -284,7 +281,6 @@ async function syncDocumentReferences(
   connectionDocument: VeradigmConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   params: Record<string, string>,
-  fetch: typeof globalThis.fetch,
 ) {
   // Sync document references and return them
   await syncFHIRResource<DocumentReference>(
@@ -293,7 +289,6 @@ async function syncDocumentReferences(
     db,
     'DocumentReference',
     DSTU2.mapDocumentReferenceToClinicalDocument,
-    fetch,
     params,
   );
 
@@ -343,7 +338,6 @@ async function syncDocumentReferences(
             const { contentType, raw } = await fetchAttachmentData(
               attachmentUrl,
               connectionDocument,
-              fetch,
             );
             if (raw && contentType) {
               const cd: CreateClinicalDocument<string | Blob> = {
@@ -384,7 +378,6 @@ async function syncDocumentReferences(
 async function fetchAttachmentData(
   url: string,
   cd: VeradigmConnectionDocument,
-  fetch: typeof globalThis.fetch,
 ): Promise<{ contentType: string | null; raw: string | Blob | undefined }> {
   try {
     const res = await fetch(url, {

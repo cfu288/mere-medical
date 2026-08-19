@@ -83,7 +83,6 @@ async function getAllFHIRResourcesWithPaging<T extends FhirResource>(
   baseUrl: string,
   connectionDocument: VAConnectionDocument,
   fhirResourceUrl: string,
-  fetch: typeof globalThis.fetch,
   params?: Record<string, string>,
 ): Promise<BundleEntry<T>[]> {
   let page = 0;
@@ -96,7 +95,6 @@ async function getAllFHIRResourcesWithPaging<T extends FhirResource>(
       baseUrl,
       connectionDocument,
       fhirResourceUrl,
-      fetch,
       {
         ...params,
         page: `${page}`,
@@ -113,7 +111,6 @@ async function getFHIRResource<T extends FhirResource>(
   baseUrl: string,
   connectionDocument: VAConnectionDocument,
   fhirResourceUrl: string,
-  fetch: typeof globalThis.fetch,
   params?: Record<string, any>,
 ): Promise<BundleEntry<T>[]> {
   const defaultUrl = `${baseUrl}${fhirResourceUrl}${
@@ -153,14 +150,12 @@ async function syncFHIRResource<T extends FhirResource>(
     entry: BundleEntry<T>,
     connection: VAConnectionDocument,
   ) => CreateClinicalDocument<BundleEntry<T>>,
-  fetch: typeof globalThis.fetch,
   params?: Record<string, string>,
 ) {
   const resc = await getAllFHIRResourcesWithPaging<T>(
     baseUrl,
     connectionDocument,
     fhirResourceUrl,
-    fetch,
     params,
   );
 
@@ -170,7 +165,7 @@ async function syncFHIRResource<T extends FhirResource>(
 export const sync: VendorSync = {
   refreshToken: ({ config, connection }) =>
     refreshVAConnectionTokenIfNeeded(config, connection),
-  syncAllRecords: ({ baseUrl, connection, db, fetch }) => {
+  syncAllRecords: ({ baseUrl, connection, db }) => {
     const cd = connection.toMutableJSON() as unknown as VAConnectionDocument;
     const patient = cd.patient;
     const get =
@@ -183,7 +178,7 @@ export const sync: VendorSync = {
         params?: Record<string, string>,
       ) =>
       () =>
-        syncFHIRResource<T>(baseUrl, cd, db, path, mapper, fetch, params);
+        syncFHIRResource<T>(baseUrl, cd, db, path, mapper, params);
 
     return runSync({
       Procedure: get<Procedure>(

@@ -109,7 +109,7 @@ function createConnectionDocument(connection: unknown) {
   } as any;
 }
 
-function epicContext(fhirVersion: string | undefined, fetch: unknown) {
+function epicContext(fhirVersion: string | undefined) {
   return {
     config: { PUBLIC_URL: 'https://app.example' },
     db: createDatabase(),
@@ -126,15 +126,10 @@ function epicContext(fhirVersion: string | undefined, fetch: unknown) {
     }),
     baseUrl: 'https://epic.example',
     useProxy: false,
-    fetch,
   } as any;
 }
 
-function cernerContext(
-  fhirVersion: string | undefined,
-  fetch: unknown,
-  db = createDatabase(),
-) {
+function cernerContext(fhirVersion: string | undefined, db = createDatabase()) {
   return {
     config: {},
     db,
@@ -150,11 +145,10 @@ function cernerContext(
     }),
     baseUrl: 'https://cerner.example/',
     useProxy: false,
-    fetch,
   } as any;
 }
 
-function athenaContext(fetch: unknown) {
+function athenaContext() {
   return {
     config: {},
     db: createDatabase(),
@@ -169,11 +163,10 @@ function athenaContext(fetch: unknown) {
     }),
     baseUrl: 'https://unused.example',
     useProxy: false,
-    fetch,
   } as any;
 }
 
-function onPatientContext(fetch: unknown) {
+function onPatientContext() {
   return {
     config: {},
     db: createDatabase(),
@@ -187,7 +180,6 @@ function onPatientContext(fetch: unknown) {
     }),
     baseUrl: 'https://onpatient.com/api/fhir',
     useProxy: false,
-    fetch,
   } as any;
 }
 
@@ -221,10 +213,15 @@ const cernerDocument = {
 };
 
 describe('vendor sync fetch', () => {
+  afterEach(() => {
+    delete (globalThis as { fetch?: unknown }).fetch;
+  });
+
   it('uses Epic DSTU2 tasks when the version is missing', async () => {
     const fetch = emptyBundleFetch();
+    globalThis.fetch = fetch;
 
-    await Epic.sync.syncAllRecords(epicContext(undefined, fetch));
+    await Epic.sync.syncAllRecords(epicContext(undefined));
 
     expect(fetch).toHaveBeenCalledTimes(10);
     expect(fetch).toHaveBeenNthCalledWith(
@@ -241,8 +238,9 @@ describe('vendor sync fetch', () => {
 
   it('uses Epic DSTU2 tasks for an invalid version', async () => {
     const fetch = emptyBundleFetch();
+    globalThis.fetch = fetch;
 
-    await Epic.sync.syncAllRecords(epicContext('invalid', fetch));
+    await Epic.sync.syncAllRecords(epicContext('invalid'));
 
     expect(fetch).toHaveBeenCalledTimes(10);
     expect(fetch).toHaveBeenNthCalledWith(
@@ -269,8 +267,9 @@ describe('vendor sync fetch', () => {
 
   it('uses Cerner DSTU2 tasks when the version is missing', async () => {
     const fetch = emptyBundleFetch();
+    globalThis.fetch = fetch;
 
-    await Cerner.sync.syncAllRecords(cernerContext(undefined, fetch));
+    await Cerner.sync.syncAllRecords(cernerContext(undefined));
 
     expect(fetch).toHaveBeenCalledTimes(10);
     expect(fetch).toHaveBeenNthCalledWith(
@@ -287,8 +286,9 @@ describe('vendor sync fetch', () => {
 
   it('uses Cerner DSTU2 tasks for an invalid version', async () => {
     const fetch = emptyBundleFetch();
+    globalThis.fetch = fetch;
 
-    await Cerner.sync.syncAllRecords(cernerContext('invalid', fetch));
+    await Cerner.sync.syncAllRecords(cernerContext('invalid'));
 
     expect(fetch).toHaveBeenCalledTimes(10);
     expect(fetch).toHaveBeenNthCalledWith(
@@ -315,8 +315,9 @@ describe('vendor sync fetch', () => {
 
   it('requests Athena Encounter provenance includes', async () => {
     const fetch = emptyBundleFetch();
+    globalThis.fetch = fetch;
 
-    await Athena.sync.syncAllRecords(athenaContext(fetch));
+    await Athena.sync.syncAllRecords(athenaContext());
 
     expect(fetch).toHaveBeenNthCalledWith(
       9,
@@ -330,10 +331,11 @@ describe('vendor sync fetch', () => {
     );
   });
 
-  it('uses the injected fetch for pagination links', async () => {
+  it('follows pagination links', async () => {
     const fetch = pagedBundleFetch();
+    globalThis.fetch = fetch;
 
-    await OnPatient.sync.syncAllRecords(onPatientContext(fetch));
+    await OnPatient.sync.syncAllRecords(onPatientContext());
 
     expect(fetch).toHaveBeenCalledWith(
       'https://onpatient.example/Immunization?page=2',
@@ -341,11 +343,12 @@ describe('vendor sync fetch', () => {
     );
   });
 
-  it('stores Cerner R4 attachments fetched with the injected fetch', async () => {
+  it('stores Cerner R4 document reference attachments', async () => {
     const fetch = cernerAttachmentFetch();
+    globalThis.fetch = fetch;
     const db = createAttachmentDatabase();
 
-    await Cerner.sync.syncAllRecords(cernerContext('R4', fetch, db));
+    await Cerner.sync.syncAllRecords(cernerContext('R4', db));
 
     expect(fetch).toHaveBeenCalledWith('https://files.example/report.xml', {
       headers: {

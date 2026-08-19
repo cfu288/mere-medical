@@ -103,7 +103,6 @@ async function getFHIRResource<T extends FhirResource>(
   baseUrl: string,
   connectionDocument: HealowConnectionDocument,
   fhirResourceUrl: string,
-  fetch: typeof globalThis.fetch,
   params?: Record<string, string>,
   useProxy = true,
 ): Promise<BundleEntry<T>[]> {
@@ -165,7 +164,6 @@ async function syncFHIRResource<T extends FhirResource>(
     entry: BundleEntry<T>,
     connection: HealowConnectionDocument,
   ) => CreateClinicalDocument<BundleEntry<T>>,
-  fetch: typeof globalThis.fetch,
   params?: Record<string, string>,
   useProxy = true,
 ) {
@@ -174,7 +172,6 @@ async function syncFHIRResource<T extends FhirResource>(
     baseUrl,
     connectionDocument,
     fhirResourceUrl,
-    fetch,
     params,
     useProxy,
   );
@@ -185,7 +182,7 @@ async function syncFHIRResource<T extends FhirResource>(
 export const sync: VendorSync = {
   refreshToken: ({ config, connection, db, useProxy }) =>
     refreshHealowConnectionTokenIfNeeded(config, connection, db, useProxy),
-  syncAllRecords: ({ config, baseUrl, connection, db, useProxy, fetch }) => {
+  syncAllRecords: ({ config, baseUrl, connection, db, useProxy }) => {
     const publicUrl = config.PUBLIC_URL || '';
     const cd =
       connection.toMutableJSON() as unknown as HealowConnectionDocument;
@@ -207,7 +204,6 @@ export const sync: VendorSync = {
           db,
           path,
           mapper,
-          fetch,
           params,
           useProxy,
         );
@@ -246,7 +242,6 @@ export const sync: VendorSync = {
           cd,
           db,
           { patient },
-          fetch,
           useProxy,
         ),
       Encounter: get('Encounter', R4.mapEncounterToClinicalDocument, {
@@ -289,7 +284,6 @@ async function syncDocumentReferences(
   connectionDocument: HealowConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   params: Record<string, string>,
-  fetch: typeof globalThis.fetch,
   useProxy = true,
 ) {
   await syncFHIRResource<DocumentReference>(
@@ -299,7 +293,6 @@ async function syncDocumentReferences(
     db,
     'DocumentReference',
     R4.mapDocumentReferenceToClinicalDocument,
-    fetch,
     params,
     useProxy,
   );
@@ -348,7 +341,6 @@ async function syncDocumentReferences(
               publicUrl,
               attachmentUrl,
               connectionDocument,
-              fetch,
               useProxy,
             );
             if (raw && contentType) {
@@ -389,7 +381,6 @@ async function fetchAttachmentData(
   publicUrl: string,
   url: string,
   cd: HealowConnectionDocument,
-  fetch: typeof globalThis.fetch,
   useProxy = true,
 ): Promise<{ contentType: string | null; raw: string | Blob | undefined }> {
   try {

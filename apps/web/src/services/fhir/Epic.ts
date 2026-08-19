@@ -151,7 +151,6 @@ async function getFHIRResource<E extends FhirBundleEntry>(
   baseUrl: string,
   connectionDocument: EpicConnectionDocument,
   fhirResourceUrl: string,
-  fetch: typeof globalThis.fetch,
   params?: Record<string, string | string[]>,
   useProxy = false,
 ): Promise<E[]> {
@@ -242,7 +241,6 @@ async function syncFHIRResource<E extends FhirBundleEntry>(
   fhirResourceUrl: string,
   mapper: ResourceMapper<E, EpicConnectionDocument>,
   params: Record<string, string | string[]>,
-  fetch: typeof globalThis.fetch,
   useProxy = false,
 ) {
   const resc = await getFHIRResource<E>(
@@ -250,7 +248,6 @@ async function syncFHIRResource<E extends FhirBundleEntry>(
     baseUrl,
     connectionDocument,
     fhirResourceUrl,
-    fetch,
     params,
     useProxy,
   );
@@ -267,7 +264,6 @@ async function syncFHIRResourceWithIncludes<E extends FhirBundleEntry>(
   mapper: ResourceMapper<E, EpicConnectionDocument>,
   params: Record<string, string | string[]>,
   includeMappers: Record<string, ResourceMapper<any, EpicConnectionDocument>>,
-  fetch: typeof globalThis.fetch,
   useProxy = false,
 ) {
   const resc = await getFHIRResource<E>(
@@ -275,7 +271,6 @@ async function syncFHIRResourceWithIncludes<E extends FhirBundleEntry>(
     baseUrl,
     connectionDocument,
     fhirResourceUrl,
-    fetch,
     params,
     useProxy,
   );
@@ -293,7 +288,7 @@ async function syncFHIRResourceWithIncludes<E extends FhirBundleEntry>(
 export const sync: VendorSync = {
   refreshToken: ({ config, connection, db, useProxy }) =>
     refreshEpicConnectionTokenIfNeeded(config, connection, db, useProxy),
-  syncAllRecords: ({ config, baseUrl, connection, db, useProxy, fetch }) => {
+  syncAllRecords: ({ config, baseUrl, connection, db, useProxy }) => {
     const cd = connection.toMutableJSON() as unknown as EpicConnectionDocument;
     const patient = cd.patient;
     const version = cd.fhir_version || 'DSTU2';
@@ -313,7 +308,6 @@ export const sync: VendorSync = {
           path,
           mapper,
           params,
-          fetch,
           useProxy,
         );
 
@@ -346,7 +340,6 @@ export const sync: VendorSync = {
             mapper,
             params,
             includeMappers,
-            fetch,
             useProxy,
           );
 
@@ -401,7 +394,6 @@ export const sync: VendorSync = {
             cd,
             db,
             { patient },
-            fetch,
             useProxy,
             'R4',
           ),
@@ -502,7 +494,6 @@ export const sync: VendorSync = {
           cd,
           db,
           { patient },
-          fetch,
           useProxy,
           'DSTU2',
         ),
@@ -519,7 +510,6 @@ async function syncDocumentReferences(
   connectionDocument: EpicConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   params: Record<string, string>,
-  fetch: typeof globalThis.fetch,
   useProxy = false,
   fhirVersion: 'DSTU2' | 'R4' = 'DSTU2',
 ) {
@@ -536,7 +526,6 @@ async function syncDocumentReferences(
         >)
       : DSTU2.mapDocumentReferenceToClinicalDocument,
     params,
-    fetch,
     useProxy,
   );
 
@@ -586,7 +575,6 @@ async function syncDocumentReferences(
               baseUrl,
               attachmentUrl,
               connectionDocument,
-              fetch,
               useProxy,
             );
             if (raw && contentType) {
@@ -644,7 +632,6 @@ async function fetchAttachmentData(
   baseUrl: string,
   url: string,
   connectionDocument: EpicConnectionDocument,
-  fetch: typeof globalThis.fetch,
   useProxy: boolean,
 ): Promise<{ contentType: string | null; raw: string | undefined }> {
   try {

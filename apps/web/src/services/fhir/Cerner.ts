@@ -117,7 +117,6 @@ async function getFHIRResource<E extends FhirBundleEntry>(
   baseUrl: string,
   connectionDocument: CernerConnectionDocument,
   fhirResourceUrl: string,
-  fetch: typeof globalThis.fetch,
   params?: Record<string, string>,
 ): Promise<E[]> {
   const defaultUrl = `${baseUrl}${fhirResourceUrl}?${new URLSearchParams(
@@ -169,14 +168,12 @@ async function syncFHIRResource<E extends FhirBundleEntry>(
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
   mapper: ResourceMapper<E, CernerConnectionDocument>,
-  fetch: typeof globalThis.fetch,
   params?: Record<string, string>,
 ) {
   const resc = await getFHIRResource<E>(
     baseUrl,
     connectionDocument,
     fhirResourceUrl,
-    fetch,
     params,
   );
 
@@ -191,13 +188,11 @@ async function syncFHIRResourceWithIncludes<E extends FhirBundleEntry>(
   mapper: ResourceMapper<E, CernerConnectionDocument>,
   params: Record<string, string>,
   includeMappers: Record<string, ResourceMapper<any, CernerConnectionDocument>>,
-  fetch: typeof globalThis.fetch,
 ) {
   const resc = await getFHIRResource<E>(
     baseUrl,
     connectionDocument,
     fhirResourceUrl,
-    fetch,
     params,
   );
 
@@ -214,7 +209,7 @@ async function syncFHIRResourceWithIncludes<E extends FhirBundleEntry>(
 export const sync: VendorSync = {
   refreshToken: ({ config, connection, db }) =>
     refreshCernerConnectionTokenIfNeeded(config, connection, db),
-  syncAllRecords: ({ baseUrl, connection, db, fetch }) => {
+  syncAllRecords: ({ baseUrl, connection, db }) => {
     const cd =
       connection.toMutableJSON() as unknown as CernerConnectionDocument;
     const version = cd.fhir_version ?? 'DSTU2';
@@ -227,7 +222,7 @@ export const sync: VendorSync = {
         params: Record<string, string>,
       ) =>
       () =>
-        syncFHIRResource<E>(baseUrl, cd, db, path, mapper, fetch, params);
+        syncFHIRResource<E>(baseUrl, cd, db, path, mapper, params);
 
     if (version === 'R4') {
       return runSync({
@@ -254,7 +249,6 @@ export const sync: VendorSync = {
               Media: R4.mapMediaToClinicalDocument,
               Provenance: R4.mapProvenanceToClinicalDocument,
             },
-            fetch,
           ),
         MedicationRequest: get(
           'MedicationRequest',
@@ -272,7 +266,7 @@ export const sync: VendorSync = {
           patient,
         }),
         DocumentReference: () =>
-          syncDocumentReferences(baseUrl, cd, db, { patient }, fetch, 'R4'),
+          syncDocumentReferences(baseUrl, cd, db, { patient }, 'R4'),
         Encounter: get('Encounter', R4.mapEncounterToClinicalDocument, {
           patient,
         }),
@@ -357,7 +351,7 @@ export const sync: VendorSync = {
         patient,
       }),
       DocumentReference: () =>
-        syncDocumentReferences(baseUrl, cd, db, { patient }, fetch, 'DSTU2'),
+        syncDocumentReferences(baseUrl, cd, db, { patient }, 'DSTU2'),
       Encounter: get('Encounter', DSTU2.mapEncounterToClinicalDocument, {
         patient,
       }),
@@ -375,7 +369,6 @@ async function syncDocumentReferences(
   connectionDocument: CernerConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   params: Record<string, string>,
-  fetch: typeof globalThis.fetch,
   version: 'DSTU2' | 'R4' = 'DSTU2',
 ) {
   await syncFHIRResource<BundleEntry<DocumentReference>>(
@@ -389,7 +382,6 @@ async function syncDocumentReferences(
           CernerConnectionDocument
         >)
       : DSTU2.mapDocumentReferenceToClinicalDocument,
-    fetch,
     params,
   );
 
@@ -439,7 +431,6 @@ async function syncDocumentReferences(
             const { contentType, raw } = await fetchAttachmentData(
               attachmentUrl,
               connectionDocument,
-              fetch,
             );
             if (raw && contentType) {
               // save as CreateClinicalDocument
@@ -495,7 +486,6 @@ async function syncDocumentReferences(
 async function fetchAttachmentData(
   url: string,
   cd: CernerConnectionDocument,
-  fetch: typeof globalThis.fetch,
 ): Promise<{ contentType: string | null; raw: string | Blob | undefined }> {
   try {
     const isBinaryResource = url.includes('/Binary/');

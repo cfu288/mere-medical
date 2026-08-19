@@ -40,8 +40,6 @@ const VENDORS: Record<ConnectionSources, VendorSync> = {
   athena: Athena.sync,
 };
 
-const defaultFetch = globalThis.fetch.bind(globalThis);
-
 type SyncJobProviderProps = PropsWithChildren<unknown>;
 
 const SyncJobContext = React.createContext<
@@ -377,7 +375,6 @@ async function fetchMedicalRecords(
     connection: connectionDocument,
     baseUrl,
     useProxy,
-    fetch: defaultFetch,
   };
 
   try {

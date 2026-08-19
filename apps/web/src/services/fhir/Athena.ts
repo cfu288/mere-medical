@@ -135,7 +135,6 @@ function buildAhPracticeParam(accessToken?: string): string | undefined {
 async function getFHIRResource<T extends FhirResource>(
   connectionDocument: AthenaConnectionDocument,
   fhirResourceUrl: string,
-  fetch: typeof globalThis.fetch,
   params?: Record<string, string>,
 ): Promise<BundleEntry<T>[]> {
   const baseUrl = connectionDocument.location as string;
@@ -194,13 +193,11 @@ async function syncFHIRResource<T extends FhirResource>(
     entry: BundleEntry<T>,
     connection: AthenaConnectionDocument,
   ) => CreateClinicalDocument<BundleEntry<T>>,
-  fetch: typeof globalThis.fetch,
   params?: Record<string, string>,
 ) {
   const resc = await getFHIRResource<T>(
     connectionDocument,
     fhirResourceUrl,
-    fetch,
     params,
   );
 
@@ -220,12 +217,10 @@ async function syncFHIRResourceWithIncludes<T extends FhirResource>(
     string,
     ResourceMapper<BundleEntry<any>, AthenaConnectionDocument>
   >,
-  fetch: typeof globalThis.fetch,
 ) {
   const resc = await getFHIRResource<T>(
     connectionDocument,
     fhirResourceUrl,
-    fetch,
     params,
   );
 
@@ -242,7 +237,7 @@ async function syncFHIRResourceWithIncludes<T extends FhirResource>(
 export const sync: VendorSync = {
   refreshToken: ({ config, connection, db }) =>
     refreshAthenaConnectionTokenIfNeeded(config, connection, db),
-  syncAllRecords: ({ connection, db, fetch }) => {
+  syncAllRecords: ({ connection, db }) => {
     const cd =
       connection.toMutableJSON() as unknown as AthenaConnectionDocument;
     const patient = cd.patient;
@@ -256,7 +251,7 @@ export const sync: VendorSync = {
         params: Record<string, string>,
       ) =>
       () =>
-        syncFHIRResource<T>(cd, db, path, mapper, fetch, params);
+        syncFHIRResource<T>(cd, db, path, mapper, params);
 
     return runSync({
       Procedure: get('Procedure', R4.mapProcedureToClinicalDocument, {
@@ -286,8 +281,7 @@ export const sync: VendorSync = {
       Condition: get('Condition', R4.mapConditionToClinicalDocument, {
         patient,
       }),
-      DocumentReference: () =>
-        syncDocumentReferences(cd, db, { patient }, fetch),
+      DocumentReference: () => syncDocumentReferences(cd, db, { patient }),
       // Athena only supports searching Provenance by target per {baseUrl}/metadata,
       // so Provenance records are pulled in via _revinclude instead
       Encounter: () =>
@@ -298,7 +292,6 @@ export const sync: VendorSync = {
           R4.mapEncounterToClinicalDocument,
           { patient, _revinclude: 'Provenance:target' },
           { Provenance: R4.mapProvenanceToClinicalDocument },
-          fetch,
         ),
       AllergyIntolerance: get(
         'AllergyIntolerance',
@@ -339,14 +332,12 @@ async function syncDocumentReferences(
   connectionDocument: AthenaConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   params: Record<string, string>,
-  fetch: typeof globalThis.fetch,
 ) {
   await syncFHIRResource<DocumentReference>(
     connectionDocument,
     db,
     'DocumentReference',
     R4.mapDocumentReferenceToClinicalDocument,
-    fetch,
     params,
   );
 
@@ -395,11 +386,7 @@ async function syncDocumentReferences(
           .exec();
         if (exists.length === 0) {
           const { contentType, raw } = attachmentUrl
-            ? await fetchAttachmentData(
-                attachmentUrl,
-                connectionDocument,
-                fetch,
-              )
+            ? await fetchAttachmentData(attachmentUrl, connectionDocument)
             : decodeInlineAttachmentData(attachment);
           if (raw && contentType) {
             const cd: CreateClinicalDocument<string | Blob> = {
@@ -464,7 +451,6 @@ function decodeInlineAttachmentData(attachment: Attachment): {
 async function fetchAttachmentData(
   url: string,
   cd: AthenaConnectionDocument,
-  fetch: typeof globalThis.fetch,
 ): Promise<{ contentType: string | null; raw: string | Blob | undefined }> {
   try {
     const isBinaryResource = url.includes('/Binary/');
