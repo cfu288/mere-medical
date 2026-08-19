@@ -120,7 +120,7 @@
     "jest-environment-jsdom": "30.0.5",
     "jest-environment-node": "^29.4.1",
     "jest-util": "30.0.5",
-    "jsonc-eslint-parser": "^2.1.0",
+    "jsonc-eslint-parser": "^3.3.0",
     "lint-staged": "^16.2.7",
     "nestjs-pino": "^4.0.0",
     "nx": "22.7.8",
