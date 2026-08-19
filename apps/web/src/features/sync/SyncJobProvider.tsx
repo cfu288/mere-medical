@@ -3,12 +3,7 @@ import { PropsWithChildren } from 'react';
 import { RxDocument, RxDatabase } from 'rxdb';
 import {
   ConnectionDocument,
-  EpicConnectionDocument,
-  CernerConnectionDocument,
   ConnectionSources,
-  VeradigmConnectionDocument,
-  VAConnectionDocument,
-  AthenaConnectionDocument,
 } from '../../models/connection-document/ConnectionDocument.type';
 import { useRxDb } from '../../app/providers/RxDbProvider';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
@@ -19,27 +14,35 @@ import * as Veradigm from '../../services/fhir/Veradigm';
 import * as VA from '../../services/fhir/VA';
 import * as Healow from '../../services/fhir/Healow';
 import * as Athena from '../../services/fhir/Athena';
-import { HealowConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
+import { SyncContext, VendorSync } from '../../services/fhir/sync';
 import { from, Subject } from 'rxjs';
 import { useNotificationDispatch } from '../../app/providers/NotificationProvider';
 import { differenceInDays, parseISO } from 'date-fns';
 import {
-  AppConfig,
   useAppConfig,
   isConfigValid,
 } from '../../app/providers/AppConfigProvider';
 import { useUserPreferences } from '../../app/providers/UserPreferencesProvider';
 import { useConnectionCards } from '../connections/hooks/useConnectionCards';
-import { refreshVAConnectionTokenIfNeeded } from '../../services/fhir/VA';
 import {
   recordSyncSuccess,
   recordSyncError,
 } from '../../services/fhir/ConnectionService';
 
+const VENDORS: Record<ConnectionSources, VendorSync> = {
+  onpatient: OnPatient.sync,
+  epic: Epic.sync,
+  cerner: Cerner.sync,
+  va: VA.sync,
+  veradigm: Veradigm.sync,
+  healow: Healow.sync,
+  athena: Athena.sync,
+};
+
 type SyncJobProviderProps = PropsWithChildren<unknown>;
 
 const SyncJobContext = React.createContext<
-  Record<string, Subject<PromiseSettledResult<void[]>[]>>
+  Record<string, Subject<PromiseSettledResult<unknown>[]>>
 >({});
 
 const SyncJobDispatchContext = React.createContext<Dispatch | undefined>(
@@ -47,38 +50,22 @@ const SyncJobDispatchContext = React.createContext<Dispatch | undefined>(
 );
 
 type Action =
-  | {
-      type: 'add_job';
-      config: AppConfig;
-      id: string;
-      connectionDocument: RxDocument<ConnectionDocument>;
-      baseUrl: string;
-      useProxy: boolean;
-      db: RxDatabase<DatabaseCollections>;
-    }
+  | { type: 'add_job'; id: string; ctx: SyncContext }
   | { type: 'remove_job'; id: string };
 
 type Dispatch = (action: Action) => void;
 
 const syncJobReducer: (
-  state: Record<string, Subject<PromiseSettledResult<void[]>[]>>,
+  state: Record<string, Subject<PromiseSettledResult<unknown>[]>>,
   action: Action,
-) => Record<string, Subject<PromiseSettledResult<void[]>[]>> = (
-  state: Record<string, Subject<PromiseSettledResult<void[]>[]>>,
+) => Record<string, Subject<PromiseSettledResult<unknown>[]>> = (
+  state: Record<string, Subject<PromiseSettledResult<unknown>[]>>,
   action: Action,
 ) => {
   switch (action.type) {
     case 'add_job': {
-      const subject = new Subject<PromiseSettledResult<void[]>[]>();
-      const observable = from(
-        fetchMedicalRecords(
-          action.config,
-          action.connectionDocument,
-          action.db,
-          action.baseUrl,
-          action.useProxy,
-        ),
-      );
+      const subject = new Subject<PromiseSettledResult<unknown>[]>();
+      const observable = from(fetchMedicalRecords(action.ctx));
       observable.subscribe(subject);
       return {
         ...state,
@@ -103,7 +90,7 @@ const syncJobReducer: (
 export function SyncJobProvider(props: SyncJobProviderProps) {
   const [state, dispatch] = React.useReducer(
     syncJobReducer,
-    {} as Record<string, Subject<PromiseSettledResult<void[]>[]>>,
+    {} as Record<string, Subject<PromiseSettledResult<unknown>[]>>,
   );
 
   return (
@@ -136,12 +123,14 @@ function HandleInitalSync({ children }: PropsWithChildren) {
         if (syncD && userPreferences) {
           syncD({
             type: 'add_job',
-            config,
             id: item.toJSON().id,
-            connectionDocument: item,
-            baseUrl: item.get('location'),
-            useProxy: userPreferences.use_proxy,
-            db,
+            ctx: {
+              config,
+              db,
+              connection: item,
+              baseUrl: item.get('location'),
+              useProxy: userPreferences.use_proxy,
+            },
           });
         }
       },
@@ -352,211 +341,29 @@ export function useSyncJobDispatchContext() {
   return context;
 }
 
-async function fetchMedicalRecords(
-  config: AppConfig,
-  connectionDocument: RxDocument<ConnectionDocument>,
-  db: RxDatabase<DatabaseCollections>,
-  baseUrl: string,
-  useProxy = false,
-) {
-  switch (connectionDocument.get('source') as ConnectionSources) {
-    case 'onpatient': {
-      try {
-        const syncJob = await OnPatient.syncAllRecords(
-          connectionDocument.toMutableJSON(),
-          db,
-        );
-        await updateConnectionDocumentTimestamps(
-          syncJob,
-          connectionDocument,
-          db,
-        );
-        return syncJob;
-      } catch (e) {
-        console.error(e);
-        await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
-        throw new Error(
-          `Error refreshing ${connectionDocument.get(
-            'name',
-          )} access - try logging in again`,
-        );
-      }
-    }
-    case 'epic': {
-      try {
-        await Epic.refreshEpicConnectionTokenIfNeeded(
-          config,
-          connectionDocument,
-          db,
-          useProxy,
-        );
-        const syncJob = await Epic.syncAllRecords(
-          config,
-          baseUrl,
-          connectionDocument.toMutableJSON() as unknown as EpicConnectionDocument,
-          db,
-          useProxy,
-        );
-        await updateConnectionDocumentTimestamps(
-          syncJob,
-          connectionDocument,
-          db,
-        );
-        return syncJob;
-      } catch (e) {
-        console.error(e);
-        await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
-        throw new Error(
-          `Error refreshing ${connectionDocument.get(
-            'name',
-          )} access - try logging in again`,
-        );
-      }
-    }
-    case 'cerner': {
-      try {
-        await Cerner.refreshCernerConnectionTokenIfNeeded(
-          config,
-          connectionDocument,
-          db,
-        );
-        const cernerConnection =
-          connectionDocument.toMutableJSON() as unknown as CernerConnectionDocument;
-        const syncJob = await Cerner.syncAllRecords(
-          baseUrl,
-          cernerConnection,
-          db,
-          cernerConnection.fhir_version ?? 'DSTU2',
-        );
-        await updateConnectionDocumentTimestamps(
-          syncJob,
-          connectionDocument,
-          db,
-        );
-        return syncJob;
-      } catch (e) {
-        console.error(e);
-        await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
-        throw new Error(
-          `Error refreshing ${connectionDocument.get(
-            'name',
-          )} access - try logging in again`,
-        );
-      }
-    }
-    case 'va': {
-      try {
-        await refreshVAConnectionTokenIfNeeded(config, connectionDocument);
-        const syncJob = await VA.syncAllRecords(
-          baseUrl,
-          connectionDocument.toMutableJSON() as unknown as VAConnectionDocument,
-          db,
-        );
-        await updateConnectionDocumentTimestamps(
-          syncJob,
-          connectionDocument,
-          db,
-        );
-        return syncJob;
-      } catch (e) {
-        console.error(e);
-        await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
-        throw new Error(
-          `Error refreshing ${connectionDocument.get(
-            'name',
-          )} access - try logging in again`,
-        );
-      }
-    }
-    case 'veradigm': {
-      try {
-        const syncJob = await Veradigm.syncAllRecords(
-          baseUrl,
-          connectionDocument.toMutableJSON() as unknown as VeradigmConnectionDocument,
-          db,
-        );
-        await updateConnectionDocumentTimestamps(
-          syncJob,
-          connectionDocument,
-          db,
-        );
-        return syncJob;
-      } catch (e) {
-        console.error(e);
-        await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
-        throw new Error(
-          `Error refreshing ${connectionDocument.get(
-            'name',
-          )} access - try logging in again`,
-        );
-      }
-    }
+async function fetchMedicalRecords(ctx: SyncContext) {
+  const { connection, db } = ctx;
+  const source = connection.get('source') as ConnectionSources;
+  const vendor = VENDORS[source];
+  if (!vendor) {
+    throw Error(`Cannot sync unknown source: ${source}`);
+  }
 
-    case 'healow': {
-      try {
-        await Healow.refreshHealowConnectionTokenIfNeeded(
-          config,
-          connectionDocument,
-          db,
-          useProxy,
-        );
-        const syncJob = await Healow.syncAllRecords(
-          config.PUBLIC_URL || '',
-          baseUrl,
-          connectionDocument.toMutableJSON() as unknown as HealowConnectionDocument,
-          db,
-          useProxy,
-        );
-        await updateConnectionDocumentTimestamps(
-          syncJob,
-          connectionDocument,
-          db,
-        );
-        return syncJob;
-      } catch (e) {
-        console.error(e);
-        await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
-        throw new Error(
-          `Error refreshing ${connectionDocument.get(
-            'name',
-          )} access - try logging in again`,
-        );
-      }
+  try {
+    if (vendor.refreshToken) {
+      await vendor.refreshToken(ctx);
     }
-
-    case 'athena': {
-      try {
-        await Athena.refreshAthenaConnectionTokenIfNeeded(
-          config,
-          connectionDocument,
-          db,
-        );
-        const syncJob = await Athena.syncAllRecords(
-          connectionDocument.toMutableJSON() as unknown as AthenaConnectionDocument,
-          db,
-        );
-        await updateConnectionDocumentTimestamps(
-          syncJob,
-          connectionDocument,
-          db,
-        );
-        return syncJob;
-      } catch (e) {
-        console.error(e);
-        await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
-        throw new Error(
-          `Error refreshing ${connectionDocument.get(
-            'name',
-          )} access - try logging in again`,
-        );
-      }
-    }
-
-    default: {
-      throw Error(
-        `Cannot sync unknown source: ${connectionDocument.get('source')}`,
-      );
-    }
+    const syncJob = await vendor.syncAllRecords(ctx);
+    await updateConnectionDocumentTimestamps(syncJob, connection, db);
+    return syncJob;
+  } catch (e) {
+    console.error(e);
+    await updateConnectionDocumentErrorTimestamps(connection, db);
+    throw new Error(
+      `Error refreshing ${connection.get(
+        'name',
+      )} access - try logging in again`,
+    );
   }
 }
 
@@ -586,7 +393,7 @@ async function updateConnectionDocumentErrorTimestamps(
  * @param db the RxDB database to update the connection document in
  */
 async function updateConnectionDocumentTimestamps(
-  syncJob: PromiseSettledResult<void[]>[],
+  syncJob: PromiseSettledResult<unknown>[],
   connectionDocument: RxDocument<ConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
 ) {

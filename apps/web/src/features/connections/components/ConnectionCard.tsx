@@ -113,12 +113,14 @@ export function ConnectionCard({
       if (syncD && userPreferences) {
         syncD({
           type: 'add_job',
-          config,
           id: item.toJSON().id,
-          connectionDocument: item,
-          baseUrl,
-          useProxy: userPreferences.use_proxy,
-          db,
+          ctx: {
+            config,
+            db,
+            connection: item,
+            baseUrl,
+            useProxy: userPreferences.use_proxy,
+          },
         });
       }
     }, [baseUrl, config, db, item, notifyDispatch, syncD, userPreferences]);

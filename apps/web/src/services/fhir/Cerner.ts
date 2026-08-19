@@ -3,44 +3,7 @@
  */
 
 /* eslint-disable no-inner-declarations */
-import {
-  AllergyIntolerance,
-  Bundle,
-  BundleEntry,
-  Condition,
-  DiagnosticReport,
-  DocumentReference,
-  Encounter,
-  FhirResource,
-  Immunization,
-  MedicationStatement,
-  Observation,
-  Patient,
-  Procedure,
-} from 'fhir/r2';
-import {
-  MedicationRequest,
-  CarePlan,
-  CareTeam,
-  Goal,
-  Coverage,
-  Device,
-  ServiceRequest,
-  Media,
-  Specimen,
-  RelatedPerson,
-  MedicationDispense,
-  MedicationAdministration,
-  Appointment,
-  FamilyMemberHistory,
-  Consent,
-  Contract,
-  InsurancePlan,
-  NutritionOrder,
-  Questionnaire,
-  QuestionnaireResponse,
-  Person,
-} from 'fhir/r4';
+import { Bundle, BundleEntry, DocumentReference } from 'fhir/r2';
 import { RxDocument, RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import {
@@ -58,13 +21,23 @@ import {
   type CernerTokenSet,
 } from '@mere/fhir-oauth';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
-import {
-  ClinicalDocument,
-  CreateClinicalDocument,
-} from '../../models/clinical-document/ClinicalDocument.type';
+import { CreateClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
 import { Routes } from '../../Routes';
 import { AppConfig } from '../../app/providers/AppConfigProvider';
+import {
+  mapSearchedResources,
+  mapCompanionResources,
+  FhirBundleEntry,
+  ResourceMapper,
+  VendorSync,
+} from './sync';
+import {
+  bulkUpsertDocuments,
+  createDocument,
+  documentExistsByMetadataId,
+  findDocumentsByResourceType,
+} from '../../repositories/ClinicalDocumentRepository';
 
 const cernerClient = createCernerClient();
 
@@ -106,17 +79,17 @@ function parseIdToken(token: string) {
   };
 }
 
-async function getFHIRResource<T extends FhirResource>(
+async function getFHIRResource<E extends FhirBundleEntry>(
   baseUrl: string,
   connectionDocument: CernerConnectionDocument,
   fhirResourceUrl: string,
   params?: Record<string, string>,
-): Promise<BundleEntry<T>[]> {
+): Promise<E[]> {
   const defaultUrl = `${baseUrl}${fhirResourceUrl}?${new URLSearchParams(
     params,
   )}`;
 
-  let allEntries: BundleEntry<T>[] = [];
+  let allEntries: E[] = [];
   let nextUrl: string | undefined = defaultUrl;
 
   while (nextUrl) {
@@ -133,7 +106,7 @@ async function getFHIRResource<T extends FhirResource>(
     const bundle: Bundle = await response.json();
 
     if (bundle.entry) {
-      allEntries = allEntries.concat(bundle.entry as BundleEntry<T>[]);
+      allEntries = allEntries.concat(bundle.entry as unknown as E[]);
     }
 
     const nextLink = bundle.link?.find(
@@ -155,427 +128,323 @@ async function getFHIRResource<T extends FhirResource>(
  * @param params Query parameters to pass to the FHIR request
  * @returns
  */
-async function syncFHIRResource<T extends FhirResource>(
+async function syncFHIRResource<E extends FhirBundleEntry>(
   baseUrl: string,
   connectionDocument: CernerConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
-  mapper: (proc: BundleEntry<T>) => CreateClinicalDocument<BundleEntry<T>>,
+  mapper: ResourceMapper<E, CernerConnectionDocument>,
   params?: Record<string, string>,
 ) {
-  const resc = await getFHIRResource<T>(
+  const resc = await getFHIRResource<E>(
     baseUrl,
     connectionDocument,
     fhirResourceUrl,
     params,
   );
 
-  const cds = resc
-    .filter(
-      (i) =>
-        i.resource?.resourceType.toLowerCase() ===
-        fhirResourceUrl.toLowerCase(),
-    )
-    .map(mapper);
-  const cdsmap = await db.clinical_documents.bulkUpsert(
-    cds as unknown as ClinicalDocument[],
+  return bulkUpsertDocuments(
+    db,
+    mapSearchedResources(resc, fhirResourceUrl, mapper, connectionDocument),
   );
-  return cdsmap;
 }
 
-async function processIncludedResources(
-  entries: BundleEntry<any>[],
-  mappers: Record<
-    string,
-    (entry: BundleEntry<any>) => CreateClinicalDocument<BundleEntry<any>>
-  >,
-  db: RxDatabase<DatabaseCollections>,
-  excludeResourceTypes: string[] = [],
-): Promise<void> {
-  const resourceTypeGroups = new Map<string, BundleEntry<any>[]>();
-  for (const entry of entries) {
-    const resourceType = entry.resource?.resourceType;
-    if (resourceType && !excludeResourceTypes.includes(resourceType)) {
-      if (!resourceTypeGroups.has(resourceType)) {
-        resourceTypeGroups.set(resourceType, []);
-      }
-      resourceTypeGroups.get(resourceType)!.push(entry);
-    }
-  }
-  for (const [resourceType, groupedEntries] of resourceTypeGroups.entries()) {
-    const mapper = mappers[resourceType];
-    if (mapper) {
-      const cds = groupedEntries.map(mapper);
-      await db.clinical_documents.bulkUpsert(
-        cds as unknown as ClinicalDocument[],
-      );
-    }
-  }
-}
-
-async function syncFHIRResourceWithIncludes<T extends FhirResource>(
+async function syncFHIRResourceWithIncludes<E extends FhirBundleEntry>(
   baseUrl: string,
   connectionDocument: CernerConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
-  mapper: (proc: BundleEntry<T>) => CreateClinicalDocument<BundleEntry<T>>,
+  mapper: ResourceMapper<E, CernerConnectionDocument>,
   params: Record<string, string>,
-  includeMappers: Record<
-    string,
-    (entry: BundleEntry<any>) => CreateClinicalDocument<BundleEntry<any>>
-  >,
+  includeMappers: Record<string, ResourceMapper<any, CernerConnectionDocument>>,
 ) {
-  const resc = await getFHIRResource<T>(
+  const resc = await getFHIRResource<E>(
     baseUrl,
     connectionDocument,
     fhirResourceUrl,
     params,
   );
-  const cds = resc
-    .filter(
-      (i) =>
-        i.resource?.resourceType.toLowerCase() ===
-        fhirResourceUrl.toLowerCase(),
-    )
-    .map(mapper);
-  await db.clinical_documents.bulkUpsert(cds as unknown as ClinicalDocument[]);
-  await processIncludedResources(resc, includeMappers, db, [fhirResourceUrl]);
+
+  await bulkUpsertDocuments(
+    db,
+    mapSearchedResources(resc, fhirResourceUrl, mapper, connectionDocument),
+  );
+  await bulkUpsertDocuments(
+    db,
+    mapCompanionResources(
+      resc,
+      includeMappers,
+      connectionDocument,
+      fhirResourceUrl,
+    ),
+  );
 }
 
-/**
- * Sync all records from the FHIR server to the local database
- * @param baseUrl Base url of the FHIR server to sync from
- * @param connectionDocument
- * @param db
- * @param version FHIR version to use for mapping (defaults to DSTU2 for backward compatibility)
- * @returns A promise of void arrays
- */
-export async function syncAllRecords(
-  baseUrl: string,
-  connectionDocument: CernerConnectionDocument,
-  db: RxDatabase<DatabaseCollections>,
-  version: 'DSTU2' | 'R4' = 'DSTU2',
-): Promise<PromiseSettledResult<void[]>[]> {
-  const mappers = version === 'R4' ? R4 : DSTU2;
+export const sync: VendorSync = {
+  refreshToken: ({ config, connection, db }) =>
+    refreshCernerConnectionTokenIfNeeded(config, connection, db),
+  syncAllRecords: ({ baseUrl, connection, db }) => {
+    const cd =
+      connection.toMutableJSON() as unknown as CernerConnectionDocument;
+    const version = cd.fhir_version ?? 'DSTU2';
+    const patient = parseIdToken(cd.id_token).fhirUser.split('/').slice(-1)[0];
 
-  const procMapper = (proc: BundleEntry<Procedure>) =>
-    mappers.mapProcedureToClinicalDocument(proc as any, connectionDocument);
-  const patientMapper = (pt: BundleEntry<Patient>) =>
-    mappers.mapPatientToClinicalDocument(pt as any, connectionDocument);
-  const obsMapper = (imm: BundleEntry<Observation>) =>
-    mappers.mapObservationToClinicalDocument(imm as any, connectionDocument);
-  const drMapper = (dr: BundleEntry<DiagnosticReport>) =>
-    mappers.mapDiagnosticReportToClinicalDocument(
-      dr as any,
-      connectionDocument,
-    );
-  const medStatementMapper = (dr: BundleEntry<MedicationStatement>) =>
-    mappers.mapMedicationStatementToClinicalDocument(
-      dr as any,
-      connectionDocument,
-    );
-  const medRequestMapper = (dr: BundleEntry<MedicationRequest>) =>
-    version === 'R4'
-      ? R4.mapMedicationRequestToClinicalDocument(dr as any, connectionDocument)
-      : medStatementMapper(dr as any);
-  const immMapper = (dr: BundleEntry<Immunization>) =>
-    mappers.mapImmunizationToClinicalDocument(dr as any, connectionDocument);
-  const conditionMapper = (dr: BundleEntry<Condition>) =>
-    mappers.mapConditionToClinicalDocument(dr as any, connectionDocument);
-  const allergyIntoleranceMapper = (a: BundleEntry<AllergyIntolerance>) =>
-    mappers.mapAllergyIntoleranceToClinicalDocument(
-      a as any,
-      connectionDocument,
-    );
-
-  const encounterMapper = (a: BundleEntry<Encounter>) =>
-    mappers.mapEncounterToClinicalDocument(a as any, connectionDocument);
-
-  const specimenMapper = (s: any) =>
-    R4.mapSpecimenToClinicalDocument(s, connectionDocument);
-  const mediaMapper = (m: any) =>
-    R4.mapMediaToClinicalDocument(m, connectionDocument);
-  const provenanceMapper = (p: any) =>
-    R4.mapProvenanceToClinicalDocument(p, connectionDocument);
-
-  const includeMappers: Record<string, (entry: any) => any> = {
-    Specimen: specimenMapper,
-    Media: mediaMapper,
-    Provenance: provenanceMapper,
-  };
-
-  const patientId = parseIdToken(connectionDocument.id_token)
-    .fhirUser.split('/')
-    .slice(-1)[0];
-
-  const syncJob = await Promise.allSettled([
-    syncFHIRResource<Procedure>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'Procedure',
-      procMapper as any,
-      {
-        patient: patientId,
-      },
-    ),
-    syncFHIRResource<Patient>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'Patient',
-      patientMapper as any,
-      {
-        _id: patientId,
-      },
-    ),
-    syncFHIRResource<Observation>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'Observation',
-      obsMapper as any,
-      {
-        patient: patientId,
-        category: 'laboratory',
-      },
-    ),
-    version === 'R4'
-      ? syncFHIRResourceWithIncludes<DiagnosticReport>(
+    if (version === 'R4') {
+      return Promise.allSettled([
+        syncFHIRResource(
           baseUrl,
-          connectionDocument,
+          cd,
+          db,
+          'Procedure',
+          R4.mapProcedureToClinicalDocument,
+          { patient },
+        ),
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'Patient',
+          R4.mapPatientToClinicalDocument,
+          { _id: patient },
+        ),
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'Observation',
+          R4.mapObservationToClinicalDocument,
+          { patient, category: 'laboratory' },
+        ),
+        syncFHIRResourceWithIncludes(
+          baseUrl,
+          cd,
           db,
           'DiagnosticReport',
-          drMapper as any,
+          R4.mapDiagnosticReportToClinicalDocument,
+          { patient, _revinclude: 'Provenance:target' },
           {
-            patient: patientId,
-            _revinclude: 'Provenance:target',
-          },
-          includeMappers,
-        )
-      : syncFHIRResource<DiagnosticReport>(
-          baseUrl,
-          connectionDocument,
-          db,
-          'DiagnosticReport',
-          drMapper as any,
-          {
-            patient: patientId,
+            Specimen: R4.mapSpecimenToClinicalDocument,
+            Media: R4.mapMediaToClinicalDocument,
+            Provenance: R4.mapProvenanceToClinicalDocument,
           },
         ),
-    version === 'R4'
-      ? syncFHIRResource<any>(
+        syncFHIRResource(
           baseUrl,
-          connectionDocument,
+          cd,
           db,
           'MedicationRequest',
-          medRequestMapper as any,
-          {
-            patient: patientId,
-          },
-        )
-      : syncFHIRResource<MedicationStatement>(
-          baseUrl,
-          connectionDocument,
-          db,
-          'MedicationStatement',
-          medStatementMapper as any,
-          {
-            patient: patientId,
-          },
+          R4.mapMedicationRequestToClinicalDocument,
+          { patient },
         ),
-    syncFHIRResource<Immunization>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'Immunization',
-      immMapper as any,
-      {
-        patient: patientId,
-      },
-    ),
-    syncFHIRResource<Condition>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'Condition',
-      conditionMapper as any,
-      {
-        patient: patientId,
-      },
-    ),
-    syncDocumentReferences(
-      baseUrl,
-      connectionDocument,
-      db,
-      {
-        patient: patientId,
-      },
-      version,
-    ),
-    syncFHIRResource<Encounter>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'Encounter',
-      encounterMapper as any,
-      {
-        patient: patientId,
-      },
-    ),
-    syncFHIRResource<AllergyIntolerance>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'AllergyIntolerance',
-      allergyIntoleranceMapper as any,
-      {
-        patient: patientId,
-      },
-    ),
-    ...(version === 'R4'
-      ? [
-          syncFHIRResource(
-            baseUrl,
-            connectionDocument,
-            db,
-            'CareTeam',
-            ((item: any) =>
-              R4.mapCareTeamToClinicalDocument(
-                item,
-                connectionDocument,
-              )) as any,
-            { patient: patientId },
-          ),
-          syncFHIRResource(
-            baseUrl,
-            connectionDocument,
-            db,
-            'Goal',
-            ((item: any) =>
-              R4.mapGoalToClinicalDocument(item, connectionDocument)) as any,
-            { patient: patientId },
-          ),
-          syncFHIRResource(
-            baseUrl,
-            connectionDocument,
-            db,
-            'Coverage',
-            ((item: any) =>
-              R4.mapCoverageToClinicalDocument(
-                item,
-                connectionDocument,
-              )) as any,
-            { patient: patientId },
-          ),
-          syncFHIRResource(
-            baseUrl,
-            connectionDocument,
-            db,
-            'Device',
-            ((item: any) =>
-              R4.mapDeviceToClinicalDocument(item, connectionDocument)) as any,
-            { patient: patientId },
-          ),
-          syncFHIRResource(
-            baseUrl,
-            connectionDocument,
-            db,
-            'ServiceRequest',
-            ((item: any) =>
-              R4.mapServiceRequestToClinicalDocument(
-                item,
-                connectionDocument,
-              )) as any,
-            { patient: patientId },
-          ),
-          syncFHIRResource(
-            baseUrl,
-            connectionDocument,
-            db,
-            'MedicationDispense',
-            ((item: any) =>
-              R4.mapMedicationDispenseToClinicalDocument(
-                item,
-                connectionDocument,
-              )) as any,
-            { patient: patientId },
-          ),
-          syncFHIRResource(
-            baseUrl,
-            connectionDocument,
-            db,
-            'MedicationAdministration',
-            ((item: any) =>
-              R4.mapMedicationAdministrationToClinicalDocument(
-                item,
-                connectionDocument,
-              )) as any,
-            { patient: patientId },
-          ),
-          syncFHIRResource(
-            baseUrl,
-            connectionDocument,
-            db,
-            'Appointment',
-            ((item: any) =>
-              R4.mapAppointmentToClinicalDocument(
-                item,
-                connectionDocument,
-              )) as any,
-            { patient: patientId, date: 'ge1900-01-01T00:00:00Z' },
-          ),
-          syncFHIRResource(
-            baseUrl,
-            connectionDocument,
-            db,
-            'FamilyMemberHistory',
-            ((item: any) =>
-              R4.mapFamilyMemberHistoryToClinicalDocument(
-                item,
-                connectionDocument,
-              )) as any,
-            { patient: patientId },
-          ),
-          syncFHIRResource(
-            baseUrl,
-            connectionDocument,
-            db,
-            'Consent',
-            ((item: any) =>
-              R4.mapConsentToClinicalDocument(item, connectionDocument)) as any,
-            { patient: patientId },
-          ),
-          syncFHIRResource(
-            baseUrl,
-            connectionDocument,
-            db,
-            'NutritionOrder',
-            ((item: any) =>
-              R4.mapNutritionOrderToClinicalDocument(
-                item,
-                connectionDocument,
-              )) as any,
-            { patient: patientId },
-          ),
-          syncFHIRResource(
-            baseUrl,
-            connectionDocument,
-            db,
-            'QuestionnaireResponse',
-            ((item: any) =>
-              R4.mapQuestionnaireResponseToClinicalDocument(
-                item,
-                connectionDocument,
-              )) as any,
-            { patient: patientId },
-          ),
-        ]
-      : []),
-  ]);
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'Immunization',
+          R4.mapImmunizationToClinicalDocument,
+          { patient },
+        ),
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'Condition',
+          R4.mapConditionToClinicalDocument,
+          { patient },
+        ),
+        syncDocumentReferences(baseUrl, cd, db, { patient }, 'R4'),
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'Encounter',
+          R4.mapEncounterToClinicalDocument,
+          { patient },
+        ),
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'AllergyIntolerance',
+          R4.mapAllergyIntoleranceToClinicalDocument,
+          { patient },
+        ),
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'CareTeam',
+          R4.mapCareTeamToClinicalDocument,
+          { patient },
+        ),
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'Goal',
+          R4.mapGoalToClinicalDocument,
+          { patient },
+        ),
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'Coverage',
+          R4.mapCoverageToClinicalDocument,
+          { patient },
+        ),
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'Device',
+          R4.mapDeviceToClinicalDocument,
+          { patient },
+        ),
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'ServiceRequest',
+          R4.mapServiceRequestToClinicalDocument,
+          { patient },
+        ),
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'MedicationDispense',
+          R4.mapMedicationDispenseToClinicalDocument,
+          { patient },
+        ),
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'MedicationAdministration',
+          R4.mapMedicationAdministrationToClinicalDocument,
+          { patient },
+        ),
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'Appointment',
+          R4.mapAppointmentToClinicalDocument,
+          { patient, date: 'ge1900-01-01T00:00:00Z' },
+        ),
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'FamilyMemberHistory',
+          R4.mapFamilyMemberHistoryToClinicalDocument,
+          { patient },
+        ),
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'Consent',
+          R4.mapConsentToClinicalDocument,
+          { patient },
+        ),
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'NutritionOrder',
+          R4.mapNutritionOrderToClinicalDocument,
+          { patient },
+        ),
+        syncFHIRResource(
+          baseUrl,
+          cd,
+          db,
+          'QuestionnaireResponse',
+          R4.mapQuestionnaireResponseToClinicalDocument,
+          { patient },
+        ),
+      ]);
+    }
 
-  return syncJob as unknown as Promise<PromiseSettledResult<void[]>[]>;
-}
+    return Promise.allSettled([
+      syncFHIRResource(
+        baseUrl,
+        cd,
+        db,
+        'Procedure',
+        DSTU2.mapProcedureToClinicalDocument,
+        { patient },
+      ),
+      syncFHIRResource(
+        baseUrl,
+        cd,
+        db,
+        'Patient',
+        DSTU2.mapPatientToClinicalDocument,
+        { _id: patient },
+      ),
+      syncFHIRResource(
+        baseUrl,
+        cd,
+        db,
+        'Observation',
+        DSTU2.mapObservationToClinicalDocument,
+        { patient, category: 'laboratory' },
+      ),
+      syncFHIRResource(
+        baseUrl,
+        cd,
+        db,
+        'DiagnosticReport',
+        DSTU2.mapDiagnosticReportToClinicalDocument,
+        { patient },
+      ),
+      syncFHIRResource(
+        baseUrl,
+        cd,
+        db,
+        'MedicationStatement',
+        DSTU2.mapMedicationStatementToClinicalDocument,
+        { patient },
+      ),
+      syncFHIRResource(
+        baseUrl,
+        cd,
+        db,
+        'Immunization',
+        DSTU2.mapImmunizationToClinicalDocument,
+        { patient },
+      ),
+      syncFHIRResource(
+        baseUrl,
+        cd,
+        db,
+        'Condition',
+        DSTU2.mapConditionToClinicalDocument,
+        { patient },
+      ),
+      syncDocumentReferences(baseUrl, cd, db, { patient }, 'DSTU2'),
+      syncFHIRResource(
+        baseUrl,
+        cd,
+        db,
+        'Encounter',
+        DSTU2.mapEncounterToClinicalDocument,
+        { patient },
+      ),
+      syncFHIRResource(
+        baseUrl,
+        cd,
+        db,
+        'AllergyIntolerance',
+        DSTU2.mapAllergyIntoleranceToClinicalDocument,
+        { patient },
+      ),
+    ]);
+  },
+};
 
 async function syncDocumentReferences(
   baseUrl: string,
@@ -584,40 +453,24 @@ async function syncDocumentReferences(
   params: Record<string, string>,
   version: 'DSTU2' | 'R4' = 'DSTU2',
 ) {
-  const mappers = version === 'R4' ? R4 : DSTU2;
-  const documentReferenceMapper = (dr: BundleEntry<DocumentReference>) =>
-    mappers.mapDocumentReferenceToClinicalDocument(
-      dr as any,
-      connectionDocument,
-    );
-  await syncFHIRResource<DocumentReference>(
+  await syncFHIRResource<BundleEntry<DocumentReference>>(
     baseUrl,
     connectionDocument,
     db,
     'DocumentReference',
-    documentReferenceMapper as any,
+    version === 'R4'
+      ? (R4.mapDocumentReferenceToClinicalDocument as ResourceMapper<
+          BundleEntry<DocumentReference>,
+          CernerConnectionDocument
+        >)
+      : DSTU2.mapDocumentReferenceToClinicalDocument,
     params,
   );
 
-  const docs = await db.clinical_documents
-    .find({
-      selector: {
-        user_id: connectionDocument.user_id,
-        'data_record.resource_type': {
-          $eq: 'documentreference',
-        },
-        connection_record_id: `${connectionDocument.id}`,
-      },
-    })
-    .exec();
-
   // format all the document references
-  const docRefItems = docs.map(
-    (doc) =>
-      doc.toMutableJSON() as unknown as CreateClinicalDocument<
-        BundleEntry<DocumentReference>
-      >,
-  );
+  const docRefItems = await findDocumentsByResourceType<
+    BundleEntry<DocumentReference>
+  >(db, connectionDocument.user_id, connectionDocument.id, 'documentreference');
   // for each docref, get attachments and sync them
   const cdsmap = docRefItems.map(async (docRefItem) => {
     const attachmentUrls = docRefItem.data_record.raw.resource?.content.map(
@@ -626,20 +479,13 @@ async function syncDocumentReferences(
     if (attachmentUrls) {
       for (const attachmentUrl of attachmentUrls) {
         if (attachmentUrl) {
-          const exists = await db.clinical_documents
-            .find({
-              selector: {
-                $and: [
-                  { user_id: connectionDocument.user_id },
-                  { 'metadata.id': `${attachmentUrl}` },
-                  {
-                    connection_record_id: `${docRefItem.connection_record_id}`,
-                  },
-                ],
-              },
-            })
-            .exec();
-          if (exists.length === 0) {
+          const exists = await documentExistsByMetadataId(
+            db,
+            connectionDocument.user_id,
+            docRefItem.connection_record_id,
+            attachmentUrl,
+          );
+          if (!exists) {
             console.log('Syncing attachment: ' + attachmentUrl);
             // attachment does not exist, sync it
             const { contentType, raw } = await fetchAttachmentData(
@@ -669,9 +515,7 @@ async function syncDocumentReferences(
                 },
               };
 
-              await db.clinical_documents.insert(
-                cd as unknown as ClinicalDocument<string | Blob>,
-              );
+              await createDocument(db, cd);
             }
           } else {
             console.log('Attachment already synced: ' + attachmentUrl);

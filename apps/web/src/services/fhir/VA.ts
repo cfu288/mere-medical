@@ -1,17 +1,5 @@
 /* eslint-disable no-inner-declarations */
-import {
-  AllergyIntolerance,
-  Bundle,
-  BundleEntry,
-  Condition,
-  DiagnosticReport,
-  FhirResource,
-  Immunization,
-  MedicationStatement,
-  Observation,
-  Patient,
-  Procedure,
-} from 'fhir/r2';
+import { Bundle, BundleEntry, FhirResource } from 'fhir/r2';
 import { RxDocument, RxDatabase } from 'rxdb';
 import {
   ConnectionDocument,
@@ -25,14 +13,11 @@ import {
   createConnection,
   updateConnection,
 } from '../../repositories/ConnectionRepository';
-import {
-  ClinicalDocument,
-  CreateClinicalDocument,
-} from '../../models/clinical-document/ClinicalDocument.type';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
 import uuid4 from '../../shared/utils/UUIDUtils';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
+import { ResourceMapper, VendorSync, mapSearchedResources } from './sync';
 import {
   createVAClient,
   createSessionManager,
@@ -40,6 +25,7 @@ import {
   buildVAOAuthConfig,
   type VATokenSet,
 } from '@mere/fhir-oauth';
+import { bulkUpsertDocuments } from '../../repositories/ClinicalDocumentRepository';
 
 export enum VALocalStorageKeys {
   VA_BASE_URL = 'vaBaseUrl',
@@ -148,7 +134,7 @@ async function syncFHIRResource<T extends FhirResource>(
   connectionDocument: VAConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
-  mapper: (proc: BundleEntry<T>) => CreateClinicalDocument<BundleEntry<T>>,
+  mapper: ResourceMapper<BundleEntry<T>, VAConnectionDocument>,
   params?: Record<string, string>,
 ) {
   const resc = await getAllFHIRResourcesWithPaging<T>(
@@ -158,135 +144,86 @@ async function syncFHIRResource<T extends FhirResource>(
     params,
   );
 
-  const cds = resc
-    .filter(
-      (i) =>
-        i.resource?.resourceType.toLowerCase() ===
-        fhirResourceUrl.toLowerCase(),
-    )
-    .map(mapper);
-  const cdsmap = await db.clinical_documents.bulkUpsert(
-    cds as unknown as ClinicalDocument[],
+  return bulkUpsertDocuments(
+    db,
+    mapSearchedResources(resc, fhirResourceUrl, mapper, connectionDocument),
   );
-  return cdsmap;
 }
 
-/**
- * Sync all records from the FHIR server to the local database
- * @param baseUrl Base url of the FHIR server to sync from
- * @param connectionDocument
- * @param db
- * @returns A promise of void arrays
- */
-export async function syncAllRecords(
-  baseUrl: string,
-  connectionDocument: VAConnectionDocument,
-  db: RxDatabase<DatabaseCollections>,
-): Promise<PromiseSettledResult<void[]>[]> {
-  const procMapper = (proc: BundleEntry<Procedure>) =>
-    DSTU2.mapProcedureToClinicalDocument(proc, connectionDocument);
-  const patientMapper = (pt: BundleEntry<Patient>) =>
-    DSTU2.mapPatientToClinicalDocument(pt, connectionDocument);
-  const obsMapper = (imm: BundleEntry<Observation>) =>
-    DSTU2.mapObservationToClinicalDocument(imm, connectionDocument);
-  const drMapper = (dr: BundleEntry<DiagnosticReport>) =>
-    DSTU2.mapDiagnosticReportToClinicalDocument(dr, connectionDocument);
-  const medStatementMapper = (dr: BundleEntry<MedicationStatement>) =>
-    DSTU2.mapMedicationStatementToClinicalDocument(dr, connectionDocument);
-  const immMapper = (dr: BundleEntry<Immunization>) =>
-    DSTU2.mapImmunizationToClinicalDocument(dr, connectionDocument);
-  const conditionMapper = (dr: BundleEntry<Condition>) =>
-    DSTU2.mapConditionToClinicalDocument(dr, connectionDocument);
-  const allergyIntoleranceMapper = (a: BundleEntry<AllergyIntolerance>) =>
-    DSTU2.mapAllergyIntoleranceToClinicalDocument(a, connectionDocument);
-
-  const patientId = (connectionDocument as VAConnectionDocument).patient;
-
-  const syncJob = await Promise.allSettled([
-    syncFHIRResource<Procedure>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'Procedure',
-      procMapper,
-      {
-        patient: patientId,
-      },
-    ),
-    syncFHIRResource<Patient>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'Patient',
-      patientMapper,
-      {
-        _id: patientId,
-      },
-    ),
-    syncFHIRResource<Observation>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'Observation',
-      obsMapper,
-      {
-        patient: patientId,
-      },
-    ),
-    syncFHIRResource<DiagnosticReport>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'DiagnosticReport',
-      drMapper,
-      {
-        patient: patientId,
-      },
-    ),
-    syncFHIRResource<MedicationStatement>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'MedicationStatement',
-      medStatementMapper,
-      {
-        patient: patientId,
-      },
-    ),
-    syncFHIRResource<Immunization>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'Immunization',
-      immMapper,
-      {
-        patient: patientId,
-      },
-    ),
-    syncFHIRResource<Condition>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'Condition',
-      conditionMapper,
-      {
-        patient: patientId,
-      },
-    ),
-    syncFHIRResource<AllergyIntolerance>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'AllergyIntolerance',
-      allergyIntoleranceMapper,
-      {
-        patient: patientId,
-      },
-    ),
-  ]);
-
-  return syncJob as unknown as Promise<PromiseSettledResult<void[]>[]>;
-}
+export const sync: VendorSync = {
+  refreshToken: ({ config, connection }) =>
+    refreshVAConnectionTokenIfNeeded(config, connection),
+  syncAllRecords: ({ baseUrl, connection, db }) => {
+    const cd = connection.toMutableJSON() as unknown as VAConnectionDocument;
+    const patient = cd.patient;
+    return Promise.allSettled([
+      syncFHIRResource(
+        baseUrl,
+        cd,
+        db,
+        'Procedure',
+        DSTU2.mapProcedureToClinicalDocument,
+        { patient },
+      ),
+      syncFHIRResource(
+        baseUrl,
+        cd,
+        db,
+        'Patient',
+        DSTU2.mapPatientToClinicalDocument,
+        { _id: patient },
+      ),
+      syncFHIRResource(
+        baseUrl,
+        cd,
+        db,
+        'Observation',
+        DSTU2.mapObservationToClinicalDocument,
+        { patient },
+      ),
+      syncFHIRResource(
+        baseUrl,
+        cd,
+        db,
+        'DiagnosticReport',
+        DSTU2.mapDiagnosticReportToClinicalDocument,
+        { patient },
+      ),
+      syncFHIRResource(
+        baseUrl,
+        cd,
+        db,
+        'MedicationStatement',
+        DSTU2.mapMedicationStatementToClinicalDocument,
+        { patient },
+      ),
+      syncFHIRResource(
+        baseUrl,
+        cd,
+        db,
+        'Immunization',
+        DSTU2.mapImmunizationToClinicalDocument,
+        { patient },
+      ),
+      syncFHIRResource(
+        baseUrl,
+        cd,
+        db,
+        'Condition',
+        DSTU2.mapConditionToClinicalDocument,
+        { patient },
+      ),
+      syncFHIRResource(
+        baseUrl,
+        cd,
+        db,
+        'AllergyIntolerance',
+        DSTU2.mapAllergyIntoleranceToClinicalDocument,
+        { patient },
+      ),
+    ]);
+  },
+};
 
 export async function saveConnectionToDb({
   tokens,

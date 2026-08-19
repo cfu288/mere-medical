@@ -27,26 +27,10 @@ import {
   CreateVeradigmConnectionDocument,
   VeradigmConnectionDocument,
 } from '../../models/connection-document/ConnectionDocument.type';
-import {
-  FhirResource,
-  BundleEntry,
-  Bundle,
-  Procedure,
-  Patient,
-  Observation,
-  DiagnosticReport,
-  MedicationStatement,
-  Immunization,
-  Condition,
-  AllergyIntolerance,
-  DocumentReference,
-} from 'fhir/r2';
+import { FhirResource, BundleEntry, Bundle, DocumentReference } from 'fhir/r2';
 import { RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
-import {
-  ClinicalDocument,
-  CreateClinicalDocument,
-} from '../../models/clinical-document/ClinicalDocument.type';
+import { CreateClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
 import {
   extractVeradigmPatientId,
@@ -58,6 +42,7 @@ import {
   updateConnection,
 } from '../../repositories/ConnectionRepository';
 import uuid4 from '../../shared/utils/UUIDUtils';
+import { ResourceMapper, VendorSync, mapSearchedResources } from './sync';
 
 export {
   createVeradigmClient,
@@ -67,6 +52,12 @@ export {
   type VeradigmTokenSet,
   type VeradigmOAuthConfigOptions,
 } from '@mere/fhir-oauth';
+import {
+  bulkUpsertDocuments,
+  createDocument,
+  documentExistsByMetadataId,
+  findDocumentsByResourceType,
+} from '../../repositories/ClinicalDocumentRepository';
 
 export enum VeradigmLocalStorageKeys {
   VERADIGM_BASE_URL = 'veradigmBaseUrl',
@@ -196,7 +187,7 @@ async function syncFHIRResource<T extends FhirResource>(
   connectionDocument: VeradigmConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
-  mapper: (proc: BundleEntry<T>) => CreateClinicalDocument<BundleEntry<T>>,
+  mapper: ResourceMapper<BundleEntry<T>, VeradigmConnectionDocument>,
   params?: Record<string, string>,
 ) {
   const resc = await getFHIRResource<T>(
@@ -206,132 +197,87 @@ async function syncFHIRResource<T extends FhirResource>(
     params,
   );
 
-  const cds = resc
-    .filter(
-      (i) =>
-        i.resource?.resourceType.toLowerCase() ===
-        fhirResourceUrl.toLowerCase(),
-    )
-    .map(mapper);
-  const cdsmap = await db.clinical_documents.bulkUpsert(
-    cds as unknown as ClinicalDocument[],
+  return bulkUpsertDocuments(
+    db,
+    mapSearchedResources(resc, fhirResourceUrl, mapper, connectionDocument),
   );
-  return cdsmap;
 }
 
-export async function syncAllRecords(
-  baseUrl: string,
-  connectionDocument: VeradigmConnectionDocument,
-  db: RxDatabase<DatabaseCollections>,
-): Promise<PromiseSettledResult<void[]>[]> {
-  const procMapper = (proc: BundleEntry<Procedure>) =>
-    DSTU2.mapProcedureToClinicalDocument(proc, connectionDocument);
-  const patientMapper = (pt: BundleEntry<Patient>) =>
-    DSTU2.mapPatientToClinicalDocument(pt, connectionDocument);
-  const obsMapper = (imm: BundleEntry<Observation>) =>
-    DSTU2.mapObservationToClinicalDocument(imm, connectionDocument);
-  const drMapper = (dr: BundleEntry<DiagnosticReport>) =>
-    DSTU2.mapDiagnosticReportToClinicalDocument(dr, connectionDocument);
-  const medStatementMapper = (dr: BundleEntry<MedicationStatement>) =>
-    DSTU2.mapMedicationStatementToClinicalDocument(dr, connectionDocument);
-  const immMapper = (dr: BundleEntry<Immunization>) =>
-    DSTU2.mapImmunizationToClinicalDocument(dr, connectionDocument);
-  const conditionMapper = (dr: BundleEntry<Condition>) =>
-    DSTU2.mapConditionToClinicalDocument(dr, connectionDocument);
-  const allergyIntoleranceMapper = (a: BundleEntry<AllergyIntolerance>) =>
-    DSTU2.mapAllergyIntoleranceToClinicalDocument(a, connectionDocument);
-
-  const patientId = extractVeradigmPatientId(connectionDocument.access_token);
-
-  const syncJob = await Promise.allSettled([
-    syncFHIRResource<Procedure>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'Procedure',
-      procMapper,
-      {
-        patient: patientId,
-      },
-    ),
-    syncFHIRResource<Patient>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'Patient',
-      patientMapper,
-      {
-        _id: patientId,
-      },
-    ),
-    syncFHIRResource<Observation>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'Observation',
-      obsMapper,
-      {
-        patient: patientId,
-        category: 'laboratory',
-      },
-    ),
-    syncFHIRResource<DiagnosticReport>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'DiagnosticReport',
-      drMapper,
-      {
-        patient: patientId,
-      },
-    ),
-    syncFHIRResource<MedicationStatement>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'MedicationStatement',
-      medStatementMapper,
-      {
-        patient: patientId,
-      },
-    ),
-    syncFHIRResource<Immunization>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'Immunization',
-      immMapper,
-      {
-        patient: patientId,
-      },
-    ),
-    syncFHIRResource<Condition>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'Condition',
-      conditionMapper,
-      {
-        patient: patientId,
-      },
-    ),
-    syncDocumentReferences(baseUrl, connectionDocument, db, {
-      patient: patientId,
-    }),
-    syncFHIRResource<AllergyIntolerance>(
-      baseUrl,
-      connectionDocument,
-      db,
-      'AllergyIntolerance',
-      allergyIntoleranceMapper,
-      {
-        patient: patientId,
-      },
-    ),
-  ]);
-
-  return syncJob as unknown as Promise<PromiseSettledResult<void[]>[]>;
-}
+export const sync: VendorSync = {
+  refreshToken: null,
+  syncAllRecords: ({ baseUrl, connection, db }) => {
+    const cd =
+      connection.toMutableJSON() as unknown as VeradigmConnectionDocument;
+    const patient = extractVeradigmPatientId(cd.access_token);
+    return Promise.allSettled([
+      syncFHIRResource(
+        baseUrl,
+        cd,
+        db,
+        'Procedure',
+        DSTU2.mapProcedureToClinicalDocument,
+        { patient },
+      ),
+      syncFHIRResource(
+        baseUrl,
+        cd,
+        db,
+        'Patient',
+        DSTU2.mapPatientToClinicalDocument,
+        { _id: patient },
+      ),
+      syncFHIRResource(
+        baseUrl,
+        cd,
+        db,
+        'Observation',
+        DSTU2.mapObservationToClinicalDocument,
+        { patient, category: 'laboratory' },
+      ),
+      syncFHIRResource(
+        baseUrl,
+        cd,
+        db,
+        'DiagnosticReport',
+        DSTU2.mapDiagnosticReportToClinicalDocument,
+        { patient },
+      ),
+      syncFHIRResource(
+        baseUrl,
+        cd,
+        db,
+        'MedicationStatement',
+        DSTU2.mapMedicationStatementToClinicalDocument,
+        { patient },
+      ),
+      syncFHIRResource(
+        baseUrl,
+        cd,
+        db,
+        'Immunization',
+        DSTU2.mapImmunizationToClinicalDocument,
+        { patient },
+      ),
+      syncFHIRResource(
+        baseUrl,
+        cd,
+        db,
+        'Condition',
+        DSTU2.mapConditionToClinicalDocument,
+        { patient },
+      ),
+      syncDocumentReferences(baseUrl, cd, db, { patient }),
+      syncFHIRResource(
+        baseUrl,
+        cd,
+        db,
+        'AllergyIntolerance',
+        DSTU2.mapAllergyIntoleranceToClinicalDocument,
+        { patient },
+      ),
+    ]);
+  },
+};
 
 async function syncDocumentReferences(
   baseUrl: string,
@@ -339,37 +285,20 @@ async function syncDocumentReferences(
   db: RxDatabase<DatabaseCollections>,
   params: Record<string, string>,
 ) {
-  const documentReferenceMapper = (dr: BundleEntry<DocumentReference>) =>
-    DSTU2.mapDocumentReferenceToClinicalDocument(dr, connectionDocument);
   // Sync document references and return them
   await syncFHIRResource<DocumentReference>(
     baseUrl,
     connectionDocument,
     db,
     'DocumentReference',
-    documentReferenceMapper,
+    DSTU2.mapDocumentReferenceToClinicalDocument,
     params,
   );
 
-  const docs = await db.clinical_documents
-    .find({
-      selector: {
-        user_id: connectionDocument.user_id,
-        'data_record.resource_type': {
-          $eq: 'documentreference',
-        },
-        connection_record_id: `${connectionDocument.id}`,
-      },
-    })
-    .exec();
-
   // format all the document references
-  const docRefItems = docs.map(
-    (doc) =>
-      doc.toMutableJSON() as unknown as ClinicalDocument<
-        BundleEntry<DocumentReference>
-      >,
-  );
+  const docRefItems = await findDocumentsByResourceType<
+    BundleEntry<DocumentReference>
+  >(db, connectionDocument.user_id, connectionDocument.id, 'documentreference');
   // for each docref, get attachments and sync them
   const cdsmap = docRefItems.map(async (docRefItem) => {
     const attachmentUrls = (
@@ -378,20 +307,13 @@ async function syncDocumentReferences(
     if (attachmentUrls) {
       for (const attachmentUrl of attachmentUrls) {
         if (attachmentUrl) {
-          const exists = await db.clinical_documents
-            .find({
-              selector: {
-                $and: [
-                  { user_id: connectionDocument.user_id },
-                  { 'metadata.id': `${attachmentUrl}` },
-                  {
-                    connection_record_id: `${docRefItem.connection_record_id}`,
-                  },
-                ],
-              },
-            })
-            .exec();
-          if (exists.length === 0) {
+          const exists = await documentExistsByMetadataId(
+            db,
+            connectionDocument.user_id,
+            docRefItem.connection_record_id,
+            attachmentUrl,
+          );
+          if (!exists) {
             console.log('Syncing attachment: ' + attachmentUrl);
             // attachment does not exist, sync it
             const { contentType, raw } = await fetchAttachmentData(
@@ -420,9 +342,7 @@ async function syncDocumentReferences(
                 },
               };
 
-              await db.clinical_documents.insert(
-                cd as unknown as ClinicalDocument,
-              );
+              await createDocument(db, cd);
             }
           } else {
             console.log('Attachment already synced: ' + attachmentUrl);
