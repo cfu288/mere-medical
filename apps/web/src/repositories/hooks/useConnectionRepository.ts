@@ -12,8 +12,8 @@ export const useConnectionRepository = () => {
     return {
       findById: (userId: string, connectionId: string) =>
         connectionRepo.findConnectionById(db, userId, connectionId),
-      findByUrl: (userId: string, url: string | Location) =>
-        connectionRepo.findConnectionByUrl(db, userId, url),
+      findByUrl: (userId: string, source: string, url: string | Location) =>
+        connectionRepo.findConnectionByUrl(db, userId, source, url),
       findByIds: (userId: string, ids: string[]) =>
         connectionRepo.findConnectionsByIds(db, userId, ids),
       findAll: (userId: string) =>

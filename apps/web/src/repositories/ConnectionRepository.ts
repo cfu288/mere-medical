@@ -28,15 +28,18 @@ export async function findConnectionById(
   return doc.toJSON();
 }
 
+// TODO: replace with findConnectionBySourceAndTenant - a url is not a connection identity
 export async function findConnectionByUrl(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
+  source: string,
   url: string | Location,
 ): Promise<ConnectionDocument | null> {
   const doc = await db.connection_documents
     .findOne({
       selector: {
         location: url,
+        source,
         user_id: userId,
       },
     })

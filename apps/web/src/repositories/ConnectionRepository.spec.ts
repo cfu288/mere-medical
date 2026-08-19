@@ -72,6 +72,7 @@ describe('ConnectionRepository', () => {
         const result = await connectionRepo.findConnectionByUrl(
           db,
           testConn.user_id,
+          'onpatient',
           'https://unique-hospital.com/fhir',
         );
 
@@ -84,6 +85,7 @@ describe('ConnectionRepository', () => {
         const result = await connectionRepo.findConnectionByUrl(
           db,
           'user-id',
+          'onpatient',
           'https://nonexistent.com/fhir',
         );
         expect(result).toBeNull();
@@ -99,6 +101,7 @@ describe('ConnectionRepository', () => {
         const result = await connectionRepo.findConnectionByUrl(
           db,
           'userB',
+          'onpatient',
           'https://shared-hospital.com/fhir',
         );
         expect(result).toBeNull();
@@ -119,16 +122,58 @@ describe('ConnectionRepository', () => {
         const resultA = await connectionRepo.findConnectionByUrl(
           db,
           'userA',
+          'onpatient',
           'https://hospital.com/fhir',
         );
         const resultB = await connectionRepo.findConnectionByUrl(
           db,
           'userB',
+          'onpatient',
           'https://hospital.com/fhir',
         );
 
         expect(resultA?.id).toBe(connA.id);
         expect(resultB?.id).toBe(connB.id);
+      });
+
+      it('keeps two vendors that share one url separate', async () => {
+        const epicConn = createEpicConnection({
+          user_id: 'userA',
+          location: 'https://shared.example.com/fhir',
+        });
+        const cernerConn = createCernerConnection({
+          user_id: 'userA',
+          location: 'https://shared.example.com/fhir',
+        });
+        await db.connection_documents.insert(epicConn);
+        await db.connection_documents.insert(cernerConn);
+
+        const result = await connectionRepo.findConnectionByUrl(
+          db,
+          'userA',
+          'cerner',
+          'https://shared.example.com/fhir',
+        );
+
+        expect(result?.id).toBe(cernerConn.id);
+        expect(result?.source).toBe('cerner');
+      });
+
+      it('returns null when the url matches but the source does not', async () => {
+        const epicConn = createEpicConnection({
+          user_id: 'userA',
+          location: 'https://only-epic.example.com/fhir',
+        });
+        await db.connection_documents.insert(epicConn);
+
+        const result = await connectionRepo.findConnectionByUrl(
+          db,
+          'userA',
+          'veradigm',
+          'https://only-epic.example.com/fhir',
+        );
+
+        expect(result).toBeNull();
       });
     });
 

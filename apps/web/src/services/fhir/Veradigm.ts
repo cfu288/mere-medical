@@ -86,7 +86,9 @@ export async function saveConnectionToDb({
   auth_uri: string;
   token_uri: string;
 }) {
+  // TODO: look up by veradigmId, which this function already stores as tenant_id
   const doc = await getConnectionCardByUrl<VeradigmConnectionDocument>(
+    'veradigm',
     veradigmBaseUrl,
     db,
     user.id,

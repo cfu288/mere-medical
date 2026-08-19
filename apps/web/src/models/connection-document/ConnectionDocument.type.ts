@@ -34,6 +34,7 @@ export interface EpicConnectionDocument extends ConnectionDocument {
   fhir_version?: 'DSTU2' | 'R4';
 }
 
+// TODO: key Cerner by tenant_id plus fhir_version - 1168 ids appear in both catalogs
 export interface CernerConnectionDocument extends ConnectionDocument {
   id_token: string;
   auth_uri: string | Location;
