@@ -34,7 +34,7 @@ import {
   type AthenaTokenSet,
 } from '@mere/fhir-oauth';
 import {
-  mapEntries,
+  mapSearchedResources,
   mapCompanionResources,
   ResourceMapper,
   VendorSync,
@@ -194,7 +194,7 @@ async function syncFHIRResource<T extends FhirResource>(
 
   return bulkUpsertDocuments(
     db,
-    mapEntries(resc, fhirResourceUrl, mapper, connectionDocument),
+    mapSearchedResources(resc, fhirResourceUrl, mapper, connectionDocument),
   );
 }
 
@@ -217,7 +217,7 @@ async function syncFHIRResourceWithIncludes<T extends FhirResource>(
 
   await bulkUpsertDocuments(
     db,
-    mapEntries(resc, fhirResourceUrl, mapper, connectionDocument),
+    mapSearchedResources(resc, fhirResourceUrl, mapper, connectionDocument),
   );
   await bulkUpsertDocuments(
     db,

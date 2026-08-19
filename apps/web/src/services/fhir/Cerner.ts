@@ -26,7 +26,7 @@ import { getConnectionCardByUrl } from './getConnectionCardByUrl';
 import { Routes } from '../../Routes';
 import { AppConfig } from '../../app/providers/AppConfigProvider';
 import {
-  mapEntries,
+  mapSearchedResources,
   mapCompanionResources,
   FhirBundleEntry,
   ResourceMapper,
@@ -145,7 +145,7 @@ async function syncFHIRResource<E extends FhirBundleEntry>(
 
   return bulkUpsertDocuments(
     db,
-    mapEntries(resc, fhirResourceUrl, mapper, connectionDocument),
+    mapSearchedResources(resc, fhirResourceUrl, mapper, connectionDocument),
   );
 }
 
@@ -167,7 +167,7 @@ async function syncFHIRResourceWithIncludes<E extends FhirBundleEntry>(
 
   await bulkUpsertDocuments(
     db,
-    mapEntries(resc, fhirResourceUrl, mapper, connectionDocument),
+    mapSearchedResources(resc, fhirResourceUrl, mapper, connectionDocument),
   );
   await bulkUpsertDocuments(
     db,

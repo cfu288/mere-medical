@@ -7,7 +7,7 @@ export type ResourceMapper<E, C> = (
   connection: C,
 ) => CreateClinicalDocument<E>;
 
-export function mapEntries<E extends FhirBundleEntry, C>(
+export function mapSearchedResources<E extends FhirBundleEntry, C>(
   entries: E[],
   resourceType: string,
   mapper: ResourceMapper<E, C>,

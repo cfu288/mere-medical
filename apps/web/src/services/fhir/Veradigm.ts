@@ -42,7 +42,7 @@ import {
   updateConnection,
 } from '../../repositories/ConnectionRepository';
 import uuid4 from '../../shared/utils/UUIDUtils';
-import { ResourceMapper, VendorSync, mapEntries } from './sync';
+import { ResourceMapper, VendorSync, mapSearchedResources } from './sync';
 
 export {
   createVeradigmClient,
@@ -199,7 +199,7 @@ async function syncFHIRResource<T extends FhirResource>(
 
   return bulkUpsertDocuments(
     db,
-    mapEntries(resc, fhirResourceUrl, mapper, connectionDocument),
+    mapSearchedResources(resc, fhirResourceUrl, mapper, connectionDocument),
   );
 }
 

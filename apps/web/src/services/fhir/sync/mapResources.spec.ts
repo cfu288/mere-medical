@@ -1,13 +1,13 @@
-import { mapEntries, mapCompanionResources } from './mapEntries';
+import { mapSearchedResources, mapCompanionResources } from './mapResources';
 
-describe('mapEntries', () => {
+describe('mapSearchedResources', () => {
   it('maps only entries with the requested resource type', () => {
     const connection = { id: 'connection-1' };
     const procedure = { resource: { resourceType: 'Procedure', id: 'p1' } };
     const patient = { resource: { resourceType: 'Patient', id: 'pt1' } };
     const mapper = jest.fn().mockReturnValue({ id: 'mapped-procedure' });
 
-    const documents = mapEntries(
+    const documents = mapSearchedResources(
       [procedure, patient],
       'Procedure',
       mapper,

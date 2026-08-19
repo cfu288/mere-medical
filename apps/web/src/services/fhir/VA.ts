@@ -17,7 +17,7 @@ import { UserDocument } from '../../models/user-document/UserDocument.type';
 import uuid4 from '../../shared/utils/UUIDUtils';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
-import { ResourceMapper, VendorSync, mapEntries } from './sync';
+import { ResourceMapper, VendorSync, mapSearchedResources } from './sync';
 import {
   createVAClient,
   createSessionManager,
@@ -146,7 +146,7 @@ async function syncFHIRResource<T extends FhirResource>(
 
   return bulkUpsertDocuments(
     db,
-    mapEntries(resc, fhirResourceUrl, mapper, connectionDocument),
+    mapSearchedResources(resc, fhirResourceUrl, mapper, connectionDocument),
   );
 }
 

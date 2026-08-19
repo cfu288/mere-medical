@@ -8,7 +8,7 @@ import { ONPATIENT_CONSTANTS } from '@mere/fhir-oauth';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import { DSTU2 } from '.';
 import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
-import { ResourceMapper, VendorSync, mapEntries } from './sync';
+import { ResourceMapper, VendorSync, mapSearchedResources } from './sync';
 import { bulkUpsertDocuments } from '../../repositories/ClinicalDocumentRepository';
 
 export const OnPatientBaseUrl = ONPATIENT_CONSTANTS.BASE_URL;
@@ -60,7 +60,12 @@ async function syncFHIRResource<T extends FhirResource>(
 
   return bulkUpsertDocuments(
     db,
-    mapEntries(fhirResources, fhirResourceUrl, mapper, connectionDocument),
+    mapSearchedResources(
+      fhirResources,
+      fhirResourceUrl,
+      mapper,
+      connectionDocument,
+    ),
   );
 }
 

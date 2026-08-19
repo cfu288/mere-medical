@@ -33,7 +33,7 @@ import { CreateClinicalDocument } from '../../models/clinical-document/ClinicalD
 import { findUserById } from '../../repositories/UserRepository';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
 import {
-  mapEntries,
+  mapSearchedResources,
   mapCompanionResources,
   FhirBundleEntry,
   ResourceMapper,
@@ -226,7 +226,7 @@ async function syncFHIRResource<E extends FhirBundleEntry>(
 
   return bulkUpsertDocuments(
     db,
-    mapEntries(resc, fhirResourceUrl, mapper, connectionDocument),
+    mapSearchedResources(resc, fhirResourceUrl, mapper, connectionDocument),
   );
 }
 
@@ -252,7 +252,7 @@ async function syncFHIRResourceWithIncludes<E extends FhirBundleEntry>(
 
   await bulkUpsertDocuments(
     db,
-    mapEntries(resc, fhirResourceUrl, mapper, connectionDocument),
+    mapSearchedResources(resc, fhirResourceUrl, mapper, connectionDocument),
   );
   await bulkUpsertDocuments(
     db,
