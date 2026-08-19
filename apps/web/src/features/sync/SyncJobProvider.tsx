@@ -14,12 +14,11 @@ import * as Veradigm from '../../services/fhir/Veradigm';
 import * as VA from '../../services/fhir/VA';
 import * as Healow from '../../services/fhir/Healow';
 import * as Athena from '../../services/fhir/Athena';
-import { VendorSync } from '../../services/fhir/sync';
+import { SyncContext, VendorSync } from '../../services/fhir/sync';
 import { from, Subject } from 'rxjs';
 import { useNotificationDispatch } from '../../app/providers/NotificationProvider';
 import { differenceInDays, parseISO } from 'date-fns';
 import {
-  AppConfig,
   useAppConfig,
   isConfigValid,
 } from '../../app/providers/AppConfigProvider';
@@ -51,15 +50,7 @@ const SyncJobDispatchContext = React.createContext<Dispatch | undefined>(
 );
 
 type Action =
-  | {
-      type: 'add_job';
-      config: AppConfig;
-      id: string;
-      connectionDocument: RxDocument<ConnectionDocument>;
-      baseUrl: string;
-      useProxy: boolean;
-      db: RxDatabase<DatabaseCollections>;
-    }
+  | { type: 'add_job'; id: string; ctx: SyncContext }
   | { type: 'remove_job'; id: string };
 
 type Dispatch = (action: Action) => void;
@@ -74,15 +65,7 @@ const syncJobReducer: (
   switch (action.type) {
     case 'add_job': {
       const subject = new Subject<PromiseSettledResult<unknown>[]>();
-      const observable = from(
-        fetchMedicalRecords(
-          action.config,
-          action.connectionDocument,
-          action.db,
-          action.baseUrl,
-          action.useProxy,
-        ),
-      );
+      const observable = from(fetchMedicalRecords(action.ctx));
       observable.subscribe(subject);
       return {
         ...state,
@@ -140,12 +123,14 @@ function HandleInitalSync({ children }: PropsWithChildren) {
         if (syncD && userPreferences) {
           syncD({
             type: 'add_job',
-            config,
             id: item.toJSON().id,
-            connectionDocument: item,
-            baseUrl: item.get('location'),
-            useProxy: userPreferences.use_proxy,
-            db,
+            ctx: {
+              config,
+              db,
+              connection: item,
+              baseUrl: item.get('location'),
+              useProxy: userPreferences.use_proxy,
+            },
           });
         }
       },
@@ -356,39 +341,26 @@ export function useSyncJobDispatchContext() {
   return context;
 }
 
-async function fetchMedicalRecords(
-  config: AppConfig,
-  connectionDocument: RxDocument<ConnectionDocument>,
-  db: RxDatabase<DatabaseCollections>,
-  baseUrl: string,
-  useProxy = false,
-) {
-  const source = connectionDocument.get('source') as ConnectionSources;
+async function fetchMedicalRecords(ctx: SyncContext) {
+  const { connection, db } = ctx;
+  const source = connection.get('source') as ConnectionSources;
   const vendor = VENDORS[source];
   if (!vendor) {
     throw Error(`Cannot sync unknown source: ${source}`);
   }
-
-  const ctx = {
-    config,
-    db,
-    connection: connectionDocument,
-    baseUrl,
-    useProxy,
-  };
 
   try {
     if (vendor.refreshToken) {
       await vendor.refreshToken(ctx);
     }
     const syncJob = await vendor.syncAllRecords(ctx);
-    await updateConnectionDocumentTimestamps(syncJob, connectionDocument, db);
+    await updateConnectionDocumentTimestamps(syncJob, connection, db);
     return syncJob;
   } catch (e) {
     console.error(e);
-    await updateConnectionDocumentErrorTimestamps(connectionDocument, db);
+    await updateConnectionDocumentErrorTimestamps(connection, db);
     throw new Error(
-      `Error refreshing ${connectionDocument.get(
+      `Error refreshing ${connection.get(
         'name',
       )} access - try logging in again`,
     );

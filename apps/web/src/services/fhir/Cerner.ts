@@ -4,29 +4,6 @@
 
 /* eslint-disable no-inner-declarations */
 import { Bundle, BundleEntry, DocumentReference } from 'fhir/r2';
-import {
-  MedicationRequest,
-  CarePlan,
-  CareTeam,
-  Goal,
-  Coverage,
-  Device,
-  ServiceRequest,
-  Media,
-  Specimen,
-  RelatedPerson,
-  MedicationDispense,
-  MedicationAdministration,
-  Appointment,
-  FamilyMemberHistory,
-  Consent,
-  Contract,
-  InsurancePlan,
-  NutritionOrder,
-  Questionnaire,
-  QuestionnaireResponse,
-  Person,
-} from 'fhir/r4';
 import { RxDocument, RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import {

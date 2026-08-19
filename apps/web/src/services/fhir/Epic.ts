@@ -5,23 +5,6 @@
 /* eslint-disable no-inner-declarations */
 import { isEpicSandbox } from './EpicUtils';
 import { Bundle, BundleEntry, DocumentReference } from 'fhir/r2';
-import {
-  MedicationRequest,
-  MedicationDispense,
-  ServiceRequest,
-  Goal,
-  CareTeam,
-  Coverage,
-  Device,
-  Media,
-  Specimen,
-  Provenance,
-  RelatedPerson,
-  Location as FhirLocation,
-  Organization,
-  PractitionerRole,
-  Encounter,
-} from 'fhir/r4';
 import { RxDocument, RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import {
