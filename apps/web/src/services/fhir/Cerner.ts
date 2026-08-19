@@ -26,13 +26,14 @@ import { getConnectionCardByUrl } from './getConnectionCardByUrl';
 import { Routes } from '../../Routes';
 import { AppConfig } from '../../app/providers/AppConfigProvider';
 import {
-  upsertEntries,
-  upsertIncludedEntries,
+  mapEntries,
+  mapIncludedEntries,
   FhirBundleEntry,
   ResourceMapper,
   VendorSync,
 } from './sync';
 import {
+  bulkUpsertDocuments,
   createDocument,
   documentExistsByMetadataId,
   findDocumentsByResourceType,
@@ -142,7 +143,10 @@ async function syncFHIRResource<E extends FhirBundleEntry>(
     params,
   );
 
-  return upsertEntries(db, resc, fhirResourceUrl, mapper, connectionDocument);
+  return bulkUpsertDocuments(
+    db,
+    mapEntries(resc, fhirResourceUrl, mapper, connectionDocument),
+  );
 }
 
 async function syncFHIRResourceWithIncludes<E extends FhirBundleEntry>(
@@ -161,13 +165,18 @@ async function syncFHIRResourceWithIncludes<E extends FhirBundleEntry>(
     params,
   );
 
-  await upsertEntries(db, resc, fhirResourceUrl, mapper, connectionDocument);
-  await upsertIncludedEntries(
+  await bulkUpsertDocuments(
     db,
-    resc,
-    includeMappers,
-    connectionDocument,
-    fhirResourceUrl,
+    mapEntries(resc, fhirResourceUrl, mapper, connectionDocument),
+  );
+  await bulkUpsertDocuments(
+    db,
+    mapIncludedEntries(
+      resc,
+      includeMappers,
+      connectionDocument,
+      fhirResourceUrl,
+    ),
   );
 }
 

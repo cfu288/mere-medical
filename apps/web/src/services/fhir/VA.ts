@@ -17,7 +17,7 @@ import { UserDocument } from '../../models/user-document/UserDocument.type';
 import uuid4 from '../../shared/utils/UUIDUtils';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
-import { ResourceMapper, VendorSync, upsertEntries } from './sync';
+import { ResourceMapper, VendorSync, mapEntries } from './sync';
 import {
   createVAClient,
   createSessionManager,
@@ -25,6 +25,7 @@ import {
   buildVAOAuthConfig,
   type VATokenSet,
 } from '@mere/fhir-oauth';
+import { bulkUpsertDocuments } from '../../repositories/ClinicalDocumentRepository';
 
 export enum VALocalStorageKeys {
   VA_BASE_URL = 'vaBaseUrl',
@@ -143,7 +144,10 @@ async function syncFHIRResource<T extends FhirResource>(
     params,
   );
 
-  return upsertEntries(db, resc, fhirResourceUrl, mapper, connectionDocument);
+  return bulkUpsertDocuments(
+    db,
+    mapEntries(resc, fhirResourceUrl, mapper, connectionDocument),
+  );
 }
 
 export const sync: VendorSync = {

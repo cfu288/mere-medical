@@ -42,7 +42,7 @@ import {
   updateConnection,
 } from '../../repositories/ConnectionRepository';
 import uuid4 from '../../shared/utils/UUIDUtils';
-import { ResourceMapper, VendorSync, upsertEntries } from './sync';
+import { ResourceMapper, VendorSync, mapEntries } from './sync';
 
 export {
   createVeradigmClient,
@@ -53,6 +53,7 @@ export {
   type VeradigmOAuthConfigOptions,
 } from '@mere/fhir-oauth';
 import {
+  bulkUpsertDocuments,
   createDocument,
   documentExistsByMetadataId,
   findDocumentsByResourceType,
@@ -196,7 +197,10 @@ async function syncFHIRResource<T extends FhirResource>(
     params,
   );
 
-  return upsertEntries(db, resc, fhirResourceUrl, mapper, connectionDocument);
+  return bulkUpsertDocuments(
+    db,
+    mapEntries(resc, fhirResourceUrl, mapper, connectionDocument),
+  );
 }
 
 export const sync: VendorSync = {

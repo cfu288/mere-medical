@@ -49,7 +49,7 @@ import uuid4 from '../../shared/utils/UUIDUtils';
 import { CreateClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { concatPath } from '../../shared/utils/urlUtils';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
-import { ResourceMapper, VendorSync, upsertEntries } from './sync';
+import { ResourceMapper, VendorSync, mapEntries } from './sync';
 import {
   createHealowClient,
   createHealowClientWithProxy,
@@ -74,6 +74,7 @@ export {
   type HealowOAuthConfigOptions,
 } from '@mere/fhir-oauth';
 import {
+  bulkUpsertDocuments,
   createDocument,
   documentExistsByMetadataId,
   findDocumentsByResourceType,
@@ -162,7 +163,10 @@ async function syncFHIRResource<T extends FhirResource>(
     useProxy,
   );
 
-  return upsertEntries(db, resc, fhirResourceUrl, mapper, connectionDocument);
+  return bulkUpsertDocuments(
+    db,
+    mapEntries(resc, fhirResourceUrl, mapper, connectionDocument),
+  );
 }
 
 export const sync: VendorSync = {

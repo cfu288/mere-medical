@@ -33,13 +33,14 @@ import { CreateClinicalDocument } from '../../models/clinical-document/ClinicalD
 import { findUserById } from '../../repositories/UserRepository';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
 import {
-  upsertEntries,
-  upsertIncludedEntries,
+  mapEntries,
+  mapIncludedEntries,
   FhirBundleEntry,
   ResourceMapper,
   VendorSync,
 } from './sync';
 import {
+  bulkUpsertDocuments,
   createDocument,
   documentExistsByMetadataId,
   findDocumentsByResourceType,
@@ -223,7 +224,10 @@ async function syncFHIRResource<E extends FhirBundleEntry>(
     useProxy,
   );
 
-  return upsertEntries(db, resc, fhirResourceUrl, mapper, connectionDocument);
+  return bulkUpsertDocuments(
+    db,
+    mapEntries(resc, fhirResourceUrl, mapper, connectionDocument),
+  );
 }
 
 async function syncFHIRResourceWithIncludes<E extends FhirBundleEntry>(
@@ -246,13 +250,18 @@ async function syncFHIRResourceWithIncludes<E extends FhirBundleEntry>(
     useProxy,
   );
 
-  await upsertEntries(db, resc, fhirResourceUrl, mapper, connectionDocument);
-  await upsertIncludedEntries(
+  await bulkUpsertDocuments(
     db,
-    resc,
-    includeMappers,
-    connectionDocument,
-    fhirResourceUrl,
+    mapEntries(resc, fhirResourceUrl, mapper, connectionDocument),
+  );
+  await bulkUpsertDocuments(
+    db,
+    mapIncludedEntries(
+      resc,
+      includeMappers,
+      connectionDocument,
+      fhirResourceUrl,
+    ),
   );
 }
 
