@@ -5,6 +5,13 @@ COPY package*.json /app/
 RUN npm ci
 
 
+FROM node:24.19.0-bookworm@sha256:934240a162082fd8b8a2f90cd5114446443f1eba1c5378f6687167ca405e6584 AS prod-deps
+
+WORKDIR /app
+COPY package*.json /app/
+RUN npm ci --omit=dev
+
+
 FROM deps AS build-api-stage
 
 COPY . /app/
@@ -47,6 +54,7 @@ WORKDIR /app
 
 COPY --from=build-web-stage /app/dist/apps/web/ /app/web/
 COPY --from=build-api-stage /app/dist/apps/api/ /app/api/
+COPY --from=prod-deps /app/node_modules/ /app/node_modules/
 COPY ./healthcheck.js /app/healthcheck.js
 
 USER 1000
