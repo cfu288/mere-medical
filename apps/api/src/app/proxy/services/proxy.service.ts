@@ -4,6 +4,7 @@ import * as server from 'http-proxy';
 import { ProxyModuleOptions, Service } from '../interfaces';
 import { HTTP_PROXY, PROXY_MODULE_OPTIONS } from '../proxy.constants';
 import { concatPath, getBaseURL } from '../utils';
+import { deriveRegistrationUrl } from '@mere/fhir-oauth';
 
 const ALLOWED_PROXY_HEADERS = ['accept', 'content-type', 'content-length'];
 
@@ -139,12 +140,7 @@ export class ProxyService {
       } else if (target_type === 'token') {
         urlToProxy = tokenUrl;
       } else if (target_type === 'register') {
-        urlToProxy =
-          baseUrl
-            .replace('/api/FHIR/DSTU2/', '')
-            .replace('/api/FHIR/DSTU2', '')
-            .replace('/api/FHIR/R4/', '')
-            .replace('/api/FHIR/R4', '') + '/oauth2/register';
+        urlToProxy = deriveRegistrationUrl(authUrl);
       }
 
       return this.doProxy(

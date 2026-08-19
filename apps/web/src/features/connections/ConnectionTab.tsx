@@ -25,11 +25,10 @@ import { useConnectionCards } from './hooks/useConnectionCards';
 import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
 import { AppConfig, useConfig } from '../../app/providers/AppConfigProvider';
 import { CernerLocalStorageKeys } from '../../services/fhir/Cerner';
+import { findEpicTenantById } from '@mere/epic';
 import {
   EpicLocalStorageKeys,
   getEpicClientId,
-  getDSTU2Url,
-  getR4Url,
 } from '../../services/fhir/Epic';
 import { getLoginUrl as getVaLoginUrl } from '../../services/fhir/VA';
 import {
@@ -77,9 +76,6 @@ async function initiateEpicAuth(
     throw new Error('Epic OAuth configuration is incomplete');
   }
 
-  const fhirBaseUrl =
-    fhirVersion === 'R4' ? getR4Url(baseUrl) : getDSTU2Url(baseUrl);
-
   const oauthConfig = buildEpicOAuthConfig({
     clientId,
     publicUrl: config.PUBLIC_URL,
@@ -90,7 +86,7 @@ async function initiateEpicAuth(
       name,
       authUrl,
       tokenUrl,
-      fhirBaseUrl,
+      fhirBaseUrl: baseUrl,
       fhirVersion,
     },
   });
@@ -256,38 +252,19 @@ export async function getLoginUrlBySource(
 ): Promise<string & Location> {
   switch (item.get('source')) {
     case 'epic': {
-      let baseUrl = item.get('location');
+      const tenantId = item.get('tenant_id');
+      const tenant = findEpicTenantById(tenantId);
       const fhirVersion = (item.get('fhir_version') || 'DSTU2') as
         | 'DSTU2'
         | 'R4';
 
-      if (fhirVersion === 'R4') {
-        if (!baseUrl.includes('/api/FHIR/R4')) {
-          baseUrl = baseUrl + '/api/FHIR/R4/';
-        }
-      } else {
-        if (!baseUrl.includes('/api/FHIR/DSTU2')) {
-          baseUrl = baseUrl + '/api/FHIR/DSTU2/';
-        }
-      }
-
-      let authUrl = item.get('auth_uri');
-      if (authUrl === undefined) {
-        authUrl = baseUrl + '/oauth2/authorize';
-      }
-
-      let tokenUrl = item.get('token_uri');
-      if (tokenUrl === undefined) {
-        tokenUrl = baseUrl + '/oauth2/token';
-      }
-
       const url = await initiateEpicAuth(
         config,
-        baseUrl,
-        authUrl,
-        tokenUrl,
+        tenant?.url ?? item.get('location'),
+        tenant?.authorize ?? item.get('auth_uri'),
+        tenant?.token ?? item.get('token_uri'),
         item.get('name'),
-        item.get('tenant_id'),
+        tenantId,
         fhirVersion,
       );
       return url as string & Location;
@@ -357,36 +334,16 @@ export function setTenantUrlBySource(
 ): void {
   switch (item.get('source')) {
     case 'epic': {
-      let baseUrl = item.get('location');
-      const fhirVersion = item.get('fhir_version') || 'DSTU2';
-
-      if (fhirVersion === 'R4') {
-        if (!baseUrl.includes('/api/FHIR/R4')) {
-          baseUrl = baseUrl + '/api/FHIR/R4/';
-        }
-      } else {
-        if (!baseUrl.includes('/api/FHIR/DSTU2')) {
-          baseUrl = baseUrl + '/api/FHIR/DSTU2/';
-        }
-      }
-
-      let authUrl = item.get('auth_uri');
-      if (authUrl === undefined) {
-        authUrl = baseUrl + '/oauth2/authorize';
-      }
-
-      let tokenUrl = item.get('token_uri');
-      if (tokenUrl === undefined) {
-        tokenUrl = baseUrl + '/oauth2/token';
-      }
+      const tenantId = item.get('tenant_id');
+      const tenant = findEpicTenantById(tenantId);
 
       setTenantEpicUrl(
-        baseUrl,
-        authUrl,
-        tokenUrl,
+        tenant?.url ?? item.get('location'),
+        tenant?.authorize ?? item.get('auth_uri'),
+        tenant?.token ?? item.get('token_uri'),
         item.get('name'),
-        item.get('tenant_id'),
-        fhirVersion,
+        tenantId,
+        item.get('fhir_version') || 'DSTU2',
       );
       break;
     }

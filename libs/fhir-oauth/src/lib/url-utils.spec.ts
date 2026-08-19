@@ -1,4 +1,9 @@
-import { extractRelativeFhirPath } from './url-utils';
+import {
+  extractRelativeFhirPath,
+  relativeFhirPathWithin,
+  resolveFhirUrl,
+  deriveRegistrationUrl,
+} from './url-utils';
 
 describe('extractRelativeFhirPath', () => {
   describe('Epic R4 URLs', () => {
@@ -83,5 +88,169 @@ describe('extractRelativeFhirPath', () => {
       const nextUrl = '/api/FHIR/R4/Patient?page=2';
       expect(extractRelativeFhirPath(nextUrl, baseUrl)).toBe('Patient?page=2');
     });
+  });
+});
+
+describe('resolveFhirUrl', () => {
+  it('appends a resource to a base url', () => {
+    expect(
+      resolveFhirUrl('https://fhir.epic.com/api/FHIR/R4/', 'Patient'),
+    ).toBe('https://fhir.epic.com/api/FHIR/R4/Patient');
+  });
+
+  it('keeps the full path when the base url has no trailing slash', () => {
+    expect(
+      resolveFhirUrl(
+        'https://webprd.ochin.org/prd-fhir/MyChartAACI/api/FHIR/R4',
+        'Patient',
+      ),
+    ).toBe('https://webprd.ochin.org/prd-fhir/MyChartAACI/api/FHIR/R4/Patient');
+  });
+
+  it('preserves a lowercase fhir path segment', () => {
+    expect(
+      resolveFhirUrl(
+        'https://call.api.northwell.io/epic-proxy/api/fhir/R4/',
+        'Observation',
+      ),
+    ).toBe('https://call.api.northwell.io/epic-proxy/api/fhir/R4/Observation');
+  });
+
+  it('does not produce a double slash when the resource path has a leading slash', () => {
+    expect(
+      resolveFhirUrl('https://fhir.epic.com/api/FHIR/R4/', '/Patient'),
+    ).toBe('https://fhir.epic.com/api/FHIR/R4/Patient');
+  });
+
+  it('keeps nested resource paths intact', () => {
+    expect(
+      resolveFhirUrl(
+        'https://fhir.epic.com/api/FHIR/R4/',
+        'Patient/123/$everything',
+      ),
+    ).toBe('https://fhir.epic.com/api/FHIR/R4/Patient/123/$everything');
+  });
+
+  it('appends search params', () => {
+    expect(
+      resolveFhirUrl(
+        'https://fhir.epic.com/api/FHIR/R4/',
+        'Observation',
+        new URLSearchParams({ patient: '123', category: 'laboratory' }),
+      ),
+    ).toBe(
+      'https://fhir.epic.com/api/FHIR/R4/Observation?patient=123&category=laboratory',
+    );
+  });
+
+  it('omits the question mark when there are no search params', () => {
+    expect(
+      resolveFhirUrl(
+        'https://fhir.epic.com/api/FHIR/R4/',
+        'Patient',
+        new URLSearchParams(),
+      ),
+    ).toBe('https://fhir.epic.com/api/FHIR/R4/Patient');
+  });
+
+  it('encodes search param values', () => {
+    expect(
+      resolveFhirUrl(
+        'https://fhir.epic.com/api/FHIR/R4/',
+        'Patient',
+        new URLSearchParams({ name: 'John Doe' }),
+      ),
+    ).toBe('https://fhir.epic.com/api/FHIR/R4/Patient?name=John+Doe');
+  });
+
+  it('round-trips with extractRelativeFhirPath', () => {
+    const baseUrl = 'https://webprd.ochin.org/prd-fhir/MyChartAACI/api/FHIR/R4/';
+    const resolved = resolveFhirUrl(
+      baseUrl,
+      'Observation',
+      new URLSearchParams({ patient: '123' }),
+    );
+
+    expect(extractRelativeFhirPath(resolved, baseUrl)).toBe(
+      'Observation?patient=123',
+    );
+  });
+});
+
+describe('relativeFhirPathWithin', () => {
+  const baseUrl = 'https://tenant.example/prd-fhir/api/FHIR/R4/';
+
+  it('returns the resource path for a url under the fhir base', () => {
+    expect(
+      relativeFhirPathWithin(
+        'https://tenant.example/prd-fhir/api/FHIR/R4/Patient?page=2',
+        baseUrl,
+      ),
+    ).toBe('Patient?page=2');
+  });
+
+  it('returns null for a url on another host', () => {
+    expect(
+      relativeFhirPathWithin('https://cdn.example/document.pdf', baseUrl),
+    ).toBeNull();
+  });
+
+  it('returns null for a url on the same host outside the fhir base', () => {
+    expect(
+      relativeFhirPathWithin(
+        'https://tenant.example/other/thing.pdf',
+        baseUrl,
+      ),
+    ).toBeNull();
+  });
+
+  it('returns null for a path that only shares a prefix with the fhir base', () => {
+    expect(
+      relativeFhirPathWithin(
+        'https://tenant.example/prd-fhir/api/FHIR/R40/Patient',
+        baseUrl,
+      ),
+    ).toBeNull();
+  });
+
+  it('returns an empty path for the fhir base itself without a trailing slash', () => {
+    expect(
+      relativeFhirPathWithin(
+        'https://tenant.example/prd-fhir/api/FHIR/R4',
+        baseUrl,
+      ),
+    ).toBe('');
+  });
+});
+
+describe('deriveRegistrationUrl', () => {
+  it('replaces the authorize segment with register', () => {
+    expect(
+      deriveRegistrationUrl(
+        'https://call.api.northwell.io/epic-proxy/oauth2/authorize',
+      ),
+    ).toBe('https://call.api.northwell.io/epic-proxy/oauth2/register');
+  });
+
+  it('keeps a deep path prefix intact', () => {
+    expect(
+      deriveRegistrationUrl(
+        'https://webprd.ochin.org/prd-fhir/MyChartAACI/oauth2/authorize',
+      ),
+    ).toBe('https://webprd.ochin.org/prd-fhir/MyChartAACI/oauth2/register');
+  });
+
+  it('handles an authorize url at the origin root', () => {
+    expect(deriveRegistrationUrl('https://fhir.example.org/authorize')).toBe(
+      'https://fhir.example.org/register',
+    );
+  });
+
+  it('drops query params from the authorize url', () => {
+    expect(
+      deriveRegistrationUrl(
+        'https://prd.lluh.org/fhir/oauth2/authorize?aud=test',
+      ),
+    ).toBe('https://prd.lluh.org/fhir/oauth2/register');
   });
 });

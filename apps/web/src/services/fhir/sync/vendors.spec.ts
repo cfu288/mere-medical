@@ -103,6 +103,50 @@ function createAttachmentDatabase() {
   } as any;
 }
 
+function createEpicAttachmentDatabase(
+  attachmentUrl = 'https://files.example/report.xml',
+) {
+  const epicDocument = {
+    toMutableJSON: jest.fn().mockReturnValue({
+      user_id: 'user-1',
+      connection_record_id: 'epic-connection',
+      data_record: {
+        raw: {
+          resource: {
+            resourceType: 'DocumentReference',
+            id: 'document-1',
+            date: '2024-01-01T00:00:00.000Z',
+            type: { text: 'Clinical document' },
+            content: [{ attachment: { url: attachmentUrl } }],
+          },
+        },
+        format: 'FHIR.DSTU2',
+        content_type: 'application/json',
+        resource_type: 'documentreference',
+        version_history: [],
+      },
+      metadata: {
+        id: 'DocumentReference/document-1',
+        date: '2024-01-01T00:00:00.000Z',
+        display_name: 'Clinical document',
+      },
+    }),
+  };
+
+  return {
+    clinical_documents: {
+      bulkUpsert: jest.fn().mockResolvedValue([]),
+      find: jest
+        .fn()
+        .mockReturnValueOnce({
+          exec: jest.fn().mockResolvedValue([epicDocument]),
+        })
+        .mockReturnValue({ exec: jest.fn().mockResolvedValue([]) }),
+      insert: jest.fn().mockResolvedValue(undefined),
+    },
+  } as any;
+}
+
 function createConnectionDocument(connection: unknown) {
   return {
     toMutableJSON: jest.fn().mockReturnValue(connection),
@@ -118,13 +162,13 @@ function epicContext(fhirVersion: string | undefined) {
       user_id: 'user-1',
       source: 'epic',
       name: 'Epic',
-      location: 'https://epic.example',
+      location: 'https://epic.example/api/FHIR/DSTU2/',
       access_token: 'epic-token',
       patient: 'patient-1',
       tenant_id: 'tenant-1',
       fhir_version: fhirVersion,
     }),
-    baseUrl: 'https://epic.example',
+    baseUrl: 'https://epic.example/api/FHIR/DSTU2/',
     useProxy: false,
   } as any;
 }
@@ -224,6 +268,26 @@ describe('vendor sync fetch', () => {
     await Epic.sync.syncAllRecords(epicContext(undefined));
 
     expect(fetch).toHaveBeenCalledTimes(10);
+    expect(fetch).toHaveBeenNthCalledWith(
+      5,
+      'https://epic.example/api/FHIR/DSTU2/MedicationStatement?patient=patient-1',
+      {
+        headers: {
+          Authorization: 'Bearer epic-token',
+          Accept: 'application/fhir+json',
+        },
+      },
+    );
+  });
+
+  it('fetches Epic records directly when no public url is configured', async () => {
+    const fetch = emptyBundleFetch();
+    globalThis.fetch = fetch;
+    const context = epicContext(undefined);
+    context.config = {};
+
+    await Epic.sync.syncAllRecords(context);
+
     expect(fetch).toHaveBeenNthCalledWith(
       5,
       'https://epic.example/api/FHIR/DSTU2/MedicationStatement?patient=patient-1',
@@ -340,6 +404,41 @@ describe('vendor sync fetch', () => {
     expect(fetch).toHaveBeenCalledWith(
       'https://onpatient.example/Immunization?page=2',
       { headers: { Authorization: 'Bearer onpatient-token' } },
+    );
+  });
+
+  it('withholds the Epic access token from an off-origin attachment', async () => {
+    const fetch = routedFetch({
+      'https://files.example/report.xml': attachmentResponse,
+    });
+    globalThis.fetch = fetch;
+    const db = createEpicAttachmentDatabase();
+    const context = epicContext(undefined);
+    context.db = db;
+
+    await Epic.sync.syncAllRecords(context);
+
+    expect(fetch).toHaveBeenCalledWith('https://files.example/report.xml', {
+      headers: {},
+    });
+  });
+
+  it('sends the Epic access token to an in-base attachment', async () => {
+    const fetch = routedFetch({
+      'https://epic.example/api/FHIR/DSTU2/Binary/abc': attachmentResponse,
+    });
+    globalThis.fetch = fetch;
+    const db = createEpicAttachmentDatabase(
+      'https://epic.example/api/FHIR/DSTU2/Binary/abc',
+    );
+    const context = epicContext(undefined);
+    context.db = db;
+
+    await Epic.sync.syncAllRecords(context);
+
+    expect(fetch).toHaveBeenCalledWith(
+      'https://epic.example/api/FHIR/DSTU2/Binary/abc',
+      { headers: { Authorization: 'Bearer epic-token' } },
     );
   });
 

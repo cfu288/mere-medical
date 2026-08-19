@@ -44,6 +44,24 @@ export async function findConnectionByUrl(
   return doc ? doc.toJSON() : null;
 }
 
+export async function findConnectionBySourceAndTenant(
+  db: RxDatabase<DatabaseCollections>,
+  userId: string,
+  source: string,
+  tenantId: string,
+): Promise<ConnectionDocument | null> {
+  const doc = await db.connection_documents
+    .findOne({
+      selector: {
+        user_id: userId,
+        source,
+        tenant_id: tenantId,
+      },
+    })
+    .exec();
+  return doc ? doc.toJSON() : null;
+}
+
 export async function findConnectionByTenant(
   db: RxDatabase<DatabaseCollections>,
   userId: string,

@@ -235,11 +235,12 @@ const client = createEpicClientWithProxy({ signJwt }, (tenantId, targetType) => 
 Epic supports registering a dynamic client for token refresh:
 
 ```typescript
-import { registerEpicDynamicClient } from '@mere/fhir-oauth';
+import { registerEpicDynamicClient, deriveRegistrationUrl } from '@mere/fhir-oauth';
 import { getPublicKey } from '@mere/crypto/browser';
 
 const publicKey = await getPublicKey();
-const { clientId } = await registerEpicDynamicClient(tokens.accessToken, epicBaseUrl, originalClientId, publicKey);
+const registrationUrl = deriveRegistrationUrl(epicAuthorizeUrl);
+const { clientId } = await registerEpicDynamicClient(tokens.accessToken, registrationUrl, originalClientId, publicKey);
 
 const refreshedTokens = await client.refresh({ ...tokens, clientId }, config);
 ```
