@@ -496,12 +496,8 @@ async function syncDocumentReferences(
               },
               metadata: {
                 id: attachmentId,
-                date:
-                  docRefItem.data_record.raw.resource?.date ||
-                  docRefItem.data_record.raw.resource?.context?.period?.start,
-                display_name:
-                  docRefItem.data_record.raw.resource?.type?.text ||
-                  docRefItem.metadata?.display_name,
+                date: docRefItem.metadata?.date,
+                display_name: docRefItem.metadata?.display_name,
               },
             };
 

@@ -384,7 +384,10 @@ export function mapDocumentReferenceToClinicalDocument(
     },
     metadata: {
       id: parseId(bundleItem),
-      date: bundleItem.resource?.date || new Date(0).toISOString(),
+      date:
+        bundleItem.resource?.date ||
+        bundleItem.resource?.context?.period?.start ||
+        new Date(0).toISOString(),
       display_name:
         bundleItem.resource?.type?.text ||
         bundleItem.resource?.type?.coding?.[0]?.display,
