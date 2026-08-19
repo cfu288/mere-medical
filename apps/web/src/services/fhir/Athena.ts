@@ -44,6 +44,13 @@ import {
   parseJwtPayload,
   type AthenaTokenSet,
 } from '@mere/fhir-oauth';
+import {
+  runSync,
+  upsertEntries,
+  upsertIncludedEntries,
+  ResourceMapper,
+  VendorSync,
+} from './sync';
 
 export {
   createAthenaClient,
@@ -128,6 +135,7 @@ function buildAhPracticeParam(accessToken?: string): string | undefined {
 async function getFHIRResource<T extends FhirResource>(
   connectionDocument: AthenaConnectionDocument,
   fhirResourceUrl: string,
+  fetch: typeof globalThis.fetch,
   params?: Record<string, string>,
 ): Promise<BundleEntry<T>[]> {
   const baseUrl = connectionDocument.location as string;
@@ -182,232 +190,138 @@ async function syncFHIRResource<T extends FhirResource>(
   connectionDocument: AthenaConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
-  mapper: (proc: BundleEntry<T>) => CreateClinicalDocument<BundleEntry<T>>,
+  mapper: (
+    entry: BundleEntry<T>,
+    connection: AthenaConnectionDocument,
+  ) => CreateClinicalDocument<BundleEntry<T>>,
+  fetch: typeof globalThis.fetch,
   params?: Record<string, string>,
 ) {
   const resc = await getFHIRResource<T>(
     connectionDocument,
     fhirResourceUrl,
+    fetch,
     params,
   );
 
-  const cds = resc
-    .filter(
-      (i) =>
-        i.resource?.resourceType.toLowerCase() ===
-        fhirResourceUrl.toLowerCase(),
-    )
-    .map(mapper);
-  const cdsmap = await db.clinical_documents.bulkUpsert(
-    cds as unknown as ClinicalDocument[],
-  );
-  return cdsmap;
-}
-
-async function processIncludedResources(
-  entries: BundleEntry<any>[],
-  mappers: Record<
-    string,
-    (entry: BundleEntry<any>) => CreateClinicalDocument<BundleEntry<any>>
-  >,
-  db: RxDatabase<DatabaseCollections>,
-  excludeResourceTypes: string[] = [],
-): Promise<void> {
-  const resourceTypeGroups = new Map<string, BundleEntry<any>[]>();
-  for (const entry of entries) {
-    const resourceType = entry.resource?.resourceType;
-    if (resourceType && !excludeResourceTypes.includes(resourceType)) {
-      if (!resourceTypeGroups.has(resourceType)) {
-        resourceTypeGroups.set(resourceType, []);
-      }
-      resourceTypeGroups.get(resourceType)!.push(entry);
-    }
-  }
-  for (const [resourceType, groupedEntries] of resourceTypeGroups.entries()) {
-    const mapper = mappers[resourceType];
-    if (mapper) {
-      const cds = groupedEntries.map(mapper);
-      await db.clinical_documents.bulkUpsert(
-        cds as unknown as ClinicalDocument[],
-      );
-    }
-  }
+  return upsertEntries(db, resc, fhirResourceUrl, mapper, connectionDocument);
 }
 
 async function syncFHIRResourceWithIncludes<T extends FhirResource>(
   connectionDocument: AthenaConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   fhirResourceUrl: string,
-  mapper: (proc: BundleEntry<T>) => CreateClinicalDocument<BundleEntry<T>>,
+  mapper: (
+    entry: BundleEntry<T>,
+    connection: AthenaConnectionDocument,
+  ) => CreateClinicalDocument<BundleEntry<T>>,
   params: Record<string, string>,
   includeMappers: Record<
     string,
-    (entry: BundleEntry<any>) => CreateClinicalDocument<BundleEntry<any>>
+    ResourceMapper<BundleEntry<any>, AthenaConnectionDocument>
   >,
+  fetch: typeof globalThis.fetch,
 ) {
   const resc = await getFHIRResource<T>(
     connectionDocument,
     fhirResourceUrl,
+    fetch,
     params,
   );
-  const cds = resc
-    .filter(
-      (i) =>
-        i.resource?.resourceType.toLowerCase() ===
-        fhirResourceUrl.toLowerCase(),
-    )
-    .map(mapper);
-  await db.clinical_documents.bulkUpsert(cds as unknown as ClinicalDocument[]);
-  await processIncludedResources(resc, includeMappers, db, [fhirResourceUrl]);
+
+  await upsertEntries(db, resc, fhirResourceUrl, mapper, connectionDocument);
+  await upsertIncludedEntries(
+    db,
+    resc,
+    includeMappers,
+    connectionDocument,
+    fhirResourceUrl,
+  );
 }
 
-export async function syncAllRecords(
-  connectionDocument: AthenaConnectionDocument,
-  db: RxDatabase<DatabaseCollections>,
-): Promise<PromiseSettledResult<void[]>[]> {
-  const procMapper = (proc: BundleEntry<Procedure>) =>
-    R4.mapProcedureToClinicalDocument(proc, connectionDocument);
-  const patientMapper = (pt: BundleEntry<Patient>) =>
-    R4.mapPatientToClinicalDocument(pt, connectionDocument);
-  const obsMapper = (imm: BundleEntry<Observation>) =>
-    R4.mapObservationToClinicalDocument(imm, connectionDocument);
-  const drMapper = (dr: BundleEntry<DiagnosticReport>) =>
-    R4.mapDiagnosticReportToClinicalDocument(dr, connectionDocument);
-  const medRequestMapper = (dr: BundleEntry<MedicationRequest>) =>
-    R4.mapMedicationRequestToClinicalDocument(dr, connectionDocument);
-  const immMapper = (dr: BundleEntry<Immunization>) =>
-    R4.mapImmunizationToClinicalDocument(dr, connectionDocument);
-  const conditionMapper = (dr: BundleEntry<Condition>) =>
-    R4.mapConditionToClinicalDocument(dr, connectionDocument);
-  const allergyIntoleranceMapper = (a: BundleEntry<AllergyIntolerance>) =>
-    R4.mapAllergyIntoleranceToClinicalDocument(a, connectionDocument);
-  const encounterMapper = (a: BundleEntry<Encounter>) =>
-    R4.mapEncounterToClinicalDocument(a, connectionDocument);
+export const sync: VendorSync = {
+  refreshToken: ({ config, connection, db }) =>
+    refreshAthenaConnectionTokenIfNeeded(config, connection, db),
+  syncAllRecords: ({ connection, db, fetch }) => {
+    const cd =
+      connection.toMutableJSON() as unknown as AthenaConnectionDocument;
+    const patient = cd.patient;
+    const get =
+      <T extends FhirResource>(
+        path: string,
+        mapper: (
+          entry: BundleEntry<T>,
+          connection: AthenaConnectionDocument,
+        ) => CreateClinicalDocument<BundleEntry<T>>,
+        params: Record<string, string>,
+      ) =>
+      () =>
+        syncFHIRResource<T>(cd, db, path, mapper, fetch, params);
 
-  const patientId = connectionDocument.patient;
-
-  const syncJob = await Promise.allSettled([
-    syncFHIRResource<Procedure>(
-      connectionDocument,
-      db,
-      'Procedure',
-      procMapper as any,
-      { patient: patientId },
-    ),
-    syncFHIRResource<Patient>(
-      connectionDocument,
-      db,
-      'Patient',
-      patientMapper as any,
-      { _id: patientId },
-    ),
-    syncFHIRResource<Observation>(
-      connectionDocument,
-      db,
-      'Observation',
-      obsMapper as any,
-      { patient: patientId, category: 'laboratory' },
-    ),
-    syncFHIRResource<DiagnosticReport>(
-      connectionDocument,
-      db,
-      'DiagnosticReport',
-      drMapper as any,
-      { patient: patientId },
-    ),
-    syncFHIRResource<MedicationRequest>(
-      connectionDocument,
-      db,
-      'MedicationRequest',
-      medRequestMapper as any,
+    return runSync({
+      Procedure: get('Procedure', R4.mapProcedureToClinicalDocument, {
+        patient,
+      }),
+      Patient: get('Patient', R4.mapPatientToClinicalDocument, {
+        _id: patient,
+      }),
+      Observation: get('Observation', R4.mapObservationToClinicalDocument, {
+        patient,
+        category: 'laboratory',
+      }),
+      DiagnosticReport: get(
+        'DiagnosticReport',
+        R4.mapDiagnosticReportToClinicalDocument,
+        { patient },
+      ),
       // Athena requires [patient, intent] or [_id] per {baseUrl}/metadata
-      { patient: patientId, intent: 'order' },
-    ),
-    syncFHIRResource<Immunization>(
-      connectionDocument,
-      db,
-      'Immunization',
-      immMapper as any,
-      { patient: patientId },
-    ),
-    syncFHIRResource<Condition>(
-      connectionDocument,
-      db,
-      'Condition',
-      conditionMapper as any,
-      { patient: patientId },
-    ),
-    syncDocumentReferences(connectionDocument, db, { patient: patientId }),
-    // Athena only supports searching Provenance by target per {baseUrl}/metadata,
-    // so Provenance records are pulled in via _revinclude instead
-    syncFHIRResourceWithIncludes<Encounter>(
-      connectionDocument,
-      db,
-      'Encounter',
-      encounterMapper as any,
-      { patient: patientId, _revinclude: 'Provenance:target' },
-      {
-        Provenance: ((item: any) =>
-          R4.mapProvenanceToClinicalDocument(item, connectionDocument)) as any,
-      },
-    ),
-    syncFHIRResource<AllergyIntolerance>(
-      connectionDocument,
-      db,
-      'AllergyIntolerance',
-      allergyIntoleranceMapper as any,
-      { patient: patientId },
-    ),
-    syncFHIRResource(
-      connectionDocument,
-      db,
-      'CareTeam',
-      ((item: any) =>
-        R4.mapCareTeamToClinicalDocument(item, connectionDocument)) as any,
-      { patient: patientId },
-    ),
-    syncFHIRResource(
-      connectionDocument,
-      db,
-      'Goal',
-      ((item: any) =>
-        R4.mapGoalToClinicalDocument(item, connectionDocument)) as any,
-      { patient: patientId },
-    ),
-    syncFHIRResource(
-      connectionDocument,
-      db,
-      'CarePlan',
-      ((item: any) =>
-        R4.mapCarePlanToClinicalDocument(item, connectionDocument)) as any,
-      { patient: patientId },
-    ),
-    syncFHIRResource(
-      connectionDocument,
-      db,
-      'Device',
-      ((item: any) =>
-        R4.mapDeviceToClinicalDocument(item, connectionDocument)) as any,
-      { patient: patientId },
-    ),
-    syncFHIRResource<Observation>(
-      connectionDocument,
-      db,
-      'Observation',
-      obsMapper as any,
-      { patient: patientId, category: 'vital-signs' },
-    ),
-    syncFHIRResource<Observation>(
-      connectionDocument,
-      db,
-      'Observation',
-      obsMapper as any,
-      { patient: patientId, category: 'social-history' },
-    ),
-  ]);
-
-  return syncJob as unknown as Promise<PromiseSettledResult<void[]>[]>;
-}
+      MedicationRequest: get(
+        'MedicationRequest',
+        R4.mapMedicationRequestToClinicalDocument,
+        { patient, intent: 'order' },
+      ),
+      Immunization: get('Immunization', R4.mapImmunizationToClinicalDocument, {
+        patient,
+      }),
+      Condition: get('Condition', R4.mapConditionToClinicalDocument, {
+        patient,
+      }),
+      DocumentReference: () =>
+        syncDocumentReferences(cd, db, { patient }, fetch),
+      // Athena only supports searching Provenance by target per {baseUrl}/metadata,
+      // so Provenance records are pulled in via _revinclude instead
+      Encounter: () =>
+        syncFHIRResourceWithIncludes<Encounter>(
+          cd,
+          db,
+          'Encounter',
+          R4.mapEncounterToClinicalDocument,
+          { patient, _revinclude: 'Provenance:target' },
+          { Provenance: R4.mapProvenanceToClinicalDocument },
+          fetch,
+        ),
+      AllergyIntolerance: get(
+        'AllergyIntolerance',
+        R4.mapAllergyIntoleranceToClinicalDocument,
+        { patient },
+      ),
+      CareTeam: get('CareTeam', R4.mapCareTeamToClinicalDocument, { patient }),
+      Goal: get('Goal', R4.mapGoalToClinicalDocument, { patient }),
+      CarePlan: get('CarePlan', R4.mapCarePlanToClinicalDocument, { patient }),
+      Device: get('Device', R4.mapDeviceToClinicalDocument, { patient }),
+      ObservationVitalSigns: get(
+        'Observation',
+        R4.mapObservationToClinicalDocument,
+        { patient, category: 'vital-signs' },
+      ),
+      ObservationSocialHistory: get(
+        'Observation',
+        R4.mapObservationToClinicalDocument,
+        { patient, category: 'social-history' },
+      ),
+    });
+  },
+};
 
 /**
  * Syncs DocumentReferences and stores their attachment content as
@@ -425,14 +339,14 @@ async function syncDocumentReferences(
   connectionDocument: AthenaConnectionDocument,
   db: RxDatabase<DatabaseCollections>,
   params: Record<string, string>,
+  fetch: typeof globalThis.fetch,
 ) {
-  const documentReferenceMapper = (dr: BundleEntry<DocumentReference>) =>
-    R4.mapDocumentReferenceToClinicalDocument(dr, connectionDocument);
   await syncFHIRResource<DocumentReference>(
     connectionDocument,
     db,
     'DocumentReference',
-    documentReferenceMapper as any,
+    R4.mapDocumentReferenceToClinicalDocument,
+    fetch,
     params,
   );
 
@@ -481,7 +395,11 @@ async function syncDocumentReferences(
           .exec();
         if (exists.length === 0) {
           const { contentType, raw } = attachmentUrl
-            ? await fetchAttachmentData(attachmentUrl, connectionDocument)
+            ? await fetchAttachmentData(
+                attachmentUrl,
+                connectionDocument,
+                fetch,
+              )
             : decodeInlineAttachmentData(attachment);
           if (raw && contentType) {
             const cd: CreateClinicalDocument<string | Blob> = {
@@ -546,6 +464,7 @@ function decodeInlineAttachmentData(attachment: Attachment): {
 async function fetchAttachmentData(
   url: string,
   cd: AthenaConnectionDocument,
+  fetch: typeof globalThis.fetch,
 ): Promise<{ contentType: string | null; raw: string | Blob | undefined }> {
   try {
     const isBinaryResource = url.includes('/Binary/');
