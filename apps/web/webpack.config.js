@@ -10,10 +10,13 @@ function getAppVersion() {
     return process.env.MERE_APP_VERSION;
   }
   try {
-    return require('child_process')
-      .execSync('git describe --tag')
+    const { execSync } = require('child_process');
+    const date = execSync('git show -s --format=%cs HEAD')
       .toString()
-      .trim();
+      .trim()
+      .replace(/-/g, '.');
+    const hash = execSync('git rev-parse --short HEAD').toString().trim();
+    return `${date}+${hash}`;
   } catch {
     return 'unknown';
   }

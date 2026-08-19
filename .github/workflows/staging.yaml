@@ -36,7 +36,7 @@ jobs:
 
       - name: Get app version
         id: version
-        run: echo "version=$(git describe --tags)" >> $GITHUB_OUTPUT
+        run: echo "version=$(git show -s --format=%cs HEAD | tr '-' '.')+$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
@@ -120,7 +120,7 @@ jobs:
 
       - name: Get app version
         id: version
-        run: echo "version=$(git describe --tags)" >> $GITHUB_OUTPUT
+        run: echo "version=$(git show -s --format=%cs HEAD | tr '-' '.')+$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
