@@ -8,6 +8,7 @@ export interface R4Endpoint {
   authorize: string;
 }
 
+/** Server only - importing this in the web app ships the whole tenant catalog to the browser. */
 export const HealowR4TenantEndpoints: R4Endpoint[] = Array.from(HealowEndpoints);
 
 export function getUniqueTenantCount(): number {

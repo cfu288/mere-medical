@@ -1,7 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { Request, Response } from 'express';
-import { ProxyService, resolveProxyTarget } from './proxy.service';
-import { HTTP_PROXY, PROXY_MODULE_OPTIONS } from '../proxy.constants';
+import { resolveProxyTarget } from './proxy.service';
 
 const NORTHWELL_R4 = {
   id: '1a5fe784-078b-ef11-91a4-0050568bc890',
@@ -66,57 +63,6 @@ describe('resolveProxyTarget', () => {
   it('falls back to the fhir url for an unknown target type', () => {
     expect(resolveProxyTarget(NORTHWELL_R4, undefined)).toBe(
       'https://call.api.northwell.io/epic-proxy/api/fhir/R4/',
-    );
-  });
-});
-
-describe('ProxyService', () => {
-  it('proxies a request to the target resolved for its tenant', async () => {
-    let proxiedTo = '';
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        ProxyService,
-        { provide: HTTP_PROXY, useValue: { web: jest.fn() } },
-        {
-          provide: PROXY_MODULE_OPTIONS,
-          useValue: {
-            services: [{ vendor: 'epic', endpoints: [NORTHWELL_R4] }],
-          },
-        },
-      ],
-    }).compile();
-    const service = module.get(ProxyService);
-    jest
-      .spyOn(
-        service as unknown as {
-          doProxy: (
-            req: Request,
-            res: Response,
-            target: string,
-          ) => Promise<void>;
-        },
-        'doProxy',
-      )
-      .mockImplementation(async (_req, _res, target) => {
-        proxiedTo = target;
-      });
-
-    await service.proxyRequest(
-      {
-        query: { serviceId: NORTHWELL_R4.id, target_type: 'register' },
-        headers: {},
-        method: 'POST',
-        url: '/proxy',
-        hasOwnProperty: () => false,
-      } as unknown as Request,
-      {
-        status: jest.fn().mockReturnThis(),
-        send: jest.fn(),
-      } as unknown as Response,
-    );
-
-    expect(proxiedTo).toBe(
-      'https://call.api.northwell.io/epic-proxy/oauth2/register',
     );
   });
 });

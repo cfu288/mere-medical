@@ -46,8 +46,8 @@ export function relativeFhirPathWithin(
   fullUrl: string,
   fhirBaseUrl: string,
 ): string | null {
-  const parsedBase = new URL(fhirBaseUrl);
-  const parsedFull = new URL(fullUrl, fhirBaseUrl);
+  const parsedBase = new URL(fhirBaseUrl),
+    parsedFull = new URL(fullUrl, fhirBaseUrl);
 
   if (parsedFull.origin !== parsedBase.origin) {
     return null;
@@ -78,13 +78,12 @@ export function resolveFhirUrl(
   resourcePath: string,
   params?: URLSearchParams,
 ): string {
-  const base = fhirBaseUrl.endsWith('/') ? fhirBaseUrl : `${fhirBaseUrl}/`;
-  const relativePath = resourcePath.startsWith('/')
-    ? resourcePath.slice(1)
-    : resourcePath;
-
-  const url = new URL(relativePath, base);
-  const query = params?.toString();
+  const base = fhirBaseUrl.endsWith('/') ? fhirBaseUrl : `${fhirBaseUrl}/`,
+    relativePath = resourcePath.startsWith('/')
+      ? resourcePath.slice(1)
+      : resourcePath,
+    url = new URL(relativePath, base),
+    query = params?.toString();
   if (query) {
     url.search = query;
   }

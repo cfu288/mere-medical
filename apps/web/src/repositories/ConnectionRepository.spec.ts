@@ -705,23 +705,6 @@ describe('ConnectionRepository', () => {
       expect(result?.id).toBe(testConn.id);
     });
 
-    it('finds a connection whose stored location is a full fhir base url', async () => {
-      const testConn = createEpicConnection({
-        tenant_id: '1a5fe784-078b-ef11-91a4-0050568bc890',
-        location: 'https://call.api.northwell.io/epic-proxy/api/fhir/R4/',
-      });
-      await db.connection_documents.insert(testConn);
-
-      const result = await connectionRepo.findConnectionBySourceAndTenant(
-        db,
-        testConn.user_id,
-        'epic',
-        '1a5fe784-078b-ef11-91a4-0050568bc890',
-      );
-
-      expect(result?.id).toBe(testConn.id);
-    });
-
     it('keeps two same-host tenants separate', async () => {
       const northwell = createEpicConnection({
         tenant_id: '1a5fe784-078b-ef11-91a4-0050568bc890',

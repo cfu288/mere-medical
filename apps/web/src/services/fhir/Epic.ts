@@ -3,8 +3,11 @@
  */
 
 /* eslint-disable no-inner-declarations */
-import { isEpicSandbox, resolveEpicFhirBaseUrl } from './EpicUtils';
-import { findEpicTenantById } from '@mere/epic';
+import {
+  parseEpicTenantId,
+  isEpicSandbox,
+  parseEpicFhirBaseUrl,
+} from './EpicUtils';
 import { Bundle, BundleEntry, DocumentReference } from 'fhir/r2';
 import { RxDocument, RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
@@ -49,28 +52,31 @@ import {
 
 const epicClient = createEpicClient({ signJwt });
 
-const createProxiedEpicClient = (publicUrl: string) =>
-  createEpicClientWithProxy(
-    { signJwt },
-    (tenantId, targetType) =>
-      `${publicUrl}/api/proxy?serviceId=${tenantId}&target_type=${targetType}`,
-  );
-
-function buildProxyUrl(
+/**
+ * Builds a URL that routes an Epic request through this instance's proxy.
+ */
+export function epicProxyUrl(
   publicUrl: string,
   serviceId: string | undefined,
-  target: string,
+  params: { targetType: string; target?: string },
 ): string {
   if (!publicUrl) {
     throw new Error('Cannot proxy a request without PUBLIC_URL configured');
   }
-  const base = publicUrl.endsWith('/') ? publicUrl : `${publicUrl}/`;
-  const url = new URL('api/proxy', base);
+  const base = publicUrl.endsWith('/') ? publicUrl : `${publicUrl}/`,
+    url = new URL('api/proxy', base);
   url.searchParams.set('serviceId', serviceId || '');
-  url.searchParams.set('target', target);
-  url.searchParams.set('target_type', 'base');
+  if (params.target !== undefined) {
+    url.searchParams.set('target', params.target);
+  }
+  url.searchParams.set('target_type', params.targetType);
   return url.toString();
 }
+
+export const createProxiedEpicClient = (publicUrl: string) =>
+  createEpicClientWithProxy({ signJwt }, (tenantId, targetType) =>
+    epicProxyUrl(publicUrl, tenantId, { targetType }),
+  );
 
 export function getEpicClientId(
   config: AppConfig,
@@ -131,11 +137,10 @@ async function getFHIRResource<E extends FhirBundleEntry>(
 
   let allEntries: E[] = [];
   let nextUrl: string | undefined = useProxy
-    ? buildProxyUrl(
-        config.PUBLIC_URL || '',
-        epicId,
-        query ? `${fhirResourceUrl}?${query}` : fhirResourceUrl,
-      )
+    ? epicProxyUrl(config.PUBLIC_URL || '', epicId, {
+        targetType: 'base',
+        target: query ? `${fhirResourceUrl}?${query}` : fhirResourceUrl,
+      })
     : resolveFhirUrl(fhirUrl, fhirResourceUrl, searchParams);
 
   while (nextUrl) {
@@ -165,7 +170,10 @@ async function getFHIRResource<E extends FhirBundleEntry>(
           `Pagination link points outside the FHIR server: ${nextLink.url}`,
         );
       }
-      nextUrl = buildProxyUrl(config.PUBLIC_URL || '', epicId, relativePath);
+      nextUrl = epicProxyUrl(config.PUBLIC_URL || '', epicId, {
+        targetType: 'base',
+        target: relativePath,
+      });
     } else {
       nextUrl = nextLink?.url;
     }
@@ -249,7 +257,7 @@ export const sync: VendorSync = {
     refreshEpicConnectionTokenIfNeeded(config, connection, db, useProxy),
   syncAllRecords: ({ config, connection, db, useProxy }) => {
     const cd = connection.toMutableJSON() as unknown as EpicConnectionDocument;
-    const baseUrl = resolveEpicFhirBaseUrl(cd);
+    const baseUrl = parseEpicFhirBaseUrl(cd.location);
     const patient = cd.patient;
     const version = cd.fhir_version || 'DSTU2';
 
@@ -682,7 +690,10 @@ async function fetchAttachmentData(
     const relativePath = relativeFhirPathWithin(defaultUrl, baseUrl);
     const fetchUrl =
       useProxy && relativePath !== null
-        ? buildProxyUrl(config.PUBLIC_URL || '', epicId, relativePath)
+        ? epicProxyUrl(config.PUBLIC_URL || '', epicId, {
+            targetType: 'base',
+            target: relativePath,
+          })
         : defaultUrl;
     const res = await fetch(fetchUrl, {
       headers: { Authorization: `Bearer ${connectionDocument.access_token}` },
@@ -760,9 +771,10 @@ export async function saveConnectionToDb({
   fhirVersion?: 'DSTU2' | 'R4';
 }) {
   // TODO: a second patient at the same tenant overwrites the first - key on patient too
+  const tenantId = parseEpicTenantId(epicId);
   const currentDoc = await getConnectionCardByTenant<EpicConnectionDocument>(
     'epic',
-    epicId,
+    tenantId,
     db,
     user.id,
   );
@@ -785,7 +797,7 @@ export async function saveConnectionToDb({
                 expires_at: nowInSeconds + res.expires_in,
                 scope: res.scope,
                 patient: res.patient,
-                tenant_id: epicId,
+                tenant_id: tenantId,
                 fhir_version: fhirVersion,
                 last_sync_was_error: false,
               },
@@ -818,7 +830,7 @@ export async function saveConnectionToDb({
           scope: res.scope,
           patient: res.patient,
           client_id: (res as EpicAuthResponseWithClientId)?.client_id,
-          tenant_id: epicId,
+          tenant_id: tenantId,
           fhir_version: fhirVersion,
         };
         try {
@@ -886,20 +898,20 @@ export async function refreshEpicConnectionTokenIfNeeded(
         throw new Error(`User not found: ${userId}`);
       }
 
-      const tenant = findEpicTenantById(epicId);
-      const oauthConfig: OAuthConfig = {
-        clientId: getEpicClientId(config, fhirVersion, isEpicSandbox(epicId)),
-        redirectUri: `${config.PUBLIC_URL}${Routes.EpicCallback}`,
-        scopes: ['openid', 'fhirUser'],
-        tenant: {
-          id: epicId,
-          name: epicName,
-          authUrl: tenant?.authorize ?? epicAuthUrl,
-          tokenUrl: tenant?.token ?? epicTokenUrl,
-          fhirBaseUrl: tenant?.url ?? epicUrl,
-          fhirVersion,
-        },
-      };
+      const fhirBaseUrl = parseEpicFhirBaseUrl(epicUrl),
+        oauthConfig: OAuthConfig = {
+          clientId: getEpicClientId(config, fhirVersion, isEpicSandbox(epicId)),
+          redirectUri: `${config.PUBLIC_URL}${Routes.EpicCallback}`,
+          scopes: ['openid', 'fhirUser'],
+          tenant: {
+            id: epicId,
+            name: epicName,
+            authUrl: epicAuthUrl,
+            tokenUrl: epicTokenUrl,
+            fhirBaseUrl,
+            fhirVersion,
+          },
+        };
 
       const client = useProxy
         ? createProxiedEpicClient(config.PUBLIC_URL || '')

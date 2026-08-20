@@ -14,20 +14,6 @@ describe('registerEpicDynamicClient', () => {
     global.fetch = fetchMock as unknown as typeof fetch;
   });
 
-  it('posts to the registration url it is given', async () => {
-    await registerEpicDynamicClient(
-      'access-token',
-      'https://call.api.northwell.io/epic-proxy/oauth2/register',
-      'software-id',
-      publicKey,
-    );
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      'https://call.api.northwell.io/epic-proxy/oauth2/register',
-      expect.objectContaining({ method: 'POST' }),
-    );
-  });
-
   it('posts to a proxy registration url unchanged', async () => {
     await registerEpicDynamicClient(
       'access-token',

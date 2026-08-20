@@ -1,5 +1,3 @@
-import { findEpicTenantById } from '@mere/epic';
-
 export const EPIC_SANDBOX_IDS = ['sandbox_epic', 'sandbox_epic_r4'] as const;
 
 export function isEpicSandbox(epicId?: string): boolean {
@@ -8,21 +6,12 @@ export function isEpicSandbox(epicId?: string): boolean {
 }
 
 /**
- * Resolves the FHIR base URL for an Epic connection.
- *
- * Epic's published endpoint list is authoritative, so the tenant id decides the
- * URL. Connections to tenants outside that list keep their stored location.
- *
- * @throws when the tenant is unpublished and the stored location is only an
- * origin, which carries no FHIR path to request against.
- */
-/**
  * Fails when a connection cannot be tied to a tenant.
  *
  * Reconnecting keys on the tenant, so a connection without one would be saved
  * as a second, unlinked copy of itself.
  */
-export function assertEpicTenantId(tenantId: string | undefined): string {
+export function parseEpicTenantId(tenantId: string | undefined): string {
   if (!tenantId || tenantId === 'undefined') {
     throw new Error(
       'Connection predates tenant tracking - remove it and add it again',
@@ -31,21 +20,25 @@ export function assertEpicTenantId(tenantId: string | undefined): string {
   return tenantId;
 }
 
-export function resolveEpicFhirBaseUrl(connection: {
-  tenant_id?: string;
-  location: string | Location;
-}): string {
-  const published = findEpicTenantById(connection.tenant_id)?.url;
-  if (published) {
-    return published;
-  }
+/**
+ * Returns the stored FHIR base URL for an Epic connection.
+ *
+ * @throws when the stored location carries no FHIR path to request against,
+ * which a connection saved before the base URL was recorded in full will hit.
+ */
+export function parseEpicFhirBaseUrl(location: string | Location): string {
+  const stored = String(location);
 
-  const location = String(connection.location);
-  if (new URL(location).pathname === '/') {
+  let pathname: string;
+  try {
+    pathname = new URL(stored).pathname;
+  } catch {
+    throw new Error(`Connection has an unusable address: ${stored}`);
+  }
+  if (pathname === '/') {
     throw new Error(
-      `Connection is missing a FHIR base URL - reconnect to ${location}`,
+      `Connection is missing a FHIR base URL - remove it and add it again`,
     );
   }
-
-  return location;
+  return stored;
 }

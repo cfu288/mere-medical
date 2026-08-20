@@ -1,8 +1,8 @@
 import {
-  assertEpicTenantId,
+  parseEpicTenantId,
   isEpicSandbox,
   EPIC_SANDBOX_IDS,
-  resolveEpicFhirBaseUrl,
+  parseEpicFhirBaseUrl,
 } from './EpicUtils';
 
 describe('EpicUtils', () => {
@@ -36,116 +36,57 @@ describe('EpicUtils', () => {
     });
   });
 
-  describe('assertEpicTenantId', () => {
+  describe('parseEpicTenantId', () => {
     it('returns a real tenant id', () => {
-      expect(assertEpicTenantId('1a5fe784-078b-ef11-91a4-0050568bc890')).toBe(
+      expect(parseEpicTenantId('1a5fe784-078b-ef11-91a4-0050568bc890')).toBe(
         '1a5fe784-078b-ef11-91a4-0050568bc890',
       );
     });
 
     it('rejects a connection saved before tenants were tracked', () => {
-      expect(() => assertEpicTenantId(undefined)).toThrow(
+      expect(() => parseEpicTenantId(undefined)).toThrow(
         'Connection predates tenant tracking',
       );
     });
 
     it('rejects the string a missing id turns into through local storage', () => {
-      expect(() => assertEpicTenantId('undefined')).toThrow(
+      expect(() => parseEpicTenantId('undefined')).toThrow(
         'Connection predates tenant tracking',
       );
     });
   });
 
-  describe('resolveEpicFhirBaseUrl', () => {
-    it('resolves the canonical base url from the tenant id', () => {
+  describe('parseEpicFhirBaseUrl', () => {
+    it('returns a stored fhir base url', () => {
       expect(
-        resolveEpicFhirBaseUrl({
-          tenant_id: '1a5fe784-078b-ef11-91a4-0050568bc890',
-          location: 'https://call.api.northwell.io',
-        }),
+        parseEpicFhirBaseUrl(
+          'https://call.api.northwell.io/epic-proxy/api/fhir/R4/',
+        ),
       ).toBe('https://call.api.northwell.io/epic-proxy/api/fhir/R4/');
     });
 
-    it('ignores a stored location that lost its path prefix', () => {
+    it('keeps a lowercase fhir path segment verbatim', () => {
       expect(
-        resolveEpicFhirBaseUrl({
-          tenant_id: '2baa00f4-3236-f011-91f0-0050568bc890',
-          location: 'https://webprd.ochin.org/api/FHIR/R4/',
-        }),
-      ).toBe('https://webprd.ochin.org/prd-fhir/MyChartAACI/api/FHIR/R4/');
-    });
-
-    it('resolves DSTU2 tenants from the same lookup', () => {
-      expect(
-        resolveEpicFhirBaseUrl({
-          tenant_id: '989e0f4c-9813-e911-9126-001dd8b71f19',
-          location: 'https://prd.lluh.org',
-        }),
+        parseEpicFhirBaseUrl('https://prd.lluh.org/fhir/api/fhir/DSTU2/'),
       ).toBe('https://prd.lluh.org/fhir/api/fhir/DSTU2/');
     });
 
-    it('resolves the sandbox tenant from the endpoint list', () => {
-      expect(
-        resolveEpicFhirBaseUrl({
-          tenant_id: 'sandbox_epic_r4',
-          location: 'https://fhir.epic.com',
-        }),
-      ).toBe('https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4/');
-    });
-
-    it('falls back to the stored location for a tenant not in the endpoint list', () => {
-      expect(
-        resolveEpicFhirBaseUrl({
-          tenant_id: 'not-a-published-tenant',
-          location: 'https://self.hosted.example.org/custom/api/FHIR/R4/',
-        }),
-      ).toBe('https://self.hosted.example.org/custom/api/FHIR/R4/');
-    });
-
-    it('throws for an unpublished tenant whose stored location is only an origin', () => {
-      expect(() =>
-        resolveEpicFhirBaseUrl({
-          tenant_id: 'not-a-published-tenant',
-          location: 'https://epic.example',
-        }),
-      ).toThrow('Connection is missing a FHIR base URL');
-    });
-
-    it('throws for an unpublished tenant whose stored location is an origin with a trailing slash', () => {
-      expect(() =>
-        resolveEpicFhirBaseUrl({
-          tenant_id: 'not-a-published-tenant',
-          location: 'https://epic.example/',
-        }),
-      ).toThrow('Connection is missing a FHIR base URL');
-    });
-
-    it('resolves a published tenant even when the stored location is only an origin', () => {
-      expect(
-        resolveEpicFhirBaseUrl({
-          tenant_id: '1a5fe784-078b-ef11-91a4-0050568bc890',
-          location: 'https://call.api.northwell.io',
-        }),
-      ).toBe('https://call.api.northwell.io/epic-proxy/api/fhir/R4/');
-    });
-
-    it('refuses the same connection the reconnect flow would reuse', () => {
-      const legacy = {
-        tenant_id: 'not-a-published-tenant',
-        location: 'https://legacy.example.org',
-      };
-
-      expect(() => resolveEpicFhirBaseUrl(legacy)).toThrow(
+    it('rejects a stored location that is only an origin', () => {
+      expect(() => parseEpicFhirBaseUrl('https://epic.example')).toThrow(
         'Connection is missing a FHIR base URL',
       );
     });
 
-    it('falls back to the stored location when there is no tenant id', () => {
-      expect(
-        resolveEpicFhirBaseUrl({
-          location: 'https://self.hosted.example.org/api/FHIR/R4/',
-        }),
-      ).toBe('https://self.hosted.example.org/api/FHIR/R4/');
+    it('rejects a stored location that is an origin with a trailing slash', () => {
+      expect(() => parseEpicFhirBaseUrl('https://epic.example/')).toThrow(
+        'Connection is missing a FHIR base URL',
+      );
+    });
+
+    it('rejects a stored location that cannot be read', () => {
+      expect(() => parseEpicFhirBaseUrl('not-a-url')).toThrow(
+        'Connection has an unusable address',
+      );
     });
   });
 });

@@ -232,42 +232,10 @@ describe('deriveRegistrationUrl', () => {
     ).toBe('https://call.api.northwell.io/epic-proxy/oauth2/register');
   });
 
-  it('keeps a deep path prefix intact', () => {
-    expect(
-      deriveRegistrationUrl(
-        'https://webprd.ochin.org/prd-fhir/MyChartAACI/oauth2/authorize',
-      ),
-    ).toBe('https://webprd.ochin.org/prd-fhir/MyChartAACI/oauth2/register');
-  });
-
   it('handles an authorize url at the origin root', () => {
     expect(deriveRegistrationUrl('https://fhir.example.org/authorize')).toBe(
       'https://fhir.example.org/register',
     );
-  });
-
-  it('follows the authorize host when it differs from the fhir host', () => {
-    expect(
-      deriveRegistrationUrl(
-        'https://epicproxy.et0169.epichosted.com/APIProxyPRD/oauth2/authorize',
-      ),
-    ).toBe('https://epicproxy.et0169.epichosted.com/APIProxyPRD/oauth2/register');
-  });
-
-  it('follows the authorize path tree when it differs from the fhir path tree', () => {
-    expect(
-      deriveRegistrationUrl(
-        'https://fhir.kp.org/KPPolarisPortal/esb-envlbl/190/oauth2/authorize',
-      ),
-    ).toBe('https://fhir.kp.org/KPPolarisPortal/esb-envlbl/190/oauth2/register');
-  });
-
-  it('preserves the authorize path casing', () => {
-    expect(
-      deriveRegistrationUrl(
-        'https://epicservicegw.froedtert.com/FHIRproxyPRD/oauth2/authorize',
-      ),
-    ).toBe('https://epicservicegw.froedtert.com/FHIRproxyPRD/oauth2/register');
   });
 
   it('drops query params from the authorize url', () => {

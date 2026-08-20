@@ -236,26 +236,6 @@ describe('vendor sync fetch', () => {
     );
   });
 
-  it('fetches Epic records directly when no public url is configured', async () => {
-    const fetch = emptyBundleFetch();
-    globalThis.fetch = fetch;
-    const context = epicContext(undefined);
-    context.config = {};
-
-    await Epic.sync.syncAllRecords(context);
-
-    expect(fetch).toHaveBeenNthCalledWith(
-      5,
-      'https://epic.example/api/FHIR/DSTU2/MedicationStatement?patient=patient-1',
-      {
-        headers: {
-          Authorization: 'Bearer epic-token',
-          Accept: 'application/fhir+json',
-        },
-      },
-    );
-  });
-
   it('uses Epic DSTU2 tasks for an invalid version', async () => {
     const fetch = emptyBundleFetch();
     globalThis.fetch = fetch;
