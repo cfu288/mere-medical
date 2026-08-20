@@ -3,12 +3,13 @@
  */
 
 /* eslint-disable no-inner-declarations */
-import { isEpicSandbox, resolveEpicFhirBaseUrl } from './EpicUtils';
+import { isEpicSandbox } from './EpicUtils';
 import { findEpicTenantById } from '@mere/epic';
 import { Bundle, BundleEntry, DocumentReference } from 'fhir/r2';
 import { RxDocument, RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import {
+  AnyConnectionDocument,
   ConnectionDocument,
   CreateEpicConnectionDocument,
   EpicConnectionDocument,
@@ -244,12 +245,16 @@ async function syncFHIRResourceWithIncludes<E extends FhirBundleEntry>(
   );
 }
 
-export const sync: VendorSync = {
+export const sync: VendorSync<EpicConnectionDocument> = {
   refreshToken: ({ config, connection, db, useProxy }) =>
     refreshEpicConnectionTokenIfNeeded(config, connection, db, useProxy),
-  syncAllRecords: ({ config, connection, db, useProxy }) => {
-    const cd = connection.toMutableJSON() as unknown as EpicConnectionDocument;
-    const baseUrl = resolveEpicFhirBaseUrl(cd);
+  syncAllRecords: ({
+    config,
+    fhirBaseUrl: baseUrl,
+    document: cd,
+    db,
+    useProxy,
+  }) => {
     const patient = cd.patient;
     const version = cd.fhir_version || 'DSTU2';
 
@@ -824,7 +829,7 @@ export async function saveConnectionToDb({
           fhir_version: fhirVersion,
         };
         try {
-          createConnection(db, dbentry as ConnectionDocument)
+          createConnection(db, dbentry as EpicConnectionDocument)
             .then(() => {
               resolve(true);
             })
@@ -851,7 +856,7 @@ export async function saveConnectionToDb({
  */
 export async function refreshEpicConnectionTokenIfNeeded(
   config: AppConfig,
-  connectionDocument: RxDocument<ConnectionDocument>,
+  connectionDocument: RxDocument<AnyConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
   useProxy = false,
 ) {

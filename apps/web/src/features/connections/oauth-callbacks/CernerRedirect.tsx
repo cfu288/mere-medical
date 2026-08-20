@@ -128,7 +128,7 @@ function useCernerOAuthCallback() {
           );
         }
 
-        const dbentry: Omit<CreateCernerConnectionDocument, 'patient'> = {
+        const dbentry: CreateCernerConnectionDocument = {
           id: uuid4(),
           user_id: user.id,
           source: 'cerner',
@@ -145,7 +145,7 @@ function useCernerOAuthCallback() {
         };
 
         // TODO: reconnecting adds a duplicate row - look up the tenant before creating
-        await createConnection(db, dbentry as any);
+        await createConnection(db, dbentry);
         navigate(Routes.AddConnection, { replace: true });
       } catch (err) {
         const message =

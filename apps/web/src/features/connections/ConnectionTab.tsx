@@ -22,7 +22,10 @@ import { ConnectionCard } from './components/ConnectionCard';
 import { EMRVendor, TenantSelectModal } from './components/TenantSelectModal';
 import { GenericBanner } from '../../shared/components/GenericBanner';
 import { useConnectionCards } from './hooks/useConnectionCards';
-import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
+import {
+  AnyConnectionDocument,
+  ConnectionDocument,
+} from '../../models/connection-document/ConnectionDocument.type';
 import { AppConfig, useConfig } from '../../app/providers/AppConfigProvider';
 import { CernerLocalStorageKeys } from '../../services/fhir/Cerner';
 import { findEpicTenantById } from '@mere/epic';
@@ -248,7 +251,7 @@ async function initiateHealowAuth(
 
 export async function getLoginUrlBySource(
   config: AppConfig,
-  item: RxDocument<ConnectionDocument>,
+  item: RxDocument<AnyConnectionDocument>,
 ): Promise<string & Location> {
   switch (item.get('source')) {
     case 'epic': {
@@ -330,7 +333,7 @@ export async function getLoginUrlBySource(
 }
 
 export function setTenantUrlBySource(
-  item: RxDocument<ConnectionDocument>,
+  item: RxDocument<AnyConnectionDocument>,
 ): void {
   switch (item.get('source')) {
     case 'epic': {

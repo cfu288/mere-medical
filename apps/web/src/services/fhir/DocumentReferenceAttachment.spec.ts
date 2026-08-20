@@ -59,7 +59,8 @@ function cernerContext(db: unknown) {
     config: {},
     db,
     connection: { toMutableJSON: jest.fn().mockReturnValue(connection) },
-    baseUrl: 'https://cerner.example/',
+    document: connection,
+    fhirBaseUrl: 'https://cerner.example/',
     useProxy: false,
   } as any;
 }

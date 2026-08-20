@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
 import { RxDocument } from 'rxdb';
-import { ConnectionDocument } from '../../../models/connection-document/ConnectionDocument.type';
+import {
+  AnyConnectionDocument,
+  ConnectionDocument,
+} from '../../../models/connection-document/ConnectionDocument.type';
 import { useUser } from '../../../app/providers/UserProvider';
 import { useConnectionRepository } from '../../../repositories/hooks/useConnectionRepository';
 
 export function useConnectionDoc(id: string) {
   const connectionRepository = useConnectionRepository();
   const user = useUser();
-  const [conn, setConn] = useState<RxDocument<ConnectionDocument>>();
+  const [conn, setConn] = useState<RxDocument<AnyConnectionDocument>>();
 
   const userId = user?.id;
   useEffect(() => {
@@ -42,7 +45,7 @@ export function useConnectionDoc(id: string) {
 export function useConnectionDocs(ids: string[]) {
   const connectionRepository = useConnectionRepository();
   const user = useUser();
-  const [conns, setConns] = useState<RxDocument<ConnectionDocument>[]>([]);
+  const [conns, setConns] = useState<RxDocument<AnyConnectionDocument>[]>([]);
   const idsSerialized = JSON.stringify(ids);
 
   const userId = user?.id;

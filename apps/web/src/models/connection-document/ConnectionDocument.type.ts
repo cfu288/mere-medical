@@ -26,6 +26,7 @@ export interface ConnectionDocument extends BaseDocument {
 }
 
 export interface EpicConnectionDocument extends ConnectionDocument {
+  source: 'epic';
   client_id: string; // A client id specifically provided on dynamic registration
   tenant_id: string; // The tenant's id as published in Epic's endpoint list
   patient: string; // A patient identifier
@@ -36,6 +37,7 @@ export interface EpicConnectionDocument extends ConnectionDocument {
 
 // TODO: key Cerner by tenant_id plus fhir_version - 1168 ids appear in both catalogs
 export interface CernerConnectionDocument extends ConnectionDocument {
+  source: 'cerner';
   id_token: string;
   auth_uri: string | Location;
   token_uri: string | Location;
@@ -43,6 +45,7 @@ export interface CernerConnectionDocument extends ConnectionDocument {
 }
 
 export interface VAConnectionDocument extends ConnectionDocument {
+  source: 'va';
   id_token: string; // An OAuth ID token
   auth_uri: string; // the OAuth authorization url
   token_uri: string; // the OAuth token url
@@ -60,6 +63,7 @@ export type CreateCernerConnectionDocument = Omit<
 >;
 
 export interface VeradigmConnectionDocument extends ConnectionDocument {
+  source: 'veradigm';
   id_token: string;
   auth_uri: string | Location;
   token_uri: string | Location;
@@ -80,12 +84,17 @@ export type CreateEpicConnectionDocument = Omit<
   'last_refreshed' | 'last_sync_attempt' | 'last_sync_was_error'
 >;
 
+export interface OnPatientConnectionDocument extends ConnectionDocument {
+  source: 'onpatient';
+}
+
 export type CreateOnPatientConnectionDocument = Omit<
-  ConnectionDocument,
+  OnPatientConnectionDocument,
   'last_refreshed' | 'last_sync_attempt' | 'last_sync_was_error'
 >;
 
 export interface HealowConnectionDocument extends ConnectionDocument {
+  source: 'healow';
   id_token: string;
   auth_uri: string | Location;
   token_uri: string | Location;
@@ -112,3 +121,12 @@ export type CreateAthenaConnectionDocument = Omit<
   AthenaConnectionDocument,
   'last_refreshed' | 'last_sync_attempt' | 'last_sync_was_error'
 >;
+
+export type AnyConnectionDocument =
+  | EpicConnectionDocument
+  | CernerConnectionDocument
+  | HealowConnectionDocument
+  | VeradigmConnectionDocument
+  | AthenaConnectionDocument
+  | VAConnectionDocument
+  | OnPatientConnectionDocument;
