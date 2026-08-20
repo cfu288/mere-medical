@@ -7,6 +7,7 @@ import { Bundle, BundleEntry, DocumentReference } from 'fhir/r2';
 import { RxDocument, RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import {
+  AnyConnectionDocument,
   CernerConnectionDocument,
   ConnectionDocument,
 } from '../../models/connection-document/ConnectionDocument.type';
@@ -180,12 +181,10 @@ async function syncFHIRResourceWithIncludes<E extends FhirBundleEntry>(
   );
 }
 
-export const sync: VendorSync = {
+export const sync: VendorSync<CernerConnectionDocument> = {
   refreshToken: ({ config, connection, db }) =>
     refreshCernerConnectionTokenIfNeeded(config, connection, db),
-  syncAllRecords: ({ baseUrl, connection, db }) => {
-    const cd =
-      connection.toMutableJSON() as unknown as CernerConnectionDocument;
+  syncAllRecords: ({ fhirBaseUrl: baseUrl, document: cd, db }) => {
     const version = cd.fhir_version ?? 'DSTU2';
     const patient = parseIdToken(cd.id_token).fhirUser.split('/').slice(-1)[0];
 
@@ -641,7 +640,7 @@ async function updateConnectionTokens({
  */
 export async function refreshCernerConnectionTokenIfNeeded(
   config: AppConfig,
-  connectionDocument: RxDocument<ConnectionDocument>,
+  connectionDocument: RxDocument<AnyConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
 ) {
   const refreshToken = connectionDocument.get('refresh_token');

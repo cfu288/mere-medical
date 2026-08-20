@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DatabaseCollections } from '../app/providers/DatabaseCollections';
 import {
+  AnyConnectionDocument,
   ConnectionDocument,
   ConnectionSources,
 } from '../models/connection-document/ConnectionDocument.type';
@@ -133,7 +134,7 @@ export async function findConnectionWithDoc(
   connectionId: string,
 ): Promise<{
   connection: ConnectionDocument | null;
-  rawConnection: RxDocument<ConnectionDocument> | null;
+  rawConnection: RxDocument<AnyConnectionDocument> | null;
 }> {
   const rawConnection = await db.connection_documents
     .findOne({
@@ -155,7 +156,7 @@ export async function findConnectionWithDoc(
 
   return {
     connection: rawConnection.toJSON(),
-    rawConnection: rawConnection as RxDocument<ConnectionDocument>,
+    rawConnection: rawConnection as RxDocument<AnyConnectionDocument>,
   };
 }
 
@@ -166,7 +167,7 @@ export async function findConnectionsWithDocsByIds(
 ): Promise<
   Array<{
     connection: ConnectionDocument;
-    rawConnection: RxDocument<ConnectionDocument>;
+    rawConnection: RxDocument<AnyConnectionDocument>;
   }>
 > {
   const docs = await db.connection_documents
@@ -180,17 +181,17 @@ export async function findConnectionsWithDocsByIds(
 
   return docs.map((doc) => ({
     connection: doc.toJSON(),
-    rawConnection: doc as RxDocument<ConnectionDocument>,
+    rawConnection: doc as RxDocument<AnyConnectionDocument>,
   }));
 }
 
 export function watchAllConnections(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
-): Observable<RxDocument<ConnectionDocument>[]> {
+): Observable<RxDocument<AnyConnectionDocument>[]> {
   return db.connection_documents
     .find({ selector: { user_id: userId } })
-    .$.pipe(map((docs) => docs as RxDocument<ConnectionDocument>[]));
+    .$.pipe(map((docs) => docs as RxDocument<AnyConnectionDocument>[]));
 }
 
 export function watchConnectionCount(
@@ -204,13 +205,13 @@ export function watchConnectionCount(
 
 export async function createConnection(
   db: RxDatabase<DatabaseCollections>,
-  connectionData: ConnectionDocument,
-): Promise<RxDocument<ConnectionDocument>> {
+  connectionData: AnyConnectionDocument,
+): Promise<RxDocument<AnyConnectionDocument>> {
   if (!connectionData.user_id) {
     throw new Error('Cannot create connection without user_id');
   }
   const doc = await db.connection_documents.insert(connectionData);
-  return doc as RxDocument<ConnectionDocument>;
+  return doc as RxDocument<AnyConnectionDocument>;
 }
 
 export async function updateConnection(

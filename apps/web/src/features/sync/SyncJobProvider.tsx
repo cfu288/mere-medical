@@ -3,8 +3,12 @@ import { PropsWithChildren } from 'react';
 import { RxDocument, RxDatabase } from 'rxdb';
 import {
   ConnectionDocument,
-  ConnectionSources,
+  AnyConnectionDocument,
 } from '../../models/connection-document/ConnectionDocument.type';
+import {
+  contextAfterRefresh,
+  resolveSyncContext,
+} from '../../services/fhir/sync/resolveSyncContext';
 import { useRxDb } from '../../app/providers/RxDbProvider';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import * as OnPatient from '../../services/fhir/OnPatient';
@@ -29,15 +33,55 @@ import {
   recordSyncError,
 } from '../../services/fhir/ConnectionService';
 
-const VENDORS: Record<ConnectionSources, VendorSync> = {
-  onpatient: OnPatient.sync,
-  epic: Epic.sync,
-  cerner: Cerner.sync,
-  va: VA.sync,
-  veradigm: Veradigm.sync,
-  healow: Healow.sync,
-  athena: Athena.sync,
-};
+async function refreshIfNeeded(ctx: SyncContext): Promise<void> {
+  const document = ctx.document;
+  switch (document.source) {
+    case 'epic':
+      return void (await Epic.sync.refreshToken?.({ ...ctx, document }));
+    case 'cerner':
+      return void (await Cerner.sync.refreshToken?.({ ...ctx, document }));
+    case 'healow':
+      return void (await Healow.sync.refreshToken?.({ ...ctx, document }));
+    case 'veradigm':
+      return void (await Veradigm.sync.refreshToken?.({ ...ctx, document }));
+    case 'athena':
+      return void (await Athena.sync.refreshToken?.({ ...ctx, document }));
+    case 'va':
+      return void (await VA.sync.refreshToken?.({ ...ctx, document }));
+    case 'onpatient':
+      return void (await OnPatient.sync.refreshToken?.({ ...ctx, document }));
+    default:
+      return assertNever(document);
+  }
+}
+
+function syncWithVendor(
+  ctx: SyncContext,
+): Promise<PromiseSettledResult<unknown>[]> {
+  const document = ctx.document;
+  switch (document.source) {
+    case 'epic':
+      return Epic.sync.syncAllRecords({ ...ctx, document });
+    case 'cerner':
+      return Cerner.sync.syncAllRecords({ ...ctx, document });
+    case 'healow':
+      return Healow.sync.syncAllRecords({ ...ctx, document });
+    case 'veradigm':
+      return Veradigm.sync.syncAllRecords({ ...ctx, document });
+    case 'athena':
+      return Athena.sync.syncAllRecords({ ...ctx, document });
+    case 'va':
+      return VA.sync.syncAllRecords({ ...ctx, document });
+    case 'onpatient':
+      return OnPatient.sync.syncAllRecords({ ...ctx, document });
+    default:
+      return assertNever(document);
+  }
+}
+
+function assertNever(value: never): never {
+  throw new Error(`Cannot sync unknown source: ${JSON.stringify(value)}`);
+}
 
 type SyncJobProviderProps = PropsWithChildren<unknown>;
 
@@ -119,19 +163,22 @@ function HandleInitalSync({ children }: PropsWithChildren) {
     currentSyncJobLength = Object.keys(sync).length,
     syncJobEntries = useMemo(() => new Set(Object.keys(sync)), [sync]),
     handleFetchData = useCallback(
-      (item: RxDocument<ConnectionDocument>) => {
+      (item: RxDocument<AnyConnectionDocument>) => {
         if (syncD && userPreferences) {
-          syncD({
-            type: 'add_job',
-            id: item.toJSON().id,
-            ctx: {
-              config,
-              db,
-              connection: item,
-              baseUrl: item.get('location'),
-              useProxy: userPreferences.use_proxy,
-            },
+          const parsed = resolveSyncContext({
+            config,
+            db,
+            connection: item,
+            useProxy: userPreferences.use_proxy,
           });
+          if (!parsed.ok) {
+            console.error(parsed.reason);
+            recordSyncError(db, item.get('user_id'), item.get('id')).catch(
+              console.error,
+            );
+            return;
+          }
+          syncD({ type: 'add_job', id: item.toJSON().id, ctx: parsed.ctx });
         }
       },
       [config, db, syncD, userPreferences],
@@ -170,9 +217,9 @@ function HandleInitalSync({ children }: PropsWithChildren) {
 }
 
 function startSyncConnection(
-  item: RxDocument<ConnectionDocument>,
+  item: RxDocument<AnyConnectionDocument>,
   syncJobEntries: Set<string>,
-  handleFetchData: (item: RxDocument<ConnectionDocument>) => void,
+  handleFetchData: (item: RxDocument<AnyConnectionDocument>) => void,
 ) {
   if (
     !item.get('last_refreshed') ||
@@ -343,17 +390,10 @@ export function useSyncJobDispatchContext() {
 
 async function fetchMedicalRecords(ctx: SyncContext) {
   const { connection, db } = ctx;
-  const source = connection.get('source') as ConnectionSources;
-  const vendor = VENDORS[source];
-  if (!vendor) {
-    throw Error(`Cannot sync unknown source: ${source}`);
-  }
 
   try {
-    if (vendor.refreshToken) {
-      await vendor.refreshToken(ctx);
-    }
-    const syncJob = await vendor.syncAllRecords(ctx);
+    await refreshIfNeeded(ctx);
+    const syncJob = await syncWithVendor(contextAfterRefresh(ctx));
     await updateConnectionDocumentTimestamps(syncJob, connection, db);
     return syncJob;
   } catch (e) {
@@ -374,7 +414,7 @@ async function fetchMedicalRecords(ctx: SyncContext) {
  * @param db The RxDB database instance where the connection document is stored
  */
 async function updateConnectionDocumentErrorTimestamps(
-  connectionDocument: RxDocument<ConnectionDocument>,
+  connectionDocument: RxDocument<AnyConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
 ) {
   await recordSyncError(
@@ -394,7 +434,7 @@ async function updateConnectionDocumentErrorTimestamps(
  */
 async function updateConnectionDocumentTimestamps(
   syncJob: PromiseSettledResult<unknown>[],
-  connectionDocument: RxDocument<ConnectionDocument>,
+  connectionDocument: RxDocument<AnyConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
 ) {
   const anySuccess = syncJob.some((i) => i.status === 'fulfilled');
