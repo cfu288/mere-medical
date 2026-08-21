@@ -702,7 +702,8 @@ describe('ConnectionRepository', () => {
         '1a5fe784-078b-ef11-91a4-0050568bc890',
       );
 
-      expect(result?.id).toBe(testConn.id);
+      expect(result.connection?.id).toBe(testConn.id);
+      expect(result.rawConnection?.get('id')).toBe(testConn.id);
     });
 
     it('keeps two same-host tenants separate', async () => {
@@ -726,8 +727,8 @@ describe('ConnectionRepository', () => {
         'c6e5f01b-a2ca-48a1-8949-c1ccf4dd254e',
       );
 
-      expect(result?.id).toBe(vivo.id);
-      expect(result?.name).toBe('Vivo Pharmacy');
+      expect(result.connection?.id).toBe(vivo.id);
+      expect(result.connection?.name).toBe('Vivo Pharmacy');
     });
 
     it('keeps two tenants that share one fhir base url separate', async () => {
@@ -751,8 +752,8 @@ describe('ConnectionRepository', () => {
         'cd9e0f4c-9813-e911-9126-001dd8b71f19',
       );
 
-      expect(result?.id).toBe(ucsfBenioff.id);
-      expect(result?.name).toBe("UCSF Benioff Children's Hospital");
+      expect(result.connection?.id).toBe(ucsfBenioff.id);
+      expect(result.connection?.name).toBe("UCSF Benioff Children's Hospital");
     });
 
     it('returns null for a tenant the user has not connected', async () => {
@@ -763,7 +764,8 @@ describe('ConnectionRepository', () => {
         '1a5fe784-078b-ef11-91a4-0050568bc890',
       );
 
-      expect(result).toBeNull();
+      expect(result.connection).toBeNull();
+      expect(result.rawConnection).toBeNull();
     });
 
     it('enforces user isolation', async () => {
@@ -780,7 +782,8 @@ describe('ConnectionRepository', () => {
         '1a5fe784-078b-ef11-91a4-0050568bc890',
       );
 
-      expect(result).toBeNull();
+      expect(result.connection).toBeNull();
+      expect(result.rawConnection).toBeNull();
     });
   });
 });

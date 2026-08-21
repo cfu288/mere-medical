@@ -15,22 +15,14 @@ export async function getConnectionCardByTenant<T extends ConnectionDocument>(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
 ): Promise<RxDocument<T> | null> {
-  const connection = await connectionRepo.findConnectionBySourceAndTenant(
-    db,
-    userId,
-    source,
-    tenantId,
-  );
-  if (!connection) {
-    return null;
-  }
-
-  const result = await connectionRepo.findConnectionWithDoc(
-    db,
-    userId,
-    connection.id,
-  );
-  return result.rawConnection as unknown as RxDocument<T>;
+  const { rawConnection } =
+    await connectionRepo.findConnectionBySourceAndTenant(
+      db,
+      userId,
+      source,
+      tenantId,
+    );
+  return rawConnection as unknown as RxDocument<T> | null;
 }
 
 export async function getConnectionCardByUrl<T extends ConnectionDocument>(

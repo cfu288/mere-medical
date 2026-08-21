@@ -49,7 +49,10 @@ export async function findConnectionBySourceAndTenant(
   userId: string,
   source: string,
   tenantId: string,
-): Promise<ConnectionDocument | null> {
+): Promise<{
+  connection: ConnectionDocument | null;
+  rawConnection: RxDocument<ConnectionDocument> | null;
+}> {
   const doc = await db.connection_documents
     .findOne({
       selector: {
@@ -59,7 +62,13 @@ export async function findConnectionBySourceAndTenant(
       },
     })
     .exec();
-  return doc ? doc.toJSON() : null;
+  if (!doc) {
+    return { connection: null, rawConnection: null };
+  }
+  return {
+    connection: doc.toJSON(),
+    rawConnection: doc as RxDocument<ConnectionDocument>,
+  };
 }
 
 export async function findConnectionByTenant(
