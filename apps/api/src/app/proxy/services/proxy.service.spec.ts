@@ -60,6 +60,23 @@ describe('resolveProxyTarget', () => {
     ).toBe('https://prd.lluh.org/fhir/oauth2/register');
   });
 
+  it('registers against the authorization server when it sits on a different path than the fhir base', () => {
+    expect(
+      resolveProxyTarget(
+        {
+          url: 'https://FHIR.KP.ORG/service/ptnt_care/EpicEdiFhirRoutingSvc/v2014/esb-envlbl/190/api/FHIR/DSTU2/',
+          token:
+            'https://fhir.kp.org/KPPolarisPortal/esb-envlbl/190/oauth2/token',
+          authorize:
+            'https://fhir.kp.org/KPPolarisPortal/esb-envlbl/190/oauth2/authorize',
+        },
+        'register',
+      ),
+    ).toBe(
+      'https://fhir.kp.org/KPPolarisPortal/esb-envlbl/190/oauth2/register',
+    );
+  });
+
   it('falls back to the fhir url for an unknown target type', () => {
     expect(resolveProxyTarget(NORTHWELL_R4, undefined)).toBe(
       'https://call.api.northwell.io/epic-proxy/api/fhir/R4/',
