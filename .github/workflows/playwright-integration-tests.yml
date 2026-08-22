@@ -82,9 +82,7 @@ jobs:
         env:
           E2E_EPIC_SANDBOX: ${{ secrets.EPIC_SANDBOX_CLIENT_ID_R4 != '' && 'enabled' || '' }}
           EPIC_SANDBOX_CLIENT_ID_R4: ${{ secrets.EPIC_SANDBOX_CLIENT_ID_R4 }}
-          E2E_NEXTGEN_SANDBOX: ${{ secrets.NEXTGEN_SANDBOX_PASSWORD != '' && 'enabled' || '' }}
+          E2E_NEXTGEN_SANDBOX: ${{ secrets.NEXTGEN_CLIENT_SECRET != '' && 'enabled' || '' }}
           NEXTGEN_CLIENT_ID: ${{ secrets.NEXTGEN_CLIENT_ID }}
           NEXTGEN_CLIENT_SECRET: ${{ secrets.NEXTGEN_CLIENT_SECRET }}
-          NEXTGEN_SANDBOX_USERNAME: ${{ secrets.NEXTGEN_SANDBOX_USERNAME }}
-          NEXTGEN_SANDBOX_PASSWORD: ${{ secrets.NEXTGEN_SANDBOX_PASSWORD }}
         run: npx nx run web-e2e:e2e

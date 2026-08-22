@@ -4,13 +4,10 @@ test.use({
   ignoreHTTPSErrors: true,
 });
 
-const username = process.env.NEXTGEN_SANDBOX_USERNAME;
-const password = process.env.NEXTGEN_SANDBOX_PASSWORD;
-
 test.describe('nextgen sandbox integration', () => {
   test.skip(
-    process.env.E2E_NEXTGEN_SANDBOX !== 'enabled' || !username || !password,
-    'hits the NextGen sandbox; requires NEXTGEN_CLIENT_ID and NEXTGEN_CLIENT_SECRET on the api plus NEXTGEN_SANDBOX_USERNAME and NEXTGEN_SANDBOX_PASSWORD',
+    process.env.E2E_NEXTGEN_SANDBOX !== 'enabled',
+    'hits the NextGen sandbox; requires NEXTGEN_CLIENT_ID and NEXTGEN_CLIENT_SECRET on the api and an explicit opt-in',
   );
 
   test('connects to the NextGen sandbox and adds a connection', async ({
@@ -30,8 +27,8 @@ test.describe('nextgen sandbox integration', () => {
       .click();
 
     await page.waitForURL(/fhir\.nextgen\.com/, { timeout: 60_000 });
-    await page.locator('input[name="Username"]').fill(username as string);
-    await page.locator('input[name="Password"]').fill(password as string);
+    await page.locator('input[name="Username"]').fill('patientapitest');
+    await page.locator('input[name="Password"]').fill('Password1!');
     await page.getByRole('button', { name: 'Next' }).click();
 
     // NextGen may show a variable number of consent screens before redirecting
