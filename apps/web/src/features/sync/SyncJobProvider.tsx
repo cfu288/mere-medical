@@ -33,26 +33,38 @@ import {
   recordSyncError,
 } from '../../services/fhir/ConnectionService';
 
-async function refreshIfNeeded(ctx: SyncContext): Promise<void> {
+/**
+ * Refreshes the connection's tokens when needed and returns the context to
+ * sync with; the context passed in predates the refresh and must not be used.
+ */
+async function refreshIfNeeded(ctx: SyncContext): Promise<SyncContext> {
   const document = ctx.document;
   switch (document.source) {
     case 'epic':
-      return void (await Epic.sync.refreshToken?.({ ...ctx, document }));
+      await Epic.sync.refreshToken?.({ ...ctx, document });
+      break;
     case 'cerner':
-      return void (await Cerner.sync.refreshToken?.({ ...ctx, document }));
+      await Cerner.sync.refreshToken?.({ ...ctx, document });
+      break;
     case 'healow':
-      return void (await Healow.sync.refreshToken?.({ ...ctx, document }));
+      await Healow.sync.refreshToken?.({ ...ctx, document });
+      break;
     case 'veradigm':
-      return void (await Veradigm.sync.refreshToken?.({ ...ctx, document }));
+      await Veradigm.sync.refreshToken?.({ ...ctx, document });
+      break;
     case 'athena':
-      return void (await Athena.sync.refreshToken?.({ ...ctx, document }));
+      await Athena.sync.refreshToken?.({ ...ctx, document });
+      break;
     case 'va':
-      return void (await VA.sync.refreshToken?.({ ...ctx, document }));
+      await VA.sync.refreshToken?.({ ...ctx, document });
+      break;
     case 'onpatient':
-      return void (await OnPatient.sync.refreshToken?.({ ...ctx, document }));
+      await OnPatient.sync.refreshToken?.({ ...ctx, document });
+      break;
     default:
       return assertNever(document);
   }
+  return contextAfterRefresh(ctx);
 }
 
 function syncWithVendor(
@@ -392,8 +404,8 @@ async function fetchMedicalRecords(ctx: SyncContext) {
   const { connection, db } = ctx;
 
   try {
-    await refreshIfNeeded(ctx);
-    const syncJob = await syncWithVendor(contextAfterRefresh(ctx));
+    const refreshed = await refreshIfNeeded(ctx);
+    const syncJob = await syncWithVendor(refreshed);
     await updateConnectionDocumentTimestamps(syncJob, connection, db);
     return syncJob;
   } catch (e) {
