@@ -235,6 +235,7 @@ export async function saveConnectionToDb({
   user: UserDocument;
 }) {
   const doc = await getConnectionCardByUrl<VAConnectionDocument>(
+    'va',
     VA_SANDBOX_TENANT.fhirBaseUrl,
     db,
     user.id,

@@ -28,12 +28,24 @@ export async function getConnectionCardByTenant<T extends ConnectionDocument>(
   return rawConnection as unknown as RxDocument<T> | null;
 }
 
+/**
+ * @deprecated Look connections up by source and tenant instead
+ * ({@link getConnectionCardByTenant}) - a url is not a connection identity.
+ * Identity should eventually include the patient too, since one tenant can
+ * hold several patients for a user.
+ */
 export async function getConnectionCardByUrl<T extends ConnectionDocument>(
+  source: ConnectionSources,
   url: string,
   db: RxDatabase<DatabaseCollections>,
   userId: string,
 ): Promise<RxDocument<T> | null> {
-  const connection = await connectionRepo.findConnectionByUrl(db, userId, url);
+  const connection = await connectionRepo.findConnectionByUrl(
+    db,
+    userId,
+    source,
+    url,
+  );
   if (!connection) {
     return null;
   }

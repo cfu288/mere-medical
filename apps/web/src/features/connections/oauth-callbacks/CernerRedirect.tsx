@@ -144,6 +144,7 @@ function useCernerOAuthCallback() {
           fhir_version: fhirVersion,
         };
 
+        // TODO: reconnecting adds a duplicate row - look up the tenant before creating
         await createConnection(db, dbentry as any);
         navigate(Routes.AddConnection, { replace: true });
       } catch (err) {

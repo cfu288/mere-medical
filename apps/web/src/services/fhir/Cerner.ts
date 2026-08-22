@@ -605,7 +605,9 @@ async function updateConnectionTokens({
   db: RxDatabase<DatabaseCollections>;
   user: UserDocument;
 }) {
+  // TODO: dedupe by tenant - CernerConnectionDocument has no tenant_id to key on yet
   const doc = await getConnectionCardByUrl<CernerConnectionDocument>(
+    'cerner',
     cernerBaseUrl,
     db,
     user.id,
