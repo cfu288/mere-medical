@@ -82,4 +82,40 @@ describe('resolveProxyTarget', () => {
       'https://call.api.northwell.io/epic-proxy/api/fhir/R4/',
     );
   });
+
+  it('derives a register url when the vendor is named epic', () => {
+    expect(resolveProxyTarget(NORTHWELL_R4, 'register', 'epic')).toBe(
+      'https://call.api.northwell.io/epic-proxy/oauth2/register',
+    );
+  });
+
+  it('does not derive a register url for a healow tenant', () => {
+    expect(
+      resolveProxyTarget(
+        {
+          url: 'https://fhir4.healow.com/fhir/r4/AACJCD',
+          token: 'https://oauthserver.eclinicalworks.com/oauth/oauth2/token',
+          authorize:
+            'https://oauthserver.eclinicalworks.com/oauth/oauth2/authorize',
+        },
+        'register',
+        'healow',
+      ),
+    ).toBe('https://fhir4.healow.com/fhir/r4/AACJCD');
+  });
+
+  it('sends a healow token request to the tenant token url', () => {
+    expect(
+      resolveProxyTarget(
+        {
+          url: 'https://fhir4.healow.com/fhir/r4/AACJCD',
+          token: 'https://oauthserver.eclinicalworks.com/oauth/oauth2/token',
+          authorize:
+            'https://oauthserver.eclinicalworks.com/oauth/oauth2/authorize',
+        },
+        'token',
+        'healow',
+      ),
+    ).toBe('https://oauthserver.eclinicalworks.com/oauth/oauth2/token');
+  });
 });

@@ -10,8 +10,38 @@ const ALLOWED_PROXY_HEADERS = ['accept', 'content-type', 'content-length'];
 
 /**
  * Picks which of a tenant's published endpoints a proxied request targets.
+ *
+ * A request that names no vendor is an Epic request; Epic proxy URLs predate
+ * the vendor parameter.
  */
 export function resolveProxyTarget(
+  service: Pick<Service, 'url' | 'authorize' | 'token'>,
+  targetType: string | undefined,
+  vendor?: string,
+): string {
+  switch (vendor ?? 'epic') {
+    case 'epic':
+      return epicProxyTarget(service, targetType);
+    default:
+      return standardProxyTarget(service, targetType);
+  }
+}
+
+/**
+ * Epic also serves dynamic client registration, published as a sibling of its
+ * authorize endpoint; no other vendor's catalog carries a registration URL.
+ */
+function epicProxyTarget(
+  service: Pick<Service, 'url' | 'authorize' | 'token'>,
+  targetType: string | undefined,
+): string {
+  if (targetType === 'register') {
+    return deriveRegistrationUrl(service.authorize);
+  }
+  return standardProxyTarget(service, targetType);
+}
+
+function standardProxyTarget(
   service: Pick<Service, 'url' | 'authorize' | 'token'>,
   targetType: string | undefined,
 ): string {
@@ -20,8 +50,6 @@ export function resolveProxyTarget(
       return service.authorize;
     case 'token':
       return service.token;
-    case 'register':
-      return deriveRegistrationUrl(service.authorize);
     default:
       return service.url;
   }
@@ -149,7 +177,7 @@ export class ProxyService {
       this.logger.debug(
         `Proxying ${req.method} ${req.url} to ${vendor ? `${vendor}/` : ''}${serviceId}`,
       );
-      const urlToProxy = resolveProxyTarget(service, target_type);
+      const urlToProxy = resolveProxyTarget(service, target_type, vendor);
 
       return this.doProxy(
         req,
