@@ -30,7 +30,7 @@ export async function getConnectionCardByTenant<T extends ConnectionDocument>(
 
 // TODO: retire once every vendor deduplicates by tenant instead of by url
 export async function getConnectionCardByUrl<T extends ConnectionDocument>(
-  source: string,
+  source: ConnectionSources,
   url: string,
   db: RxDatabase<DatabaseCollections>,
   userId: string,

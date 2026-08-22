@@ -35,7 +35,7 @@ export async function findConnectionById(
 export async function findConnectionByUrl(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
-  source: string,
+  source: ConnectionSources,
   url: string | Location,
 ): Promise<ConnectionDocument | null> {
   const doc = await db.connection_documents

@@ -1,7 +1,10 @@
 import { useMemo } from 'react';
 import { useRxDb } from '../../app/providers/RxDbProvider';
 import * as connectionRepo from '../ConnectionRepository';
-import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
+import {
+  ConnectionDocument,
+  ConnectionSources,
+} from '../../models/connection-document/ConnectionDocument.type';
 
 export const useConnectionRepository = () => {
   const db = useRxDb();
@@ -12,8 +15,11 @@ export const useConnectionRepository = () => {
     return {
       findById: (userId: string, connectionId: string) =>
         connectionRepo.findConnectionById(db, userId, connectionId),
-      findByUrl: (userId: string, source: string, url: string | Location) =>
-        connectionRepo.findConnectionByUrl(db, userId, source, url),
+      findByUrl: (
+        userId: string,
+        source: ConnectionSources,
+        url: string | Location,
+      ) => connectionRepo.findConnectionByUrl(db, userId, source, url),
       findByIds: (userId: string, ids: string[]) =>
         connectionRepo.findConnectionsByIds(db, userId, ids),
       findAll: (userId: string) =>
