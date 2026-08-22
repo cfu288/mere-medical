@@ -65,10 +65,8 @@ function getImage(logo: ConnectionSources) {
 
 export function ConnectionCard({
   item,
-  baseUrl,
 }: {
   item: RxDocument<AnyConnectionDocument>;
-  baseUrl: string;
 }) {
   const db = useRxDb(),
     config = useConfig(),
@@ -130,7 +128,7 @@ export function ConnectionCard({
         }
         syncD({ type: 'add_job', id: item.toJSON().id, ctx: parsed.ctx });
       }
-    }, [baseUrl, config, db, item, notifyDispatch, syncD, userPreferences]);
+    }, [config, db, item, notifyDispatch, syncD, userPreferences]);
 
   const [showModal, setShowModal] = useState(false);
   const [showPeriodText, setShowPeriodText] = useState('...');

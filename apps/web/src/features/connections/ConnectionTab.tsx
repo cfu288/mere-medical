@@ -568,13 +568,7 @@ const ConnectionTab: React.FC = () => {
       </div>
       <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pb-20 sm:px-6 sm:pb-6 lg:px-8">
         <ul className="grid grid-cols-1 pt-8">
-          {list?.map((item) => (
-            <ConnectionCard
-              key={item.id}
-              item={item}
-              baseUrl={item.get('location')}
-            />
-          ))}
+          {list?.map((item) => <ConnectionCard key={item.id} item={item} />)}
         </ul>
         <div className="mb-4 box-border	flex w-full justify-center align-middle">
           <button
