@@ -26,7 +26,10 @@ import { ConnectionCard } from './components/ConnectionCard';
 import { EMRVendor, TenantSelectModal } from './components/TenantSelectModal';
 import { GenericBanner } from '../../shared/components/GenericBanner';
 import { useConnectionCards } from './hooks/useConnectionCards';
-import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
+import {
+  AnyConnectionDocument,
+  ConnectionDocument,
+} from '../../models/connection-document/ConnectionDocument.type';
 import { AppConfig, useConfig } from '../../app/providers/AppConfigProvider';
 import { CernerLocalStorageKeys } from '../../services/fhir/Cerner';
 import {
@@ -259,7 +262,7 @@ async function initiateHealowAuth(
 
 export async function getLoginUrlBySource(
   config: AppConfig,
-  item: RxDocument<ConnectionDocument>,
+  item: RxDocument<AnyConnectionDocument>,
 ): Promise<string & Location> {
   switch (item.get('source')) {
     case 'epic': {
@@ -340,7 +343,7 @@ export async function getLoginUrlBySource(
 }
 
 export function setTenantUrlBySource(
-  item: RxDocument<ConnectionDocument>,
+  item: RxDocument<AnyConnectionDocument>,
 ): void {
   switch (item.get('source')) {
     case 'epic': {
@@ -565,13 +568,7 @@ const ConnectionTab: React.FC = () => {
       </div>
       <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pb-20 sm:px-6 sm:pb-6 lg:px-8">
         <ul className="grid grid-cols-1 pt-8">
-          {list?.map((item) => (
-            <ConnectionCard
-              key={item.id}
-              item={item}
-              baseUrl={item.get('location')}
-            />
-          ))}
+          {list?.map((item) => <ConnectionCard key={item.id} item={item} />)}
         </ul>
         <div className="mb-4 box-border	flex w-full justify-center align-middle">
           <button

@@ -2,6 +2,7 @@
 import { Bundle, BundleEntry, FhirResource } from 'fhir/r2';
 import { RxDocument, RxDatabase } from 'rxdb';
 import {
+  AnyConnectionDocument,
   ConnectionDocument,
   CreateVAConnectionDocument,
   VAConnectionDocument,
@@ -150,11 +151,10 @@ async function syncFHIRResource<T extends FhirResource>(
   );
 }
 
-export const sync: VendorSync = {
+export const sync: VendorSync<VAConnectionDocument> = {
   refreshToken: ({ config, connection }) =>
     refreshVAConnectionTokenIfNeeded(config, connection),
-  syncAllRecords: ({ baseUrl, connection, db }) => {
-    const cd = connection.toMutableJSON() as unknown as VAConnectionDocument;
+  syncAllRecords: ({ fhirBaseUrl: baseUrl, document: cd, db }) => {
     const patient = cd.patient;
     return Promise.allSettled([
       syncFHIRResource(
@@ -234,7 +234,7 @@ export async function saveConnectionToDb({
   db: RxDatabase<DatabaseCollections>;
   user: UserDocument;
 }) {
-  const doc = await getConnectionCardByUrl<VAConnectionDocument>(
+  const doc = await getConnectionCardByUrl(
     'va',
     VA_SANDBOX_TENANT.fhirBaseUrl,
     db,
@@ -273,7 +273,7 @@ export async function saveConnectionToDb({
     token_uri: VA_SANDBOX_TENANT.tokenUrl,
   };
 
-  await createConnection(db, dbentry as ConnectionDocument);
+  await createConnection(db, dbentry as VAConnectionDocument);
 }
 
 /**
@@ -283,7 +283,7 @@ export async function saveConnectionToDb({
  */
 export async function refreshVAConnectionTokenIfNeeded(
   config: AppConfig,
-  connectionDocument: RxDocument<ConnectionDocument>,
+  connectionDocument: RxDocument<AnyConnectionDocument>,
 ) {
   const nowInSeconds = Math.floor(Date.now() / 1000);
   const expiresAt = connectionDocument.get('expires_at');

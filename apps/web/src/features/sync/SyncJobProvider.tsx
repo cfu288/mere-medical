@@ -3,8 +3,12 @@ import { PropsWithChildren } from 'react';
 import { RxDocument, RxDatabase } from 'rxdb';
 import {
   ConnectionDocument,
-  ConnectionSources,
+  AnyConnectionDocument,
 } from '../../models/connection-document/ConnectionDocument.type';
+import {
+  contextAfterRefresh,
+  resolveSyncContext,
+} from '../../services/fhir/sync/resolveSyncContext';
 import { useRxDb } from '../../app/providers/RxDbProvider';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import * as OnPatient from '../../services/fhir/OnPatient';
@@ -29,15 +33,68 @@ import {
   recordSyncError,
 } from '../../services/fhir/ConnectionService';
 
-const VENDORS: Record<ConnectionSources, VendorSync> = {
-  onpatient: OnPatient.sync,
-  epic: Epic.sync,
-  cerner: Cerner.sync,
-  va: VA.sync,
-  veradigm: Veradigm.sync,
-  healow: Healow.sync,
-  athena: Athena.sync,
-};
+/**
+ * Refreshes the connection's tokens when needed and returns the context to
+ * sync with; the context passed in predates the refresh and must not be used.
+ */
+async function refreshIfNeeded(ctx: SyncContext): Promise<SyncContext> {
+  const document = ctx.document;
+  switch (document.source) {
+    case 'epic':
+      await Epic.sync.refreshToken?.({ ...ctx, document });
+      break;
+    case 'cerner':
+      await Cerner.sync.refreshToken?.({ ...ctx, document });
+      break;
+    case 'healow':
+      await Healow.sync.refreshToken?.({ ...ctx, document });
+      break;
+    case 'veradigm':
+      await Veradigm.sync.refreshToken?.({ ...ctx, document });
+      break;
+    case 'athena':
+      await Athena.sync.refreshToken?.({ ...ctx, document });
+      break;
+    case 'va':
+      await VA.sync.refreshToken?.({ ...ctx, document });
+      break;
+    case 'onpatient':
+      await OnPatient.sync.refreshToken?.({ ...ctx, document });
+      break;
+    default:
+      return assertNever(document);
+  }
+  return contextAfterRefresh(ctx);
+}
+
+async function syncWithVendor(
+  ctx: SyncContext,
+): Promise<PromiseSettledResult<unknown>[]> {
+  const refreshed = await refreshIfNeeded(ctx);
+  const document = refreshed.document;
+  switch (document.source) {
+    case 'epic':
+      return Epic.sync.syncAllRecords({ ...refreshed, document });
+    case 'cerner':
+      return Cerner.sync.syncAllRecords({ ...refreshed, document });
+    case 'healow':
+      return Healow.sync.syncAllRecords({ ...refreshed, document });
+    case 'veradigm':
+      return Veradigm.sync.syncAllRecords({ ...refreshed, document });
+    case 'athena':
+      return Athena.sync.syncAllRecords({ ...refreshed, document });
+    case 'va':
+      return VA.sync.syncAllRecords({ ...refreshed, document });
+    case 'onpatient':
+      return OnPatient.sync.syncAllRecords({ ...refreshed, document });
+    default:
+      return assertNever(document);
+  }
+}
+
+function assertNever(value: never): never {
+  throw new Error(`Cannot sync unknown source: ${JSON.stringify(value)}`);
+}
 
 type SyncJobProviderProps = PropsWithChildren<unknown>;
 
@@ -119,19 +176,22 @@ function HandleInitalSync({ children }: PropsWithChildren) {
     currentSyncJobLength = Object.keys(sync).length,
     syncJobEntries = useMemo(() => new Set(Object.keys(sync)), [sync]),
     handleFetchData = useCallback(
-      (item: RxDocument<ConnectionDocument>) => {
+      (item: RxDocument<AnyConnectionDocument>) => {
         if (syncD && userPreferences) {
-          syncD({
-            type: 'add_job',
-            id: item.toJSON().id,
-            ctx: {
-              config,
-              db,
-              connection: item,
-              baseUrl: item.get('location'),
-              useProxy: userPreferences.use_proxy,
-            },
+          const parsed = resolveSyncContext({
+            config,
+            db,
+            connection: item,
+            useProxy: userPreferences.use_proxy,
           });
+          if (!parsed.ok) {
+            console.error(parsed.reason);
+            recordSyncError(db, item.get('user_id'), item.get('id')).catch(
+              console.error,
+            );
+            return;
+          }
+          syncD({ type: 'add_job', id: item.toJSON().id, ctx: parsed.ctx });
         }
       },
       [config, db, syncD, userPreferences],
@@ -170,9 +230,9 @@ function HandleInitalSync({ children }: PropsWithChildren) {
 }
 
 function startSyncConnection(
-  item: RxDocument<ConnectionDocument>,
+  item: RxDocument<AnyConnectionDocument>,
   syncJobEntries: Set<string>,
-  handleFetchData: (item: RxDocument<ConnectionDocument>) => void,
+  handleFetchData: (item: RxDocument<AnyConnectionDocument>) => void,
 ) {
   if (
     !item.get('last_refreshed') ||
@@ -343,17 +403,9 @@ export function useSyncJobDispatchContext() {
 
 async function fetchMedicalRecords(ctx: SyncContext) {
   const { connection, db } = ctx;
-  const source = connection.get('source') as ConnectionSources;
-  const vendor = VENDORS[source];
-  if (!vendor) {
-    throw Error(`Cannot sync unknown source: ${source}`);
-  }
 
   try {
-    if (vendor.refreshToken) {
-      await vendor.refreshToken(ctx);
-    }
-    const syncJob = await vendor.syncAllRecords(ctx);
+    const syncJob = await syncWithVendor(ctx);
     await updateConnectionDocumentTimestamps(syncJob, connection, db);
     return syncJob;
   } catch (e) {
@@ -374,7 +426,7 @@ async function fetchMedicalRecords(ctx: SyncContext) {
  * @param db The RxDB database instance where the connection document is stored
  */
 async function updateConnectionDocumentErrorTimestamps(
-  connectionDocument: RxDocument<ConnectionDocument>,
+  connectionDocument: RxDocument<AnyConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
 ) {
   await recordSyncError(
@@ -394,7 +446,7 @@ async function updateConnectionDocumentErrorTimestamps(
  */
 async function updateConnectionDocumentTimestamps(
   syncJob: PromiseSettledResult<unknown>[],
-  connectionDocument: RxDocument<ConnectionDocument>,
+  connectionDocument: RxDocument<AnyConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
 ) {
   const anySuccess = syncJob.some((i) => i.status === 'fulfilled');

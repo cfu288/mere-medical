@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useRxDb } from '../../app/providers/RxDbProvider';
 import * as connectionRepo from '../ConnectionRepository';
 import {
+  AnyConnectionDocument,
   ConnectionDocument,
   ConnectionSources,
 } from '../../models/connection-document/ConnectionDocument.type';
@@ -32,7 +33,7 @@ export const useConnectionRepository = () => {
         connectionRepo.watchAllConnections(db, userId),
       watchCount: (userId: string) =>
         connectionRepo.watchConnectionCount(db, userId),
-      create: (connectionData: ConnectionDocument) =>
+      create: (connectionData: AnyConnectionDocument) =>
         connectionRepo.createConnection(db, connectionData),
       update: (
         userId: string,

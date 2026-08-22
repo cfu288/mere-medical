@@ -124,7 +124,18 @@ function epicContext(fhirVersion: string | undefined) {
       tenant_id: 'tenant-1',
       fhir_version: fhirVersion,
     }),
-    baseUrl: 'https://epic.example/api/FHIR/DSTU2/',
+    document: {
+      id: 'epic-connection',
+      user_id: 'user-1',
+      source: 'epic',
+      name: 'Epic',
+      location: 'https://epic.example/api/FHIR/DSTU2/',
+      access_token: 'epic-token',
+      patient: 'patient-1',
+      tenant_id: 'tenant-1',
+      fhir_version: fhirVersion,
+    },
+    fhirBaseUrl: 'https://epic.example/api/FHIR/DSTU2/',
     useProxy: false,
   } as any;
 }
@@ -143,7 +154,17 @@ function cernerContext(fhirVersion: string | undefined, db = createDatabase()) {
       id_token: 'header.eyJmaGlyVXNlciI6IlBhdGllbnQvMTIzIn0.signature',
       fhir_version: fhirVersion,
     }),
-    baseUrl: 'https://cerner.example/',
+    document: {
+      id: 'cerner-connection',
+      user_id: 'user-1',
+      source: 'cerner',
+      name: 'Cerner',
+      location: 'https://cerner.example/',
+      access_token: 'cerner-token',
+      id_token: 'header.eyJmaGlyVXNlciI6IlBhdGllbnQvMTIzIn0.signature',
+      fhir_version: fhirVersion,
+    },
+    fhirBaseUrl: 'https://cerner.example/',
     useProxy: false,
   } as any;
 }
@@ -161,7 +182,16 @@ function athenaContext() {
       access_token: 'athena-token',
       patient: 'patient-1',
     }),
-    baseUrl: 'https://unused.example',
+    document: {
+      id: 'athena-connection',
+      user_id: 'user-1',
+      source: 'athena',
+      name: 'Athena',
+      location: 'https://athena.example/fhir',
+      access_token: 'athena-token',
+      patient: 'patient-1',
+    },
+    fhirBaseUrl: 'https://unused.example',
     useProxy: false,
   } as any;
 }
@@ -178,7 +208,15 @@ function onPatientContext() {
       location: 'https://onpatient.com/api/fhir',
       access_token: 'onpatient-token',
     }),
-    baseUrl: 'https://onpatient.com/api/fhir',
+    document: {
+      id: 'onpatient-connection',
+      user_id: 'user-1',
+      source: 'onpatient',
+      name: 'OnPatient',
+      location: 'https://onpatient.com/api/fhir',
+      access_token: 'onpatient-token',
+    },
+    fhirBaseUrl: 'https://onpatient.com/api/fhir',
     useProxy: false,
   } as any;
 }

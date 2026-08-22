@@ -9,7 +9,7 @@ import {
 import { RxDocument, RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import {
-  ConnectionDocument,
+  AnyConnectionDocument,
   CreateAthenaConnectionDocument,
   AthenaConnectionDocument,
 } from '../../models/connection-document/ConnectionDocument.type';
@@ -230,12 +230,10 @@ async function syncFHIRResourceWithIncludes<T extends FhirResource>(
   );
 }
 
-export const sync: VendorSync = {
+export const sync: VendorSync<AthenaConnectionDocument> = {
   refreshToken: ({ config, connection, db }) =>
     refreshAthenaConnectionTokenIfNeeded(config, connection, db),
-  syncAllRecords: ({ connection, db }) => {
-    const cd =
-      connection.toMutableJSON() as unknown as AthenaConnectionDocument;
+  syncAllRecords: ({ document: cd, db }) => {
     const patient = cd.patient;
     return Promise.allSettled([
       syncFHIRResource(cd, db, 'Procedure', R4.mapProcedureToClinicalDocument, {
@@ -631,13 +629,13 @@ export async function saveConnectionToDb({
       auth_uri: envConfig.authUrl,
       token_uri: envConfig.tokenUrl,
     };
-    await createConnection(db, dbentry as ConnectionDocument);
+    await createConnection(db, dbentry as AthenaConnectionDocument);
   }
 }
 
 export async function refreshAthenaConnectionTokenIfNeeded(
   config: AppConfig,
-  connectionDocument: RxDocument<ConnectionDocument>,
+  connectionDocument: RxDocument<AnyConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
 ) {
   const nowInSeconds = Math.floor(Date.now() / 1000);

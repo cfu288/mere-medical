@@ -7,7 +7,10 @@ import { RxDatabase } from 'rxdb';
 import { ONPATIENT_CONSTANTS } from '@mere/fhir-oauth';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import { DSTU2 } from '.';
-import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
+import {
+  ConnectionDocument,
+  OnPatientConnectionDocument,
+} from '../../models/connection-document/ConnectionDocument.type';
 import { ResourceMapper, VendorSync, mapSearchedResources } from './sync';
 import { bulkUpsertDocuments } from '../../repositories/ClinicalDocumentRepository';
 
@@ -69,10 +72,9 @@ async function syncFHIRResource<T extends FhirResource>(
   );
 }
 
-export const sync: VendorSync = {
+export const sync: VendorSync<OnPatientConnectionDocument> = {
   refreshToken: null,
-  syncAllRecords: ({ connection, db }) => {
-    const cd = connection.toMutableJSON() as ConnectionDocument;
+  syncAllRecords: ({ document: cd, db }) => {
     return Promise.allSettled([
       syncFHIRResource(
         cd,

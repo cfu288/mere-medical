@@ -35,7 +35,7 @@ import { Bundle, BundleEntry, DocumentReference, FhirResource } from 'fhir/r4';
 import { RxDocument, RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import {
-  ConnectionDocument,
+  AnyConnectionDocument,
   CreateHealowConnectionDocument,
   HealowConnectionDocument,
 } from '../../models/connection-document/ConnectionDocument.type';
@@ -169,13 +169,17 @@ async function syncFHIRResource<T extends FhirResource>(
   );
 }
 
-export const sync: VendorSync = {
+export const sync: VendorSync<HealowConnectionDocument> = {
   refreshToken: ({ config, connection, db, useProxy }) =>
     refreshHealowConnectionTokenIfNeeded(config, connection, db, useProxy),
-  syncAllRecords: ({ config, baseUrl, connection, db, useProxy }) => {
+  syncAllRecords: ({
+    config,
+    fhirBaseUrl: baseUrl,
+    document: cd,
+    db,
+    useProxy,
+  }) => {
     const publicUrl = config.PUBLIC_URL || '';
-    const cd =
-      connection.toMutableJSON() as unknown as HealowConnectionDocument;
     const patient = extractHealowPatientId(cd.id_token);
     return Promise.allSettled([
       syncFHIRResource(
@@ -515,7 +519,7 @@ export async function saveConnectionToDb({
   user: UserDocument;
 }) {
   // TODO: look up by healowId, once sandbox_healow is canonicalized to JAFJCD
-  const doc = await getConnectionCardByUrl<HealowConnectionDocument>(
+  const doc = await getConnectionCardByUrl(
     'healow',
     healowBaseUrl,
     db,
@@ -579,7 +583,7 @@ export async function saveConnectionToDb({
           tenant_id: healowId,
         };
         try {
-          createConnection(db, dbentry as ConnectionDocument)
+          createConnection(db, dbentry as HealowConnectionDocument)
             .then(() => {
               resolve(true);
             })
@@ -610,7 +614,7 @@ function buildHealowProxyUrlBuilder(publicUrl: string) {
 
 export async function refreshHealowConnectionTokenIfNeeded(
   config: AppConfig,
-  connectionDocument: RxDocument<ConnectionDocument>,
+  connectionDocument: RxDocument<AnyConnectionDocument>,
   db: RxDatabase<DatabaseCollections>,
   useProxy = false,
 ) {

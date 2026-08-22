@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
+  AnyConnectionDocument,
   ConnectionDocument,
   ConnectionSources,
 } from '../../../models/connection-document/ConnectionDocument.type';
+import { resolveSyncContext } from '../../../services/fhir/sync/resolveSyncContext';
 import { useRxDb } from '../../../app/providers/RxDbProvider';
 import onpatientLogo from '../../../assets/img/onpatient-logo.jpeg';
 import epicLogo from '../../../assets/img/MyChartByEpic.png';
@@ -63,17 +65,15 @@ function getImage(logo: ConnectionSources) {
 
 export function ConnectionCard({
   item,
-  baseUrl,
 }: {
-  item: RxDocument<ConnectionDocument>;
-  baseUrl: string;
+  item: RxDocument<AnyConnectionDocument>;
 }) {
   const db = useRxDb(),
     config = useConfig(),
     user = useUser(),
     [deleting, setDeleting] = useState(false),
     userPreferences = useUserPreferences(),
-    removeDocument = (document: RxDocument<ConnectionDocument>) => {
+    removeDocument = (document: RxDocument<AnyConnectionDocument>) => {
       setDeleting(true);
       const connectionId = document.get('id');
 
@@ -111,19 +111,24 @@ export function ConnectionCard({
         return;
       }
       if (syncD && userPreferences) {
-        syncD({
-          type: 'add_job',
-          id: item.toJSON().id,
-          ctx: {
-            config,
-            db,
-            connection: item,
-            baseUrl,
-            useProxy: userPreferences.use_proxy,
-          },
+        const parsed = resolveSyncContext({
+          config,
+          db,
+          connection: item,
+          useProxy: userPreferences.use_proxy,
         });
+        if (!parsed.ok) {
+          console.error(parsed.reason);
+          notifyDispatch({
+            type: 'set_notification',
+            message: parsed.reason,
+            variant: 'error',
+          });
+          return;
+        }
+        syncD({ type: 'add_job', id: item.toJSON().id, ctx: parsed.ctx });
       }
-    }, [baseUrl, config, db, item, notifyDispatch, syncD, userPreferences]);
+    }, [config, db, item, notifyDispatch, syncD, userPreferences]);
 
   const [showModal, setShowModal] = useState(false);
   const [showPeriodText, setShowPeriodText] = useState('...');

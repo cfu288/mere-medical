@@ -87,7 +87,7 @@ export async function saveConnectionToDb({
   token_uri: string;
 }) {
   // TODO: look up by veradigmId, which this function already stores as tenant_id
-  const doc = await getConnectionCardByUrl<VeradigmConnectionDocument>(
+  const doc = await getConnectionCardByUrl(
     'veradigm',
     veradigmBaseUrl,
     db,
@@ -205,11 +205,9 @@ async function syncFHIRResource<T extends FhirResource>(
   );
 }
 
-export const sync: VendorSync = {
+export const sync: VendorSync<VeradigmConnectionDocument> = {
   refreshToken: null,
-  syncAllRecords: ({ baseUrl, connection, db }) => {
-    const cd =
-      connection.toMutableJSON() as unknown as VeradigmConnectionDocument;
+  syncAllRecords: ({ fhirBaseUrl: baseUrl, document: cd, db }) => {
     const patient = extractVeradigmPatientId(cd.access_token);
     return Promise.allSettled([
       syncFHIRResource(
