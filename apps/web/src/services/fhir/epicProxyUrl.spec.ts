@@ -7,7 +7,7 @@ describe('epicProxyUrl', () => {
         targetType: 'register',
       }),
     ).toBe(
-      'https://app.example.com/api/proxy?serviceId=tenant-1&target_type=register',
+      'https://app.example.com/api/proxy?vendor=epic&serviceId=tenant-1&target_type=register',
     );
   });
 
@@ -18,7 +18,7 @@ describe('epicProxyUrl', () => {
         target: 'Patient?patient=123',
       }),
     ).toBe(
-      'https://app.example.com/api/proxy?serviceId=tenant-1&target=Patient%3Fpatient%3D123&target_type=base',
+      'https://app.example.com/api/proxy?vendor=epic&serviceId=tenant-1&target=Patient%3Fpatient%3D123&target_type=base',
     );
   });
 
@@ -28,7 +28,7 @@ describe('epicProxyUrl', () => {
         targetType: 'token',
       }),
     ).toBe(
-      'https://app.example.com/api/proxy?serviceId=tenant-1&target_type=token',
+      'https://app.example.com/api/proxy?vendor=epic&serviceId=tenant-1&target_type=token',
     );
   });
 
@@ -38,7 +38,7 @@ describe('epicProxyUrl', () => {
         targetType: 'token',
       }),
     ).toBe(
-      'https://app.example.com/mere/api/proxy?serviceId=tenant-1&target_type=token',
+      'https://app.example.com/mere/api/proxy?vendor=epic&serviceId=tenant-1&target_type=token',
     );
   });
 
@@ -48,7 +48,7 @@ describe('epicProxyUrl', () => {
         targetType: 'token',
       }),
     ).toBe(
-      'https://app.example.com/mere/api/proxy?serviceId=tenant-1&target_type=token',
+      'https://app.example.com/mere/api/proxy?vendor=epic&serviceId=tenant-1&target_type=token',
     );
   });
 

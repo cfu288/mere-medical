@@ -57,7 +57,7 @@ const epicClient = createEpicClient({ signJwt });
  */
 export function epicProxyUrl(
   publicUrl: string,
-  serviceId: string | undefined,
+  serviceId: string,
   params: { targetType: string; target?: string },
 ): string {
   if (!publicUrl) {
@@ -65,7 +65,8 @@ export function epicProxyUrl(
   }
   const base = publicUrl.endsWith('/') ? publicUrl : `${publicUrl}/`,
     url = new URL('api/proxy', base);
-  url.searchParams.set('serviceId', serviceId || '');
+  url.searchParams.set('vendor', 'epic');
+  url.searchParams.set('serviceId', serviceId);
   if (params.target !== undefined) {
     url.searchParams.set('target', params.target);
   }
