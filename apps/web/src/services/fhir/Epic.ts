@@ -64,15 +64,12 @@ export function epicProxyUrl(
   if (!publicUrl) {
     throw new Error('Cannot proxy a request without PUBLIC_URL configured');
   }
-  const base = publicUrl.endsWith('/') ? publicUrl : `${publicUrl}/`,
-    url = new URL('api/proxy', base);
-  url.searchParams.set('vendor', 'epic');
-  url.searchParams.set('serviceId', serviceId);
+  const query = new URLSearchParams({ vendor: 'epic', serviceId });
   if (params.target !== undefined) {
-    url.searchParams.set('target', params.target);
+    query.set('target', params.target);
   }
-  url.searchParams.set('target_type', params.targetType);
-  return url.toString();
+  query.set('target_type', params.targetType);
+  return resolveFhirUrl(publicUrl, 'api/proxy', query);
 }
 
 export const createProxiedEpicClient = (publicUrl: string) =>
