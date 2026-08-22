@@ -107,7 +107,7 @@ describe('Proxy Header Filtering E2E', () => {
           useValue: {
             services: [
               {
-                vendor: 'test',
+                vendor: 'epic',
                 endpoints: [
                   {
                     id: 'test-service',

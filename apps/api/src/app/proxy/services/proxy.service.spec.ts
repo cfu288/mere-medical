@@ -10,27 +10,33 @@ const NORTHWELL_R4 = {
 
 describe('resolveProxyTarget', () => {
   it('sends a base request to the tenant fhir url', () => {
-    expect(resolveProxyTarget(NORTHWELL_R4, 'base', 'epic')).toBe(
-      'https://call.api.northwell.io/epic-proxy/api/fhir/R4/',
-    );
+    expect(
+      resolveProxyTarget(NORTHWELL_R4, { vendor: 'epic', targetType: 'base' }),
+    ).toBe('https://call.api.northwell.io/epic-proxy/api/fhir/R4/');
   });
 
   it('sends an authorize request to the tenant authorize url', () => {
-    expect(resolveProxyTarget(NORTHWELL_R4, 'authorize', 'epic')).toBe(
-      'https://call.api.northwell.io/epic-proxy/oauth2/authorize',
-    );
+    expect(
+      resolveProxyTarget(NORTHWELL_R4, {
+        vendor: 'epic',
+        targetType: 'authorize',
+      }),
+    ).toBe('https://call.api.northwell.io/epic-proxy/oauth2/authorize');
   });
 
   it('sends a token request to the tenant token url', () => {
-    expect(resolveProxyTarget(NORTHWELL_R4, 'token', 'epic')).toBe(
-      'https://call.api.northwell.io/epic-proxy/oauth2/token',
-    );
+    expect(
+      resolveProxyTarget(NORTHWELL_R4, { vendor: 'epic', targetType: 'token' }),
+    ).toBe('https://call.api.northwell.io/epic-proxy/oauth2/token');
   });
 
   it('sends a register request to the sibling of the authorize url', () => {
-    expect(resolveProxyTarget(NORTHWELL_R4, 'register', 'epic')).toBe(
-      'https://call.api.northwell.io/epic-proxy/oauth2/register',
-    );
+    expect(
+      resolveProxyTarget(NORTHWELL_R4, {
+        vendor: 'epic',
+        targetType: 'register',
+      }),
+    ).toBe('https://call.api.northwell.io/epic-proxy/oauth2/register');
   });
 
   it('registers against a path prefix that sits above the fhir base', () => {
@@ -42,8 +48,7 @@ describe('resolveProxyTarget', () => {
           authorize:
             'https://webprd.ochin.org/prd-fhir/MyChartAACI/oauth2/authorize',
         },
-        'register',
-        'epic',
+        { vendor: 'epic', targetType: 'register' },
       ),
     ).toBe('https://webprd.ochin.org/prd-fhir/MyChartAACI/oauth2/register');
   });
@@ -56,8 +61,7 @@ describe('resolveProxyTarget', () => {
           token: 'https://prd.lluh.org/fhir/oauth2/token',
           authorize: 'https://prd.lluh.org/fhir/oauth2/authorize',
         },
-        'register',
-        'epic',
+        { vendor: 'epic', targetType: 'register' },
       ),
     ).toBe('https://prd.lluh.org/fhir/oauth2/register');
   });
@@ -72,33 +76,11 @@ describe('resolveProxyTarget', () => {
           authorize:
             'https://fhir.kp.org/KPPolarisPortal/esb-envlbl/190/oauth2/authorize',
         },
-        'register',
-        'epic',
+        { vendor: 'epic', targetType: 'register' },
       ),
     ).toBe(
       'https://fhir.kp.org/KPPolarisPortal/esb-envlbl/190/oauth2/register',
     );
-  });
-
-  it('falls back to the fhir url for an unknown target type', () => {
-    expect(resolveProxyTarget(NORTHWELL_R4, undefined, 'epic')).toBe(
-      'https://call.api.northwell.io/epic-proxy/api/fhir/R4/',
-    );
-  });
-
-  it('does not derive a register url for a healow tenant', () => {
-    expect(
-      resolveProxyTarget(
-        {
-          url: 'https://fhir4.healow.com/fhir/r4/AACJCD',
-          token: 'https://oauthserver.eclinicalworks.com/oauth/oauth2/token',
-          authorize:
-            'https://oauthserver.eclinicalworks.com/oauth/oauth2/authorize',
-        },
-        'register',
-        'healow',
-      ),
-    ).toBe('https://fhir4.healow.com/fhir/r4/AACJCD');
   });
 
   it('sends a healow token request to the tenant token url', () => {
@@ -110,8 +92,7 @@ describe('resolveProxyTarget', () => {
           authorize:
             'https://oauthserver.eclinicalworks.com/oauth/oauth2/authorize',
         },
-        'token',
-        'healow',
+        { vendor: 'healow', targetType: 'token' },
       ),
     ).toBe('https://oauthserver.eclinicalworks.com/oauth/oauth2/token');
   });

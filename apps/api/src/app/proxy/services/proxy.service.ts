@@ -4,7 +4,12 @@ import * as server from 'http-proxy';
 import { ProxyModuleOptions, Service } from '../interfaces';
 import { HTTP_PROXY, PROXY_MODULE_OPTIONS } from '../proxy.constants';
 import { concatPath, getBaseURL } from '../utils';
-import { deriveRegistrationUrl } from '@mere/fhir-oauth';
+import {
+  deriveRegistrationUrl,
+  parseProxyTarget,
+  ProxyTarget,
+  ProxyVendor,
+} from '@mere/fhir-oauth';
 
 const ALLOWED_PROXY_HEADERS = ['accept', 'content-type', 'content-length'];
 
@@ -16,25 +21,29 @@ const ALLOWED_PROXY_HEADERS = ['accept', 'content-type', 'content-length'];
  */
 export function resolveProxyTarget(
   service: Pick<Service, 'url' | 'authorize' | 'token'>,
-  targetType: string | undefined,
-  vendor: string,
+  target: ProxyTarget,
 ): string {
-  if (vendor === 'epic' && targetType === 'register') {
-    return deriveRegistrationUrl(service.authorize);
+  switch (target.vendor) {
+    case 'epic':
+      if (target.targetType === 'register') {
+        return deriveRegistrationUrl(service.authorize);
+      }
+      return publishedTarget(service, target.targetType);
+    case 'healow':
+      return publishedTarget(service, target.targetType);
   }
-  return publishedTarget(service, targetType);
 }
 
 function publishedTarget(
   service: Pick<Service, 'url' | 'authorize' | 'token'>,
-  targetType: string | undefined,
+  targetType: 'base' | 'authorize' | 'token',
 ): string {
   switch (targetType) {
     case 'authorize':
       return service.authorize;
     case 'token':
       return service.token;
-    default:
+    case 'base':
       return service.url;
   }
 }
@@ -53,7 +62,7 @@ export class ProxyService {
     vendor: string | undefined,
     serviceId: string,
   ):
-    | { service: Service; vendor: string; error?: never }
+    | { service: Service; vendor: ProxyVendor; error?: never }
     | {
         service?: never;
         vendor?: never;
@@ -80,7 +89,7 @@ export class ProxyService {
           },
         };
       }
-      return { service, vendor };
+      return { service, vendor: vendorServices.vendor };
     }
 
     const matches = (this.options.services || []).flatMap((v) =>
@@ -168,8 +177,7 @@ export class ProxyService {
       );
       const urlToProxy = resolveProxyTarget(
         service,
-        target_type,
-        result.vendor,
+        parseProxyTarget(result.vendor, target_type),
       );
 
       return this.doProxy(

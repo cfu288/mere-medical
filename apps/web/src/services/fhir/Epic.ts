@@ -29,6 +29,7 @@ import {
   EPIC_DEFAULT_SCOPES,
   relativeFhirPathWithin,
   resolveFhirUrl,
+  type ProxyTargetTypeOf,
   type OAuthConfig,
   type EpicTokenSet,
 } from '@mere/fhir-oauth';
@@ -58,7 +59,7 @@ const epicClient = createEpicClient({ signJwt });
 export function epicProxyUrl(
   publicUrl: string,
   serviceId: string,
-  params: { targetType: string; target?: string },
+  params: { targetType: ProxyTargetTypeOf<'epic'>; target?: string },
 ): string {
   if (!publicUrl) {
     throw new Error('Cannot proxy a request without PUBLIC_URL configured');

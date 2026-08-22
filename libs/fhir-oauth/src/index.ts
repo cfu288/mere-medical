@@ -91,6 +91,13 @@ export {
   resolveFhirUrl,
   deriveRegistrationUrl,
 } from './lib/url-utils.js';
+export {
+  PROXY_TARGET_TYPES_BY_VENDOR,
+  parseProxyTarget,
+  type ProxyVendor,
+  type ProxyTargetTypeOf,
+  type ProxyTarget,
+} from './lib/proxy-targets.js';
 
 // Core types
 export type {
