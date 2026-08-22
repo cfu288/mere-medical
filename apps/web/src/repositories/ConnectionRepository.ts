@@ -2,7 +2,10 @@ import { RxDatabase, RxDocument } from 'rxdb';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DatabaseCollections } from '../app/providers/DatabaseCollections';
-import { ConnectionDocument } from '../models/connection-document/ConnectionDocument.type';
+import {
+  ConnectionDocument,
+  ConnectionSources,
+} from '../models/connection-document/ConnectionDocument.type';
 
 export async function findConnectionById(
   db: RxDatabase<DatabaseCollections>,
@@ -47,7 +50,7 @@ export async function findConnectionByUrl(
 export async function findConnectionBySourceAndTenant(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
-  source: string,
+  source: ConnectionSources,
   tenantId: string,
 ): Promise<{
   connection: ConnectionDocument | null;
@@ -74,7 +77,7 @@ export async function findConnectionBySourceAndTenant(
 export async function findConnectionByTenant(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
-  source: string,
+  source: ConnectionSources,
   tenantId: string,
   location: string,
 ): Promise<ConnectionDocument | null> {

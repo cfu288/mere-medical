@@ -1,6 +1,9 @@
 import { RxDocument, RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
-import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
+import {
+  ConnectionDocument,
+  ConnectionSources,
+} from '../../models/connection-document/ConnectionDocument.type';
 import * as connectionRepo from '../../repositories/ConnectionRepository';
 
 /**
@@ -10,7 +13,7 @@ import * as connectionRepo from '../../repositories/ConnectionRepository';
  * becoming a different connection, so the tenant id is the stable identity.
  */
 export async function getConnectionCardByTenant<T extends ConnectionDocument>(
-  source: string,
+  source: ConnectionSources,
   tenantId: string,
   db: RxDatabase<DatabaseCollections>,
   userId: string,
