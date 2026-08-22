@@ -519,7 +519,7 @@ export async function saveConnectionToDb({
   user: UserDocument;
 }) {
   // TODO: look up by healowId, once sandbox_healow is canonicalized to JAFJCD
-  const doc = await getConnectionCardByUrl<HealowConnectionDocument>(
+  const doc = await getConnectionCardByUrl(
     'healow',
     healowBaseUrl,
     db,

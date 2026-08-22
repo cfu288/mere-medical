@@ -605,7 +605,7 @@ async function updateConnectionTokens({
   user: UserDocument;
 }) {
   // TODO: dedupe by tenant - CernerConnectionDocument has no tenant_id to key on yet
-  const doc = await getConnectionCardByUrl<CernerConnectionDocument>(
+  const doc = await getConnectionCardByUrl(
     'cerner',
     cernerBaseUrl,
     db,

@@ -62,7 +62,7 @@ export async function findConnectionBySourceAndTenant(
   tenantId: string,
 ): Promise<{
   connection: ConnectionDocument | null;
-  rawConnection: RxDocument<ConnectionDocument> | null;
+  rawConnection: RxDocument<AnyConnectionDocument> | null;
 }> {
   const doc = await db.connection_documents
     .findOne({
@@ -78,7 +78,7 @@ export async function findConnectionBySourceAndTenant(
   }
   return {
     connection: doc.toJSON(),
-    rawConnection: doc as RxDocument<ConnectionDocument>,
+    rawConnection: doc,
   };
 }
 

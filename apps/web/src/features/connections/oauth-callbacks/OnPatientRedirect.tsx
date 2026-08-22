@@ -68,7 +68,7 @@ const OnPatientRedirect: React.FC = () => {
 
       fetchTokensFromServer(sessionId)
         .then(async (tokens) => {
-          const doc = await getConnectionCardByUrl<ConnectionDocument>(
+          const doc = await getConnectionCardByUrl(
             'onpatient',
             'https://onpatient.com',
             db,

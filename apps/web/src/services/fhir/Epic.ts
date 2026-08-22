@@ -776,7 +776,7 @@ export async function saveConnectionToDb({
 }) {
   // TODO: a second patient at the same tenant overwrites the first - key on patient too
   const tenantId = parseEpicTenantId(epicId);
-  const currentDoc = await getConnectionCardByTenant<EpicConnectionDocument>(
+  const currentDoc = await getConnectionCardByTenant(
     'epic',
     tenantId,
     db,

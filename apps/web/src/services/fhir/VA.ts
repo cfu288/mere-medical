@@ -234,7 +234,7 @@ export async function saveConnectionToDb({
   db: RxDatabase<DatabaseCollections>;
   user: UserDocument;
 }) {
-  const doc = await getConnectionCardByUrl<VAConnectionDocument>(
+  const doc = await getConnectionCardByUrl(
     'va',
     VA_SANDBOX_TENANT.fhirBaseUrl,
     db,
