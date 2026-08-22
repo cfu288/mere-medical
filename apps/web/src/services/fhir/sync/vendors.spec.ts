@@ -1,6 +1,7 @@
 import * as Athena from '../Athena';
 import * as Cerner from '../Cerner';
 import * as Epic from '../Epic';
+import * as NextGen from '../NextGen';
 import * as OnPatient from '../OnPatient';
 
 function bundleResponse(bundle: unknown): Response {
@@ -196,6 +197,33 @@ function athenaContext() {
   } as any;
 }
 
+function nextGenContext() {
+  return {
+    config: {},
+    db: createDatabase(),
+    connection: createConnectionDocument({
+      id: 'nextgen-connection',
+      user_id: 'user-1',
+      source: 'nextgen',
+      name: 'NextGen Enterprise',
+      location: 'https://fhir.nextgen.com/nge/prod/fhir-api-r4/fhir/r4/',
+      access_token: 'nextgen-token',
+      patient: 'patient-1',
+    }),
+    document: {
+      id: 'nextgen-connection',
+      user_id: 'user-1',
+      source: 'nextgen',
+      name: 'NextGen Enterprise',
+      location: 'https://fhir.nextgen.com/nge/prod/fhir-api-r4/fhir/r4/',
+      access_token: 'nextgen-token',
+      patient: 'patient-1',
+    },
+    fhirBaseUrl: 'https://unused.example',
+    useProxy: false,
+  } as any;
+}
+
 function onPatientContext() {
   return {
     config: {},
@@ -249,6 +277,50 @@ const cernerDocument = {
     },
   }),
 };
+
+const nextGenDocument = {
+  toMutableJSON: jest.fn().mockReturnValue({
+    user_id: 'user-1',
+    connection_record_id: 'nextgen-connection',
+    data_record: {
+      raw: {
+        resource: {
+          resourceType: 'DocumentReference',
+          id: 'document-1',
+          date: '2024-01-01T00:00:00.000Z',
+          type: { text: 'Clinical document' },
+          content: [
+            { attachment: { url: 'https://files.example/report.xml' } },
+          ],
+        },
+      },
+      format: 'FHIR.R4',
+      content_type: 'application/json',
+      resource_type: 'documentreference',
+      version_history: [],
+    },
+    metadata: {
+      id: 'DocumentReference/document-1',
+      date: '2024-01-01T00:00:00.000Z',
+      display_name: 'Clinical document',
+    },
+  }),
+};
+
+function createNextGenAttachmentDatabase() {
+  return {
+    clinical_documents: {
+      bulkUpsert: jest.fn().mockResolvedValue([]),
+      find: jest
+        .fn()
+        .mockReturnValueOnce({
+          exec: jest.fn().mockResolvedValue([nextGenDocument]),
+        })
+        .mockReturnValue({ exec: jest.fn().mockResolvedValue([]) }),
+      insert: jest.fn().mockResolvedValue(undefined),
+    },
+  } as any;
+}
 
 describe('vendor sync fetch', () => {
   afterEach(() => {
@@ -364,6 +436,78 @@ describe('vendor sync fetch', () => {
         headers: {
           Authorization: 'Bearer athena-token',
           Accept: 'application/fhir+json',
+        },
+      },
+    );
+  });
+
+  it('requests each NextGen Observation category separately', async () => {
+    const fetch = emptyBundleFetch();
+    globalThis.fetch = fetch;
+
+    await NextGen.sync.syncAllRecords(nextGenContext());
+
+    expect(fetch).toHaveBeenNthCalledWith(
+      3,
+      'https://fhir.nextgen.com/nge/prod/fhir-api-r4/fhir/r4/Observation?patient=patient-1&category=laboratory',
+      {
+        headers: {
+          Authorization: 'Bearer nextgen-token',
+          Accept: 'application/json',
+        },
+      },
+    );
+    expect(fetch).toHaveBeenNthCalledWith(
+      4,
+      'https://fhir.nextgen.com/nge/prod/fhir-api-r4/fhir/r4/Observation?patient=patient-1&category=vital-signs',
+      {
+        headers: {
+          Authorization: 'Bearer nextgen-token',
+          Accept: 'application/json',
+        },
+      },
+    );
+    expect(fetch).toHaveBeenNthCalledWith(
+      5,
+      'https://fhir.nextgen.com/nge/prod/fhir-api-r4/fhir/r4/Observation?patient=patient-1&category=social-history',
+      {
+        headers: {
+          Authorization: 'Bearer nextgen-token',
+          Accept: 'application/json',
+        },
+      },
+    );
+  });
+
+  it('omits the NextGen token when an attachment is on another origin', async () => {
+    const fetch = routedFetch({
+      'https://files.example/report.xml': attachmentResponse,
+    });
+    globalThis.fetch = fetch;
+    const db = createNextGenAttachmentDatabase();
+    const ctx = nextGenContext();
+    ctx.db = db;
+
+    await NextGen.sync.syncAllRecords(ctx);
+
+    expect(fetch).toHaveBeenCalledWith('https://files.example/report.xml', {
+      headers: { Accept: '*/*' },
+    });
+  });
+
+  it('requests NextGen CarePlan with the assess-plan category', async () => {
+    const fetch = emptyBundleFetch();
+    globalThis.fetch = fetch;
+
+    await NextGen.sync.syncAllRecords(nextGenContext());
+
+    expect(fetch).toHaveBeenNthCalledWith(
+      10,
+      'https://fhir.nextgen.com/nge/prod/fhir-api-r4/fhir/r4/CarePlan?patient=patient-1&category=assess-plan',
+      {
+        headers: {
+          Authorization: 'Bearer nextgen-token',
+          Accept: 'application/json',
         },
       },
     );

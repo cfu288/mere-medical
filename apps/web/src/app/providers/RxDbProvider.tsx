@@ -95,6 +95,7 @@ export const databaseCollections = {
         oldDoc['ATHENA_SANDBOX_CLIENT_ID'] = '';
         return oldDoc;
       },
+      5: (oldDoc: Record<string, unknown>) => oldDoc,
     },
   },
 };

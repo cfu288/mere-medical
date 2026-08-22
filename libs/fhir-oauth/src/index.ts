@@ -60,6 +60,16 @@ export {
   type AthenaOAuthConfigOptions,
 } from './lib/vendors/athena.js';
 
+export {
+  createNextGenClientConfidential,
+  buildNextGenOAuthConfig,
+  NEXTGEN_CONSTANTS,
+  type NextGenClient,
+  type NextGenApiEndpoints,
+  type NextGenTokenSet,
+  type NextGenOAuthConfigOptions,
+} from './lib/vendors/nextgen.js';
+
 // Session management
 export {
   createSessionManager,
