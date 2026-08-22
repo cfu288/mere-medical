@@ -28,7 +28,12 @@ export async function getConnectionCardByTenant<T extends ConnectionDocument>(
   return rawConnection as unknown as RxDocument<T> | null;
 }
 
-// TODO: retire once every vendor deduplicates by tenant instead of by url
+/**
+ * @deprecated Look connections up by source and tenant instead
+ * ({@link getConnectionCardByTenant}) - a url is not a connection identity.
+ * Identity should eventually include the patient too, since one tenant can
+ * hold several patients for a user.
+ */
 export async function getConnectionCardByUrl<T extends ConnectionDocument>(
   source: ConnectionSources,
   url: string,

@@ -31,7 +31,11 @@ export async function findConnectionById(
   return doc.toJSON();
 }
 
-// TODO: replace with findConnectionBySourceAndTenant - a url is not a connection identity
+/**
+ * @deprecated Look connections up by source and tenant instead
+ * ({@link findConnectionBySourceAndTenant}) - a url is not a connection
+ * identity.
+ */
 export async function findConnectionByUrl(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
