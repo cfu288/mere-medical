@@ -21,6 +21,7 @@ const epicBase = {
   access_token: 'token',
   expires_at: 1893456000,
   patient: 'patient-1',
+  tenant_id: '1a5fe784-078b-ef11-91a4-0050568bc890',
 };
 
 describe('resolveSyncContext', () => {
@@ -73,6 +74,71 @@ describe('resolveSyncContext', () => {
     });
 
     expect(result.ok && result.ctx.fhirBaseUrl).toBe('https://cerner.example/');
+  });
+
+  it('fails when an Epic connection has no tenant id', () => {
+    const result = resolve({
+      ...epicBase,
+      tenant_id: undefined,
+      location: 'https://legacy.example.org/prd/api/FHIR/DSTU2/',
+    });
+
+    expect(result.ok).toBe(false);
+    expect(!result.ok && result.reason).toBe(
+      'Connection predates tenant tracking - remove it and add it again',
+    );
+  });
+
+  it('fails when a Cerner connection has no login token', () => {
+    const result = resolve({
+      id: 'c7',
+      user_id: 'u1',
+      source: 'cerner',
+      name: 'Cerner',
+      location: 'https://cerner.example/',
+      access_token: 'token',
+      expires_at: 1893456000,
+    });
+
+    expect(result.ok).toBe(false);
+    expect(!result.ok && result.reason).toBe(
+      'Connection is missing its login token - remove it and add it again',
+    );
+  });
+
+  it('fails when a Healow connection has no login token', () => {
+    const result = resolve({
+      id: 'c8',
+      user_id: 'u1',
+      source: 'healow',
+      name: 'Healow',
+      location: 'https://fhir4.healow.com/fhir/r4/AACJCD',
+      access_token: 'token',
+      expires_at: 1893456000,
+    });
+
+    expect(result.ok).toBe(false);
+    expect(!result.ok && result.reason).toBe(
+      'Connection is missing its login token - remove it and add it again',
+    );
+  });
+
+  it('fails when a stored location is not a url', () => {
+    const result = resolve({
+      id: 'c9',
+      user_id: 'u1',
+      source: 'veradigm',
+      name: 'Veradigm',
+      location: 'not-a-url',
+      access_token: 'token',
+      expires_at: 1893456000,
+      id_token: 'token',
+    });
+
+    expect(result.ok).toBe(false);
+    expect(!result.ok && result.reason).toBe(
+      'Connection has an unusable address: not-a-url',
+    );
   });
 });
 

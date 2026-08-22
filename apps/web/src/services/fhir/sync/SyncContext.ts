@@ -6,10 +6,10 @@ import { AnyConnectionDocument } from '../../../models/connection-document/Conne
 declare const FHIR_BASE_URL: unique symbol;
 
 /**
- * A FHIR base URL that has been resolved from a connection.
+ * A FHIR base URL established by a vendor's sync-boundary parse.
  *
- * Only {@link resolveSyncContext} produces one, so a stored `location` cannot
- * be mistaken for a usable base URL.
+ * Only {@link resolveSyncContext} produces one, so a raw stored `location`
+ * cannot be mistaken for a parsed base URL.
  */
 export type FhirBaseUrl = string & { readonly [FHIR_BASE_URL]: true };
 
