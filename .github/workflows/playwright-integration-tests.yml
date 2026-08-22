@@ -44,6 +44,17 @@ jobs:
       - name: Install local certs
         run: mkcert -install
       - name: Setup api env vars
-        run: cp .example.env .env
+        env:
+          EPIC_SANDBOX_CLIENT_ID_R4: ${{ secrets.EPIC_SANDBOX_CLIENT_ID_R4 }}
+          CERNER_CLIENT_ID: ${{ secrets.CERNER_CLIENT_ID }}
+        run: |
+          cp .example.env .env
+          {
+            echo "EPIC_SANDBOX_CLIENT_ID_R4=$EPIC_SANDBOX_CLIENT_ID_R4"
+            echo "CERNER_CLIENT_ID=$CERNER_CLIENT_ID"
+          } >> .env
       - name: Run Playwright tests
+        env:
+          E2E_EPIC_SANDBOX: ${{ github.event_name == 'push' && 'enabled' || '' }}
+          E2E_CERNER_SANDBOX: ${{ github.event_name == 'push' && 'enabled' || '' }}
         run: npx nx run web-e2e:e2e
