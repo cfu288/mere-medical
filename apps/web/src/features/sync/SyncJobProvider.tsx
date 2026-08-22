@@ -67,25 +67,26 @@ async function refreshIfNeeded(ctx: SyncContext): Promise<SyncContext> {
   return contextAfterRefresh(ctx);
 }
 
-function syncWithVendor(
+async function syncWithVendor(
   ctx: SyncContext,
 ): Promise<PromiseSettledResult<unknown>[]> {
-  const document = ctx.document;
+  const refreshed = await refreshIfNeeded(ctx);
+  const document = refreshed.document;
   switch (document.source) {
     case 'epic':
-      return Epic.sync.syncAllRecords({ ...ctx, document });
+      return Epic.sync.syncAllRecords({ ...refreshed, document });
     case 'cerner':
-      return Cerner.sync.syncAllRecords({ ...ctx, document });
+      return Cerner.sync.syncAllRecords({ ...refreshed, document });
     case 'healow':
-      return Healow.sync.syncAllRecords({ ...ctx, document });
+      return Healow.sync.syncAllRecords({ ...refreshed, document });
     case 'veradigm':
-      return Veradigm.sync.syncAllRecords({ ...ctx, document });
+      return Veradigm.sync.syncAllRecords({ ...refreshed, document });
     case 'athena':
-      return Athena.sync.syncAllRecords({ ...ctx, document });
+      return Athena.sync.syncAllRecords({ ...refreshed, document });
     case 'va':
-      return VA.sync.syncAllRecords({ ...ctx, document });
+      return VA.sync.syncAllRecords({ ...refreshed, document });
     case 'onpatient':
-      return OnPatient.sync.syncAllRecords({ ...ctx, document });
+      return OnPatient.sync.syncAllRecords({ ...refreshed, document });
     default:
       return assertNever(document);
   }
@@ -404,8 +405,7 @@ async function fetchMedicalRecords(ctx: SyncContext) {
   const { connection, db } = ctx;
 
   try {
-    const refreshed = await refreshIfNeeded(ctx);
-    const syncJob = await syncWithVendor(refreshed);
+    const syncJob = await syncWithVendor(ctx);
     await updateConnectionDocumentTimestamps(syncJob, connection, db);
     return syncJob;
   } catch (e) {
