@@ -30,22 +30,9 @@ test.describe('nextgen sandbox integration', () => {
       .click();
 
     await page.waitForURL(/fhir\.nextgen\.com/, { timeout: 60_000 });
-    await page
-      .locator(
-        'input[type="text"], input[type="email"], input[name*="user" i], input[id*="user" i]',
-      )
-      .first()
-      .fill(username as string);
-    await page
-      .locator('input[type="password"]')
-      .first()
-      .fill(password as string);
-    await page
-      .locator(
-        'button[type="submit"], input[type="submit"], button:has-text("Log in"), button:has-text("Sign in"), button:has-text("Login")',
-      )
-      .first()
-      .click();
+    await page.locator('input[name="Username"]').fill(username as string);
+    await page.locator('input[name="Password"]').fill(password as string);
+    await page.getByRole('button', { name: 'Next' }).click();
 
     // NextGen may show a variable number of consent screens before redirecting
     for (let i = 0; i < 8; i++) {
