@@ -11,37 +11,21 @@ const ALLOWED_PROXY_HEADERS = ['accept', 'content-type', 'content-length'];
 /**
  * Picks which of a tenant's published endpoints a proxied request targets.
  *
- * A request that names no vendor is an Epic request; Epic proxy URLs predate
- * the vendor parameter.
+ * Register is the one endpoint no catalog publishes; only Epic defines a
+ * derivation for it, as a sibling of its authorize endpoint.
  */
 export function resolveProxyTarget(
   service: Pick<Service, 'url' | 'authorize' | 'token'>,
   targetType: string | undefined,
-  vendor?: string,
+  vendor: string,
 ): string {
-  switch (vendor ?? 'epic') {
-    case 'epic':
-      return epicProxyTarget(service, targetType);
-    default:
-      return standardProxyTarget(service, targetType);
-  }
-}
-
-/**
- * Epic also serves dynamic client registration, published as a sibling of its
- * authorize endpoint; no other vendor's catalog carries a registration URL.
- */
-function epicProxyTarget(
-  service: Pick<Service, 'url' | 'authorize' | 'token'>,
-  targetType: string | undefined,
-): string {
-  if (targetType === 'register') {
+  if (vendor === 'epic' && targetType === 'register') {
     return deriveRegistrationUrl(service.authorize);
   }
-  return standardProxyTarget(service, targetType);
+  return publishedTarget(service, targetType);
 }
 
-function standardProxyTarget(
+function publishedTarget(
   service: Pick<Service, 'url' | 'authorize' | 'token'>,
   targetType: string | undefined,
 ): string {
@@ -69,8 +53,12 @@ export class ProxyService {
     vendor: string | undefined,
     serviceId: string,
   ):
-    | { service: Service; error?: never }
-    | { service?: never; error: { status: number; body: object } } {
+    | { service: Service; vendor: string; error?: never }
+    | {
+        service?: never;
+        vendor?: never;
+        error: { status: number; body: object };
+      } {
     if (vendor) {
       const vendorServices = this.options.services?.find(
         (s) => s.vendor === vendor,
@@ -92,7 +80,7 @@ export class ProxyService {
           },
         };
       }
-      return { service };
+      return { service, vendor };
     }
 
     const matches = (this.options.services || []).flatMap((v) =>
@@ -122,7 +110,8 @@ export class ProxyService {
       };
     }
 
-    return { service: matches[0] };
+    const { vendor: matchedVendor, ...service } = matches[0];
+    return { service, vendor: matchedVendor };
   }
 
   async proxyRequest(
@@ -177,7 +166,11 @@ export class ProxyService {
       this.logger.debug(
         `Proxying ${req.method} ${req.url} to ${vendor ? `${vendor}/` : ''}${serviceId}`,
       );
-      const urlToProxy = resolveProxyTarget(service, target_type, vendor);
+      const urlToProxy = resolveProxyTarget(
+        service,
+        target_type,
+        result.vendor,
+      );
 
       return this.doProxy(
         req,

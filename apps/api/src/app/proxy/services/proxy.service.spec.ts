@@ -10,25 +10,25 @@ const NORTHWELL_R4 = {
 
 describe('resolveProxyTarget', () => {
   it('sends a base request to the tenant fhir url', () => {
-    expect(resolveProxyTarget(NORTHWELL_R4, 'base')).toBe(
+    expect(resolveProxyTarget(NORTHWELL_R4, 'base', 'epic')).toBe(
       'https://call.api.northwell.io/epic-proxy/api/fhir/R4/',
     );
   });
 
   it('sends an authorize request to the tenant authorize url', () => {
-    expect(resolveProxyTarget(NORTHWELL_R4, 'authorize')).toBe(
+    expect(resolveProxyTarget(NORTHWELL_R4, 'authorize', 'epic')).toBe(
       'https://call.api.northwell.io/epic-proxy/oauth2/authorize',
     );
   });
 
   it('sends a token request to the tenant token url', () => {
-    expect(resolveProxyTarget(NORTHWELL_R4, 'token')).toBe(
+    expect(resolveProxyTarget(NORTHWELL_R4, 'token', 'epic')).toBe(
       'https://call.api.northwell.io/epic-proxy/oauth2/token',
     );
   });
 
   it('sends a register request to the sibling of the authorize url', () => {
-    expect(resolveProxyTarget(NORTHWELL_R4, 'register')).toBe(
+    expect(resolveProxyTarget(NORTHWELL_R4, 'register', 'epic')).toBe(
       'https://call.api.northwell.io/epic-proxy/oauth2/register',
     );
   });
@@ -43,6 +43,7 @@ describe('resolveProxyTarget', () => {
             'https://webprd.ochin.org/prd-fhir/MyChartAACI/oauth2/authorize',
         },
         'register',
+        'epic',
       ),
     ).toBe('https://webprd.ochin.org/prd-fhir/MyChartAACI/oauth2/register');
   });
@@ -56,6 +57,7 @@ describe('resolveProxyTarget', () => {
           authorize: 'https://prd.lluh.org/fhir/oauth2/authorize',
         },
         'register',
+        'epic',
       ),
     ).toBe('https://prd.lluh.org/fhir/oauth2/register');
   });
@@ -71,6 +73,7 @@ describe('resolveProxyTarget', () => {
             'https://fhir.kp.org/KPPolarisPortal/esb-envlbl/190/oauth2/authorize',
         },
         'register',
+        'epic',
       ),
     ).toBe(
       'https://fhir.kp.org/KPPolarisPortal/esb-envlbl/190/oauth2/register',
@@ -78,14 +81,8 @@ describe('resolveProxyTarget', () => {
   });
 
   it('falls back to the fhir url for an unknown target type', () => {
-    expect(resolveProxyTarget(NORTHWELL_R4, undefined)).toBe(
+    expect(resolveProxyTarget(NORTHWELL_R4, undefined, 'epic')).toBe(
       'https://call.api.northwell.io/epic-proxy/api/fhir/R4/',
-    );
-  });
-
-  it('derives a register url when the vendor is named epic', () => {
-    expect(resolveProxyTarget(NORTHWELL_R4, 'register', 'epic')).toBe(
-      'https://call.api.northwell.io/epic-proxy/oauth2/register',
     );
   });
 
