@@ -16,8 +16,7 @@ const ALLOWED_PROXY_HEADERS = ['accept', 'content-type', 'content-length'];
 /**
  * Picks which of a tenant's published endpoints a proxied request targets.
  *
- * Register is the one endpoint no catalog publishes; only Epic defines a
- * derivation for it, as a sibling of its authorize endpoint.
+ * Register seems to be an Epic specific endpoint for DCR which is derived off of its authorize endpoint.
  */
 export function resolveProxyTarget(
   service: Pick<Service, 'url' | 'authorize' | 'token'>,

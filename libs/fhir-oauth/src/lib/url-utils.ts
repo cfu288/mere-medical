@@ -2,10 +2,7 @@
  * Extracts the resource path of an absolute FHIR URL relative to a server's base.
  *
  * Epic returns Bundle `next` links as absolute URLs, but the proxy only accepts
- * a path to forward (`target=Patient?page=2`). The string alternative,
- * `fullUrl.replace(baseUrl, '')`, silently returns the whole absolute URL when
- * the two differ by so much as a trailing slash, and that garbage becomes the
- * proxy target.
+ * a path to forward (`target=Patient?page=2`).
  *
  * @example
  * extractRelativeFhirPath(
@@ -45,9 +42,6 @@ export function extractRelativeFhirPath(
  * under the base at all - null means it points somewhere the proxy cannot
  * forward to, since the proxy only routes paths under the tenant's base.
  *
- * Raw string prefix checks get the boundary wrong: '/api/FHIR/R4' is a string
- * prefix of '/api/FHIR/R40/Patient' but not a parent path of it.
- *
  * @example
  * relativeFhirPathWithin(
  *   'https://cdn.example/document.pdf',
@@ -83,12 +77,7 @@ export function relativeFhirPathWithin(
  * Joins a resource path onto a FHIR base URL without losing the base's path.
  *
  * Epic tenants publish bases with deep path prefixes, e.g.
- * `https://webprd.ochin.org/prd-fhir/MyChartAACI/api/FHIR/R4/`, and both raw
- * alternatives corrupt them: `new URL('/Patient', base)` resolves from the
- * origin and drops the whole prefix, and when the base has no trailing slash
- * `new URL('Patient', base)` replaces the last path segment instead of
- * appending. String concatenation doubles or drops slashes and leaves query
- * encoding to every caller.
+ * `https://webprd.ochin.org/prd-fhir/MyChartAACI/api/FHIR/R4/`.
  *
  * @example
  * resolveFhirUrl('https://webprd.ochin.org/prd-fhir/MyChartAACI/api/FHIR/R4', '/Patient')
@@ -115,12 +104,6 @@ export function resolveFhirUrl(
 /**
  * Derives Epic's dynamic client registration endpoint, which no catalog
  * publishes, as a sibling of the authorize endpoint.
- *
- * Deriving it from the FHIR base instead (strip `/api/FHIR/R4`, append
- * `/oauth2/register`) picks the wrong server whenever a tenant hosts FHIR and
- * OAuth on different paths or hosts - true for 119 of the 1276 tenants in
- * Epic's catalog, e.g. Kaiser serves FHIR from a routing-service path but
- * OAuth from its portal path.
  *
  * @example
  * deriveRegistrationUrl('https://fhir.kp.org/KPPolarisPortal/esb-envlbl/190/oauth2/authorize')
