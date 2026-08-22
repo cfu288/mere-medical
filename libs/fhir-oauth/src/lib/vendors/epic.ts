@@ -238,37 +238,24 @@ export interface PublicKeyWithKid {
   kid: string;
 }
 
-export interface DynamicClientRegistrationOptions {
-  useProxy?: boolean;
-  proxyUrl?: string;
-}
-
 /**
  * Registers a dynamic client with Epic using the SMART Backend Services spec.
  * Call this after initial authorization to get a persistent client_id that can
  * be used for JWT bearer token refresh without requiring user interaction.
  *
  * @param accessToken - Access token from the initial authorization
- * @param baseUrl - Epic FHIR server base URL
+ * @param registrationUrl - Registration endpoint, or a proxy URL standing in for it
  * @param softwareId - Your application's software ID registered with Epic
  * @param publicKey - RSA public key for client authentication
- * @param options.useProxy - Route registration through a proxy
- * @param options.proxyUrl - Proxy URL for registration requests
  * @returns The registered client_id
  */
 export async function registerEpicDynamicClient(
   accessToken: string,
-  baseUrl: string,
+  registrationUrl: string,
   softwareId: string,
   publicKey: PublicKeyWithKid,
-  options?: DynamicClientRegistrationOptions,
 ): Promise<{ clientId: string }> {
-  const registerUrl =
-    options?.useProxy && options?.proxyUrl
-      ? options.proxyUrl
-      : `${baseUrl.replace(/\/api\/FHIR\/(DSTU2|R4)\/?/, '')}/oauth2/register`;
-
-  const res = await fetch(registerUrl, {
+  const res = await fetch(registrationUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

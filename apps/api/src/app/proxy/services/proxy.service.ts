@@ -4,8 +4,48 @@ import * as server from 'http-proxy';
 import { ProxyModuleOptions, Service } from '../interfaces';
 import { HTTP_PROXY, PROXY_MODULE_OPTIONS } from '../proxy.constants';
 import { concatPath, getBaseURL } from '../utils';
+import {
+  deriveRegistrationUrl,
+  parseProxyTarget,
+  ProxyTarget,
+  ProxyVendor,
+} from '@mere/fhir-oauth';
 
 const ALLOWED_PROXY_HEADERS = ['accept', 'content-type', 'content-length'];
+
+/**
+ * Picks which of a tenant's published endpoints a proxied request targets.
+ *
+ * Register seems to be an Epic specific endpoint for DCR which is derived off of its authorize endpoint.
+ */
+export function resolveProxyTarget(
+  service: Pick<Service, 'url' | 'authorize' | 'token'>,
+  target: ProxyTarget,
+): string {
+  switch (target.vendor) {
+    case 'epic':
+      if (target.targetType === 'register') {
+        return deriveRegistrationUrl(service.authorize);
+      }
+      return publishedTarget(service, target.targetType);
+    case 'healow':
+      return publishedTarget(service, target.targetType);
+  }
+}
+
+function publishedTarget(
+  service: Pick<Service, 'url' | 'authorize' | 'token'>,
+  targetType: 'base' | 'authorize' | 'token',
+): string {
+  switch (targetType) {
+    case 'authorize':
+      return service.authorize;
+    case 'token':
+      return service.token;
+    case 'base':
+      return service.url;
+  }
+}
 
 @Injectable()
 export class ProxyService {
@@ -21,8 +61,12 @@ export class ProxyService {
     vendor: string | undefined,
     serviceId: string,
   ):
-    | { service: Service; error?: never }
-    | { service?: never; error: { status: number; body: object } } {
+    | { service: Service; vendor: ProxyVendor; error?: never }
+    | {
+        service?: never;
+        vendor?: never;
+        error: { status: number; body: object };
+      } {
     if (vendor) {
       const vendorServices = this.options.services?.find(
         (s) => s.vendor === vendor,
@@ -44,7 +88,7 @@ export class ProxyService {
           },
         };
       }
-      return { service };
+      return { service, vendor: vendorServices.vendor };
     }
 
     const matches = (this.options.services || []).flatMap((v) =>
@@ -74,7 +118,8 @@ export class ProxyService {
       };
     }
 
-    return { service: matches[0] };
+    const { vendor: matchedVendor, ...service } = matches[0];
+    return { service, vendor: matchedVendor };
   }
 
   async proxyRequest(
@@ -129,23 +174,10 @@ export class ProxyService {
       this.logger.debug(
         `Proxying ${req.method} ${req.url} to ${vendor ? `${vendor}/` : ''}${serviceId}`,
       );
-      const baseUrl = service.url;
-      const authUrl = service.authorize;
-      const tokenUrl = service.token;
-      let urlToProxy = baseUrl;
-
-      if (target_type === 'authorize') {
-        urlToProxy = authUrl;
-      } else if (target_type === 'token') {
-        urlToProxy = tokenUrl;
-      } else if (target_type === 'register') {
-        urlToProxy =
-          baseUrl
-            .replace('/api/FHIR/DSTU2/', '')
-            .replace('/api/FHIR/DSTU2', '')
-            .replace('/api/FHIR/R4/', '')
-            .replace('/api/FHIR/R4', '') + '/oauth2/register';
-      }
+      const urlToProxy = resolveProxyTarget(
+        service,
+        parseProxyTarget(result.vendor, target_type),
+      );
 
       return this.doProxy(
         req,

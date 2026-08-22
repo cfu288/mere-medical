@@ -1,5 +1,6 @@
 import { ModuleMetadata, Type } from '@nestjs/common/interfaces';
 import * as server from 'http-proxy';
+import { ProxyVendor } from '@mere/fhir-oauth';
 
 export interface Service {
   id: string;
@@ -12,7 +13,7 @@ export interface Service {
 }
 
 export interface VendorServices {
-  vendor: string;
+  vendor: ProxyVendor;
   endpoints: Service[];
 }
 

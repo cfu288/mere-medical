@@ -26,8 +26,8 @@ export interface ConnectionDocument extends BaseDocument {
 }
 
 export interface EpicConnectionDocument extends ConnectionDocument {
-  client_id: string;
-  tenant_id?: string; // A client id specifically provided on dynamic registration
+  client_id: string; // A client id specifically provided on dynamic registration
+  tenant_id: string; // The tenant's id as published in Epic's endpoint list
   patient: string; // A patient identifier
   auth_uri: string | Location; // the OAuth authorization url
   token_uri: string | Location; // the OAuth token url

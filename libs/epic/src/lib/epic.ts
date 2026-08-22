@@ -21,10 +21,12 @@ export interface R4Endpoint {
   managingOrganization?: string;
 }
 
+/** Server only - importing this in the web app ships the whole tenant catalog to the browser. */
 export const EpicDSTU2TenantEndpoints: DSTU2Endpoint[] = Array.from(
   EpicDSTU2EndpointsData,
 );
 
+/** Server only - importing this in the web app ships the whole tenant catalog to the browser. */
 export const EpicR4TenantEndpoints: R4Endpoint[] = Array.from(
   EpicR4EndpointsData,
 );

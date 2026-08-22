@@ -8,6 +8,7 @@ export interface DSTU2Endpoint {
   authorize?: string;
 }
 
+/** Server only - importing this in the web app ships the whole tenant catalog to the browser. */
 export const VeradigmDSTU2TenantEndpoints: DSTU2Endpoint[] =
   Array.from(VeradigmEndpoints);
 

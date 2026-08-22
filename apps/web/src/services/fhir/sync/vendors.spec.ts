@@ -118,13 +118,13 @@ function epicContext(fhirVersion: string | undefined) {
       user_id: 'user-1',
       source: 'epic',
       name: 'Epic',
-      location: 'https://epic.example',
+      location: 'https://epic.example/api/FHIR/DSTU2/',
       access_token: 'epic-token',
       patient: 'patient-1',
       tenant_id: 'tenant-1',
       fhir_version: fhirVersion,
     }),
-    baseUrl: 'https://epic.example',
+    baseUrl: 'https://epic.example/api/FHIR/DSTU2/',
     useProxy: false,
   } as any;
 }

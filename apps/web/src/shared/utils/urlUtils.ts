@@ -3,6 +3,7 @@ export function getBaseURL(path: string) {
   return url.origin;
 }
 
+/** @deprecated Migrate callers to resolveFhirUrl, then delete this copy of url-join. */
 export function concatPath(...args: string[]) {
   return urlJoin(...args);
 }
@@ -79,6 +80,7 @@ function normalize(strArray: string[]) {
   return str;
 }
 
+/** @deprecated Migrate callers to resolveFhirUrl, then delete this copy of url-join. */
 export default function urlJoin(...parts: string[]): string {
   let input;
 

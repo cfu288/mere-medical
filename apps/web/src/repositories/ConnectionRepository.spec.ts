@@ -686,4 +686,104 @@ describe('ConnectionRepository', () => {
       expect(final?.last_sync_attempt).toBeTruthy();
     });
   });
+
+  describe('findConnectionBySourceAndTenant', () => {
+    it('finds a connection whose stored location is a bare origin', async () => {
+      const testConn = createEpicConnection({
+        tenant_id: '1a5fe784-078b-ef11-91a4-0050568bc890',
+        location: 'https://call.api.northwell.io',
+      });
+      await db.connection_documents.insert(testConn);
+
+      const result = await connectionRepo.findConnectionBySourceAndTenant(
+        db,
+        testConn.user_id,
+        'epic',
+        '1a5fe784-078b-ef11-91a4-0050568bc890',
+      );
+
+      expect(result.connection?.id).toBe(testConn.id);
+      expect(result.rawConnection?.get('id')).toBe(testConn.id);
+    });
+
+    it('keeps two same-host tenants separate', async () => {
+      const northwell = createEpicConnection({
+        tenant_id: '1a5fe784-078b-ef11-91a4-0050568bc890',
+        name: 'Northwell Health',
+        location: 'https://call.api.northwell.io/epic-proxy/api/fhir/R4/',
+      });
+      const vivo = createEpicConnection({
+        tenant_id: 'c6e5f01b-a2ca-48a1-8949-c1ccf4dd254e',
+        name: 'Vivo Pharmacy',
+        location: 'https://call.api.northwell.io/epic-proxy/api/FHIR/R4/',
+      });
+      await db.connection_documents.insert(northwell);
+      await db.connection_documents.insert(vivo);
+
+      const result = await connectionRepo.findConnectionBySourceAndTenant(
+        db,
+        northwell.user_id,
+        'epic',
+        'c6e5f01b-a2ca-48a1-8949-c1ccf4dd254e',
+      );
+
+      expect(result.connection?.id).toBe(vivo.id);
+      expect(result.connection?.name).toBe('Vivo Pharmacy');
+    });
+
+    it('keeps two tenants that share one fhir base url separate', async () => {
+      const ucsfHealth = createEpicConnection({
+        tenant_id: 'cc9e0f4c-9813-e911-9126-001dd8b71f19',
+        name: 'UCSF Health',
+        location: 'https://unified-api.ucsf.edu/clinical/apex/api/FHIR/DSTU2/',
+      });
+      const ucsfBenioff = createEpicConnection({
+        tenant_id: 'cd9e0f4c-9813-e911-9126-001dd8b71f19',
+        name: "UCSF Benioff Children's Hospital",
+        location: 'https://unified-api.ucsf.edu/clinical/apex/api/FHIR/DSTU2/',
+      });
+      await db.connection_documents.insert(ucsfHealth);
+      await db.connection_documents.insert(ucsfBenioff);
+
+      const result = await connectionRepo.findConnectionBySourceAndTenant(
+        db,
+        ucsfHealth.user_id,
+        'epic',
+        'cd9e0f4c-9813-e911-9126-001dd8b71f19',
+      );
+
+      expect(result.connection?.id).toBe(ucsfBenioff.id);
+      expect(result.connection?.name).toBe("UCSF Benioff Children's Hospital");
+    });
+
+    it('returns null for a tenant the user has not connected', async () => {
+      const result = await connectionRepo.findConnectionBySourceAndTenant(
+        db,
+        'test-user-id',
+        'epic',
+        '1a5fe784-078b-ef11-91a4-0050568bc890',
+      );
+
+      expect(result.connection).toBeNull();
+      expect(result.rawConnection).toBeNull();
+    });
+
+    it('enforces user isolation', async () => {
+      const testConn = createEpicConnection({
+        user_id: 'userA',
+        tenant_id: '1a5fe784-078b-ef11-91a4-0050568bc890',
+      });
+      await db.connection_documents.insert(testConn);
+
+      const result = await connectionRepo.findConnectionBySourceAndTenant(
+        db,
+        'userB',
+        'epic',
+        '1a5fe784-078b-ef11-91a4-0050568bc890',
+      );
+
+      expect(result.connection).toBeNull();
+      expect(result.rawConnection).toBeNull();
+    });
+  });
 });

@@ -36,6 +36,7 @@ export function createEpicConnection(
     expires_at: Date.now() + 3600000,
     scope: 'patient/*.read',
     client_id: 'test-client-id',
+    tenant_id: 'sandbox_epic_r4',
     patient: 'test-patient-id',
     auth_uri: 'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/authorize',
     token_uri: 'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/token',

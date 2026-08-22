@@ -10,32 +10,25 @@ import { useUserPreferences } from '../../../app/providers/UserPreferencesProvid
 import { useUser } from '../../../app/providers/UserProvider';
 import {
   createEpicClient,
-  createEpicClientWithProxy,
   registerEpicDynamicClient,
   buildEpicOAuthConfig,
   EPIC_DEFAULT_SCOPES,
   type EpicTokenSet,
   OAuthError,
+  deriveRegistrationUrl,
 } from '@mere/fhir-oauth';
 import { signJwt, getPublicKey } from '@mere/crypto/browser';
 import { useOAuthFlow } from '@mere/fhir-oauth/react';
 import {
+  createProxiedEpicClient,
+  epicProxyUrl,
   EpicLocalStorageKeys,
   getEpicClientId,
-  getDSTU2Url,
-  getR4Url,
   saveConnectionToDb,
 } from '../../../services/fhir/Epic';
 import { isEpicSandbox } from '../../../services/fhir/EpicUtils';
 
 const epicClient = createEpicClient({ signJwt });
-
-const createProxiedEpicClient = (publicUrl: string) =>
-  createEpicClientWithProxy(
-    { signJwt },
-    (tenantId, targetType) =>
-      `${publicUrl}/api/proxy?serviceId=${tenantId}&target_type=${targetType}`,
-  );
 
 /**
  * Handles the redirect from Epic's authorization server. If possible, it
@@ -51,42 +44,35 @@ const createProxiedEpicClient = (publicUrl: string) =>
  * anyways so we can't tell.
  */
 function useEpicOAuthCallback() {
-  const db = useRxDb();
-  const { config, isLoading: configLoading } = useAppConfig();
-  const user = useUser();
-  const userPreferences = useUserPreferences();
-  const navigate = useNavigate();
-  const notifyDispatch = useNotificationDispatch();
-  const { search } = useLocation();
-  const hasRun = useRef(false);
-  const [error, setError] = useState('');
-
-  const enableProxy = userPreferences?.use_proxy ?? false;
-  const publicUrl = config.PUBLIC_URL || '';
-  const client = enableProxy ? createProxiedEpicClient(publicUrl) : epicClient;
-  const { handleCallback, clearSession } = useOAuthFlow({
-    client,
-    vendor: 'epic',
-  });
+  const db = useRxDb(),
+    { config, isLoading: configLoading } = useAppConfig(),
+    user = useUser(),
+    userPreferences = useUserPreferences(),
+    navigate = useNavigate(),
+    notifyDispatch = useNotificationDispatch(),
+    { search } = useLocation(),
+    hasRun = useRef(false),
+    [error, setError] = useState(''),
+    enableProxy = userPreferences?.use_proxy ?? false,
+    publicUrl = config.PUBLIC_URL || '',
+    client = enableProxy ? createProxiedEpicClient(publicUrl) : epicClient,
+    { handleCallback, clearSession } = useOAuthFlow({
+      client,
+      vendor: 'epic',
+    });
 
   useEffect(() => {
     if (configLoading || !userPreferences || hasRun.current) return;
 
-    const searchParams = new URLSearchParams(search);
-    const epicBaseUrl = localStorage.getItem(
-      EpicLocalStorageKeys.EPIC_BASE_URL,
-    );
-    const epicTokenUrl = localStorage.getItem(
-      EpicLocalStorageKeys.EPIC_TOKEN_URL,
-    );
-    const epicAuthUrl = localStorage.getItem(
-      EpicLocalStorageKeys.EPIC_AUTH_URL,
-    );
-    const epicName = localStorage.getItem(EpicLocalStorageKeys.EPIC_NAME);
-    const epicId = localStorage.getItem(EpicLocalStorageKeys.EPIC_ID);
-    const storedFhirVersion = localStorage.getItem(
-      EpicLocalStorageKeys.FHIR_VERSION,
-    ) as 'DSTU2' | 'R4' | null;
+    const searchParams = new URLSearchParams(search),
+      epicBaseUrl = localStorage.getItem(EpicLocalStorageKeys.EPIC_BASE_URL),
+      epicTokenUrl = localStorage.getItem(EpicLocalStorageKeys.EPIC_TOKEN_URL),
+      epicAuthUrl = localStorage.getItem(EpicLocalStorageKeys.EPIC_AUTH_URL),
+      epicName = localStorage.getItem(EpicLocalStorageKeys.EPIC_NAME),
+      epicId = localStorage.getItem(EpicLocalStorageKeys.EPIC_ID),
+      storedFhirVersion = localStorage.getItem(
+        EpicLocalStorageKeys.FHIR_VERSION,
+      ) as 'DSTU2' | 'R4' | null;
 
     if (
       !epicBaseUrl ||
@@ -114,13 +100,10 @@ function useEpicOAuthCallback() {
     }
 
     hasRun.current = true;
-    const fhirVersion =
-      storedFhirVersion ||
-      (epicBaseUrl.toUpperCase().includes('/R4') ? 'R4' : 'DSTU2');
-    const fhirBaseUrl =
-      fhirVersion === 'R4' ? getR4Url(epicBaseUrl) : getDSTU2Url(epicBaseUrl);
-    const isSandbox = isEpicSandbox(epicId);
-    const clientId = getEpicClientId(config, fhirVersion, isSandbox);
+    const fhirVersion = storedFhirVersion ?? 'DSTU2',
+      fhirBaseUrl = epicBaseUrl,
+      isSandbox = isEpicSandbox(epicId),
+      clientId = getEpicClientId(config, fhirVersion, isSandbox);
 
     if (!clientId || !config.PUBLIC_URL) {
       clearLocalStorage();
@@ -153,16 +136,15 @@ function useEpicOAuthCallback() {
 
         try {
           const publicKey = await getPublicKey();
-          const proxyUrl = enableProxy
-            ? `${publicUrl}/api/proxy?serviceId=${epicId}&target_type=register`
-            : undefined;
+          const registrationUrl = enableProxy
+            ? epicProxyUrl(publicUrl, epicId, { targetType: 'register' })
+            : deriveRegistrationUrl(epicAuthUrl);
 
           const dcr = await registerEpicDynamicClient(
             tokens.accessToken,
-            epicBaseUrl,
+            registrationUrl,
             oauthConfig.clientId,
             publicKey,
-            { useProxy: enableProxy, proxyUrl },
           );
           dynamicClientId = dcr.clientId;
 

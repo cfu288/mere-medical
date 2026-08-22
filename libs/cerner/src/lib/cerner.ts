@@ -17,9 +17,11 @@ export interface R4Endpoint {
   authorize: string;
 }
 
+/** Server only - importing this in the web app ships the whole tenant catalog to the browser. */
 export const CernerDSTU2TenantEndpoints: DSTU2Endpoint[] =
   Array.from(CernerDSTU2Endpoints);
 
+/** Server only - importing this in the web app ships the whole tenant catalog to the browser. */
 export const CernerR4TenantEndpoints: R4Endpoint[] =
   Array.from(CernerR4Endpoints);
 
