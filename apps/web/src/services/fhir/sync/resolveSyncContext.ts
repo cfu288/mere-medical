@@ -95,10 +95,17 @@ function assertNever(value: never): never {
 }
 
 /**
- * Builds the context a vendor needs to sync a connection.
+ * Admission gate of the sync pipeline: turns a stored connection into the
+ * context vendor sync code runs against.
  *
- * Each vendor's parse establishes the fields its sync will read, so a
- * connection that cannot be synced never reaches vendor code.
+ * Snapshots the document once so a sync run works from a single document
+ * state, parses the fields the vendor's sync will read, and resolves the
+ * FHIR base URL - a connection that cannot be synced never reaches vendor
+ * code.
+ *
+ * Both sync entry points call this before any work starts. On failure the
+ * reason is user-actionable copy: the Sync button surfaces it as a
+ * notification, auto-sync records it as a sync error on the card.
  */
 export function resolveSyncContext(input: {
   config: AppConfig;
