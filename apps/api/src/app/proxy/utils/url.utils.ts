@@ -5,6 +5,7 @@ export function getBaseURL(path: string) {
   return url.origin;
 }
 
+// TODO: migrate callers to url-based joining, then delete this vendored copy of url-join
 export function concatPath(...args: string[]) {
   return urlJoin(...args);
 }
