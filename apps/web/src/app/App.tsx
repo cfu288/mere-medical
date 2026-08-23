@@ -28,6 +28,7 @@ import ConnectionTab from '../features/connections/ConnectionTab';
 import EpicRedirect from '../features/connections/oauth-callbacks/EpicRedirect';
 import HealowRedirect from '../features/connections/oauth-callbacks/HealowRedirect';
 import MereAITab from '../features/ai-chat/MereAITab';
+import NextGenRedirect from '../features/connections/oauth-callbacks/NextGenRedirect';
 import OnPatientRedirect from '../features/connections/oauth-callbacks/OnPatientRedirect';
 import SettingsTab from '../features/settings/SettingsTab';
 import SummaryTab from '../features/summary/SummaryTab';
@@ -119,6 +120,10 @@ const routes = [
       {
         path: AppRoutes.AthenaCallback,
         element: <AthenaRedirect />,
+      },
+      {
+        path: AppRoutes.NextGenCallback,
+        element: <NextGenRedirect />,
       },
       {
         path: '*',

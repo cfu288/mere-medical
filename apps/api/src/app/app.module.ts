@@ -8,6 +8,7 @@ import { EpicModule } from './epic/epic.module';
 import { HealowModule } from './healow/healow.module';
 import { VeradigmModule } from './veradigm/veradigm.module';
 import { AthenaModule } from './athena/athena.module';
+import { NextGenModule } from './nextgen/nextgen.module';
 import { TenantModule } from './tenant/tenant.module';
 import { ConfigModule } from './config/config.module';
 import { describeRequirement, EnableRequirement } from '@mere/shared';
@@ -45,6 +46,7 @@ logChannel('Veradigm', vendors.veradigm);
 logChannel('OnPatient', vendors.onpatient);
 logChannel('Healow', vendors.healow);
 logChannel('Athena', vendors.athena);
+logChannel('NextGen', vendors.nextgen);
 if (vendors.healow.status === 'production') {
   Logger.log(
     vendors.healow.mode === 'confidential'
@@ -85,6 +87,10 @@ if (vendors.healow.status !== 'disabled') {
 
 if (vendors.athena.status !== 'disabled') {
   imports.push(AthenaModule);
+}
+
+if (vendors.nextgen.status === 'production') {
+  imports.push(NextGenModule.register(vendors.nextgen.registration));
 }
 
 @Module({

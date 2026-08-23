@@ -7,14 +7,20 @@ import {
   VendorConfigModel,
 } from '@mere/shared';
 import { OnPatientServiceConfig } from './onpatient/onpatient.service';
+import { NextGenModuleConfig } from './nextgen/nextgen.config';
 
 export type OnPatientServerChannel =
   | { status: 'disabled'; enableWith: EnableRequirement }
   | { status: 'production'; registration: OnPatientServiceConfig };
 
+export type NextGenServerChannel =
+  | { status: 'disabled'; enableWith: EnableRequirement }
+  | { status: 'production'; registration: NextGenModuleConfig };
+
 export interface ServerVendorConfig
-  extends Omit<VendorConfigModel, 'onpatient'> {
+  extends Omit<VendorConfigModel, 'onpatient' | 'nextgen'> {
   onpatient: OnPatientServerChannel;
+  nextgen: NextGenServerChannel;
 }
 
 let parsed: ServerVendorConfig | undefined;
@@ -30,11 +36,38 @@ export function parseServerVendorConfig(
     ...env,
     ONPATIENT_SECRET_CONFIGURED: !!env.ONPATIENT_CLIENT_SECRET,
     HEALOW_CONFIDENTIAL_MODE: !!env.HEALOW_CLIENT_SECRET,
+    NEXTGEN_SECRET_CONFIGURED: isConfigured(env.NEXTGEN_CLIENT_SECRET),
   });
   return {
     ...model,
     onpatient: onPatientServerChannel(env, model.publicUrl),
+    nextgen: nextGenServerChannel(env),
   };
+}
+
+function nextGenServerChannel(
+  env: Record<string, string | undefined>,
+): NextGenServerChannel {
+  const clientId = env.NEXTGEN_CLIENT_ID;
+  const clientSecret = env.NEXTGEN_CLIENT_SECRET;
+  if (!isConfigured(clientId)) {
+    return {
+      status: 'disabled',
+      enableWith: {
+        allOf: [
+          'NEXTGEN_CLIENT_ID',
+          ...(isConfigured(clientSecret) ? [] : ['NEXTGEN_CLIENT_SECRET']),
+        ],
+      },
+    };
+  }
+  if (!isConfigured(clientSecret)) {
+    return {
+      status: 'disabled',
+      enableWith: { allOf: ['NEXTGEN_CLIENT_SECRET'] },
+    };
+  }
+  return { status: 'production', registration: { clientId, clientSecret } };
 }
 
 function onPatientServerChannel(

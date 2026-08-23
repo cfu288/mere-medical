@@ -40,6 +40,8 @@ import {
   AthenaLocalStorageKeys,
   getLoginUrl as getAthenaLoginUrl,
 } from '../../../services/fhir/Athena';
+import { getLoginUrl as getNextGenLoginUrl } from '../../../services/fhir/NextGen';
+import NextGenLogo from '../../../assets/img/nextgen-logo.svg';
 
 export type FhirVersion = 'DSTU2' | 'R4';
 
@@ -338,6 +340,28 @@ export function TenantSelectModal({
       };
     })();
 
+    const nextGenItem = ((): SourceItem => {
+      const base = { title: 'NextGen', source: NextGenLogo };
+      if (vendors.nextgen.status === 'disabled') {
+        return {
+          ...base,
+          enabled: false,
+          reason: missingConfig(vendors.nextgen),
+        };
+      }
+      const clientId = vendors.nextgen.production.value;
+      const publicUrl = vendors.nextgen.publicUrl;
+      return {
+        ...base,
+        enabled: true,
+        activate: () => {
+          getNextGenLoginUrl(clientId, publicUrl).then((url) => {
+            window.location.href = url;
+          });
+        },
+      };
+    })();
+
     return [
       searchItem(
         {
@@ -369,6 +393,7 @@ export function TenantSelectModal({
         vendors.healow,
       ),
       athenaItem,
+      nextGenItem,
       searchItem(
         {
           title: 'Search All',

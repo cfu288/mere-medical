@@ -13,6 +13,7 @@ import allscriptsConnectLogo from '../../../assets/img/allscripts-logo.png';
 import vaLogo from '../../../assets/img/va-logo.png';
 import healowLogo from '../../../assets/img/ecw-logo.png';
 import athenaLogo from '../../../assets/img/athena-logo.jpeg';
+import nextgenLogo from '../../../assets/img/nextgen-logo-square.jpeg';
 import { differenceInDays, format, parseISO } from 'date-fns';
 import { RxDocument } from 'rxdb';
 import { useNotificationDispatch } from '../../../app/providers/NotificationProvider';
@@ -56,6 +57,9 @@ function getImage(logo: ConnectionSources) {
     }
     case 'athena': {
       return athenaLogo;
+    }
+    case 'nextgen': {
+      return nextgenLogo;
     }
     default: {
       return undefined;
@@ -171,7 +175,9 @@ export function ConnectionCard({
                     ? `Veradigm - ${item.get('name')}`
                     : item.get('source') === 'athena'
                       ? `Athena - ${item.get('name')}`
-                      : item.get('name')}
+                      : item.get('source') === 'nextgen'
+                        ? `NextGen - ${item.get('name')}`
+                        : item.get('name')}
             </h3>
           </div>
           {item.get('last_sync_was_error') ? (

@@ -6,12 +6,18 @@ description: Which Patient Portals are Supported?
 
 # Supported Patient Portals
 
-Currently, only the following patient portals are supported:
+Mere Medical can connect to the following patient portals:
 
-- MyChart/Epic
-- Cerner Health
-- Allscripts Connect
-- DrChrono/OnPatient
+| Portal | Runs on | Setup guide |
+| --- | --- | --- |
+| <img src="/img/logos/mychart-logo.png" alt="MyChart" height="40" /> | Epic (MyChart) | [Epic setup](/docs/getting-started/epic-setup) |
+| <img src="/img/logos/cerner-logo.png" alt="Cerner Health" height="40" /> | Oracle Health (Cerner) | [Cerner setup](/docs/getting-started/cerner-setup) |
+| <img src="/img/logos/allscripts-logo.png" alt="Allscripts Connect" height="40" /> | Veradigm (Allscripts) | — |
+| <img src="/img/logos/onpatient-logo.jpeg" alt="OnPatient" height="40" /> | DrChrono (OnPatient) | [OnPatient setup](/docs/getting-started/onpatient-setup) |
+| <img src="/img/logos/va-logo.png" alt="VA" height="40" /> | US Department of Veterans Affairs | [VA setup](/docs/getting-started/va-setup) |
+| <img src="/img/logos/ecw-logo.png" alt="Healow" height="40" /> | eClinicalWorks (Healow) | [Healow setup](/docs/getting-started/healow-setup) |
+| <img src="/img/logos/athena-logo.png" alt="athenahealth" height="40" /> | athenahealth (athenaPatient) | [Athena setup](/docs/getting-started/athena-setup) |
+| <img src="/img/logos/nextgen-logo-square.jpeg" alt="NextGen" height="40" /> | NextGen Enterprise | [NextGen setup](/docs/getting-started/nextgen-setup) |
 
 Support for more patient portals is coming soon.
 

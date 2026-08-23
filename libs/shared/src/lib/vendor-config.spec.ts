@@ -38,7 +38,7 @@ describe('parseVendorConfig', () => {
           enableWith: {
             allOf: [
               'ONPATIENT_CLIENT_ID',
-              'ONPATIENT_CLIENT_SECRET (on the server)',
+              'ONPATIENT_CLIENT_SECRET',
               'PUBLIC_URL',
             ],
           },
@@ -52,6 +52,16 @@ describe('parseVendorConfig', () => {
           status: 'disabled',
           enableWith: {
             anyOf: ['ATHENA_CLIENT_ID', 'ATHENA_SANDBOX_CLIENT_ID'],
+          },
+        },
+        nextgen: {
+          status: 'disabled',
+          enableWith: {
+            allOf: [
+              'NEXTGEN_CLIENT_ID',
+              'NEXTGEN_CLIENT_SECRET',
+              'PUBLIC_URL',
+            ],
           },
         },
       },
@@ -154,7 +164,7 @@ describe('parseVendorConfig', () => {
       {
         onpatient: {
           status: 'disabled',
-          enableWith: { allOf: ['ONPATIENT_CLIENT_SECRET (on the server)'] },
+          enableWith: { allOf: ['ONPATIENT_CLIENT_SECRET'] },
         },
       },
     ],
@@ -211,6 +221,41 @@ describe('parseVendorConfig', () => {
         cerner: {
           status: 'disabled',
           enableWith: { anyOf: ['CERNER_CLIENT_ID'] },
+        },
+      },
+    ],
+    [
+      'nextgen requires the server secret, not just the client id',
+      { NEXTGEN_CLIENT_ID: ID, PUBLIC_URL: 'https://mere.example' },
+      {
+        nextgen: {
+          status: 'disabled',
+          enableWith: { allOf: ['NEXTGEN_CLIENT_SECRET'] },
+        },
+      },
+    ],
+    [
+      'nextgen without a public url cannot build its auth flow',
+      { NEXTGEN_CLIENT_ID: ID, NEXTGEN_SECRET_CONFIGURED: true },
+      {
+        nextgen: {
+          status: 'disabled',
+          enableWith: { allOf: ['PUBLIC_URL'] },
+        },
+      },
+    ],
+    [
+      'nextgen with client id, server secret, and public url is production',
+      {
+        NEXTGEN_CLIENT_ID: ID,
+        NEXTGEN_SECRET_CONFIGURED: true,
+        PUBLIC_URL: 'https://mere.example',
+      },
+      {
+        nextgen: {
+          status: 'production',
+          production: { envVar: 'NEXTGEN_CLIENT_ID', value: ID },
+          publicUrl: 'https://mere.example',
         },
       },
     ],

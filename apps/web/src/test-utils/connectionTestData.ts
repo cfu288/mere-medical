@@ -4,6 +4,7 @@ import {
   CernerConnectionDocument,
   VAConnectionDocument,
   VeradigmConnectionDocument,
+  NextGenConnectionDocument,
 } from '../models/connection-document/ConnectionDocument.type';
 import uuid4 from '../shared/utils/UUIDUtils';
 
@@ -102,6 +103,28 @@ export function createVeradigmConnection(
     id_token: 'veradigm-id-token',
     auth_uri: 'https://oauth.veradigm.com/authorize',
     token_uri: 'https://oauth.veradigm.com/token',
+    ...overrides,
+  };
+}
+
+export function createNextGenConnection(
+  overrides?: Partial<NextGenConnectionDocument>,
+): NextGenConnectionDocument {
+  return {
+    id: uuid4(),
+    user_id: 'test-user-id',
+    source: 'nextgen',
+    name: 'NextGen Test Practice',
+    location: 'https://fhir.nextgen.com/nge/prod/fhir-api-r4/fhir/r4/',
+    access_token: 'nextgen-access-token',
+    expires_at: Date.now() + 3600000,
+    scope: 'patient/*.read',
+    patient: 'nextgen-patient-id',
+    tenant_id: 'nextgen-patient-id',
+    fhir_version: 'R4',
+    auth_uri: 'https://fhir.nextgen.com/nge/prod/patient-oauth/authorize',
+    token_uri: 'https://fhir.nextgen.com/nge/prod/patient-oauth/token',
+    refresh_token: 'nextgen-refresh-token',
     ...overrides,
   };
 }

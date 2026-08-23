@@ -73,6 +73,10 @@ services:
       - VA_CLIENT_ID=${VA_CLIENT_ID}
       - HEALOW_CLIENT_ID=${HEALOW_CLIENT_ID}
       - HEALOW_CLIENT_SECRET=${HEALOW_CLIENT_SECRET}
+      - ATHENA_CLIENT_ID=${ATHENA_CLIENT_ID}
+      - ATHENA_SANDBOX_CLIENT_ID=${ATHENA_SANDBOX_CLIENT_ID}
+      - NEXTGEN_CLIENT_ID=${NEXTGEN_CLIENT_ID}
+      - NEXTGEN_CLIENT_SECRET=${NEXTGEN_CLIENT_SECRET}
       - PUBLIC_URL=${PUBLIC_URL}
 ```
 
@@ -171,6 +175,10 @@ services:
      -e VA_CLIENT_ID=<ID_HERE> \
      -e HEALOW_CLIENT_ID=<ID_HERE> \
      -e HEALOW_CLIENT_SECRET=<SECRET_HERE> \
+     -e ATHENA_CLIENT_ID=<ID_HERE> \
+     -e ATHENA_SANDBOX_CLIENT_ID=<ID_HERE> \
+     -e NEXTGEN_CLIENT_ID=<ID_HERE> \
+     -e NEXTGEN_CLIENT_SECRET=<SECRET_HERE> \
      -e PUBLIC_URL=https://localhost:4200 \
      mere-medical:latest
    ```
@@ -193,6 +201,10 @@ services:
 | `VA_CLIENT_ID`                 | No       | Client ID for VA (Veterans Affairs). **Note: Only works with VA sandbox, not production access at this time.** |                                                                                    |
 | `HEALOW_CLIENT_ID`             | No       | Client ID for Healow (eClinicalWorks)                                                                          | See [Healow setup](https://meremedical.co/docs/getting-started/healow-setup)       |
 | `HEALOW_CLIENT_SECRET`         | No       | Client secret for Healow confidential client (enables refresh tokens)                                          | See [Healow setup](https://meremedical.co/docs/getting-started/healow-setup)       |
+| `ATHENA_CLIENT_ID`             | No       | Client ID for Athena Health production                                                                         | See [Athena setup](https://meremedical.co/docs/getting-started/athena-setup)       |
+| `ATHENA_SANDBOX_CLIENT_ID`     | No       | Client ID for Athena Health sandbox (Preview)                                                                  | See [Athena setup](https://meremedical.co/docs/getting-started/athena-setup)       |
+| `NEXTGEN_CLIENT_ID`            | No       | Client ID for NextGen Enterprise                                                                               | See [NextGen setup](https://meremedical.co/docs/getting-started/nextgen-setup)     |
+| `NEXTGEN_CLIENT_SECRET`        | No       | Client secret for NextGen Enterprise. Required alongside the client ID; kept server-side.                      | See [NextGen setup](https://meremedical.co/docs/getting-started/nextgen-setup)     |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

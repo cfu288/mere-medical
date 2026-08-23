@@ -13,6 +13,18 @@ test.describe('epic sandbox integration', () => {
   test('connects to the Epic sandbox and adds a connection', async ({ page }) => {
     test.setTimeout(6 * 60_000);
 
+    const instanceConfig = await page.request
+      .get('https://localhost:4200/api/v1/instance-config')
+      .then((res) => res.json());
+    if (
+      !instanceConfig.EPIC_SANDBOX_CLIENT_ID_R4 &&
+      !instanceConfig.EPIC_SANDBOX_CLIENT_ID
+    ) {
+      throw new Error(
+        'E2E_EPIC_SANDBOX is enabled but the api is not serving an Epic sandbox client id - set EPIC_SANDBOX_CLIENT_ID_R4 in the api environment',
+      );
+    }
+
     await page.goto('https://localhost:4200/connections');
     const skipTutorial = page.getByText('Skip Tutorial');
     if (await skipTutorial.isVisible().catch(() => false)) {
