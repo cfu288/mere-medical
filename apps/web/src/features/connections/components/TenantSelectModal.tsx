@@ -7,7 +7,7 @@ import { MagnifyingGlassIcon } from '@heroicons/react/20/solid';
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import { DSTU2Endpoint as CernerDSTU2Endpoint } from '@mere/cerner';
 import { DSTU2Endpoint as EpicDSTU2Endpoint } from '@mere/epic';
-import { DSTU2Endpoint as VeradigmDSTU2Endpoint } from '@mere/veradigm';
+import { VeradigmEndpoint } from '@mere/veradigm';
 import { buildOnPatientAuthUrl } from '@mere/fhir-oauth';
 
 import VeradigmLogo from '../../../assets/img/allscripts-logo.png';
@@ -56,7 +56,7 @@ const vendorPaths = {
     R4: '/api/v1/healow/tenants?',
   },
   veradigm: {
-    DSTU2: '/api/v1/veradigm/tenants?',
+    R4: '/api/v1/veradigm/tenants?',
   },
   any: {
     R4: '/api/v1/r4/tenants?',
@@ -99,7 +99,7 @@ const wireVendorMap: Record<TenantWireVendor, EMRVendor> = {
 
 export type UnifiedDSTU2Endpoint = CernerDSTU2Endpoint &
   EpicDSTU2Endpoint &
-  VeradigmDSTU2Endpoint & { vendor: TenantWireVendor };
+  VeradigmEndpoint & { vendor: TenantWireVendor };
 
 type RemoteData<T> =
   | { status: 'loading' }
@@ -358,7 +358,7 @@ export function TenantSelectModal({
       ),
       searchItem(
         { title: 'Allscripts', source: VeradigmLogo, alt: 'Veradigm' },
-        { vendor: 'veradigm', version: 'DSTU2' },
+        { vendor: 'veradigm', version: 'R4' },
         vendors.veradigm,
       ),
       onPatientItem,
