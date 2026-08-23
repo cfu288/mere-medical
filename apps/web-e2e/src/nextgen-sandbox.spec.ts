@@ -43,14 +43,16 @@ test.describe('nextgen sandbox integration', () => {
     await page.locator('input[name="Password"]').fill('Password1!');
     await page.getByRole('button', { name: 'Next' }).click();
 
-    // NextGen may show a variable number of consent screens before redirecting
+    // The consent submit button fails Playwright's visibility check, so click via the DOM
     for (let i = 0; i < 8; i++) {
       if (page.url().includes('localhost:4200')) break;
-      const next = page
-        .locator('text=/^(Allow|Continue|Accept|Next|Approve|Authorize|Agree)$/i')
+      const allow = page
+        .locator('button[value="allow"], button#btnAllow')
         .first();
-      if (await next.isVisible().catch(() => false)) {
-        await next.click({ force: true });
+      if ((await allow.count().catch(() => 0)) > 0) {
+        await allow
+          .evaluate((el) => (el as HTMLButtonElement).click())
+          .catch(() => undefined);
       }
       await page
         .waitForURL(/localhost:4200/, { timeout: 10_000 })
