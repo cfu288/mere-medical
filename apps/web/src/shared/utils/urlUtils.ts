@@ -54,14 +54,14 @@ function normalize(strArray: string[]) {
 
     if (i > 0) {
       // Removing the starting slashes for each component but the first.
-      component = component.replace(/^[\/]+/, '');
+      component = component.replace(/^\/+/, '');
     }
     if (i < strArray.length - 1) {
       // Removing the ending slashes for each component but the last.
-      component = component.replace(/[\/]+$/, '');
+      component = component.replace(/\/+$/, '');
     } else {
       // For the last component we will combine multiple slashes to a single one.
-      component = component.replace(/[\/]+$/, '/');
+      component = component.replace(/\/+$/, '/');
     }
 
     resultArray.push(component);

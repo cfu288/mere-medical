@@ -7,7 +7,7 @@ describe('selectTopDocumentsWithThreshold', () => {
   // Helper to create test documents
   const createDoc = (
     score: number,
-    text: string = `doc-${score}`,
+    text = `doc-${score}`,
   ): RerankingDocument => ({
     text,
     relevanceScore: score,

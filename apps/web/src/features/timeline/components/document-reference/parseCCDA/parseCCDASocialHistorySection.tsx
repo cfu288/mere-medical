@@ -136,7 +136,7 @@ function getEntryRelationshipsOfSameDepth(entry: Element) {
     const els = [];
     while (er) {
       els.unshift(er);
-      // @ts-ignore
+      // @ts-expect-error parentNode is not on the narrowed element type
       er = er.parentNode;
     }
     return els.length;

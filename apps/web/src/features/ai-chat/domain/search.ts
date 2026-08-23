@@ -110,8 +110,8 @@ export async function iterativeSearch(
   } = {},
 ): Promise<DocumentSearchResult> {
   const maxIterations = options.maxIterations || 3;
-  let allDocuments: ClinicalDocument<BundleEntry<FhirResource>>[] = [];
-  let allChunkIds: string[] = [];
+  const allDocuments: ClinicalDocument<BundleEntry<FhirResource>>[] = [];
+  const allChunkIds: string[] = [];
   let allTerms = [...initialTerms];
 
   for (let i = 0; i < maxIterations; i++) {

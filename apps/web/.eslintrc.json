@@ -8,7 +8,14 @@
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {}
+      "rules": {
+        "react-hooks/set-state-in-effect": "warn",
+        "react-hooks/preserve-manual-memoization": "warn",
+        "react-hooks/incompatible-library": "warn",
+        "react-hooks/purity": "warn",
+        "react-hooks/immutability": "warn",
+        "react-hooks/refs": "warn"
+      }
     },
     {
       "files": ["*.ts", "*.tsx"],
