@@ -5,7 +5,7 @@ ARG USER=node
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 ENV DEBIAN_FRONTEND=noninteractive
-ENV NODE_VERSION=20.x
+ENV NODE_VERSION=26.x
 
 ## Create unpriv user
 RUN groupadd --gid $USER_GID $USER \
