@@ -102,7 +102,7 @@ services:
 2. Set up NPM and install NPM packages
 
    ```sh
-   nvm install v20.11.0
+   nvm install v26.7.0
    nvm use
    npm install
    ```
