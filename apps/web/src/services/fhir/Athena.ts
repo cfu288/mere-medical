@@ -39,6 +39,12 @@ import {
   ResourceMapper,
   VendorSync,
 } from './sync';
+import {
+  bulkUpsertDocuments,
+  createDocument,
+  documentExistsByMetadataId,
+  findDocumentsByResourceType,
+} from '../../repositories/ClinicalDocumentRepository';
 
 export {
   createAthenaClient,
@@ -49,12 +55,6 @@ export {
   type AthenaTokenSet,
   type AthenaOAuthConfigOptions,
 } from '@mere/fhir-oauth';
-import {
-  bulkUpsertDocuments,
-  createDocument,
-  documentExistsByMetadataId,
-  findDocumentsByResourceType,
-} from '../../repositories/ClinicalDocumentRepository';
 
 const athenaClient = createAthenaClient();
 const athenaSession = createSessionManager('athena');

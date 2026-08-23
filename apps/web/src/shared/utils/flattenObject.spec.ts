@@ -286,7 +286,7 @@ describe('flattenObject', () => {
         error: new Error('test'),
 
         // Functions are objects but Object(fn) === fn
-        function: () => {},
+        function: () => undefined,
       };
 
       const result = flattenObject(input);

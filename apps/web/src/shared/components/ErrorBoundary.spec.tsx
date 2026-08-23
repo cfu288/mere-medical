@@ -10,7 +10,7 @@ describe('ErrorBoundary', () => {
 
   it('should catch thrown errors successfully', async () => {
     // Prevent known console.error from dirtying up the test output
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
 
     const ThrowError = () => {
       throw new Error('Test Error That Is Caught');
