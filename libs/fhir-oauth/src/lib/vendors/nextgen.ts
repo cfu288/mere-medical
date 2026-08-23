@@ -7,9 +7,17 @@ import type {
 } from '../types.js';
 import { createOAuthError } from '../types.js';
 import { generateAuthorizationRequestState } from '../session.js';
-import { parseTokenResponse, validateCallback, isTokenExpired } from '../token-exchange.js';
+import {
+  parseTokenResponse,
+  validateCallback,
+  isTokenExpired,
+} from '../token-exchange.js';
 
-// One gateway serves all practices and the sandbox (NextGen Patient API Auth Guide).
+/**
+ * One gateway serves all practices and the sandbox
+ * @see https://developer.nextgen.com/wiki/pages/7e535a8d-287f-4718-a7f2-d5d1494daee3/authentication-details#:~:text=other%20GET%20routes.-,Patient%20Access%20API%20Developer%20Sandbox%20Test%20Credentials,-The%20following%20Patient
+ * @see {@link https://nextgenhealthcare.my.salesforce.com/sfc/p/#400000007MP6/a/Vz000004B5DO/XZeaEmgMtiUZKUD24dLz6iO3axx2qAq1BXaMV5UbRDA | Sandbox Postman collection (JSON)}
+ */
 export const NEXTGEN_CONSTANTS = {
   AUTH_URL: 'https://fhir.nextgen.com/nge/prod/patient-oauth/authorize',
   TOKEN_URL: 'https://fhir.nextgen.com/nge/prod/patient-oauth/token',
@@ -34,7 +42,7 @@ export interface NextGenApiEndpoints {
 async function initiateAuth(
   config: OAuthConfig,
 ): Promise<{ url: string; session: AuthorizationRequestState }> {
-  // NextGen documents no PKCE; scopes are configured portal-side (Patient API Auth Guide).
+  // NextGen documents no PKCE; scopes are configured portal-side.
   const session = await generateAuthorizationRequestState({
     usePkce: false,
     useState: true,
@@ -86,14 +94,23 @@ async function fetchPatientId(
         )?.resource?.id;
 
   if (!patientId) {
-    throw createOAuthError('missing_patient', 'No Patient id in GET /Patient response');
+    throw createOAuthError(
+      'missing_patient',
+      'No Patient id in GET /Patient response',
+    );
   }
 
   return patientId;
 }
 
 function buildTokenResult(
-  tokens: { accessToken: string; expiresAt: number; refreshToken?: string; scope?: string; raw: Record<string, unknown> },
+  tokens: {
+    accessToken: string;
+    expiresAt: number;
+    refreshToken?: string;
+    scope?: string;
+    raw: Record<string, unknown>;
+  },
   patientId: string,
 ): NextGenTokenSet {
   return {
@@ -135,7 +152,10 @@ export function createNextGenClientConfidential(
 
     async refresh(tokens, _config) {
       if (!tokens.refreshToken) {
-        throw createOAuthError('refresh_not_supported', 'No refresh token available');
+        throw createOAuthError(
+          'refresh_not_supported',
+          'No refresh token available',
+        );
       }
 
       const res = await fetch(apiEndpoints.refresh, {
@@ -172,7 +192,9 @@ export interface NextGenOAuthConfigOptions {
   redirectPath: string;
 }
 
-export function buildNextGenOAuthConfig(options: NextGenOAuthConfigOptions): OAuthConfig {
+export function buildNextGenOAuthConfig(
+  options: NextGenOAuthConfigOptions,
+): OAuthConfig {
   return {
     clientId: options.clientId,
     redirectUri: new URL(options.redirectPath, options.publicUrl).toString(),
