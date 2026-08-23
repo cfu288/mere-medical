@@ -285,43 +285,60 @@ export default function Home() {
                     <h2 className="text-sm font-normal leading-8 text-gray-700">
                       Sync data from popular patient portals
                     </h2>
-                    <div className="mx-auto mt-10 grid max-w-lg grid-cols-4 items-center gap-x-8 gap-y-10 sm:grid-cols-6 sm:gap-x-10 lg:mx-0 lg:grid-cols-6">
+                    <div className="mx-auto mt-10 grid max-w-lg grid-cols-4 items-center gap-x-8 gap-y-10 sm:grid-cols-8 sm:gap-x-10 lg:mx-0 lg:grid-cols-8">
                       <img
-                        className="col-span-2 max-h-12 w-full object-contain grayscale lg:col-span-2"
+                        className="col-span-2 max-h-12 w-full object-contain grayscale"
                         src="/img/MyChartLogo.png"
                         alt="Epic MyChart Patient Portal"
                         width={158 * 0.75}
                         height={48 * 0.75}
                       />
                       <img
-                        className="col-span-2 max-h-12 w-full object-contain grayscale lg:col-span-2"
+                        className="col-span-2 max-h-12 w-full object-contain grayscale"
                         src="/img/CernerHealthLogo.png"
                         alt="Cerner Health Patient Portal"
                         width={158 * 0.75}
                         height={48 * 0.75}
-                        style={{
-                          filter:
-                            'grayscale invert(17%) sepia(60%) saturate(5044%) hue-rotate(182deg) brightness(91%) contrast(101%)',
-                        }}
                       />
                       <img
-                        className="col-span-2 max-h-12 w-full object-contain grayscale lg:col-span-2"
+                        className="col-span-2 max-h-12 w-full object-contain grayscale"
                         src="/img/AllscriptsLogo.png"
                         alt="Allscripts Connect Patient Portal"
                         width={158 * 0.75}
                         height={48 * 0.75}
                       />
                       <img
-                        className="col-span-2 max-h-12 w-full object-contain grayscale sm:col-start-2 lg:col-span-2 lg:col-start-2"
+                        className="col-span-2 max-h-12 w-full object-contain grayscale"
                         src="/img/OnpatientLogo.png"
-                        alt="Onpatient Patient Portal"
+                        alt="OnPatient Patient Portal"
                         width={158 * 0.75}
                         height={48 * 0.75}
                       />
                       <img
-                        className="col-span-2 col-start-2 max-h-12 w-full object-contain grayscale sm:col-start-auto lg:col-span-2"
-                        src="/img/FollowMyHealthLogo.png"
-                        alt="Onpatient Patient Portal"
+                        className="col-span-2 max-h-12 w-full object-contain grayscale"
+                        src="/img/logos/va-logo.png"
+                        alt="VA Patient Portal"
+                        width={158 * 0.75}
+                        height={48 * 0.75}
+                      />
+                      <img
+                        className="col-span-2 max-h-12 w-full object-contain grayscale"
+                        src="/img/logos/ecw-logo.png"
+                        alt="eClinicalWorks Healow Patient Portal"
+                        width={158 * 0.75}
+                        height={48 * 0.75}
+                      />
+                      <img
+                        className="col-span-2 max-h-12 w-full object-contain grayscale"
+                        src="/img/logos/athena-logo.png"
+                        alt="athenahealth Patient Portal"
+                        width={158 * 0.75}
+                        height={48 * 0.75}
+                      />
+                      <img
+                        className="col-span-2 max-h-12 w-full object-contain grayscale"
+                        src="/img/logos/nextgen-logo-square.jpeg"
+                        alt="NextGen Enterprise Patient Portal"
                         width={158 * 0.75}
                         height={48 * 0.75}
                       />
@@ -486,7 +503,7 @@ function TestimonialSection() {
   useEffect(() => {
     const interval = setInterval(() => {
       setMessage(
-        Feedback_Messages[Math.floor(Math.random() * Feedback_Messages.length)]
+        Feedback_Messages[Math.floor(Math.random() * Feedback_Messages.length)],
       );
     }, 10000);
     return () => clearInterval(interval);
@@ -507,7 +524,7 @@ function TestimonialSection() {
                     const index = Feedback_Messages.indexOf(feedbackMessage);
                     if (index === 0) {
                       setMessage(
-                        Feedback_Messages[Feedback_Messages.length - 1]
+                        Feedback_Messages[Feedback_Messages.length - 1],
                       );
                     } else {
                       setMessage(Feedback_Messages[index - 1]);
