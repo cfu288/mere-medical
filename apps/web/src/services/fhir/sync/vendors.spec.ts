@@ -495,6 +495,24 @@ describe('vendor sync fetch', () => {
     });
   });
 
+  it('requests NextGen DiagnosticReport with no category filter', async () => {
+    const fetch = emptyBundleFetch();
+    globalThis.fetch = fetch;
+
+    await NextGen.sync.syncAllRecords(nextGenContext());
+
+    expect(fetch).toHaveBeenNthCalledWith(
+      9,
+      'https://fhir.nextgen.com/nge/prod/fhir-api-r4/fhir/r4/DiagnosticReport?patient=patient-1',
+      {
+        headers: {
+          Authorization: 'Bearer nextgen-token',
+          Accept: 'application/json',
+        },
+      },
+    );
+  });
+
   it('requests NextGen CarePlan with the assess-plan category', async () => {
     const fetch = emptyBundleFetch();
     globalThis.fetch = fetch;

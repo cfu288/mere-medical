@@ -186,7 +186,7 @@ export const sync: VendorSync<NextGenConnectionDocument> = {
         db,
         'DiagnosticReport',
         R4.mapDiagnosticReportToClinicalDocument,
-        { patient, category: 'lab' },
+        { patient },
       ),
       syncFHIRResource(cd, db, 'CarePlan', R4.mapCarePlanToClinicalDocument, {
         patient,
