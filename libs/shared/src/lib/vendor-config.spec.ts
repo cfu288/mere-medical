@@ -38,7 +38,7 @@ describe('parseVendorConfig', () => {
           enableWith: {
             allOf: [
               'ONPATIENT_CLIENT_ID',
-              'ONPATIENT_CLIENT_SECRET (on the server)',
+              'ONPATIENT_CLIENT_SECRET',
               'PUBLIC_URL',
             ],
           },
@@ -59,7 +59,7 @@ describe('parseVendorConfig', () => {
           enableWith: {
             allOf: [
               'NEXTGEN_CLIENT_ID',
-              'NEXTGEN_CLIENT_SECRET (on the server)',
+              'NEXTGEN_CLIENT_SECRET',
               'PUBLIC_URL',
             ],
           },
@@ -164,7 +164,7 @@ describe('parseVendorConfig', () => {
       {
         onpatient: {
           status: 'disabled',
-          enableWith: { allOf: ['ONPATIENT_CLIENT_SECRET (on the server)'] },
+          enableWith: { allOf: ['ONPATIENT_CLIENT_SECRET'] },
         },
       },
     ],
@@ -230,7 +230,7 @@ describe('parseVendorConfig', () => {
       {
         nextgen: {
           status: 'disabled',
-          enableWith: { allOf: ['NEXTGEN_CLIENT_SECRET (on the server)'] },
+          enableWith: { allOf: ['NEXTGEN_CLIENT_SECRET'] },
         },
       },
     ],

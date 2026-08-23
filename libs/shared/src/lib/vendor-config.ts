@@ -202,7 +202,7 @@ function onPatientChannel(
   const base = channel(env, { production: ['ONPATIENT_CLIENT_ID'] });
   const secretMissing = env.ONPATIENT_SECRET_CONFIGURED
     ? []
-    : (['ONPATIENT_CLIENT_SECRET (on the server)'] as const);
+    : (['ONPATIENT_CLIENT_SECRET'] as const);
   const publicUrlMissing =
     publicUrl.status === 'configured'
       ? []
@@ -219,7 +219,7 @@ function onPatientChannel(
     return {
       status: 'disabled',
       enableWith: {
-        allOf: ['ONPATIENT_CLIENT_SECRET (on the server)', ...publicUrlMissing],
+        allOf: ['ONPATIENT_CLIENT_SECRET', ...publicUrlMissing],
       },
     };
   }
@@ -266,7 +266,7 @@ function nextGenChannel(
   const base = channel(env, { production: ['NEXTGEN_CLIENT_ID'] });
   const secretMissing = env.NEXTGEN_SECRET_CONFIGURED
     ? []
-    : (['NEXTGEN_CLIENT_SECRET (on the server)'] as const);
+    : (['NEXTGEN_CLIENT_SECRET'] as const);
   const publicUrlMissing =
     publicUrl.status === 'configured'
       ? []
@@ -283,7 +283,7 @@ function nextGenChannel(
     return {
       status: 'disabled',
       enableWith: {
-        allOf: ['NEXTGEN_CLIENT_SECRET (on the server)', ...publicUrlMissing],
+        allOf: ['NEXTGEN_CLIENT_SECRET', ...publicUrlMissing],
       },
     };
   }
