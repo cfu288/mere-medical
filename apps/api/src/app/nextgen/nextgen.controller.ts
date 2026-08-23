@@ -50,20 +50,17 @@ export class NextGenController {
     grantParams: Record<string, string>,
   ) {
     try {
-      // NextGen's token endpoint reads params from the query string (Patient API Auth Guide).
       const params = new URLSearchParams({
         ...grantParams,
         client_id: this.config.clientId,
         client_secret: this.config.clientSecret,
       });
 
-      const tokenResponse = await fetch(
-        `${NEXTGEN_CONSTANTS.TOKEN_URL}?${params}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        },
-      );
+      const tokenResponse = await fetch(NEXTGEN_CONSTANTS.TOKEN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString(),
+      });
 
       const body = await tokenResponse.text();
       let data: Record<string, unknown>;
