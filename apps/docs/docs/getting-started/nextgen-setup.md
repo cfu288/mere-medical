@@ -21,7 +21,7 @@ Sign up at [developer.nextgen.com](https://developer.nextgen.com/account/registe
 4. Leave **This application is for SMART Standalone Launch** and **This application can be launched from within the NextGen EHR** off.
 5. Under **API Selection**, select **FHIR API R4** only. NextGen advises against the DSTU2 API, which is being sunset.
 6. In the **FHIR API R4** configuration panel that appears, under **Requested Scopes**:
-   - Enable **Does this app require Access authorization?** and check **Offline Access** only. This grants 90-day refresh tokens; without it, sessions expire after an hour. Online Access is for SMART-on-FHIR user-facing apps and is not applicable.
+   - Enable **Does this app require Access authorization?** and check **Offline Access** only. This grants 90-day refresh tokens; without it, refresh tokens expire after one hour and users must log in again every session. Online Access is for SMART-on-FHIR user-facing apps and is not applicable.
    - Enable **Does this app require Patient authorization?** and check the **Read** column for every resource. Patients will see the selected categories on NextGen's consent screen and can approve or deny each.
 7. Accept the NextGen API Terms of Service and select **Add Application**. Your `client_id` and `client_secret` are displayed immediately.
 
@@ -38,6 +38,10 @@ NEXTGEN_CLIENT_SECRET=
 
 NextGen's sandbox uses the same OAuth and FHIR endpoints as production. Select NextGen in Mere's connections tab and log in with the sandbox test patient credentials published in the [NextGen Patient Access API Authentication Guide](https://www.nextgen.com/api/-/media/files/api/nge-patient-api-auth-guide.pdf) (username `patientapitest`).
 
+To verify the gateway is reachable without any credentials, the R4 CapabilityStatement is public: `https://fhir.nextgen.com/nge/prod/fhir-api-r4/fhir/r4/metadata`.
+
 ## Going to Production
 
-Patient Access apps do not require NextGen review. Before supporting real practices, NextGen requests that you notify apiprogram@nextgen.com of your intent to go to production and share any requirements practices must satisfy. Patients connect with Patient API credentials issued by their practice through NextGen's Patient Enrollment Workflow, which is separate from their patient-portal login.
+The same credentials serve production once your registration meets NextGen's deployment requirements — there is no separate production key. Before launch, NextGen asks Patient Access developers to email `APIpartners@nextgen.com` with your intent and any practice-facing requirements; this also lists your app in NextGen's directory of known Patient Access apps.
+
+A patient can only connect if their practice has enabled the Patient Access API (installed NextGen's API Suite Manager and enrolled the patient). Practices using the NextGen Patient Portal let patients log in with their existing portal credentials; other practices issue dedicated Patient API credentials during enrollment. Practice enablement status is searchable at [nextgen.com/api/practice-search](https://www.nextgen.com/api/practice-search).
