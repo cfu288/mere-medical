@@ -29,12 +29,13 @@ jobs:
           node-version: 26.7.0
       - name: Install dependencies
         run: npm ci
-      - name: Resolve Playwright version
+      - name: Resolve Playwright version for the browser cache key
         id: playwright
         run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
       - name: Cache Playwright browsers
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
+          # npm ci does not install browsers; they download here and are pinned to the Playwright version
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
       - name: Install Playwright system dependencies
