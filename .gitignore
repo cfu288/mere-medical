@@ -59,3 +59,4 @@ Thumbs.db
 errorlog*
 
 .claude/worktrees
+.epic-proxy-profile
