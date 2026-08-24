@@ -24,7 +24,7 @@ export class NextGenController {
   @Post('token')
   async exchangeToken(
     @Res() response: Response,
-    @Body() body: TokenExchangeRequest,
+    @Body() body: TokenExchangeRequest = {} as TokenExchangeRequest,
   ) {
     await this.forwardTokenRequest(response, 'token exchange', {
       grant_type: 'authorization_code',
@@ -36,7 +36,7 @@ export class NextGenController {
   @Post('refresh')
   async refreshToken(
     @Res() response: Response,
-    @Body() body: TokenRefreshRequest,
+    @Body() body: TokenRefreshRequest = {} as TokenRefreshRequest,
   ) {
     await this.forwardTokenRequest(response, 'token refresh', {
       grant_type: 'refresh_token',

@@ -138,7 +138,9 @@ export class ProxyService {
       token = ((req as any).user as any).authTokens.accessToken;
     }
 
-    const prefix = params ? `${params[0]}` : '';
+    const prefix = Array.isArray(params?.prefix)
+      ? (params.prefix as unknown as string[]).join('/')
+      : '';
 
     if (target && !serviceId) {
       const error = `Cannot make a proxy call without a serviceId`;

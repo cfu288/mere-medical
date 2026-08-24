@@ -12,7 +12,7 @@ import { ProxyService } from '../services';
 import { OriginGuard } from '../guards';
 
 @UseGuards(OriginGuard)
-@Controller('?*/proxy')
+@Controller(['proxy', '*prefix/proxy'])
 export class ProxyController {
   private readonly logger = new Logger(ProxyController.name);
 

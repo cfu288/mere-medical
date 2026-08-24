@@ -64,7 +64,7 @@ export class HealowController {
   @Post('token')
   async exchangeToken(
     @Res() response: Response,
-    @Body() body: TokenExchangeRequest,
+    @Body() body: TokenExchangeRequest = {} as TokenExchangeRequest,
   ) {
     const clientId = this.configService.getPublicConfig().HEALOW_CLIENT_ID;
     const clientSecret = this.configService.getHealowClientSecret();
@@ -138,7 +138,7 @@ export class HealowController {
   @Post('refresh')
   async refreshToken(
     @Res() response: Response,
-    @Body() body: TokenRefreshRequest,
+    @Body() body: TokenRefreshRequest = {} as TokenRefreshRequest,
   ) {
     const clientId = this.configService.getPublicConfig().HEALOW_CLIENT_ID;
     const clientSecret = this.configService.getHealowClientSecret();
