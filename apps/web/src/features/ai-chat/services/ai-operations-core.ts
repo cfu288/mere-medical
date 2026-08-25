@@ -87,7 +87,7 @@ export async function callAIProvider({
       const reader = response.body.getReader();
       const decoder = new TextDecoder('utf-8');
       let fullResponse = '';
-      while (true) {
+      for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
         const chunk = decoder.decode(value);
@@ -148,7 +148,7 @@ export async function callAIProvider({
       const reader = response.body.getReader();
       const decoder = new TextDecoder('utf-8');
       let fullResponse = '';
-      while (true) {
+      for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
         const chunk = decoder.decode(value);

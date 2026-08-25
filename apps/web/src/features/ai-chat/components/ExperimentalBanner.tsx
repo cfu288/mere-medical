@@ -5,9 +5,8 @@ export function ExperimentalBanner() {
     <div
       style={{
         background: 'rgb(199 210 254 / 0.4)',
-        // @ts-ignore
+        // @ts-expect-error CSS custom property is not in CSSProperties
         '--image-url': `url(${grainImage})`,
-        // @ts-ignore
         '-webkit-backdrop-filter': 'blur(10px)',
         backdropFilter: 'blur(10px)',
       }}

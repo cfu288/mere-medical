@@ -59,7 +59,7 @@ const TutorialLocalStorageContext = React.createContext<TutorialLocalStorage>(
 );
 const UpdateTutorialLocalStorageContext = React.createContext<
   (config: Partial<TutorialLocalStorage>) => void
->(() => {});
+>(() => undefined);
 
 export function TutorialConfigProvider(props: PropsWithChildren<unknown>) {
   const [tutorialConfig, setTutorialConfig] = useState<

@@ -55,7 +55,7 @@ type LocalConfigProviderProps = PropsWithChildren<unknown>;
 const LocalConfigContext = React.createContext<LocalConfig>(defaultLocalConfig);
 const UpdateLocalConfigContext = React.createContext<
   (config: Partial<LocalConfig>) => void
->(() => {});
+>(() => undefined);
 
 /**
  * Helper function that allows you to get a value from the local config
