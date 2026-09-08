@@ -1,0 +1,113 @@
+{
+  "resourceType": "Bundle",
+  "entry": [
+    {
+      "fullUrl": "https://fhir-myrecord.cerner.com/Endpoint/-KzIoYV6gk-ILcHOWbsH2m9KsSdDgi12",
+      "resource": {
+        "resourceType": "Endpoint",
+        "id": "-KzIoYV6gk-ILcHOWbsH2m9KsSdDgi12",
+        "status": "active",
+        "connectionType": {
+          "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
+          "code": "hl7-fhir-rest",
+          "display": "HL7 FHIR"
+        },
+        "payloadType": [
+          {
+            "coding": [
+              {
+                "system": "urn:oid:1.3.6.1.4.1.19376.1.2.3",
+                "code": "urn:ihe:pcc:xphr:2007",
+                "display": "Personal Health Records"
+              }
+            ]
+          }
+        ],
+        "address": "https://fhir-myrecord.cerner.com/r4/-KzIoYV6gk-ILcHOWbsH2m9KsSdDgi12/"
+      }
+    },
+    {
+      "fullUrl": "https://fhir-myrecord.cerner.com/Endpoint/-MIuTZfWACgngV9YTgKmhcl1PVL8iu53",
+      "resource": {
+        "resourceType": "Endpoint",
+        "id": "-MIuTZfWACgngV9YTgKmhcl1PVL8iu53",
+        "status": "active",
+        "connectionType": {
+          "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
+          "code": "hl7-fhir-rest",
+          "display": "HL7 FHIR"
+        },
+        "payloadType": [
+          {
+            "coding": [
+              {
+                "system": "urn:oid:1.3.6.1.4.1.19376.1.2.3",
+                "code": "urn:ihe:pcc:xphr:2007",
+                "display": "Personal Health Records"
+              }
+            ]
+          }
+        ],
+        "address": "https://fhir-myrecord.cerner.com/r4/-MIuTZfWACgngV9YTgKmhcl1PVL8iu53/"
+      }
+    },
+    {
+      "fullUrl": "https://fhir-myrecord.cerner.com/Organization/O-KzIoYV6gk-ILcHOWbsH2m9KsSdDgi12",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "O-KzIoYV6gk-ILcHOWbsH2m9KsSdDgi12",
+        "identifier": [
+          {
+            "use": "official",
+            "system": "urn:ietf:rfc:3986",
+            "value": "urn:oid:2.16.840.1.113883.3.3771"
+          }
+        ],
+        "name": "Oscar Matthews, MD",
+        "address": [
+          {
+            "line": ["611 Lido Park Dr Apt 4-A"],
+            "city": "Newport Beach",
+            "state": "CA",
+            "postalCode": "92663",
+            "country": "United States of America"
+          }
+        ],
+        "endpoint": [
+          {
+            "reference": "Endpoint/-KzIoYV6gk-ILcHOWbsH2m9KsSdDgi12"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "https://fhir-myrecord.cerner.com/Organization/O-MIuTZfWACgngV9YTgKmhcl1PVL8iu53",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "O-MIuTZfWACgngV9YTgKmhcl1PVL8iu53",
+        "identifier": [
+          {
+            "use": "official",
+            "system": "http://hl7.org/fhir/sid/us-npi",
+            "value": "1912011511"
+          }
+        ],
+        "name": "Vishen, R K MD",
+        "address": [
+          {
+            "line": ["165 Wells Rd"],
+            "city": "Orange Park",
+            "state": "FL",
+            "postalCode": "32073",
+            "country": "United States of America"
+          }
+        ],
+        "endpoint": [
+          {
+            "reference": "Endpoint/-MIuTZfWACgngV9YTgKmhcl1PVL8iu53"
+          }
+        ]
+      }
+    }
+  ]
+}

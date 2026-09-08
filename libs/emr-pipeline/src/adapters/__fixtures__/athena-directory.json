@@ -1,0 +1,51 @@
+{
+  "resourceType": "Bundle",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Organization",
+        "id": "ffff0000-0000-0000-0000-000000000000",
+        "name": "Radiology White Plains",
+        "extension": [
+          {
+            "url": "https://fhir.athena.io/StructureDefinition/ah-practice",
+            "valueReference": { "reference": "Practice-21260" }
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Organization",
+        "id": "1111aaaa-0000-0000-0000-000000000000",
+        "name": "Audiology Greenwich",
+        "extension": [
+          {
+            "url": "https://fhir.athena.io/StructureDefinition/ah-practice",
+            "valueReference": { "reference": "Practice-21260" }
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Organization",
+        "id": "2222bbbb-0000-0000-0000-000000000000",
+        "name": "Anchor Medical Associates",
+        "extension": [
+          {
+            "url": "https://fhir.athena.io/StructureDefinition/ah-practice",
+            "valueReference": { "reference": "Practice-10" }
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Organization",
+        "id": "3333cccc-0000-0000-0000-000000000000",
+        "name": "No Practice Extension"
+      }
+    }
+  ]
+}

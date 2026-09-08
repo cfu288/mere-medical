@@ -1,0 +1,12 @@
+{
+  "name": "@mere/emr-pipeline",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "dependencies": {
+    "@mere/shared": "0.0.1",
+    "@mere/tenant-db": "0.0.1",
+    "tslib": "^2.3.0",
+    "zod": "^3.25.76"
+  }
+}
