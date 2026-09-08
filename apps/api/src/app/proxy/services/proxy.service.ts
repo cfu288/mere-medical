@@ -1,15 +1,27 @@
 import { Inject, Injectable, Logger, Param } from '@nestjs/common';
 import { Request, Response } from 'express';
 import * as server from 'http-proxy';
-import { ProxyModuleOptions, Service } from '../interfaces';
-import { HTTP_PROXY, PROXY_MODULE_OPTIONS } from '../proxy.constants';
+import { Service } from '../interfaces';
+import { HTTP_PROXY } from '../proxy.constants';
 import { concatPath, getBaseURL } from '../utils';
 import {
   deriveRegistrationUrl,
   parseProxyTarget,
+  PROXY_TARGET_TYPES_BY_VENDOR,
   ProxyTarget,
   ProxyVendor,
 } from '@mere/fhir-oauth';
+import { TenantDb, findTenantById } from '@mere/tenant-db';
+import { toVendorEndpoint } from '@mere/shared';
+import { TENANT_DB } from '../../tenant-db/tenant-db.module';
+
+function isProxyVendor(value: string): value is ProxyVendor {
+  return PROXY_VENDORS.includes(value as ProxyVendor);
+}
+
+const PROXY_VENDORS = Object.keys(
+  PROXY_TARGET_TYPES_BY_VENDOR,
+) as ProxyVendor[];
 
 const ALLOWED_PROXY_HEADERS = ['accept', 'content-type', 'content-length'];
 
@@ -19,13 +31,13 @@ const ALLOWED_PROXY_HEADERS = ['accept', 'content-type', 'content-length'];
  * Register seems to be an Epic specific endpoint for DCR which is derived off of its authorize endpoint.
  */
 export function resolveProxyTarget(
-  service: Pick<Service, 'url' | 'authorize' | 'token'>,
+  service: Pick<Service, 'url' | 'authorize' | 'token' | 'register'>,
   target: ProxyTarget,
 ): string {
   switch (target.vendor) {
     case 'epic':
       if (target.targetType === 'register') {
-        return deriveRegistrationUrl(service.authorize);
+        return service.register ?? deriveRegistrationUrl(service.authorize);
       }
       return publishedTarget(service, target.targetType);
     case 'healow':
@@ -53,10 +65,9 @@ export class ProxyService {
 
   constructor(
     @Inject(HTTP_PROXY) private proxy: server,
-    @Inject(PROXY_MODULE_OPTIONS) private options: ProxyModuleOptions,
+    @Inject(TENANT_DB) private tenants: TenantDb,
   ) {}
 
-  // TODO: Convert endpoints arrays to Map<id, endpoint> for O(1) lookup instead of O(n) scan
   private findService(
     vendor: string | undefined,
     serviceId: string,
@@ -68,10 +79,7 @@ export class ProxyService {
         error: { status: number; body: object };
       } {
     if (vendor) {
-      const vendorServices = this.options.services?.find(
-        (s) => s.vendor === vendor,
-      );
-      if (!vendorServices) {
+      if (!isProxyVendor(vendor)) {
         return {
           error: {
             status: 404,
@@ -79,8 +87,8 @@ export class ProxyService {
           },
         };
       }
-      const service = vendorServices.endpoints.find((e) => e.id === serviceId);
-      if (!service) {
+      const tenant = findTenantById(this.tenants, vendor, serviceId);
+      if (!tenant) {
         return {
           error: {
             status: 404,
@@ -88,14 +96,16 @@ export class ProxyService {
           },
         };
       }
-      return { service, vendor: vendorServices.vendor };
+      return {
+        service: { ...toVendorEndpoint(tenant), register: tenant.register },
+        vendor,
+      };
     }
 
-    const matches = (this.options.services || []).flatMap((v) =>
-      v.endpoints
-        .filter((e) => e.id === serviceId)
-        .map((e) => ({ vendor: v.vendor, ...e })),
-    );
+    const matches = PROXY_VENDORS.flatMap((proxyVendor) => {
+      const tenant = findTenantById(this.tenants, proxyVendor, serviceId);
+      return tenant ? [{ vendor: proxyVendor, tenant }] : [];
+    });
 
     if (matches.length === 0) {
       return {
@@ -118,8 +128,13 @@ export class ProxyService {
       };
     }
 
-    const { vendor: matchedVendor, ...service } = matches[0];
-    return { service, vendor: matchedVendor };
+    return {
+      service: {
+        ...toVendorEndpoint(matches[0].tenant),
+        register: matches[0].tenant.register,
+      },
+      vendor: matches[0].vendor,
+    };
   }
 
   async proxyRequest(
@@ -185,8 +200,8 @@ export class ProxyService {
         req,
         res,
         target ? concatPath(urlToProxy, prefix, target) : urlToProxy,
-        service.forwardToken === false ? null : token,
-        { ...service.config, headers },
+        token,
+        { headers },
       );
     }
 

@@ -1,58 +1,35 @@
-import { Injectable } from '@nestjs/common';
-import {
-  EpicDSTU2TenantEndpoints,
-  DSTU2Endpoint,
-  EpicR4TenantEndpoints,
-  R4Endpoint,
-} from '@mere/epic';
-import { stringSimilarity } from '@mere/shared';
-
-const SANDBOX_IDS = ['sandbox_epic', 'sandbox_epic_r4'];
+import { Inject, Injectable } from '@nestjs/common';
+import { VendorEndpoint, toVendorEndpoint } from '@mere/shared';
+import { TenantDb, searchTenants } from '@mere/tenant-db';
+import { TENANT_DB } from '../tenant-db/tenant-db.module';
 
 @Injectable()
 export class EpicService {
-  private readonly items = EpicDSTU2TenantEndpoints;
-  private readonly r4Items = EpicR4TenantEndpoints;
+  constructor(@Inject(TENANT_DB) private readonly db: TenantDb) {}
 
   async queryTenants(
     query: string,
     sandboxOnly = false,
-  ): Promise<DSTU2Endpoint[]> {
-    const items = sandboxOnly
-      ? this.items.filter((item) => SANDBOX_IDS.includes(item.id))
-      : this.items;
-    return filteredItemsWithQuery(items, query);
+  ): Promise<VendorEndpoint[]> {
+    return this.search(query, 'DSTU2', sandboxOnly);
   }
 
   async queryR4Tenants(
     query: string,
     sandboxOnly = false,
-  ): Promise<R4Endpoint[]> {
-    const items = sandboxOnly
-      ? this.r4Items.filter((item) => SANDBOX_IDS.includes(item.id))
-      : this.r4Items;
-    return filteredItemsWithQuery(items, query);
+  ): Promise<VendorEndpoint[]> {
+    return this.search(query, 'R4', sandboxOnly);
   }
-}
 
-function filteredItemsWithQuery<
-  T extends { name: string; managingOrganization?: string },
->(items: T[], query: string): T[] {
-  if (query === '' || query === undefined) {
-    return items.sort((x, y) => x.name.localeCompare(y.name)).slice(0, 100);
+  private search(
+    query: string,
+    fhirVersion: 'DSTU2' | 'R4',
+    sandboxOnly: boolean,
+  ): VendorEndpoint[] {
+    return searchTenants(this.db, query, {
+      vendors: ['epic'],
+      fhirVersion,
+      source: sandboxOnly ? 'sandbox' : undefined,
+    }).map(toVendorEndpoint);
   }
-  return items
-    .map((item) => {
-      const vals = [item.name, item.managingOrganization]
-        .filter(Boolean)
-        .join(' ')
-        .split(' ')
-        .map((token) => stringSimilarity(token, query));
-      const rating = Math.max(...vals);
-      return { rating, item };
-    })
-    .filter((item) => item.rating > 0.05)
-    .sort((a, b) => b.rating - a.rating)
-    .slice(0, 50)
-    .map((item) => item.item);
 }

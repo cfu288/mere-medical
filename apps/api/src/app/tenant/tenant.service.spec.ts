@@ -1,4 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { TenantDbModule } from '../tenant-db/tenant-db.module';
+
 import { TenantService } from './tenant.service';
 
 describe('TenantService', () => {
@@ -6,6 +8,7 @@ describe('TenantService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [TenantDbModule],
       providers: [TenantService],
     }).compile();
 
@@ -150,7 +153,7 @@ describe('TenantService', () => {
 
   describe('edge cases', () => {
     it('should handle undefined query as empty', async () => {
-      const result = await service.queryTenants(undefined as any, []);
+      const result = await service.queryTenants(undefined, []);
 
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBeGreaterThan(0);
@@ -170,6 +173,18 @@ describe('TenantService', () => {
 
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBe(0);
+    });
+
+    it('does not throw or widen when express parses vendor as an object', async () => {
+      const result = await service.queryAllTenants('', { nested: 'EPIC' });
+
+      expect(result).toEqual([]);
+    });
+
+    it('does not browse arbitrarily for a repeated query parameter', async () => {
+      const result = await service.queryAllTenants(['one', 'two'], []);
+
+      expect(result).toEqual([]);
     });
 
     it('should handle queries with very low similarity scores', async () => {

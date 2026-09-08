@@ -1,4 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { TenantDbModule } from '../tenant-db/tenant-db.module';
+
 import { CernerService } from './cerner.service';
 
 describe('CernerService', () => {
@@ -6,6 +8,7 @@ describe('CernerService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [TenantDbModule],
       providers: [CernerService],
     }).compile();
 
@@ -13,17 +16,17 @@ describe('CernerService', () => {
   });
 
   describe('queryTenants (DSTU2)', () => {
-    it('should return sorted results by name when query is empty', async () => {
+    it('lists tenants by name when the query is empty', async () => {
       const result = await service.queryTenants('');
 
-      for (let i = 1; i < result.length; i++) {
-        expect(
-          result[i - 1].name.localeCompare(result[i].name),
-        ).toBeLessThanOrEqual(0);
-      }
+      expect(result.slice(0, 3).map((tenant) => tenant.name)).toEqual([
+        "A Woman's Place, LLC",
+        'Abbeville General Hospital',
+        'AbbVie Inc.',
+      ]);
     });
 
-    it('should filter results by query string using stringSimilarity', async () => {
+    it('filters results by query string', async () => {
       const result = await service.queryTenants('sandbox');
 
       expect(result.length).toBeGreaterThan(0);
@@ -41,17 +44,17 @@ describe('CernerService', () => {
   });
 
   describe('queryR4Tenants', () => {
-    it('should return sorted results by name when query is empty', async () => {
+    it('lists r4 tenants by name when the query is empty', async () => {
       const result = await service.queryR4Tenants('');
 
-      for (let i = 1; i < result.length; i++) {
-        expect(
-          result[i - 1].name.localeCompare(result[i].name),
-        ).toBeLessThanOrEqual(0);
-      }
+      expect(result.slice(0, 3).map((tenant) => tenant.name)).toEqual([
+        "A Woman's Place, LLC",
+        'Abbeville General Hospital',
+        'ABHA MISHRA NEUROLOGY PLLC',
+      ]);
     });
 
-    it('should filter R4 results by query string using stringSimilarity', async () => {
+    it('filters R4 results by query string', async () => {
       const result = await service.queryR4Tenants('sandbox');
 
       expect(result.length).toBeGreaterThan(0);

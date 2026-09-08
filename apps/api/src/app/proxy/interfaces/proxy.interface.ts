@@ -1,6 +1,5 @@
 import { ModuleMetadata, Type } from '@nestjs/common/interfaces';
 import * as server from 'http-proxy';
-import { ProxyVendor } from '@mere/fhir-oauth';
 
 export interface Service {
   id: string;
@@ -8,18 +7,11 @@ export interface Service {
   name: string;
   token: string;
   authorize: string;
-  config?: server.ServerOptions;
-  forwardToken?: boolean;
-}
-
-export interface VendorServices {
-  vendor: ProxyVendor;
-  endpoints: Service[];
+  register?: string;
 }
 
 export interface ProxyModuleOptions {
   config?: server.ServerOptions;
-  services?: VendorServices[];
   allowedCookies?: string[];
 }
 

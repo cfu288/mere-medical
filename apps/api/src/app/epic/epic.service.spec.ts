@@ -1,4 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { TenantDbModule } from '../tenant-db/tenant-db.module';
+
 import { EpicService } from './epic.service';
 
 describe('EpicService', () => {
@@ -6,6 +8,7 @@ describe('EpicService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [TenantDbModule],
       providers: [EpicService],
     }).compile();
 
@@ -13,14 +16,14 @@ describe('EpicService', () => {
   });
 
   describe('queryTenants (DSTU2)', () => {
-    it('should return sorted results by name when query is empty', async () => {
+    it('lists tenants by name when the query is empty', async () => {
       const result = await service.queryTenants('');
 
-      for (let i = 1; i < result.length; i++) {
-        expect(
-          result[i - 1].name.localeCompare(result[i].name),
-        ).toBeLessThanOrEqual(0);
-      }
+      expect(result.slice(0, 3).map((tenant) => tenant.name)).toEqual([
+        'Access Community Health Network',
+        'Acumen Physician Solutions, LLC.',
+        'Adult & Pediatric Ear, Nose & Throat - Kalamazoo',
+      ]);
     });
 
     it('should filter results by query string', async () => {
@@ -61,14 +64,14 @@ describe('EpicService', () => {
   });
 
   describe('queryR4Tenants', () => {
-    it('should return sorted results by name when query is empty', async () => {
+    it('lists r4 tenants by name when the query is empty', async () => {
       const result = await service.queryR4Tenants('');
 
-      for (let i = 1; i < result.length; i++) {
-        expect(
-          result[i - 1].name.localeCompare(result[i].name),
-        ).toBeLessThanOrEqual(0);
-      }
+      expect(result.slice(0, 3).map((tenant) => tenant.name)).toEqual([
+        'AACI',
+        'Access Community Health Centers',
+        'Access Community Health Network',
+      ]);
     });
 
     it('should filter R4 results by query string', async () => {

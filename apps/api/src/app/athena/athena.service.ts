@@ -1,11 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { AthenaOrganizations } from '@mere/athena';
+import { Inject, Injectable } from '@nestjs/common';
+import { TenantDb, findTenantById } from '@mere/tenant-db';
+import { TENANT_DB } from '../tenant-db/tenant-db.module';
 
 @Injectable()
 export class AthenaService {
-  private readonly practiceNames = AthenaOrganizations;
+  constructor(@Inject(TENANT_DB) private readonly db: TenantDb) {}
 
   getOrganizationName(practiceId: string): string | undefined {
-    return this.practiceNames[practiceId];
+    return findTenantById(this.db, 'athena', practiceId, 'R4')?.name;
   }
 }
