@@ -1,0 +1,25 @@
+{
+  "name": "tenant-db",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/tenant-db/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/tenant-db",
+        "main": "libs/tenant-db/src/index.ts",
+        "tsConfig": "libs/tenant-db/tsconfig.lib.json",
+        "assets": ["libs/tenant-db/*.md"]
+      }
+    },
+    "lint": { "executor": "@nx/eslint:lint" },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/libs/tenant-db"],
+      "options": { "jestConfig": "libs/tenant-db/jest.config.ts" }
+    }
+  }
+}
