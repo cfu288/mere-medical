@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { TenantDbModule } from '../tenant-db/tenant-db.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AthenaService } from './athena.service';
 import { AthenaController } from './athena.controller';
@@ -9,6 +10,7 @@ import {
 
 @Module({
   imports: [
+    TenantDbModule,
     ThrottlerModule.forRoot([
       { name: 'short', ttl: 1000, limit: 30 },
       { name: 'medium', ttl: 60000, limit: 600 },

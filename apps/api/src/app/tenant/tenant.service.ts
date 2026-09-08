@@ -1,140 +1,70 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
-  CernerDSTU2TenantEndpoints,
-  DSTU2Endpoint as CernerDSTU2Endpoint,
-  CernerR4TenantEndpoints,
-  R4Endpoint as CernerR4Endpoint,
-} from '@mere/cerner';
-import {
-  EpicDSTU2TenantEndpoints,
-  DSTU2Endpoint as EpicDSTU2Endpoint,
-  EpicR4TenantEndpoints,
-  R4Endpoint as EpicR4Endpoint,
-} from '@mere/epic';
-import {
-  VeradigmDSTU2TenantEndpoints,
-  DSTU2Endpoint as VeradigmDSTU2Endpoint,
-} from '@mere/veradigm';
-import { HealowR4TenantEndpoints } from '@mere/healow';
-import { stringSimilarity } from '@mere/shared';
-
-type UnifiedTenantEndpoint = {
-  id: string;
-  url: string;
-  name: string;
-  token: string;
-  authorize: string;
-  managingOrganization?: string;
-  vendor: 'EPIC' | 'CERNER' | 'VERADIGM' | 'HEALOW';
-  version: 'DSTU2' | 'R4';
-};
-
-const searchDSTU2Items: UnifiedTenantEndpoint[] = (
-  [] as UnifiedTenantEndpoint[]
-)
-  .concat(
-    (EpicDSTU2TenantEndpoints as unknown as UnifiedTenantEndpoint[]).map(
-      (i) => {
-        i.vendor = 'EPIC';
-        i.version = 'DSTU2';
-        return i;
-      },
-    ),
-  )
-  .concat(
-    (CernerDSTU2TenantEndpoints as unknown as UnifiedTenantEndpoint[]).map(
-      (i) => {
-        i.vendor = 'CERNER';
-        i.version = 'DSTU2';
-        return i;
-      },
-    ),
-  )
-  .concat(
-    (VeradigmDSTU2TenantEndpoints as unknown as UnifiedTenantEndpoint[]).map(
-      (i) => {
-        i.vendor = 'VERADIGM';
-        i.version = 'DSTU2';
-        return i;
-      },
-    ),
-  );
-
-const searchR4Items: UnifiedTenantEndpoint[] = ([] as UnifiedTenantEndpoint[])
-  .concat(
-    (EpicR4TenantEndpoints as unknown as UnifiedTenantEndpoint[]).map((i) => {
-      i.vendor = 'EPIC';
-      i.version = 'R4';
-      return i;
-    }),
-  )
-  .concat(
-    (CernerR4TenantEndpoints as unknown as UnifiedTenantEndpoint[]).map((i) => {
-      i.vendor = 'CERNER';
-      i.version = 'R4';
-      return i;
-    }),
-  )
-  .concat(
-    (HealowR4TenantEndpoints as unknown as UnifiedTenantEndpoint[]).map((i) => {
-      i.vendor = 'HEALOW';
-      i.version = 'R4';
-      return i;
-    }),
-  );
+  FhirVersion,
+  SearchableVendor,
+  TenantSearchResult,
+  WIRE_VENDOR,
+  fromWireVendor,
+  toSearchResult,
+} from '@mere/shared';
+import { TenantDb, searchTenants } from '@mere/tenant-db';
+import { TENANT_DB } from '../tenant-db/tenant-db.module';
 
 @Injectable()
 export class TenantService {
-  private readonly dstu2Items = searchDSTU2Items;
-  private readonly r4Items = searchR4Items;
-  private readonly allItems = [...searchDSTU2Items, ...searchR4Items];
+  constructor(@Inject(TENANT_DB) private readonly db: TenantDb) {}
 
   async queryTenants(
-    query: string,
-    vendors: string[],
-  ): Promise<UnifiedTenantEndpoint[]> {
-    return filteredItemsWithQuery(this.dstu2Items, query, vendors);
+    query: unknown,
+    vendors: unknown,
+  ): Promise<TenantSearchResult[]> {
+    return this.search(query, vendors, 'DSTU2');
   }
 
   async queryR4Tenants(
-    query: string,
-    vendors: string[],
-  ): Promise<UnifiedTenantEndpoint[]> {
-    return filteredItemsWithQuery(this.r4Items, query, vendors);
+    query: unknown,
+    vendors: unknown,
+  ): Promise<TenantSearchResult[]> {
+    return this.search(query, vendors, 'R4');
   }
 
   async queryAllTenants(
-    query: string,
-    vendors: string[],
-  ): Promise<UnifiedTenantEndpoint[]> {
-    return filteredItemsWithQuery(this.allItems, query, vendors);
+    query: unknown,
+    vendors: unknown,
+  ): Promise<TenantSearchResult[]> {
+    return this.search(query, vendors, undefined);
+  }
+
+  private search(
+    query: unknown,
+    vendors: unknown,
+    fhirVersion: FhirVersion | undefined,
+  ): TenantSearchResult[] {
+    return searchTenants(this.db, query, {
+      vendors: toSearchableVendors(vendors),
+      fhirVersion,
+    }).map(toSearchResult);
   }
 }
 
-function filteredItemsWithQuery(
-  items: UnifiedTenantEndpoint[],
-  query: string,
-  vendors?: string[] | string,
-): UnifiedTenantEndpoint[] {
-  if (vendors && vendors.length) {
-    const vendorArray = Array.isArray(vendors) ? vendors : [vendors];
-    items = items.filter((item) => vendorArray.includes(item.vendor));
+/**
+ * Reads the uppercase vendor names the browser sends.
+ *
+ * Returns undefined when no vendor was asked for, and an empty array when every name
+ * given was unrecognised, so an unknown vendor narrows the search to nothing rather
+ * than widening it to everything.
+ */
+function toSearchableVendors(vendors: unknown): SearchableVendor[] | undefined {
+  const values = Array.isArray(vendors) ? vendors : [vendors];
+  const requested = values.filter(
+    (vendor): vendor is string =>
+      typeof vendor === 'string' && vendor.length > 0,
+  );
+  if (values.every((vendor) => vendor === undefined || vendor === '')) {
+    return undefined;
   }
-  if (query === '' || query === undefined) {
-    return items.sort((x, y) => x.name.localeCompare(y.name)).slice(0, 100);
-  }
-  return items
-    .map((item) => {
-      const vals = [item.name, item.managingOrganization]
-        .filter(Boolean)
-        .join(' ')
-        .split(' ')
-        .map((token) => stringSimilarity(token, query));
-      const rating = vals.length ? Math.max(...vals) : 0;
-      return { rating, item };
-    })
-    .filter((item) => item.rating > 0.05)
-    .sort((a, b) => b.rating - a.rating)
-    .slice(0, 50)
-    .map((item) => item.item);
+  return requested
+    .map((vendor) => WIRE_VENDOR.safeParse(vendor.toUpperCase()))
+    .filter((parsed) => parsed.success)
+    .map((parsed) => fromWireVendor[parsed.data]);
 }

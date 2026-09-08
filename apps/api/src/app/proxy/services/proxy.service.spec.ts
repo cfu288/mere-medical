@@ -30,6 +30,18 @@ describe('resolveProxyTarget', () => {
     ).toBe('https://call.api.northwell.io/epic-proxy/oauth2/token');
   });
 
+  it('prefers a published register url over the derived sibling', () => {
+    expect(
+      resolveProxyTarget(
+        {
+          ...NORTHWELL_R4,
+          register: 'https://call.api.northwell.io/declared/oauth2/register',
+        },
+        { vendor: 'epic', targetType: 'register' },
+      ),
+    ).toBe('https://call.api.northwell.io/declared/oauth2/register');
+  });
+
   it('sends a register request to the sibling of the authorize url', () => {
     expect(
       resolveProxyTarget(NORTHWELL_R4, {
