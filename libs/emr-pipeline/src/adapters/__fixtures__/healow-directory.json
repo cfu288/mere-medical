@@ -1,0 +1,158 @@
+{
+  "resourceType": "Bundle",
+  "entry": [
+    {
+      "resource": {
+        "period": {
+          "start": "2022-12-08T17:28:28.000-05:00"
+        },
+        "address": "https://fhir4.healow.com/fhir/r4/AACJCD",
+        "payloadType": [
+          {
+            "text": "FHIR R4 facade"
+          }
+        ],
+        "name": "Pointcare Medical Center LLC",
+        "id": "AACJCD",
+        "payloadMimeType": [
+          "application/fhir+json",
+          "application/json+fhir",
+          "application/xml+fhir",
+          "application/fhir+xml"
+        ],
+        "connectionType": {
+          "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
+          "code": "hl7-fhir-rest"
+        },
+        "resourceType": "Endpoint",
+        "status": "active"
+      },
+      "fullUrl": "https://fhir4.healow.com/fhir/r4/AACJCD/Endpoint/AACJCD"
+    },
+    {
+      "resource": {
+        "endpoint": [
+          {
+            "reference": "Endpoint/AACJCD"
+          }
+        ],
+        "address": [
+          {
+            "line": [
+              "4727 Hiawtha Ave, Minneapolis,",
+              "Mn - Minnesota, Usa, 55406"
+            ],
+            "city": "Minneapolis",
+            "state": "MN",
+            "postalCode": "55406",
+            "country": "US"
+          }
+        ],
+        "name": "Pointcare Medical Center LLC",
+        "id": "AACJCD",
+        "resourceType": "Organization"
+      },
+      "fullUrl": "https://fhir4.healow.com/fhir/r4/AACJCD/Organization/AACJCD"
+    },
+    {
+      "resource": {
+        "period": {
+          "start": "2023-03-23T15:43:59.000-04:00"
+        },
+        "address": "https://fhir4.healow.com/fhir/r4/IAJHCD",
+        "payloadType": [
+          {
+            "text": "FHIR R4 facade"
+          }
+        ],
+        "name": "Rochester Skin Cancer and Surgery Center",
+        "id": "IAJHCD",
+        "payloadMimeType": [
+          "application/fhir+json",
+          "application/json+fhir",
+          "application/xml+fhir",
+          "application/fhir+xml"
+        ],
+        "connectionType": {
+          "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
+          "code": "hl7-fhir-rest"
+        },
+        "resourceType": "Endpoint",
+        "status": "active"
+      },
+      "fullUrl": "https://fhir4.healow.com/fhir/r4/IAJHCD/Endpoint/IAJHCD"
+    },
+    {
+      "resource": {
+        "endpoint": [
+          {
+            "reference": "Endpoint/IAJHCD"
+          }
+        ],
+        "address": [
+          {
+            "line": ["405 Barclay Circle"],
+            "city": "Rochester Hills",
+            "state": "MI",
+            "postalCode": "48307",
+            "country": "US"
+          }
+        ],
+        "name": "Rochester Skin Cancer and Surgery Center",
+        "id": "IAJHCD",
+        "resourceType": "Organization"
+      },
+      "fullUrl": "https://fhir4.healow.com/fhir/r4/IAJHCD/Organization/IAJHCD"
+    },
+    {
+      "resource": {
+        "period": {
+          "start": "2023-03-24T17:12:16.000-04:00"
+        },
+        "address": "https://fhir4.healow.com/fhir/r4/IFJFCD",
+        "payloadType": [
+          {
+            "text": "FHIR R4 facade"
+          }
+        ],
+        "name": "Illinois Pain Treatment Institute",
+        "id": "IFJFCD",
+        "payloadMimeType": [
+          "application/fhir+json",
+          "application/json+fhir",
+          "application/xml+fhir",
+          "application/fhir+xml"
+        ],
+        "connectionType": {
+          "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
+          "code": "hl7-fhir-rest"
+        },
+        "resourceType": "Endpoint",
+        "status": "active"
+      },
+      "fullUrl": "https://fhir4.healow.com/fhir/r4/IFJFCD/Endpoint/IFJFCD"
+    },
+    {
+      "resource": {
+        "endpoint": [
+          {
+            "reference": "Endpoint/IFJFCD"
+          }
+        ],
+        "address": [
+          {
+            "line": ["600 Hart Road"],
+            "city": "Barrington",
+            "state": "IL",
+            "postalCode": "60010",
+            "country": "US"
+          }
+        ],
+        "name": "Illinois Pain Treatment Institute",
+        "id": "IFJFCD",
+        "resourceType": "Organization"
+      },
+      "fullUrl": "https://fhir4.healow.com/fhir/r4/IFJFCD/Organization/IFJFCD"
+    }
+  ]
+}

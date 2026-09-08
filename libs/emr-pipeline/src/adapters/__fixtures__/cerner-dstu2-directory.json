@@ -1,0 +1,60 @@
+{
+  "resourceType": "Bundle",
+  "total": 2,
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Endpoint",
+        "id": "-KzIoYV6gk-ILcHOWbsH2m9KsSdDgi12",
+        "contained": [
+          {
+            "resourceType": "Organization",
+            "id": "O-KzIoYV6gk-ILcHOWbsH2m9KsSdDgi12",
+            "name": "Oscar Matthews, MD",
+            "address": [
+              {
+                "line": ["611 Lido Park Dr Apt 4-A"],
+                "city": "Newport Beach",
+                "state": "California",
+                "postalCode": "92663",
+                "country": "United States of America"
+              }
+            ]
+          }
+        ],
+        "status": "active",
+        "managingOrganization": {
+          "id": "#O-KzIoYV6gk-ILcHOWbsH2m9KsSdDgi12"
+        },
+        "address": "https://fhir-myrecord.cerner.com/dstu2/-KzIoYV6gk-ILcHOWbsH2m9KsSdDgi12/"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Endpoint",
+        "id": "-MIuTZfWACgngV9YTgKmhcl1PVL8iu53",
+        "contained": [
+          {
+            "resourceType": "Organization",
+            "id": "O-MIuTZfWACgngV9YTgKmhcl1PVL8iu53",
+            "name": "Vishen, R K MD",
+            "address": [
+              {
+                "line": ["165 Wells Rd"],
+                "city": "Orange Park",
+                "state": "Florida",
+                "postalCode": "32073-3035",
+                "country": "United States of America"
+              }
+            ]
+          }
+        ],
+        "status": "active",
+        "managingOrganization": {
+          "id": "#O-MIuTZfWACgngV9YTgKmhcl1PVL8iu53"
+        },
+        "address": "https://fhir-myrecord.cerner.com/dstu2/-MIuTZfWACgngV9YTgKmhcl1PVL8iu53/"
+      }
+    }
+  ]
+}
