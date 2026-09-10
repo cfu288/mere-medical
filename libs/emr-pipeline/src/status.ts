@@ -37,7 +37,6 @@ export function formatStatus(db: DatabaseSync, now: string): string {
   for (const vendor of vendors) {
     for (const version of ADAPTERS[vendor].versions) {
       const directoryCount = directoryCounts.find(db, vendor, version);
-      const failing = downloads.countFailing(db, vendor, version);
       const latestSnapshot = snapshots.latestFetchedAt(db, vendor, version);
       const latestCapability = downloads.latestDownloadedAt(
         db,
@@ -55,11 +54,11 @@ export function formatStatus(db: DatabaseSync, now: string): string {
         version,
       );
       const failingCell =
-        lastFailed != null &&
-        previousFailed != null &&
-        lastFailed !== previousFailed
-          ? `${failing} (${signed(lastFailed - previousFailed)})`
-          : String(failing);
+        lastFailed === undefined
+          ? '-'
+          : previousFailed !== undefined && lastFailed !== previousFailed
+            ? `${lastFailed} (${signed(lastFailed - previousFailed)})`
+            : String(lastFailed);
 
       const transform = latestSnapshot
         ? !directoryCount || latestSnapshot > directoryCount.seen_at

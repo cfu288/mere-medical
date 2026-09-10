@@ -1,3 +1,8 @@
+/**
+ * Read API over the shipped `tenants.db` artifact. `apps/api` calls it to serve
+ * tenant search and lookup at runtime; it never reaches back into the pipeline
+ * warehouse, so the api ships without any build-time data dependency.
+ */
 import { DatabaseSync } from 'node:sqlite';
 import { allRows, getRow } from './rows';
 import { TENANT_DB_USER_VERSION } from './schema';

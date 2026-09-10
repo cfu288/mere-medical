@@ -1,3 +1,7 @@
+/**
+ * The `publications` table: when `tenants.db` was written and with how many rows.
+ * Publish records each write; status lists the recent ones to show row-count deltas.
+ */
 import type { DatabaseSync } from 'node:sqlite';
 import { allRows } from '@mere/tenant-db';
 

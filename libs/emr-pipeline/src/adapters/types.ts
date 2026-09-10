@@ -18,14 +18,6 @@ export interface SandboxSeed {
   authorize?: string;
 }
 
-/** A response the server answered but that carries no document, such as 404 or 403. */
-export class HttpStatusError extends Error {
-  constructor(readonly status: number) {
-    super(`HTTP ${status}`);
-    this.name = 'HttpStatusError';
-  }
-}
-
 export interface DirectorySource {
   fetch(signal: AbortSignal): Promise<string>;
 }
@@ -57,7 +49,7 @@ export function httpDirectory(url: string): DirectorySource {
       });
       const body = await response.text();
       if (!response.ok) {
-        throw new HttpStatusError(response.status);
+        throw new Error(`HTTP ${response.status}`);
       }
       return body;
     },

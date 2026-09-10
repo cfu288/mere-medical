@@ -1,3 +1,8 @@
+/**
+ * The `directory_counts` table: how many tenants each vendor's directory listed when
+ * transform last parsed it. Transform records it; status reads it for the endpoints
+ * column and to flag a crawl the transform has not consumed yet.
+ */
 import type { DatabaseSync } from 'node:sqlite';
 import type { FhirVersion, Vendor } from '@mere/shared';
 import { getRow } from '@mere/tenant-db';

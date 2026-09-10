@@ -1,3 +1,9 @@
+/**
+ * The `directory_snapshots` table (every distinct directory body ever fetched) and
+ * `directory_fetches` (each vendor's last attempt and error). Extract appends after a
+ * good directory fetch; transform replays the whole history; publish and status read
+ * the newest dates. The history is how the pipeline remembers delisted tenants.
+ */
 import type { DatabaseSync } from 'node:sqlite';
 import type { FhirVersion, Vendor } from '@mere/shared';
 import { allRows, getRow } from '@mere/tenant-db';

@@ -1,3 +1,5 @@
+-- Disposable layer: openWarehouse runs this file whenever these tables are missing,
+-- and transform refills every row from warehouse history, so deleting them loses nothing.
 DROP TABLE IF EXISTS tenant_directory_entries;
 DROP TABLE IF EXISTS tenant_urls;
 DROP TABLE IF EXISTS tenant_capabilities;
