@@ -12,8 +12,10 @@ import {
   parseBundle,
   readSmartUris,
 } from './adapters/schemas';
-import { getRow } from '@mere/tenant-db';
 import * as snapshots from './db/repository/directory-snapshots';
+import * as downloads from './db/repository/capability-downloads';
+import * as derived from './db/repository/derived-tenants';
+import * as directoryCounts from './db/repository/directory-counts';
 
 interface ClassifiedCapability {
   classification: CapabilityClassification;
@@ -109,16 +111,6 @@ export function transform(
 
   db.exec('BEGIN');
   try {
-    for (const table of [
-      'tenant_directory_entries',
-      'tenant_urls',
-      'tenant_capabilities',
-    ]) {
-      db.prepare(
-        `DELETE FROM ${table} WHERE vendor = ? AND fhir_version = ?`,
-      ).run(vendor, fhirVersion);
-    }
-
     const merged = new Map<string, MergedTenant>();
     const seenUrls = new Map<
       string,
@@ -177,87 +169,58 @@ export function transform(
       latest = { seenAt: snapshot.fetched_at, tenantCount: entries.length };
     }
 
-    const insertEntry = db.prepare(
-      `INSERT INTO tenant_directory_entries
-         (vendor, fhir_version, tenant_id, name, url, managing_organization,
-          last_seen_in_directory)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    );
-    for (const [tenantId, tenant] of merged) {
-      insertEntry.run(
-        vendor,
-        fhirVersion,
+    derived.replaceEntries(
+      db,
+      vendor,
+      fhirVersion,
+      [...merged.entries()].map(([tenantId, tenant]) => ({
         tenantId,
-        tenant.name ?? null,
-        tenant.url,
-        tenant.managingOrganization ?? null,
-        tenant.lastSeen,
-      );
-      counts.directoryEntries++;
-    }
+        name: tenant.name,
+        url: tenant.url,
+        managingOrganization: tenant.managingOrganization,
+        lastSeen: tenant.lastSeen,
+      })),
+    );
+    counts.directoryEntries = merged.size;
 
-    const insertUrl = db.prepare(
-      `INSERT INTO tenant_urls (vendor, fhir_version, tenant_id, url, last_seen_at)
-       VALUES (?, ?, ?, ?, ?)`,
-    );
-    for (const seenUrl of seenUrls.values()) {
-      insertUrl.run(
-        vendor,
-        fhirVersion,
-        seenUrl.tenantId,
-        seenUrl.url,
-        seenUrl.lastSeenAt,
-      );
-    }
+    derived.replaceUrls(db, vendor, fhirVersion, [...seenUrls.values()]);
 
-    const insertCapability = db.prepare(
-      `INSERT INTO tenant_capabilities
-         (vendor, fhir_version, url, authorize_url,
-          token_url, register_url, classification)
-       VALUES (?, ?, ?, ?, ?, ?, ?)
-       ON CONFLICT (vendor, fhir_version, url) DO NOTHING`,
-    );
-    const selectCapability = db.prepare(
-      `SELECT body FROM capability_downloads
-       WHERE vendor = ? AND fhir_version = ? AND url = ? AND body IS NOT NULL`,
-    );
+    const capabilities: derived.CapabilityRow[] = [];
     for (const seenUrl of seenUrls.values()) {
       const capabilityUrl = adapter.capabilityUrl({
         tenantId: seenUrl.tenantId,
         url: seenUrl.url,
       });
       if (!capabilityUrl) continue;
-      const document = getRow<{ body: string }>(selectCapability, [
+      const download = downloads.findByUrl(db, {
         vendor,
         fhirVersion,
-        capabilityUrl,
-      ]);
-      if (!document) continue;
+        url: capabilityUrl,
+      });
+      if (download?.body == null) continue;
+      if (capabilities.some((c) => c.url === seenUrl.url)) continue;
 
-      const classified = classifyCapability(document.body);
-      const inserted = insertCapability.run(
-        vendor,
-        fhirVersion,
-        seenUrl.url,
-        classified.authorizeUrl ?? null,
-        classified.tokenUrl ?? null,
-        classified.registerUrl ?? null,
-        classified.classification,
-      );
-      if (Number(inserted.changes) === 0) continue;
+      const classified = classifyCapability(download.body);
+      capabilities.push({
+        url: seenUrl.url,
+        authorizeUrl: classified.authorizeUrl ?? null,
+        tokenUrl: classified.tokenUrl ?? null,
+        registerUrl: classified.registerUrl ?? null,
+        classification: classified.classification,
+      });
       if (classified.classification === 'unparseable') counts.unparseable++;
-      counts.capabilities++;
     }
+    derived.replaceCapabilities(db, vendor, fhirVersion, capabilities);
+    counts.capabilities = capabilities.length;
 
     if (latest.seenAt !== '') {
-      db.prepare(
-        `INSERT INTO directory_counts
-           (vendor, fhir_version, seen_at, tenant_count)
-         VALUES (?, ?, ?, ?)
-         ON CONFLICT (vendor, fhir_version) DO UPDATE SET
-           seen_at = excluded.seen_at,
-           tenant_count = excluded.tenant_count`,
-      ).run(vendor, fhirVersion, latest.seenAt, latest.tenantCount);
+      directoryCounts.record(
+        db,
+        vendor,
+        fhirVersion,
+        latest.seenAt,
+        latest.tenantCount,
+      );
     }
 
     db.exec('COMMIT');

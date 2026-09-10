@@ -144,6 +144,38 @@ export function recordFailure(
   });
 }
 
+export function countFailing(
+  db: DatabaseSync,
+  vendor: Vendor,
+  fhirVersion: FhirVersion,
+): number {
+  return (
+    getRow<{ n: number }>(
+      db.prepare(
+        `SELECT COUNT(*) AS n FROM capability_downloads
+         WHERE vendor = ? AND fhir_version = ? AND failed = 1`,
+      ),
+      [vendor, fhirVersion],
+    )?.n ?? 0
+  );
+}
+
+export function latestDownloadedAt(
+  db: DatabaseSync,
+  vendor: Vendor,
+  fhirVersion: FhirVersion,
+): string | null {
+  return (
+    getRow<{ newest: string | null }>(
+      db.prepare(
+        `SELECT MAX(downloaded_at) AS newest FROM capability_downloads
+         WHERE vendor = ? AND fhir_version = ?`,
+      ),
+      [vendor, fhirVersion],
+    )?.newest ?? null
+  );
+}
+
 interface DownloadListQuery {
   vendor: Vendor;
   fhirVersion: FhirVersion;

@@ -57,6 +57,30 @@ export function recordAttempt(
   ).run(vendor, fhirVersion, attemptedAt, error);
 }
 
+export function latestFetchedAt(
+  db: DatabaseSync,
+  vendor: Vendor,
+  fhirVersion: FhirVersion,
+): string | null {
+  return (
+    getRow<{ newest: string | null }>(
+      db.prepare(
+        `SELECT MAX(fetched_at) AS newest FROM directory_snapshots
+         WHERE vendor = ? AND fhir_version = ?`,
+      ),
+      [vendor, fhirVersion],
+    )?.newest ?? null
+  );
+}
+
+export function latestFetchedAtOverall(db: DatabaseSync): string | null {
+  return (
+    getRow<{ newest: string | null }>(
+      db.prepare('SELECT MAX(fetched_at) AS newest FROM directory_snapshots'),
+    )?.newest ?? null
+  );
+}
+
 export function listSnapshots(
   db: DatabaseSync,
   vendor: Vendor,

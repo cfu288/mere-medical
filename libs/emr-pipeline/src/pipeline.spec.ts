@@ -120,7 +120,6 @@ describe('warehouse to artifact', () => {
 
   function publishOptions(overrides = {}) {
     return {
-      warehousePath,
       artifactPath,
       now: () => NOW,
       log: silent,
@@ -301,7 +300,7 @@ describe('warehouse to artifact', () => {
                '2026-08-23T00:00:00.000Z')`,
     ).run();
 
-    buildArtifact(warehousePath, artifactPath);
+    buildArtifact(db, artifactPath);
 
     const artifact = new DatabaseSync(artifactPath);
     expect(() =>
@@ -660,18 +659,18 @@ describe('warehouse to artifact', () => {
     });
     publish(db, publishOptions());
     const good = fs.readFileSync(artifactPath).length;
-    const notADatabase = path.join(dir, 'broken.db');
-    fs.writeFileSync(notADatabase, 'not a sqlite file');
+    const closed = openWarehouse(path.join(dir, 'closed.db'));
+    closed.close();
 
-    expect(() => buildArtifact(notADatabase, artifactPath)).toThrow();
+    expect(() => buildArtifact(closed, artifactPath)).toThrow();
     expect(fs.readFileSync(artifactPath).length).toBe(good);
   });
 
   it('leaves no partial file behind when the build fails', () => {
-    const notADatabase = path.join(dir, 'broken2.db');
-    fs.writeFileSync(notADatabase, 'not a sqlite file');
+    const closed = openWarehouse(path.join(dir, 'closed2.db'));
+    closed.close();
 
-    expect(() => buildArtifact(notADatabase, artifactPath)).toThrow();
+    expect(() => buildArtifact(closed, artifactPath)).toThrow();
 
     expect(fs.existsSync(`${artifactPath}.building`)).toBe(false);
   });
@@ -688,7 +687,7 @@ describe('warehouse to artifact', () => {
   it('surfaces the rename failure when the artifact path is a directory', () => {
     fs.mkdirSync(artifactPath);
 
-    expect(() => buildArtifact(warehousePath, artifactPath)).toThrow('EISDIR');
+    expect(() => buildArtifact(db, artifactPath)).toThrow('EISDIR');
     expect(fs.existsSync(`${artifactPath}.building`)).toBe(false);
   });
 

@@ -1,5 +1,6 @@
 import type { DatabaseSync } from 'node:sqlite';
 import type { FhirVersion, Vendor } from '@mere/shared';
+import { allRows } from '@mere/tenant-db';
 
 export function startRun(
   db: DatabaseSync,
@@ -13,6 +14,22 @@ export function startRun(
     )
     .run(vendor, fhirVersion);
   return Number(result.lastInsertRowid);
+}
+
+/** The failed counts of the last two finished runs, newest first. */
+export function lastTwoFailedCounts(
+  db: DatabaseSync,
+  vendor: Vendor,
+  fhirVersion: FhirVersion,
+): (number | null)[] {
+  return allRows<{ failed: number | null }>(
+    db.prepare(
+      `SELECT failed FROM fetch_runs
+       WHERE vendor = ? AND fhir_version = ? AND status = 'done'
+       ORDER BY id DESC LIMIT 2`,
+    ),
+    [vendor, fhirVersion],
+  ).map((run) => run.failed);
 }
 
 export function finishRun(

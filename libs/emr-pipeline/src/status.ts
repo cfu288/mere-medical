@@ -1,30 +1,13 @@
 import type { DatabaseSync } from 'node:sqlite';
-import { allRows, getRow } from '@mere/tenant-db';
 import { ADAPTERS } from './adapters';
-
-interface DirectoryCountRow {
-  tenant_count: number;
-  seen_at: string;
-}
-
-interface PublicationRow {
-  published_at: string;
-  row_count: number;
-}
+import * as downloads from './db/repository/capability-downloads';
+import * as directoryCounts from './db/repository/directory-counts';
+import * as publications from './db/repository/publications';
+import * as runs from './db/repository/fetch-runs';
+import * as snapshots from './db/repository/directory-snapshots';
 
 function signed(n: number): string {
   return n < 0 ? String(n) : `+${n}`;
-}
-
-function failedCounts(db: DatabaseSync, vendor: string, version: string) {
-  return allRows<{ failed: number | null }>(
-    db.prepare(
-      `SELECT failed FROM fetch_runs
-       WHERE vendor = ? AND fhir_version = ? AND status = 'done'
-       ORDER BY id DESC LIMIT 2`,
-    ),
-    [vendor, version],
-  ).map((run) => run.failed);
 }
 
 export function formatStatus(db: DatabaseSync, now: string): string {
@@ -52,41 +35,24 @@ export function formatStatus(db: DatabaseSync, now: string): string {
   );
   for (const [vendor, adapter] of vendors) {
     for (const version of adapter.versions) {
-      const directoryCount = getRow<DirectoryCountRow>(
-        db.prepare(
-          `SELECT tenant_count, seen_at FROM directory_counts
-           WHERE vendor = ? AND fhir_version = ?`,
-        ),
-        [vendor, version],
+      const directoryCount = directoryCounts.find(db, vendor, version);
+      const failing = downloads.countFailing(db, vendor, version);
+      const latestSnapshot = snapshots.latestFetchedAt(db, vendor, version);
+      const latestCapability = downloads.latestDownloadedAt(
+        db,
+        vendor,
+        version,
       );
-      const failing =
-        getRow<{ n: number }>(
-          db.prepare(
-            `SELECT COUNT(*) AS n FROM capability_downloads
-             WHERE vendor = ? AND fhir_version = ? AND failed = 1`,
-          ),
-          [vendor, version],
-        )?.n ?? 0;
-      const latestSnapshot = getRow<{ newest: string | null }>(
-        db.prepare(
-          `SELECT MAX(fetched_at) AS newest FROM directory_snapshots
-           WHERE vendor = ? AND fhir_version = ?`,
-        ),
-        [vendor, version],
-      )?.newest;
-      const latestCapability = getRow<{ newest: string | null }>(
-        db.prepare(
-          `SELECT MAX(downloaded_at) AS newest FROM capability_downloads
-           WHERE vendor = ? AND fhir_version = ?`,
-        ),
-        [vendor, version],
-      )?.newest;
       const crawled = [latestSnapshot, latestCapability]
         .filter((t): t is string => t !== null)
         .sort()
         .at(-1);
 
-      const [lastFailed, previousFailed] = failedCounts(db, vendor, version);
+      const [lastFailed, previousFailed] = runs.lastTwoFailedCounts(
+        db,
+        vendor,
+        version,
+      );
       const failingCell =
         lastFailed != null &&
         previousFailed != null &&
@@ -115,19 +81,14 @@ export function formatStatus(db: DatabaseSync, now: string): string {
     }
   }
 
-  const publications = allRows<PublicationRow>(
-    db.prepare(
-      `SELECT published_at, row_count FROM publications
-       ORDER BY published_at DESC, id DESC LIMIT 6`,
-    ),
-  );
+  const recent = publications.listRecent(db, 6);
   lines.push('');
-  if (publications.length === 0) {
+  if (recent.length === 0) {
     lines.push('published: never');
   } else {
     lines.push('publishes');
-    publications.slice(0, 5).forEach((publication, index) => {
-      const previous = publications[index + 1];
+    recent.slice(0, 5).forEach((publication, index) => {
+      const previous = recent[index + 1];
       lines.push(
         `  ${age(publication.published_at).padEnd(10)}` +
           `${publication.row_count.toLocaleString('en-US')} rows` +

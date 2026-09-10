@@ -77,7 +77,6 @@ export async function main(argv: string[]): Promise<number> {
       }
       case 'publish': {
         publish(db, {
-          warehousePath,
           artifactPath: process.env['EMR_TENANT_DB'] ?? DEFAULT_ARTIFACT,
           now,
           log,
