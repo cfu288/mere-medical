@@ -98,7 +98,7 @@ type CapabilityOutcome =
   | { kind: 'ok'; id: number; body: string }
   | { kind: 'error'; id: number; error: unknown };
 
-/** Runs the capability fetches a fixed number at a time, draining every worker before rethrowing a failure. */
+/** Runs the tasks a fixed number at a time. When one fails, it waits for the rest to finish before rethrowing. */
 async function runPool<T>(
   tasks: (() => Promise<T>)[],
   onResult: (result: T) => void,

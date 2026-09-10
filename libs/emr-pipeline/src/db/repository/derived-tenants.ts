@@ -2,7 +2,7 @@
  * Owns the disposable tables `tenant_directory_entries`, `tenant_urls`, and
  * `tenant_capabilities`. Transform rebuilds them from snapshot history and publish
  * reads `listPublishable` to write `tenants.db`. They exist so publish is one query
- * over folded rows instead of its own replay of the history.
+ * over merged rows instead of its own replay of the history.
  */
 import type { DatabaseSync } from 'node:sqlite';
 import type {
@@ -50,7 +50,7 @@ function replace(
   );
 }
 
-/** Replaces one vendor and version's folded tenants when transform finishes replaying its snapshots. */
+/** Replaces one vendor and version's merged tenants when transform finishes replaying its snapshots. */
 export function replaceEntries(
   db: DatabaseSync,
   vendor: Vendor,
@@ -77,7 +77,7 @@ export function replaceEntries(
   }
 }
 
-/** Replaces one vendor and version's url sightings from the same replay. */
+/** Replaces the record of which urls each tenant was listed at, from the same replay. */
 export function replaceUrls(
   db: DatabaseSync,
   vendor: Vendor,

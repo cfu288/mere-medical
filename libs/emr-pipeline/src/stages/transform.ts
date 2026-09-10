@@ -88,7 +88,7 @@ interface MergedTenant {
 }
 
 /**
- * Folds one vendor and version's snapshot history into the derived tenant tables,
+ * Merges one vendor and version's snapshot history into the derived tenant tables,
  * classifying each tenant's stored capability download, and returns counts of what it
  * wrote. A tenant id a snapshot lists at more than one url contributes nothing from
  * that snapshot. Earlier snapshots still count.
