@@ -45,7 +45,7 @@ Epic's Brands bundle is ~90 MB and Athena's is ~132 MB, so a run peaks around 1.
 heap and the directory fetch gets its own multi-minute timeout.
 
 `data/warehouse.db` is gitignored; the workflow persists it as a rolling
-`warehouse-snapshot` release asset. Override paths with `EMR_WAREHOUSE_DB` and
+`warehouse-backup` release asset. Override paths with `EMR_WAREHOUSE_DB` and
 `EMR_TENANT_DB`.
 
 ## Data flow
@@ -63,8 +63,8 @@ heap and the directory fetch gets its own multi-minute timeout.
    non-empty name, every url it was ever listed at, and a classification of each url's
    stored capability body. Pure, offline.
 4. **Publish.** One query over the derived tables writes a fresh `tenants.db`: entries
-   joined to their usable capability (preferring the current url, else the latest
-   most recently seen url that still classifies usable), plus code-seeded sandbox rows stamped
+   joined to their usable capability (preferring the current url, else the most
+   recently seen url that still classifies usable), plus code-seeded sandbox rows stamped
    with the newest snapshot time. Publishing twice from the same warehouse yields the
    same artifact.
 
@@ -89,7 +89,7 @@ the monthly PR's status comment is where a human catches a bad refresh.
 
 ## Schema
 
-The DDL lives in `src/db/migrations/001_init.sql` (durable), `src/db/derived.sql`
+The DDL lives in `src/db/warehouse.sql` (durable), `src/db/derived.sql`
 (disposable, dropped and rebuilt), and `libs/tenant-db/src/lib/schema.ts` (the shipped
 artifact, `user_version`-asserted at open). `tenants.db` and the derived tables are never
 migrated; they regenerate from the durable tables. The durable state is what extract

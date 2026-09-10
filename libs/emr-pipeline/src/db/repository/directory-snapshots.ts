@@ -2,6 +2,7 @@ import type { DatabaseSync } from 'node:sqlite';
 import type { FhirVersion, Vendor } from '@mere/shared';
 import { allRows, getRow } from '@mere/tenant-db';
 
+/** One saved copy of a vendor's directory page: the body as downloaded, and when. */
 export interface Snapshot {
   fetched_at: string;
   body: string;
