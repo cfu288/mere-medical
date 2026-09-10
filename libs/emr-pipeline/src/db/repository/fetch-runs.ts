@@ -9,8 +9,8 @@ export function record(
   failed: number,
 ): void {
   db.prepare(
-    `INSERT INTO fetch_runs (vendor, fhir_version, status, failed)
-     VALUES (?, ?, 'done', ?)`,
+    `INSERT INTO fetch_runs (vendor, fhir_version, failed)
+     VALUES (?, ?, ?)`,
   ).run(vendor, fhirVersion, failed);
 }
 
@@ -19,11 +19,11 @@ export function lastTwoFailedCounts(
   db: DatabaseSync,
   vendor: Vendor,
   fhirVersion: FhirVersion,
-): (number | null)[] {
-  return allRows<{ failed: number | null }>(
+): number[] {
+  return allRows<{ failed: number }>(
     db.prepare(
       `SELECT failed FROM fetch_runs
-       WHERE vendor = ? AND fhir_version = ? AND status = 'done'
+       WHERE vendor = ? AND fhir_version = ?
        ORDER BY id DESC LIMIT 2`,
     ),
     [vendor, fhirVersion],

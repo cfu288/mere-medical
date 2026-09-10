@@ -88,17 +88,19 @@ describe('extract', () => {
     delete process.env['EPIC_R4_ENDPOINTS_URL'];
   });
 
+  function idOf(url: string): number {
+    return (
+      db
+        .prepare('SELECT id FROM capability_downloads WHERE url = ?')
+        .get(url) as { id: number }
+    ).id;
+  }
+
   function seedGoodCapability(): number {
     snapshots.appendSnapshot(db, 'epic', 'R4', NOW, DIRECTORY);
-    const capabilityId = downloads.addUrl(
-      db,
-      {
-        vendor: 'epic',
-        fhirVersion: 'R4',
-        url: 'https://one.example.org/api/FHIR/R4/metadata',
-      },
-      NOW,
-    );
+    const url = 'https://one.example.org/api/FHIR/R4/metadata';
+    downloads.addUrl(db, { vendor: 'epic', fhirVersion: 'R4', url });
+    const capabilityId = idOf(url);
     downloads.recordSuccess(db, {
       id: capabilityId,
       body: CAPABILITY,
@@ -241,15 +243,12 @@ describe('extract', () => {
 
   it('leaves a capability the directory no longer lists unfetched', async () => {
     seedGoodCapability();
-    const delistedId = downloads.addUrl(
-      db,
-      {
-        vendor: 'epic',
-        fhirVersion: 'R4',
-        url: 'https://gone.example.org/api/FHIR/R4/metadata',
-      },
-      NOW,
-    );
+    downloads.addUrl(db, {
+      vendor: 'epic',
+      fhirVersion: 'R4',
+      url: 'https://gone.example.org/api/FHIR/R4/metadata',
+    });
+    const delistedId = idOf('https://gone.example.org/api/FHIR/R4/metadata');
     const requested: string[] = [];
     globalThis.fetch = (async (url: string | URL) => {
       if (String(url).includes('directory')) {

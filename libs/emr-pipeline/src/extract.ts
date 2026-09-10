@@ -3,7 +3,7 @@ import { setTimeout as sleep } from 'node:timers/promises';
 import type { FhirVersion, Vendor } from '@mere/shared';
 import { adapterFor } from './adapters';
 import { parseBundle } from './adapters/schemas';
-import { DirectoryEntry, FHIR_ACCEPT, HttpStatusError } from './adapters/types';
+import { DirectoryEntry, FHIR_ACCEPT } from './adapters/types';
 import * as downloads from './db/repository/capability-downloads';
 import * as runs from './db/repository/fetch-runs';
 import * as snapshots from './db/repository/directory-snapshots';
@@ -82,11 +82,11 @@ async function fetchWithRetry(
     }
 
     if (response.status >= 500) {
-      lastError = new HttpStatusError(response.status);
+      lastError = new Error(`HTTP ${response.status}`);
       continue;
     }
     if (!response.ok) {
-      throw new HttpStatusError(response.status);
+      throw new Error(`HTTP ${response.status}`);
     }
     return { body };
   }
@@ -108,7 +108,12 @@ async function runPool<T>(
     }
   }
   const workers = Math.max(1, Math.min(CONCURRENCY, tasks.length));
-  await Promise.all(Array.from({ length: workers }, worker));
+  const settled = await Promise.allSettled(
+    Array.from({ length: workers }, worker),
+  );
+  for (const result of settled) {
+    if (result.status === 'rejected') throw result.reason;
+  }
 }
 
 export async function extract(
@@ -170,7 +175,7 @@ export async function extract(
   db.exec('BEGIN');
   try {
     for (const url of capabilityUrls) {
-      downloads.addUrl(db, { vendor, fhirVersion, url }, options.now());
+      downloads.addUrl(db, { vendor, fhirVersion, url });
     }
     db.exec('COMMIT');
   } catch (error) {

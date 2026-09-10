@@ -4,7 +4,6 @@ CREATE TABLE capability_downloads (
   fhir_version  TEXT NOT NULL DEFAULT '',
   url           TEXT NOT NULL,
   body          TEXT,
-  first_seen_at TEXT NOT NULL,
   downloaded_at TEXT,
   attempted_at  TEXT,
   failed        INTEGER NOT NULL DEFAULT 0,
@@ -24,8 +23,7 @@ CREATE TABLE fetch_runs (
   id           INTEGER PRIMARY KEY,
   vendor       TEXT NOT NULL,
   fhir_version TEXT NOT NULL DEFAULT '',
-  status       TEXT NOT NULL,
-  failed       INTEGER
+  failed       INTEGER NOT NULL
 );
 
 CREATE TABLE directory_counts (

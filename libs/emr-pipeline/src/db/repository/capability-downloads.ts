@@ -37,29 +37,12 @@ function toRow(row: CapabilitySqlRow): CapabilityDownload {
   return { ...key, body: row.body, downloadedAt: row.downloaded_at };
 }
 
-export function addUrl(
-  db: DatabaseSync,
-  key: CapabilityKey,
-  now: string,
-): number {
+export function addUrl(db: DatabaseSync, key: CapabilityKey): void {
   db.prepare(
-    `INSERT INTO capability_downloads (vendor, fhir_version, url, first_seen_at)
-     VALUES (?, ?, ?, ?)
+    `INSERT INTO capability_downloads (vendor, fhir_version, url)
+     VALUES (?, ?, ?)
      ON CONFLICT (vendor, fhir_version, url) DO NOTHING`,
-  ).run(key.vendor, key.fhirVersion, key.url, now);
-
-  const row = getRow<{ id: number }>(
-    db.prepare(
-      `SELECT id FROM capability_downloads
-       WHERE vendor = ? AND fhir_version = ? AND url = ?`,
-    ),
-    [key.vendor, key.fhirVersion, key.url],
-  );
-
-  if (!row) {
-    throw new Error(`Failed to add ${key.vendor} capability url ${key.url}`);
-  }
-  return row.id;
+  ).run(key.vendor, key.fhirVersion, key.url);
 }
 
 export function findByUrl(
@@ -142,22 +125,6 @@ export function recordFailure(
     now: failure.now,
     error: serializeError(failure.error),
   });
-}
-
-export function countFailing(
-  db: DatabaseSync,
-  vendor: Vendor,
-  fhirVersion: FhirVersion,
-): number {
-  return (
-    getRow<{ n: number }>(
-      db.prepare(
-        `SELECT COUNT(*) AS n FROM capability_downloads
-         WHERE vendor = ? AND fhir_version = ? AND failed = 1`,
-      ),
-      [vendor, fhirVersion],
-    )?.n ?? 0
-  );
 }
 
 export function latestDownloadedAt(

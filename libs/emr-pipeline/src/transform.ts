@@ -185,7 +185,9 @@ export function transform(
     derived.replaceUrls(db, vendor, fhirVersion, [...seenUrls.values()]);
 
     const capabilities: derived.CapabilityRow[] = [];
+    const classifiedUrls = new Set<string>();
     for (const seenUrl of seenUrls.values()) {
+      if (classifiedUrls.has(seenUrl.url)) continue;
       const capabilityUrl = adapter.capabilityUrl({
         tenantId: seenUrl.tenantId,
         url: seenUrl.url,
@@ -197,9 +199,9 @@ export function transform(
         url: capabilityUrl,
       });
       if (download?.body == null) continue;
-      if (capabilities.some((c) => c.url === seenUrl.url)) continue;
 
       const classified = classifyCapability(download.body);
+      classifiedUrls.add(seenUrl.url);
       capabilities.push({
         url: seenUrl.url,
         authorizeUrl: classified.authorizeUrl ?? null,

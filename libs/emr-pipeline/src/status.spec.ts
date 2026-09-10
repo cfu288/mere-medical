@@ -25,14 +25,14 @@ describe('formatStatus', () => {
     expect(formatStatus(db, NOW)).toBe(
       [
         'vendor     version  endpoints   failing crawled   transform',
-        'athena     R4               -         0 never     -',
-        'cerner     DSTU2            -         0 never     -',
-        'cerner     R4               -         0 never     -',
-        'epic       DSTU2            -         0 never     -',
-        'epic       R4               -         0 never     -',
-        'healow     R4               -         0 never     -',
-        'veradigm   DSTU2            -         0 never     -',
-        'veradigm   R4               -         0 never     -',
+        'athena     R4               -         - never     -',
+        'cerner     DSTU2            -         - never     -',
+        'cerner     R4               -         - never     -',
+        'epic       DSTU2            -         - never     -',
+        'epic       R4               -         - never     -',
+        'healow     R4               -         - never     -',
+        'veradigm   DSTU2            -         - never     -',
+        'veradigm   R4               -         - never     -',
         '',
         'published: never',
       ].join('\n'),
@@ -43,14 +43,11 @@ describe('formatStatus', () => {
     db.exec(`
       INSERT INTO directory_snapshots (vendor, fhir_version, fetched_at, body)
       VALUES ('epic', 'R4', '2026-08-26T12:00:00.000Z', '{}');
-      INSERT INTO capability_downloads (vendor, fhir_version, url, first_seen_at, failed)
-      VALUES ('epic', 'R4', 'https://a.example.org/metadata', '2026-08-26T12:00:00.000Z', 1),
-             ('epic', 'R4', 'https://b.example.org/metadata', '2026-08-26T12:00:00.000Z', 1);
       INSERT INTO directory_counts (vendor, fhir_version, seen_at, tenant_count)
       VALUES ('epic', 'R4', '2026-08-26T12:00:00.000Z', 815);
-      INSERT INTO fetch_runs (vendor, fhir_version, status, failed)
-      VALUES ('epic', 'R4', 'done', 0),
-             ('epic', 'R4', 'done', 2);
+      INSERT INTO fetch_runs (vendor, fhir_version, failed)
+      VALUES ('epic', 'R4', 0),
+             ('epic', 'R4', 2);
       INSERT INTO publications (published_at, row_count)
       VALUES ('2026-09-05T10:00:00.000Z', 9),
              ('2026-09-06T10:00:00.000Z', 6),
@@ -60,14 +57,14 @@ describe('formatStatus', () => {
     expect(formatStatus(db, NOW)).toBe(
       [
         'vendor     version  endpoints   failing crawled   transform',
-        'athena     R4               -         0 never     -',
-        'cerner     DSTU2            -         0 never     -',
-        'cerner     R4               -         0 never     -',
-        'epic       DSTU2            -         0 never     -',
+        'athena     R4               -         - never     -',
+        'cerner     DSTU2            -         - never     -',
+        'cerner     R4               -         - never     -',
+        'epic       DSTU2            -         - never     -',
         'epic       R4             815    2 (+2) 12d ago   current',
-        'healow     R4               -         0 never     -',
-        'veradigm   DSTU2            -         0 never     -',
-        'veradigm   R4               -         0 never     -',
+        'healow     R4               -         - never     -',
+        'veradigm   DSTU2            -         - never     -',
+        'veradigm   R4               -         - never     -',
         '',
         'publishes',
         '  today     8 rows (+2)',
@@ -79,31 +76,26 @@ describe('formatStatus', () => {
 
   it('keeps failure deltas separate per vendor and version', () => {
     db.exec(`
-      INSERT INTO capability_downloads (vendor, fhir_version, url, first_seen_at, failed)
-      VALUES ('epic', 'DSTU2', 'https://a.example.org/dstu2/metadata', '2026-08-26T12:00:00.000Z', 1),
-             ('epic', 'R4', 'https://a.example.org/r4/metadata', '2026-08-26T12:00:00.000Z', 1),
-             ('epic', 'R4', 'https://b.example.org/r4/metadata', '2026-08-26T12:00:00.000Z', 1),
-             ('cerner', 'R4', 'https://c.example.org/r4/metadata', '2026-08-26T12:00:00.000Z', 1);
-      INSERT INTO fetch_runs (vendor, fhir_version, status, failed)
-      VALUES ('epic', 'DSTU2', 'done', 2),
-             ('epic', 'DSTU2', 'done', 1),
-             ('epic', 'R4', 'done', 0),
-             ('epic', 'R4', 'done', 2),
-             ('cerner', 'R4', 'done', 1),
-             ('cerner', 'R4', 'done', 1);
+      INSERT INTO fetch_runs (vendor, fhir_version, failed)
+      VALUES ('epic', 'DSTU2', 2),
+             ('epic', 'DSTU2', 1),
+             ('epic', 'R4', 0),
+             ('epic', 'R4', 2),
+             ('cerner', 'R4', 1),
+             ('cerner', 'R4', 1);
     `);
 
     expect(formatStatus(db, NOW)).toBe(
       [
         'vendor     version  endpoints   failing crawled   transform',
-        'athena     R4               -         0 never     -',
-        'cerner     DSTU2            -         0 never     -',
+        'athena     R4               -         - never     -',
+        'cerner     DSTU2            -         - never     -',
         'cerner     R4               -         1 never     -',
         'epic       DSTU2            -    1 (-1) never     -',
         'epic       R4               -    2 (+2) never     -',
-        'healow     R4               -         0 never     -',
-        'veradigm   DSTU2            -         0 never     -',
-        'veradigm   R4               -         0 never     -',
+        'healow     R4               -         - never     -',
+        'veradigm   DSTU2            -         - never     -',
+        'veradigm   R4               -         - never     -',
         '',
         'published: never',
       ].join('\n'),
@@ -114,10 +106,6 @@ describe('formatStatus', () => {
     db.exec(`
       INSERT INTO directory_snapshots (vendor, fhir_version, fetched_at, body)
       VALUES ('epic', 'R4', '2026-09-07T09:00:00.000Z', '{}');
-      INSERT INTO capability_downloads (vendor, fhir_version, url, first_seen_at, failed)
-      VALUES ('epic', 'R4', 'https://a.example.org/metadata', '2026-08-07T00:00:00.000Z', 1),
-             ('epic', 'R4', 'https://b.example.org/metadata', '2026-08-07T00:00:00.000Z', 1),
-             ('epic', 'R4', 'https://c.example.org/metadata', '2026-08-07T00:00:00.000Z', 1);
       INSERT INTO directory_counts (vendor, fhir_version, seen_at, tenant_count)
       VALUES ('epic', 'R4', '2026-08-07T00:00:00.000Z', 815);
       INSERT INTO publications (published_at, row_count)
@@ -132,14 +120,14 @@ describe('formatStatus', () => {
     expect(formatStatus(db, NOW)).toBe(
       [
         'vendor     version  endpoints   failing crawled   transform',
-        'athena     R4               -         0 never     -',
-        'cerner     DSTU2            -         0 never     -',
-        'cerner     R4               -         0 never     -',
-        'epic       DSTU2            -         0 never     -',
-        'epic       R4             815         3 today     BEHIND',
-        'healow     R4               -         0 never     -',
-        'veradigm   DSTU2            -         0 never     -',
-        'veradigm   R4               -         0 never     -',
+        'athena     R4               -         - never     -',
+        'cerner     DSTU2            -         - never     -',
+        'cerner     R4               -         - never     -',
+        'epic       DSTU2            -         - never     -',
+        'epic       R4             815         - today     BEHIND',
+        'healow     R4               -         - never     -',
+        'veradigm   DSTU2            -         - never     -',
+        'veradigm   R4               -         - never     -',
         '',
         'publishes',
         '  31d ago   44,958 rows (+13)',

@@ -5,8 +5,6 @@ export type SearchableVendor = Exclude<Vendor, 'athena'>;
 
 export type FhirVersion = 'DSTU2' | 'R4';
 
-export type DocType = 'directory' | 'capability';
-
 export type EndpointSource = 'directory' | 'sandbox';
 
 export type CapabilityClassification =

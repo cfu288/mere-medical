@@ -87,21 +87,22 @@ describe('warehouse to artifact', () => {
     delete process.env['EPIC_R4_ENDPOINTS_URL'];
   });
 
+  function idOf(url: string): number {
+    return (
+      db
+        .prepare('SELECT id FROM capability_downloads WHERE url = ?')
+        .get(url) as { id: number }
+    ).id;
+  }
+
   function seedEpicR4() {
     snapshots.appendSnapshot(db, 'epic', 'R4', NOW, EPIC_DIRECTORY);
 
     for (const host of ['one.example.org', 'two.example.org']) {
-      const id = downloads.addUrl(
-        db,
-        {
-          vendor: 'epic',
-          fhirVersion: 'R4',
-          url: `https://${host}/api/FHIR/R4/metadata`,
-        },
-        NOW,
-      );
+      const url = `https://${host}/api/FHIR/R4/metadata`;
+      downloads.addUrl(db, { vendor: 'epic', fhirVersion: 'R4', url });
       downloads.recordSuccess(db, {
-        id,
+        id: idOf(url),
         body: capabilityBody(host),
         now: NOW,
       });
