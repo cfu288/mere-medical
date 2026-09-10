@@ -44,6 +44,7 @@ export const epicAdapter: VendorAdapter = {
     return httpDirectory(process.env[source.env] ?? source.url);
   },
 
+  /** Reads one tenant per Endpoint resource, dropping a health-system name that just repeats the tenant name. */
   parseDirectory(bundle: FhirBundle): DirectoryEntry[] {
     const entries: DirectoryEntry[] = [];
     for (const { resource } of bundle.entry) {

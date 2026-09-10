@@ -1,14 +1,14 @@
 /**
  * The `directory_snapshots` table (every distinct directory body ever fetched) and
  * `directory_fetches` (each vendor's last attempt and error). Extract appends after a
- * good directory fetch; transform replays the whole history; publish and status read
- * the newest dates. The history is how the pipeline remembers delisted tenants.
+ * good directory fetch. Transform replays the whole history, and publish and status
+ * read the newest dates. The history is how the pipeline remembers delisted tenants.
  */
 import type { DatabaseSync } from 'node:sqlite';
 import type { FhirVersion, Vendor } from '@mere/shared';
 import { allRows, getRow } from '@mere/tenant-db';
 
-/** One saved copy of a vendor's directory page: the body as downloaded, and when. */
+/** One saved copy of a vendor's directory page, the body as downloaded and when. */
 interface Snapshot {
   fetched_at: string;
   body: string;
@@ -16,7 +16,7 @@ interface Snapshot {
 
 /**
  * Saves a directory page into history. A page identical to the newest saved copy adds
- * no row; that copy's date moves to now instead.
+ * no row and only moves that copy's date to now.
  */
 export function appendSnapshot(
   db: DatabaseSync,
@@ -63,6 +63,7 @@ export function recordAttempt(
   ).run(vendor, fhirVersion, attemptedAt, error);
 }
 
+/** The newest snapshot date for one vendor and version, compared by status against the transform. */
 export function latestFetchedAt(
   db: DatabaseSync,
   vendor: Vendor,
@@ -79,6 +80,7 @@ export function latestFetchedAt(
   );
 }
 
+/** The newest snapshot date across every vendor, used by publish to stamp sandbox rows. */
 export function latestFetchedAtOverall(db: DatabaseSync): string | null {
   return (
     getRow<{ newest: string | null }>(

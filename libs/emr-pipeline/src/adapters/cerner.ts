@@ -15,7 +15,7 @@ const DIRECTORY: Record<FhirVersion, { env: string; url: string }> = {
   },
   DSTU2: {
     env: 'CERNER_DSTU2_ENDPOINTS_URL',
-    // Pinned commit: ignite-endpoints main no longer carries the DSTU2 list.
+    // Pinned to a commit because ignite-endpoints main no longer carries the DSTU2 list.
     url: 'https://raw.githubusercontent.com/oracle-samples/ignite-endpoints/30bce23a24731f7c38c1da8aec94321ba9c223cb/millennium_patient_dstu2_endpoints.json',
   },
 };
@@ -50,6 +50,7 @@ export const cernerAdapter: VendorAdapter = {
     return httpDirectory(process.env[source.env] ?? source.url);
   },
 
+  /** Reads one tenant per Endpoint resource, named by the Organization that links to it when one does. */
   parseDirectory(bundle: FhirBundle): DirectoryEntry[] {
     const namesByEndpointId = new Map<string, string>();
     for (const { resource } of bundle.entry) {

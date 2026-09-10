@@ -7,6 +7,7 @@ import * as publications from '../db/repository/publications';
 import * as runs from '../db/repository/fetch-runs';
 import * as snapshots from '../db/repository/directory-snapshots';
 
+/** Renders a delta as +n or -n for the status table. */
 function signed(n: number): string {
   return n < 0 ? String(n) : `+${n}`;
 }

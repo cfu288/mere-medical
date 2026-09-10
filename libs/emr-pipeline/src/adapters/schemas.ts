@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 /**
  * Every field is `.catch(undefined)` because one resource type's field collides with
- * another's: `Endpoint.address` is a url string while `Organization.address` is an
+ * another's. `Endpoint.address` is a url string while `Organization.address` is an
  * array of postal addresses, and both share a directory bundle. A strict type here
  * rejects the whole directory over a field the adapter was never going to read.
  */
@@ -86,7 +86,7 @@ const securityExtensionSchema = z.object({
   valueUri: z.string().optional(),
 });
 
-/** Only the slice of a CapabilityStatement the pipeline reads: the security extensions carrying SMART urls. */
+/** Models only the security extensions carrying SMART urls, the one slice of a CapabilityStatement the pipeline reads. */
 export const capabilityStatementSchema = z.object({
   resourceType: z.string().optional(),
   rest: z

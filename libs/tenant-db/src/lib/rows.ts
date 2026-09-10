@@ -6,7 +6,7 @@ type SqlParams = Record<string, unknown> | unknown[];
  * Reads query results as a hand-written row type.
  *
  * `node:sqlite` types every column as a union, so the mapping from a SELECT to a row
- * interface is unchecked; the caller's row type must match its own query.
+ * interface is unchecked. The caller's row type must match its own query.
  */
 export function allRows<T>(
   statement: StatementSync,

@@ -14,10 +14,12 @@ const DIRECTORY_TIMEOUT_MS = 300_000;
 const RETRIES = 3;
 const BATCH_SIZE = 200;
 
+/** True for an https url, the only kind the crawl fetches. */
 function isHttpsUrl(value: string): boolean {
   return URL.parse(value)?.protocol === 'https:';
 }
 
+/** Tells a real FHIR body from an error page served with status 200. */
 function isJson(body: string): boolean {
   try {
     JSON.parse(body);
@@ -38,7 +40,7 @@ interface ExtractResult {
   status: 'ok' | 'failed';
 }
 
-/** Rejects a directory that contradicts itself: empty, or a declared total its entries do not match. */
+/** Rejects a directory that is empty or whose declared total does not match its entries. */
 export function checkDirectory(
   tenantCount: number,
   bundleEntryCount: number,
@@ -56,6 +58,7 @@ export function checkDirectory(
   return { ok: true };
 }
 
+/** Fetches one url with a timeout, retrying network errors and 5xx answers. Any other bad status throws. */
 async function fetchWithRetry(
   url: string,
   headers: Record<string, string>,
@@ -95,6 +98,7 @@ type CapabilityOutcome =
   | { kind: 'ok'; id: number; body: string }
   | { kind: 'error'; id: number; error: unknown };
 
+/** Runs the capability fetches a fixed number at a time, draining every worker before rethrowing a failure. */
 async function runPool<T>(
   tasks: (() => Promise<T>)[],
   onResult: (result: T) => void,
@@ -119,7 +123,7 @@ async function runPool<T>(
  * every capability document it lists into the warehouse.
  *
  * A directory that cannot be fetched or fails its checks returns `failed` instead of
- * throwing; individual capability download failures are recorded and never abort a run.
+ * throwing. Individual capability download failures are recorded and never abort a run.
  */
 export async function extract(
   db: DatabaseSync,

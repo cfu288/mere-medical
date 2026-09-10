@@ -14,7 +14,7 @@ const BUNDLE_URL =
 const PRACTICE_EXTENSION_URL =
   'https://fhir.athena.io/StructureDefinition/ah-practice';
 
-/** Every practice shares this base; the practice is selected post-auth by query param. */
+/** Every practice shares this base url. The practice itself is picked after login by query param. */
 const ATHENA_FHIR_BASE_URL = 'https://api.platform.athenahealth.com/fhir/r4';
 
 export const athenaAdapter: VendorAdapter = {
@@ -27,8 +27,8 @@ export const athenaAdapter: VendorAdapter = {
 
   /**
    * Groups the bundle's Organization resources by their practice id and returns one
-   * tenant per practice: the practice id, the shared athena base url, and a name only
-   * when every Organization in the practice agrees on one.
+   * tenant per practice. Each carries the practice id, the shared athena base url, and
+   * a name only when every Organization in the practice agrees on one.
    */
   parseDirectory(bundle: FhirBundle): DirectoryEntry[] {
     const namesByPractice = new Map<string, Set<string>>();

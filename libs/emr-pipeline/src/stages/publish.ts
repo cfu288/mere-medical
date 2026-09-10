@@ -17,6 +17,7 @@ interface PublishOptions {
   log: (message: string) => void;
 }
 
+/** Writes a fresh tenants.db beside `artifactPath` and renames it into place. */
 function buildArtifact(
   db: DatabaseSync,
   artifactPath: string,

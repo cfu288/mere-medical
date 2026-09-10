@@ -1,7 +1,7 @@
 /**
- * The `directory_counts` table: how many tenants each vendor's directory listed when
- * transform last parsed it. Transform records it; status reads it for the endpoints
- * column and to flag a crawl the transform has not consumed yet.
+ * Owns the `directory_counts` table, which keeps how many tenants each vendor's
+ * directory listed when transform last parsed it. Transform records it and status
+ * reads it for the endpoints column and the transform-behind flag.
  */
 import type { DatabaseSync } from 'node:sqlite';
 import type { FhirVersion, Vendor } from '@mere/shared';
@@ -13,6 +13,7 @@ interface DirectoryCount {
   tenant_count: number;
 }
 
+/** Saves the latest snapshot's tenant count when transform finishes a vendor and version. */
 export function record(
   db: DatabaseSync,
   vendor: Vendor,
@@ -29,6 +30,7 @@ export function record(
   ).run(vendor, fhirVersion, seenAt, tenantCount);
 }
 
+/** The saved count for one vendor and version, rendered by status as the endpoints column. */
 export function find(
   db: DatabaseSync,
   vendor: Vendor,

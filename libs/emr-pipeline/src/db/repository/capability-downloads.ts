@@ -1,8 +1,9 @@
 /**
- * The `capability_downloads` table: every CapabilityStatement url a directory ever
- * listed, with its last good body and last attempt. Extract registers urls and records
- * each fetch outcome; transform reads the stored bodies to classify auth urls; status
- * reads the newest download date. Durable so an outage costs freshness, never data.
+ * Owns the `capability_downloads` table, which keeps every CapabilityStatement url a
+ * directory ever listed along with its last good body and last attempt. Extract
+ * registers urls and records each fetch outcome. Transform reads the stored bodies and
+ * status reads the newest download date. The table is durable so an outage costs
+ * freshness, never data.
  */
 import type { DatabaseSync } from 'node:sqlite';
 import type { FhirVersion, Vendor } from '@mere/shared';
@@ -14,7 +15,7 @@ interface CapabilityKey {
   url: string;
 }
 
-/** One tenant's CapabilityStatement url; body and download date arrive together once a fetch succeeds. */
+/** One tenant's CapabilityStatement url. Body and download date arrive together once a fetch succeeds. */
 export type CapabilityDownload = CapabilityKey &
   (
     | { id: number; body: string; downloadedAt: string }
@@ -30,6 +31,7 @@ interface CapabilitySqlRow {
   downloaded_at: string | null;
 }
 
+/** Maps a raw sql row onto the download shape, pairing body and date. */
 function toRow(row: CapabilitySqlRow): CapabilityDownload {
   const key = {
     id: row.id,
@@ -43,7 +45,7 @@ function toRow(row: CapabilitySqlRow): CapabilityDownload {
   return { ...key, body: row.body, downloadedAt: row.downloaded_at };
 }
 
-/** Registers a url for download; a url already present keeps its stored body and dates. */
+/** Registers a url for download. A url already present keeps its stored body and dates. */
 export function addUrl(db: DatabaseSync, key: CapabilityKey): void {
   db.prepare(
     `INSERT INTO capability_downloads (vendor, fhir_version, url)
@@ -52,6 +54,7 @@ export function addUrl(db: DatabaseSync, key: CapabilityKey): void {
   ).run(key.vendor, key.fhirVersion, key.url);
 }
 
+/** One download by its url, how transform reads a stored capability body. */
 export function findByUrl(
   db: DatabaseSync,
   key: CapabilityKey,
@@ -66,6 +69,7 @@ export function findByUrl(
   return row ? toRow(row) : null;
 }
 
+/** One download by its row id. */
 export function findById(
   db: DatabaseSync,
   id: number,
@@ -106,6 +110,7 @@ interface DownloadFailure {
   now: string;
 }
 
+/** Flattens any thrown value to JSON for the error column. */
 function serializeError(error: unknown): string {
   if (error instanceof Error) {
     return JSON.stringify({
@@ -117,7 +122,7 @@ function serializeError(error: unknown): string {
   return JSON.stringify({ name: 'Unknown', message: String(error) });
 }
 
-/** Records a failed fetch: attempt date and error only, never `body`, so the last good copy survives an outage. */
+/** Records a failed fetch as an attempt date and error. It never touches the body, so the last good copy survives an outage. */
 export function recordFailure(
   db: DatabaseSync,
   failure: DownloadFailure,
@@ -135,6 +140,7 @@ export function recordFailure(
   });
 }
 
+/** The newest successful download date, shown by status as the crawl age. */
 export function latestDownloadedAt(
   db: DatabaseSync,
   vendor: Vendor,
@@ -156,7 +162,7 @@ interface DownloadListQuery {
   fhirVersion: FhirVersion;
 }
 
-/** Every url for one vendor and version, never-downloaded first; each run refetches all. */
+/** Every url for one vendor and version, never-downloaded first. Each run refetches all of them. */
 export function selectForDownload(
   db: DatabaseSync,
   query: DownloadListQuery,

@@ -26,7 +26,7 @@ interface ClassifiedCapability {
 
 /**
  * Reads one CapabilityStatement body into its SMART auth urls plus a classification
- * saying whether they are usable, and if not, why. Never throws: an unreadable body
+ * saying whether they are usable, and if not, why. Never throws. An unreadable body
  * classifies as `unparseable`.
  */
 export function classifyCapability(body: string): ClassifiedCapability {
@@ -91,7 +91,7 @@ interface MergedTenant {
  * Folds one vendor and version's snapshot history into the derived tenant tables,
  * classifying each tenant's stored capability download, and returns counts of what it
  * wrote. A tenant id a snapshot lists at more than one url contributes nothing from
- * that snapshot; what earlier snapshots said about it still counts.
+ * that snapshot. Earlier snapshots still count.
  */
 export function transform(
   db: DatabaseSync,

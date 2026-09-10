@@ -14,6 +14,7 @@ export const ADAPTERS: Record<Vendor, VendorAdapter> = {
   athena: athenaAdapter,
 };
 
+/** Looks up one vendor's adapter, how every stage resolves vendor-specific behavior. */
 export function adapterFor(vendor: Vendor): VendorAdapter {
   return ADAPTERS[vendor];
 }

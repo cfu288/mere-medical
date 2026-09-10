@@ -1,8 +1,8 @@
 /**
- * The disposable derived tables: `tenant_directory_entries`, `tenant_urls`, and
- * `tenant_capabilities`. Transform rebuilds them from snapshot history; publish reads
- * `listPublishable` to write `tenants.db`. They exist so publish is one query over
- * folded rows instead of its own replay of the history.
+ * Owns the disposable tables `tenant_directory_entries`, `tenant_urls`, and
+ * `tenant_capabilities`. Transform rebuilds them from snapshot history and publish
+ * reads `listPublishable` to write `tenants.db`. They exist so publish is one query
+ * over folded rows instead of its own replay of the history.
  */
 import type { DatabaseSync } from 'node:sqlite';
 import type {
@@ -12,7 +12,7 @@ import type {
 } from '@mere/shared';
 import { allRows } from '@mere/tenant-db';
 
-/** One tenant merged from every snapshot: latest url and seen date, last non-empty name. */
+/** One tenant merged from every snapshot, keeping its latest url and seen date and its last non-empty name. */
 interface DirectoryEntryRow {
   tenantId: string;
   name: string | undefined;
@@ -37,6 +37,7 @@ export interface CapabilityRow {
   classification: CapabilityClassification;
 }
 
+/** Clears one vendor and version's rows ahead of a rebuild. */
 function replace(
   db: DatabaseSync,
   table: string,
@@ -49,6 +50,7 @@ function replace(
   );
 }
 
+/** Replaces one vendor and version's folded tenants when transform finishes replaying its snapshots. */
 export function replaceEntries(
   db: DatabaseSync,
   vendor: Vendor,
@@ -75,6 +77,7 @@ export function replaceEntries(
   }
 }
 
+/** Replaces one vendor and version's url sightings from the same replay. */
 export function replaceUrls(
   db: DatabaseSync,
   vendor: Vendor,
@@ -91,6 +94,7 @@ export function replaceUrls(
   }
 }
 
+/** Replaces one vendor and version's classified capabilities from the same replay. */
 export function replaceCapabilities(
   db: DatabaseSync,
   vendor: Vendor,
@@ -118,7 +122,7 @@ export function replaceCapabilities(
   }
 }
 
-/** A tenant ready to ship: named (athena aside), with its best usable auth urls. */
+/** A tenant ready to ship, named unless athena, with its best usable auth urls. */
 interface PublishableTenant {
   tenant_id: string;
   vendor: string;
@@ -133,7 +137,7 @@ interface PublishableTenant {
   last_seen_in_directory: string;
 }
 
-/** Every tenant fit to publish; auth comes from its current url's usable capability, else its most recently seen usable one. */
+/** Every tenant fit to publish. Auth comes from its current url's usable capability, or else from its most recently seen usable one. */
 export function listPublishable(db: DatabaseSync): PublishableTenant[] {
   return allRows<PublishableTenant>(
     db.prepare(

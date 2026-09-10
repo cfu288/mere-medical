@@ -34,6 +34,7 @@ export const healowAdapter: VendorAdapter = {
     );
   },
 
+  /** Reads one tenant per Endpoint in the practice list, preferring the matching Organization's name. */
   parseDirectory(bundle: FhirBundle): DirectoryEntry[] {
     const names = new Map<string, string>();
     for (const { resource } of bundle.entry) {

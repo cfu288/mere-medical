@@ -18,12 +18,14 @@ const DEFAULT_ARTIFACT = path.resolve(
   'tenants.db',
 );
 
+/** Every vendor and version any adapter declares. */
 function targets(): { vendor: Vendor; fhirVersion: FhirVersion }[] {
   return (Object.keys(ADAPTERS) as Vendor[]).flatMap((vendor) =>
     adapterFor(vendor).versions.map((fhirVersion) => ({ vendor, fhirVersion })),
   );
 }
 
+/** Only the targets whose directory location is configured. */
 function configuredTargets(): { vendor: Vendor; fhirVersion: FhirVersion }[] {
   return targets().filter((target) => {
     if (adapterFor(target.vendor).directory(target.fhirVersion)) return true;
@@ -37,6 +39,7 @@ function configuredTargets(): { vendor: Vendor; fhirVersion: FhirVersion }[] {
 const now = () => new Date().toISOString();
 const log = (message: string) => console.log(message);
 
+/** Runs one pipeline command against the warehouse and returns the exit code. */
 async function main(argv: string[]): Promise<number> {
   const [command, ...rest] = argv;
   if (rest.length > 0) {
