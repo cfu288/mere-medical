@@ -59,7 +59,7 @@ export function checkTenantDirectoryCounts(
 }
 
 /** Fetches one url and returns its body text, retrying network errors and 5xx answers. Any other bad status throws. */
-async function fetchWithRetry(
+async function fetchWithExponentialBackoff(
   url: string,
   headers: Record<string, string>,
 ): Promise<{ body: string }> {
@@ -98,29 +98,22 @@ type CapabilityOutcome =
   | { kind: 'ok'; id: number; body: string }
   | { kind: 'error'; id: number; error: unknown };
 
-/** Runs every task a fixed number at a time, handing each result to onResult. The first failure is rethrown, but only after the remaining tasks finish. */
-async function runPool<T>(
+/** Runs the tasks in batches of CONCURRENCY, handing every result to onResult as its batch finishes. */
+async function runInBatches<T>(
   tasks: (() => Promise<T>)[],
   onResult: (result: T) => void,
 ): Promise<void> {
-  let next = 0;
-  async function worker(): Promise<void> {
-    while (next < tasks.length) {
-      onResult(await tasks[next++]());
-    }
-  }
-  const workers = Math.max(1, Math.min(CONCURRENCY, tasks.length));
-  const settled = await Promise.allSettled(
-    Array.from({ length: workers }, worker),
-  );
-  for (const result of settled) {
-    if (result.status === 'rejected') throw result.reason;
+  for (let start = 0; start < tasks.length; start += CONCURRENCY) {
+    const batch = tasks.slice(start, start + CONCURRENCY);
+    const results = await Promise.all(batch.map((task) => task()));
+    results.forEach(onResult);
   }
 }
 
 /**
- * Fetches one vendor and version's directory containing all tenants, saves it as a snapshot in the database, and then iterates each to download
- * each capability document into the warehouse.
+ * Fetches one vendor and version's directory containing all tenants, saves it as a
+ * snapshot in the database, and then downloads each listed tenant's capability
+ * document into the warehouse.
  */
 export async function extract(
   db: DatabaseSync,
@@ -252,10 +245,13 @@ export async function extract(
     buffer.length = 0;
   };
 
-  await runPool<CapabilityOutcome>(
+  await runInBatches<CapabilityOutcome>(
     fetchable.map((row) => async (): Promise<CapabilityOutcome> => {
       try {
-        const result = await fetchWithRetry(row.url, capabilityHeaders);
+        const result = await fetchWithExponentialBackoff(
+          row.url,
+          capabilityHeaders,
+        );
         return { kind: 'ok', id: row.id, ...result };
       } catch (error) {
         return { kind: 'error', id: row.id, error };

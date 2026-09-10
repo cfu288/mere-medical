@@ -12,7 +12,7 @@ import type {
 } from '@mere/shared';
 import { allRows } from '@mere/tenant-db';
 
-/** One tenant merged from every snapshot, keeping its latest url and seen date and its last non-empty name. */
+/** One tenant summarized across every saved directory copy. It keeps the url and date from the newest copy that listed the tenant, and the last name the vendor ever gave it. */
 interface DirectoryEntryRow {
   tenantId: string;
   name: string | undefined;
@@ -21,14 +21,14 @@ interface DirectoryEntryRow {
   lastSeen: string;
 }
 
-/** One url a tenant was ever listed at, and the last snapshot that listed it there. */
+/** Records that a tenant was once listed at this url, and the date of the newest directory copy that listed it there. */
 interface TenantUrlRow {
   tenantId: string;
   url: string;
   lastSeenAt: string;
 }
 
-/** The SMART auth urls one url's capability download declared, and how it classified. */
+/** The SMART auth urls read out of one url's downloaded CapabilityStatement. The classification says whether they are complete enough to log in with, and `listPublishable` keeps only `usable` rows. */
 export interface CapabilityRow {
   url: string;
   authorizeUrl: string | null;
@@ -37,8 +37,8 @@ export interface CapabilityRow {
   classification: CapabilityClassification;
 }
 
-/** Clears one vendor and version's rows from the given table ahead of a rebuild. */
-function replace(
+/** Deletes one vendor and version's rows from the given table. */
+function clearRows(
   db: DatabaseSync,
   table: string,
   vendor: Vendor,
@@ -50,14 +50,14 @@ function replace(
   );
 }
 
-/** Replaces one vendor and version's merged tenants when transform finishes replaying its snapshots. */
+/** Deletes and rewrites one vendor and version's tenant rows. Transform calls it after rereading every saved directory copy. */
 export function replaceEntries(
   db: DatabaseSync,
   vendor: Vendor,
   fhirVersion: FhirVersion,
   entries: DirectoryEntryRow[],
 ): void {
-  replace(db, 'tenant_directory_entries', vendor, fhirVersion);
+  clearRows(db, 'tenant_directory_entries', vendor, fhirVersion);
   const insert = db.prepare(
     `INSERT INTO tenant_directory_entries
        (vendor, fhir_version, tenant_id, name, url, managing_organization,
@@ -77,14 +77,14 @@ export function replaceEntries(
   }
 }
 
-/** Replaces the record of which urls each tenant was listed at, from the same replay. */
+/** Deletes and rewrites which urls each tenant was ever listed at. Transform calls it in the same pass as `replaceEntries`. */
 export function replaceUrls(
   db: DatabaseSync,
   vendor: Vendor,
   fhirVersion: FhirVersion,
   urls: TenantUrlRow[],
 ): void {
-  replace(db, 'tenant_urls', vendor, fhirVersion);
+  clearRows(db, 'tenant_urls', vendor, fhirVersion);
   const insert = db.prepare(
     `INSERT INTO tenant_urls (vendor, fhir_version, tenant_id, url, last_seen_at)
      VALUES (?, ?, ?, ?, ?)`,
@@ -94,14 +94,14 @@ export function replaceUrls(
   }
 }
 
-/** Replaces one vendor and version's classified capabilities from the same replay. */
+/** Deletes and rewrites each url's `CapabilityRow`, the auth urls read from its downloaded CapabilityStatement. Transform calls it in the same pass as `replaceEntries`. */
 export function replaceCapabilities(
   db: DatabaseSync,
   vendor: Vendor,
   fhirVersion: FhirVersion,
   capabilities: CapabilityRow[],
 ): void {
-  replace(db, 'tenant_capabilities', vendor, fhirVersion);
+  clearRows(db, 'tenant_capabilities', vendor, fhirVersion);
   const insert = db.prepare(
     `INSERT INTO tenant_capabilities
        (vendor, fhir_version, url, authorize_url, token_url, register_url,
@@ -137,7 +137,12 @@ interface PublishableTenant {
   last_seen_in_directory: string;
 }
 
-/** Every tenant fit to publish. Auth comes from its current url's usable capability, or else from its most recently seen usable one. */
+/**
+ * Queries the three derived tables and then returns a list of every tenant that
+ * belongs in `tenants.db`, each carrying auth urls from its current url's usable
+ * CapabilityStatement, or else from the most recent of its urls that had one. This is
+ * intended to be used by publish as the artifact's entire directory-sourced content.
+ */
 export function listPublishable(db: DatabaseSync): PublishableTenant[] {
   return allRows<PublishableTenant>(
     db.prepare(
