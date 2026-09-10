@@ -13,13 +13,17 @@ interface RawDocumentKey {
  * One row of `raw_documents`: a URL the crawler downloads and the last copy it saved.
  *
  * Only two kinds of page exist: a vendor's directory of hospitals, or one hospital's
- * CapabilityStatement. `raw` is null until the first download succeeds.
+ * CapabilityStatement. A row either holds a downloaded copy with its time, or neither.
  */
-export interface RawDocumentRow extends RawDocumentKey {
-  id: number;
-  raw: string | null;
-  lastRefreshed: string | null;
-}
+export type RawDocumentRow = RawDocumentKey &
+  (
+    | { id: number; raw: string; lastRefreshed: string }
+    | {
+        id: number;
+        raw: null;
+        lastRefreshed: null;
+      }
+  );
 
 interface RawDocumentSqlRow {
   id: number;
@@ -32,15 +36,17 @@ interface RawDocumentSqlRow {
 }
 
 function toRow(row: RawDocumentSqlRow): RawDocumentRow {
-  return {
+  const key = {
     id: row.id,
     vendor: row.vendor as Vendor,
     fhirVersion: row.fhir_version as FhirVersion,
     docType: row.doc_type as DocType,
     url: row.url,
-    raw: row.raw,
-    lastRefreshed: row.last_refreshed,
   };
+  if (row.raw === null || row.last_refreshed === null) {
+    return { ...key, raw: null, lastRefreshed: null };
+  }
+  return { ...key, raw: row.raw, lastRefreshed: row.last_refreshed };
 }
 
 /** Adds a row for a URL without downloading it yet, and returns the row's id. */
