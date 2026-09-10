@@ -1,0 +1,148 @@
+import { DatabaseSync } from 'node:sqlite';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { ADAPTERS } from '../adapters';
+import {
+  TENANT_DB_SCHEMA,
+  TENANT_DB_USER_VERSION,
+  getRow,
+} from '@mere/tenant-db';
+import * as derived from '../db/repository/derived-tenants';
+import * as snapshots from '../db/repository/directory-snapshots';
+import * as publications from '../db/repository/publications';
+
+interface PublishOptions {
+  artifactPath: string;
+  now: () => string;
+  log: (message: string) => void;
+}
+
+/**
+ * Writes a fresh tenants.db beside `artifactPath`, renames it into place, and
+ * returns its row count, so nothing from an older artifact survives into the
+ * new one.
+ */
+function buildArtifact(
+  db: DatabaseSync,
+  artifactPath: string,
+): { rowCount: number } {
+  fs.mkdirSync(path.dirname(artifactPath), { recursive: true });
+
+  const tenants = derived.listPublishable(db);
+  const seenAt =
+    snapshots.latestFetchedAtOverall(db) ?? '1970-01-01T00:00:00.000Z';
+
+  const building = `${artifactPath}.building`;
+  for (const stale of [building, `${building}-wal`, `${building}-shm`]) {
+    fs.rmSync(stale, { force: true });
+  }
+
+  const artifact = new DatabaseSync(building);
+  try {
+    artifact.exec(TENANT_DB_SCHEMA);
+    artifact.exec(`PRAGMA user_version = ${TENANT_DB_USER_VERSION}`);
+
+    const insert = artifact.prepare(
+      `INSERT INTO tenants
+         (tenant_id, vendor, fhir_version, name, url, token, authorize, register,
+          managing_organization, source, searchable, last_seen_in_directory)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    );
+    for (const tenant of tenants) {
+      insert.run(
+        tenant.tenant_id,
+        tenant.vendor,
+        tenant.fhir_version,
+        tenant.name,
+        tenant.url,
+        tenant.token,
+        tenant.authorize,
+        tenant.register,
+        tenant.managing_organization,
+        'directory',
+        tenant.searchable,
+        tenant.last_seen_in_directory,
+      );
+    }
+    for (const [vendor, adapter] of Object.entries(ADAPTERS)) {
+      for (const version of adapter.versions) {
+        for (const seed of adapter.sandbox(version)) {
+          insert.run(
+            seed.tenantId,
+            vendor,
+            version,
+            seed.name,
+            seed.url,
+            seed.token ?? null,
+            seed.authorize ?? null,
+            null,
+            null,
+            'sandbox',
+            1,
+            seenAt,
+          );
+        }
+      }
+    }
+
+    artifact.exec(
+      `INSERT INTO tenants_fts (rowid, name, managing_organization)
+       SELECT id, name, managing_organization FROM tenants`,
+    );
+    const count = getRow<{ n: number }>(
+      artifact.prepare('SELECT COUNT(*) AS n FROM tenants'),
+    );
+    artifact.exec('VACUUM');
+    artifact.close();
+
+    fs.renameSync(building, artifactPath);
+    fs.rmSync(`${artifactPath}-wal`, { force: true });
+    fs.rmSync(`${artifactPath}-shm`, { force: true });
+    return { rowCount: count?.n ?? 0 };
+  } catch (error) {
+    if (artifact.isOpen) artifact.close();
+    fs.rmSync(building, { force: true });
+    throw error;
+  }
+}
+
+interface PublishResult {
+  rowCount: number;
+}
+
+/**
+ * Writes the shipped tenant catalog `tenants.db` from the warehouse alone, so
+ * publishing twice from the same warehouse produces identical content. The artifact
+ * holds every tenant `listPublishable` returns plus every adapter's sandbox tenants,
+ * and the publish is recorded in the warehouse for the status history.
+ *
+ * The artifact is built beside its target and renamed into place, so a reader never
+ * sees a half-written file.
+ *
+ * @param db - An open warehouse whose derived tables transform has filled.
+ * @param options - Where to write and how to report progress.
+ * @param options.artifactPath - Where to write the artifact.
+ * @param options.now - Clock returning an ISO timestamp for the publish record.
+ * @param options.log - Sink for one-line progress messages.
+ * @returns The number of tenant rows the artifact holds.
+ * @example
+ * const { rowCount } = publish(db, {
+ *   artifactPath: 'libs/tenant-db/data/tenants.db',
+ *   now: () => new Date().toISOString(),
+ *   log: console.log,
+ * });
+ *
+ * A run like this returns `rowCount` 39560 and logs:
+ *
+ *   wrote libs/tenant-db/data/tenants.db: 39560 rows
+ */
+export function publish(
+  db: DatabaseSync,
+  options: PublishOptions,
+): PublishResult {
+  const artifact = buildArtifact(db, options.artifactPath);
+  publications.record(db, options.now(), artifact.rowCount);
+
+  options.log(`wrote ${options.artifactPath}: ${artifact.rowCount} rows`);
+  return { rowCount: artifact.rowCount };
+}

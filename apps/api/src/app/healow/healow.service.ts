@@ -1,37 +1,21 @@
-import { Injectable } from '@nestjs/common';
-import { HealowR4TenantEndpoints, R4Endpoint } from '@mere/healow';
-import { stringSimilarity } from '@mere/shared';
+import { Inject, Injectable } from '@nestjs/common';
+import { VendorEndpoint, toVendorEndpoint } from '@mere/shared';
+import { TenantDb, findTenantById, searchTenants } from '@mere/tenant-db';
+import { TENANT_DB } from '../tenant-db/tenant-db.module';
 
 @Injectable()
 export class HealowService {
-  private readonly r4Items = HealowR4TenantEndpoints;
+  constructor(@Inject(TENANT_DB) private readonly db: TenantDb) {}
 
-  async queryR4Tenants(query: string): Promise<R4Endpoint[]> {
-    return filteredItemsWithQuery(this.r4Items, query);
+  async queryR4Tenants(query: string): Promise<VendorEndpoint[]> {
+    return searchTenants(this.db, query, {
+      vendors: ['healow'],
+      fhirVersion: 'R4',
+    }).map(toVendorEndpoint);
   }
 
-  findTenantById(tenantId: string): R4Endpoint | undefined {
-    return this.r4Items.find((t) => t.id === tenantId);
+  findTenantById(tenantId: string): VendorEndpoint | undefined {
+    const tenant = findTenantById(this.db, 'healow', tenantId, 'R4');
+    return tenant ? toVendorEndpoint(tenant) : undefined;
   }
-}
-
-function filteredItemsWithQuery<T extends { name: string }>(
-  items: T[],
-  query: string,
-): T[] {
-  if (query === '' || query === undefined) {
-    return items.sort((x, y) => x.name.localeCompare(y.name)).slice(0, 100);
-  }
-  return items
-    .map((item) => {
-      const vals = item.name
-        .split(' ')
-        .map((token) => stringSimilarity(token, query));
-      const rating = Math.max(...vals);
-      return { rating, item };
-    })
-    .filter((item) => item.rating > 0.05)
-    .sort((a, b) => b.rating - a.rating)
-    .slice(0, 50)
-    .map((item) => item.item);
 }

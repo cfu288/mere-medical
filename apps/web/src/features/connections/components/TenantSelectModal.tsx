@@ -5,9 +5,7 @@ import { Link } from 'react-router-dom';
 import { Combobox, Disclosure } from '@headlessui/react';
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid';
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
-import { DSTU2Endpoint as CernerDSTU2Endpoint } from '@mere/cerner';
-import { DSTU2Endpoint as EpicDSTU2Endpoint } from '@mere/epic';
-import { DSTU2Endpoint as VeradigmDSTU2Endpoint } from '@mere/veradigm';
+import { VendorEndpoint } from '@mere/shared';
 import { buildOnPatientAuthUrl } from '@mere/fhir-oauth';
 
 import VeradigmLogo from '../../../assets/img/allscripts-logo.png';
@@ -99,9 +97,9 @@ const wireVendorMap: Record<TenantWireVendor, EMRVendor> = {
   HEALOW: 'healow',
 };
 
-export type UnifiedDSTU2Endpoint = CernerDSTU2Endpoint &
-  EpicDSTU2Endpoint &
-  VeradigmDSTU2Endpoint & { vendor: TenantWireVendor };
+export type UnifiedDSTU2Endpoint = VendorEndpoint & {
+  vendor?: TenantWireVendor;
+};
 
 type RemoteData<T> =
   | { status: 'loading' }

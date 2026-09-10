@@ -1,10 +1,7 @@
-// @ts-nocheck
 import { DynamicModule, Logger, Module, Provider } from '@nestjs/common';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { createProxyServer } from 'http-proxy';
-import { EpicDSTU2TenantEndpoints, EpicR4TenantEndpoints } from '@mere/epic';
-import { HealowR4TenantEndpoints } from '@mere/healow';
 import * as queryString from 'querystring';
 import { ProxyController } from './controllers';
 import {
@@ -18,6 +15,7 @@ import {
   PROXY_MODULE_OPTIONS,
 } from './proxy.constants';
 import { ProxyService } from './services';
+import { TenantDbModule } from '../tenant-db/tenant-db.module';
 import { concatPath } from './utils';
 import { allowedOriginProvider, OriginGuard } from './guards';
 
@@ -38,13 +36,16 @@ const proxyFactory = {
       'host',
     ];
 
-    proxy.on('proxyReq', function (proxyReq, req, res, opts) {
-      const url = concatPath(`${proxyReq.protocol}//${proxyReq.host}`, req.url);
+    proxy.on('proxyReq', function (proxyReq, req, _res, opts) {
+      const url = concatPath(
+        `${proxyReq.protocol}//${proxyReq.host}`,
+        req.url ?? '',
+      );
       logger.debug(`Sending ${req.method} ${url}`);
 
       const savedContentType = proxyReq.getHeader('content-type');
       const savedHost = proxyReq.getHeader('host');
-      const serverHeaders = (opts as any).headers || {};
+      const serverHeaders = opts.headers ?? {};
 
       proxyReq.getHeaderNames().forEach((h) => proxyReq.removeHeader(h));
 
@@ -79,20 +80,27 @@ const proxyFactory = {
         }
       }
 
-      if (!req['body'] || !Object.keys(req['body']).length) {
+      const body = (req as typeof req & { body?: Record<string, unknown> })
+        .body;
+      if (!body || !Object.keys(body).length) {
         return;
       }
 
-      const contentType =
+      const rawContentType =
         savedContentType || proxyReq.getHeader('content-type');
-      let bodyData: string;
+      const contentType = Array.isArray(rawContentType)
+        ? rawContentType[0]
+        : rawContentType;
+      let bodyData: string | undefined;
 
       if (contentType === 'application/json') {
-        bodyData = JSON.stringify(req['body']);
+        bodyData = JSON.stringify(body);
       }
 
       if (contentType === 'application/x-www-form-urlencoded') {
-        bodyData = queryString.stringify(req['body']);
+        bodyData = queryString.stringify(
+          body as Parameters<typeof queryString.stringify>[0],
+        );
       }
 
       if (bodyData) {
@@ -101,12 +109,8 @@ const proxyFactory = {
       }
     });
 
-    proxy.on('proxyRes', function (proxyRes, req, res) {
-      const url = concatPath(
-        `${proxyRes['req'].protocol}//${proxyRes['req'].host}`,
-        req.url,
-      );
-      logger.debug(`Received ${req.method} ${url}`);
+    proxy.on('proxyRes', function (_proxyRes, req) {
+      logger.debug(`Received ${req.method} ${req.url ?? ''}`);
     });
     return proxy;
   },
@@ -115,6 +119,7 @@ const proxyFactory = {
 
 @Module({
   imports: [
+    TenantDbModule,
     ThrottlerModule.forRoot([
       { name: 'short', ttl: 1000, limit: 30 },
       { name: 'medium', ttl: 60000, limit: 600 },
@@ -156,11 +161,17 @@ export class ProxyModule {
     if (options.useExisting || options.useFactory) {
       return [this.createAsyncOptionsProvider(options)];
     }
+    const useClass = options.useClass;
+    if (!useClass) {
+      throw new Error(
+        'ProxyModule.forRootAsync requires useExisting, useFactory, or useClass',
+      );
+    }
     return [
       this.createAsyncOptionsProvider(options),
       {
-        provide: options.useClass,
-        useClass: options.useClass,
+        provide: useClass,
+        useClass,
       },
     ];
   }
@@ -169,17 +180,24 @@ export class ProxyModule {
     options: ProxyModuleAsyncOptions,
   ): Provider {
     if (options.useFactory) {
+      const useFactory = options.useFactory;
       return {
         provide: PROXY_MODULE_OPTIONS,
-        useFactory: async (...args: any[]) => await options.useFactory(...args),
+        useFactory: async (...args: unknown[]) => await useFactory(...args),
         inject: options.inject || [],
       };
+    }
+    const factoryProvider = options.useExisting ?? options.useClass;
+    if (!factoryProvider) {
+      throw new Error(
+        'ProxyModule.forRootAsync requires useExisting, useFactory, or useClass',
+      );
     }
     return {
       provide: PROXY_MODULE_OPTIONS,
       useFactory: async (optionsFactory: ProxyModuleOptionsFactory) =>
         await optionsFactory.createModuleConfig(),
-      inject: [options.useExisting || options.useClass],
+      inject: [factoryProvider],
     };
   }
 }
@@ -189,11 +207,4 @@ export const LoginProxyModule = ProxyModule.forRoot({
       'Content-Type': 'application/x-www-form-urlencoded',
     },
   },
-  services: [
-    {
-      vendor: 'epic',
-      endpoints: [...EpicDSTU2TenantEndpoints, ...EpicR4TenantEndpoints],
-    },
-    { vendor: 'healow', endpoints: [...HealowR4TenantEndpoints] },
-  ],
 });

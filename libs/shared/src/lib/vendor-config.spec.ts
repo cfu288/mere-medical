@@ -57,11 +57,7 @@ describe('parseVendorConfig', () => {
         nextgen: {
           status: 'disabled',
           enableWith: {
-            allOf: [
-              'NEXTGEN_CLIENT_ID',
-              'NEXTGEN_CLIENT_SECRET',
-              'PUBLIC_URL',
-            ],
+            allOf: ['NEXTGEN_CLIENT_ID', 'NEXTGEN_CLIENT_SECRET', 'PUBLIC_URL'],
           },
         },
       },

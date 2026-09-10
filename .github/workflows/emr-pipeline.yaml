@@ -1,0 +1,98 @@
+name: EMR tenant catalog refresh
+
+on:
+  schedule:
+    - cron: '17 6 3 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: emr-pipeline-refresh
+
+env:
+  EPIC_CLIENT_ID: ${{ secrets.EPIC_CLIENT_ID }}
+
+jobs:
+  refresh:
+    if: github.repository == 'cfu288/mere-medical'
+    timeout-minutes: 300
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 26.7.0
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Restore warehouse backup
+        id: restore
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p libs/emr-pipeline/data
+          if gh release view warehouse-backup >/dev/null 2>&1; then
+            gh release download warehouse-backup --pattern warehouse.db.zst
+            zstd -d warehouse.db.zst -o libs/emr-pipeline/data/warehouse.db
+            rm warehouse.db.zst
+            echo "warehouse backup restored"
+          else
+            echo "no backup found; starting from a fresh warehouse"
+          fi
+
+      - name: Extract
+        run: npx nx run emr-pipeline:extract
+
+      - name: Transform
+        run: npx nx run emr-pipeline:transform
+
+      - name: Publish
+        run: npx nx run emr-pipeline:publish
+
+      - name: Report status
+        if: always()
+        run: |
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          npx nx run emr-pipeline:status >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Save warehouse backup
+        if: always() && steps.restore.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          zstd -T0 -3 -f libs/emr-pipeline/data/warehouse.db -o warehouse.db.zst
+          gh release create warehouse-backup --prerelease \
+            --title 'EMR warehouse backup' \
+            --notes 'Rolling emr-pipeline warehouse backup; replaced by each refresh run.' \
+            2>/dev/null || true
+          gh release upload warehouse-backup warehouse.db.zst --clobber
+
+      - name: Open pull request
+        id: pr
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          branch: chore/tenants-refresh
+          add-paths: libs/tenant-db/data/tenants.db
+          commit-message: 'chore(tenant-db): monthly tenants.db refresh'
+          title: 'chore(tenant-db): monthly tenants.db refresh'
+          body: ''
+          delete-branch: true
+
+      - name: Comment status on the pull request
+        if: steps.pr.outputs.pull-request-number
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo '```'
+            npx nx run emr-pipeline:status
+            echo '```'
+          } > status-comment.md
+          gh pr comment '${{ steps.pr.outputs.pull-request-number }}' --body-file status-comment.md

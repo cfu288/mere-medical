@@ -1,0 +1,34 @@
+/**
+ * Owns the `publications` table, which records when `tenants.db` was written and with
+ * how many rows. Publish records each write and status lists the recent ones to show
+ * row-count deltas.
+ */
+import type { DatabaseSync } from 'node:sqlite';
+import { allRows } from '@mere/tenant-db';
+
+interface Publication {
+  published_at: string;
+  row_count: number;
+}
+
+/** Saves one publish's date and row count for the status history. */
+export function record(
+  db: DatabaseSync,
+  publishedAt: string,
+  rowCount: number,
+): void {
+  db.prepare(
+    `INSERT INTO publications (published_at, row_count) VALUES (?, ?)`,
+  ).run(publishedAt, rowCount);
+}
+
+/** The newest publishes first, at most `limit` rows. */
+export function listRecent(db: DatabaseSync, limit: number): Publication[] {
+  return allRows<Publication>(
+    db.prepare(
+      `SELECT published_at, row_count FROM publications
+       ORDER BY published_at DESC, id DESC LIMIT ?`,
+    ),
+    [limit],
+  );
+}

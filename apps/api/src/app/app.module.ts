@@ -9,7 +9,6 @@ import { HealowModule } from './healow/healow.module';
 import { VeradigmModule } from './veradigm/veradigm.module';
 import { AthenaModule } from './athena/athena.module';
 import { NextGenModule } from './nextgen/nextgen.module';
-import { TenantModule } from './tenant/tenant.module';
 import { ConfigModule } from './config/config.module';
 import { describeRequirement, EnableRequirement } from '@mere/shared';
 import { serverVendorConfig } from './vendor-config.server';
@@ -58,7 +57,6 @@ if (vendors.healow.status === 'production') {
 const imports: ModuleMetadata['imports'] = [
   StaticModule,
   LoginProxyModule,
-  TenantModule,
   ConfigModule,
 ];
 
