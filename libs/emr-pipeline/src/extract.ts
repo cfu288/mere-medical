@@ -315,14 +315,14 @@ export async function extract(
       throw error;
     }
 
-    const stale = raw
-      .selectWorklist(db, {
+    const documents = raw
+      .selectForDownload(db, {
         vendor,
         fhirVersion,
         docType: 'capability',
       })
       .filter((row) => capabilityUrls.has(row.url));
-    const insecure = stale.filter((row) => !isHttpsUrl(row.url));
+    const insecure = documents.filter((row) => !isHttpsUrl(row.url));
     for (const row of insecure) {
       raw.recordFailure(db, {
         id: row.id,
@@ -336,7 +336,7 @@ export async function extract(
         `${vendor} ${fhirVersion}: refused ${insecure.length} non-https capability urls`,
       );
     }
-    const fetchable = stale.filter((row) => isHttpsUrl(row.url));
+    const fetchable = documents.filter((row) => isHttpsUrl(row.url));
     const capabilityHeaders = {
       Accept: FHIR_ACCEPT,
       ...adapter.capabilityHeaders?.(),

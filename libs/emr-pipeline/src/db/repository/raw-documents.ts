@@ -152,7 +152,7 @@ export function recordFailure(db: DatabaseSync, failure: FetchFailure): void {
   });
 }
 
-interface WorklistQuery {
+interface DownloadListQuery {
   vendor: Vendor;
   fhirVersion: FhirVersion;
   docType: DocType;
@@ -164,9 +164,9 @@ interface WorklistQuery {
  * Extract downloads this whole list every run; a stored copy is crash insurance,
  * never a reason to skip the fetch.
  */
-export function selectWorklist(
+export function selectForDownload(
   db: DatabaseSync,
-  query: WorklistQuery,
+  query: DownloadListQuery,
 ): RawDocumentRow[] {
   const rows = allRows<RawDocumentSqlRow>(
     db.prepare(

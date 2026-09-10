@@ -632,7 +632,7 @@ describe('warehouse to artifact', () => {
     expect(publish(db, publishOptions()).rowCount).toBe(9);
   });
 
-  it('puts every capability document on the work list, never-fetched first', () => {
+  it('lists every capability document for download, never-downloaded first', () => {
     seedEpicR4();
     raw.trackDocument(
       db,
@@ -645,14 +645,14 @@ describe('warehouse to artifact', () => {
       NOW,
     );
 
-    const worklist = raw.selectWorklist(db, {
+    const downloads = raw.selectForDownload(db, {
       vendor: 'epic',
       fhirVersion: 'R4',
       docType: 'capability',
     });
 
-    expect(worklist).toHaveLength(3);
-    expect(worklist[0]?.url).toBe(
+    expect(downloads).toHaveLength(3);
+    expect(downloads[0]?.url).toBe(
       'https://three.example.org/api/FHIR/R4/metadata',
     );
   });
