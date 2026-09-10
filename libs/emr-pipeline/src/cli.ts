@@ -2,7 +2,7 @@ import * as path from 'node:path';
 import type { FhirVersion, Vendor } from '@mere/shared';
 import { adapterFor, ADAPTERS } from './adapters';
 import { openWarehouse } from './db/open';
-import { DEFAULT_EXTRACT_OPTIONS, extract } from './extract';
+import { extract } from './extract';
 import { publish } from './publish';
 import { formatStatus } from './status';
 import { transform } from './transform';
@@ -44,8 +44,7 @@ async function main(argv: string[]): Promise<number> {
     console.error(`Usage: cli.ts <extract|transform|publish|status>`);
     return 2;
   }
-  const warehousePath = process.env['EMR_WAREHOUSE_DB'] ?? DEFAULT_WAREHOUSE;
-  const db = openWarehouse(warehousePath);
+  const db = openWarehouse(DEFAULT_WAREHOUSE);
 
   try {
     switch (command) {
@@ -53,12 +52,7 @@ async function main(argv: string[]): Promise<number> {
         let failed = false;
         for (const target of configuredTargets()) {
           try {
-            const result = await extract(db, {
-              ...target,
-              ...DEFAULT_EXTRACT_OPTIONS,
-              now,
-              log,
-            });
+            const result = await extract(db, { ...target, now, log });
             if (result.status === 'failed') failed = true;
           } catch (error) {
             failed = true;
@@ -76,11 +70,7 @@ async function main(argv: string[]): Promise<number> {
         return 0;
       }
       case 'publish': {
-        publish(db, {
-          artifactPath: process.env['EMR_TENANT_DB'] ?? DEFAULT_ARTIFACT,
-          now,
-          log,
-        });
+        publish(db, { artifactPath: DEFAULT_ARTIFACT, now, log });
         return 0;
       }
       case 'status': {

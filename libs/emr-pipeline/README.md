@@ -45,8 +45,7 @@ Epic's Brands bundle is ~90 MB and Athena's is ~132 MB, so a run peaks around 1.
 heap and the directory fetch gets its own multi-minute timeout.
 
 `data/warehouse.db` is gitignored; the workflow persists it as a rolling
-`warehouse-backup` release asset. Override paths with `EMR_WAREHOUSE_DB` and
-`EMR_TENANT_DB`.
+`warehouse-backup` release asset.
 
 ## Data flow
 
@@ -55,9 +54,9 @@ heap and the directory fetch gets its own multi-minute timeout.
    remembers every tenant ever listed; a body identical to the newest saved copy only
    updates that copy's date.
 2. **Extract.** Fetches the CapabilityStatement of every currently listed tenant, each
-   run. Bounded worker pool with a per-host cap and a per-host give-up rule; a failure,
-   including a 200 carrying non-JSON, updates error columns only. It **never clobbers a
-   good body**: a run killed midway costs a re-crawl, never data.
+   run, through a bounded worker pool with retries and timeouts. A failure, including a
+   200 carrying non-JSON, updates error columns only. It **never clobbers a good
+   body**: a run killed midway costs a re-crawl, never data.
 3. **Transform.** `DELETE` + `INSERT` rebuilds the derived tables by replaying the whole
    snapshot history: every tenant ever listed, its latest url and seen date, its last
    non-empty name, every url it was ever listed at, and a classification of each url's

@@ -8,6 +8,12 @@ import * as downloads from './db/repository/capability-downloads';
 import * as runs from './db/repository/fetch-runs';
 import * as snapshots from './db/repository/directory-snapshots';
 
+const CONCURRENCY = 8;
+const TIMEOUT_MS = 20_000;
+const DIRECTORY_TIMEOUT_MS = 300_000;
+const RETRIES = 3;
+const BATCH_SIZE = 200;
+
 function isHttpsUrl(value: string): boolean {
   return URL.parse(value)?.protocol === 'https:';
 }
@@ -24,26 +30,9 @@ function isJson(body: string): boolean {
 interface ExtractOptions {
   vendor: Vendor;
   fhirVersion: FhirVersion;
-  concurrency: number;
-  hostConcurrency: number;
-  hostFailureLimit: number;
-  timeoutMs: number;
-  directoryTimeoutMs: number;
-  retries: number;
-  batchSize: number;
   now: () => string;
   log: (message: string) => void;
 }
-
-export const DEFAULT_EXTRACT_OPTIONS = {
-  concurrency: 8,
-  hostConcurrency: 4,
-  hostFailureLimit: 25,
-  timeoutMs: 20_000,
-  directoryTimeoutMs: 300_000,
-  retries: 3,
-  batchSize: 200,
-} as const;
 
 interface ExtractResult {
   status: 'ok' | 'failed';
@@ -69,22 +58,12 @@ export function checkDirectory(
   return { ok: true };
 }
 
-class HostUnreachableError extends Error {
-  constructor(host: string, failureLimit: number) {
-    super(
-      `Host ${host} failed ${failureLimit} times with no success; remaining documents skipped`,
-    );
-    this.name = 'HostUnreachableError';
-  }
-}
-
 async function fetchWithRetry(
   url: string,
   headers: Record<string, string>,
-  options: Pick<ExtractOptions, 'timeoutMs' | 'retries'>,
 ): Promise<{ body: string }> {
   let lastError: unknown;
-  for (let attempt = 0; attempt <= options.retries; attempt++) {
+  for (let attempt = 0; attempt <= RETRIES; attempt++) {
     if (attempt > 0) {
       const backoff = 2 ** (attempt - 1) * 500;
       await sleep(backoff + Math.random() * backoff);
@@ -94,7 +73,7 @@ async function fetchWithRetry(
     try {
       response = await fetch(url, {
         headers,
-        signal: AbortSignal.timeout(options.timeoutMs),
+        signal: AbortSignal.timeout(TIMEOUT_MS),
       });
       body = await response.text();
     } catch (error) {
@@ -114,94 +93,23 @@ async function fetchWithRetry(
   throw lastError;
 }
 
-function hostOf(url: string): string {
-  return URL.parse(url)?.host ?? url;
-}
-
-interface PoolTask<T> {
-  host: string;
-  run: () => Promise<T>;
-}
-
-interface PoolOptions<T> {
-  concurrency: number;
-  hostConcurrency: number;
-  /** 0 disables giving up on a host. */
-  hostFailureLimit: number;
-  failed: (result: T) => boolean;
-  skipped: (host: string) => T;
-}
-
-/**
- * Runs tasks under a global cap, a per-host cap, and a per-host give-up rule.
- *
- * A host that blackholes costs the full timeout on every request; without the give-up
- * rule one dead host in a large catalog stalls a run for hours.
- */
-async function runPool<T>(
-  tasks: PoolTask<T>[],
-  options: PoolOptions<T>,
-  onResult: (result: T, index: number) => void,
-): Promise<Map<string, number>> {
-  const queue = tasks.map((task, index) => ({ task, index }));
-  const inFlight = new Map<string, number>();
-  const failures = new Map<string, number>();
-  const successes = new Set<string>();
-  const abandoned = new Map<string, number>();
-
-  const givenUp = (host: string) =>
-    options.hostFailureLimit > 0 &&
-    !successes.has(host) &&
-    (failures.get(host) ?? 0) >= options.hostFailureLimit;
-
-  const busy = (host: string) =>
-    (inFlight.get(host) ?? 0) >= options.hostConcurrency;
-
-  async function worker(): Promise<void> {
-    for (;;) {
-      const next = queue.findIndex((item) => !busy(item.task.host));
-      if (next === -1) {
-        if (queue.length === 0) return;
-        await sleep(HOST_WAIT_MS);
-        continue;
-      }
-      const [item] = queue.splice(next, 1);
-      const host = item.task.host;
-
-      if (givenUp(host)) {
-        abandoned.set(host, (abandoned.get(host) ?? 0) + 1);
-        onResult(options.skipped(host), item.index);
-        continue;
-      }
-
-      inFlight.set(host, (inFlight.get(host) ?? 0) + 1);
-      try {
-        const result = await item.task.run();
-        if (options.failed(result)) {
-          failures.set(host, (failures.get(host) ?? 0) + 1);
-        } else {
-          successes.add(host);
-        }
-        onResult(result, item.index);
-      } finally {
-        inFlight.set(host, (inFlight.get(host) ?? 1) - 1);
-      }
-    }
-  }
-
-  const workers = Math.max(1, Math.min(options.concurrency, tasks.length));
-  await Promise.all(Array.from({ length: workers }, worker));
-  return abandoned;
-}
-
-const HOST_WAIT_MS = 25;
-
 type CapabilityOutcome =
   | { kind: 'ok'; id: number; body: string }
-  | { kind: 'error'; id: number; error: unknown }
-  | { kind: 'skipped'; host: string };
+  | { kind: 'error'; id: number; error: unknown };
 
-type RecordedOutcome = Exclude<CapabilityOutcome, { kind: 'skipped' }>;
+async function runPool<T>(
+  tasks: (() => Promise<T>)[],
+  onResult: (result: T) => void,
+): Promise<void> {
+  let next = 0;
+  async function worker(): Promise<void> {
+    while (next < tasks.length) {
+      onResult(await tasks[next++]());
+    }
+  }
+  const workers = Math.max(1, Math.min(CONCURRENCY, tasks.length));
+  await Promise.all(Array.from({ length: workers }, worker));
+}
 
 export async function extract(
   db: DatabaseSync,
@@ -209,33 +117,28 @@ export async function extract(
 ): Promise<ExtractResult> {
   const { vendor, fhirVersion, log } = options;
   const adapter = adapterFor(vendor);
-  const runId = runs.startRun(db, vendor, fhirVersion);
   const counts = { fetched: 0, failed: 0 };
 
   const source = adapter.directory(fhirVersion);
   if (!source) {
-    runs.finishRun(db, runId, counts.failed);
     throw new Error(`${vendor} publishes no ${fhirVersion} directory`);
   }
 
   const rejectDirectory = (message: string): ExtractResult => {
     snapshots.recordAttempt(db, vendor, fhirVersion, options.now(), message);
-    counts.failed++;
-    runs.finishRun(db, runId, counts.failed);
+    runs.record(db, vendor, fhirVersion, 1);
     log(`${vendor} ${fhirVersion}: ${message}`);
     return { status: 'failed' };
   };
 
-  let fetched: { body: string };
+  let body: string;
   try {
-    fetched = await source.fetch(
-      AbortSignal.timeout(options.directoryTimeoutMs),
-    );
+    body = await source.fetch(AbortSignal.timeout(DIRECTORY_TIMEOUT_MS));
   } catch (error) {
     return rejectDirectory(`directory fetch failed - ${error}`);
   }
 
-  const parsed = parseBundle(fetched.body);
+  const parsed = parseBundle(body);
   if (!parsed.ok) {
     return rejectDirectory(`directory body rejected - ${parsed.error}`);
   }
@@ -251,162 +154,112 @@ export async function extract(
     return rejectDirectory(`directory rejected: ${check.reason}`);
   }
   snapshots.recordAttempt(db, vendor, fhirVersion, options.now(), null);
-  if (
-    !snapshots.appendSnapshot(
-      db,
-      vendor,
-      fhirVersion,
-      options.now(),
-      fetched.body,
-    )
-  ) {
+  if (!snapshots.appendSnapshot(db, vendor, fhirVersion, options.now(), body)) {
     log(
       `${vendor} ${fhirVersion}: directory unchanged; updated the date on its saved copy`,
     );
   }
 
-  try {
-    log(`${vendor} ${fhirVersion}: directory holds ${entries.length} tenants`);
-    const capabilityUrls = new Set<string>();
-    for (const entry of entries) {
-      const url = adapter.capabilityUrl(entry);
-      if (url) capabilityUrls.add(url);
-    }
+  log(`${vendor} ${fhirVersion}: directory holds ${entries.length} tenants`);
+  const capabilityUrls = new Set<string>();
+  for (const entry of entries) {
+    const url = adapter.capabilityUrl(entry);
+    if (url) capabilityUrls.add(url);
+  }
 
+  db.exec('BEGIN');
+  try {
+    for (const url of capabilityUrls) {
+      downloads.addUrl(db, { vendor, fhirVersion, url }, options.now());
+    }
+    db.exec('COMMIT');
+  } catch (error) {
+    db.exec('ROLLBACK');
+    throw error;
+  }
+
+  const documents = downloads
+    .selectForDownload(db, { vendor, fhirVersion })
+    .filter((row) => capabilityUrls.has(row.url));
+  const insecure = documents.filter((row) => !isHttpsUrl(row.url));
+  for (const row of insecure) {
+    downloads.recordFailure(db, {
+      id: row.id,
+      error: new Error(`refusing to fetch non-https url ${row.url}`),
+      now: options.now(),
+    });
+    counts.failed++;
+  }
+  if (insecure.length > 0) {
+    log(
+      `${vendor} ${fhirVersion}: refused ${insecure.length} non-https capability urls`,
+    );
+  }
+  const fetchable = documents.filter((row) => isHttpsUrl(row.url));
+  const capabilityHeaders = {
+    Accept: FHIR_ACCEPT,
+    ...adapter.capabilityHeaders?.(),
+  };
+  log(
+    `${vendor} ${fhirVersion}: ${fetchable.length} capability documents to fetch`,
+  );
+
+  const buffer: CapabilityOutcome[] = [];
+  const flush = () => {
+    if (buffer.length === 0) return;
     db.exec('BEGIN');
     try {
-      for (const url of capabilityUrls) {
-        downloads.addUrl(db, { vendor, fhirVersion, url }, options.now());
+      for (const outcome of buffer) {
+        if (outcome.kind === 'ok' && isJson(outcome.body)) {
+          downloads.recordSuccess(db, {
+            id: outcome.id,
+            body: outcome.body,
+            now: options.now(),
+          });
+          counts.fetched++;
+        } else if (outcome.kind === 'ok') {
+          downloads.recordFailure(db, {
+            id: outcome.id,
+            error: new Error('endpoint answered 200 with a non-JSON body'),
+            now: options.now(),
+          });
+          counts.failed++;
+        } else {
+          downloads.recordFailure(db, {
+            id: outcome.id,
+            error: outcome.error,
+            now: options.now(),
+          });
+          counts.failed++;
+        }
       }
       db.exec('COMMIT');
     } catch (error) {
       db.exec('ROLLBACK');
       throw error;
     }
+    buffer.length = 0;
+  };
 
-    const documents = downloads
-      .selectForDownload(db, { vendor, fhirVersion })
-      .filter((row) => capabilityUrls.has(row.url));
-    const insecure = documents.filter((row) => !isHttpsUrl(row.url));
-    for (const row of insecure) {
-      downloads.recordFailure(db, {
-        id: row.id,
-        error: new Error(`refusing to fetch non-https url ${row.url}`),
-        now: options.now(),
-      });
-      counts.failed++;
-    }
-    if (insecure.length > 0) {
-      log(
-        `${vendor} ${fhirVersion}: refused ${insecure.length} non-https capability urls`,
-      );
-    }
-    const fetchable = documents.filter((row) => isHttpsUrl(row.url));
-    const capabilityHeaders = {
-      Accept: FHIR_ACCEPT,
-      ...adapter.capabilityHeaders?.(),
-    };
-    log(
-      `${vendor} ${fhirVersion}: ${fetchable.length} capability documents to fetch`,
-    );
-
-    const buffer: RecordedOutcome[] = [];
-    const flush = () => {
-      if (buffer.length === 0) return;
-      db.exec('BEGIN');
+  await runPool<CapabilityOutcome>(
+    fetchable.map((row) => async (): Promise<CapabilityOutcome> => {
       try {
-        for (const outcome of buffer) {
-          if (outcome.kind === 'ok' && isJson(outcome.body)) {
-            downloads.recordSuccess(db, {
-              id: outcome.id,
-              body: outcome.body,
-              now: options.now(),
-            });
-            counts.fetched++;
-          } else if (outcome.kind === 'ok') {
-            downloads.recordFailure(db, {
-              id: outcome.id,
-              error: new Error('endpoint answered 200 with a non-JSON body'),
-              now: options.now(),
-            });
-            counts.failed++;
-          } else {
-            downloads.recordFailure(db, {
-              id: outcome.id,
-              error: outcome.error,
-              now: options.now(),
-            });
-            counts.failed++;
-          }
-        }
-        db.exec('COMMIT');
+        const result = await fetchWithRetry(row.url, capabilityHeaders);
+        return { kind: 'ok', id: row.id, ...result };
       } catch (error) {
-        db.exec('ROLLBACK');
-        throw error;
+        return { kind: 'error', id: row.id, error };
       }
-      buffer.length = 0;
-    };
+    }),
+    (outcome) => {
+      buffer.push(outcome);
+      if (buffer.length >= BATCH_SIZE) flush();
+    },
+  );
+  flush();
 
-    const abandoned = await runPool<CapabilityOutcome>(
-      fetchable.map((row) => ({
-        host: hostOf(row.url),
-        run: async (): Promise<CapabilityOutcome> => {
-          try {
-            const result = await fetchWithRetry(
-              row.url,
-              capabilityHeaders,
-              options,
-            );
-            return { kind: 'ok', id: row.id, ...result };
-          } catch (error) {
-            return { kind: 'error', id: row.id, error };
-          }
-        },
-      })),
-      {
-        concurrency: options.concurrency,
-        hostConcurrency: options.hostConcurrency,
-        hostFailureLimit: options.hostFailureLimit,
-        failed: (result) =>
-          result.kind === 'error' &&
-          (!(result.error instanceof HttpStatusError) ||
-            result.error.status >= 500),
-        skipped: (host) => ({ kind: 'skipped', host }),
-      },
-      (outcome, index) => {
-        buffer.push(
-          outcome.kind === 'skipped'
-            ? {
-                kind: 'error',
-                id: fetchable[index].id,
-                error: new HostUnreachableError(
-                  outcome.host,
-                  options.hostFailureLimit,
-                ),
-              }
-            : outcome,
-        );
-        if (buffer.length >= options.batchSize) flush();
-      },
-    );
-    flush();
-    for (const [host, count] of abandoned) {
-      log(
-        `${vendor} ${fhirVersion}: gave up on ${host} after ${count} skipped documents`,
-      );
-    }
-
-    runs.finishRun(db, runId, counts.failed);
-    log(
-      `${vendor} ${fhirVersion}: ${counts.fetched} fetched, ${counts.failed} failed`,
-    );
-    return { status: 'ok' };
-  } catch (error) {
-    try {
-      runs.finishRun(db, runId, counts.failed);
-    } catch {
-      // Preserve the triggering error when even the status write cannot get a lock.
-    }
-    throw error;
-  }
+  runs.record(db, vendor, fhirVersion, counts.failed);
+  log(
+    `${vendor} ${fhirVersion}: ${counts.fetched} fetched, ${counts.failed} failed`,
+  );
+  return { status: 'ok' };
 }

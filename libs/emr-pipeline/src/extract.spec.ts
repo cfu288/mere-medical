@@ -126,13 +126,6 @@ describe('extract', () => {
     return extract(db, {
       vendor: 'epic',
       fhirVersion: 'R4',
-      concurrency: 2,
-      timeoutMs: 1000,
-      directoryTimeoutMs: 5000,
-      hostConcurrency: 2,
-      hostFailureLimit: 0,
-      retries: 0,
-      batchSize: 10,
       now: () => '2026-09-01T00:00:00.000Z',
       log: silent,
     });
@@ -189,63 +182,6 @@ describe('extract', () => {
     expect(
       db.prepare('SELECT fetched_at FROM directory_snapshots').all(),
     ).toEqual([{ fetched_at: '2026-09-01T00:00:00.000Z' }]);
-  });
-
-  it('keeps asking a host whose endpoints answer 404', async () => {
-    const twoTenants = JSON.stringify({
-      resourceType: 'Bundle',
-      entry: [
-        {
-          resource: {
-            resourceType: 'Endpoint',
-            id: 'epic-1',
-            name: 'Example Health',
-            address: 'https://one.example.org/api/FHIR/R4/',
-          },
-        },
-        {
-          resource: {
-            resourceType: 'Endpoint',
-            id: 'epic-2',
-            name: 'Second Health',
-            address: 'https://one.example.org/second/api/FHIR/R4/',
-          },
-        },
-      ],
-    });
-    const asked: string[] = [];
-    globalThis.fetch = (async (url: string | URL) => {
-      if (String(url).includes('directory')) {
-        return new Response(twoTenants, {
-          status: 200,
-          headers: { 'content-type': 'application/json' },
-        });
-      }
-      asked.push(String(url));
-      return new Response('<html>404 Not Found</html>', {
-        status: 404,
-        headers: { 'content-type': 'text/html' },
-      });
-    }) as typeof fetch;
-
-    await extract(db, {
-      vendor: 'epic',
-      fhirVersion: 'R4',
-      concurrency: 1,
-      timeoutMs: 1000,
-      directoryTimeoutMs: 5000,
-      hostConcurrency: 1,
-      hostFailureLimit: 1,
-      retries: 0,
-      batchSize: 10,
-      now: () => '2026-09-01T00:00:00.000Z',
-      log: silent,
-    });
-
-    expect(asked.sort()).toEqual([
-      'https://one.example.org/api/FHIR/R4/metadata',
-      'https://one.example.org/second/api/FHIR/R4/metadata',
-    ]);
   });
 
   it('keeps the saved directory copy when the server answers an error', async () => {
@@ -370,31 +306,5 @@ describe('extract', () => {
       status: 'failed',
       snapshots: [{ body: DIRECTORY }],
     });
-  });
-
-  it('closes the run even when post-directory processing throws', async () => {
-    respondWith(200, CAPABILITY);
-
-    await expect(
-      extract(db, {
-        vendor: 'epic',
-        fhirVersion: 'R4',
-        concurrency: 1,
-        hostConcurrency: 1,
-        hostFailureLimit: 0,
-        timeoutMs: 1000,
-        directoryTimeoutMs: 5000,
-        retries: 0,
-        batchSize: 10,
-        now: () => NOW,
-        log: () => {
-          throw new Error('log sink failed');
-        },
-      }),
-    ).rejects.toThrow('log sink failed');
-
-    expect(db.prepare('SELECT status FROM fetch_runs').all()).toEqual([
-      { status: 'done' },
-    ]);
   });
 });

@@ -1,4 +1,5 @@
 import type { DatabaseSync } from 'node:sqlite';
+import type { Vendor } from '@mere/shared';
 import { ADAPTERS } from './adapters';
 import * as downloads from './db/repository/capability-downloads';
 import * as directoryCounts from './db/repository/directory-counts';
@@ -30,11 +31,11 @@ export function formatStatus(db: DatabaseSync, now: string): string {
     line(['vendor', 'version', 'endpoints', 'failing', 'crawled', 'transform']),
   ];
 
-  const vendors = Object.entries(ADAPTERS).sort(([a], [b]) =>
+  const vendors = (Object.keys(ADAPTERS) as Vendor[]).sort((a, b) =>
     a.localeCompare(b),
   );
-  for (const [vendor, adapter] of vendors) {
-    for (const version of adapter.versions) {
+  for (const vendor of vendors) {
+    for (const version of ADAPTERS[vendor].versions) {
       const directoryCount = directoryCounts.find(db, vendor, version);
       const failing = downloads.countFailing(db, vendor, version);
       const latestSnapshot = snapshots.latestFetchedAt(db, vendor, version);
