@@ -3,41 +3,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { getRow } from '@mere/tenant-db';
 
-const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
+const WAREHOUSE_FILE = path.join(__dirname, 'warehouse.sql');
 const DERIVED_FILE = path.join(__dirname, 'derived.sql');
-
-interface Migration {
-  version: number;
-  name: string;
-  sql: string;
-}
-
-export function readMigrations(): Migration[] {
-  const migrations = fs
-    .readdirSync(MIGRATIONS_DIR)
-    .filter((f) => f.endsWith('.sql'))
-    .map((file) => {
-      const match = /^(\d+)_/.exec(file);
-      if (!match) {
-        throw new Error(`Migration '${file}' does not start with a number`);
-      }
-      return {
-        version: Number(match[1]),
-        name: file,
-        sql: fs.readFileSync(path.join(MIGRATIONS_DIR, file), 'utf8'),
-      };
-    })
-    .sort((a, b) => a.version - b.version);
-
-  migrations.forEach((migration, index) => {
-    if (migration.version !== index + 1) {
-      throw new Error(
-        `Migration '${migration.name}' breaks the sequence at ${index + 1}`,
-      );
-    }
-  });
-  return migrations;
-}
 
 function currentVersion(db: DatabaseSync): number {
   const row = getRow<{ user_version: number }>(
@@ -46,18 +13,16 @@ function currentVersion(db: DatabaseSync): number {
   return row?.user_version ?? 0;
 }
 
-function migrate(db: DatabaseSync): void {
-  const version = currentVersion(db);
-  for (const migration of readMigrations().filter((m) => m.version > version)) {
-    db.exec('BEGIN');
-    try {
-      db.exec(migration.sql);
-      db.exec(`PRAGMA user_version = ${migration.version}`);
-      db.exec('COMMIT');
-    } catch (error) {
-      db.exec('ROLLBACK');
-      throw new Error(`Migration '${migration.name}' failed: ${error}`);
-    }
+function initialize(db: DatabaseSync): void {
+  if (currentVersion(db) !== 0) return;
+  db.exec('BEGIN');
+  try {
+    db.exec(fs.readFileSync(WAREHOUSE_FILE, 'utf8'));
+    db.exec('PRAGMA user_version = 1');
+    db.exec('COMMIT');
+  } catch (error) {
+    db.exec('ROLLBACK');
+    throw error;
   }
 }
 
@@ -104,7 +69,7 @@ export function openWarehouse(dbPath: string): DatabaseSync {
     db.exec('PRAGMA busy_timeout = 5000');
     db.exec('PRAGMA journal_mode = WAL');
     db.exec('PRAGMA foreign_keys = ON');
-    migrate(db);
+    initialize(db);
     if (!hasCurrentWarehouseTables(db)) {
       throw new Error(
         `Warehouse ${dbPath} is missing warehouse tables; delete it and rebuild`,

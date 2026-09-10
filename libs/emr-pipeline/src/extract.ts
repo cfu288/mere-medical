@@ -280,7 +280,7 @@ export async function extract(
     )
   ) {
     log(
-      `${vendor} ${fhirVersion}: directory unchanged; advanced the latest snapshot`,
+      `${vendor} ${fhirVersion}: directory unchanged; updated the date on its saved copy`,
     );
   }
 
