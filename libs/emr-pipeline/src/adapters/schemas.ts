@@ -63,7 +63,7 @@ export const fhirBundleSchema = z.object({
 
 export type FhirBundle = z.infer<typeof fhirBundleSchema>;
 
-export type BundleParse =
+type BundleParse =
   | { ok: true; bundle: FhirBundle }
   | { ok: false; error: string };
 
@@ -86,6 +86,7 @@ const securityExtensionSchema = z.object({
   valueUri: z.string().optional(),
 });
 
+/** Only the slice of a CapabilityStatement the pipeline reads: the security extensions carrying SMART urls. */
 export const capabilityStatementSchema = z.object({
   resourceType: z.string().optional(),
   rest: z

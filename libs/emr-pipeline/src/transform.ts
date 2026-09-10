@@ -87,6 +87,12 @@ interface MergedTenant {
   lastSeen: string;
 }
 
+/**
+ * Folds one vendor and version's snapshot history into the derived tenant tables,
+ * classifying each tenant's stored capability download, and returns counts of what it
+ * wrote. A tenant id a snapshot lists at more than one url contributes nothing from
+ * that snapshot; what earlier snapshots said about it still counts.
+ */
 export function transform(
   db: DatabaseSync,
   options: TransformOptions,

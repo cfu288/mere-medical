@@ -105,6 +105,12 @@ interface PublishResult {
   rowCount: number;
 }
 
+/**
+ * Writes the artifact at `options.artifactPath` from the warehouse's publishable
+ * tenants plus every adapter's sandbox seeds, and records the publish in the warehouse.
+ * The artifact is built beside its target and renamed into place, so a reader never
+ * sees a half-written file.
+ */
 export function publish(
   db: DatabaseSync,
   options: PublishOptions,

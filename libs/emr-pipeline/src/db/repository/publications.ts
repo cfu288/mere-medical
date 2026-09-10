@@ -5,7 +5,7 @@
 import type { DatabaseSync } from 'node:sqlite';
 import { allRows } from '@mere/tenant-db';
 
-export interface Publication {
+interface Publication {
   published_at: string;
   row_count: number;
 }
@@ -20,6 +20,7 @@ export function record(
   ).run(publishedAt, rowCount);
 }
 
+/** The newest publishes first, at most `limit` rows. */
 export function listRecent(db: DatabaseSync, limit: number): Publication[] {
   return allRows<Publication>(
     db.prepare(

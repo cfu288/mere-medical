@@ -43,6 +43,7 @@ function toRow(row: CapabilitySqlRow): CapabilityDownload {
   return { ...key, body: row.body, downloadedAt: row.downloaded_at };
 }
 
+/** Registers a url for download; a url already present keeps its stored body and dates. */
 export function addUrl(db: DatabaseSync, key: CapabilityKey): void {
   db.prepare(
     `INSERT INTO capability_downloads (vendor, fhir_version, url)
@@ -82,6 +83,7 @@ interface DownloadSuccess {
   now: string;
 }
 
+/** Stores a fetched body with its date and clears any earlier failure. */
 export function recordSuccess(db: DatabaseSync, result: DownloadSuccess): void {
   db.prepare(
     `UPDATE capability_downloads
@@ -104,7 +106,7 @@ interface DownloadFailure {
   now: string;
 }
 
-export function serializeError(error: unknown): string {
+function serializeError(error: unknown): string {
   if (error instanceof Error) {
     return JSON.stringify({
       name: error.name,

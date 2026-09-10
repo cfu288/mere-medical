@@ -9,7 +9,7 @@ import type { FhirVersion, Vendor } from '@mere/shared';
 import { allRows, getRow } from '@mere/tenant-db';
 
 /** One saved copy of a vendor's directory page: the body as downloaded, and when. */
-export interface Snapshot {
+interface Snapshot {
   fetched_at: string;
   body: string;
 }
@@ -87,6 +87,7 @@ export function latestFetchedAtOverall(db: DatabaseSync): string | null {
   );
 }
 
+/** Every saved directory body for a vendor and version, oldest first. */
 export function listSnapshots(
   db: DatabaseSync,
   vendor: Vendor,

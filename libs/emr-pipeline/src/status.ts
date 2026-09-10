@@ -11,6 +11,10 @@ function signed(n: number): string {
   return n < 0 ? String(n) : `+${n}`;
 }
 
+/**
+ * Renders the warehouse's crawl, transform, and publish state as a fixed-width text
+ * table, one row per vendor and version, with ages computed relative to `now`.
+ */
 export function formatStatus(db: DatabaseSync, now: string): string {
   const age = (ts: string): string => {
     const days = Math.floor((Date.parse(now) - Date.parse(ts)) / 86_400_000);

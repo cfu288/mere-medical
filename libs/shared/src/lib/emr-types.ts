@@ -7,6 +7,10 @@ export type FhirVersion = 'DSTU2' | 'R4';
 
 export type EndpointSource = 'directory' | 'sandbox';
 
+/**
+ * Verdict on one capability download: `usable` means its SMART auth urls are complete;
+ * every other value names what was missing or wrong.
+ */
 export type CapabilityClassification =
   | 'usable'
   | 'operation_outcome'
@@ -40,6 +44,7 @@ export interface VendorEndpoint {
   managingOrganization?: string;
 }
 
+/** Reshapes a tenant into the endpoint a route returns; a missing token or authorize url becomes an empty string. */
 export function toVendorEndpoint(tenant: Tenant): VendorEndpoint {
   return {
     id: tenant.tenantId,

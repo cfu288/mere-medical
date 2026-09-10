@@ -60,6 +60,11 @@ function hasCurrentWarehouseTables(db: DatabaseSync): boolean {
   ]);
 }
 
+/**
+ * Opens the warehouse at `dbPath`, creating its schema on first use and rebuilding the
+ * disposable derived tables when they are missing. An existing file that lacks the
+ * warehouse tables is refused; delete it and rerun to rebuild.
+ */
 export function openWarehouse(dbPath: string): DatabaseSync {
   if (dbPath !== ':memory:') {
     fs.mkdirSync(path.dirname(dbPath), { recursive: true });
