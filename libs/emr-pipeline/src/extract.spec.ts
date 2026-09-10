@@ -282,7 +282,7 @@ describe('extract', () => {
     ).toEqual([{ vendor: 'epic', fhir_version: 'R4', body: DIRECTORY }]);
   });
 
-  it('advances the latest snapshot when the directory body is unchanged', () => {
+  it('updates the saved copy date when the directory body is unchanged', () => {
     expect(snapshots.appendSnapshot(db, 'epic', 'R4', NOW, DIRECTORY)).toBe(
       true,
     );

@@ -51,9 +51,9 @@ heap and the directory fetch gets its own multi-minute timeout.
 ## Data flow
 
 1. **Discover.** Each adapter reads its vendor directory and yields candidate tenants.
-   An accepted directory body is appended to `directory_snapshots`, the append-only
-   history that makes never-forgetting structural (an unchanged body just advances the
-   latest snapshot's time).
+   An accepted directory body is saved into `directory_snapshots`, the history that
+   remembers every tenant ever listed; a body identical to the newest saved copy only
+   updates that copy's date.
 2. **Extract.** Fetches the CapabilityStatement of every currently listed tenant, each
    run. Bounded worker pool with a per-host cap and a per-host give-up rule; a failure,
    including a 200 carrying non-JSON, updates error columns only. It **never clobbers a

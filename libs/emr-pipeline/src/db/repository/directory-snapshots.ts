@@ -7,7 +7,10 @@ export interface Snapshot {
   body: string;
 }
 
-/** Appends a directory body; an unchanged body just advances the latest snapshot's time. */
+/**
+ * Saves a directory page into history. A page identical to the newest saved copy adds
+ * no row; that copy's date moves to now instead.
+ */
 export function appendSnapshot(
   db: DatabaseSync,
   vendor: Vendor,
