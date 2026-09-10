@@ -2,10 +2,10 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import { openWarehouse } from './db/open';
-import * as downloads from './db/repository/capability-downloads';
+import { openWarehouse } from '../db/open';
+import * as downloads from '../db/repository/capability-downloads';
 import { publish } from './publish';
-import * as snapshots from './db/repository/directory-snapshots';
+import * as snapshots from '../db/repository/directory-snapshots';
 import { transform } from './transform';
 
 const SMART_URL =

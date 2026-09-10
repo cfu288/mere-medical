@@ -1,12 +1,12 @@
 import type { DatabaseSync } from 'node:sqlite';
 import { setTimeout as sleep } from 'node:timers/promises';
 import type { FhirVersion, Vendor } from '@mere/shared';
-import { adapterFor } from './adapters';
-import { parseBundle } from './adapters/schemas';
-import { DirectoryEntry, FHIR_ACCEPT } from './adapters/types';
-import * as downloads from './db/repository/capability-downloads';
-import * as runs from './db/repository/fetch-runs';
-import * as snapshots from './db/repository/directory-snapshots';
+import { adapterFor } from '../adapters';
+import { parseBundle } from '../adapters/schemas';
+import { DirectoryEntry, FHIR_ACCEPT } from '../adapters/types';
+import * as downloads from '../db/repository/capability-downloads';
+import * as runs from '../db/repository/fetch-runs';
+import * as snapshots from '../db/repository/directory-snapshots';
 
 const CONCURRENCY = 8;
 const TIMEOUT_MS = 20_000;

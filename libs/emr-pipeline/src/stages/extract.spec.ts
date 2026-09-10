@@ -2,9 +2,9 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import type { DatabaseSync } from 'node:sqlite';
-import { openWarehouse } from './db/open';
-import * as downloads from './db/repository/capability-downloads';
-import * as snapshots from './db/repository/directory-snapshots';
+import { openWarehouse } from '../db/open';
+import * as downloads from '../db/repository/capability-downloads';
+import * as snapshots from '../db/repository/directory-snapshots';
 import { checkDirectory, extract } from './extract';
 
 const SMART =

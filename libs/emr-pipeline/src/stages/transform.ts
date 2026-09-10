@@ -4,18 +4,18 @@ import type {
   FhirVersion,
   Vendor,
 } from '@mere/shared';
-import { adapterFor } from './adapters';
-import type { DirectoryEntry } from './adapters/types';
+import { adapterFor } from '../adapters';
+import type { DirectoryEntry } from '../adapters/types';
 import {
   CapabilityStatement,
   capabilityStatementSchema,
   parseBundle,
   readSmartUris,
-} from './adapters/schemas';
-import * as snapshots from './db/repository/directory-snapshots';
-import * as downloads from './db/repository/capability-downloads';
-import * as derived from './db/repository/derived-tenants';
-import * as directoryCounts from './db/repository/directory-counts';
+} from '../adapters/schemas';
+import * as snapshots from '../db/repository/directory-snapshots';
+import * as downloads from '../db/repository/capability-downloads';
+import * as derived from '../db/repository/derived-tenants';
+import * as directoryCounts from '../db/repository/directory-counts';
 
 interface ClassifiedCapability {
   classification: CapabilityClassification;
