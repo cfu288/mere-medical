@@ -19,8 +19,8 @@ function isHttpsUrl(value: string): boolean {
   return URL.parse(value)?.protocol === 'https:';
 }
 
-/** Tells a real FHIR body from an error page served with status 200. */
-function isJson(body: string): boolean {
+/** True when the body parses as JSON. */
+function isValidJson(body: string): boolean {
   try {
     JSON.parse(body);
     return true;
@@ -40,8 +40,8 @@ interface ExtractResult {
   status: 'ok' | 'failed';
 }
 
-/** Rejects a directory that is empty or whose declared total does not match its entries. */
-export function checkDirectory(
+/** Returns not-ok with the reason when a directory is empty or its declared total does not match its entries. */
+export function checkTenantDirectoryCounts(
   tenantCount: number,
   bundleEntryCount: number,
   declaredTotal: number | undefined,
@@ -58,7 +58,7 @@ export function checkDirectory(
   return { ok: true };
 }
 
-/** Fetches one url with a timeout, retrying network errors and 5xx answers. Any other bad status throws. */
+/** Fetches one url and returns its body text, retrying network errors and 5xx answers. Any other bad status throws. */
 async function fetchWithRetry(
   url: string,
   headers: Record<string, string>,
@@ -98,7 +98,7 @@ type CapabilityOutcome =
   | { kind: 'ok'; id: number; body: string }
   | { kind: 'error'; id: number; error: unknown };
 
-/** Runs the tasks a fixed number at a time. When one fails, it waits for the rest to finish before rethrowing. */
+/** Runs every task a fixed number at a time, handing each result to onResult. The first failure is rethrown, but only after the remaining tasks finish. */
 async function runPool<T>(
   tasks: (() => Promise<T>)[],
   onResult: (result: T) => void,
@@ -119,11 +119,8 @@ async function runPool<T>(
 }
 
 /**
- * Fetches one vendor and version's directory, saves it as a snapshot, and downloads
- * every capability document it lists into the warehouse.
- *
- * A directory that cannot be fetched or fails its checks returns `failed` instead of
- * throwing. Individual capability download failures are recorded and never abort a run.
+ * Fetches one vendor and version's directory containing all tenants, saves it as a snapshot in the database, and then iterates each to download
+ * each capability document into the warehouse.
  */
 export async function extract(
   db: DatabaseSync,
@@ -159,7 +156,7 @@ export async function extract(
   const bundle = parsed.bundle;
 
   const entries: DirectoryEntry[] = adapter.parseDirectory(bundle);
-  const check = checkDirectory(
+  const check = checkTenantDirectoryCounts(
     entries.length,
     bundle.entry.length,
     bundle.total,
@@ -224,7 +221,7 @@ export async function extract(
     db.exec('BEGIN');
     try {
       for (const outcome of buffer) {
-        if (outcome.kind === 'ok' && isJson(outcome.body)) {
+        if (outcome.kind === 'ok' && isValidJson(outcome.body)) {
           downloads.recordSuccess(db, {
             id: outcome.id,
             body: outcome.body,

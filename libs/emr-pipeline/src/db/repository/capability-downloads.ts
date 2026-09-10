@@ -87,7 +87,7 @@ interface DownloadSuccess {
   now: string;
 }
 
-/** Stores a fetched body with its date and clears any earlier failure. */
+/** Stores a fetched body with its download and attempt dates and clears any earlier failure. */
 export function recordSuccess(db: DatabaseSync, result: DownloadSuccess): void {
   db.prepare(
     `UPDATE capability_downloads

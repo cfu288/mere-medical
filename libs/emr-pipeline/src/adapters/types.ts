@@ -44,7 +44,7 @@ export interface VendorAdapter {
 export const FHIR_ACCEPT =
   'application/json+fhir, application/fhir+json, application/json';
 
-/** A directory fetched from a url. Any non-ok answer throws. */
+/** A directory source that downloads its body from the url when asked. Any non-ok answer throws. */
 export function httpDirectory(url: string): DirectorySource {
   return {
     async fetch(signal) {
@@ -61,7 +61,7 @@ export function httpDirectory(url: string): DirectorySource {
   };
 }
 
-/** A directory read from a local file, for a vendor list kept on disk instead of at a url. */
+/** A directory source that reads its body from a local file when asked. */
 export function fileDirectory(filePath: string): DirectorySource {
   return {
     async fetch() {

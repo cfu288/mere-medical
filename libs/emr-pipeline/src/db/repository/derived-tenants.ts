@@ -37,7 +37,7 @@ export interface CapabilityRow {
   classification: CapabilityClassification;
 }
 
-/** Clears one vendor and version's rows ahead of a rebuild. */
+/** Clears one vendor and version's rows from the given table ahead of a rebuild. */
 function replace(
   db: DatabaseSync,
   table: string,

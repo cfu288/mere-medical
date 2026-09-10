@@ -15,8 +15,8 @@ interface Snapshot {
 }
 
 /**
- * Saves a directory page into history. A page identical to the newest saved copy adds
- * no row and only moves that copy's date to now.
+ * Saves a directory page into history and returns true. A page identical to the
+ * newest saved copy returns false and only moves that copy's date to now.
  */
 export function appendSnapshot(
   db: DatabaseSync,
@@ -46,7 +46,7 @@ export function appendSnapshot(
   return true;
 }
 
-/** Notes when a vendor's directory page was last requested, and the error if it failed. */
+/** Overwrites a vendor and version's last directory request date and error, clearing the error on success. */
 export function recordAttempt(
   db: DatabaseSync,
   vendor: Vendor,
