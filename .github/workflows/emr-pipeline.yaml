@@ -31,7 +31,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # The warehouse is real state: directory history is the memory of ever-listed tenants.
       - name: Restore warehouse snapshot
         env:
           GH_TOKEN: ${{ github.token }}
@@ -60,7 +59,6 @@ jobs:
           npx nx run emr-pipeline:status >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
 
-      # Saved even on failure so directory history and run history survive to the next run.
       - name: Save warehouse snapshot
         if: always()
         env:

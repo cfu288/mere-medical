@@ -25,12 +25,9 @@ interface ExtractOptions {
   vendor: Vendor;
   fhirVersion: FhirVersion;
   concurrency: number;
-  /** How many requests one host may be serving at once. */
   hostConcurrency: number;
-  /** Give up on a host after this many failures with nothing succeeding. */
   hostFailureLimit: number;
   timeoutMs: number;
-  /** Separate budget for the directory, which is one large download rather than many small ones. */
   directoryTimeoutMs: number;
   retries: number;
   batchSize: number;
@@ -48,7 +45,6 @@ export const DEFAULT_EXTRACT_OPTIONS = {
   batchSize: 200,
 } as const;
 
-/** `failed` always means the directory itself was unusable; later failures throw. */
 interface ExtractResult {
   status: 'ok' | 'failed';
 }
@@ -73,7 +69,6 @@ export function checkDirectory(
   return { ok: true };
 }
 
-/** A host that failed enough times in one run that the rest of its work was skipped. */
 class HostUnreachableError extends Error {
   constructor(host: string, failureLimit: number) {
     super(
@@ -133,9 +128,7 @@ interface PoolOptions<T> {
   hostConcurrency: number;
   /** 0 disables giving up on a host. */
   hostFailureLimit: number;
-  /** Whether a result counts as a failure, for the give-up rule. */
   failed: (result: T) => boolean;
-  /** Builds the result recorded for tasks skipped after a host is given up on. */
   skipped: (host: string) => T;
 }
 
@@ -208,7 +201,6 @@ type CapabilityOutcome =
   | { kind: 'error'; id: number; error: unknown }
   | { kind: 'skipped'; host: string };
 
-/** What reaches the database: a skipped document is written as a failure. */
 type RecordedOutcome = Exclude<CapabilityOutcome, { kind: 'skipped' }>;
 
 export async function extract(
