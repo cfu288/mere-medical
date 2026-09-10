@@ -14,11 +14,17 @@ const DIRECTORY_TIMEOUT_MS = 300_000;
 const RETRIES = 3;
 const BATCH_SIZE = 200;
 
+/** True for an https url, the only kind the crawl fetches. */
 function isHttpsUrl(value: string): boolean {
   return URL.parse(value)?.protocol === 'https:';
 }
 
-function isJson(body: string): boolean {
+/**
+ * True when the body parses as JSON. Some endpoints answer 200 with an error
+ * page, which must be recorded as a failure rather than stored as a capability
+ * body.
+ */
+function isValidJson(body: string): boolean {
   try {
     JSON.parse(body);
     return true;
@@ -38,8 +44,14 @@ interface ExtractResult {
   status: 'ok' | 'failed';
 }
 
-/** Rejects a directory that contradicts itself: empty, or a declared total its entries do not match. */
-export function checkDirectory(
+/**
+ * Checks the tenant directory page a vendor just served, before extract saves it.
+ * Vendors sometimes answer 200 with a broken page, either empty or declaring a total
+ * its entries do not match, and a saved page becomes permanent history that the rest
+ * of the pipeline treats as the truth about which tenants exist. Returns not-ok with
+ * the reason so extract can reject the page.
+ */
+export function checkTenantDirectoryCounts(
   tenantCount: number,
   bundleEntryCount: number,
   declaredTotal: number | undefined,
@@ -56,7 +68,12 @@ export function checkDirectory(
   return { ok: true };
 }
 
-async function fetchWithRetry(
+/**
+ * Fetches one capability url and returns its body text, retrying network errors
+ * and 5xx answers so a brief server blip is not recorded as this month's
+ * failure. Any other bad status throws.
+ */
+async function fetchWithExponentialBackoff(
   url: string,
   headers: Record<string, string>,
 ): Promise<{ body: string }> {
@@ -95,31 +112,51 @@ type CapabilityOutcome =
   | { kind: 'ok'; id: number; body: string }
   | { kind: 'error'; id: number; error: unknown };
 
-async function runPool<T>(
+/**
+ * Runs the capability fetches in batches of CONCURRENCY, handing every result
+ * to onResult as its batch finishes.
+ */
+async function runInBatches<T>(
   tasks: (() => Promise<T>)[],
   onResult: (result: T) => void,
 ): Promise<void> {
-  let next = 0;
-  async function worker(): Promise<void> {
-    while (next < tasks.length) {
-      onResult(await tasks[next++]());
-    }
-  }
-  const workers = Math.max(1, Math.min(CONCURRENCY, tasks.length));
-  const settled = await Promise.allSettled(
-    Array.from({ length: workers }, worker),
-  );
-  for (const result of settled) {
-    if (result.status === 'rejected') throw result.reason;
+  for (let start = 0; start < tasks.length; start += CONCURRENCY) {
+    const batch = tasks.slice(start, start + CONCURRENCY);
+    const results = await Promise.all(batch.map((task) => task()));
+    results.forEach(onResult);
   }
 }
 
 /**
- * Fetches one vendor and version's directory, saves it as a snapshot, and downloads
- * every capability document it lists into the warehouse.
+ * Fetches one vendor and version's directory containing all tenants, saves it as a
+ * snapshot in the database, and then downloads each listed tenant's capability
+ * document into the warehouse.
  *
- * A directory that cannot be fetched or fails its checks returns `failed` instead of
- * throwing; individual capability download failures are recorded and never abort a run.
+ * A rejected directory returns `failed` and leaves saved history untouched. A failed
+ * capability download keeps its last good body and only adds to the failure count.
+ *
+ * @param db - An open warehouse from `openWarehouse`.
+ * @param options - What to crawl and how to report progress.
+ * @param options.vendor - The vendor whose directory to crawl, such as `'epic'`.
+ * @param options.fhirVersion - `'DSTU2'` or `'R4'`.
+ * @param options.now - Clock returning an ISO timestamp, stamped on every row written.
+ * @param options.log - Sink for one-line progress messages.
+ * @returns `{ status: 'ok' }` when the directory was crawled, even if some capability
+ *   downloads failed, or `{ status: 'failed' }` when the directory itself was
+ *   rejected.
+ * @example
+ * const db = openWarehouse('libs/emr-pipeline/data/warehouse.db');
+ * const result = await extract(db, {
+ *   vendor: 'epic',
+ *   fhirVersion: 'R4',
+ *   now: () => new Date().toISOString(),
+ *   log: console.log,
+ * });
+ *
+ * A run like this logs progress and resolves to `{ status: 'ok' }`:
+ *
+ *   epic R4: directory holds 820 tenants
+ *   epic R4: 815 fetched, 5 failed
  */
 export async function extract(
   db: DatabaseSync,
@@ -155,7 +192,7 @@ export async function extract(
   const bundle = parsed.bundle;
 
   const entries: DirectoryEntry[] = adapter.parseDirectory(bundle);
-  const check = checkDirectory(
+  const check = checkTenantDirectoryCounts(
     entries.length,
     bundle.entry.length,
     bundle.total,
@@ -164,7 +201,7 @@ export async function extract(
     return rejectDirectory(`directory rejected: ${check.reason}`);
   }
   snapshots.recordAttempt(db, vendor, fhirVersion, options.now(), null);
-  if (!snapshots.appendSnapshot(db, vendor, fhirVersion, options.now(), body)) {
+  if (!snapshots.saveSnapshot(db, vendor, fhirVersion, options.now(), body)) {
     log(
       `${vendor} ${fhirVersion}: directory unchanged; updated the date on its saved copy`,
     );
@@ -220,7 +257,7 @@ export async function extract(
     db.exec('BEGIN');
     try {
       for (const outcome of buffer) {
-        if (outcome.kind === 'ok' && isJson(outcome.body)) {
+        if (outcome.kind === 'ok' && isValidJson(outcome.body)) {
           downloads.recordSuccess(db, {
             id: outcome.id,
             body: outcome.body,
@@ -251,10 +288,13 @@ export async function extract(
     buffer.length = 0;
   };
 
-  await runPool<CapabilityOutcome>(
+  await runInBatches<CapabilityOutcome>(
     fetchable.map((row) => async (): Promise<CapabilityOutcome> => {
       try {
-        const result = await fetchWithRetry(row.url, capabilityHeaders);
+        const result = await fetchWithExponentialBackoff(
+          row.url,
+          capabilityHeaders,
+        );
         return { kind: 'ok', id: row.id, ...result };
       } catch (error) {
         return { kind: 'error', id: row.id, error };

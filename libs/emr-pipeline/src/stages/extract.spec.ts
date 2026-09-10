@@ -5,7 +5,7 @@ import type { DatabaseSync } from 'node:sqlite';
 import { openWarehouse } from '../db/open';
 import * as downloads from '../db/repository/capability-downloads';
 import * as snapshots from '../db/repository/directory-snapshots';
-import { checkDirectory, extract } from './extract';
+import { checkTenantDirectoryCounts, extract } from './extract';
 
 const SMART =
   'http://fhir-registry.smarthealthit.org/StructureDefinition/oauth-uris';
@@ -52,18 +52,20 @@ const silent = () => undefined;
 
 describe('checkDirectory', () => {
   it('accepts a bundle whose declared total counts every entry', () => {
-    expect(checkDirectory(6918, 13836, 13836)).toEqual({ ok: true });
+    expect(checkTenantDirectoryCounts(6918, 13836, 13836)).toEqual({
+      ok: true,
+    });
   });
 
   it('rejects a bundle declaring a total its entries do not reach', () => {
-    expect(checkDirectory(96, 96, 3326)).toEqual({
+    expect(checkTenantDirectoryCounts(96, 96, 3326)).toEqual({
       ok: false,
       reason: 'directory declares total 3326 but holds 96 entries',
     });
   });
 
   it('rejects a directory that yielded no tenants', () => {
-    expect(checkDirectory(0, 40, undefined)).toEqual({
+    expect(checkTenantDirectoryCounts(0, 40, undefined)).toEqual({
       ok: false,
       reason: 'directory yielded no tenants',
     });
@@ -97,7 +99,7 @@ describe('extract', () => {
   }
 
   function seedGoodCapability(): number {
-    snapshots.appendSnapshot(db, 'epic', 'R4', NOW, DIRECTORY);
+    snapshots.saveSnapshot(db, 'epic', 'R4', NOW, DIRECTORY);
     const url = 'https://one.example.org/api/FHIR/R4/metadata';
     downloads.addUrl(db, { vendor: 'epic', fhirVersion: 'R4', url });
     const capabilityId = idOf(url);
@@ -168,11 +170,9 @@ describe('extract', () => {
   });
 
   it('updates the saved copy date when the directory body is unchanged', () => {
-    expect(snapshots.appendSnapshot(db, 'epic', 'R4', NOW, DIRECTORY)).toBe(
-      true,
-    );
+    expect(snapshots.saveSnapshot(db, 'epic', 'R4', NOW, DIRECTORY)).toBe(true);
     expect(
-      snapshots.appendSnapshot(
+      snapshots.saveSnapshot(
         db,
         'epic',
         'R4',

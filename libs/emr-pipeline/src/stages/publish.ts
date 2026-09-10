@@ -17,6 +17,11 @@ interface PublishOptions {
   log: (message: string) => void;
 }
 
+/**
+ * Writes a fresh tenants.db beside `artifactPath`, renames it into place, and
+ * returns its row count, so nothing from an older artifact survives into the
+ * new one.
+ */
 function buildArtifact(
   db: DatabaseSync,
   artifactPath: string,
@@ -106,10 +111,30 @@ interface PublishResult {
 }
 
 /**
- * Writes the artifact at `options.artifactPath` from the warehouse's publishable
- * tenants plus every adapter's sandbox seeds, and records the publish in the warehouse.
+ * Writes the shipped tenant catalog `tenants.db` from the warehouse alone, so
+ * publishing twice from the same warehouse produces identical content. The artifact
+ * holds every tenant `listPublishable` returns plus every adapter's sandbox tenants,
+ * and the publish is recorded in the warehouse for the status history.
+ *
  * The artifact is built beside its target and renamed into place, so a reader never
  * sees a half-written file.
+ *
+ * @param db - An open warehouse whose derived tables transform has filled.
+ * @param options - Where to write and how to report progress.
+ * @param options.artifactPath - Where to write the artifact.
+ * @param options.now - Clock returning an ISO timestamp for the publish record.
+ * @param options.log - Sink for one-line progress messages.
+ * @returns The number of tenant rows the artifact holds.
+ * @example
+ * const { rowCount } = publish(db, {
+ *   artifactPath: 'libs/tenant-db/data/tenants.db',
+ *   now: () => new Date().toISOString(),
+ *   log: console.log,
+ * });
+ *
+ * A run like this returns `rowCount` 39560 and logs:
+ *
+ *   wrote libs/tenant-db/data/tenants.db: 39560 rows
  */
 export function publish(
   db: DatabaseSync,

@@ -6,6 +6,7 @@ import { getRow } from '@mere/tenant-db';
 const WAREHOUSE_FILE = path.join(__dirname, 'sql', 'warehouse.sql');
 const DERIVED_FILE = path.join(__dirname, 'sql', 'derived.sql');
 
+/** Reads the warehouse schema version, which is zero on a brand-new file. */
 function currentVersion(db: DatabaseSync): number {
   const row = getRow<{ user_version: number }>(
     db.prepare('PRAGMA user_version'),
@@ -13,6 +14,7 @@ function currentVersion(db: DatabaseSync): number {
   return row?.user_version ?? 0;
 }
 
+/** Creates the durable schema on a brand-new file only. */
 function initialize(db: DatabaseSync): void {
   if (currentVersion(db) !== 0) return;
   db.exec('BEGIN');
@@ -26,10 +28,14 @@ function initialize(db: DatabaseSync): void {
   }
 }
 
-function rebuildDerived(db: DatabaseSync): void {
+/**
+ * Drops and recreates the disposable derived tables for transform to refill.
+ */
+function resetDerivedTables(db: DatabaseSync): void {
   db.exec(fs.readFileSync(DERIVED_FILE, 'utf8'));
 }
 
+/** True when every named table exists. */
 function hasTables(db: DatabaseSync, names: string[]): boolean {
   const row = getRow<{ n: number }>(
     db.prepare(
@@ -41,6 +47,10 @@ function hasTables(db: DatabaseSync, names: string[]): boolean {
   return row?.n === names.length;
 }
 
+/**
+ * True when all three derived tables exist. A missing one makes openWarehouse
+ * recreate the whole disposable layer.
+ */
 function hasDerivedTables(db: DatabaseSync): boolean {
   return hasTables(db, [
     'tenant_directory_entries',
@@ -49,6 +59,10 @@ function hasDerivedTables(db: DatabaseSync): boolean {
   ]);
 }
 
+/**
+ * True when every durable table exists. openWarehouse refuses a file without
+ * them rather than writing into an unknown schema.
+ */
 function hasCurrentWarehouseTables(db: DatabaseSync): boolean {
   return hasTables(db, [
     'capability_downloads',
@@ -63,7 +77,7 @@ function hasCurrentWarehouseTables(db: DatabaseSync): boolean {
 /**
  * Opens the warehouse at `dbPath`, creating its schema on first use and rebuilding the
  * disposable derived tables when they are missing. An existing file that lacks the
- * warehouse tables is refused; delete it and rerun to rebuild.
+ * warehouse tables is refused. Delete it and rerun to rebuild.
  */
 export function openWarehouse(dbPath: string): DatabaseSync {
   if (dbPath !== ':memory:') {
@@ -82,7 +96,7 @@ export function openWarehouse(dbPath: string): DatabaseSync {
       );
     }
     if (!hasDerivedTables(db)) {
-      rebuildDerived(db);
+      resetDerivedTables(db);
     }
     return db;
   } catch (error) {

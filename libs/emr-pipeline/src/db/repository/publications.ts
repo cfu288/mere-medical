@@ -1,6 +1,7 @@
 /**
- * The `publications` table: when `tenants.db` was written and with how many rows.
- * Publish records each write; status lists the recent ones to show row-count deltas.
+ * Owns the `publications` table, which records when `tenants.db` was written and with
+ * how many rows. Publish records each write and status lists the recent ones to show
+ * row-count deltas.
  */
 import type { DatabaseSync } from 'node:sqlite';
 import { allRows } from '@mere/tenant-db';
@@ -10,6 +11,7 @@ interface Publication {
   row_count: number;
 }
 
+/** Saves one publish's date and row count for the status history. */
 export function record(
   db: DatabaseSync,
   publishedAt: string,

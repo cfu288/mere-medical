@@ -1,6 +1,6 @@
 /**
  * Read API over the shipped `tenants.db` artifact. `apps/api` calls it to serve
- * tenant search and lookup at runtime; it never reaches back into the pipeline
+ * tenant search and lookup at runtime. It never reaches back into the pipeline
  * warehouse, so the api ships without any build-time data dependency.
  */
 import { DatabaseSync } from 'node:sqlite';
@@ -57,10 +57,8 @@ function toTenant(row: TenantSqlRow): Tenant {
 }
 
 /**
- * Opens the shipped tenant catalog read-only.
- *
- * Fails here rather than returning empty results forever: a stale or truncated artifact
- * is a deploy problem, and an empty tenant picker looks identical to "no matches".
+ * Opens the shipped tenant catalog read-only. A stale or truncated artifact fails
+ * here at boot, because an empty tenant picker would look identical to "no matches".
  */
 export function openTenantDb(dbPath: string): TenantDb {
   const db = new DatabaseSync(dbPath, { readOnly: true });
@@ -181,7 +179,7 @@ export function searchTenants(
 /**
  * One tenant by vendor and id.
  *
- * With no version given and a tenant published under both, returns the R4 row: 1,168
+ * With no version given and a tenant published under both, returns the R4 row. 1,168
  * Cerner ids exist in DSTU2 and R4, and R4 is the newer contract.
  */
 export function findTenantById(
