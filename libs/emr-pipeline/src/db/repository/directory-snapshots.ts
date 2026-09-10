@@ -2,6 +2,7 @@ import type { DatabaseSync } from 'node:sqlite';
 import type { FhirVersion, Vendor } from '@mere/shared';
 import { allRows, getRow } from '@mere/tenant-db';
 
+/** One saved copy of a vendor's directory page: the body as downloaded, and when. */
 export interface Snapshot {
   fetched_at: string;
   body: string;
@@ -37,6 +38,47 @@ export function appendSnapshot(
      VALUES (?, ?, ?, ?)`,
   ).run(vendor, fhirVersion, fetchedAt, body);
   return true;
+}
+
+/** Notes when a vendor's directory page was last requested, and the error if it failed. */
+export function recordAttempt(
+  db: DatabaseSync,
+  vendor: Vendor,
+  fhirVersion: FhirVersion,
+  attemptedAt: string,
+  error: string | null,
+): void {
+  db.prepare(
+    `INSERT INTO directory_fetches (vendor, fhir_version, attempted_at, error)
+     VALUES (?, ?, ?, ?)
+     ON CONFLICT (vendor, fhir_version) DO UPDATE SET
+       attempted_at = excluded.attempted_at,
+       error = excluded.error`,
+  ).run(vendor, fhirVersion, attemptedAt, error);
+}
+
+export function latestFetchedAt(
+  db: DatabaseSync,
+  vendor: Vendor,
+  fhirVersion: FhirVersion,
+): string | null {
+  return (
+    getRow<{ newest: string | null }>(
+      db.prepare(
+        `SELECT MAX(fetched_at) AS newest FROM directory_snapshots
+         WHERE vendor = ? AND fhir_version = ?`,
+      ),
+      [vendor, fhirVersion],
+    )?.newest ?? null
+  );
+}
+
+export function latestFetchedAtOverall(db: DatabaseSync): string | null {
+  return (
+    getRow<{ newest: string | null }>(
+      db.prepare('SELECT MAX(fetched_at) AS newest FROM directory_snapshots'),
+    )?.newest ?? null
+  );
 }
 
 export function listSnapshots(

@@ -1,5 +1,4 @@
 import * as fs from 'node:fs';
-import { pathToFileURL } from 'node:url';
 import type { FhirVersion } from '@mere/shared';
 import type { FhirBundle } from './schemas';
 
@@ -7,7 +6,7 @@ export interface DirectoryEntry {
   tenantId: string;
   name?: string;
   url: string;
-  /** The health system this tenant belongs to, named, and only when it differs from it. */
+  /** Name of the health system this tenant belongs to, when the directory carries one. */
   managingOrganization?: string;
 }
 
@@ -28,14 +27,12 @@ export class HttpStatusError extends Error {
 }
 
 export interface DirectorySource {
-  /** Identifies the document in `raw_documents`; a `file:` url for a committed bundle. */
-  url: string;
-  fetch(signal: AbortSignal): Promise<{ body: string }>;
+  fetch(signal: AbortSignal): Promise<string>;
 }
 
 export interface VendorAdapter {
   versions: FhirVersion[];
-  /** Where this vendor's catalog for a version lives, or null if it publishes none. */
+  /** Where this vendor's directory for a version lives, or null if it publishes none. */
   directory(version: FhirVersion): DirectorySource | null;
   /** Reads a fetched directory body into candidate tenants. */
   parseDirectory(bundle: FhirBundle): DirectoryEntry[];
@@ -43,7 +40,7 @@ export interface VendorAdapter {
   capabilityUrl(entry: DirectoryEntry): string | null;
   /** Extra headers a vendor needs on capability fetches, such as Epic's client id gate. */
   capabilityHeaders?(): Record<string, string>;
-  /** Rows this vendor always publishes, independent of its catalog. */
+  /** Rows this vendor always publishes, independent of its directory. */
   sandbox(version: FhirVersion): SandboxSeed[];
 }
 
@@ -53,7 +50,6 @@ export const FHIR_ACCEPT =
 
 export function httpDirectory(url: string): DirectorySource {
   return {
-    url,
     async fetch(signal) {
       const response = await fetch(url, {
         headers: { Accept: FHIR_ACCEPT },
@@ -63,16 +59,15 @@ export function httpDirectory(url: string): DirectorySource {
       if (!response.ok) {
         throw new HttpStatusError(response.status);
       }
-      return { body };
+      return body;
     },
   };
 }
 
 export function fileDirectory(filePath: string): DirectorySource {
   return {
-    url: pathToFileURL(filePath).href,
     async fetch() {
-      return { body: fs.readFileSync(filePath, 'utf8') };
+      return fs.readFileSync(filePath, 'utf8');
     },
   };
 }

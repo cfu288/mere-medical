@@ -4,7 +4,7 @@ Build-time ETL that turns vendor EMR directories into `libs/tenant-db/data/tenan
 
 ```
 vendor APIs / files ──▶ warehouse.db ──▶ tenants.db ──▶ apps/api ──▶ apps/web
-     (extract)          (raw+derived,     (committed,    (SQL, FTS)   (frozen HTTP
+     (extract)          (state+derived,     (committed,    (SQL, FTS)   (frozen HTTP
                          gitignored)       ~13.5 MiB)                  contract)
 ```
 
@@ -45,8 +45,7 @@ Epic's Brands bundle is ~90 MB and Athena's is ~132 MB, so a run peaks around 1.
 heap and the directory fetch gets its own multi-minute timeout.
 
 `data/warehouse.db` is gitignored; the workflow persists it as a rolling
-`warehouse-snapshot` release asset. Override paths with `EMR_WAREHOUSE_DB` and
-`EMR_TENANT_DB`.
+`warehouse-backup` release asset.
 
 ## Data flow
 
@@ -55,16 +54,16 @@ heap and the directory fetch gets its own multi-minute timeout.
    remembers every tenant ever listed; a body identical to the newest saved copy only
    updates that copy's date.
 2. **Extract.** Fetches the CapabilityStatement of every currently listed tenant, each
-   run. Bounded worker pool with a per-host cap and a per-host give-up rule; a failure,
-   including a 200 carrying non-JSON, updates error columns only. It **never clobbers a
-   good body**: a run killed midway costs a re-crawl, never data.
+   run, through a bounded worker pool with retries and timeouts. A failure, including a
+   200 carrying non-JSON, updates error columns only. It **never clobbers a good
+   body**: a run killed midway costs a re-crawl, never data.
 3. **Transform.** `DELETE` + `INSERT` rebuilds the derived tables by replaying the whole
    snapshot history: every tenant ever listed, its latest url and seen date, its last
    non-empty name, every url it was ever listed at, and a classification of each url's
    stored capability body. Pure, offline.
 4. **Publish.** One query over the derived tables writes a fresh `tenants.db`: entries
-   joined to their usable capability (preferring the current url, else the latest
-   most recently seen url that still classifies usable), plus code-seeded sandbox rows stamped
+   joined to their usable capability (preferring the current url, else the most
+   recently seen url that still classifies usable), plus code-seeded sandbox rows stamped
    with the newest snapshot time. Publishing twice from the same warehouse yields the
    same artifact.
 
@@ -89,24 +88,30 @@ the monthly PR's status comment is where a human catches a bad refresh.
 
 ## Schema
 
-The DDL lives in `src/db/migrations/001_init.sql` (durable), `src/db/derived.sql`
+The DDL lives in `src/db/warehouse.sql` (durable), `src/db/derived.sql`
 (disposable, dropped and rebuilt), and `libs/tenant-db/src/lib/schema.ts` (the shipped
 artifact, `user_version`-asserted at open). `tenants.db` and the derived tables are never
 migrated; they regenerate from the durable tables. The durable state is what extract
-learns: raw bodies and the snapshot history. Losing the warehouse costs a recrawl plus
+learns: downloaded capability bodies and the directory history. Losing the warehouse costs a recrawl plus
 the memory of tenants no directory lists anymore.
 
 ```mermaid
 erDiagram
-  raw_documents {
+  capability_downloads {
     INTEGER id PK
     TEXT vendor UK
     TEXT fhir_version UK
-    TEXT doc_type UK
     TEXT url UK
-    TEXT raw
-    TEXT last_refreshed
-    TEXT last_sync_attempt
+    TEXT body
+    TEXT downloaded_at
+    TEXT attempted_at
+    INTEGER failed
+  }
+  directory_fetches {
+    TEXT vendor PK
+    TEXT fhir_version PK
+    TEXT attempted_at
+    TEXT error
   }
   directory_snapshots {
     INTEGER id PK
@@ -171,7 +176,7 @@ erDiagram
 
   directory_snapshots ||--o{ tenant_directory_entries : "merge"
   directory_snapshots ||--o{ tenant_urls : "merge"
-  raw_documents ||--o{ tenant_capabilities : "classify by url"
+  capability_downloads ||--o{ tenant_capabilities : "classify by url"
   tenants ||--|| tenants_fts : content_rowid
 ```
 
@@ -180,7 +185,7 @@ How rows move between the tables and across the two databases:
 ```mermaid
 flowchart LR
   subgraph warehouse["warehouse.db"]
-    raw[raw_documents]
+    caps[capability_downloads]
     snaps[directory_snapshots]
     tde[tenant_directory_entries]
     turl[tenant_urls]
@@ -194,7 +199,7 @@ flowchart LR
   seeds[adapter sandbox seeds]
 
   snaps -- "transform: merge history" --> tde & turl & dobs
-  raw -- "transform: classify" --> tc
+  caps -- "transform: classify" --> tc
   tde -- "publish: one query" --> t
   turl -- "usable url pick" --> t
   tc -- "usable url pick" --> t
@@ -207,10 +212,10 @@ flowchart LR
 | Decision                                  | Why                                                                                                                                                         |
 | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Commit `tenants.db` as a binary           | ~2.7 MB/commit gzipped; Git LFS bills the repo owner and a blocked pull breaks `docker build` with a pointer file. DVC, Dolt, and sqlite-diffable rejected. |
-| One raw table, upsert-in-place            | Capability bodies need no version history; only directory bodies do, and those live in `directory_snapshots`.                                               |
+| One capability table, upsert-in-place     | Capability bodies need no version history; only directory bodies do, and those live in `directory_snapshots`.                                               |
 | No ORM; free functions + prepared SQL     | The hot query is FTS `MATCH`; bulk upserts and `INSERT…SELECT` are where ORMs are weakest.                                                                  |
 | FTS prefix match, no fuzzy fallback       | Typo tolerance traded for ranked ~1.5 ms search; a misspelling returns nothing rather than a guess.                                                         |
 | Directory wins FHIR-version disagreements | The URL is version-specific; the server's claim is recorded as data, and a mismatch is a data-quality query.                                                |
 | Don't collapse DSTU2/R4 tenant identity   | 1,168 Cerner ids legitimately exist in both versions, so `fhir_version` is part of the tenant key.                                                          |
 | Single-instance vendors are not rows      | `tenants` holds rows a user selects between; one-endpoint vendors (VA, OnPatient, NextGen) stay as literals in `fhir-oauth`.                                |
-| Retention: keep all raw                   | Pruning before sizes are measured defeats the store's purpose; no `prune` command exists yet.                                                               |
+| Retention: keep every downloaded body     | Pruning before sizes are measured defeats the store's purpose; no `prune` command exists yet.                                                               |

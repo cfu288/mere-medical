@@ -41,12 +41,11 @@ describe('formatStatus', () => {
 
   it('renders a crawled, transformed, published pipeline with failure growth', () => {
     db.exec(`
-      INSERT INTO raw_documents (vendor, fhir_version, doc_type, url, first_seen_at, raw, last_refreshed)
-      VALUES ('epic', 'R4', 'directory', 'https://directory.example.org/R4',
-              '2026-08-26T12:00:00.000Z', '{}', '2026-08-26T12:00:00.000Z');
-      INSERT INTO raw_documents (vendor, fhir_version, doc_type, url, first_seen_at, last_sync_was_error)
-      VALUES ('epic', 'R4', 'capability', 'https://a.example.org/metadata', '2026-08-26T12:00:00.000Z', 1),
-             ('epic', 'R4', 'capability', 'https://b.example.org/metadata', '2026-08-26T12:00:00.000Z', 1);
+      INSERT INTO directory_snapshots (vendor, fhir_version, fetched_at, body)
+      VALUES ('epic', 'R4', '2026-08-26T12:00:00.000Z', '{}');
+      INSERT INTO capability_downloads (vendor, fhir_version, url, first_seen_at, failed)
+      VALUES ('epic', 'R4', 'https://a.example.org/metadata', '2026-08-26T12:00:00.000Z', 1),
+             ('epic', 'R4', 'https://b.example.org/metadata', '2026-08-26T12:00:00.000Z', 1);
       INSERT INTO directory_counts (vendor, fhir_version, seen_at, tenant_count)
       VALUES ('epic', 'R4', '2026-08-26T12:00:00.000Z', 815);
       INSERT INTO fetch_runs (vendor, fhir_version, status, failed)
@@ -80,11 +79,11 @@ describe('formatStatus', () => {
 
   it('keeps failure deltas separate per vendor and version', () => {
     db.exec(`
-      INSERT INTO raw_documents (vendor, fhir_version, doc_type, url, first_seen_at, last_sync_was_error)
-      VALUES ('epic', 'DSTU2', 'capability', 'https://a.example.org/dstu2/metadata', '2026-08-26T12:00:00.000Z', 1),
-             ('epic', 'R4', 'capability', 'https://a.example.org/r4/metadata', '2026-08-26T12:00:00.000Z', 1),
-             ('epic', 'R4', 'capability', 'https://b.example.org/r4/metadata', '2026-08-26T12:00:00.000Z', 1),
-             ('cerner', 'R4', 'capability', 'https://c.example.org/r4/metadata', '2026-08-26T12:00:00.000Z', 1);
+      INSERT INTO capability_downloads (vendor, fhir_version, url, first_seen_at, failed)
+      VALUES ('epic', 'DSTU2', 'https://a.example.org/dstu2/metadata', '2026-08-26T12:00:00.000Z', 1),
+             ('epic', 'R4', 'https://a.example.org/r4/metadata', '2026-08-26T12:00:00.000Z', 1),
+             ('epic', 'R4', 'https://b.example.org/r4/metadata', '2026-08-26T12:00:00.000Z', 1),
+             ('cerner', 'R4', 'https://c.example.org/r4/metadata', '2026-08-26T12:00:00.000Z', 1);
       INSERT INTO fetch_runs (vendor, fhir_version, status, failed)
       VALUES ('epic', 'DSTU2', 'done', 2),
              ('epic', 'DSTU2', 'done', 1),
@@ -113,13 +112,12 @@ describe('formatStatus', () => {
 
   it('flags a crawl the transform has not consumed', () => {
     db.exec(`
-      INSERT INTO raw_documents (vendor, fhir_version, doc_type, url, first_seen_at, raw, last_refreshed)
-      VALUES ('epic', 'R4', 'directory', 'https://directory.example.org/R4',
-              '2026-08-07T00:00:00.000Z', '{}', '2026-09-07T09:00:00.000Z');
-      INSERT INTO raw_documents (vendor, fhir_version, doc_type, url, first_seen_at, last_sync_was_error)
-      VALUES ('epic', 'R4', 'capability', 'https://a.example.org/metadata', '2026-08-07T00:00:00.000Z', 1),
-             ('epic', 'R4', 'capability', 'https://b.example.org/metadata', '2026-08-07T00:00:00.000Z', 1),
-             ('epic', 'R4', 'capability', 'https://c.example.org/metadata', '2026-08-07T00:00:00.000Z', 1);
+      INSERT INTO directory_snapshots (vendor, fhir_version, fetched_at, body)
+      VALUES ('epic', 'R4', '2026-09-07T09:00:00.000Z', '{}');
+      INSERT INTO capability_downloads (vendor, fhir_version, url, first_seen_at, failed)
+      VALUES ('epic', 'R4', 'https://a.example.org/metadata', '2026-08-07T00:00:00.000Z', 1),
+             ('epic', 'R4', 'https://b.example.org/metadata', '2026-08-07T00:00:00.000Z', 1),
+             ('epic', 'R4', 'https://c.example.org/metadata', '2026-08-07T00:00:00.000Z', 1);
       INSERT INTO directory_counts (vendor, fhir_version, seen_at, tenant_count)
       VALUES ('epic', 'R4', '2026-08-07T00:00:00.000Z', 815);
       INSERT INTO publications (published_at, row_count)

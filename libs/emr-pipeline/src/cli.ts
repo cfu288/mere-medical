@@ -2,7 +2,7 @@ import * as path from 'node:path';
 import type { FhirVersion, Vendor } from '@mere/shared';
 import { adapterFor, ADAPTERS } from './adapters';
 import { openWarehouse } from './db/open';
-import { DEFAULT_EXTRACT_OPTIONS, extract } from './extract';
+import { extract } from './extract';
 import { publish } from './publish';
 import { formatStatus } from './status';
 import { transform } from './transform';
@@ -24,7 +24,6 @@ function targets(): { vendor: Vendor; fhirVersion: FhirVersion }[] {
   );
 }
 
-/** Skips a vendor and version whose directory location is not configured. */
 function configuredTargets(): { vendor: Vendor; fhirVersion: FhirVersion }[] {
   return targets().filter((target) => {
     if (adapterFor(target.vendor).directory(target.fhirVersion)) return true;
@@ -38,14 +37,13 @@ function configuredTargets(): { vendor: Vendor; fhirVersion: FhirVersion }[] {
 const now = () => new Date().toISOString();
 const log = (message: string) => console.log(message);
 
-export async function main(argv: string[]): Promise<number> {
+async function main(argv: string[]): Promise<number> {
   const [command, ...rest] = argv;
   if (rest.length > 0) {
     console.error(`Usage: cli.ts <extract|transform|publish|status>`);
     return 2;
   }
-  const warehousePath = process.env['EMR_WAREHOUSE_DB'] ?? DEFAULT_WAREHOUSE;
-  const db = openWarehouse(warehousePath);
+  const db = openWarehouse(DEFAULT_WAREHOUSE);
 
   try {
     switch (command) {
@@ -53,12 +51,7 @@ export async function main(argv: string[]): Promise<number> {
         let failed = false;
         for (const target of configuredTargets()) {
           try {
-            const result = await extract(db, {
-              ...target,
-              ...DEFAULT_EXTRACT_OPTIONS,
-              now,
-              log,
-            });
+            const result = await extract(db, { ...target, now, log });
             if (result.status === 'failed') failed = true;
           } catch (error) {
             failed = true;
@@ -76,12 +69,7 @@ export async function main(argv: string[]): Promise<number> {
         return 0;
       }
       case 'publish': {
-        publish(db, {
-          warehousePath,
-          artifactPath: process.env['EMR_TENANT_DB'] ?? DEFAULT_ARTIFACT,
-          now,
-          log,
-        });
+        publish(db, { artifactPath: DEFAULT_ARTIFACT, now, log });
         return 0;
       }
       case 'status': {
