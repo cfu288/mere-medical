@@ -88,10 +88,34 @@ interface MergedTenant {
 }
 
 /**
- * Merges one vendor and version's saved directory copies into the derived tenant
- * tables, classifying each tenant's stored capability download, and returns counts of
- * what it wrote. A tenant id one directory copy lists at more than one url
- * contributes nothing from that copy. Earlier copies still count.
+ * Rebuilds the derived tenant tables for one vendor and version by rereading every
+ * saved directory copy, oldest to newest. Each tenant keeps the url and listing date
+ * from the newest copy that mentions it and the last name the vendor ever gave it,
+ * and each of its urls gets its stored CapabilityStatement classified for usable auth
+ * urls. Runs offline against the warehouse alone.
+ *
+ * A tenant id one directory copy lists at more than one url contributes nothing from
+ * that copy. Earlier copies still count.
+ *
+ * @param db - An open warehouse from `openWarehouse`.
+ * @param options - What to rebuild and how to report progress.
+ * @param options.vendor - The vendor to rebuild, such as `'epic'`.
+ * @param options.fhirVersion - `'DSTU2'` or `'R4'`.
+ * @param options.log - Sink for one-line progress messages.
+ * @returns Counts of what was written. `directoryEntries` is the number of distinct
+ *   tenants, `capabilities` the number of classified urls, `unparseable` how many
+ *   stored bodies would not parse, and `duplicateTenantIds` how many ids the newest
+ *   directory copy listed at more than one url.
+ * @example
+ * const counts = transform(db, {
+ *   vendor: 'epic',
+ *   fhirVersion: 'R4',
+ *   log: console.log,
+ * });
+ *
+ * A run like this returns:
+ *
+ *   { directoryEntries: 820, capabilities: 815, unparseable: 2, duplicateTenantIds: 0 }
  */
 export function transform(
   db: DatabaseSync,

@@ -14,7 +14,25 @@ function signed(n: number): string {
 
 /**
  * Renders the warehouse's crawl, transform, and publish state as a fixed-width text
- * table, one row per vendor and version, with ages computed relative to `now`.
+ * table, one row per vendor and version, with ages computed relative to `now`. This
+ * is the pipeline's whole health report. The monthly workflow posts it on the
+ * refresh pull request, where a human decides whether to merge.
+ *
+ * @param db - An open warehouse from `openWarehouse`.
+ * @param now - The ISO timestamp ages are computed against.
+ * @returns The table followed by the recent publish history, ready to print.
+ * @example
+ * console.log(formatStatus(db, new Date().toISOString()));
+ *
+ * This prints a report shaped like:
+ *
+ *   vendor     version  endpoints   failing crawled   transform
+ *   athena     R4           17437         - 2d ago    current
+ *   epic       R4             820         0 today     current
+ *
+ *   publishes
+ *     today     39,560 rows (+0)
+ *     2d ago    39,560 rows (-5413)
  */
 export function formatStatus(db: DatabaseSync, now: string): string {
   const age = (ts: string): string => {

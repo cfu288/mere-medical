@@ -131,6 +131,34 @@ async function runInBatches<T>(
  * Fetches one vendor and version's directory containing all tenants, saves it as a
  * snapshot in the database, and then downloads each listed tenant's capability
  * document into the warehouse.
+ *
+ * Failures degrade to staleness, never data loss. A directory that cannot be fetched
+ * or fails its checks makes the run return `failed` without touching the saved
+ * history. A capability url that fails to download keeps its last good body and is
+ * counted in the run's failure total.
+ *
+ * @param db - An open warehouse from `openWarehouse`.
+ * @param options - What to crawl and how to report progress.
+ * @param options.vendor - The vendor whose directory to crawl, such as `'epic'`.
+ * @param options.fhirVersion - `'DSTU2'` or `'R4'`.
+ * @param options.now - Clock returning an ISO timestamp, stamped on every row written.
+ * @param options.log - Sink for one-line progress messages.
+ * @returns `{ status: 'ok' }` when the directory was crawled, even if some capability
+ *   downloads failed, or `{ status: 'failed' }` when the directory itself was
+ *   rejected.
+ * @example
+ * const db = openWarehouse('libs/emr-pipeline/data/warehouse.db');
+ * const result = await extract(db, {
+ *   vendor: 'epic',
+ *   fhirVersion: 'R4',
+ *   now: () => new Date().toISOString(),
+ *   log: console.log,
+ * });
+ *
+ * A run like this logs progress and resolves to `{ status: 'ok' }`:
+ *
+ *   epic R4: directory holds 820 tenants
+ *   epic R4: 815 fetched, 5 failed
  */
 export async function extract(
   db: DatabaseSync,
