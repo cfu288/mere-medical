@@ -13,7 +13,7 @@ interface DirectoryCount {
   tenant_count: number;
 }
 
-/** Saves the latest snapshot's tenant count when transform finishes a vendor and version. */
+/** Saves the newest directory copy's tenant count when transform finishes a vendor and version. */
 export function record(
   db: DatabaseSync,
   vendor: Vendor,

@@ -158,7 +158,7 @@ export async function extract(
     return rejectDirectory(`directory rejected: ${check.reason}`);
   }
   snapshots.recordAttempt(db, vendor, fhirVersion, options.now(), null);
-  if (!snapshots.appendSnapshot(db, vendor, fhirVersion, options.now(), body)) {
+  if (!snapshots.saveSnapshot(db, vendor, fhirVersion, options.now(), body)) {
     log(
       `${vendor} ${fhirVersion}: directory unchanged; updated the date on its saved copy`,
     );

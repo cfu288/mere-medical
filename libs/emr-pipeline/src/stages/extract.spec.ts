@@ -99,7 +99,7 @@ describe('extract', () => {
   }
 
   function seedGoodCapability(): number {
-    snapshots.appendSnapshot(db, 'epic', 'R4', NOW, DIRECTORY);
+    snapshots.saveSnapshot(db, 'epic', 'R4', NOW, DIRECTORY);
     const url = 'https://one.example.org/api/FHIR/R4/metadata';
     downloads.addUrl(db, { vendor: 'epic', fhirVersion: 'R4', url });
     const capabilityId = idOf(url);
@@ -170,11 +170,9 @@ describe('extract', () => {
   });
 
   it('updates the saved copy date when the directory body is unchanged', () => {
-    expect(snapshots.appendSnapshot(db, 'epic', 'R4', NOW, DIRECTORY)).toBe(
-      true,
-    );
+    expect(snapshots.saveSnapshot(db, 'epic', 'R4', NOW, DIRECTORY)).toBe(true);
     expect(
-      snapshots.appendSnapshot(
+      snapshots.saveSnapshot(
         db,
         'epic',
         'R4',

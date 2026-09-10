@@ -88,10 +88,10 @@ interface MergedTenant {
 }
 
 /**
- * Merges one vendor and version's snapshot history into the derived tenant tables,
- * classifying each tenant's stored capability download, and returns counts of what it
- * wrote. A tenant id a snapshot lists at more than one url contributes nothing from
- * that snapshot. Earlier snapshots still count.
+ * Merges one vendor and version's saved directory copies into the derived tenant
+ * tables, classifying each tenant's stored capability download, and returns counts of
+ * what it wrote. A tenant id one directory copy lists at more than one url
+ * contributes nothing from that copy. Earlier copies still count.
  */
 export function transform(
   db: DatabaseSync,

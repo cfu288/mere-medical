@@ -18,7 +18,7 @@ interface Snapshot {
  * Saves a directory page into history and returns true. A page identical to the
  * newest saved copy returns false and only moves that copy's date to now.
  */
-export function appendSnapshot(
+export function saveSnapshot(
   db: DatabaseSync,
   vendor: Vendor,
   fhirVersion: FhirVersion,

@@ -29,7 +29,7 @@ function initialize(db: DatabaseSync): void {
 }
 
 /** Drops and recreates the disposable derived tables for transform to refill. */
-function rebuildDerived(db: DatabaseSync): void {
+function resetDerivedTables(db: DatabaseSync): void {
   db.exec(fs.readFileSync(DERIVED_FILE, 'utf8'));
 }
 
@@ -88,7 +88,7 @@ export function openWarehouse(dbPath: string): DatabaseSync {
       );
     }
     if (!hasDerivedTables(db)) {
-      rebuildDerived(db);
+      resetDerivedTables(db);
     }
     return db;
   } catch (error) {

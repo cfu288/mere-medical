@@ -96,7 +96,7 @@ describe('warehouse to artifact', () => {
   }
 
   function seedEpicR4() {
-    snapshots.appendSnapshot(db, 'epic', 'R4', NOW, EPIC_DIRECTORY);
+    snapshots.saveSnapshot(db, 'epic', 'R4', NOW, EPIC_DIRECTORY);
 
     for (const host of ['one.example.org', 'two.example.org']) {
       const url = `https://${host}/api/FHIR/R4/metadata`;
@@ -149,7 +149,7 @@ describe('warehouse to artifact', () => {
     seedEpicR4();
     const padded = JSON.parse(EPIC_DIRECTORY);
     padded.entry[0].resource.name = 'Example Health\t';
-    snapshots.appendSnapshot(
+    snapshots.saveSnapshot(
       db,
       'epic',
       'R4',
@@ -176,7 +176,7 @@ describe('warehouse to artifact', () => {
     seedEpicR4();
     const duplicated = JSON.parse(EPIC_DIRECTORY);
     duplicated.entry.push(duplicated.entry[0]);
-    snapshots.appendSnapshot(
+    snapshots.saveSnapshot(
       db,
       'epic',
       'R4',
@@ -204,7 +204,7 @@ describe('warehouse to artifact', () => {
     const clone = JSON.parse(JSON.stringify(conflicting.entry[0]));
     clone.resource.address = 'https://elsewhere.example.org/api/FHIR/R4';
     conflicting.entry.push(clone);
-    snapshots.appendSnapshot(
+    snapshots.saveSnapshot(
       db,
       'epic',
       'R4',
@@ -240,7 +240,7 @@ describe('warehouse to artifact', () => {
   });
 
   it('folds athena practices into tenant directory entries', () => {
-    snapshots.appendSnapshot(
+    snapshots.saveSnapshot(
       db,
       'athena',
       'R4',
@@ -360,7 +360,7 @@ describe('warehouse to artifact', () => {
 
   it('keeps last-good auth urls for a still-listed tenant whose metadata broke', () => {
     seedEpicR4();
-    snapshots.appendSnapshot(
+    snapshots.saveSnapshot(
       db,
       'epic',
       'R4',
@@ -422,7 +422,7 @@ describe('warehouse to artifact', () => {
     seedEpicR4();
     const blank = JSON.parse(EPIC_DIRECTORY);
     blank.entry[0].resource.name = '';
-    snapshots.appendSnapshot(
+    snapshots.saveSnapshot(
       db,
       'epic',
       'R4',
@@ -454,7 +454,7 @@ describe('warehouse to artifact', () => {
     seedEpicR4();
     const moved = JSON.parse(EPIC_DIRECTORY);
     moved.entry[0].resource.address = 'https://moved.example.org/api/FHIR/R4/';
-    snapshots.appendSnapshot(
+    snapshots.saveSnapshot(
       db,
       'epic',
       'R4',
@@ -485,7 +485,7 @@ describe('warehouse to artifact', () => {
       resourceType: 'Bundle',
       entry: JSON.parse(EPIC_DIRECTORY).entry.slice(1),
     });
-    snapshots.appendSnapshot(
+    snapshots.saveSnapshot(
       db,
       'epic',
       'R4',
@@ -522,7 +522,7 @@ describe('warehouse to artifact', () => {
 
   it('folds past an unparseable snapshot without losing tenants', () => {
     seedEpicR4();
-    snapshots.appendSnapshot(
+    snapshots.saveSnapshot(
       db,
       'epic',
       'R4',

@@ -1,8 +1,9 @@
 /**
  * Owns the disposable tables `tenant_directory_entries`, `tenant_urls`, and
- * `tenant_capabilities`. Transform rebuilds them from snapshot history and publish
- * reads `listPublishable` to write `tenants.db`. They exist so publish is one query
- * over merged rows instead of its own replay of the history.
+ * `tenant_capabilities`. Transform rebuilds them from the saved directory copies in
+ * `directory_snapshots`, and publish reads `listPublishable` to write `tenants.db`.
+ * They exist so publish is one query over merged rows instead of rereading the whole
+ * history itself.
  */
 import type { DatabaseSync } from 'node:sqlite';
 import type {
