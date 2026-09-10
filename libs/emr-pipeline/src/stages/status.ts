@@ -1,16 +1,20 @@
 import type { DatabaseSync } from 'node:sqlite';
 import type { Vendor } from '@mere/shared';
-import { ADAPTERS } from './adapters';
-import * as downloads from './db/repository/capability-downloads';
-import * as directoryCounts from './db/repository/directory-counts';
-import * as publications from './db/repository/publications';
-import * as runs from './db/repository/fetch-runs';
-import * as snapshots from './db/repository/directory-snapshots';
+import { ADAPTERS } from '../adapters';
+import * as downloads from '../db/repository/capability-downloads';
+import * as directoryCounts from '../db/repository/directory-counts';
+import * as publications from '../db/repository/publications';
+import * as runs from '../db/repository/fetch-runs';
+import * as snapshots from '../db/repository/directory-snapshots';
 
 function signed(n: number): string {
   return n < 0 ? String(n) : `+${n}`;
 }
 
+/**
+ * Renders the warehouse's crawl, transform, and publish state as a fixed-width text
+ * table, one row per vendor and version, with ages computed relative to `now`.
+ */
 export function formatStatus(db: DatabaseSync, now: string): string {
   const age = (ts: string): string => {
     const days = Math.floor((Date.parse(now) - Date.parse(ts)) / 86_400_000);

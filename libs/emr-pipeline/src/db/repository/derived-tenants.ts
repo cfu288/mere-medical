@@ -13,7 +13,7 @@ import type {
 import { allRows } from '@mere/tenant-db';
 
 /** One tenant merged from every snapshot: latest url and seen date, last non-empty name. */
-export interface DirectoryEntryRow {
+interface DirectoryEntryRow {
   tenantId: string;
   name: string | undefined;
   url: string;
@@ -22,12 +22,13 @@ export interface DirectoryEntryRow {
 }
 
 /** One url a tenant was ever listed at, and the last snapshot that listed it there. */
-export interface TenantUrlRow {
+interface TenantUrlRow {
   tenantId: string;
   url: string;
   lastSeenAt: string;
 }
 
+/** The SMART auth urls one url's capability download declared, and how it classified. */
 export interface CapabilityRow {
   url: string;
   authorizeUrl: string | null;
@@ -118,7 +119,7 @@ export function replaceCapabilities(
 }
 
 /** A tenant ready to ship: named (athena aside), with its best usable auth urls. */
-export interface PublishableTenant {
+interface PublishableTenant {
   tenant_id: string;
   vendor: string;
   fhir_version: string;

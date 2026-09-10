@@ -8,7 +8,7 @@ import type { FhirVersion, Vendor } from '@mere/shared';
 import { getRow } from '@mere/tenant-db';
 
 /** How many tenants a vendor's directory listed the last time transform parsed it. */
-export interface DirectoryCount {
+interface DirectoryCount {
   seen_at: string;
   tenant_count: number;
 }

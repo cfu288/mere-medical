@@ -2,10 +2,10 @@ import * as path from 'node:path';
 import type { FhirVersion, Vendor } from '@mere/shared';
 import { adapterFor, ADAPTERS } from './adapters';
 import { openWarehouse } from './db/open';
-import { extract } from './extract';
-import { publish } from './publish';
-import { formatStatus } from './status';
-import { transform } from './transform';
+import { extract } from './stages/extract';
+import { publish } from './stages/publish';
+import { formatStatus } from './stages/status';
+import { transform } from './stages/transform';
 
 const LIB_ROOT = path.resolve(__dirname, '..');
 

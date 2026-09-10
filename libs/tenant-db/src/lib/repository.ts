@@ -14,6 +14,7 @@ import type {
   Vendor,
 } from '@mere/shared';
 
+/** An open handle to a `tenants.db` artifact. */
 export type TenantDb = DatabaseSync;
 
 const DEFAULT_SEARCH_LIMIT = 50;

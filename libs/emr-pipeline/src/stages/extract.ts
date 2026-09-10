@@ -1,12 +1,12 @@
 import type { DatabaseSync } from 'node:sqlite';
 import { setTimeout as sleep } from 'node:timers/promises';
 import type { FhirVersion, Vendor } from '@mere/shared';
-import { adapterFor } from './adapters';
-import { parseBundle } from './adapters/schemas';
-import { DirectoryEntry, FHIR_ACCEPT } from './adapters/types';
-import * as downloads from './db/repository/capability-downloads';
-import * as runs from './db/repository/fetch-runs';
-import * as snapshots from './db/repository/directory-snapshots';
+import { adapterFor } from '../adapters';
+import { parseBundle } from '../adapters/schemas';
+import { DirectoryEntry, FHIR_ACCEPT } from '../adapters/types';
+import * as downloads from '../db/repository/capability-downloads';
+import * as runs from '../db/repository/fetch-runs';
+import * as snapshots from '../db/repository/directory-snapshots';
 
 const CONCURRENCY = 8;
 const TIMEOUT_MS = 20_000;
@@ -38,14 +38,12 @@ interface ExtractResult {
   status: 'ok' | 'failed';
 }
 
-type DirectoryCheck = { ok: true } | { ok: false; reason: string };
-
 /** Rejects a directory that contradicts itself: empty, or a declared total its entries do not match. */
 export function checkDirectory(
   tenantCount: number,
   bundleEntryCount: number,
   declaredTotal: number | undefined,
-): DirectoryCheck {
+): { ok: true } | { ok: false; reason: string } {
   if (tenantCount === 0) {
     return { ok: false, reason: 'directory yielded no tenants' };
   }
@@ -116,6 +114,13 @@ async function runPool<T>(
   }
 }
 
+/**
+ * Fetches one vendor and version's directory, saves it as a snapshot, and downloads
+ * every capability document it lists into the warehouse.
+ *
+ * A directory that cannot be fetched or fails its checks returns `failed` instead of
+ * throwing; individual capability download failures are recorded and never abort a run.
+ */
 export async function extract(
   db: DatabaseSync,
   options: ExtractOptions,

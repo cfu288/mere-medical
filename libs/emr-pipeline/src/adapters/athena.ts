@@ -15,8 +15,7 @@ const PRACTICE_EXTENSION_URL =
   'https://fhir.athena.io/StructureDefinition/ah-practice';
 
 /** Every practice shares this base; the practice is selected post-auth by query param. */
-export const ATHENA_FHIR_BASE_URL =
-  'https://api.platform.athenahealth.com/fhir/r4';
+const ATHENA_FHIR_BASE_URL = 'https://api.platform.athenahealth.com/fhir/r4';
 
 export const athenaAdapter: VendorAdapter = {
   versions: ['R4'],

@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import type { DatabaseSync } from 'node:sqlite';
-import { openWarehouse } from './db/open';
+import { openWarehouse } from '../db/open';
 import { formatStatus } from './status';
 
 const NOW = '2026-09-07T12:00:00.000Z';

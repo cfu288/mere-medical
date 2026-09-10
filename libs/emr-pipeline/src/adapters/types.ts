@@ -2,6 +2,7 @@ import * as fs from 'node:fs';
 import type { FhirVersion } from '@mere/shared';
 import type { FhirBundle } from './schemas';
 
+/** One tenant a directory lists: its id, base url, and any names the page carried. */
 export interface DirectoryEntry {
   tenantId: string;
   name?: string;
@@ -10,6 +11,7 @@ export interface DirectoryEntry {
   managingOrganization?: string;
 }
 
+/** A sandbox tenant an adapter ships as-is, auth urls and all, with no directory or capability download behind it. */
 export interface SandboxSeed {
   tenantId: string;
   name: string;
@@ -18,10 +20,12 @@ export interface SandboxSeed {
   authorize?: string;
 }
 
+/** Fetches the raw body of a directory, wherever it lives. */
 export interface DirectorySource {
   fetch(signal: AbortSignal): Promise<string>;
 }
 
+/** How the pipeline talks to one vendor: its directories, how to read them, and its sandbox tenants. */
 export interface VendorAdapter {
   versions: FhirVersion[];
   /** Where this vendor's directory for a version lives, or null if it publishes none. */
@@ -40,6 +44,7 @@ export interface VendorAdapter {
 export const FHIR_ACCEPT =
   'application/json+fhir, application/fhir+json, application/json';
 
+/** A directory fetched from a url; any non-ok answer throws `HTTP <status>`. */
 export function httpDirectory(url: string): DirectorySource {
   return {
     async fetch(signal) {

@@ -1,15 +1,15 @@
 import { DatabaseSync } from 'node:sqlite';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { ADAPTERS } from './adapters';
+import { ADAPTERS } from '../adapters';
 import {
   TENANT_DB_SCHEMA,
   TENANT_DB_USER_VERSION,
   getRow,
 } from '@mere/tenant-db';
-import * as derived from './db/repository/derived-tenants';
-import * as snapshots from './db/repository/directory-snapshots';
-import * as publications from './db/repository/publications';
+import * as derived from '../db/repository/derived-tenants';
+import * as snapshots from '../db/repository/directory-snapshots';
+import * as publications from '../db/repository/publications';
 
 interface PublishOptions {
   artifactPath: string;
@@ -105,6 +105,12 @@ interface PublishResult {
   rowCount: number;
 }
 
+/**
+ * Writes the artifact at `options.artifactPath` from the warehouse's publishable
+ * tenants plus every adapter's sandbox seeds, and records the publish in the warehouse.
+ * The artifact is built beside its target and renamed into place, so a reader never
+ * sees a half-written file.
+ */
 export function publish(
   db: DatabaseSync,
   options: PublishOptions,
