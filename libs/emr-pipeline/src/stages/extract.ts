@@ -45,9 +45,11 @@ interface ExtractResult {
 }
 
 /**
- * Returns not-ok with the reason when a directory is empty or its declared total does
- * not match its entries. Extract calls this before saving the page, so bad data does
- * not become permanent history.
+ * Checks the tenant directory page a vendor just served, before extract saves it.
+ * Vendors sometimes answer 200 with a broken page, either empty or declaring a total
+ * its entries do not match, and a saved page becomes permanent history that the rest
+ * of the pipeline treats as the truth about which tenants exist. Returns not-ok with
+ * the reason so extract can reject the page.
  */
 export function checkTenantDirectoryCounts(
   tenantCount: number,
