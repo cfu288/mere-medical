@@ -147,10 +147,10 @@ interface WorklistQuery {
 }
 
 /**
- * The work list: every tracked document, never-fetched rows first.
+ * Every tracked document for one vendor and version, never-downloaded rows first.
  *
- * A run refetches everything; the store shields good bodies from failed fetches, it
- * never excuses a fetch.
+ * Extract downloads this whole list every run; a stored copy is crash insurance,
+ * never a reason to skip the fetch.
  */
 export function selectWorklist(
   db: DatabaseSync,
