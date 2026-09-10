@@ -8,7 +8,9 @@ import type { DatabaseSync } from 'node:sqlite';
 import type { FhirVersion, Vendor } from '@mere/shared';
 import { allRows, getRow } from '@mere/tenant-db';
 
-/** One saved copy of a vendor's directory page, the body as downloaded and when. */
+/**
+ * One saved copy of a vendor's directory page, the body as downloaded and when.
+ */
 interface Snapshot {
   fetched_at: string;
   body: string;
@@ -46,7 +48,10 @@ export function saveSnapshot(
   return true;
 }
 
-/** Overwrites a vendor and version's last directory request date and error, clearing the error on success. */
+/**
+ * Overwrites a vendor and version's last directory request date and error,
+ * clearing the error on success.
+ */
 export function recordAttempt(
   db: DatabaseSync,
   vendor: Vendor,
@@ -63,7 +68,10 @@ export function recordAttempt(
   ).run(vendor, fhirVersion, attemptedAt, error);
 }
 
-/** The newest snapshot date for one vendor and version, compared by status against the transform. */
+/**
+ * The newest snapshot date for one vendor and version, compared by status
+ * against the transform.
+ */
 export function latestFetchedAt(
   db: DatabaseSync,
   vendor: Vendor,
@@ -80,7 +88,10 @@ export function latestFetchedAt(
   );
 }
 
-/** The newest snapshot date across every vendor, used by publish to stamp sandbox rows. */
+/**
+ * The newest snapshot date across every vendor, used by publish to stamp
+ * sandbox rows.
+ */
 export function latestFetchedAtOverall(db: DatabaseSync): string | null {
   return (
     getRow<{ newest: string | null }>(

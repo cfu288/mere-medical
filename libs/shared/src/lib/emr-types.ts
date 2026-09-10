@@ -1,6 +1,9 @@
 export type Vendor = 'epic' | 'cerner' | 'veradigm' | 'healow' | 'athena';
 
-/** Vendors whose tenants a user picks between in search. Athena resolves by practice id. */
+/**
+ * Vendors whose tenants a user picks between in search. Athena resolves by
+ * practice id.
+ */
 export type SearchableVendor = Exclude<Vendor, 'athena'>;
 
 export type FhirVersion = 'DSTU2' | 'R4';
@@ -44,7 +47,10 @@ export interface VendorEndpoint {
   managingOrganization?: string;
 }
 
-/** Reshapes a tenant into the endpoint a route returns. A missing token or authorize url becomes an empty string. */
+/**
+ * Reshapes a tenant into the endpoint a route returns. A missing token or
+ * authorize url becomes an empty string.
+ */
 export function toVendorEndpoint(tenant: Tenant): VendorEndpoint {
   return {
     id: tenant.tenantId,

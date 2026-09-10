@@ -15,7 +15,10 @@ interface CapabilityKey {
   url: string;
 }
 
-/** One tenant's CapabilityStatement url. Body and download date arrive together once a fetch succeeds. */
+/**
+ * One tenant's CapabilityStatement url. Body and download date arrive together
+ * once a fetch succeeds.
+ */
 export type CapabilityDownload = CapabilityKey &
   (
     | { id: number; body: string; downloadedAt: string }
@@ -45,7 +48,10 @@ function toRow(row: CapabilitySqlRow): CapabilityDownload {
   return { ...key, body: row.body, downloadedAt: row.downloaded_at };
 }
 
-/** Registers a url for download. A url already present keeps its stored body and dates. */
+/**
+ * Registers a url for download. A url already present keeps its stored body and
+ * dates.
+ */
 export function addUrl(db: DatabaseSync, key: CapabilityKey): void {
   db.prepare(
     `INSERT INTO capability_downloads (vendor, fhir_version, url)
@@ -87,7 +93,10 @@ interface DownloadSuccess {
   now: string;
 }
 
-/** Stores a fetched body with its download and attempt dates and clears any earlier failure. */
+/**
+ * Stores a fetched body with its download and attempt dates and clears any
+ * earlier failure.
+ */
 export function recordSuccess(db: DatabaseSync, result: DownloadSuccess): void {
   db.prepare(
     `UPDATE capability_downloads
@@ -122,7 +131,10 @@ function serializeError(error: unknown): string {
   return JSON.stringify({ name: 'Unknown', message: String(error) });
 }
 
-/** Records a failed fetch as an attempt date and error. It never touches the body, so the last good copy survives an outage. */
+/**
+ * Records a failed fetch as an attempt date and error. It never touches the
+ * body, so the last good copy survives an outage.
+ */
 export function recordFailure(
   db: DatabaseSync,
   failure: DownloadFailure,
@@ -162,7 +174,10 @@ interface DownloadListQuery {
   fhirVersion: FhirVersion;
 }
 
-/** Every url for one vendor and version, never-downloaded first. Each run refetches all of them. */
+/**
+ * Every url for one vendor and version, never-downloaded first. Each run
+ * refetches all of them.
+ */
 export function selectForDownload(
   db: DatabaseSync,
   query: DownloadListQuery,

@@ -7,13 +7,19 @@ import type { DatabaseSync } from 'node:sqlite';
 import type { FhirVersion, Vendor } from '@mere/shared';
 import { getRow } from '@mere/tenant-db';
 
-/** How many tenants a vendor's directory listed the last time transform parsed it. */
+/**
+ * How many tenants a vendor's directory listed the last time transform parsed
+ * it.
+ */
 interface DirectoryCount {
   seen_at: string;
   tenant_count: number;
 }
 
-/** Saves the newest directory copy's tenant count when transform finishes a vendor and version. */
+/**
+ * Saves the newest directory copy's tenant count when transform finishes a
+ * vendor and version.
+ */
 export function record(
   db: DatabaseSync,
   vendor: Vendor,
@@ -30,7 +36,10 @@ export function record(
   ).run(vendor, fhirVersion, seenAt, tenantCount);
 }
 
-/** The saved count for one vendor and version, rendered by status as the endpoints column. */
+/**
+ * The saved count for one vendor and version, rendered by status as the
+ * endpoints column.
+ */
 export function find(
   db: DatabaseSync,
   vendor: Vendor,

@@ -13,7 +13,11 @@ import type {
 } from '@mere/shared';
 import { allRows } from '@mere/tenant-db';
 
-/** One tenant summarized across every saved directory copy. It keeps the url and date from the newest copy that listed the tenant, and the last name the vendor ever gave it. */
+/**
+ * One tenant summarized across every saved directory copy. It keeps the url and
+ * date from the newest copy that listed the tenant, and the last name the
+ * vendor ever gave it.
+ */
 interface DirectoryEntryRow {
   tenantId: string;
   name: string | undefined;
@@ -22,14 +26,21 @@ interface DirectoryEntryRow {
   lastSeen: string;
 }
 
-/** Records that a tenant was once listed at this url, and the date of the newest directory copy that listed it there. */
+/**
+ * Records that a tenant was once listed at this url, and the date of the newest
+ * directory copy that listed it there.
+ */
 interface TenantUrlRow {
   tenantId: string;
   url: string;
   lastSeenAt: string;
 }
 
-/** The SMART auth urls read out of one url's downloaded CapabilityStatement. The classification says whether they are complete enough to log in with, and `listPublishable` keeps only `usable` rows. */
+/**
+ * The SMART auth urls read out of one url's downloaded CapabilityStatement. The
+ * classification says whether they are complete enough to log in with, and
+ * `listPublishable` keeps only `usable` rows.
+ */
 export interface CapabilityRow {
   url: string;
   authorizeUrl: string | null;
@@ -51,7 +62,10 @@ function clearRows(
   );
 }
 
-/** Deletes and rewrites one vendor and version's tenant rows. Transform calls it after rereading every saved directory copy. */
+/**
+ * Deletes and rewrites one vendor and version's tenant rows. Transform calls it
+ * after rereading every saved directory copy.
+ */
 export function replaceEntries(
   db: DatabaseSync,
   vendor: Vendor,
@@ -78,7 +92,10 @@ export function replaceEntries(
   }
 }
 
-/** Deletes and rewrites which urls each tenant was ever listed at. Transform calls it in the same pass as `replaceEntries`. */
+/**
+ * Deletes and rewrites which urls each tenant was ever listed at. Transform
+ * calls it in the same pass as `replaceEntries`.
+ */
 export function replaceUrls(
   db: DatabaseSync,
   vendor: Vendor,
@@ -95,7 +112,11 @@ export function replaceUrls(
   }
 }
 
-/** Deletes and rewrites each url's `CapabilityRow`, the auth urls read from its downloaded CapabilityStatement. Transform calls it in the same pass as `replaceEntries`. */
+/**
+ * Deletes and rewrites each url's `CapabilityRow`, the auth urls read from its
+ * downloaded CapabilityStatement. Transform calls it in the same pass as
+ * `replaceEntries`.
+ */
 export function replaceCapabilities(
   db: DatabaseSync,
   vendor: Vendor,
@@ -123,7 +144,9 @@ export function replaceCapabilities(
   }
 }
 
-/** A tenant ready to ship, named unless athena, with its best usable auth urls. */
+/**
+ * A tenant ready to ship, named unless athena, with its best usable auth urls.
+ */
 interface PublishableTenant {
   tenant_id: string;
   vendor: string;

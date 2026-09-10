@@ -86,7 +86,10 @@ const securityExtensionSchema = z.object({
   valueUri: z.string().optional(),
 });
 
-/** Models only the security extensions carrying SMART urls, the one slice of a CapabilityStatement the pipeline reads. */
+/**
+ * Models only the security extensions carrying SMART urls, the one slice of a
+ * CapabilityStatement the pipeline reads.
+ */
 export const capabilityStatementSchema = z.object({
   resourceType: z.string().optional(),
   rest: z

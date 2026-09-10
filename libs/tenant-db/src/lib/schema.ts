@@ -1,4 +1,7 @@
-/** Bump whenever `TENANT_DB_SCHEMA` changes. `openTenantDb` refuses any other value. */
+/**
+ * Bump whenever `TENANT_DB_SCHEMA` changes. `openTenantDb` refuses any other
+ * value.
+ */
 export const TENANT_DB_USER_VERSION = 1;
 
 export const TENANT_DB_SCHEMA = `

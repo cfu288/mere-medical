@@ -50,7 +50,10 @@ export const cernerAdapter: VendorAdapter = {
     return httpDirectory(process.env[source.env] ?? source.url);
   },
 
-  /** Reads one tenant per Endpoint resource, named by the Organization that links to it when one does. */
+  /**
+   * Reads one tenant per Endpoint resource, named by the Organization that
+   * links to it when one does.
+   */
   parseDirectory(bundle: FhirBundle): DirectoryEntry[] {
     const namesByEndpointId = new Map<string, string>();
     for (const { resource } of bundle.entry) {

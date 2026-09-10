@@ -28,7 +28,9 @@ function initialize(db: DatabaseSync): void {
   }
 }
 
-/** Drops and recreates the disposable derived tables for transform to refill. */
+/**
+ * Drops and recreates the disposable derived tables for transform to refill.
+ */
 function resetDerivedTables(db: DatabaseSync): void {
   db.exec(fs.readFileSync(DERIVED_FILE, 'utf8'));
 }
@@ -45,7 +47,10 @@ function hasTables(db: DatabaseSync, names: string[]): boolean {
   return row?.n === names.length;
 }
 
-/** True when all three derived tables exist. A missing one makes openWarehouse recreate the whole disposable layer. */
+/**
+ * True when all three derived tables exist. A missing one makes openWarehouse
+ * recreate the whole disposable layer.
+ */
 function hasDerivedTables(db: DatabaseSync): boolean {
   return hasTables(db, [
     'tenant_directory_entries',
@@ -54,7 +59,10 @@ function hasDerivedTables(db: DatabaseSync): boolean {
   ]);
 }
 
-/** True when every durable table exists. openWarehouse refuses a file without them rather than writing into an unknown schema. */
+/**
+ * True when every durable table exists. openWarehouse refuses a file without
+ * them rather than writing into an unknown schema.
+ */
 function hasCurrentWarehouseTables(db: DatabaseSync): boolean {
   return hasTables(db, [
     'capability_downloads',

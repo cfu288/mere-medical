@@ -46,7 +46,10 @@ export const veradigmAdapter: VendorAdapter = {
     return url ? httpDirectory(url) : null;
   },
 
-  /** Reads one tenant per entry, taking its id and name from the contained Organization. */
+  /**
+   * Reads one tenant per entry, taking its id and name from the contained
+   * Organization.
+   */
   parseDirectory(bundle: FhirBundle): DirectoryEntry[] {
     const entries: DirectoryEntry[] = [];
     for (const { resource } of bundle.entry) {

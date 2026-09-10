@@ -14,7 +14,10 @@ const BUNDLE_URL =
 const PRACTICE_EXTENSION_URL =
   'https://fhir.athena.io/StructureDefinition/ah-practice';
 
-/** Every practice shares this base url. The practice itself is picked after login by query param. */
+/**
+ * Every practice shares this base url. The practice itself is picked after
+ * login by query param.
+ */
 const ATHENA_FHIR_BASE_URL = 'https://api.platform.athenahealth.com/fhir/r4';
 
 export const athenaAdapter: VendorAdapter = {
