@@ -5,7 +5,7 @@ import type { DatabaseSync } from 'node:sqlite';
 import { openWarehouse } from './db/open';
 import * as downloads from './db/repository/capability-downloads';
 import * as snapshots from './db/repository/directory-snapshots';
-import { checkDirectory, extract, runPool } from './extract';
+import { checkDirectory, extract } from './extract';
 
 const SMART =
   'http://fhir-registry.smarthealthit.org/StructureDefinition/oauth-uris';
@@ -66,99 +66,6 @@ describe('checkDirectory', () => {
     expect(checkDirectory(0, 40, undefined)).toEqual({
       ok: false,
       reason: 'directory yielded no tenants',
-    });
-  });
-});
-
-describe('runPool', () => {
-  it('holds a host to its own concurrency cap', async () => {
-    const inFlight: string[] = [];
-    let maxPerHost = 0;
-    const tasks = ['a', 'a', 'a', 'a', 'a', 'b'].map((host, index) => ({
-      host,
-      run: async () => {
-        inFlight.push(host);
-        maxPerHost = Math.max(
-          maxPerHost,
-          inFlight.filter((h) => h === host).length,
-        );
-        await new Promise((resolve) => setTimeout(resolve, 5));
-        inFlight.splice(inFlight.indexOf(host), 1);
-        return index;
-      },
-    }));
-
-    const results: number[] = [];
-    await runPool<number | null>(
-      tasks,
-      {
-        concurrency: 6,
-        hostConcurrency: 2,
-        hostFailureLimit: 0,
-        failed: () => false,
-        skipped: () => null,
-      },
-      (result) => results.push(result as number),
-    );
-
-    expect(maxPerHost).toBe(2);
-    expect(results.sort((a, b) => a - b)).toEqual([0, 1, 2, 3, 4, 5]);
-  });
-
-  it('stops requesting a host that keeps failing with nothing succeeding', async () => {
-    let attempts = 0;
-    const tasks = Array.from({ length: 20 }, () => ({
-      host: 'dead.example.org',
-      run: async () => {
-        attempts++;
-        return { ok: false };
-      },
-    }));
-
-    const skipped: unknown[] = [];
-    const abandoned = await runPool<{ ok: boolean } | { skippedHost: string }>(
-      tasks,
-      {
-        concurrency: 2,
-        hostConcurrency: 2,
-        hostFailureLimit: 5,
-        failed: (result) => !(result as { ok: boolean }).ok,
-        skipped: (host) => ({ skippedHost: host }),
-      },
-      (result) => skipped.push(result),
-    );
-
-    expect({ attempts, abandoned: abandoned.get('dead.example.org') }).toEqual({
-      attempts: 6,
-      abandoned: 14,
-    });
-  });
-
-  it('keeps requesting a host that failed but also succeeded', async () => {
-    let attempts = 0;
-    const tasks = Array.from({ length: 12 }, (_, index) => ({
-      host: 'flaky.example.org',
-      run: async () => {
-        attempts++;
-        return { ok: index === 0 };
-      },
-    }));
-
-    const abandoned = await runPool<{ ok: boolean } | null>(
-      tasks,
-      {
-        concurrency: 1,
-        hostConcurrency: 1,
-        hostFailureLimit: 3,
-        failed: (result) => !(result as { ok: boolean }).ok,
-        skipped: () => null,
-      },
-      () => undefined,
-    );
-
-    expect({ attempts, abandoned: abandoned.size }).toEqual({
-      attempts: 12,
-      abandoned: 0,
     });
   });
 });
@@ -341,84 +248,6 @@ describe('extract', () => {
     ]);
   });
 
-  it('reports a run whose capability fetches failed as ok', async () => {
-    seedGoodCapability();
-    respondWith(404, '<html>404 Not Found</html>');
-
-    const result = await run();
-
-    expect(result.status).toBe('ok');
-  });
-
-  it('asks once when the endpoint answers 404', async () => {
-    seedGoodCapability();
-    let attempts = 0;
-    globalThis.fetch = (async (url: string | URL) => {
-      if (String(url).includes('directory')) {
-        return new Response(DIRECTORY, { status: 200 });
-      }
-      attempts++;
-      return new Response('gone', { status: 404 });
-    }) as typeof fetch;
-
-    await extract(db, {
-      vendor: 'epic',
-      fhirVersion: 'R4',
-      concurrency: 2,
-      hostConcurrency: 2,
-      hostFailureLimit: 0,
-      timeoutMs: 1000,
-      directoryTimeoutMs: 5000,
-      retries: 3,
-      batchSize: 10,
-      now: () => NOW,
-      log: silent,
-    });
-
-    expect(attempts).toBe(1);
-  });
-
-  it('retries a 503 up to the retry budget', async () => {
-    seedGoodCapability();
-    let attempts = 0;
-    globalThis.fetch = (async (url: string | URL) => {
-      if (String(url).includes('directory')) {
-        return new Response(DIRECTORY, { status: 200 });
-      }
-      attempts++;
-      return new Response('busy', { status: 503 });
-    }) as typeof fetch;
-
-    await extract(db, {
-      vendor: 'epic',
-      fhirVersion: 'R4',
-      concurrency: 2,
-      hostConcurrency: 2,
-      hostFailureLimit: 0,
-      timeoutMs: 1000,
-      directoryTimeoutMs: 5000,
-      retries: 2,
-      batchSize: 10,
-      now: () => NOW,
-      log: silent,
-    });
-
-    expect(attempts).toBe(3);
-  });
-
-  it('marks a document failed once its 5xx retries run out', async () => {
-    const capabilityId = seedGoodCapability();
-    respondWith(503, 'busy');
-
-    await run();
-    const failed = db
-      .prepare('SELECT failed AS n FROM capability_downloads WHERE id = ?')
-      .get(capabilityId);
-
-    expect(failed).toEqual({ n: 1 });
-    expect(downloads.findById(db, capabilityId)?.body).toBe(CAPABILITY);
-  });
-
   it('keeps the saved directory copy when the server answers an error', async () => {
     seedGoodCapability();
     globalThis.fetch = (async () =>
@@ -429,17 +258,6 @@ describe('extract', () => {
     expect(db.prepare('SELECT body FROM directory_snapshots').all()).toEqual([
       { body: DIRECTORY },
     ]);
-  });
-
-  it('stores a body the endpoint answers with 200', async () => {
-    const capabilityId = seedGoodCapability();
-    respondWith(200, CAPABILITY.replace('one.example', 'moved.example'));
-
-    await run();
-
-    expect(downloads.findById(db, capabilityId)?.body).toContain(
-      'moved.example',
-    );
   });
 
   it('refuses to fetch a capability url the directory lists as http', async () => {

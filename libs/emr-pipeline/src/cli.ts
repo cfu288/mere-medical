@@ -38,7 +38,7 @@ function configuredTargets(): { vendor: Vendor; fhirVersion: FhirVersion }[] {
 const now = () => new Date().toISOString();
 const log = (message: string) => console.log(message);
 
-export async function main(argv: string[]): Promise<number> {
+async function main(argv: string[]): Promise<number> {
   const [command, ...rest] = argv;
   if (rest.length > 0) {
     console.error(`Usage: cli.ts <extract|transform|publish|status>`);

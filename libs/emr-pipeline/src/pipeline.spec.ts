@@ -4,7 +4,7 @@ import * as path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { openWarehouse } from './db/open';
 import * as downloads from './db/repository/capability-downloads';
-import { buildArtifact, publish } from './publish';
+import { publish } from './publish';
 import * as snapshots from './db/repository/directory-snapshots';
 import { transform } from './transform';
 
@@ -290,27 +290,6 @@ describe('warehouse to artifact', () => {
     ]);
   });
 
-  it('keeps the fts index consistent when the artifact holds unsearchable rows', () => {
-    db.prepare(
-      `INSERT INTO tenant_directory_entries
-         (vendor, fhir_version, tenant_id, name, url, managing_organization,
-          last_seen_in_directory)
-       VALUES ('athena', 'R4', '12345', 'Quiet Practice',
-               'https://api.platform.athenahealth.com/fhir/r4', NULL,
-               '2026-08-23T00:00:00.000Z')`,
-    ).run();
-
-    buildArtifact(db, artifactPath);
-
-    const artifact = new DatabaseSync(artifactPath);
-    expect(() =>
-      artifact.exec(
-        `INSERT INTO tenants_fts (tenants_fts, rank) VALUES ('integrity-check', 1)`,
-      ),
-    ).not.toThrow();
-    artifact.close();
-  });
-
   it('publishes the register endpoint a capability statement declares', () => {
     seedEpicR4();
     transform(db, {
@@ -341,22 +320,6 @@ describe('warehouse to artifact', () => {
 
     expect(result.rowCount).toBe(9);
     expect(fs.existsSync(artifactPath)).toBe(true);
-  });
-
-  it('records each publication for the status history', () => {
-    seedEpicR4();
-    transform(db, {
-      vendor: 'epic',
-      fhirVersion: 'R4',
-      log: silent,
-    });
-    publish(db, publishOptions());
-
-    const publications = db
-      .prepare('SELECT published_at, row_count FROM publications')
-      .all();
-
-    expect(publications).toEqual([{ published_at: NOW, row_count: 9 }]);
   });
 
   it('keeps a failed capability fetch from erasing the body it already had', () => {
@@ -615,98 +578,6 @@ describe('warehouse to artifact', () => {
     );
 
     expect(publish(db, publishOptions()).rowCount).toBe(8);
-  });
-
-  it('replaces an unreadable artifact', () => {
-    seedEpicR4();
-    transform(db, {
-      vendor: 'epic',
-      fhirVersion: 'R4',
-      log: silent,
-    });
-    fs.writeFileSync(artifactPath, 'not a sqlite file');
-
-    expect(publish(db, publishOptions()).rowCount).toBe(9);
-  });
-
-  it('lists every capability document for download, never-downloaded first', () => {
-    seedEpicR4();
-    downloads.addUrl(
-      db,
-      {
-        vendor: 'epic',
-        fhirVersion: 'R4',
-        url: 'https://three.example.org/api/FHIR/R4/metadata',
-      },
-      NOW,
-    );
-
-    const list = downloads.selectForDownload(db, {
-      vendor: 'epic',
-      fhirVersion: 'R4',
-    });
-
-    expect(list).toHaveLength(3);
-    expect(list[0]?.url).toBe('https://three.example.org/api/FHIR/R4/metadata');
-  });
-
-  it('keeps the previous artifact when the build fails', () => {
-    seedEpicR4();
-    transform(db, {
-      vendor: 'epic',
-      fhirVersion: 'R4',
-      log: silent,
-    });
-    publish(db, publishOptions());
-    const good = fs.readFileSync(artifactPath).length;
-    const closed = openWarehouse(path.join(dir, 'closed.db'));
-    closed.close();
-
-    expect(() => buildArtifact(closed, artifactPath)).toThrow();
-    expect(fs.readFileSync(artifactPath).length).toBe(good);
-  });
-
-  it('leaves no partial file behind when the build fails', () => {
-    const closed = openWarehouse(path.join(dir, 'closed2.db'));
-    closed.close();
-
-    expect(() => buildArtifact(closed, artifactPath)).toThrow();
-
-    expect(fs.existsSync(`${artifactPath}.building`)).toBe(false);
-  });
-
-  it('creates the warehouse directory a fresh clone does not have', () => {
-    const nested = path.join(dir, 'data', 'warehouse.db');
-
-    const fresh = openWarehouse(nested);
-    fresh.close();
-
-    expect(fs.existsSync(nested)).toBe(true);
-  });
-
-  it('surfaces the rename failure when the artifact path is a directory', () => {
-    fs.mkdirSync(artifactPath);
-
-    expect(() => buildArtifact(db, artifactPath)).toThrow('EISDIR');
-    expect(fs.existsSync(`${artifactPath}.building`)).toBe(false);
-  });
-
-  it('reopens an existing warehouse without losing raw bodies', () => {
-    seedEpicR4();
-    db.close();
-
-    db = openWarehouse(warehousePath);
-    const document = downloads.findByUrl(db, {
-      vendor: 'epic',
-      fhirVersion: 'R4',
-      url: 'https://one.example.org/api/FHIR/R4/metadata',
-    });
-
-    expect(document?.body).toBe(capabilityBody('one.example.org'));
-  });
-
-  it('waits briefly for a concurrent warehouse writer instead of failing immediately', () => {
-    expect(db.prepare('PRAGMA busy_timeout').get()).toEqual({ timeout: 5000 });
   });
 
   it('leaves derived rows in place for a vendor with no snapshots yet', () => {

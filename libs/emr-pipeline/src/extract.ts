@@ -138,7 +138,7 @@ interface PoolOptions<T> {
  * A host that blackholes costs the full timeout on every request; without the give-up
  * rule one dead host in a large catalog stalls a run for hours.
  */
-export async function runPool<T>(
+async function runPool<T>(
   tasks: PoolTask<T>[],
   options: PoolOptions<T>,
   onResult: (result: T, index: number) => void,

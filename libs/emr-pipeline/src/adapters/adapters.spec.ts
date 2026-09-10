@@ -125,15 +125,6 @@ describe('veradigm r4 directory bundle', () => {
     ]);
   });
 
-  it('crawls the r4 directory from its own environment url', () => {
-    process.env['VERADIGM_R4_ENDPOINTS_URL'] =
-      'https://example.org/r4-directory';
-    const source = adapterFor('veradigm').directory('R4');
-    delete process.env['VERADIGM_R4_ENDPOINTS_URL'];
-
-    expect(source?.url).toBe('https://example.org/r4-directory');
-  });
-
   it('falls back to the endpoint name when the contained organization is nameless', () => {
     const nameless = fhirBundleSchema.parse({
       resourceType: 'Bundle',

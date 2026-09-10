@@ -18,7 +18,7 @@ interface PublishOptions {
 }
 
 /** Writes `tenants.db` from scratch, so a stale row cannot survive into the artifact. */
-export function buildArtifact(
+function buildArtifact(
   db: DatabaseSync,
   artifactPath: string,
 ): { rowCount: number } {

@@ -27,12 +27,9 @@ export const athenaAdapter: VendorAdapter = {
   },
 
   /**
-   * One entry per practice. A name is safe only when every member Organization agrees.
-   *
-   * Athena's practice reference identifies a billing tenant, while the bundle contains
-   * leaf facilities rather than a practice resource. Choosing one facility would label
-   * the connection incorrectly; an absent name lets the authenticated Patient resource
-   * provide its managing-organization display instead.
+   * Groups the bundle's Organization resources by their practice id and returns one
+   * tenant per practice: the practice id, the shared athena base url, and a name only
+   * when every Organization in the practice agrees on one.
    */
   parseDirectory(bundle: FhirBundle): DirectoryEntry[] {
     const namesByPractice = new Map<string, Set<string>>();
