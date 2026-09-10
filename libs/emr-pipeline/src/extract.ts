@@ -4,7 +4,7 @@ import type { FhirVersion, Vendor } from '@mere/shared';
 import { adapterFor } from './adapters';
 import { parseBundle } from './adapters/schemas';
 import { DirectoryEntry, FHIR_ACCEPT, HttpStatusError } from './adapters/types';
-import * as raw from './db/repository/raw-documents';
+import * as downloads from './db/repository/capability-downloads';
 import * as runs from './db/repository/fetch-runs';
 import * as snapshots from './db/repository/directory-snapshots';
 
@@ -218,12 +218,8 @@ export async function extract(
     throw new Error(`${vendor} publishes no ${fhirVersion} directory`);
   }
 
-  const directoryId = raw.trackDocument(
-    db,
-    { vendor, fhirVersion, docType: 'directory', url: source.url },
-    options.now(),
-  );
   const rejectDirectory = (message: string): ExtractResult => {
+    snapshots.recordAttempt(db, vendor, fhirVersion, options.now(), message);
     counts.failed++;
     runs.finishRun(db, runId, counts.failed);
     log(`${vendor} ${fhirVersion}: ${message}`);
@@ -236,17 +232,11 @@ export async function extract(
       AbortSignal.timeout(options.directoryTimeoutMs),
     );
   } catch (error) {
-    raw.recordFailure(db, { id: directoryId, error, now: options.now() });
     return rejectDirectory(`directory fetch failed - ${error}`);
   }
 
   const parsed = parseBundle(fetched.body);
   if (!parsed.ok) {
-    raw.recordSuccess(db, {
-      id: directoryId,
-      body: fetched.body,
-      now: options.now(),
-    });
     return rejectDirectory(`directory body rejected - ${parsed.error}`);
   }
   const bundle = parsed.bundle;
@@ -258,18 +248,9 @@ export async function extract(
     bundle.total,
   );
   if (!check.ok) {
-    raw.recordFailure(db, {
-      id: directoryId,
-      error: new Error(`directory rejected: ${check.reason}`),
-      now: options.now(),
-    });
     return rejectDirectory(`directory rejected: ${check.reason}`);
   }
-  raw.recordSuccess(db, {
-    id: directoryId,
-    body: fetched.body,
-    now: options.now(),
-  });
+  snapshots.recordAttempt(db, vendor, fhirVersion, options.now(), null);
   if (
     !snapshots.appendSnapshot(
       db,
@@ -295,11 +276,7 @@ export async function extract(
     db.exec('BEGIN');
     try {
       for (const url of capabilityUrls) {
-        raw.trackDocument(
-          db,
-          { vendor, fhirVersion, docType: 'capability', url },
-          options.now(),
-        );
+        downloads.addUrl(db, { vendor, fhirVersion, url }, options.now());
       }
       db.exec('COMMIT');
     } catch (error) {
@@ -307,16 +284,12 @@ export async function extract(
       throw error;
     }
 
-    const documents = raw
-      .selectForDownload(db, {
-        vendor,
-        fhirVersion,
-        docType: 'capability',
-      })
+    const documents = downloads
+      .selectForDownload(db, { vendor, fhirVersion })
       .filter((row) => capabilityUrls.has(row.url));
     const insecure = documents.filter((row) => !isHttpsUrl(row.url));
     for (const row of insecure) {
-      raw.recordFailure(db, {
+      downloads.recordFailure(db, {
         id: row.id,
         error: new Error(`refusing to fetch non-https url ${row.url}`),
         now: options.now(),
@@ -344,21 +317,21 @@ export async function extract(
       try {
         for (const outcome of buffer) {
           if (outcome.kind === 'ok' && isJson(outcome.body)) {
-            raw.recordSuccess(db, {
+            downloads.recordSuccess(db, {
               id: outcome.id,
               body: outcome.body,
               now: options.now(),
             });
             counts.fetched++;
           } else if (outcome.kind === 'ok') {
-            raw.recordFailure(db, {
+            downloads.recordFailure(db, {
               id: outcome.id,
               error: new Error('endpoint answered 200 with a non-JSON body'),
               now: options.now(),
             });
             counts.failed++;
           } else {
-            raw.recordFailure(db, {
+            downloads.recordFailure(db, {
               id: outcome.id,
               error: outcome.error,
               now: options.now(),

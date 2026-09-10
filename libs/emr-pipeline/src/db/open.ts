@@ -51,7 +51,8 @@ function hasDerivedTables(db: DatabaseSync): boolean {
 
 function hasCurrentWarehouseTables(db: DatabaseSync): boolean {
   return hasTables(db, [
-    'raw_documents',
+    'capability_downloads',
+    'directory_fetches',
     'fetch_runs',
     'publications',
     'directory_counts',

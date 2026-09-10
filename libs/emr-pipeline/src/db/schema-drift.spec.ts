@@ -31,18 +31,26 @@ describe('schema drift', () => {
     });
   });
 
-  it('gives raw_documents the columns the repository reads', () => {
-    expect(columnsOf(db, 'raw_documents')).toEqual([
-      'doc_type',
+  it('gives capability_downloads the columns the repository reads', () => {
+    expect(columnsOf(db, 'capability_downloads')).toEqual([
+      'attempted_at',
+      'body',
+      'downloaded_at',
+      'error',
+      'failed',
       'fhir_version',
       'first_seen_at',
       'id',
-      'last_error',
-      'last_refreshed',
-      'last_sync_attempt',
-      'last_sync_was_error',
-      'raw',
       'url',
+      'vendor',
+    ]);
+  });
+
+  it('tracks when each directory was last requested', () => {
+    expect(columnsOf(db, 'directory_fetches')).toEqual([
+      'attempted_at',
+      'error',
+      'fhir_version',
       'vendor',
     ]);
   });
@@ -97,22 +105,5 @@ describe('schema drift', () => {
       'url',
       'vendor',
     ]);
-  });
-
-  it('treats an empty fhir_version as a value rather than a null', () => {
-    const now = '2026-08-23T00:00:00.000Z';
-    const insert = db.prepare(
-      `INSERT INTO raw_documents (vendor, fhir_version, doc_type, url, first_seen_at)
-       VALUES ('athena', '', 'directory', 'https://example.org/dir', ?)
-       ON CONFLICT (vendor, fhir_version, doc_type, url) DO NOTHING`,
-    );
-    insert.run(now);
-    insert.run(now);
-
-    expect(db.prepare('SELECT COUNT(*) AS n FROM raw_documents').get()).toEqual(
-      {
-        n: 1,
-      },
-    );
   });
 });

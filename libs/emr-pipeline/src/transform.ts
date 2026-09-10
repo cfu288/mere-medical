@@ -218,9 +218,8 @@ export function transform(
        ON CONFLICT (vendor, fhir_version, url) DO NOTHING`,
     );
     const selectCapability = db.prepare(
-      `SELECT raw FROM raw_documents
-       WHERE vendor = ? AND fhir_version = ? AND doc_type = 'capability'
-         AND url = ? AND raw IS NOT NULL AND last_refreshed IS NOT NULL`,
+      `SELECT body FROM capability_downloads
+       WHERE vendor = ? AND fhir_version = ? AND url = ? AND body IS NOT NULL`,
     );
     for (const seenUrl of seenUrls.values()) {
       const capabilityUrl = adapter.capabilityUrl({
@@ -228,14 +227,14 @@ export function transform(
         url: seenUrl.url,
       });
       if (!capabilityUrl) continue;
-      const document = getRow<{ raw: string }>(selectCapability, [
+      const document = getRow<{ body: string }>(selectCapability, [
         vendor,
         fhirVersion,
         capabilityUrl,
       ]);
       if (!document) continue;
 
-      const classified = classifyCapability(document.raw);
+      const classified = classifyCapability(document.body);
       const inserted = insertCapability.run(
         vendor,
         fhirVersion,

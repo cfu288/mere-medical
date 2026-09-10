@@ -40,6 +40,23 @@ export function appendSnapshot(
   return true;
 }
 
+/** Notes when a vendor's directory page was last requested, and the error if it failed. */
+export function recordAttempt(
+  db: DatabaseSync,
+  vendor: Vendor,
+  fhirVersion: FhirVersion,
+  attemptedAt: string,
+  error: string | null,
+): void {
+  db.prepare(
+    `INSERT INTO directory_fetches (vendor, fhir_version, attempted_at, error)
+     VALUES (?, ?, ?, ?)
+     ON CONFLICT (vendor, fhir_version) DO UPDATE SET
+       attempted_at = excluded.attempted_at,
+       error = excluded.error`,
+  ).run(vendor, fhirVersion, attemptedAt, error);
+}
+
 export function listSnapshots(
   db: DatabaseSync,
   vendor: Vendor,

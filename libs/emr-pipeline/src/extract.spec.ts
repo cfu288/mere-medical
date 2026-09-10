@@ -3,7 +3,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import type { DatabaseSync } from 'node:sqlite';
 import { openWarehouse } from './db/open';
-import * as raw from './db/repository/raw-documents';
+import * as downloads from './db/repository/capability-downloads';
 import * as snapshots from './db/repository/directory-snapshots';
 import { checkDirectory, extract, runPool } from './extract';
 
@@ -182,32 +182,17 @@ describe('extract', () => {
   });
 
   function seedGoodCapability(): number {
-    const directoryId = raw.trackDocument(
+    snapshots.appendSnapshot(db, 'epic', 'R4', NOW, DIRECTORY);
+    const capabilityId = downloads.addUrl(
       db,
       {
         vendor: 'epic',
         fhirVersion: 'R4',
-        docType: 'directory',
-        url: DIRECTORY_URL,
-      },
-      NOW,
-    );
-    raw.recordSuccess(db, {
-      id: directoryId,
-      body: DIRECTORY,
-      now: NOW,
-    });
-    const capabilityId = raw.trackDocument(
-      db,
-      {
-        vendor: 'epic',
-        fhirVersion: 'R4',
-        docType: 'capability',
         url: 'https://one.example.org/api/FHIR/R4/metadata',
       },
       NOW,
     );
-    raw.recordSuccess(db, {
+    downloads.recordSuccess(db, {
       id: capabilityId,
       body: CAPABILITY,
       now: NOW,
@@ -252,7 +237,7 @@ describe('extract', () => {
 
     await run();
 
-    expect(raw.findById(db, capabilityId)?.raw).toBe(CAPABILITY);
+    expect(downloads.findById(db, capabilityId)?.body).toBe(CAPABILITY);
   });
 
   it('keeps a good body when the endpoint answers 200 with non-JSON', async () => {
@@ -261,12 +246,10 @@ describe('extract', () => {
 
     await run();
     const failed = db
-      .prepare(
-        'SELECT last_sync_was_error AS n FROM raw_documents WHERE id = ?',
-      )
+      .prepare('SELECT failed AS n FROM capability_downloads WHERE id = ?')
       .get(capabilityId);
 
-    expect(raw.findById(db, capabilityId)?.raw).toBe(CAPABILITY);
+    expect(downloads.findById(db, capabilityId)?.body).toBe(CAPABILITY);
     expect(failed).toEqual({ n: 1 });
   });
 
@@ -429,29 +412,23 @@ describe('extract', () => {
 
     await run();
     const failed = db
-      .prepare(
-        'SELECT last_sync_was_error AS n FROM raw_documents WHERE id = ?',
-      )
+      .prepare('SELECT failed AS n FROM capability_downloads WHERE id = ?')
       .get(capabilityId);
 
     expect(failed).toEqual({ n: 1 });
-    expect(raw.findById(db, capabilityId)?.raw).toBe(CAPABILITY);
+    expect(downloads.findById(db, capabilityId)?.body).toBe(CAPABILITY);
   });
 
-  it('keeps the stored directory body when the server answers an error', async () => {
+  it('keeps the saved directory copy when the server answers an error', async () => {
     seedGoodCapability();
     globalThis.fetch = (async () =>
       new Response('gone', { status: 404 })) as typeof fetch;
 
     await run();
-    const directory = raw.findByKey(db, {
-      vendor: 'epic',
-      fhirVersion: 'R4',
-      docType: 'directory',
-      url: DIRECTORY_URL,
-    });
 
-    expect(directory?.raw).toBe(DIRECTORY);
+    expect(db.prepare('SELECT body FROM directory_snapshots').all()).toEqual([
+      { body: DIRECTORY },
+    ]);
   });
 
   it('stores a body the endpoint answers with 200', async () => {
@@ -460,7 +437,9 @@ describe('extract', () => {
 
     await run();
 
-    expect(raw.findById(db, capabilityId)?.raw).toContain('moved.example');
+    expect(downloads.findById(db, capabilityId)?.body).toContain(
+      'moved.example',
+    );
   });
 
   it('refuses to fetch a capability url the directory lists as http', async () => {
@@ -489,17 +468,16 @@ describe('extract', () => {
     }) as typeof fetch;
 
     const result = await run();
-    const document = raw.findByKey(db, {
+    const document = downloads.findByUrl(db, {
       vendor: 'epic',
       fhirVersion: 'R4',
-      docType: 'capability',
       url: 'http://127.0.0.1:8080/api/FHIR/R4/metadata',
     });
 
     expect({
       capabilityFetches,
       status: result.status,
-      storedBody: document?.raw,
+      storedBody: document?.body,
     }).toEqual({
       capabilityFetches: 0,
       status: 'ok',
@@ -509,12 +487,11 @@ describe('extract', () => {
 
   it('leaves a capability the directory no longer lists unfetched', async () => {
     seedGoodCapability();
-    const delistedId = raw.trackDocument(
+    const delistedId = downloads.addUrl(
       db,
       {
         vendor: 'epic',
         fhirVersion: 'R4',
-        docType: 'capability',
         url: 'https://gone.example.org/api/FHIR/R4/metadata',
       },
       NOW,
@@ -531,10 +508,10 @@ describe('extract', () => {
     await run();
 
     expect(requested).toEqual(['https://one.example.org/api/FHIR/R4/metadata']);
-    expect(raw.findById(db, delistedId)?.raw).toBeNull();
+    expect(downloads.findById(db, delistedId)?.body).toBeNull();
   });
 
-  it('stores a 200 directory body it cannot parse without a transport failure', async () => {
+  it('records the rejection of a 200 directory body it cannot parse', async () => {
     seedGoodCapability();
     globalThis.fetch = (async () =>
       new Response('<html>maintenance</html>', {
@@ -543,23 +520,22 @@ describe('extract', () => {
       })) as typeof fetch;
 
     const result = await run();
-    const directory = raw.findByKey(db, {
-      vendor: 'epic',
-      fhirVersion: 'R4',
-      docType: 'directory',
-      url: DIRECTORY_URL,
-    });
+    const attempt = db
+      .prepare('SELECT attempted_at, error FROM directory_fetches')
+      .get() as { attempted_at: string; error: string | null };
 
     expect({
       status: result.status,
-      storedBody: directory?.raw,
+      attemptedAt: attempt.attempted_at,
+      rejected: attempt.error?.startsWith('directory body rejected'),
     }).toEqual({
       status: 'failed',
-      storedBody: '<html>maintenance</html>',
+      attemptedAt: '2026-09-01T00:00:00.000Z',
+      rejected: true,
     });
   });
 
-  it('keeps the good directory body when a refetch loses every tenant', async () => {
+  it('keeps the saved directory copy when a refetch loses every tenant', async () => {
     seedGoodCapability();
     globalThis.fetch = (async () =>
       new Response(JSON.stringify({ resourceType: 'Bundle', entry: [] }), {
@@ -568,23 +544,13 @@ describe('extract', () => {
       })) as typeof fetch;
 
     const result = await run();
-    const directory = raw.findByKey(db, {
-      vendor: 'epic',
-      fhirVersion: 'R4',
-      docType: 'directory',
-      url: DIRECTORY_URL,
-    });
 
     expect({
       status: result.status,
-      storedBody: directory?.raw,
-      snapshots: db
-        .prepare('SELECT COUNT(*) AS n FROM directory_snapshots')
-        .get(),
+      snapshots: db.prepare('SELECT body FROM directory_snapshots').all(),
     }).toEqual({
       status: 'failed',
-      storedBody: DIRECTORY,
-      snapshots: { n: 0 },
+      snapshots: [{ body: DIRECTORY }],
     });
   });
 

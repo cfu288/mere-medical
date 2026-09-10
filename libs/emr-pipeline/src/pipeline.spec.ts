@@ -3,7 +3,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { openWarehouse } from './db/open';
-import * as raw from './db/repository/raw-documents';
+import * as downloads from './db/repository/capability-downloads';
 import { buildArtifact, publish } from './publish';
 import * as snapshots from './db/repository/directory-snapshots';
 import { transform } from './transform';
@@ -91,17 +91,16 @@ describe('warehouse to artifact', () => {
     snapshots.appendSnapshot(db, 'epic', 'R4', NOW, EPIC_DIRECTORY);
 
     for (const host of ['one.example.org', 'two.example.org']) {
-      const id = raw.trackDocument(
+      const id = downloads.addUrl(
         db,
         {
           vendor: 'epic',
           fhirVersion: 'R4',
-          docType: 'capability',
           url: `https://${host}/api/FHIR/R4/metadata`,
         },
         NOW,
       );
-      raw.recordSuccess(db, {
+      downloads.recordSuccess(db, {
         id,
         body: capabilityBody(host),
         now: NOW,
@@ -109,11 +108,10 @@ describe('warehouse to artifact', () => {
     }
   }
 
-  function capabilityDocument(): raw.RawDocumentRow {
-    const document = raw.findByKey(db, {
+  function capabilityDocument(): downloads.CapabilityDownload {
+    const document = downloads.findByUrl(db, {
       vendor: 'epic',
       fhirVersion: 'R4',
-      docType: 'capability',
       url: 'https://one.example.org/api/FHIR/R4/metadata',
     });
     if (!document) throw new Error('capability document was not seeded');
@@ -366,34 +364,34 @@ describe('warehouse to artifact', () => {
     seedEpicR4();
     const before = capabilityDocument();
 
-    raw.recordFailure(db, {
+    downloads.recordFailure(db, {
       id: before.id,
       error: new Error('ECONNRESET'),
       now: '2026-08-24T00:00:00.000Z',
     });
-    const after = raw.findById(db, before.id);
+    const after = downloads.findById(db, before.id);
 
-    expect(after?.raw).toBe(before.raw);
+    expect(after?.body).toBe(before.body);
   });
 
   it('tracks the last attempted refresh apart from the last successful one', () => {
     seedEpicR4();
     const document = capabilityDocument();
 
-    raw.recordFailure(db, {
+    downloads.recordFailure(db, {
       id: document.id,
       error: new Error('ECONNRESET'),
       now: '2026-08-24T00:00:00.000Z',
     });
     const row = db
       .prepare(
-        'SELECT last_refreshed, last_sync_attempt FROM raw_documents WHERE id = ?',
+        'SELECT downloaded_at, attempted_at FROM capability_downloads WHERE id = ?',
       )
       .get(document.id);
 
     expect(row).toEqual({
-      last_refreshed: NOW,
-      last_sync_attempt: '2026-08-24T00:00:00.000Z',
+      downloaded_at: NOW,
+      attempted_at: '2026-08-24T00:00:00.000Z',
     });
   });
 
@@ -406,7 +404,7 @@ describe('warehouse to artifact', () => {
       '2026-08-24T00:00:00.000Z',
       EPIC_DIRECTORY,
     );
-    raw.recordFailure(db, {
+    downloads.recordFailure(db, {
       id: capabilityDocument().id,
       error: new Error('endpoint answered 200 with a non-JSON body'),
       now: '2026-08-24T00:00:00.000Z',
@@ -435,7 +433,7 @@ describe('warehouse to artifact', () => {
 
   it('publishes the authorize url a re-crawled capability declares', () => {
     seedEpicR4();
-    raw.recordSuccess(db, {
+    downloads.recordSuccess(db, {
       id: capabilityDocument().id,
       body: capabilityBody('moved.example.org'),
       now: '2026-08-24T00:00:00.000Z',
@@ -634,27 +632,23 @@ describe('warehouse to artifact', () => {
 
   it('lists every capability document for download, never-downloaded first', () => {
     seedEpicR4();
-    raw.trackDocument(
+    downloads.addUrl(
       db,
       {
         vendor: 'epic',
         fhirVersion: 'R4',
-        docType: 'capability',
         url: 'https://three.example.org/api/FHIR/R4/metadata',
       },
       NOW,
     );
 
-    const downloads = raw.selectForDownload(db, {
+    const list = downloads.selectForDownload(db, {
       vendor: 'epic',
       fhirVersion: 'R4',
-      docType: 'capability',
     });
 
-    expect(downloads).toHaveLength(3);
-    expect(downloads[0]?.url).toBe(
-      'https://three.example.org/api/FHIR/R4/metadata',
-    );
+    expect(list).toHaveLength(3);
+    expect(list[0]?.url).toBe('https://three.example.org/api/FHIR/R4/metadata');
   });
 
   it('keeps the previous artifact when the build fails', () => {
@@ -703,14 +697,13 @@ describe('warehouse to artifact', () => {
     db.close();
 
     db = openWarehouse(warehousePath);
-    const document = raw.findByKey(db, {
+    const document = downloads.findByUrl(db, {
       vendor: 'epic',
       fhirVersion: 'R4',
-      docType: 'capability',
       url: 'https://one.example.org/api/FHIR/R4/metadata',
     });
 
-    expect(document?.raw).toBe(capabilityBody('one.example.org'));
+    expect(document?.body).toBe(capabilityBody('one.example.org'));
   });
 
   it('waits briefly for a concurrent warehouse writer instead of failing immediately', () => {

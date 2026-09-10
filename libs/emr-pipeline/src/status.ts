@@ -62,27 +62,29 @@ export function formatStatus(db: DatabaseSync, now: string): string {
       const failing =
         getRow<{ n: number }>(
           db.prepare(
-            `SELECT COUNT(*) AS n FROM raw_documents
-             WHERE vendor = ? AND fhir_version = ? AND doc_type = 'capability'
-               AND last_sync_was_error = 1`,
+            `SELECT COUNT(*) AS n FROM capability_downloads
+             WHERE vendor = ? AND fhir_version = ? AND failed = 1`,
           ),
           [vendor, version],
         )?.n ?? 0;
-      const crawled = getRow<{ newest: string | null }>(
+      const latestSnapshot = getRow<{ newest: string | null }>(
         db.prepare(
-          `SELECT MAX(last_refreshed) AS newest FROM raw_documents
+          `SELECT MAX(fetched_at) AS newest FROM directory_snapshots
            WHERE vendor = ? AND fhir_version = ?`,
         ),
         [vendor, version],
       )?.newest;
-      const directoryBody = getRow<{ newest: string | null }>(
+      const latestCapability = getRow<{ newest: string | null }>(
         db.prepare(
-          `SELECT MAX(last_refreshed) AS newest FROM raw_documents
-           WHERE vendor = ? AND fhir_version = ? AND doc_type = 'directory'
-             AND raw IS NOT NULL`,
+          `SELECT MAX(downloaded_at) AS newest FROM capability_downloads
+           WHERE vendor = ? AND fhir_version = ?`,
         ),
         [vendor, version],
       )?.newest;
+      const crawled = [latestSnapshot, latestCapability]
+        .filter((t): t is string => t !== null)
+        .sort()
+        .at(-1);
 
       const [lastFailed, previousFailed] = failedCounts(db, vendor, version);
       const failingCell =
@@ -92,8 +94,8 @@ export function formatStatus(db: DatabaseSync, now: string): string {
           ? `${failing} (${signed(lastFailed - previousFailed)})`
           : String(failing);
 
-      const transform = directoryBody
-        ? !directoryCount || directoryBody > directoryCount.seen_at
+      const transform = latestSnapshot
+        ? !directoryCount || latestSnapshot > directoryCount.seen_at
           ? 'BEHIND'
           : 'current'
         : directoryCount

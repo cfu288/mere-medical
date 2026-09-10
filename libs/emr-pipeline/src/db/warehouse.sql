@@ -1,16 +1,23 @@
-CREATE TABLE raw_documents (
-  id                   INTEGER PRIMARY KEY,
-  vendor               TEXT NOT NULL,
-  fhir_version         TEXT NOT NULL DEFAULT '',
-  doc_type             TEXT NOT NULL,
-  url                  TEXT NOT NULL,
-  raw                  TEXT,
-  first_seen_at        TEXT NOT NULL,
-  last_refreshed       TEXT,
-  last_sync_attempt    TEXT,
-  last_sync_was_error  INTEGER NOT NULL DEFAULT 0,
-  last_error           TEXT,
-  UNIQUE (vendor, fhir_version, doc_type, url)
+CREATE TABLE capability_downloads (
+  id            INTEGER PRIMARY KEY,
+  vendor        TEXT NOT NULL,
+  fhir_version  TEXT NOT NULL DEFAULT '',
+  url           TEXT NOT NULL,
+  body          TEXT,
+  first_seen_at TEXT NOT NULL,
+  downloaded_at TEXT,
+  attempted_at  TEXT,
+  failed        INTEGER NOT NULL DEFAULT 0,
+  error         TEXT,
+  UNIQUE (vendor, fhir_version, url)
+);
+
+CREATE TABLE directory_fetches (
+  vendor       TEXT NOT NULL,
+  fhir_version TEXT NOT NULL DEFAULT '',
+  attempted_at TEXT NOT NULL,
+  error        TEXT,
+  PRIMARY KEY (vendor, fhir_version)
 );
 
 CREATE TABLE fetch_runs (
