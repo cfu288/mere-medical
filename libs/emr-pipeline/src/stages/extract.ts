@@ -46,9 +46,8 @@ interface ExtractResult {
 
 /**
  * Returns not-ok with the reason when a directory is empty or its declared total does
- * not match its entries. Extract calls this before saving the page, because a
- * truncated or empty page saved into history would be kept forever as if the vendor
- * had really published it.
+ * not match its entries. Extract calls this before saving the page, so bad data does
+ * not become permanent history.
  */
 export function checkTenantDirectoryCounts(
   tenantCount: number,
@@ -113,8 +112,7 @@ type CapabilityOutcome =
 
 /**
  * Runs the capability fetches in batches of CONCURRENCY, handing every result
- * to onResult as its batch finishes, so thousands of urls download in bounded
- * parallel.
+ * to onResult as its batch finishes.
  */
 async function runInBatches<T>(
   tasks: (() => Promise<T>)[],

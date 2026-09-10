@@ -14,9 +14,9 @@ function signed(n: number): string {
 
 /**
  * Renders the warehouse's crawl, transform, and publish state as a fixed-width text
- * table, one row per vendor and version, with ages computed relative to `now`. This
- * is the pipeline's whole health report. The monthly workflow posts it on the
- * refresh pull request, where a human decides whether to merge.
+ * table, one row per vendor and version, with ages computed relative to `now`. The
+ * monthly workflow posts it on the refresh pull request, where a human decides
+ * whether to merge.
  *
  * @param db - An open warehouse from `openWarehouse`.
  * @param now - The ISO timestamp ages are computed against.

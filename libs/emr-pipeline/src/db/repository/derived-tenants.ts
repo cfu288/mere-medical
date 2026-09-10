@@ -162,10 +162,10 @@ interface PublishableTenant {
 }
 
 /**
- * Queries the three derived tables and then returns a list of every tenant that
- * belongs in `tenants.db`, each carrying auth urls from its current url's usable
- * CapabilityStatement, or else from the most recent of its urls that had one. This is
- * intended to be used by publish as the artifact's entire directory-sourced content.
+ * Queries the three derived tables and then returns a list of every publishable
+ * tenant, each carrying auth urls from its current url's usable CapabilityStatement,
+ * or else from the most recent of its urls that had one. This is intended to be used
+ * by publish as the artifact's entire directory-sourced content.
  */
 export function listPublishable(db: DatabaseSync): PublishableTenant[] {
   return allRows<PublishableTenant>(

@@ -57,10 +57,8 @@ function toTenant(row: TenantSqlRow): Tenant {
 }
 
 /**
- * Opens the shipped tenant catalog read-only.
- *
- * Fails here rather than returning empty results forever. A stale or truncated artifact
- * is a deploy problem, and an empty tenant picker looks identical to "no matches".
+ * Opens the shipped tenant catalog read-only. A stale or truncated artifact fails
+ * here at boot, because an empty tenant picker would look identical to "no matches".
  */
 export function openTenantDb(dbPath: string): TenantDb {
   const db = new DatabaseSync(dbPath, { readOnly: true });

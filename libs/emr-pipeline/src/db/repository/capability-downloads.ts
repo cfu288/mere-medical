@@ -2,8 +2,7 @@
  * Owns the `capability_downloads` table, which keeps every CapabilityStatement url a
  * directory ever listed along with its last good body and last attempt. Extract
  * registers urls and records each fetch outcome. Transform reads the stored bodies and
- * status reads the newest download date. The table is durable so an outage costs
- * freshness, never data.
+ * status reads the newest download date.
  */
 import type { DatabaseSync } from 'node:sqlite';
 import type { FhirVersion, Vendor } from '@mere/shared';

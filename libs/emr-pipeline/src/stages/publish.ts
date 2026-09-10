@@ -19,8 +19,8 @@ interface PublishOptions {
 
 /**
  * Writes a fresh tenants.db beside `artifactPath`, renames it into place, and
- * returns its row count. Built from scratch so nothing from an older artifact
- * can survive into the new one.
+ * returns its row count, so nothing from an older artifact survives into the
+ * new one.
  */
 function buildArtifact(
   db: DatabaseSync,
@@ -111,10 +111,10 @@ interface PublishResult {
 }
 
 /**
- * Writes the shipped tenant catalog `tenants.db` from the warehouse alone. The
- * artifact holds every tenant `listPublishable` returns plus every adapter's sandbox
- * tenants, and the publish is recorded in the warehouse for the status history.
- * Publishing twice from the same warehouse produces identical content.
+ * Writes the shipped tenant catalog `tenants.db` from the warehouse alone, so
+ * publishing twice from the same warehouse produces identical content. The artifact
+ * holds every tenant `listPublishable` returns plus every adapter's sandbox tenants,
+ * and the publish is recorded in the warehouse for the status history.
  *
  * The artifact is built beside its target and renamed into place, so a reader never
  * sees a half-written file.
