@@ -9,11 +9,21 @@ interface RawDocumentKey {
   url: string;
 }
 
-export interface RawDocumentRow extends RawDocumentKey {
-  id: number;
-  raw: string | null;
-  lastRefreshed: string | null;
-}
+/**
+ * One row of `raw_documents`: a URL the crawler downloads and the last copy it saved.
+ *
+ * Only two kinds of page exist: a vendor's directory of hospitals, or one hospital's
+ * CapabilityStatement. A row either holds a downloaded copy with its time, or neither.
+ */
+export type RawDocumentRow = RawDocumentKey &
+  (
+    | { id: number; raw: string; lastRefreshed: string }
+    | {
+        id: number;
+        raw: null;
+        lastRefreshed: null;
+      }
+  );
 
 interface RawDocumentSqlRow {
   id: number;
@@ -26,18 +36,20 @@ interface RawDocumentSqlRow {
 }
 
 function toRow(row: RawDocumentSqlRow): RawDocumentRow {
-  return {
+  const key = {
     id: row.id,
     vendor: row.vendor as Vendor,
     fhirVersion: row.fhir_version as FhirVersion,
     docType: row.doc_type as DocType,
     url: row.url,
-    raw: row.raw,
-    lastRefreshed: row.last_refreshed,
   };
+  if (row.raw === null || row.last_refreshed === null) {
+    return { ...key, raw: null, lastRefreshed: null };
+  }
+  return { ...key, raw: row.raw, lastRefreshed: row.last_refreshed };
 }
 
-/** Registers a document as tracked without fetching it, and returns its id. */
+/** Adds a row for a URL without downloading it yet, and returns the row's id. */
 export function trackDocument(
   db: DatabaseSync,
   key: RawDocumentKey,
@@ -140,21 +152,21 @@ export function recordFailure(db: DatabaseSync, failure: FetchFailure): void {
   });
 }
 
-interface WorklistQuery {
+interface DownloadListQuery {
   vendor: Vendor;
   fhirVersion: FhirVersion;
   docType: DocType;
 }
 
 /**
- * The work list: every tracked document, never-fetched rows first.
+ * Every row for one vendor and version, never-downloaded rows first.
  *
- * A run refetches everything; the store shields good bodies from failed fetches, it
- * never excuses a fetch.
+ * Extract downloads this whole list every run; a stored copy is crash insurance,
+ * never a reason to skip the fetch.
  */
-export function selectWorklist(
+export function selectForDownload(
   db: DatabaseSync,
-  query: WorklistQuery,
+  query: DownloadListQuery,
 ): RawDocumentRow[] {
   const rows = allRows<RawDocumentSqlRow>(
     db.prepare(

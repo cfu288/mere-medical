@@ -25,12 +25,9 @@ interface ExtractOptions {
   vendor: Vendor;
   fhirVersion: FhirVersion;
   concurrency: number;
-  /** How many requests one host may be serving at once. */
   hostConcurrency: number;
-  /** Give up on a host after this many failures with nothing succeeding. */
   hostFailureLimit: number;
   timeoutMs: number;
-  /** Separate budget for the directory, which is one large download rather than many small ones. */
   directoryTimeoutMs: number;
   retries: number;
   batchSize: number;
@@ -48,7 +45,6 @@ export const DEFAULT_EXTRACT_OPTIONS = {
   batchSize: 200,
 } as const;
 
-/** `failed` always means the directory itself was unusable; later failures throw. */
 interface ExtractResult {
   status: 'ok' | 'failed';
 }
@@ -73,7 +69,6 @@ export function checkDirectory(
   return { ok: true };
 }
 
-/** A host that failed enough times in one run that the rest of its work was skipped. */
 class HostUnreachableError extends Error {
   constructor(host: string, failureLimit: number) {
     super(
@@ -94,25 +89,25 @@ async function fetchWithRetry(
       const backoff = 2 ** (attempt - 1) * 500;
       await sleep(backoff + Math.random() * backoff);
     }
-    let answered: Response | null = null;
+    let response: Response | null = null;
     let body = '';
     try {
-      answered = await fetch(url, {
+      response = await fetch(url, {
         headers,
         signal: AbortSignal.timeout(options.timeoutMs),
       });
-      body = await answered.text();
+      body = await response.text();
     } catch (error) {
       lastError = error;
       continue;
     }
 
-    if (answered.status >= 500) {
-      lastError = new HttpStatusError(answered.status);
+    if (response.status >= 500) {
+      lastError = new HttpStatusError(response.status);
       continue;
     }
-    if (!answered.ok) {
-      throw new HttpStatusError(answered.status);
+    if (!response.ok) {
+      throw new HttpStatusError(response.status);
     }
     return { body };
   }
@@ -133,9 +128,7 @@ interface PoolOptions<T> {
   hostConcurrency: number;
   /** 0 disables giving up on a host. */
   hostFailureLimit: number;
-  /** Whether a result counts as a failure, for the give-up rule. */
   failed: (result: T) => boolean;
-  /** Builds the result recorded for tasks skipped after a host is given up on. */
   skipped: (host: string) => T;
 }
 
@@ -208,7 +201,6 @@ type CapabilityOutcome =
   | { kind: 'error'; id: number; error: unknown }
   | { kind: 'skipped'; host: string };
 
-/** What reaches the database: a skipped document is written as a failure. */
 type RecordedOutcome = Exclude<CapabilityOutcome, { kind: 'skipped' }>;
 
 export async function extract(
@@ -231,7 +223,7 @@ export async function extract(
     { vendor, fhirVersion, docType: 'directory', url: source.url },
     options.now(),
   );
-  const suspectDirectory = (message: string): ExtractResult => {
+  const rejectDirectory = (message: string): ExtractResult => {
     counts.failed++;
     runs.finishRun(db, runId, counts.failed);
     log(`${vendor} ${fhirVersion}: ${message}`);
@@ -245,7 +237,7 @@ export async function extract(
     );
   } catch (error) {
     raw.recordFailure(db, { id: directoryId, error, now: options.now() });
-    return suspectDirectory(`directory fetch failed - ${error}`);
+    return rejectDirectory(`directory fetch failed - ${error}`);
   }
 
   const parsed = parseBundle(fetched.body);
@@ -255,7 +247,7 @@ export async function extract(
       body: fetched.body,
       now: options.now(),
     });
-    return suspectDirectory(`directory body rejected - ${parsed.error}`);
+    return rejectDirectory(`directory body rejected - ${parsed.error}`);
   }
   const bundle = parsed.bundle;
 
@@ -271,7 +263,7 @@ export async function extract(
       error: new Error(`directory rejected: ${check.reason}`),
       now: options.now(),
     });
-    return suspectDirectory(`directory rejected: ${check.reason}`);
+    return rejectDirectory(`directory rejected: ${check.reason}`);
   }
   raw.recordSuccess(db, {
     id: directoryId,
@@ -315,14 +307,14 @@ export async function extract(
       throw error;
     }
 
-    const stale = raw
-      .selectWorklist(db, {
+    const documents = raw
+      .selectForDownload(db, {
         vendor,
         fhirVersion,
         docType: 'capability',
       })
       .filter((row) => capabilityUrls.has(row.url));
-    const insecure = stale.filter((row) => !isHttpsUrl(row.url));
+    const insecure = documents.filter((row) => !isHttpsUrl(row.url));
     for (const row of insecure) {
       raw.recordFailure(db, {
         id: row.id,
@@ -336,7 +328,7 @@ export async function extract(
         `${vendor} ${fhirVersion}: refused ${insecure.length} non-https capability urls`,
       );
     }
-    const fetchable = stale.filter((row) => isHttpsUrl(row.url));
+    const fetchable = documents.filter((row) => isHttpsUrl(row.url));
     const capabilityHeaders = {
       Accept: FHIR_ACCEPT,
       ...adapter.capabilityHeaders?.(),

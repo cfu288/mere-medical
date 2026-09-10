@@ -47,7 +47,7 @@ describe('formatStatus', () => {
       INSERT INTO raw_documents (vendor, fhir_version, doc_type, url, first_seen_at, last_sync_was_error)
       VALUES ('epic', 'R4', 'capability', 'https://a.example.org/metadata', '2026-08-26T12:00:00.000Z', 1),
              ('epic', 'R4', 'capability', 'https://b.example.org/metadata', '2026-08-26T12:00:00.000Z', 1);
-      INSERT INTO directory_observations (vendor, fhir_version, last_observed_at, tenant_count)
+      INSERT INTO directory_counts (vendor, fhir_version, seen_at, tenant_count)
       VALUES ('epic', 'R4', '2026-08-26T12:00:00.000Z', 815);
       INSERT INTO fetch_runs (vendor, fhir_version, status, failed)
       VALUES ('epic', 'R4', 'done', 0),
@@ -120,7 +120,7 @@ describe('formatStatus', () => {
       VALUES ('epic', 'R4', 'capability', 'https://a.example.org/metadata', '2026-08-07T00:00:00.000Z', 1),
              ('epic', 'R4', 'capability', 'https://b.example.org/metadata', '2026-08-07T00:00:00.000Z', 1),
              ('epic', 'R4', 'capability', 'https://c.example.org/metadata', '2026-08-07T00:00:00.000Z', 1);
-      INSERT INTO directory_observations (vendor, fhir_version, last_observed_at, tenant_count)
+      INSERT INTO directory_counts (vendor, fhir_version, seen_at, tenant_count)
       VALUES ('epic', 'R4', '2026-08-07T00:00:00.000Z', 815);
       INSERT INTO publications (published_at, row_count)
       VALUES ('2026-08-01T10:00:00.000Z', 44900),

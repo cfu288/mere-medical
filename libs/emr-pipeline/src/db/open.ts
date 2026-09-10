@@ -61,7 +61,6 @@ function migrate(db: DatabaseSync): void {
   }
 }
 
-/** Drops and rebuilds every table `transform` and `publish` regenerate from raw. */
 function rebuildDerived(db: DatabaseSync): void {
   db.exec(fs.readFileSync(DERIVED_FILE, 'utf8'));
 }
@@ -90,7 +89,7 @@ function hasCurrentWarehouseTables(db: DatabaseSync): boolean {
     'raw_documents',
     'fetch_runs',
     'publications',
-    'directory_observations',
+    'directory_counts',
     'directory_snapshots',
   ]);
 }
