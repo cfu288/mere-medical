@@ -58,13 +58,13 @@ heap and the directory fetch gets its own multi-minute timeout.
    run. Bounded worker pool with a per-host cap and a per-host give-up rule; a failure,
    including a 200 carrying non-JSON, updates error columns only. It **never clobbers a
    good body**: a run killed midway costs a re-crawl, never data.
-3. **Transform.** `DELETE` + `INSERT` rebuilds the derived tables by folding the whole
-   snapshot history: every tenant ever listed, its latest url and sighting, its last
+3. **Transform.** `DELETE` + `INSERT` rebuilds the derived tables by replaying the whole
+   snapshot history: every tenant ever listed, its latest url and seen date, its last
    non-empty name, every url it was ever listed at, and a classification of each url's
    stored capability body. Pure, offline.
 4. **Publish.** One query over the derived tables writes a fresh `tenants.db`: entries
    joined to their usable capability (preferring the current url, else the latest
-   sighted url that still classifies usable), plus code-seeded sandbox rows stamped
+   most recently seen url that still classifies usable), plus code-seeded sandbox rows stamped
    with the newest snapshot time. Publishing twice from the same warehouse yields the
    same artifact.
 
@@ -74,7 +74,7 @@ completed run over the same bodies would.
 
 Every row carries `last_seen_in_directory` and no row ever leaves the artifact. Nothing
 in this repo turns that timestamp into an expiry: search and `findTenantById` serve every
-row however old its sighting, so delisted tenants stay reachable and connected users'
+row however old its seen date, so delisted tenants stay reachable and connected users'
 sync never breaks. If hiding long-delisted tenants ever matters, that becomes a filter
 in the API reading the column, not pipeline state.
 
@@ -82,7 +82,7 @@ in the API reading the column, not pipeline state.
 
 Extract rejects only a directory that contradicts itself: an unparseable body, an empty
 yield, or a declared `total` its entries do not match. A rejected directory is never
-parsed into the derived tables and advances no sighting.
+parsed into the derived tables and advances no seen date.
 
 Publish has no checks of its own: the artifact ships whatever the warehouse holds, and
 the monthly PR's status comment is where a human catches a bad refresh.
@@ -122,10 +122,10 @@ erDiagram
     TEXT status
     INTEGER failed
   }
-  directory_observations {
+  directory_counts {
     TEXT vendor PK
     TEXT fhir_version PK
-    TEXT last_observed_at
+    TEXT seen_at
     INTEGER tenant_count
   }
   publications {
@@ -169,8 +169,8 @@ erDiagram
     TEXT managing_organization "FTS5"
   }
 
-  directory_snapshots ||--o{ tenant_directory_entries : "fold"
-  directory_snapshots ||--o{ tenant_urls : "fold"
+  directory_snapshots ||--o{ tenant_directory_entries : "merge"
+  directory_snapshots ||--o{ tenant_urls : "merge"
   raw_documents ||--o{ tenant_capabilities : "classify by url"
   tenants ||--|| tenants_fts : content_rowid
 ```
@@ -185,7 +185,7 @@ flowchart LR
     tde[tenant_directory_entries]
     turl[tenant_urls]
     tc[tenant_capabilities]
-    dobs[directory_observations]
+    dobs[directory_counts]
   end
   subgraph artifact["tenants.db (shipped)"]
     t[tenants]
@@ -193,7 +193,7 @@ flowchart LR
   end
   seeds[adapter sandbox seeds]
 
-  snaps -- "transform: fold history" --> tde & turl & dobs
+  snaps -- "transform: merge history" --> tde & turl & dobs
   raw -- "transform: classify" --> tc
   tde -- "publish: one query" --> t
   turl -- "usable url pick" --> t

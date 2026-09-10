@@ -15,7 +15,7 @@ import {
 import { getRow } from '@mere/tenant-db';
 import * as snapshots from './db/repository/directory-snapshots';
 
-interface CapabilityFacts {
+interface ClassifiedCapability {
   classification: CapabilityClassification;
   authorizeUrl?: string;
   tokenUrl?: string;
@@ -23,12 +23,12 @@ interface CapabilityFacts {
 }
 
 /**
- * Reads one CapabilityStatement body into the facts publish needs.
+ * Reads one CapabilityStatement body into the auth urls and classification publish needs.
  *
  * Never throws: an unreadable body becomes a classified row so the failure is queryable
  * rather than fatal.
  */
-export function classifyCapability(body: string): CapabilityFacts {
+export function classifyCapability(body: string): ClassifiedCapability {
   let json: unknown;
   try {
     json = JSON.parse(body);
@@ -51,19 +51,19 @@ export function classifyCapability(body: string): CapabilityFacts {
     return { classification: 'no_security_block' };
   }
 
-  const facts = {
+  const classified = {
     authorizeUrl: uris['authorize'],
     tokenUrl: uris['token'],
     registerUrl: uris['register'],
   };
 
-  if (!facts.authorizeUrl) {
-    return { ...facts, classification: 'missing_authorize' };
+  if (!classified.authorizeUrl) {
+    return { ...classified, classification: 'missing_authorize' };
   }
-  if (!facts.tokenUrl) {
-    return { ...facts, classification: 'missing_token' };
+  if (!classified.tokenUrl) {
+    return { ...classified, classification: 'missing_token' };
   }
-  return { ...facts, classification: 'usable' };
+  return { ...classified, classification: 'usable' };
 }
 
 interface TransformOptions {
@@ -79,7 +79,7 @@ interface TransformCounts {
   duplicateTenantIds: number;
 }
 
-interface FoldedTenant {
+interface MergedTenant {
   name: string | undefined;
   managingOrganization: string | undefined;
   url: string;
@@ -119,8 +119,8 @@ export function transform(
       ).run(vendor, fhirVersion);
     }
 
-    const folded = new Map<string, FoldedTenant>();
-    const urlSightings = new Map<
+    const merged = new Map<string, MergedTenant>();
+    const seenUrls = new Map<
       string,
       { tenantId: string; url: string; lastSeenAt: string }
     >();
@@ -160,15 +160,15 @@ export function transform(
       }
 
       for (const entry of resolved) {
-        const previous = folded.get(entry.tenantId);
-        folded.set(entry.tenantId, {
+        const previous = merged.get(entry.tenantId);
+        merged.set(entry.tenantId, {
           url: entry.url,
           lastSeen: snapshot.fetched_at,
           name: entry.name ?? previous?.name,
           managingOrganization:
             entry.managingOrganization ?? previous?.managingOrganization,
         });
-        urlSightings.set(`${entry.tenantId}\n${entry.url}`, {
+        seenUrls.set(`${entry.tenantId}\n${entry.url}`, {
           tenantId: entry.tenantId,
           url: entry.url,
           lastSeenAt: snapshot.fetched_at,
@@ -183,7 +183,7 @@ export function transform(
           last_seen_in_directory)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
     );
-    for (const [tenantId, tenant] of folded) {
+    for (const [tenantId, tenant] of merged) {
       insertEntry.run(
         vendor,
         fhirVersion,
@@ -200,13 +200,13 @@ export function transform(
       `INSERT INTO tenant_urls (vendor, fhir_version, tenant_id, url, last_seen_at)
        VALUES (?, ?, ?, ?, ?)`,
     );
-    for (const sighting of urlSightings.values()) {
+    for (const seenUrl of seenUrls.values()) {
       insertUrl.run(
         vendor,
         fhirVersion,
-        sighting.tenantId,
-        sighting.url,
-        sighting.lastSeenAt,
+        seenUrl.tenantId,
+        seenUrl.url,
+        seenUrl.lastSeenAt,
       );
     }
 
@@ -222,10 +222,10 @@ export function transform(
        WHERE vendor = ? AND fhir_version = ? AND doc_type = 'capability'
          AND url = ? AND raw IS NOT NULL AND last_refreshed IS NOT NULL`,
     );
-    for (const sighting of urlSightings.values()) {
+    for (const seenUrl of seenUrls.values()) {
       const capabilityUrl = adapter.capabilityUrl({
-        tenantId: sighting.tenantId,
-        url: sighting.url,
+        tenantId: seenUrl.tenantId,
+        url: seenUrl.url,
       });
       if (!capabilityUrl) continue;
       const document = getRow<{ raw: string }>(selectCapability, [
@@ -235,28 +235,28 @@ export function transform(
       ]);
       if (!document) continue;
 
-      const facts = classifyCapability(document.raw);
+      const classified = classifyCapability(document.raw);
       const inserted = insertCapability.run(
         vendor,
         fhirVersion,
-        sighting.url,
-        facts.authorizeUrl ?? null,
-        facts.tokenUrl ?? null,
-        facts.registerUrl ?? null,
-        facts.classification,
+        seenUrl.url,
+        classified.authorizeUrl ?? null,
+        classified.tokenUrl ?? null,
+        classified.registerUrl ?? null,
+        classified.classification,
       );
       if (Number(inserted.changes) === 0) continue;
-      if (facts.classification === 'unparseable') counts.unparseable++;
+      if (classified.classification === 'unparseable') counts.unparseable++;
       counts.capabilities++;
     }
 
     if (latest.seenAt !== '') {
       db.prepare(
-        `INSERT INTO directory_observations
-           (vendor, fhir_version, last_observed_at, tenant_count)
+        `INSERT INTO directory_counts
+           (vendor, fhir_version, seen_at, tenant_count)
          VALUES (?, ?, ?, ?)
          ON CONFLICT (vendor, fhir_version) DO UPDATE SET
-           last_observed_at = excluded.last_observed_at,
+           seen_at = excluded.seen_at,
            tenant_count = excluded.tenant_count`,
       ).run(vendor, fhirVersion, latest.seenAt, latest.tenantCount);
     }

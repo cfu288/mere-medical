@@ -71,10 +71,10 @@ describe('schema drift', () => {
     ]);
   });
 
-  it('records only successfully parsed directory observations', () => {
-    expect(columnsOf(db, 'directory_observations')).toEqual([
+  it('records the latest parsed tenant count per directory', () => {
+    expect(columnsOf(db, 'directory_counts')).toEqual([
       'fhir_version',
-      'last_observed_at',
+      'seen_at',
       'tenant_count',
       'vendor',
     ]);

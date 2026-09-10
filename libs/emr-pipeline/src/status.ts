@@ -2,9 +2,9 @@ import type { DatabaseSync } from 'node:sqlite';
 import { allRows, getRow } from '@mere/tenant-db';
 import { ADAPTERS } from './adapters';
 
-interface ObservationRow {
+interface DirectoryCountRow {
   tenant_count: number;
-  last_observed_at: string;
+  seen_at: string;
 }
 
 interface PublicationRow {
@@ -52,9 +52,9 @@ export function formatStatus(db: DatabaseSync, now: string): string {
   );
   for (const [vendor, adapter] of vendors) {
     for (const version of adapter.versions) {
-      const observation = getRow<ObservationRow>(
+      const directoryCount = getRow<DirectoryCountRow>(
         db.prepare(
-          `SELECT tenant_count, last_observed_at FROM directory_observations
+          `SELECT tenant_count, seen_at FROM directory_counts
            WHERE vendor = ? AND fhir_version = ?`,
         ),
         [vendor, version],
@@ -93,10 +93,10 @@ export function formatStatus(db: DatabaseSync, now: string): string {
           : String(failing);
 
       const transform = directoryBody
-        ? !observation || directoryBody > observation.last_observed_at
+        ? !directoryCount || directoryBody > directoryCount.seen_at
           ? 'BEHIND'
           : 'current'
-        : observation
+        : directoryCount
           ? 'current'
           : '-';
 
@@ -104,7 +104,7 @@ export function formatStatus(db: DatabaseSync, now: string): string {
         line([
           vendor,
           version,
-          observation ? String(observation.tenant_count) : '-',
+          directoryCount ? String(directoryCount.tenant_count) : '-',
           failingCell,
           crawled ? age(crawled) : 'never',
           transform,

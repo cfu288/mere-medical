@@ -90,7 +90,7 @@ function hasCurrentWarehouseTables(db: DatabaseSync): boolean {
     'raw_documents',
     'fetch_runs',
     'publications',
-    'directory_observations',
+    'directory_counts',
     'directory_snapshots',
   ]);
 }

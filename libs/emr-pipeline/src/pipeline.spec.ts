@@ -576,11 +576,11 @@ describe('warehouse to artifact', () => {
     });
 
     expect(counts.directoryEntries).toBe(2);
-    expect(db.prepare('SELECT * FROM directory_observations').all()).toEqual([
+    expect(db.prepare('SELECT * FROM directory_counts').all()).toEqual([
       {
         vendor: 'epic',
         fhir_version: 'R4',
-        last_observed_at: NOW,
+        seen_at: NOW,
         tenant_count: 2,
       },
     ]);

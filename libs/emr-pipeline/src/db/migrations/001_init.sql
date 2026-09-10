@@ -22,10 +22,10 @@ CREATE TABLE fetch_runs (
 );
 
 -- The latest tenant count transform parsed, read by the status table.
-CREATE TABLE directory_observations (
+CREATE TABLE directory_counts (
   vendor           TEXT NOT NULL,
   fhir_version     TEXT NOT NULL DEFAULT '',
-  last_observed_at TEXT NOT NULL,
+  seen_at          TEXT NOT NULL,
   tenant_count     INTEGER NOT NULL,
   PRIMARY KEY (vendor, fhir_version)
 );

@@ -94,25 +94,25 @@ async function fetchWithRetry(
       const backoff = 2 ** (attempt - 1) * 500;
       await sleep(backoff + Math.random() * backoff);
     }
-    let answered: Response | null = null;
+    let response: Response | null = null;
     let body = '';
     try {
-      answered = await fetch(url, {
+      response = await fetch(url, {
         headers,
         signal: AbortSignal.timeout(options.timeoutMs),
       });
-      body = await answered.text();
+      body = await response.text();
     } catch (error) {
       lastError = error;
       continue;
     }
 
-    if (answered.status >= 500) {
-      lastError = new HttpStatusError(answered.status);
+    if (response.status >= 500) {
+      lastError = new HttpStatusError(response.status);
       continue;
     }
-    if (!answered.ok) {
-      throw new HttpStatusError(answered.status);
+    if (!response.ok) {
+      throw new HttpStatusError(response.status);
     }
     return { body };
   }
@@ -231,7 +231,7 @@ export async function extract(
     { vendor, fhirVersion, docType: 'directory', url: source.url },
     options.now(),
   );
-  const suspectDirectory = (message: string): ExtractResult => {
+  const rejectDirectory = (message: string): ExtractResult => {
     counts.failed++;
     runs.finishRun(db, runId, counts.failed);
     log(`${vendor} ${fhirVersion}: ${message}`);
@@ -245,7 +245,7 @@ export async function extract(
     );
   } catch (error) {
     raw.recordFailure(db, { id: directoryId, error, now: options.now() });
-    return suspectDirectory(`directory fetch failed - ${error}`);
+    return rejectDirectory(`directory fetch failed - ${error}`);
   }
 
   const parsed = parseBundle(fetched.body);
@@ -255,7 +255,7 @@ export async function extract(
       body: fetched.body,
       now: options.now(),
     });
-    return suspectDirectory(`directory body rejected - ${parsed.error}`);
+    return rejectDirectory(`directory body rejected - ${parsed.error}`);
   }
   const bundle = parsed.bundle;
 
@@ -271,7 +271,7 @@ export async function extract(
       error: new Error(`directory rejected: ${check.reason}`),
       now: options.now(),
     });
-    return suspectDirectory(`directory rejected: ${check.reason}`);
+    return rejectDirectory(`directory rejected: ${check.reason}`);
   }
   raw.recordSuccess(db, {
     id: directoryId,
