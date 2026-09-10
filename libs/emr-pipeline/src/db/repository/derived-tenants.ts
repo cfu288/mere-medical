@@ -126,7 +126,7 @@ export interface PublishableTenant {
   last_seen_in_directory: string;
 }
 
-/** Auth comes from the current url's usable capability, else the most recently seen one. */
+/** Every tenant fit to publish; auth comes from its current url's usable capability, else its most recently seen usable one. */
 export function listPublishable(db: DatabaseSync): PublishableTenant[] {
   return allRows<PublishableTenant>(
     db.prepare(

@@ -6,7 +6,7 @@ export interface DirectoryEntry {
   tenantId: string;
   name?: string;
   url: string;
-  /** The health system this tenant belongs to, named, and only when it differs from it. */
+  /** Name of the health system this tenant belongs to, when the directory carries one. */
   managingOrganization?: string;
 }
 
@@ -32,7 +32,7 @@ export interface DirectorySource {
 
 export interface VendorAdapter {
   versions: FhirVersion[];
-  /** Where this vendor's catalog for a version lives, or null if it publishes none. */
+  /** Where this vendor's directory for a version lives, or null if it publishes none. */
   directory(version: FhirVersion): DirectorySource | null;
   /** Reads a fetched directory body into candidate tenants. */
   parseDirectory(bundle: FhirBundle): DirectoryEntry[];
@@ -40,7 +40,7 @@ export interface VendorAdapter {
   capabilityUrl(entry: DirectoryEntry): string | null;
   /** Extra headers a vendor needs on capability fetches, such as Epic's client id gate. */
   capabilityHeaders?(): Record<string, string>;
-  /** Rows this vendor always publishes, independent of its catalog. */
+  /** Rows this vendor always publishes, independent of its directory. */
   sandbox(version: FhirVersion): SandboxSeed[];
 }
 

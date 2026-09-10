@@ -24,7 +24,6 @@ function targets(): { vendor: Vendor; fhirVersion: FhirVersion }[] {
   );
 }
 
-/** Skips a vendor and version whose directory location is not configured. */
 function configuredTargets(): { vendor: Vendor; fhirVersion: FhirVersion }[] {
   return targets().filter((target) => {
     if (adapterFor(target.vendor).directory(target.fhirVersion)) return true;

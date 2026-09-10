@@ -8,7 +8,7 @@ interface CapabilityKey {
   url: string;
 }
 
-/** One tenant's CapabilityStatement url, with the last copy downloaded or neither field. */
+/** One tenant's CapabilityStatement url; body and download date arrive together once a fetch succeeds. */
 export type CapabilityDownload = CapabilityKey &
   (
     | { id: number; body: string; downloadedAt: string }
@@ -126,7 +126,7 @@ export function serializeError(error: unknown): string {
   return JSON.stringify({ name: 'Unknown', message: String(error) });
 }
 
-/** A failure never touches `body`, so the last good copy survives an outage. */
+/** Records a failed fetch: attempt date and error only, never `body`, so the last good copy survives an outage. */
 export function recordFailure(
   db: DatabaseSync,
   failure: DownloadFailure,

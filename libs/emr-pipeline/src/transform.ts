@@ -25,10 +25,9 @@ interface ClassifiedCapability {
 }
 
 /**
- * Reads one CapabilityStatement body into the auth urls and classification publish needs.
- *
- * Never throws: an unreadable body becomes a classified row so the failure is queryable
- * rather than fatal.
+ * Reads one CapabilityStatement body into its SMART auth urls plus a classification
+ * saying whether they are usable, and if not, why. Never throws: an unreadable body
+ * classifies as `unparseable`.
  */
 export function classifyCapability(body: string): ClassifiedCapability {
   let json: unknown;

@@ -4,7 +4,7 @@ import { z } from 'zod';
  * Every field is `.catch(undefined)` because one resource type's field collides with
  * another's: `Endpoint.address` is a url string while `Organization.address` is an
  * array of postal addresses, and both share a directory bundle. A strict type here
- * rejects the whole catalog over a field the adapter was never going to read.
+ * rejects the whole directory over a field the adapter was never going to read.
  */
 const resourceSchema = z
   .object({

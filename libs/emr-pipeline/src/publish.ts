@@ -17,7 +17,6 @@ interface PublishOptions {
   log: (message: string) => void;
 }
 
-/** Writes `tenants.db` from scratch, so a stale row cannot survive into the artifact. */
 function buildArtifact(
   db: DatabaseSync,
   artifactPath: string,
