@@ -9,6 +9,12 @@ interface RawDocumentKey {
   url: string;
 }
 
+/**
+ * One row of `raw_documents`: a URL the crawler downloads and the last copy it saved.
+ *
+ * Only two kinds of page exist: a vendor's directory of hospitals, or one hospital's
+ * CapabilityStatement. `raw` is null until the first download succeeds.
+ */
 export interface RawDocumentRow extends RawDocumentKey {
   id: number;
   raw: string | null;
@@ -37,7 +43,7 @@ function toRow(row: RawDocumentSqlRow): RawDocumentRow {
   };
 }
 
-/** Registers a document as tracked without fetching it, and returns its id. */
+/** Adds a row for a URL without downloading it yet, and returns the row's id. */
 export function trackDocument(
   db: DatabaseSync,
   key: RawDocumentKey,
@@ -147,7 +153,7 @@ interface WorklistQuery {
 }
 
 /**
- * Every tracked document for one vendor and version, never-downloaded rows first.
+ * Every row for one vendor and version, never-downloaded rows first.
  *
  * Extract downloads this whole list every run; a stored copy is crash insurance,
  * never a reason to skip the fetch.
