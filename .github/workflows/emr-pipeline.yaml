@@ -32,12 +32,15 @@ jobs:
         run: npm ci
 
       - name: Restore warehouse backup
+        id: restore
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p libs/emr-pipeline/data
-          if gh release download warehouse-backup --pattern warehouse.db.zst --output - 2>/dev/null \
-            | zstd -d -o libs/emr-pipeline/data/warehouse.db; then
+          if gh release view warehouse-backup >/dev/null 2>&1; then
+            gh release download warehouse-backup --pattern warehouse.db.zst
+            zstd -d warehouse.db.zst -o libs/emr-pipeline/data/warehouse.db
+            rm warehouse.db.zst
             echo "warehouse backup restored"
           else
             echo "no backup found; starting from a fresh warehouse"
@@ -60,7 +63,7 @@ jobs:
           echo '```' >> "$GITHUB_STEP_SUMMARY"
 
       - name: Save warehouse backup
-        if: always()
+        if: always() && steps.restore.outcome == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
