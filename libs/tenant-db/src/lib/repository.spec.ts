@@ -158,7 +158,7 @@ describe('tenant-db', () => {
     const other = fs.mkdtempSync(path.join(os.tmpdir(), 'tenant-db-'));
 
     expect(() => openTenantDb(writeArtifact(other, SEEDS, 99))).toThrow(
-      /schema version 99, expected 4/,
+      /schema version 99, expected 1/,
     );
 
     fs.rmSync(other, { recursive: true, force: true });
