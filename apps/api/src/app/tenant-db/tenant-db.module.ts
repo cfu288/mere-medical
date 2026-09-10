@@ -19,9 +19,6 @@ const IN_WORKSPACE = path.resolve(
  * server never depends on an environment variable being set.
  */
 function tenantDbPath(): string {
-  const override = process.env['MERE_TENANT_DB'];
-  if (override) return override;
-
   const found = [PACKAGED, IN_WORKSPACE].find((candidate) =>
     fs.existsSync(candidate),
   );
