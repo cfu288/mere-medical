@@ -19,7 +19,7 @@ function isHttpsUrl(value: string): boolean {
   return URL.parse(value)?.protocol === 'https:';
 }
 
-/** True when the body parses as JSON. */
+/** True when the body parses as JSON. Some endpoints answer 200 with an error page, which must be recorded as a failure rather than stored as a capability body. */
 function isValidJson(body: string): boolean {
   try {
     JSON.parse(body);
@@ -40,7 +40,12 @@ interface ExtractResult {
   status: 'ok' | 'failed';
 }
 
-/** Returns not-ok with the reason when a directory is empty or its declared total does not match its entries. */
+/**
+ * Returns not-ok with the reason when a directory is empty or its declared total does
+ * not match its entries. Extract calls this before saving the page, because a
+ * truncated or empty page saved into history would be kept forever as if the vendor
+ * had really published it.
+ */
 export function checkTenantDirectoryCounts(
   tenantCount: number,
   bundleEntryCount: number,
@@ -58,7 +63,7 @@ export function checkTenantDirectoryCounts(
   return { ok: true };
 }
 
-/** Fetches one url and returns its body text, retrying network errors and 5xx answers. Any other bad status throws. */
+/** Fetches one capability url and returns its body text, retrying network errors and 5xx answers so a brief server blip is not recorded as this month's failure. Any other bad status throws. */
 async function fetchWithExponentialBackoff(
   url: string,
   headers: Record<string, string>,
@@ -98,7 +103,7 @@ type CapabilityOutcome =
   | { kind: 'ok'; id: number; body: string }
   | { kind: 'error'; id: number; error: unknown };
 
-/** Runs the tasks in batches of CONCURRENCY, handing every result to onResult as its batch finishes. */
+/** Runs the capability fetches in batches of CONCURRENCY, handing every result to onResult as its batch finishes, so thousands of urls download in bounded parallel. */
 async function runInBatches<T>(
   tasks: (() => Promise<T>)[],
   onResult: (result: T) => void,

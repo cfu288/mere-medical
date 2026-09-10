@@ -17,7 +17,7 @@ interface PublishOptions {
   log: (message: string) => void;
 }
 
-/** Writes a fresh tenants.db beside `artifactPath`, renames it into place, and returns its row count. */
+/** Writes a fresh tenants.db beside `artifactPath`, renames it into place, and returns its row count. Built from scratch so nothing from an older artifact can survive into the new one. */
 function buildArtifact(
   db: DatabaseSync,
   artifactPath: string,

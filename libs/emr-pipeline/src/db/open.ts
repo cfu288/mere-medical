@@ -45,7 +45,7 @@ function hasTables(db: DatabaseSync, names: string[]): boolean {
   return row?.n === names.length;
 }
 
-/** True when all three derived tables exist. */
+/** True when all three derived tables exist. A missing one makes openWarehouse recreate the whole disposable layer. */
 function hasDerivedTables(db: DatabaseSync): boolean {
   return hasTables(db, [
     'tenant_directory_entries',
@@ -54,7 +54,7 @@ function hasDerivedTables(db: DatabaseSync): boolean {
   ]);
 }
 
-/** True when every durable table exists. */
+/** True when every durable table exists. openWarehouse refuses a file without them rather than writing into an unknown schema. */
 function hasCurrentWarehouseTables(db: DatabaseSync): boolean {
   return hasTables(db, [
     'capability_downloads',

@@ -18,14 +18,14 @@ const DEFAULT_ARTIFACT = path.resolve(
   'tenants.db',
 );
 
-/** Every vendor and version any adapter declares. */
+/** Every vendor and version any adapter declares. Transform walks them all because saved history can exist even where fetching is not configured. */
 function targets(): { vendor: Vendor; fhirVersion: FhirVersion }[] {
   return (Object.keys(ADAPTERS) as Vendor[]).flatMap((vendor) =>
     adapterFor(vendor).versions.map((fhirVersion) => ({ vendor, fhirVersion })),
   );
 }
 
-/** Only the targets whose directory location is configured. */
+/** Only the targets whose directory location is configured. Extract fetches these and logs the ones it skips. */
 function configuredTargets(): { vendor: Vendor; fhirVersion: FhirVersion }[] {
   return targets().filter((target) => {
     if (adapterFor(target.vendor).directory(target.fhirVersion)) return true;
