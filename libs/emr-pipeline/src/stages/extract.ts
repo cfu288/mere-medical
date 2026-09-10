@@ -132,10 +132,8 @@ async function runInBatches<T>(
  * snapshot in the database, and then downloads each listed tenant's capability
  * document into the warehouse.
  *
- * Failures degrade to staleness, never data loss. A directory that cannot be fetched
- * or fails its checks makes the run return `failed` without touching the saved
- * history. A capability url that fails to download keeps its last good body and is
- * counted in the run's failure total.
+ * A rejected directory returns `failed` and leaves saved history untouched. A failed
+ * capability download keeps its last good body and only adds to the failure count.
  *
  * @param db - An open warehouse from `openWarehouse`.
  * @param options - What to crawl and how to report progress.
