@@ -3,8 +3,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { getRow } from '@mere/tenant-db';
 
-const WAREHOUSE_FILE = path.join(__dirname, 'warehouse.sql');
-const DERIVED_FILE = path.join(__dirname, 'derived.sql');
+const WAREHOUSE_FILE = path.join(__dirname, 'sql', 'warehouse.sql');
+const DERIVED_FILE = path.join(__dirname, 'sql', 'derived.sql');
 
 function currentVersion(db: DatabaseSync): number {
   const row = getRow<{ user_version: number }>(

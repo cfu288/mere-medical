@@ -88,7 +88,7 @@ the monthly PR's status comment is where a human catches a bad refresh.
 
 ## Schema
 
-The DDL lives in `src/db/warehouse.sql` (durable), `src/db/derived.sql`
+The DDL lives in `src/db/sql/warehouse.sql` (durable), `src/db/sql/derived.sql`
 (disposable, dropped and rebuilt), and `libs/tenant-db/src/lib/schema.ts` (the shipped
 artifact, `user_version`-asserted at open). `tenants.db` and the derived tables are never
 migrated; they regenerate from the durable tables. The durable state is what extract
