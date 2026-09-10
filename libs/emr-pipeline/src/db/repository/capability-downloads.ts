@@ -1,3 +1,9 @@
+/**
+ * The `capability_downloads` table: every CapabilityStatement url a directory ever
+ * listed, with its last good body and last attempt. Extract registers urls and records
+ * each fetch outcome; transform reads the stored bodies to classify auth urls; status
+ * reads the newest download date. Durable so an outage costs freshness, never data.
+ */
 import type { DatabaseSync } from 'node:sqlite';
 import type { FhirVersion, Vendor } from '@mere/shared';
 import { allRows, getRow } from '@mere/tenant-db';

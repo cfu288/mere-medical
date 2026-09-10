@@ -1,3 +1,9 @@
+/**
+ * The disposable derived tables: `tenant_directory_entries`, `tenant_urls`, and
+ * `tenant_capabilities`. Transform rebuilds them from snapshot history; publish reads
+ * `listPublishable` to write `tenants.db`. They exist so publish is one query over
+ * folded rows instead of its own replay of the history.
+ */
 import type { DatabaseSync } from 'node:sqlite';
 import type {
   CapabilityClassification,

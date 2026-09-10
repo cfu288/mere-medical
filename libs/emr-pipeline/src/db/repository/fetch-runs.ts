@@ -1,3 +1,8 @@
+/**
+ * The `fetch_runs` table: each finished extract run's failure count. Extract records a
+ * row when a run ends; status reads the last two per vendor and version to render the
+ * failing column and its delta.
+ */
 import type { DatabaseSync } from 'node:sqlite';
 import type { FhirVersion, Vendor } from '@mere/shared';
 import { allRows } from '@mere/tenant-db';
