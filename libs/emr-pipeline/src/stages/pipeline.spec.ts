@@ -149,7 +149,7 @@ describe('warehouse to artifact', () => {
 
     const row = db
       .prepare(
-        `SELECT name FROM tenant_directory_entries
+        `SELECT name FROM tenant_names
          WHERE vendor = 'epic' AND fhir_version = 'R4' AND tenant_id = 'epic-1'`,
       )
       .get() as unknown as { name: string };
@@ -202,15 +202,20 @@ describe('warehouse to artifact', () => {
     });
     const rows = db
       .prepare(
-        `SELECT tenant_id, last_seen_in_directory FROM tenant_directory_entries
-         WHERE vendor = 'epic' AND fhir_version = 'R4' ORDER BY tenant_id`,
+        `SELECT tenant_id, url, last_seen_at FROM tenant_listings
+         WHERE vendor = 'epic' AND fhir_version = 'R4' ORDER BY tenant_id, url`,
       )
       .all();
     expect(rows).toEqual([
-      { tenant_id: 'epic-1', last_seen_in_directory: NOW },
+      {
+        tenant_id: 'epic-1',
+        url: 'https://one.example.org/api/FHIR/R4/',
+        last_seen_at: NOW,
+      },
       {
         tenant_id: 'epic-2',
-        last_seen_in_directory: '2026-08-24T00:00:00.000Z',
+        url: 'https://two.example.org/api/FHIR/R4/',
+        last_seen_at: '2026-08-24T00:00:00.000Z',
       },
     ]);
   });
@@ -251,7 +256,10 @@ describe('warehouse to artifact', () => {
     expect(
       db
         .prepare(
-          "SELECT tenant_id, name, url FROM tenant_directory_entries WHERE vendor = 'athena'",
+          `SELECT n.tenant_id, n.name, l.url FROM tenant_names n
+           JOIN tenant_listings l ON l.vendor = n.vendor
+             AND l.fhir_version = n.fhir_version AND l.tenant_id = n.tenant_id
+           WHERE n.vendor = 'athena'`,
         )
         .all(),
     ).toEqual([
@@ -503,9 +511,7 @@ describe('warehouse to artifact', () => {
   it('leaves a tenant the directory gave no name out of the artifact', () => {
     seedEpicR4();
     transform(db, 'epic', 'R4');
-    db.exec(
-      "UPDATE tenant_directory_entries SET name = '' WHERE tenant_id = 'epic-1'",
-    );
+    db.exec("UPDATE tenant_names SET name = NULL WHERE tenant_id = 'epic-1'");
 
     expect(publish(db, artifactPath).rowCount).toBe(8);
   });
@@ -516,7 +522,7 @@ describe('warehouse to artifact', () => {
 
     const counts = transform(db, 'cerner', 'R4');
     const remaining = db
-      .prepare('SELECT COUNT(*) AS n FROM tenant_directory_entries')
+      .prepare('SELECT COUNT(*) AS n FROM tenant_names')
       .get();
 
     expect({ counts: counts.directoryEntries, remaining }).toEqual({

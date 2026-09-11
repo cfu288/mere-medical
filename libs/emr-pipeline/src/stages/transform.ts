@@ -14,7 +14,7 @@ import {
 } from '../adapters/schemas';
 import * as vendorTenantDirectory from '../db/repository/vendor-tenant-directory-snapshots';
 import * as downloads from '../db/repository/capability-downloads';
-import * as derived from '../db/repository/derived-tenants';
+import * as tenantListings from '../db/repository/tenant-listings';
 import * as directoryCounts from '../db/repository/directory-counts';
 
 interface ClassifiedCapability {
@@ -74,11 +74,9 @@ interface TransformCounts {
   duplicateTenantIds: number;
 }
 
-interface MergedTenant {
+interface MergedNames {
   name: string | undefined;
   managingOrganization: string | undefined;
-  url: string;
-  lastSeen: string;
 }
 
 /**
@@ -119,7 +117,7 @@ export function transform(
 
   db.exec('BEGIN');
   try {
-    const merged = new Map<string, MergedTenant>();
+    const merged = new Map<string, MergedNames>();
     const seenUrls = new Map<
       string,
       { tenantId: string; url: string; lastSeenAt: string }
@@ -162,8 +160,6 @@ export function transform(
       for (const entry of resolved) {
         const previous = merged.get(entry.tenantId);
         merged.set(entry.tenantId, {
-          url: entry.url,
-          lastSeen: snapshot.fetched_at,
           name: entry.name ?? previous?.name,
           managingOrganization:
             entry.managingOrganization ?? previous?.managingOrganization,
@@ -177,23 +173,24 @@ export function transform(
       latest = { seenAt: snapshot.fetched_at, tenantCount: entries.length };
     }
 
-    derived.replaceEntries(
-      db,
-      vendor,
-      fhirVersion,
-      [...merged.entries()].map(([tenantId, tenant]) => ({
+    const urlsByTenant = Map.groupBy(
+      seenUrls.values(),
+      (seen) => seen.tenantId,
+    );
+    const listings: tenantListings.TenantListing[] = [...merged.entries()].map(
+      ([tenantId, names]) => ({
         tenantId,
-        name: tenant.name,
-        url: tenant.url,
-        managingOrganization: tenant.managingOrganization,
-        lastSeen: tenant.lastSeen,
-      })),
+        name: names.name,
+        managingOrganization: names.managingOrganization,
+        urls: (urlsByTenant.get(tenantId) ?? []).map((seen) => ({
+          url: seen.url,
+          lastSeenAt: seen.lastSeenAt,
+        })),
+      }),
     );
     counts.directoryEntries = merged.size;
 
-    derived.replaceUrls(db, vendor, fhirVersion, [...seenUrls.values()]);
-
-    const capabilities: derived.CapabilityRow[] = [];
+    const capabilities: tenantListings.UrlCapability[] = [];
     const classifiedUrls = new Set<string>();
     for (const seenUrl of seenUrls.values()) {
       if (classifiedUrls.has(seenUrl.url)) continue;
@@ -220,7 +217,7 @@ export function transform(
       });
       if (classified.classification === 'unparseable') counts.unparseable++;
     }
-    derived.replaceCapabilities(db, vendor, fhirVersion, capabilities);
+    tenantListings.replace(db, vendor, fhirVersion, listings, capabilities);
     counts.capabilities = capabilities.length;
 
     if (latest.seenAt !== '') {

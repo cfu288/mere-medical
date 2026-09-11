@@ -7,7 +7,7 @@ import {
   TENANT_DB_USER_VERSION,
   getRow,
 } from '@mere/tenant-db';
-import * as derived from '../db/repository/derived-tenants';
+import * as tenantListings from '../db/repository/tenant-listings';
 import * as vendorTenantDirectory from '../db/repository/vendor-tenant-directory-snapshots';
 import * as publications from '../db/repository/publications';
 
@@ -23,7 +23,7 @@ function buildArtifact(
 ): { rowCount: number } {
   fs.mkdirSync(path.dirname(artifactPath), { recursive: true });
 
-  const tenants = derived.listPublishable(db);
+  const tenants = tenantListings.listPublishable(db);
   const seenAt =
     vendorTenantDirectory.latestFetchedAtOverall(db) ??
     '1970-01-01T00:00:00.000Z';

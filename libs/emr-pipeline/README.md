@@ -54,9 +54,10 @@ heap and the directory fetch gets its own multi-minute timeout.
    remembers every tenant ever listed; a body identical to the newest snapshot only
    updates that snapshot's date.
 2. **Extract.** Fetches the CapabilityStatement of every currently listed tenant, each
-   run, through a bounded worker pool with retries and timeouts. A failure, including a
-   200 carrying non-JSON, updates error columns only. It **never clobbers a good
-   body**: a run killed midway costs a re-crawl, never data.
+   run, through a bounded worker pool with retries and timeouts. A failure, including
+   a 200 carrying non-JSON or a capability that classifies unusable, updates error
+   columns only. It **never replaces a usable body with an unusable one**: a run
+   killed midway costs a re-crawl, never data.
 3. **Transform.** `DELETE` + `INSERT` rebuilds the derived tables by rereading every
    snapshot: every tenant ever listed, its latest url and seen date, its last
    non-empty name, every url it was ever listed at, and a classification of each url's
@@ -94,6 +95,12 @@ artifact, `user_version`-asserted at open). `tenants.db` and the derived tables 
 migrated; they regenerate from the durable tables. The durable state is what extract
 learns: downloaded capability bodies and the directory history. Losing the warehouse costs a recrawl plus
 the memory of tenants no directory lists anymore.
+
+The published values derive from the tables above by three rules. A tenant's
+current listing is its newest `tenant_listings` row (ties broken by highest id).
+Its name and managing organization each come from the newest snapshot where that
+column was non-empty. Its auth urls come from its usable capability rows, current
+url first, then newest sighting, all three urls taken from one row.
 
 ```mermaid
 erDiagram
@@ -137,26 +144,24 @@ erDiagram
     TEXT published_at
     INTEGER row_count
   }
-  tenant_directory_entries {
-    INTEGER id PK
-    TEXT vendor UK
-    TEXT fhir_version UK
-    TEXT tenant_id UK
-    TEXT url
-    TEXT last_seen_in_directory
+  tenant_names {
+    TEXT vendor PK
+    TEXT fhir_version PK
+    TEXT tenant_id PK
+    TEXT name
+    TEXT managing_organization
   }
-  tenant_urls {
+  tenant_listings {
     TEXT vendor UK
     TEXT fhir_version UK
     TEXT tenant_id UK
     TEXT url UK
-    TEXT last_seen_at
+    TEXT last_seen_at "newest row per tenant = current listing"
   }
-  tenant_capabilities {
-    INTEGER id PK
-    TEXT vendor UK
-    TEXT fhir_version UK
-    TEXT url UK
+  url_capabilities {
+    TEXT vendor PK
+    TEXT fhir_version PK
+    TEXT url PK
     TEXT classification
   }
   tenants {
@@ -173,9 +178,11 @@ erDiagram
     TEXT managing_organization "FTS5"
   }
 
-  vendor_tenant_directory_snapshots ||--o{ tenant_directory_entries : "merge"
-  vendor_tenant_directory_snapshots ||--o{ tenant_urls : "merge"
-  capability_downloads ||--o{ tenant_capabilities : "classify by url"
+  vendor_tenant_directory_snapshots ||--o{ tenant_names : "merge"
+  vendor_tenant_directory_snapshots ||--o{ tenant_listings : "merge"
+  capability_downloads ||--o{ url_capabilities : "classify by url"
+  tenant_names ||--o{ tenant_listings : "one tenant, many listings"
+  tenant_listings }o--|| url_capabilities : "join by url"
   tenants ||--|| tenants_fts : content_rowid
 ```
 
@@ -186,9 +193,9 @@ flowchart LR
   subgraph warehouse["warehouse.db"]
     caps[capability_downloads]
     snaps[vendor_tenant_directory_snapshots]
-    tde[tenant_directory_entries]
-    turl[tenant_urls]
-    tc[tenant_capabilities]
+    names[tenant_names]
+    listings[tenant_listings]
+    ucap[url_capabilities]
     dobs[directory_counts]
   end
   subgraph artifact["tenants.db (shipped)"]
@@ -197,11 +204,11 @@ flowchart LR
   end
   seeds[adapter sandbox seeds]
 
-  snaps -- "transform: merge history" --> tde & turl & dobs
-  caps -- "transform: classify" --> tc
-  tde -- "publish: one query" --> t
-  turl -- "usable url pick" --> t
-  tc -- "usable url pick" --> t
+  snaps -- "transform: merge history" --> names & listings & dobs
+  caps -- "transform: classify" --> ucap
+  names -- "publish: one query" --> t
+  listings -- "current url and usable url pick" --> t
+  ucap -- "usable url pick" --> t
   seeds --> t
   t --> fts
 ```

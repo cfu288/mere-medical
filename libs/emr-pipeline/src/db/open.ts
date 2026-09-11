@@ -52,11 +52,7 @@ function hasTables(db: DatabaseSync, names: string[]): boolean {
  * recreate the whole disposable layer.
  */
 function hasDerivedTables(db: DatabaseSync): boolean {
-  return hasTables(db, [
-    'tenant_directory_entries',
-    'tenant_urls',
-    'tenant_capabilities',
-  ]);
+  return hasTables(db, ['tenant_names', 'tenant_listings', 'url_capabilities']);
 }
 
 /**
