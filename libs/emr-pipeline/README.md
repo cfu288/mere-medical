@@ -4,7 +4,7 @@ Build-time ETL that turns vendor EMR directories into `libs/tenant-db/data/tenan
 
 ```
 vendor APIs / files ──▶ warehouse.db ──▶ tenants.db ──▶ apps/api ──▶ apps/web
-     (extract)          (state+derived,     (committed,    (SQL, FTS)   (frozen HTTP
+     (extract)          (state+staging,     (committed,    (SQL, FTS)   (frozen HTTP
                          gitignored)       ~13.5 MiB)                  contract)
 ```
 
@@ -58,11 +58,11 @@ heap and the directory fetch gets its own multi-minute timeout.
    a 200 carrying non-JSON or a capability that classifies unusable, updates error
    columns only. It **never replaces a usable body with an unusable one**: a run
    killed midway costs a re-crawl, never data.
-3. **Transform.** `DELETE` + `INSERT` rebuilds the derived tables by rereading every
+3. **Transform.** `DELETE` + `INSERT` rebuilds the staging tables by rereading every
    snapshot: every tenant ever listed, its latest url and seen date, its last
    non-empty name, every url it was ever listed at, and a classification of each url's
    stored capability body. Pure, offline.
-4. **Publish.** One query over the derived tables writes a fresh `tenants.db`: entries
+4. **Publish.** One query over the staging tables writes a fresh `tenants.db`: entries
    joined to their usable capability (preferring the current url, else the most
    recently seen url that still classifies usable), plus code-seeded sandbox rows stamped
    with the newest snapshot's time. Publishing twice from the same warehouse yields the
@@ -82,19 +82,27 @@ in the API reading the column, not pipeline state.
 
 Extract rejects only a directory that contradicts itself: an unparseable body, an empty
 yield, or a declared `total` its entries do not match. A rejected directory is never
-parsed into the derived tables and advances no seen date.
+parsed into the staging tables and advances no seen date.
 
 Publish has no checks of its own: the artifact ships whatever the warehouse holds, and
 the monthly PR's status comment is where a human catches a bad refresh.
 
 ## Schema
 
-The DDL lives in `src/db/sql/warehouse.sql` (durable), `src/db/sql/derived.sql`
+The DDL lives in `src/db/sql/warehouse.sql` (durable), `src/db/sql/staging.sql`
 (disposable, dropped and rebuilt), and `libs/tenant-db/src/lib/schema.ts` (the shipped
-artifact, `user_version`-asserted at open). `tenants.db` and the derived tables are never
+artifact, `user_version`-asserted at open). `tenants.db` and the staging tables are never
 migrated; they regenerate from the durable tables. The durable state is what extract
 learns: downloaded capability bodies and the directory history. Losing the warehouse costs a recrawl plus
 the memory of tenants no directory lists anymore.
+
+Conventions: every timestamp is an ISO-8601 UTC instant written by the
+pipeline's own clock, so text order is time order. Empty strings are never
+stored; blank input becomes NULL. Every warehouse table is scoped by
+`(vendor, fhir_version)` and scopes never join to each other. The staging
+layer declares no foreign keys; transform rebuilds a scope wholesale in one
+transaction, so orphans cannot survive a rebuild. Sandbox rows use reserved
+`sandbox_`-prefixed ids, and athena ships none.
 
 The published values derive from the tables above by three rules. A tenant's
 current listing is its newest `tenant_listings` row (ties broken by highest id).
@@ -158,7 +166,7 @@ erDiagram
     TEXT url UK
     TEXT last_seen_at "newest row per tenant = current listing"
   }
-  url_capabilities {
+  url_smart_security {
     TEXT vendor PK
     TEXT fhir_version PK
     TEXT url PK
@@ -180,9 +188,9 @@ erDiagram
 
   vendor_tenant_directory_snapshots ||--o{ tenant_names : "merge"
   vendor_tenant_directory_snapshots ||--o{ tenant_listings : "merge"
-  capability_downloads ||--o{ url_capabilities : "classify by url"
+  capability_downloads ||--o{ url_smart_security : "classify by url"
   tenant_names ||--o{ tenant_listings : "one tenant, many listings"
-  tenant_listings }o--|| url_capabilities : "join by url"
+  tenant_listings }o--|| url_smart_security : "join by url"
   tenants ||--|| tenants_fts : content_rowid
 ```
 
@@ -195,7 +203,7 @@ flowchart LR
     snaps[vendor_tenant_directory_snapshots]
     names[tenant_names]
     listings[tenant_listings]
-    ucap[url_capabilities]
+    ucap[url_smart_security]
     dobs[directory_counts]
   end
   subgraph artifact["tenants.db (shipped)"]
@@ -225,3 +233,16 @@ flowchart LR
 | Don't collapse DSTU2/R4 tenant identity   | 1,168 Cerner ids legitimately exist in both versions, so `fhir_version` is part of the tenant key.                                                          |
 | Single-instance vendors are not rows      | `tenants` holds rows a user selects between; one-endpoint vendors (VA, OnPatient, NextGen) stay as literals in `fhir-oauth`.                                |
 | Retention: keep every downloaded body     | Pruning before sizes are measured defeats the store's purpose; no `prune` command exists yet.                                                               |
+
+## Accepted limits
+
+- Two extract runs of one scope in the same millisecond would collide on the
+  snapshot uniqueness key and abort. Fine for a monthly job.
+- The artifact rename and the `publications` insert are two steps across two
+  databases; a crash between them ships an artifact whose history row only
+  arrives with the next publish.
+- A vendor reassigning a url from a delisted tenant to a new one would hand
+  the old tenant the new owner's auth urls. Base urls are tenant-specific for
+  every vendor except athena's deliberately shared one.
+- Publishing twice from one warehouse yields identical rows and ids because
+  inserts are ordered, though file bytes may differ.

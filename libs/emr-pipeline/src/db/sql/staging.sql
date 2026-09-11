@@ -2,7 +2,7 @@
 -- and transform refills every row from warehouse history, so deleting them loses nothing.
 DROP TABLE IF EXISTS tenant_names;
 DROP TABLE IF EXISTS tenant_listings;
-DROP TABLE IF EXISTS url_capabilities;
+DROP TABLE IF EXISTS url_smart_security;
 
 CREATE TABLE tenant_names (
   vendor                TEXT NOT NULL,
@@ -23,7 +23,7 @@ CREATE TABLE tenant_listings (
   UNIQUE (vendor, fhir_version, tenant_id, url)
 );
 
-CREATE TABLE url_capabilities (
+CREATE TABLE url_smart_security (
   vendor         TEXT NOT NULL,
   fhir_version   TEXT NOT NULL DEFAULT '',
   url            TEXT NOT NULL,

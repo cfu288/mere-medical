@@ -516,7 +516,7 @@ describe('warehouse to artifact', () => {
     expect(publish(db, artifactPath).rowCount).toBe(8);
   });
 
-  it('leaves derived rows in place for a vendor with no directory snapshots yet', () => {
+  it('leaves staging rows in place for a vendor with no directory snapshots yet', () => {
     seedEpicR4();
     transform(db, 'epic', 'R4');
 

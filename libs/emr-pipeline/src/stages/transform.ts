@@ -80,7 +80,7 @@ interface MergedNames {
 }
 
 /**
- * Rebuilds the derived tenant tables for a vendor and version from its snapshot
+ * Rebuilds the staging tables for a vendor and version from its snapshot
  * history. Tenants keep their newest url and date and last non-empty name, and each
  * url's stored capability statement gets classified. Ids listed at two urls in one
  * snapshot are skipped for that snapshot. Runs offline.
@@ -190,7 +190,7 @@ export function transform(
     );
     counts.directoryEntries = merged.size;
 
-    const capabilities: tenantListings.UrlCapability[] = [];
+    const capabilities: tenantListings.UrlSmartSecurity[] = [];
     const classifiedUrls = new Set<string>();
     for (const seenUrl of seenUrls.values()) {
       if (classifiedUrls.has(seenUrl.url)) continue;

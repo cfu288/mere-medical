@@ -4,9 +4,9 @@ import * as path from 'node:path';
 import { getRow } from '@mere/tenant-db';
 
 const WAREHOUSE_FILE = path.join(__dirname, 'sql', 'warehouse.sql');
-const DERIVED_FILE = path.join(__dirname, 'sql', 'derived.sql');
+const STAGING_FILE = path.join(__dirname, 'sql', 'staging.sql');
 
-/** Reads the warehouse schema version, which is zero on a brand-new file. */
+/** Reads the warehouse schema version. */
 function currentVersion(db: DatabaseSync): number {
   const row = getRow<{ user_version: number }>(
     db.prepare('PRAGMA user_version'),
@@ -29,10 +29,10 @@ function initialize(db: DatabaseSync): void {
 }
 
 /**
- * Drops and recreates the disposable derived tables for transform to refill.
+ * Drops and recreates the staging tables for transform to refill.
  */
-function resetDerivedTables(db: DatabaseSync): void {
-  db.exec(fs.readFileSync(DERIVED_FILE, 'utf8'));
+function resetStagingTables(db: DatabaseSync): void {
+  db.exec(fs.readFileSync(STAGING_FILE, 'utf8'));
 }
 
 /** True when every named table exists. */
@@ -48,11 +48,15 @@ function hasTables(db: DatabaseSync, names: string[]): boolean {
 }
 
 /**
- * True when all three derived tables exist. A missing one makes openWarehouse
+ * True when all three staging tables exist. A missing one makes openWarehouse
  * recreate the whole disposable layer.
  */
-function hasDerivedTables(db: DatabaseSync): boolean {
-  return hasTables(db, ['tenant_names', 'tenant_listings', 'url_capabilities']);
+function hasStagingTables(db: DatabaseSync): boolean {
+  return hasTables(db, [
+    'tenant_names',
+    'tenant_listings',
+    'url_smart_security',
+  ]);
 }
 
 /**
@@ -72,7 +76,7 @@ function hasCurrentWarehouseTables(db: DatabaseSync): boolean {
 
 /**
  * Opens the warehouse at `dbPath`, creating the schema on first use and
- * recreating missing derived tables. A file without the warehouse tables is
+ * recreating missing staging tables. A file without the warehouse tables is
  * refused.
  */
 export function openWarehouse(dbPath: string): DatabaseSync {
@@ -89,8 +93,8 @@ export function openWarehouse(dbPath: string): DatabaseSync {
         `Warehouse ${dbPath} is missing warehouse tables; delete it and rebuild`,
       );
     }
-    if (!hasDerivedTables(db)) {
-      resetDerivedTables(db);
+    if (!hasStagingTables(db)) {
+      resetStagingTables(db);
     }
     return db;
   } catch (error) {

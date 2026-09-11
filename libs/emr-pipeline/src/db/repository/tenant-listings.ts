@@ -1,6 +1,6 @@
 /**
  * Owns the disposable tables `tenant_names`, `tenant_listings`, and
- * `url_capabilities`. Transform rebuilds them from the snapshots so publish
+ * `url_smart_security`. Transform rebuilds them from the snapshots so publish
  * is one query instead of rereading history.
  */
 import type { DatabaseSync } from 'node:sqlite';
@@ -27,7 +27,7 @@ export interface TenantListing {
  * One url's SMART auth urls and whether they are complete enough to log in
  * with. `listPublishable` keeps only `usable` rows.
  */
-export interface UrlCapability {
+export interface UrlSmartSecurity {
   url: string;
   authorizeUrl: string | null;
   tokenUrl: string | null;
@@ -44,9 +44,13 @@ export function replace(
   vendor: Vendor,
   fhirVersion: FhirVersion,
   listings: TenantListing[],
-  capabilities: UrlCapability[],
+  capabilities: UrlSmartSecurity[],
 ): void {
-  for (const table of ['tenant_names', 'tenant_listings', 'url_capabilities']) {
+  for (const table of [
+    'tenant_names',
+    'tenant_listings',
+    'url_smart_security',
+  ]) {
     db.prepare(
       `DELETE FROM ${table} WHERE vendor = ? AND fhir_version = ?`,
     ).run(vendor, fhirVersion);
@@ -81,7 +85,7 @@ export function replace(
   }
 
   const insertCapability = db.prepare(
-    `INSERT INTO url_capabilities
+    `INSERT INTO url_smart_security
        (vendor, fhir_version, url, authorize_url, token_url, register_url,
         classification)
      VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -141,7 +145,7 @@ export function listPublishable(db: DatabaseSync): PublishableTenant[] {
          SELECT l.vendor, l.fhir_version, l.tenant_id, l.url, l.last_seen_at,
                 l.id, c.token_url, c.authorize_url, c.register_url
          FROM tenant_listings l
-         JOIN url_capabilities c
+         JOIN url_smart_security c
            ON c.vendor = l.vendor AND c.fhir_version = l.fhir_version AND c.url = l.url
          WHERE c.classification = 'usable'
        ),
