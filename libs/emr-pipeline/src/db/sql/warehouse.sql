@@ -34,7 +34,7 @@ CREATE TABLE directory_counts (
   PRIMARY KEY (vendor, fhir_version)
 );
 
-CREATE TABLE directory_snapshots (
+CREATE TABLE vendor_tenant_directory_snapshots (
   id           INTEGER PRIMARY KEY,
   vendor       TEXT NOT NULL,
   fhir_version TEXT NOT NULL DEFAULT '',

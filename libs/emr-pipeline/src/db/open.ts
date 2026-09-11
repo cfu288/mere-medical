@@ -70,19 +70,17 @@ function hasCurrentWarehouseTables(db: DatabaseSync): boolean {
     'fetch_runs',
     'publications',
     'directory_counts',
-    'directory_snapshots',
+    'vendor_tenant_directory_snapshots',
   ]);
 }
 
 /**
- * Opens the warehouse at `dbPath`, creating its schema on first use and rebuilding the
- * disposable derived tables when they are missing. An existing file that lacks the
- * warehouse tables is refused. Delete it and rerun to rebuild.
+ * Opens the warehouse at `dbPath`, creating the schema on first use and
+ * recreating missing derived tables. A file without the warehouse tables is
+ * refused.
  */
 export function openWarehouse(dbPath: string): DatabaseSync {
-  if (dbPath !== ':memory:') {
-    fs.mkdirSync(path.dirname(dbPath), { recursive: true });
-  }
+  fs.mkdirSync(path.dirname(dbPath), { recursive: true });
   const db = new DatabaseSync(dbPath);
   try {
     // Configure waiting before any pragma that may need a lock.

@@ -1,24 +1,23 @@
 /**
- * The `directory_snapshots` table (every distinct directory body ever fetched) and
- * `directory_fetches` (each vendor's last attempt and error). Extract appends after a
- * good directory fetch. Transform replays the whole history, and publish and status
- * read the newest dates. The history is how the pipeline remembers delisted tenants.
+ * Owns `vendor_tenant_directory_snapshots`, every distinct directory body ever
+ * fetched, and `directory_fetches`, each vendor's last attempt and error. The
+ * history is how the pipeline remembers delisted tenants.
  */
 import type { DatabaseSync } from 'node:sqlite';
 import type { FhirVersion, Vendor } from '@mere/shared';
 import { allRows, getRow } from '@mere/tenant-db';
 
 /**
- * One saved copy of a vendor's directory page, the body as downloaded and when.
+ * One snapshot of a vendor's tenant directory, the body as downloaded and when.
  */
-interface Snapshot {
+interface VendorTenantDirectorySnapshot {
   fetched_at: string;
   body: string;
 }
 
 /**
- * Saves a directory page into history and returns true. A page identical to the
- * newest saved copy returns false and only moves that copy's date to now.
+ * Saves a directory snapshot and returns true. Identical bodies just move the
+ * newest snapshot's date and return false.
  */
 export function saveSnapshot(
   db: DatabaseSync,
@@ -27,32 +26,34 @@ export function saveSnapshot(
   fetchedAt: string,
   body: string,
 ): boolean {
-  const latest = getRow<{ id: number; same: number }>(
+  const newest = getRow<{ id: number; sameBody: number }>(
     db.prepare(
-      `SELECT id, body = :body AS same FROM directory_snapshots
+      `SELECT id, body = :body AS sameBody FROM vendor_tenant_directory_snapshots
        WHERE vendor = :vendor AND fhir_version = :fhirVersion
        ORDER BY fetched_at DESC LIMIT 1`,
     ),
     { vendor, fhirVersion, body },
   );
-  if (latest?.same === 1) {
+  // If the latest copy is the same as the current verion, just update the timestamp
+  if (newest?.sameBody === 1) {
     db.prepare(
-      `UPDATE directory_snapshots SET fetched_at = ? WHERE id = ?`,
-    ).run(fetchedAt, latest.id);
+      `UPDATE vendor_tenant_directory_snapshots SET fetched_at = ? WHERE id = ?`,
+    ).run(fetchedAt, newest.id);
     return false;
   }
   db.prepare(
-    `INSERT INTO directory_snapshots (vendor, fhir_version, fetched_at, body)
+    `INSERT INTO vendor_tenant_directory_snapshots (vendor, fhir_version, fetched_at, body)
      VALUES (?, ?, ?, ?)`,
   ).run(vendor, fhirVersion, fetchedAt, body);
   return true;
 }
 
 /**
- * Overwrites a vendor and version's last directory request date and error,
- * clearing the error on success.
+ * Overwrites the single row holding a vendor's last directory fetch date and
+ * error. Success clears the error. A failed fetch leaves no snapshot, so this
+ * row is its only trace.
  */
-export function recordAttempt(
+export function recordFetchAttempt(
   db: DatabaseSync,
   vendor: Vendor,
   fhirVersion: FhirVersion,
@@ -68,10 +69,7 @@ export function recordAttempt(
   ).run(vendor, fhirVersion, attemptedAt, error);
 }
 
-/**
- * The newest snapshot date for one vendor and version, compared by status
- * against the transform.
- */
+/** The newest snapshot date for a vendor and version. */
 export function latestFetchedAt(
   db: DatabaseSync,
   vendor: Vendor,
@@ -80,7 +78,7 @@ export function latestFetchedAt(
   return (
     getRow<{ newest: string | null }>(
       db.prepare(
-        `SELECT MAX(fetched_at) AS newest FROM directory_snapshots
+        `SELECT MAX(fetched_at) AS newest FROM vendor_tenant_directory_snapshots
          WHERE vendor = ? AND fhir_version = ?`,
       ),
       [vendor, fhirVersion],
@@ -95,7 +93,9 @@ export function latestFetchedAt(
 export function latestFetchedAtOverall(db: DatabaseSync): string | null {
   return (
     getRow<{ newest: string | null }>(
-      db.prepare('SELECT MAX(fetched_at) AS newest FROM directory_snapshots'),
+      db.prepare(
+        'SELECT MAX(fetched_at) AS newest FROM vendor_tenant_directory_snapshots',
+      ),
     )?.newest ?? null
   );
 }
@@ -105,10 +105,10 @@ export function listSnapshots(
   db: DatabaseSync,
   vendor: Vendor,
   fhirVersion: FhirVersion,
-): Snapshot[] {
-  return allRows<Snapshot>(
+): VendorTenantDirectorySnapshot[] {
+  return allRows<VendorTenantDirectorySnapshot>(
     db.prepare(
-      `SELECT fetched_at, body FROM directory_snapshots
+      `SELECT fetched_at, body FROM vendor_tenant_directory_snapshots
        WHERE vendor = ? AND fhir_version = ?
        ORDER BY fetched_at ASC`,
     ),

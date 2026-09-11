@@ -17,7 +17,7 @@ interface DirectoryCount {
 }
 
 /**
- * Saves the newest directory copy's tenant count when transform finishes a
+ * Saves the newest snapshot's tenant count when transform finishes a
  * vendor and version.
  */
 export function record(

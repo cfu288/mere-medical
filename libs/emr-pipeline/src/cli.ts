@@ -2,7 +2,7 @@ import * as path from 'node:path';
 import type { FhirVersion, Vendor } from '@mere/shared';
 import { adapterFor, ADAPTERS } from './adapters';
 import { openWarehouse } from './db/open';
-import { extract } from './stages/extract';
+import { startCapabilityStatementExtractionForVendor } from './stages/extract';
 import { publish } from './stages/publish';
 import { formatStatus } from './stages/status';
 import { transform } from './stages/transform';
@@ -35,15 +35,12 @@ function targets(): { vendor: Vendor; fhirVersion: FhirVersion }[] {
 function configuredTargets(): { vendor: Vendor; fhirVersion: FhirVersion }[] {
   return targets().filter((target) => {
     if (adapterFor(target.vendor).directory(target.fhirVersion)) return true;
-    log(
+    console.log(
       `${target.vendor} ${target.fhirVersion}: no directory configured, skipping`,
     );
     return false;
   });
 }
-
-const now = () => new Date().toISOString();
-const log = (message: string) => console.log(message);
 
 /**
  * Runs one pipeline command against the warehouse and returns the exit code.
@@ -62,11 +59,15 @@ async function main(argv: string[]): Promise<number> {
         let failed = false;
         for (const target of configuredTargets()) {
           try {
-            const result = await extract(db, { ...target, now, log });
+            const result = await startCapabilityStatementExtractionForVendor(
+              db,
+              target.vendor,
+              target.fhirVersion,
+            );
             if (result.status === 'failed') failed = true;
           } catch (error) {
             failed = true;
-            log(
+            console.log(
               `${target.vendor} ${target.fhirVersion}: extract crashed - ${error}`,
             );
           }
@@ -75,16 +76,16 @@ async function main(argv: string[]): Promise<number> {
       }
       case 'transform': {
         for (const target of targets()) {
-          transform(db, { ...target, log });
+          transform(db, target.vendor, target.fhirVersion);
         }
         return 0;
       }
       case 'publish': {
-        publish(db, { artifactPath: DEFAULT_ARTIFACT, now, log });
+        publish(db, DEFAULT_ARTIFACT);
         return 0;
       }
       case 'status': {
-        console.log(formatStatus(db, now()));
+        console.log(formatStatus(db));
         return 0;
       }
       default:

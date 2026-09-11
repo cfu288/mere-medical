@@ -18,6 +18,7 @@ export function allRows<T>(
   return result as unknown as T[];
 }
 
+/** Reads the first result row as a hand-written row type, or null when the query matches nothing. */
 export function getRow<T>(
   statement: StatementSync,
   params: SqlParams = [],

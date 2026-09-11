@@ -1,9 +1,7 @@
 /**
  * Owns the disposable tables `tenant_directory_entries`, `tenant_urls`, and
- * `tenant_capabilities`. Transform rebuilds them from the saved directory copies in
- * `directory_snapshots`, and publish reads `listPublishable` to write `tenants.db`.
- * They exist so publish is one query over merged rows instead of rereading the whole
- * history itself.
+ * `tenant_capabilities`. Transform rebuilds them from the snapshots so publish
+ * is one query instead of rereading history.
  */
 import type { DatabaseSync } from 'node:sqlite';
 import type {
@@ -14,9 +12,8 @@ import type {
 import { allRows } from '@mere/tenant-db';
 
 /**
- * One tenant summarized across every saved directory copy. It keeps the url and
- * date from the newest copy that listed the tenant, and the last name the
- * vendor ever gave it.
+ * One tenant summarized across snapshots, keeping its newest url and listing
+ * date and its last non-empty name.
  */
 interface DirectoryEntryRow {
   tenantId: string;
@@ -28,7 +25,7 @@ interface DirectoryEntryRow {
 
 /**
  * Records that a tenant was once listed at this url, and the date of the newest
- * directory copy that listed it there.
+ * snapshot that listed it there.
  */
 interface TenantUrlRow {
   tenantId: string;
@@ -37,9 +34,8 @@ interface TenantUrlRow {
 }
 
 /**
- * The SMART auth urls read out of one url's downloaded CapabilityStatement. The
- * classification says whether they are complete enough to log in with, and
- * `listPublishable` keeps only `usable` rows.
+ * One url's SMART auth urls and whether they are complete enough to log in
+ * with. `listPublishable` keeps only `usable` rows.
  */
 export interface CapabilityRow {
   url: string;
@@ -62,10 +58,7 @@ function clearRows(
   );
 }
 
-/**
- * Deletes and rewrites one vendor and version's tenant rows. Transform calls it
- * after rereading every saved directory copy.
- */
+/** Deletes and rewrites a vendor and version's tenant rows during transform. */
 export function replaceEntries(
   db: DatabaseSync,
   vendor: Vendor,
@@ -92,10 +85,7 @@ export function replaceEntries(
   }
 }
 
-/**
- * Deletes and rewrites which urls each tenant was ever listed at. Transform
- * calls it in the same pass as `replaceEntries`.
- */
+/** Deletes and rewrites which urls each tenant was ever listed at, in the same transform pass. */
 export function replaceUrls(
   db: DatabaseSync,
   vendor: Vendor,
@@ -113,9 +103,8 @@ export function replaceUrls(
 }
 
 /**
- * Deletes and rewrites each url's `CapabilityRow`, the auth urls read from its
- * downloaded CapabilityStatement. Transform calls it in the same pass as
- * `replaceEntries`.
+ * Deletes and rewrites each url's `CapabilityRow`, in the same transform pass
+ * as `replaceEntries`.
  */
 export function replaceCapabilities(
   db: DatabaseSync,
@@ -162,10 +151,9 @@ interface PublishableTenant {
 }
 
 /**
- * Queries the three derived tables and then returns a list of every publishable
- * tenant, each carrying auth urls from its current url's usable CapabilityStatement,
- * or else from the most recent of its urls that had one. This is intended to be used
- * by publish as the artifact's entire directory-sourced content.
+ * Returns every publishable tenant with auth urls from its current url's usable
+ * CapabilityStatement, else its most recent usable one. Publish writes exactly
+ * this list to the artifact.
  */
 export function listPublishable(db: DatabaseSync): PublishableTenant[] {
   return allRows<PublishableTenant>(

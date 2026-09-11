@@ -31,8 +31,10 @@ export interface SandboxSeed {
 
 /** Fetches the raw body of a directory, wherever it lives. */
 export interface DirectorySource {
-  fetch(signal: AbortSignal): Promise<string>;
+  fetch(): Promise<string>;
 }
+
+const DIRECTORY_TIMEOUT_MS = 300_000;
 
 /**
  * How the pipeline talks to one vendor, covering its directories, how to read
@@ -73,10 +75,10 @@ export const FHIR_ACCEPT =
  */
 export function httpDirectory(url: string): DirectorySource {
   return {
-    async fetch(signal) {
+    async fetch() {
       const response = await fetch(url, {
         headers: { Accept: FHIR_ACCEPT },
-        signal,
+        signal: AbortSignal.timeout(DIRECTORY_TIMEOUT_MS),
       });
       const body = await response.text();
       if (!response.ok) {

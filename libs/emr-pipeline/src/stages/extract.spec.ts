@@ -4,8 +4,11 @@ import * as path from 'node:path';
 import type { DatabaseSync } from 'node:sqlite';
 import { openWarehouse } from '../db/open';
 import * as downloads from '../db/repository/capability-downloads';
-import * as snapshots from '../db/repository/directory-snapshots';
-import { checkTenantDirectoryCounts, extract } from './extract';
+import * as vendorTenantDirectory from '../db/repository/vendor-tenant-directory-snapshots';
+import {
+  checkTenantDirectoryCounts,
+  startCapabilityStatementExtractionForVendor,
+} from './extract';
 
 const SMART =
   'http://fhir-registry.smarthealthit.org/StructureDefinition/oauth-uris';
@@ -48,7 +51,6 @@ const DIRECTORY = JSON.stringify({
 
 const DIRECTORY_URL = 'https://directory.example.org/R4';
 const NOW = '2026-08-23T00:00:00.000Z';
-const silent = () => undefined;
 
 describe('checkDirectory', () => {
   it('accepts a bundle whose declared total counts every entry', () => {
@@ -78,12 +80,15 @@ describe('extract', () => {
   const realFetch = globalThis.fetch;
 
   beforeEach(() => {
+    jest.spyOn(console, 'log').mockImplementation(() => undefined);
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'extract-'));
     db = openWarehouse(path.join(dir, 'warehouse.db'));
     process.env['EPIC_R4_ENDPOINTS_URL'] = DIRECTORY_URL;
   });
 
   afterEach(() => {
+    jest.restoreAllMocks();
+    jest.useRealTimers();
     db.close();
     globalThis.fetch = realFetch;
     fs.rmSync(dir, { recursive: true, force: true });
@@ -99,7 +104,7 @@ describe('extract', () => {
   }
 
   function seedGoodCapability(): number {
-    snapshots.saveSnapshot(db, 'epic', 'R4', NOW, DIRECTORY);
+    vendorTenantDirectory.saveSnapshot(db, 'epic', 'R4', NOW, DIRECTORY);
     const url = 'https://one.example.org/api/FHIR/R4/metadata';
     downloads.addUrl(db, { vendor: 'epic', fhirVersion: 'R4', url });
     const capabilityId = idOf(url);
@@ -127,12 +132,7 @@ describe('extract', () => {
   }
 
   async function run() {
-    return extract(db, {
-      vendor: 'epic',
-      fhirVersion: 'R4',
-      now: () => '2026-09-01T00:00:00.000Z',
-      log: silent,
-    });
+    return startCapabilityStatementExtractionForVendor(db, 'epic', 'R4');
   }
 
   it('keeps a good body when the endpoint later answers 404', async () => {
@@ -164,15 +164,19 @@ describe('extract', () => {
 
     expect(
       db
-        .prepare('SELECT vendor, fhir_version, body FROM directory_snapshots')
+        .prepare(
+          'SELECT vendor, fhir_version, body FROM vendor_tenant_directory_snapshots',
+        )
         .all(),
     ).toEqual([{ vendor: 'epic', fhir_version: 'R4', body: DIRECTORY }]);
   });
 
-  it('updates the saved copy date when the directory body is unchanged', () => {
-    expect(snapshots.saveSnapshot(db, 'epic', 'R4', NOW, DIRECTORY)).toBe(true);
+  it('updates the snapshot date when the directory body is unchanged', () => {
     expect(
-      snapshots.saveSnapshot(
+      vendorTenantDirectory.saveSnapshot(db, 'epic', 'R4', NOW, DIRECTORY),
+    ).toBe(true);
+    expect(
+      vendorTenantDirectory.saveSnapshot(
         db,
         'epic',
         'R4',
@@ -182,20 +186,22 @@ describe('extract', () => {
     ).toBe(false);
 
     expect(
-      db.prepare('SELECT fetched_at FROM directory_snapshots').all(),
+      db
+        .prepare('SELECT fetched_at FROM vendor_tenant_directory_snapshots')
+        .all(),
     ).toEqual([{ fetched_at: '2026-09-01T00:00:00.000Z' }]);
   });
 
-  it('keeps the saved directory copy when the server answers an error', async () => {
+  it('keeps the directory snapshot when the server answers an error', async () => {
     seedGoodCapability();
     globalThis.fetch = (async () =>
       new Response('gone', { status: 404 })) as typeof fetch;
 
     await run();
 
-    expect(db.prepare('SELECT body FROM directory_snapshots').all()).toEqual([
-      { body: DIRECTORY },
-    ]);
+    expect(
+      db.prepare('SELECT body FROM vendor_tenant_directory_snapshots').all(),
+    ).toEqual([{ body: DIRECTORY }]);
   });
 
   it('refuses to fetch a capability url the directory lists as http', async () => {
@@ -266,6 +272,7 @@ describe('extract', () => {
 
   it('records the rejection of a 200 directory body it cannot parse', async () => {
     seedGoodCapability();
+    jest.useFakeTimers({ now: new Date('2026-09-01T00:00:00.000Z') });
     globalThis.fetch = (async () =>
       new Response('<html>maintenance</html>', {
         status: 200,
@@ -288,7 +295,7 @@ describe('extract', () => {
     });
   });
 
-  it('keeps the saved directory copy when a refetch loses every tenant', async () => {
+  it('keeps the directory snapshot when a refetch loses every tenant', async () => {
     seedGoodCapability();
     globalThis.fetch = (async () =>
       new Response(JSON.stringify({ resourceType: 'Bundle', entry: [] }), {
@@ -300,10 +307,12 @@ describe('extract', () => {
 
     expect({
       status: result.status,
-      snapshots: db.prepare('SELECT body FROM directory_snapshots').all(),
+      copies: db
+        .prepare('SELECT body FROM vendor_tenant_directory_snapshots')
+        .all(),
     }).toEqual({
       status: 'failed',
-      snapshots: [{ body: DIRECTORY }],
+      copies: [{ body: DIRECTORY }],
     });
   });
 });

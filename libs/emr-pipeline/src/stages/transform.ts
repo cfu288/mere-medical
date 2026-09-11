@@ -12,7 +12,7 @@ import {
   parseBundle,
   readSmartUris,
 } from '../adapters/schemas';
-import * as snapshots from '../db/repository/directory-snapshots';
+import * as vendorTenantDirectory from '../db/repository/vendor-tenant-directory-snapshots';
 import * as downloads from '../db/repository/capability-downloads';
 import * as derived from '../db/repository/derived-tenants';
 import * as directoryCounts from '../db/repository/directory-counts';
@@ -25,9 +25,9 @@ interface ClassifiedCapability {
 }
 
 /**
- * Reads one CapabilityStatement body into its SMART auth urls plus a classification
- * saying whether they are usable, and if not, why. Never throws. An unreadable body
- * classifies as `unparseable`.
+ * Reads a CapabilityStatement body into SMART auth urls plus a classification of
+ * whether they are usable. Unreadable bodies classify as `unparseable` instead of
+ * throwing.
  */
 export function classifyCapability(body: string): ClassifiedCapability {
   let json: unknown;
@@ -67,12 +67,6 @@ export function classifyCapability(body: string): ClassifiedCapability {
   return { ...classified, classification: 'usable' };
 }
 
-interface TransformOptions {
-  vendor: Vendor;
-  fhirVersion: FhirVersion;
-  log: (message: string) => void;
-}
-
 interface TransformCounts {
   directoryEntries: number;
   capabilities: number;
@@ -88,30 +82,15 @@ interface MergedTenant {
 }
 
 /**
- * Rebuilds the derived tenant tables for one vendor and version by rereading every
- * saved directory copy, oldest to newest. Each tenant keeps the url and listing date
- * from the newest copy that mentions it and the last name the vendor ever gave it,
- * and each of its urls gets its stored CapabilityStatement classified for usable auth
- * urls. Runs offline against the warehouse alone.
+ * Rebuilds the derived tenant tables for a vendor and version from its snapshot
+ * history. Tenants keep their newest url and date and last non-empty name, and each
+ * url's stored capability statement gets classified. Ids listed at two urls in one
+ * snapshot are skipped for that snapshot. Runs offline.
  *
- * A tenant id one directory copy lists at more than one url contributes nothing from
- * that copy. Earlier copies still count.
- *
- * @param db - An open warehouse from `openWarehouse`.
- * @param options - What to rebuild and how to report progress.
- * @param options.vendor - The vendor to rebuild, such as `'epic'`.
- * @param options.fhirVersion - `'DSTU2'` or `'R4'`.
- * @param options.log - Sink for one-line progress messages.
- * @returns Counts of what was written. `directoryEntries` is the number of distinct
- *   tenants, `capabilities` the number of classified urls, `unparseable` how many
- *   stored bodies would not parse, and `duplicateTenantIds` how many ids the newest
- *   directory copy listed at more than one url.
+ * @returns Counts of distinct tenants, classified urls, unparseable bodies, and
+ *   ambiguous ids in the newest snapshot.
  * @example
- * const counts = transform(db, {
- *   vendor: 'epic',
- *   fhirVersion: 'R4',
- *   log: console.log,
- * });
+ * const counts = transform(db, 'epic', 'R4');
  *
  * A run like this returns:
  *
@@ -119,9 +98,9 @@ interface MergedTenant {
  */
 export function transform(
   db: DatabaseSync,
-  options: TransformOptions,
+  vendor: Vendor,
+  fhirVersion: FhirVersion,
 ): TransformCounts {
-  const { vendor, fhirVersion } = options;
   const adapter = adapterFor(vendor);
   const counts: TransformCounts = {
     directoryEntries: 0,
@@ -130,9 +109,9 @@ export function transform(
     duplicateTenantIds: 0,
   };
 
-  const history = snapshots.listSnapshots(db, vendor, fhirVersion);
+  const history = vendorTenantDirectory.listSnapshots(db, vendor, fhirVersion);
   if (history.length === 0) {
-    options.log(
+    console.log(
       `${vendor} ${fhirVersion}: no directory snapshots to transform`,
     );
     return counts;
@@ -150,7 +129,7 @@ export function transform(
     for (const snapshot of history) {
       const parsed = parseBundle(snapshot.body);
       if (!parsed.ok) {
-        options.log(
+        console.log(
           `${vendor} ${fhirVersion}: snapshot ${snapshot.fetched_at} is unparseable, skipped`,
         );
         continue;
@@ -173,7 +152,7 @@ export function transform(
       }
       counts.duplicateTenantIds = ambiguous.length;
       if (ambiguous.length > 0) {
-        options.log(
+        console.log(
           `${vendor} ${fhirVersion}: snapshot ${snapshot.fetched_at} dropped ${ambiguous.length} tenant ids listed at multiple urls: ${ambiguous
             .slice(0, 5)
             .join(', ')}`,
@@ -260,7 +239,7 @@ export function transform(
     throw error;
   }
 
-  options.log(
+  console.log(
     `${vendor} ${fhirVersion}: ${counts.directoryEntries} tenants, ${counts.capabilities} capabilities, ${counts.unparseable} unparseable` +
       (counts.duplicateTenantIds
         ? `, ${counts.duplicateTenantIds} ambiguous tenant ids in the latest snapshot`

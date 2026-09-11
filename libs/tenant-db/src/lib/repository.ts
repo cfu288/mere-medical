@@ -1,7 +1,6 @@
 /**
- * Read API over the shipped `tenants.db` artifact. `apps/api` calls it to serve
- * tenant search and lookup at runtime. It never reaches back into the pipeline
- * warehouse, so the api ships without any build-time data dependency.
+ * Read API over the shipped `tenants.db`. `apps/api` serves search and lookup
+ * from it and never reaches back into the pipeline warehouse.
  */
 import { DatabaseSync } from 'node:sqlite';
 import { allRows, getRow } from './rows';
@@ -85,11 +84,8 @@ export function openTenantDb(dbPath: string): TenantDb {
 }
 
 /**
- * Turns arbitrary user input into an FTS5 prefix query, or null when it holds no
- * searchable token.
- *
- * Every token is quoted, so FTS operators a user types (`AND`, `*`, `"`, `NEAR`) are
- * matched as text instead of changing the meaning of the query.
+ * Turns user input into a quoted FTS5 prefix query, or null when nothing is
+ * searchable. Quoting makes typed operators match as plain text.
  */
 export function toFtsQuery(query: string): string | null {
   return (
@@ -132,12 +128,9 @@ function filterClauses(options: SearchOptions): {
 }
 
 /**
- * Full-text search over searchable tenants, ranked by FTS5 relevance.
- *
- * An empty query lists tenants by name instead of matching nothing, which is what the
- * picker shows before anyone types. An empty `vendors` array matches nothing, so a
- * caller that recognised none of the vendors it was asked for cannot fall through to
- * returning every vendor.
+ * Full-text search over searchable tenants, ranked by FTS5 relevance. An empty
+ * query lists tenants by name, the picker's initial view. An empty `vendors`
+ * array matches nothing rather than every vendor.
  */
 export function searchTenants(
   db: TenantDb,
@@ -177,10 +170,8 @@ export function searchTenants(
 }
 
 /**
- * One tenant by vendor and id.
- *
- * With no version given and a tenant published under both, returns the R4 row. 1,168
- * Cerner ids exist in DSTU2 and R4, and R4 is the newer contract.
+ * One tenant by vendor and id. Ids published under both versions return the R4
+ * row, the newer contract.
  */
 export function findTenantById(
   db: TenantDb,

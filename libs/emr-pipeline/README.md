@@ -50,21 +50,21 @@ heap and the directory fetch gets its own multi-minute timeout.
 ## Data flow
 
 1. **Discover.** Each adapter reads its vendor directory and yields candidate tenants.
-   An accepted directory body is saved into `directory_snapshots`, the history that
-   remembers every tenant ever listed; a body identical to the newest saved copy only
-   updates that copy's date.
+   An accepted directory body is saved into `vendor_tenant_directory_snapshots`, the history that
+   remembers every tenant ever listed; a body identical to the newest snapshot only
+   updates that snapshot's date.
 2. **Extract.** Fetches the CapabilityStatement of every currently listed tenant, each
    run, through a bounded worker pool with retries and timeouts. A failure, including a
    200 carrying non-JSON, updates error columns only. It **never clobbers a good
    body**: a run killed midway costs a re-crawl, never data.
-3. **Transform.** `DELETE` + `INSERT` rebuilds the derived tables by replaying the whole
-   snapshot history: every tenant ever listed, its latest url and seen date, its last
+3. **Transform.** `DELETE` + `INSERT` rebuilds the derived tables by rereading every
+   snapshot: every tenant ever listed, its latest url and seen date, its last
    non-empty name, every url it was ever listed at, and a classification of each url's
    stored capability body. Pure, offline.
 4. **Publish.** One query over the derived tables writes a fresh `tenants.db`: entries
    joined to their usable capability (preferring the current url, else the most
    recently seen url that still classifies usable), plus code-seeded sandbox rows stamped
-   with the newest snapshot time. Publishing twice from the same warehouse yields the
+   with the newest snapshot's time. Publishing twice from the same warehouse yields the
    same artifact.
 
 Failure semantics: **partial failure degrades to staleness, never absence**. Transform
@@ -113,7 +113,7 @@ erDiagram
     TEXT attempted_at
     TEXT error
   }
-  directory_snapshots {
+  vendor_tenant_directory_snapshots {
     INTEGER id PK
     TEXT vendor UK
     TEXT fhir_version UK
@@ -124,7 +124,6 @@ erDiagram
     INTEGER id PK
     TEXT vendor
     TEXT fhir_version
-    TEXT status
     INTEGER failed
   }
   directory_counts {
@@ -174,8 +173,8 @@ erDiagram
     TEXT managing_organization "FTS5"
   }
 
-  directory_snapshots ||--o{ tenant_directory_entries : "merge"
-  directory_snapshots ||--o{ tenant_urls : "merge"
+  vendor_tenant_directory_snapshots ||--o{ tenant_directory_entries : "merge"
+  vendor_tenant_directory_snapshots ||--o{ tenant_urls : "merge"
   capability_downloads ||--o{ tenant_capabilities : "classify by url"
   tenants ||--|| tenants_fts : content_rowid
 ```
@@ -186,7 +185,7 @@ How rows move between the tables and across the two databases:
 flowchart LR
   subgraph warehouse["warehouse.db"]
     caps[capability_downloads]
-    snaps[directory_snapshots]
+    snaps[vendor_tenant_directory_snapshots]
     tde[tenant_directory_entries]
     turl[tenant_urls]
     tc[tenant_capabilities]
@@ -212,7 +211,7 @@ flowchart LR
 | Decision                                  | Why                                                                                                                                                         |
 | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Commit `tenants.db` as a binary           | ~2.7 MB/commit gzipped; Git LFS bills the repo owner and a blocked pull breaks `docker build` with a pointer file. DVC, Dolt, and sqlite-diffable rejected. |
-| One capability table, upsert-in-place     | Capability bodies need no version history; only directory bodies do, and those live in `directory_snapshots`.                                               |
+| One capability table, upsert-in-place     | Capability bodies need no version history; only directory bodies do, and those live in `vendor_tenant_directory_snapshots`.                                 |
 | No ORM; free functions + prepared SQL     | The hot query is FTS `MATCH`; bulk upserts and `INSERT…SELECT` are where ORMs are weakest.                                                                  |
 | FTS prefix match, no fuzzy fallback       | Typo tolerance traded for ranked ~1.5 ms search; a misspelling returns nothing rather than a guess.                                                         |
 | Directory wins FHIR-version disagreements | The URL is version-specific; the server's claim is recorded as data, and a mismatch is a data-quality query.                                                |

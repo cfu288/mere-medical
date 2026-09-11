@@ -5,7 +5,7 @@ import * as downloads from '../db/repository/capability-downloads';
 import * as directoryCounts from '../db/repository/directory-counts';
 import * as publications from '../db/repository/publications';
 import * as runs from '../db/repository/fetch-runs';
-import * as snapshots from '../db/repository/directory-snapshots';
+import * as vendorTenantDirectory from '../db/repository/vendor-tenant-directory-snapshots';
 
 /** Renders a delta as +n or -n for the status table. */
 function signed(n: number): string {
@@ -13,28 +13,24 @@ function signed(n: number): string {
 }
 
 /**
- * Renders the warehouse's crawl, transform, and publish state as a fixed-width text
- * table, one row per vendor and version, with ages computed relative to `now`. The
- * monthly workflow posts it on the refresh pull request, where a human decides
- * whether to merge.
+ * Renders crawl, transform, and publish state as a fixed-width text table, one
+ * row per vendor and version. The monthly workflow posts it on the refresh PR
+ * for human review.
  *
- * @param db - An open warehouse from `openWarehouse`.
- * @param now - The ISO timestamp ages are computed against.
- * @returns The table followed by the recent publish history, ready to print.
+ * @returns The table plus recent publish history, ready to print.
  * @example
- * console.log(formatStatus(db, new Date().toISOString()));
+ * console.log(formatStatus(db));
  *
  * This prints a report shaped like:
  *
  *   vendor     version  endpoints   failing crawled   transform
- *   athena     R4           17437         - 2d ago    current
  *   epic       R4             820         0 today     current
  *
  *   publishes
  *     today     39,560 rows (+0)
- *     2d ago    39,560 rows (-5413)
  */
-export function formatStatus(db: DatabaseSync, now: string): string {
+export function formatStatus(db: DatabaseSync): string {
+  const now = new Date().toISOString();
   const age = (ts: string): string => {
     const days = Math.floor((Date.parse(now) - Date.parse(ts)) / 86_400_000);
     return days < 1 ? 'today' : `${days}d ago`;
@@ -60,7 +56,11 @@ export function formatStatus(db: DatabaseSync, now: string): string {
   for (const vendor of vendors) {
     for (const version of ADAPTERS[vendor].versions) {
       const directoryCount = directoryCounts.find(db, vendor, version);
-      const latestSnapshot = snapshots.latestFetchedAt(db, vendor, version);
+      const latestSnapshot = vendorTenantDirectory.latestFetchedAt(
+        db,
+        vendor,
+        version,
+      );
       const latestCapability = downloads.latestDownloadedAt(
         db,
         vendor,

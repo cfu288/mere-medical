@@ -1,10 +1,9 @@
 import { z } from 'zod';
 
 /**
- * Every field is `.catch(undefined)` because one resource type's field collides with
- * another's. `Endpoint.address` is a url string while `Organization.address` is an
- * array of postal addresses, and both share a directory bundle. A strict type here
- * rejects the whole directory over a field the adapter was never going to read.
+ * Every field is `.catch(undefined)`. Resource types collide in one bundle,
+ * like `Endpoint.address` (a url) vs `Organization.address` (an array), and
+ * a strict type would reject the whole directory over fields never read.
  */
 const resourceSchema = z
   .object({
@@ -118,11 +117,9 @@ const SMART_OAUTH_EXTENSION_URL =
   'http://fhir-registry.smarthealthit.org/StructureDefinition/oauth-uris';
 
 /**
- * The SMART OAuth URIs a CapabilityStatement declares, or null when it declares no
- * security block at all.
- *
- * Prefers the extension carrying the registered SMART url and falls back to the first
- * one present, because some servers omit the url on the wrapper.
+ * The SMART OAuth URIs a CapabilityStatement declares, or null without a
+ * security block. Falls back to the first extension when a server omits the
+ * registered SMART url.
  */
 export function readSmartUris(
   statement: CapabilityStatement,

@@ -12,17 +12,19 @@ describe('formatStatus', () => {
   let db: DatabaseSync;
 
   beforeEach(() => {
+    jest.useFakeTimers({ now: new Date(NOW) });
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'emr-status-'));
     db = openWarehouse(path.join(dir, 'warehouse.db'));
   });
 
   afterEach(() => {
+    jest.useRealTimers();
     db.close();
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
   it('shows never for a warehouse nothing has run against', () => {
-    expect(formatStatus(db, NOW)).toBe(
+    expect(formatStatus(db)).toBe(
       [
         'vendor     version  endpoints   failing crawled   transform',
         'athena     R4               -         - never     -',
@@ -41,7 +43,7 @@ describe('formatStatus', () => {
 
   it('renders a crawled, transformed, published pipeline with failure growth', () => {
     db.exec(`
-      INSERT INTO directory_snapshots (vendor, fhir_version, fetched_at, body)
+      INSERT INTO vendor_tenant_directory_snapshots (vendor, fhir_version, fetched_at, body)
       VALUES ('epic', 'R4', '2026-08-26T12:00:00.000Z', '{}');
       INSERT INTO directory_counts (vendor, fhir_version, seen_at, tenant_count)
       VALUES ('epic', 'R4', '2026-08-26T12:00:00.000Z', 815);
@@ -54,7 +56,7 @@ describe('formatStatus', () => {
              ('2026-09-07T10:00:00.000Z', 8);
     `);
 
-    expect(formatStatus(db, NOW)).toBe(
+    expect(formatStatus(db)).toBe(
       [
         'vendor     version  endpoints   failing crawled   transform',
         'athena     R4               -         - never     -',
@@ -85,7 +87,7 @@ describe('formatStatus', () => {
              ('cerner', 'R4', 1);
     `);
 
-    expect(formatStatus(db, NOW)).toBe(
+    expect(formatStatus(db)).toBe(
       [
         'vendor     version  endpoints   failing crawled   transform',
         'athena     R4               -         - never     -',
@@ -104,7 +106,7 @@ describe('formatStatus', () => {
 
   it('flags a crawl the transform has not consumed', () => {
     db.exec(`
-      INSERT INTO directory_snapshots (vendor, fhir_version, fetched_at, body)
+      INSERT INTO vendor_tenant_directory_snapshots (vendor, fhir_version, fetched_at, body)
       VALUES ('epic', 'R4', '2026-09-07T09:00:00.000Z', '{}');
       INSERT INTO directory_counts (vendor, fhir_version, seen_at, tenant_count)
       VALUES ('epic', 'R4', '2026-08-07T00:00:00.000Z', 815);
@@ -117,7 +119,7 @@ describe('formatStatus', () => {
              ('2026-08-07T10:00:00.000Z', 44958);
     `);
 
-    expect(formatStatus(db, NOW)).toBe(
+    expect(formatStatus(db)).toBe(
       [
         'vendor     version  endpoints   failing crawled   transform',
         'athena     R4               -         - never     -',

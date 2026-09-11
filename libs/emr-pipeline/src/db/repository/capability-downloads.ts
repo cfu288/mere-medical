@@ -1,8 +1,7 @@
 /**
- * Owns the `capability_downloads` table, which keeps every CapabilityStatement url a
- * directory ever listed along with its last good body and last attempt. Extract
- * registers urls and records each fetch outcome. Transform reads the stored bodies and
- * status reads the newest download date.
+ * Owns `capability_downloads`, every CapabilityStatement url a directory ever
+ * listed with its last good body and last attempt. Extract writes it, transform
+ * reads the bodies, status reads the dates.
  */
 import type { DatabaseSync } from 'node:sqlite';
 import type { FhirVersion, Vendor } from '@mere/shared';
@@ -59,7 +58,7 @@ export function addUrl(db: DatabaseSync, key: CapabilityKey): void {
   ).run(key.vendor, key.fhirVersion, key.url);
 }
 
-/** One download by its url, how transform reads a stored capability body. */
+/** One download by its url. */
 export function findByUrl(
   db: DatabaseSync,
   key: CapabilityKey,
@@ -168,29 +167,22 @@ export function latestDownloadedAt(
   );
 }
 
-interface DownloadListQuery {
-  vendor: Vendor;
-  fhirVersion: FhirVersion;
-}
-
 /**
  * Every url for one vendor and version, never-downloaded first. Each run
  * refetches all of them.
  */
 export function selectForDownload(
   db: DatabaseSync,
-  query: DownloadListQuery,
+  vendor: Vendor,
+  fhirVersion: FhirVersion,
 ): CapabilityDownload[] {
   const rows = allRows<CapabilitySqlRow>(
     db.prepare(
       `SELECT * FROM capability_downloads
-       WHERE vendor = :vendor AND fhir_version = :fhirVersion
+       WHERE vendor = ? AND fhir_version = ?
        ORDER BY (body IS NULL) DESC, downloaded_at ASC`,
     ),
-    {
-      vendor: query.vendor,
-      fhirVersion: query.fhirVersion,
-    },
+    [vendor, fhirVersion],
   );
   return rows.map(toRow);
 }

@@ -8,19 +8,14 @@ import {
   getRow,
 } from '@mere/tenant-db';
 import * as derived from '../db/repository/derived-tenants';
-import * as snapshots from '../db/repository/directory-snapshots';
+import * as vendorTenantDirectory from '../db/repository/vendor-tenant-directory-snapshots';
 import * as publications from '../db/repository/publications';
 
-interface PublishOptions {
-  artifactPath: string;
-  now: () => string;
-  log: (message: string) => void;
-}
-
 /**
- * Writes a fresh tenants.db beside `artifactPath`, renames it into place, and
- * returns its row count, so nothing from an older artifact survives into the
- * new one.
+ * Creates a brand-new tenants.db with every publishable and sandbox tenant and
+ * returns its row count. Writes to a temporary `.building` file and swaps it onto
+ * `artifactPath` with one rename at the end, so the old artifact stays intact
+ * until the new one is complete.
  */
 function buildArtifact(
   db: DatabaseSync,
@@ -30,7 +25,8 @@ function buildArtifact(
 
   const tenants = derived.listPublishable(db);
   const seenAt =
-    snapshots.latestFetchedAtOverall(db) ?? '1970-01-01T00:00:00.000Z';
+    vendorTenantDirectory.latestFetchedAtOverall(db) ??
+    '1970-01-01T00:00:00.000Z';
 
   const building = `${artifactPath}.building`;
   for (const stale of [building, `${building}-wal`, `${building}-shm`]) {
@@ -112,37 +108,18 @@ interface PublishResult {
 
 /**
  * Writes the shipped tenant catalog `tenants.db` from the warehouse alone, so
- * publishing twice from the same warehouse produces identical content. The artifact
- * holds every tenant `listPublishable` returns plus every adapter's sandbox tenants,
- * and the publish is recorded in the warehouse for the status history.
+ * publishing twice yields identical content. It holds every `listPublishable`
+ * tenant plus every sandbox tenant, and the publish is recorded for the status
+ * history.
  *
- * The artifact is built beside its target and renamed into place, so a reader never
- * sees a half-written file.
- *
- * @param db - An open warehouse whose derived tables transform has filled.
- * @param options - Where to write and how to report progress.
- * @param options.artifactPath - Where to write the artifact.
- * @param options.now - Clock returning an ISO timestamp for the publish record.
- * @param options.log - Sink for one-line progress messages.
- * @returns The number of tenant rows the artifact holds.
+ * @returns The number of tenant rows written.
  * @example
- * const { rowCount } = publish(db, {
- *   artifactPath: 'libs/tenant-db/data/tenants.db',
- *   now: () => new Date().toISOString(),
- *   log: console.log,
- * });
- *
- * A run like this returns `rowCount` 39560 and logs:
- *
- *   wrote libs/tenant-db/data/tenants.db: 39560 rows
+ * const { rowCount } = publish(db, 'libs/tenant-db/data/tenants.db');
  */
-export function publish(
-  db: DatabaseSync,
-  options: PublishOptions,
-): PublishResult {
-  const artifact = buildArtifact(db, options.artifactPath);
-  publications.record(db, options.now(), artifact.rowCount);
+export function publish(db: DatabaseSync, artifactPath: string): PublishResult {
+  const artifact = buildArtifact(db, artifactPath);
+  publications.record(db, new Date().toISOString(), artifact.rowCount);
 
-  options.log(`wrote ${options.artifactPath}: ${artifact.rowCount} rows`);
+  console.log(`wrote ${artifactPath}: ${artifact.rowCount} rows`);
   return { rowCount: artifact.rowCount };
 }
