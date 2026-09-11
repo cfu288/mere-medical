@@ -157,6 +157,19 @@ describe('extract', () => {
     expect(failed).toEqual({ n: 1 });
   });
 
+  it('keeps a usable body when the endpoint answers 200 with an unusable one', async () => {
+    const capabilityId = seedGoodCapability();
+    respondWith(200, JSON.stringify({ resourceType: 'OperationOutcome' }));
+
+    await run();
+    const failed = db
+      .prepare('SELECT failed AS n FROM capability_downloads WHERE id = ?')
+      .get(capabilityId);
+
+    expect(downloads.findById(db, capabilityId)?.body).toBe(CAPABILITY);
+    expect(failed).toEqual({ n: 1 });
+  });
+
   it('stores a directory snapshot when the crawl succeeds', async () => {
     respondWith(200, CAPABILITY);
 

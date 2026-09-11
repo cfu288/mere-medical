@@ -7,6 +7,7 @@ import { DirectoryEntry, FHIR_ACCEPT } from '../adapters/types';
 import * as downloads from '../db/repository/capability-downloads';
 import * as runs from '../db/repository/fetch-runs';
 import * as vendorTenantDirectory from '../db/repository/vendor-tenant-directory-snapshots';
+import { classifyCapability } from './transform';
 
 const CONCURRENCY = 8;
 const TIMEOUT_MS = 20_000;
@@ -273,12 +274,31 @@ export async function startCapabilityStatementExtractionForVendor(
     }),
     (outcome) => {
       if (outcome.kind === 'ok' && isValidJson(outcome.body)) {
-        downloads.recordSuccess(db, {
-          id: outcome.id,
-          body: outcome.body,
-          now: new Date().toISOString(),
-        });
-        counts.fetched++;
+        const classification = classifyCapability(outcome.body).classification;
+        const stored =
+          classification === 'usable'
+            ? null
+            : downloads.findById(db, outcome.id);
+        const keepStored =
+          stored?.body != null &&
+          classifyCapability(stored.body).classification === 'usable';
+        if (keepStored) {
+          downloads.recordFailure(db, {
+            id: outcome.id,
+            error: new Error(
+              `endpoint answered with an unusable capability (${classification}), keeping the last usable body`,
+            ),
+            now: new Date().toISOString(),
+          });
+          counts.failed++;
+        } else {
+          downloads.recordSuccess(db, {
+            id: outcome.id,
+            body: outcome.body,
+            now: new Date().toISOString(),
+          });
+          counts.fetched++;
+        }
       } else if (outcome.kind === 'ok') {
         downloads.recordFailure(db, {
           id: outcome.id,
