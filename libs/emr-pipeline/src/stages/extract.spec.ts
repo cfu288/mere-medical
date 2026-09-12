@@ -84,6 +84,7 @@ describe('extract', () => {
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'extract-'));
     db = openWarehouse(path.join(dir, 'warehouse.db'));
     process.env['EPIC_R4_ENDPOINTS_URL'] = DIRECTORY_URL;
+    process.env['EPIC_CLIENT_ID'] = 'client-123';
   });
 
   afterEach(() => {
@@ -93,6 +94,7 @@ describe('extract', () => {
     globalThis.fetch = realFetch;
     fs.rmSync(dir, { recursive: true, force: true });
     delete process.env['EPIC_R4_ENDPOINTS_URL'];
+    delete process.env['EPIC_CLIENT_ID'];
   });
 
   function idOf(url: string): number {

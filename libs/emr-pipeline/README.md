@@ -16,30 +16,22 @@ nx run emr-pipeline:status
 ```
 
 Only `extract` fetches tenant EMR data using a network. `transform` and `publish` are
-pure functions of `data/warehouse.db`; the artifact never depends on a previous
-`tenants.db`. The monthly refresh workflow (`.github/workflows/emr-pipeline.yaml`)
+pure functions of `data/warehouse.db`, which publish a simplified
+`tenants.db` for distribution. The monthly refresh workflow (`.github/workflows/emr-pipeline.yaml`)
 runs all three, opens a PR with the regenerated `tenants.db`, and comments the status
-output on it; that human review is the quality gate, not checks inside the pipeline.
+output on it.
 
-Each adapter ships its directory URL as a default, so a bare `extract` crawls every
-configured pipeline; `*_ENDPOINTS_URL` variables override them (see `src/adapters/`).
-Three variables carry meaning beyond an override:
-
-| variable                    | value                                                                                                                   |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `EPIC_CLIENT_ID`            | DCR-authorized Epic client id; unlocks per-tenant register urls in metadata                                             |
-| `VERADIGM_R4_ENDPOINTS_URL` | no default; `https://open.platform.veradigm.com/fhirendpoints/download/R4?endpointFilter=Patient` turns the R4 crawl on |
-| `HEALOW_R4_FILE_LOCATION`   | path to an eCW practice bundle on disk                                                                                  |
-
-Healow reads eClinicalWorks' public practice list by default
-(`https://fhir.eclinicalworks.com/ecwopendev/external/practiceList`, ~15 MB, 17,274
-practices). Set `HEALOW_R4_FILE_LOCATION` to read a bundle from disk instead, which is
-what the vendor libs used to do.
-
-Veradigm's R4 directory lists 21 practice ids on two or three different FHIR base urls.
-A tenant id must identify exactly one endpoint, so `transform` drops any id a directory
-lists at conflicting urls (and counts it); the other ~1,693 publish normally. The web
-app still connects Veradigm over DSTU2 only.
+Every directory location comes from the environment, and a missing variable fails
+the run loudly rather than crawling a stale built-in url. The workflow defines the
+production values; local runs read the repo `.env`, which nx loads automatically.
+Required: `EPIC_R4_ENDPOINTS_URL`, `EPIC_DSTU2_ENDPOINTS_URL`,
+`CERNER_R4_ENDPOINTS_URL`, `CERNER_DSTU2_ENDPOINTS_URL`,
+`VERADIGM_DSTU2_ENDPOINTS_URL`, `HEALOW_R4_ENDPOINTS_URL`,
+`ATHENA_ENDPOINTS_URL`, and `EPIC_CLIENT_ID` (sent as the `Epic-Client-ID` header;
+without it Epic omits each tenant's `register` url). Optional:
+`VERADIGM_R4_ENDPOINTS_URL` turns the Veradigm R4 crawl on (the web app connects
+over DSTU2 only), and `HEALOW_R4_FILE_LOCATION` reads healow's practice list from
+a file instead of its ~15 MB url.
 
 Epic's Brands bundle is ~90 MB and Athena's is ~132 MB, so a run peaks around 1.3 GB of
 heap and the directory fetch gets its own multi-minute timeout.

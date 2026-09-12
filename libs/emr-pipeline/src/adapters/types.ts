@@ -69,6 +69,15 @@ export interface VendorAdapter {
 export const FHIR_ACCEPT =
   'application/json+fhir, application/fhir+json, application/json';
 
+/** Reads an env variable or throws, so a missing setting fails the run instead of crawling the wrong source. */
+export function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`${name} is not set`);
+  }
+  return value;
+}
+
 /**
  * A directory source that downloads its body from the url when asked. Any
  * non-ok answer throws.

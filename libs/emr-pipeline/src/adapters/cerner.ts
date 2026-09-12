@@ -6,18 +6,12 @@ import {
   SandboxSeed,
   VendorAdapter,
   httpDirectory,
+  requireEnv,
 } from './types';
 
-const DIRECTORY: Record<FhirVersion, { env: string; url: string }> = {
-  R4: {
-    env: 'CERNER_R4_ENDPOINTS_URL',
-    url: 'https://raw.githubusercontent.com/oracle-samples/ignite-endpoints/refs/heads/main/oracle_health_fhir_endpoints/millennium_patient_r4_endpoints.json',
-  },
-  DSTU2: {
-    env: 'CERNER_DSTU2_ENDPOINTS_URL',
-    // Pinned to a commit because ignite-endpoints main no longer carries the DSTU2 list.
-    url: 'https://raw.githubusercontent.com/oracle-samples/ignite-endpoints/30bce23a24731f7c38c1da8aec94321ba9c223cb/millennium_patient_dstu2_endpoints.json',
-  },
+const DIRECTORY: Record<FhirVersion, string> = {
+  R4: 'CERNER_R4_ENDPOINTS_URL',
+  DSTU2: 'CERNER_DSTU2_ENDPOINTS_URL',
 };
 
 const SANDBOX_TENANT = 'ec2458f2-1e24-41c8-b71b-0e701af7583d';
@@ -46,8 +40,7 @@ export const cernerAdapter: VendorAdapter = {
   versions: ['DSTU2', 'R4'],
 
   directory(version: FhirVersion): DirectorySource | null {
-    const source = DIRECTORY[version];
-    return httpDirectory(process.env[source.env] ?? source.url);
+    return httpDirectory(requireEnv(DIRECTORY[version]));
   },
 
   /**

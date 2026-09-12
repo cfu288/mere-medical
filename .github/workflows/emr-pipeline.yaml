@@ -12,8 +12,18 @@ permissions:
 concurrency:
   group: emr-pipeline-refresh
 
+# Directory locations are configuration, not code: a missing variable fails the
+# run loudly instead of crawling a stale built-in url.
 env:
   EPIC_CLIENT_ID: ${{ secrets.EPIC_CLIENT_ID }}
+  EPIC_R4_ENDPOINTS_URL: https://open.epic.com/Endpoints/Brands
+  EPIC_DSTU2_ENDPOINTS_URL: https://open.epic.com/Endpoints/DSTU2
+  CERNER_R4_ENDPOINTS_URL: https://raw.githubusercontent.com/oracle-samples/ignite-endpoints/refs/heads/main/oracle_health_fhir_endpoints/millennium_patient_r4_endpoints.json
+  # Pinned to a commit because ignite-endpoints main no longer carries the DSTU2 list.
+  CERNER_DSTU2_ENDPOINTS_URL: https://raw.githubusercontent.com/oracle-samples/ignite-endpoints/30bce23a24731f7c38c1da8aec94321ba9c223cb/millennium_patient_dstu2_endpoints.json
+  VERADIGM_DSTU2_ENDPOINTS_URL: https://open.platform.veradigm.com/fhirendpoints/download/DSTU2
+  HEALOW_R4_ENDPOINTS_URL: https://fhir.eclinicalworks.com/ecwopendev/external/practiceList
+  ATHENA_ENDPOINTS_URL: https://service-base-urls.api.fhir.athena.io/athena-fhir-service-base-urls.json
 
 jobs:
   refresh:

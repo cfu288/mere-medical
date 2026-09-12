@@ -7,10 +7,8 @@ import {
   VendorAdapter,
   fileDirectory,
   httpDirectory,
+  requireEnv,
 } from './types';
-
-const PRACTICE_LIST_URL =
-  'https://fhir.eclinicalworks.com/ecwopendev/external/practiceList';
 
 const SANDBOX: SandboxSeed[] = [
   {
@@ -29,9 +27,7 @@ export const healowAdapter: VendorAdapter = {
     if (version !== 'R4') return null;
     const file = process.env['HEALOW_R4_FILE_LOCATION'];
     if (file) return fileDirectory(file);
-    return httpDirectory(
-      process.env['HEALOW_R4_ENDPOINTS_URL'] ?? PRACTICE_LIST_URL,
-    );
+    return httpDirectory(requireEnv('HEALOW_R4_ENDPOINTS_URL'));
   },
 
   /**

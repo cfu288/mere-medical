@@ -6,6 +6,7 @@ import {
   SandboxSeed,
   VendorAdapter,
   httpDirectory,
+  requireEnv,
 } from './types';
 
 const SANDBOX: SandboxSeed[] = [
@@ -29,21 +30,15 @@ const SANDBOX: SandboxSeed[] = [
   },
 ];
 
-const DIRECTORY: Record<FhirVersion, { env: string; url: string | null }> = {
-  R4: { env: 'VERADIGM_R4_ENDPOINTS_URL', url: null },
-  DSTU2: {
-    env: 'VERADIGM_DSTU2_ENDPOINTS_URL',
-    url: 'https://open.platform.veradigm.com/fhirendpoints/download/DSTU2',
-  },
-};
-
 export const veradigmAdapter: VendorAdapter = {
   versions: ['DSTU2', 'R4'],
 
   directory(version: FhirVersion): DirectorySource | null {
-    const source = DIRECTORY[version];
-    const url = process.env[source.env] ?? source.url;
-    return url ? httpDirectory(url) : null;
+    if (version === 'R4') {
+      const url = process.env['VERADIGM_R4_ENDPOINTS_URL'];
+      return url ? httpDirectory(url) : null;
+    }
+    return httpDirectory(requireEnv('VERADIGM_DSTU2_ENDPOINTS_URL'));
   },
 
   /**

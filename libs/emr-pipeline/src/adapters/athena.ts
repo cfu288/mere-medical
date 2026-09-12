@@ -6,10 +6,8 @@ import {
   SandboxSeed,
   VendorAdapter,
   httpDirectory,
+  requireEnv,
 } from './types';
-
-const BUNDLE_URL =
-  'https://service-base-urls.api.fhir.athena.io/athena-fhir-service-base-urls.json';
 
 const PRACTICE_EXTENSION_URL =
   'https://fhir.athena.io/StructureDefinition/ah-practice';
@@ -25,7 +23,7 @@ export const athenaAdapter: VendorAdapter = {
 
   directory(version: FhirVersion): DirectorySource | null {
     if (version !== 'R4') return null;
-    return httpDirectory(process.env['ATHENA_ENDPOINTS_URL'] ?? BUNDLE_URL);
+    return httpDirectory(requireEnv('ATHENA_ENDPOINTS_URL'));
   },
 
   /**

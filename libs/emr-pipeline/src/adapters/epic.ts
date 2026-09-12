@@ -6,17 +6,12 @@ import {
   SandboxSeed,
   VendorAdapter,
   httpDirectory,
+  requireEnv,
 } from './types';
 
-const DIRECTORY: Record<FhirVersion, { env: string; url: string }> = {
-  R4: {
-    env: 'EPIC_R4_ENDPOINTS_URL',
-    url: 'https://open.epic.com/Endpoints/Brands',
-  },
-  DSTU2: {
-    env: 'EPIC_DSTU2_ENDPOINTS_URL',
-    url: 'https://open.epic.com/Endpoints/DSTU2',
-  },
+const DIRECTORY: Record<FhirVersion, string> = {
+  R4: 'EPIC_R4_ENDPOINTS_URL',
+  DSTU2: 'EPIC_DSTU2_ENDPOINTS_URL',
 };
 
 const SANDBOX: Record<FhirVersion, SandboxSeed> = {
@@ -40,8 +35,7 @@ export const epicAdapter: VendorAdapter = {
   versions: ['DSTU2', 'R4'],
 
   directory(version: FhirVersion): DirectorySource | null {
-    const source = DIRECTORY[version];
-    return httpDirectory(process.env[source.env] ?? source.url);
+    return httpDirectory(requireEnv(DIRECTORY[version]));
   },
 
   /**
@@ -74,8 +68,7 @@ export const epicAdapter: VendorAdapter = {
 
   // Unlocks the register uri in metadata, per fhir.epic.com Documentation?docId=oauth2
   capabilityHeaders(): Record<string, string> {
-    const clientId = process.env['EPIC_CLIENT_ID'];
-    return clientId ? { 'Epic-Client-ID': clientId } : {};
+    return { 'Epic-Client-ID': requireEnv('EPIC_CLIENT_ID') };
   },
 
   sandbox(version: FhirVersion): SandboxSeed[] {

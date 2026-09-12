@@ -64,15 +64,26 @@ describe('vendor adapters', () => {
     });
   });
 
-  it('sends the epic client id header only when configured', () => {
-    delete process.env['EPIC_CLIENT_ID'];
-    expect(adapterFor('epic').capabilityHeaders?.()).toEqual({});
-
+  it('sends the epic client id header', () => {
     process.env['EPIC_CLIENT_ID'] = 'client-123';
     expect(adapterFor('epic').capabilityHeaders?.()).toEqual({
       'Epic-Client-ID': 'client-123',
     });
     delete process.env['EPIC_CLIENT_ID'];
+  });
+
+  it('refuses to build epic headers without a client id', () => {
+    delete process.env['EPIC_CLIENT_ID'];
+    expect(() => adapterFor('epic').capabilityHeaders?.()).toThrow(
+      'EPIC_CLIENT_ID is not set',
+    );
+  });
+
+  it('refuses to crawl a directory whose env variable is not set', () => {
+    delete process.env['CERNER_R4_ENDPOINTS_URL'];
+    expect(() => adapterFor('cerner').directory('R4')).toThrow(
+      'CERNER_R4_ENDPOINTS_URL is not set',
+    );
   });
 
   it('uses the current healow sandbox host', () => {
