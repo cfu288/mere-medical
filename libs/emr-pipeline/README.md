@@ -15,92 +15,92 @@ nx run emr-pipeline:publish
 nx run emr-pipeline:status
 ```
 
-Only `extract` fetches tenant EMR data using a network. `transform` and `publish` are
-pure functions of `data/warehouse.db`, which publish a simplified
-`tenants.db` for distribution. The monthly refresh workflow (`.github/workflows/emr-pipeline.yaml`)
-runs all three, opens a PR with the regenerated `tenants.db`, and comments the status
-output on it.
+Only `extract` uses the network. `transform` and `publish` read nothing but
+`data/warehouse.db`. The monthly workflow (`.github/workflows/emr-pipeline.yaml`)
+runs all three, opens a PR with the regenerated `tenants.db`, and comments the
+status report on it.
 
-Every directory location comes from the environment, and a missing variable fails
-the run loudly rather than crawling a stale built-in url. The workflow defines the
-production values; local runs read the repo `.env`, which nx loads automatically.
-Required: `EPIC_R4_ENDPOINTS_URL`, `EPIC_DSTU2_ENDPOINTS_URL`,
-`CERNER_R4_ENDPOINTS_URL`, `CERNER_DSTU2_ENDPOINTS_URL`,
-`VERADIGM_DSTU2_ENDPOINTS_URL`, `HEALOW_R4_ENDPOINTS_URL`,
-`ATHENA_ENDPOINTS_URL`, and `EPIC_CLIENT_ID` (sent as the `Epic-Client-ID` header;
-without it Epic omits each tenant's `register` url). Optional:
-`VERADIGM_R4_ENDPOINTS_URL` turns the Veradigm R4 crawl on (the web app connects
-over DSTU2 only), and `HEALOW_R4_FILE_LOCATION` reads healow's practice list from
-a file instead of its ~15 MB url.
+Extract reads its configuration from environment variables. Each crawl needs
+its `<VENDOR>_<VERSION>_ENDPOINTS_URL`, plus `EPIC_CLIENT_ID`, sent as the
+`Epic-Client-ID` header so Epic includes each tenant's `register` url. Extract
+fails if one is missing. Production values live in the workflow's `env` block.
+To run locally, copy that block into the repo `.env`, which nx loads. Two
+variables are optional. `VERADIGM_R4_ENDPOINTS_URL` turns the Veradigm R4 crawl on,
+and `HEALOW_R4_FILE_LOCATION` reads healow's practice list from a file instead
+of downloading it.
 
-Epic's Brands bundle is ~90 MB and Athena's is ~132 MB, so a run peaks around 1.3 GB of
-heap and the directory fetch gets its own multi-minute timeout.
-
-`data/warehouse.db` is gitignored; the workflow persists it as a rolling
-`warehouse-backup` release asset.
+The directory downloads are large, ~90 MB for Epic and ~132 MB for athena, so a
+run peaks around 1.3 GB of heap. The workflow saves the gitignored
+`data/warehouse.db` between runs as the rolling `warehouse-backup` release
+asset.
 
 ## Data flow
 
-1. **Discover.** Each adapter reads its vendor directory and yields candidate tenants.
-   An accepted directory body is saved into `vendor_tenant_directory_snapshots`, the history that
-   remembers every tenant ever listed; a body identical to the newest snapshot only
-   updates that snapshot's date.
-2. **Extract.** Fetches the CapabilityStatement of every currently listed tenant, each
-   run, through a bounded worker pool with retries and timeouts. A failure, including
-   a 200 carrying non-JSON or a capability that classifies unusable, updates error
-   columns only. It **never replaces a usable body with an unusable one**: a run
-   killed midway costs a re-crawl, never data.
-3. **Transform.** `DELETE` + `INSERT` rebuilds the staging tables by rereading every
-   snapshot: every tenant ever listed, its latest url and seen date, its last
-   non-empty name, every url it was ever listed at, and a classification of each url's
-   stored capability body. Pure, offline.
-4. **Publish.** One query over the staging tables writes a fresh `tenants.db`: entries
-   joined to their usable capability (preferring the current url, else the most
-   recently seen url that still classifies usable), plus code-seeded sandbox rows stamped
-   with the newest snapshot's time. Publishing twice from the same warehouse yields the
-   same artifact.
+1. **Discover.** One HTTP GET per vendor and version downloads its tenant
+   directory, a JSON FHIR Bundle listing every tenant. Each vendor lays out
+   ids, names, and urls differently (Epic uses `Endpoint` resources, cerner and
+   healow pair `Organization` with `Endpoint`, athena tags `Organization`s with a
+   practice extension), so each vendor has a `parseDirectory` adapter. A body that
+   parses, yields tenants, and matches its declared total is written verbatim as
+   one JSON text column in `vendor_tenant_directory_snapshots` (vendor,
+   fhir_version, fetched_at, body). Nothing is split into columns here; that is
+   transform's job. Refetching an identical body only updates the newest
+   snapshot's date.
+2. **Extract.** For every tenant url in the directory, one HTTP GET of
+   `{url}/metadata` downloads its CapabilityStatement, the JSON document that
+   declares the tenant's OAuth urls. `capability_downloads` keeps one row per
+   url. A success overwrites the row's `body` and `downloaded_at`. A failure, a
+   non-JSON 200, or a body that would replace a usable one with an unusable one
+   writes only `attempted_at`, `failed`, and `error`. Rows are written as
+   fetches finish, so a killed run keeps everything already fetched.
+3. **Transform.** Offline. Rereads every stored snapshot body oldest to newest
+   through the vendor's adapter and rebuilds the three staging tables with
+   `DELETE` + `INSERT`. `tenant_names` gets each tenant's merged name and
+   managing organization. `tenant_listings` gets one row per tenant and url,
+   with the newest date that listed it. `url_smart_security` gets each url's
+   authorize, token, and register urls read from its stored capability body,
+   plus a classification.
+4. **Publish.** One query joins the staging tables by the derivation rules
+   below and writes a brand-new `tenants.db`. Each row is one publishable
+   tenant, plus the adapters' fixed sandbox rows stamped with the newest
+   snapshot time.
 
-Failure semantics: **partial failure degrades to staleness, never absence**. Transform
-reads the last-known-good body per URL, and a run killed midway publishes what a
-completed run over the same bodies would.
-
-Every row carries `last_seen_in_directory` and no row ever leaves the artifact. Nothing
-in this repo turns that timestamp into an expiry: search and `findTenantById` serve every
-row however old its seen date, so delisted tenants stay reachable and connected users'
-sync never breaks. If hiding long-delisted tenants ever matters, that becomes a filter
-in the API reading the column, not pipeline state.
+Rows never leave the artifact, and readers ignore how old
+`last_seen_in_directory` is, so delisted tenants stay reachable and connected
+users keep syncing. Any future expiry belongs in the API as a filter on that
+column.
 
 ## Guardrails
 
-Extract rejects only a directory that contradicts itself: an unparseable body, an empty
-yield, or a declared `total` its entries do not match. A rejected directory is never
-parsed into the staging tables and advances no seen date.
-
-Publish has no checks of its own: the artifact ships whatever the warehouse holds, and
-the monthly PR's status comment is where a human catches a bad refresh.
+Extract rejects a directory body that does not parse, lists no tenants, or
+declares a total its entries do not match. A rejected body is not saved, so it
+never reaches staging. Publish has no checks of its own. The human reviewing
+the monthly PR's status comment is the gate.
 
 ## Schema
 
-The DDL lives in `src/db/sql/warehouse.sql` (durable), `src/db/sql/staging.sql`
-(disposable, dropped and rebuilt), and `libs/tenant-db/src/lib/schema.ts` (the shipped
-artifact, `user_version`-asserted at open). `tenants.db` and the staging tables are never
-migrated; they regenerate from the durable tables. The durable state is what extract
-learns: downloaded capability bodies and the directory history. Losing the warehouse costs a recrawl plus
-the memory of tenants no directory lists anymore.
+The DDL lives in three files. `src/db/sql/warehouse.sql` holds the durable
+tables, `src/db/sql/staging.sql` the staging tables, and
+`libs/tenant-db/src/lib/schema.ts` the shipped artifact, whose `user_version`
+the reader asserts at open. Nothing is migrated. Staging and `tenants.db`
+regenerate from the durable tables. Losing the warehouse means recrawling
+everything and losing the record of delisted tenants.
 
-Conventions: every timestamp is an ISO-8601 UTC instant written by the
-pipeline's own clock, so text order is time order. Empty strings are never
-stored; blank input becomes NULL. Every warehouse table is scoped by
-`(vendor, fhir_version)` and scopes never join to each other. The staging
-layer declares no foreign keys; transform rebuilds a scope wholesale in one
-transaction, so orphans cannot survive a rebuild. Sandbox rows use reserved
-`sandbox_`-prefixed ids, and athena ships none.
+Timestamps are ISO-8601 UTC from the pipeline clock, so text order is time
+order. Blank input becomes NULL, never an empty string. Every warehouse table
+is scoped by `(vendor, fhir_version)` and scopes never join. Staging has no
+foreign keys because transform rebuilds a whole scope in one transaction.
+Sandbox rows use `sandbox_`-prefixed ids, and athena has no sandbox row.
 
-The published values derive from the tables above by three rules. A tenant's
-current listing is its newest `tenant_listings` row (ties broken by highest id).
-Its name and managing organization each come from the newest snapshot where that
-column was non-empty. Its auth urls come from its usable capability rows, current
-url first, then newest sighting, all three urls taken from one row.
+Derivation rules:
+
+1. A tenant's current listing is its newest `tenant_listings` row, ties broken
+   by highest id.
+2. Its name and managing organization each come from the newest snapshot where
+   that column was non-empty.
+3. Its auth urls come together from one usable `url_smart_security` row,
+   preferring the current url's and falling back to the most recently listed
+   url that has one.
 
 ```mermaid
 erDiagram
@@ -186,7 +186,7 @@ erDiagram
   tenants ||--|| tenants_fts : content_rowid
 ```
 
-How rows move between the tables and across the two databases:
+How rows move across the two databases:
 
 ```mermaid
 flowchart LR
@@ -215,26 +215,22 @@ flowchart LR
 
 ## Design decisions
 
-| Decision                                  | Why                                                                                                                                                         |
-| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Commit `tenants.db` as a binary           | ~2.7 MB/commit gzipped; Git LFS bills the repo owner and a blocked pull breaks `docker build` with a pointer file. DVC, Dolt, and sqlite-diffable rejected. |
-| One capability table, upsert-in-place     | Capability bodies need no version history; only directory bodies do, and those live in `vendor_tenant_directory_snapshots`.                                 |
-| No ORM; free functions + prepared SQL     | The hot query is FTS `MATCH`; bulk upserts and `INSERT…SELECT` are where ORMs are weakest.                                                                  |
-| FTS prefix match, no fuzzy fallback       | Typo tolerance traded for ranked ~1.5 ms search; a misspelling returns nothing rather than a guess.                                                         |
-| Directory wins FHIR-version disagreements | The URL is version-specific; the server's claim is recorded as data, and a mismatch is a data-quality query.                                                |
-| Don't collapse DSTU2/R4 tenant identity   | 1,168 Cerner ids legitimately exist in both versions, so `fhir_version` is part of the tenant key.                                                          |
-| Single-instance vendors are not rows      | `tenants` holds rows a user selects between; one-endpoint vendors (VA, OnPatient, NextGen) stay as literals in `fhir-oauth`.                                |
-| Retention: keep every downloaded body     | Pruning before sizes are measured defeats the store's purpose; no `prune` command exists yet.                                                               |
+| Decision                               | Why                                                                                                                                                      |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Commit binary `tenants.db`             | ~2.7 MB/commit gzipped. Git LFS bills the repo owner, and a blocked pull breaks `docker build` with a pointer file. DVC, Dolt, sqlite-diffable rejected. |
+| One capability table, upsert-in-place  | Only directory bodies need history (`vendor_tenant_directory_snapshots`).                                                                                |
+| No ORM. Free functions + prepared SQL  | FTS `MATCH`, bulk upserts, `INSERT…SELECT` fit poorly in ORMs.                                                                                           |
+| FTS prefix matching, no fuzzy fallback | Ranked ~1.5 ms search. Misspellings return nothing.                                                                                                      |
+| Directory decides FHIR version         | The url is version-specific, so the crawl scope is the truth. The server's own version claim is not stored.                                              |
+| Separate DSTU2/R4 identities           | 1,168 Cerner ids span both. Tenant keys include `fhir_version`.                                                                                          |
+| Exclude single-instance vendors        | `tenants` contains selectable tenants. VA, OnPatient, NextGen endpoints remain `fhir-oauth` literals.                                                    |
+| Retain every downloaded body           | Measure sizes before pruning. No `prune` command yet.                                                                                                    |
 
 ## Accepted limits
 
-- Two extract runs of one scope in the same millisecond would collide on the
-  snapshot uniqueness key and abort. Fine for a monthly job.
-- The artifact rename and the `publications` insert are two steps across two
-  databases; a crash between them ships an artifact whose history row only
-  arrives with the next publish.
-- A vendor reassigning a url from a delisted tenant to a new one would hand
-  the old tenant the new owner's auth urls. Base urls are tenant-specific for
-  every vendor except athena's deliberately shared one.
-- Publishing twice from one warehouse yields identical rows and ids because
-  inserts are ordered, though file bytes may differ.
+- Same-scope extracts in the same millisecond collide on snapshot uniqueness and
+  abort. Fine for a monthly job.
+- Artifact rename precedes `publications` insertion across databases. An intervening
+  crash ships the artifact without history until next publish.
+- Reassigned urls give delisted tenants the new owner's auth urls. Vendor base
+  urls are tenant-specific except athena's intentionally shared one.

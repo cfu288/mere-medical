@@ -12,8 +12,7 @@ permissions:
 concurrency:
   group: emr-pipeline-refresh
 
-# Directory locations are configuration, not code: a missing variable fails the
-# run loudly instead of crawling a stale built-in url.
+# Extract fails if any required variable here is missing.
 env:
   EPIC_CLIENT_ID: ${{ secrets.EPIC_CLIENT_ID }}
   EPIC_R4_ENDPOINTS_URL: https://open.epic.com/Endpoints/Brands
