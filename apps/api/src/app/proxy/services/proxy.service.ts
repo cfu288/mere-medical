@@ -68,16 +68,17 @@ export class ProxyService {
     @Inject(TENANT_DB) private tenants: TenantDb,
   ) {}
 
-  private findService(
+  private async findService(
     vendor: string | undefined,
     serviceId: string,
-  ):
+  ): Promise<
     | { service: Service; vendor: ProxyVendor; error?: never }
     | {
         service?: never;
         vendor?: never;
         error: { status: number; body: object };
-      } {
+      }
+  > {
     if (vendor) {
       if (!isProxyVendor(vendor)) {
         return {
@@ -87,7 +88,7 @@ export class ProxyService {
           },
         };
       }
-      const tenant = findTenantById(this.tenants, vendor, serviceId);
+      const tenant = await findTenantById(this.tenants, vendor, serviceId);
       if (!tenant) {
         return {
           error: {
@@ -102,10 +103,18 @@ export class ProxyService {
       };
     }
 
-    const matches = PROXY_VENDORS.flatMap((proxyVendor) => {
-      const tenant = findTenantById(this.tenants, proxyVendor, serviceId);
-      return tenant ? [{ vendor: proxyVendor, tenant }] : [];
-    });
+    const matches = (
+      await Promise.all(
+        PROXY_VENDORS.map(async (proxyVendor) => {
+          const tenant = await findTenantById(
+            this.tenants,
+            proxyVendor,
+            serviceId,
+          );
+          return tenant ? [{ vendor: proxyVendor, tenant }] : [];
+        }),
+      )
+    ).flat();
 
     if (matches.length === 0) {
       return {
@@ -176,7 +185,7 @@ export class ProxyService {
     ) as { [header: string]: string };
 
     if (serviceId) {
-      const result = this.findService(vendor, serviceId);
+      const result = await this.findService(vendor, serviceId);
 
       if (result.error) {
         this.logger.warn({

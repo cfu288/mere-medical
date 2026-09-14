@@ -8,14 +8,15 @@ export class HealowService {
   constructor(@Inject(TENANT_DB) private readonly db: TenantDb) {}
 
   async queryR4Tenants(query: string): Promise<VendorEndpoint[]> {
-    return searchTenants(this.db, query, {
+    const tenants = await searchTenants(this.db, query, {
       vendors: ['healow'],
       fhirVersion: 'R4',
-    }).map(toVendorEndpoint);
+    });
+    return tenants.map(toVendorEndpoint);
   }
 
-  findTenantById(tenantId: string): VendorEndpoint | undefined {
-    const tenant = findTenantById(this.db, 'healow', tenantId, 'R4');
+  async findTenantById(tenantId: string): Promise<VendorEndpoint | undefined> {
+    const tenant = await findTenantById(this.db, 'healow', tenantId, 'R4');
     return tenant ? toVendorEndpoint(tenant) : undefined;
   }
 }

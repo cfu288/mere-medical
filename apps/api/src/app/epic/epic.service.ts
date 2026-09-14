@@ -21,15 +21,16 @@ export class EpicService {
     return this.search(query, 'R4', sandboxOnly);
   }
 
-  private search(
+  private async search(
     query: string,
     fhirVersion: 'DSTU2' | 'R4',
     sandboxOnly: boolean,
-  ): VendorEndpoint[] {
-    return searchTenants(this.db, query, {
+  ): Promise<VendorEndpoint[]> {
+    const tenants = await searchTenants(this.db, query, {
       vendors: ['epic'],
       fhirVersion,
       source: sandboxOnly ? 'sandbox' : undefined,
-    }).map(toVendorEndpoint);
+    });
+    return tenants.map(toVendorEndpoint);
   }
 }

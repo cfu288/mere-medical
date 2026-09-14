@@ -8,16 +8,18 @@ export class CernerService {
   constructor(@Inject(TENANT_DB) private readonly db: TenantDb) {}
 
   async queryTenants(query: string): Promise<VendorEndpoint[]> {
-    return searchTenants(this.db, query, {
+    const tenants = await searchTenants(this.db, query, {
       vendors: ['cerner'],
       fhirVersion: 'DSTU2',
-    }).map(toVendorEndpoint);
+    });
+    return tenants.map(toVendorEndpoint);
   }
 
   async queryR4Tenants(query: string): Promise<VendorEndpoint[]> {
-    return searchTenants(this.db, query, {
+    const tenants = await searchTenants(this.db, query, {
       vendors: ['cerner'],
       fhirVersion: 'R4',
-    }).map(toVendorEndpoint);
+    });
+    return tenants.map(toVendorEndpoint);
   }
 }
