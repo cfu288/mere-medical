@@ -3,10 +3,10 @@
  * from it and never reaches back into the pipeline warehouse.
  */
 import { DatabaseSync } from 'node:sqlite';
-import { Kysely, sql } from 'kysely';
+import { Kysely, Selectable, sql } from 'kysely';
 import { nodeSqliteDialect } from './node-sqlite';
 import { TENANT_DB_USER_VERSION } from './schema';
-import type { TenantDatabase } from './tenant-db-schema';
+import type { TenantDatabase, TenantsTable } from './tenant-db-schema';
 import type {
   EndpointSource,
   FhirVersion,
@@ -37,19 +37,20 @@ const SELECT_COLUMNS = [
   't.searchable',
 ] as const;
 
-interface TenantRow {
-  tenant_id: string;
-  vendor: string;
-  fhir_version: string;
-  name: string;
-  url: string;
-  token: string | null;
-  authorize: string | null;
-  register: string | null;
-  managing_organization: string | null;
-  source: string;
-  searchable: number;
-}
+type TenantRow = Pick<
+  Selectable<TenantsTable>,
+  | 'tenant_id'
+  | 'vendor'
+  | 'fhir_version'
+  | 'name'
+  | 'url'
+  | 'token'
+  | 'authorize'
+  | 'register'
+  | 'managing_organization'
+  | 'source'
+  | 'searchable'
+>;
 
 function toTenant(row: TenantRow): Tenant {
   return {
@@ -134,24 +135,26 @@ export async function searchTenants(
   let builder = db
     .selectFrom('tenants as t')
     .select(SELECT_COLUMNS)
-    .where('t.searchable', '=', 1)
-    .$if(!!options.vendors?.length, (qb) =>
-      qb.where('t.vendor', 'in', options.vendors as string[]),
-    )
-    .$if(options.fhirVersion !== undefined, (qb) =>
-      qb.where('t.fhir_version', '=', options.fhirVersion as string),
-    )
-    .$if(options.source !== undefined, (qb) =>
-      qb.where('t.source', '=', options.source as string),
-    );
+    .where('t.searchable', '=', 1);
+  if (options.vendors?.length) {
+    builder = builder.where('t.vendor', 'in', options.vendors);
+  }
+  if (options.fhirVersion) {
+    builder = builder.where('t.fhir_version', '=', options.fhirVersion);
+  }
+  if (options.source) {
+    builder = builder.where('t.source', '=', options.source);
+  }
 
   builder = match
     ? builder
         .innerJoin('tenants_fts as f', 'f.rowid', 't.id')
         .where(sql<boolean>`tenants_fts MATCH ${match}`)
-        .orderBy(sql`f.rank`)
+        .orderBy('f.rank')
         .limit(DEFAULT_SEARCH_LIMIT)
-    : builder.orderBy(sql`t.name COLLATE NOCASE`).limit(DEFAULT_BROWSE_LIMIT);
+    : builder
+        .orderBy('t.name', (ob) => ob.collate('nocase'))
+        .limit(DEFAULT_BROWSE_LIMIT);
 
   const rows = await builder.execute();
   return rows.map(toTenant);
@@ -167,15 +170,18 @@ export async function findTenantById(
   tenantId: string,
   fhirVersion?: FhirVersion,
 ): Promise<Tenant | null> {
-  const row = await db
+  let builder = db
     .selectFrom('tenants as t')
     .select(SELECT_COLUMNS)
     .where('t.vendor', '=', vendor)
-    .where('t.tenant_id', '=', tenantId)
-    .$if(fhirVersion !== undefined, (qb) =>
-      qb.where('t.fhir_version', '=', fhirVersion as string),
+    .where('t.tenant_id', '=', tenantId);
+  if (fhirVersion) {
+    builder = builder.where('t.fhir_version', '=', fhirVersion);
+  }
+  const row = await builder
+    .orderBy((eb) =>
+      eb.case().when('t.fhir_version', '=', 'R4').then(0).else(1).end(),
     )
-    .orderBy(sql`CASE t.fhir_version WHEN 'R4' THEN 0 ELSE 1 END`)
     .limit(1)
     .executeTakeFirst();
 

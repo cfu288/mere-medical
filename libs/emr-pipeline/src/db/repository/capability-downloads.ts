@@ -6,6 +6,7 @@
 import type { Selectable } from 'kysely';
 import type { FhirVersion, Vendor } from '@mere/shared';
 import type { Warehouse } from '../open';
+import { insertChunked } from '../insert-chunked';
 import type { CapabilityDownloadsTable } from '../warehouse-schema';
 
 interface CapabilityKey {
@@ -43,13 +44,27 @@ function toRow(row: Selectable<CapabilityDownloadsTable>): CapabilityDownload {
  * dates.
  */
 export async function addUrl(db: Warehouse, key: CapabilityKey): Promise<void> {
-  await db
-    .insertInto('capability_downloads')
-    .values({ vendor: key.vendor, fhir_version: key.fhirVersion, url: key.url })
-    .onConflict((oc) =>
-      oc.columns(['vendor', 'fhir_version', 'url']).doNothing(),
-    )
-    .execute();
+  await addUrls(db, key.vendor, key.fhirVersion, [key.url]);
+}
+
+/** Registers many urls at once, in batches. Urls already present keep their stored bodies and dates. */
+export async function addUrls(
+  db: Warehouse,
+  vendor: Vendor,
+  fhirVersion: FhirVersion,
+  urls: string[],
+): Promise<void> {
+  await insertChunked(
+    urls.map((url) => ({ vendor, fhir_version: fhirVersion, url })),
+    (chunk) =>
+      db
+        .insertInto('capability_downloads')
+        .values(chunk)
+        .onConflict((oc) =>
+          oc.columns(['vendor', 'fhir_version', 'url']).doNothing(),
+        )
+        .execute(),
+  );
 }
 
 /** One download by its url. */

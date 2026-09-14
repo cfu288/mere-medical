@@ -19,6 +19,7 @@ export interface TenantsTable {
 
 export interface TenantsFtsTable {
   rowid: number;
+  rank: number;
   name: string | null;
   managing_organization: string | null;
 }

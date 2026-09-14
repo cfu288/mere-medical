@@ -10,11 +10,11 @@ export class AthenaController {
   constructor(private readonly athenaService: AthenaService) {}
 
   @Get('organizations/:practiceId')
-  getOrganization(
+  async getOrganization(
     @Res() response: Response,
     @Param('practiceId') practiceId: string,
   ) {
-    const name = this.athenaService.getOrganizationName(practiceId);
+    const name = await this.athenaService.getOrganizationName(practiceId);
     response.json({ name: name ?? null });
   }
 }

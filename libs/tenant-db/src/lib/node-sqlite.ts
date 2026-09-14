@@ -1,4 +1,4 @@
-import { DatabaseSync } from 'node:sqlite';
+import { DatabaseSync, SQLInputValue } from 'node:sqlite';
 import { SqliteDialect } from 'kysely';
 
 /** Wraps a node:sqlite database in the small interface Kysely's SqliteDialect drives. */
@@ -11,11 +11,11 @@ export function nodeSqliteDialect(db: DatabaseSync): SqliteDialect {
         return {
           reader: statement.columns().length > 0,
           all: (parameters: ReadonlyArray<unknown>) =>
-            statement.all(...(parameters as never[])),
+            statement.all(...(parameters as SQLInputValue[])),
           run: (parameters: ReadonlyArray<unknown>) =>
-            statement.run(...(parameters as never[])),
+            statement.run(...(parameters as SQLInputValue[])),
           iterate: (parameters: ReadonlyArray<unknown>) =>
-            statement.iterate(...(parameters as never[])),
+            statement.iterate(...(parameters as SQLInputValue[])),
         };
       },
     },

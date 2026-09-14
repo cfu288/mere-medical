@@ -223,11 +223,11 @@ export async function startCapabilityStatementExtractionForVendor(
     if (url) capabilityUrls.add(url);
   }
 
-  await db.transaction().execute(async (trx) => {
-    for (const url of capabilityUrls) {
-      await downloads.addUrl(trx, { vendor, fhirVersion, url });
-    }
-  });
+  await db
+    .transaction()
+    .execute((trx) =>
+      downloads.addUrls(trx, vendor, fhirVersion, [...capabilityUrls]),
+    );
 
   const documents = (
     await downloads.selectForDownload(db, vendor, fhirVersion)

@@ -18,15 +18,24 @@ function pascal(name: string): string {
     .join('');
 }
 
-function tsType(column: TableColumn): string {
-  const base = column.type === 'INTEGER' ? 'number' : 'string';
-  if (
-    (column.pk === 1 && column.type === 'INTEGER') ||
-    column.dflt_value !== null
-  ) {
-    return `Generated<${base}>`;
+function tsType(column: TableColumn, pkColumns: number): string {
+  const bases: Record<string, string> = {
+    INTEGER: 'number',
+    REAL: 'number',
+    TEXT: 'string',
+  };
+  const base = bases[column.type];
+  if (!base) {
+    throw new Error(`unsupported column type ${column.type} on ${column.name}`);
   }
-  return column.notnull === 0 && column.pk === 0 ? `${base} | null` : base;
+  const rowidAlias =
+    column.pk === 1 && pkColumns === 1 && column.type === 'INTEGER';
+  const nullable = column.notnull === 0 && column.pk === 0 && !rowidAlias;
+  const selected = nullable ? `${base} | null` : base;
+  if (rowidAlias || column.dflt_value !== null) {
+    return `Generated<${selected}>`;
+  }
+  return selected;
 }
 
 /**
@@ -36,9 +45,17 @@ function tsType(column: TableColumn): string {
  */
 export function schemaSource(ddl: string[], databaseName: string): string {
   const db = new DatabaseSync(':memory:');
-  for (const statements of ddl) {
-    db.exec(statements);
+  try {
+    for (const statements of ddl) {
+      db.exec(statements);
+    }
+    return render(db, databaseName);
+  } finally {
+    db.close();
   }
+}
+
+function render(db: DatabaseSync, databaseName: string): string {
   const tables = db
     .prepare(
       `SELECT name, sql FROM sqlite_master
@@ -47,7 +64,7 @@ export function schemaSource(ddl: string[], databaseName: string): string {
     )
     .all() as unknown as { name: string; sql: string }[];
   const ftsNames = tables
-    .filter((table) => table.sql.includes('fts5'))
+    .filter((table) => table.sql.toLowerCase().includes('fts5'))
     .map((table) => table.name);
   const kept = tables.filter(
     (table) => !ftsNames.some((fts) => table.name.startsWith(`${fts}_`)),
@@ -66,10 +83,12 @@ export function schemaSource(ddl: string[], databaseName: string): string {
     const fields = isFts
       ? [
           '  rowid: number;',
+          '  rank: number;',
           ...columns.map((c) => `  ${c.name}: string | null;`),
         ]
       : columns.map((column) => {
-          const type = tsType(column);
+          const pkColumns = columns.filter((c) => c.pk > 0).length;
+          const type = tsType(column, pkColumns);
           if (type.startsWith('Generated')) usesGenerated = true;
           return `  ${column.name}: ${type};`;
         });
@@ -78,7 +97,6 @@ export function schemaSource(ddl: string[], databaseName: string): string {
     );
     entries.push(`  ${table.name}: ${pascal(table.name)}Table;`);
   }
-  db.close();
 
   const importLine = usesGenerated
     ? `import type { Generated } from 'kysely';\n\n`

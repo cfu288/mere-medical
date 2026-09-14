@@ -3,17 +3,19 @@
  * directory listed when transform last parsed it. Transform records it and status
  * reads it for the endpoints column and the transform-behind flag.
  */
+import type { Selectable } from 'kysely';
 import type { FhirVersion, Vendor } from '@mere/shared';
+import type { DirectoryCountsTable } from '../warehouse-schema';
 import type { Warehouse } from '../open';
 
 /**
  * How many tenants a vendor's directory listed the last time transform parsed
  * it.
  */
-interface DirectoryCount {
-  seen_at: string;
-  tenant_count: number;
-}
+type DirectoryCount = Pick<
+  Selectable<DirectoryCountsTable>,
+  'seen_at' | 'tenant_count'
+>;
 
 /**
  * Saves the newest snapshot's tenant count when transform finishes a

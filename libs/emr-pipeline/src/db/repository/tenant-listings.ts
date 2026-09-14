@@ -10,6 +10,7 @@ import type {
   Vendor,
 } from '@mere/shared';
 import type { Warehouse } from '../open';
+import { insertChunked } from '../insert-chunked';
 
 /**
  * One tenant as its vendor's directory has ever listed it: merged name, and
@@ -58,48 +59,47 @@ export async function replace(
       .execute();
   }
 
-  for (const listing of listings) {
-    await db
-      .insertInto('tenant_names')
-      .values({
+  await insertChunked(
+    listings.map((listing) => ({
+      vendor,
+      fhir_version: fhirVersion,
+      tenant_id: listing.tenantId,
+      name: listing.name ?? null,
+      managing_organization: listing.managingOrganization ?? null,
+    })),
+    (chunk) => db.insertInto('tenant_names').values(chunk).execute(),
+  );
+  await insertChunked(
+    listings.flatMap((listing) =>
+      listing.urls.map((seen) => ({
         vendor,
         fhir_version: fhirVersion,
         tenant_id: listing.tenantId,
-        name: listing.name ?? null,
-        managing_organization: listing.managingOrganization ?? null,
-      })
-      .execute();
-    for (const seen of listing.urls) {
-      await db
-        .insertInto('tenant_listings')
-        .values({
-          vendor,
-          fhir_version: fhirVersion,
-          tenant_id: listing.tenantId,
-          url: seen.url,
-          last_seen_at: seen.lastSeenAt,
-        })
-        .execute();
-    }
-  }
-
-  for (const capability of capabilities) {
-    await db
-      .insertInto('url_smart_security')
-      .values({
-        vendor,
-        fhir_version: fhirVersion,
-        url: capability.url,
-        authorize_url: capability.authorizeUrl,
-        token_url: capability.tokenUrl,
-        register_url: capability.registerUrl,
-        classification: capability.classification,
-      })
-      .onConflict((oc) =>
-        oc.columns(['vendor', 'fhir_version', 'url']).doNothing(),
-      )
-      .execute();
-  }
+        url: seen.url,
+        last_seen_at: seen.lastSeenAt,
+      })),
+    ),
+    (chunk) => db.insertInto('tenant_listings').values(chunk).execute(),
+  );
+  await insertChunked(
+    capabilities.map((capability) => ({
+      vendor,
+      fhir_version: fhirVersion,
+      url: capability.url,
+      authorize_url: capability.authorizeUrl,
+      token_url: capability.tokenUrl,
+      register_url: capability.registerUrl,
+      classification: capability.classification,
+    })),
+    (chunk) =>
+      db
+        .insertInto('url_smart_security')
+        .values(chunk)
+        .onConflict((oc) =>
+          oc.columns(['vendor', 'fhir_version', 'url']).doNothing(),
+        )
+        .execute(),
+  );
 }
 
 /**
@@ -128,124 +128,56 @@ interface PublishableTenant {
 export async function listPublishable(
   db: Warehouse,
 ): Promise<PublishableTenant[]> {
-  const rows = await db
-    .with('ranked', (qb) =>
-      qb.selectFrom('tenant_listings as l').select((eb) => [
-        'l.vendor',
-        'l.fhir_version',
-        'l.tenant_id',
-        'l.url',
-        'l.last_seen_at',
-        eb.fn
-          .agg<number>('row_number')
-          .over((ob) =>
-            ob
-              .partitionBy(['l.vendor', 'l.fhir_version', 'l.tenant_id'])
-              .orderBy('l.last_seen_at', 'desc')
-              .orderBy('l.id', 'desc'),
-          )
-          .as('rn'),
-      ]),
+  const result = await sql<PublishableTenant>`
+    WITH current AS (
+      SELECT vendor, fhir_version, tenant_id, url, last_seen_at
+      FROM (
+        SELECT l.*, ROW_NUMBER() OVER (
+          PARTITION BY l.vendor, l.fhir_version, l.tenant_id
+          ORDER BY l.last_seen_at DESC, l.id DESC
+        ) AS rn
+        FROM tenant_listings l
+      )
+      WHERE rn = 1
+    ),
+    usable AS (
+      SELECT l.vendor, l.fhir_version, l.tenant_id, l.url, l.last_seen_at,
+             l.id, c.token_url, c.authorize_url, c.register_url
+      FROM tenant_listings l
+      JOIN url_smart_security c
+        ON c.vendor = l.vendor AND c.fhir_version = l.fhir_version AND c.url = l.url
+      WHERE c.classification = 'usable'
+    ),
+    best AS (
+      SELECT u.vendor, u.fhir_version, u.tenant_id,
+             u.token_url, u.authorize_url, u.register_url,
+             ROW_NUMBER() OVER (
+               PARTITION BY u.vendor, u.fhir_version, u.tenant_id
+               ORDER BY (u.url = cur.url) DESC, u.last_seen_at DESC, u.id DESC
+             ) AS rank
+      FROM usable u
+      JOIN current cur
+        ON cur.vendor = u.vendor AND cur.fhir_version = u.fhir_version
+       AND cur.tenant_id = u.tenant_id
     )
-    .with('current', (qb) =>
-      qb.selectFrom('ranked').selectAll().where('rn', '=', 1),
-    )
-    .with('usable', (qb) =>
-      qb
-        .selectFrom('tenant_listings as l')
-        .innerJoin('url_smart_security as c', (join) =>
-          join
-            .onRef('c.vendor', '=', 'l.vendor')
-            .onRef('c.fhir_version', '=', 'l.fhir_version')
-            .onRef('c.url', '=', 'l.url'),
-        )
-        .where('c.classification', '=', 'usable')
-        .select([
-          'l.vendor',
-          'l.fhir_version',
-          'l.tenant_id',
-          'l.url',
-          'l.last_seen_at',
-          'l.id',
-          'c.token_url',
-          'c.authorize_url',
-          'c.register_url',
-        ]),
-    )
-    .with('best', (qb) =>
-      qb
-        .selectFrom('usable as u')
-        .innerJoin('current as cur', (join) =>
-          join
-            .onRef('cur.vendor', '=', 'u.vendor')
-            .onRef('cur.fhir_version', '=', 'u.fhir_version')
-            .onRef('cur.tenant_id', '=', 'u.tenant_id'),
-        )
-        .select((eb) => [
-          'u.vendor',
-          'u.fhir_version',
-          'u.tenant_id',
-          'u.token_url',
-          'u.authorize_url',
-          'u.register_url',
-          eb.fn
-            .agg<number>('row_number')
-            .over((ob) =>
-              ob
-                .partitionBy(['u.vendor', 'u.fhir_version', 'u.tenant_id'])
-                .orderBy(sql`(u.url = cur.url) desc`)
-                .orderBy('u.last_seen_at', 'desc')
-                .orderBy('u.id', 'desc'),
-            )
-            .as('rn'),
-        ]),
-    )
-    .selectFrom('current as cur')
-    .leftJoin('tenant_names as n', (join) =>
-      join
-        .onRef('n.vendor', '=', 'cur.vendor')
-        .onRef('n.fhir_version', '=', 'cur.fhir_version')
-        .onRef('n.tenant_id', '=', 'cur.tenant_id'),
-    )
-    .leftJoin('best as b', (join) =>
-      join
-        .onRef('b.vendor', '=', 'cur.vendor')
-        .onRef('b.fhir_version', '=', 'cur.fhir_version')
-        .onRef('b.tenant_id', '=', 'cur.tenant_id')
-        .on('b.rn', '=', 1),
-    )
-    .select((eb) => [
-      'cur.tenant_id',
-      'cur.vendor',
-      'cur.fhir_version',
-      eb.fn.coalesce('n.name', sql<string>`''`).as('name'),
-      'cur.url',
-      'b.token_url as token',
-      'b.authorize_url as authorize',
-      'b.register_url as register',
-      'n.managing_organization',
-      eb
-        .case()
-        .when('cur.vendor', '=', 'athena')
-        .then(0)
-        .else(1)
-        .end()
-        .as('searchable'),
-      'cur.last_seen_at as last_seen_in_directory',
-    ])
-    .where((eb) =>
-      eb.or([
-        eb('cur.vendor', '=', 'athena'),
-        eb.and([
-          sql<boolean>`trim(coalesce(n.name, '')) <> ''`,
-          eb('b.tenant_id', 'is not', null),
-        ]),
-      ]),
-    )
-    .orderBy('cur.vendor')
-    .orderBy('cur.fhir_version')
-    .orderBy('cur.tenant_id')
-    .execute();
-
-  return rows as PublishableTenant[];
+    SELECT cur.tenant_id, cur.vendor, cur.fhir_version,
+           coalesce(n.name, '') AS name, cur.url,
+           b.token_url AS token, b.authorize_url AS authorize,
+           b.register_url AS register, n.managing_organization,
+           CASE cur.vendor WHEN 'athena' THEN 0 ELSE 1 END AS searchable,
+           cur.last_seen_at AS last_seen_in_directory
+    FROM current cur
+    LEFT JOIN tenant_names n
+      ON n.vendor = cur.vendor AND n.fhir_version = cur.fhir_version
+     AND n.tenant_id = cur.tenant_id
+    LEFT JOIN best b
+      ON b.vendor = cur.vendor AND b.fhir_version = cur.fhir_version
+     AND b.tenant_id = cur.tenant_id AND b.rank = 1
+    WHERE CASE cur.vendor
+            WHEN 'athena' THEN 1
+            ELSE trim(coalesce(n.name, '')) <> '' AND b.tenant_id IS NOT NULL
+          END
+    ORDER BY cur.vendor, cur.fhir_version, cur.tenant_id
+  `.execute(db);
+  return result.rows;
 }

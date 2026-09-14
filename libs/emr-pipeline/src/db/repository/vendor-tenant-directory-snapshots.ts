@@ -3,17 +3,18 @@
  * fetched, and `directory_fetches`, each vendor's last attempt and error. The
  * history is how the pipeline remembers delisted tenants.
  */
-import { sql } from 'kysely';
+import type { Selectable } from 'kysely';
+import type { VendorTenantDirectorySnapshotsTable } from '../warehouse-schema';
 import type { FhirVersion, Vendor } from '@mere/shared';
 import type { Warehouse } from '../open';
 
 /**
  * One snapshot of a vendor's tenant directory, the body as downloaded and when.
  */
-interface VendorTenantDirectorySnapshot {
-  fetched_at: string;
-  body: string;
-}
+type VendorTenantDirectorySnapshot = Pick<
+  Selectable<VendorTenantDirectorySnapshotsTable>,
+  'fetched_at' | 'body'
+>;
 
 /**
  * Saves a directory snapshot and returns true. Identical bodies just move the
@@ -28,14 +29,14 @@ export async function saveSnapshot(
 ): Promise<boolean> {
   const newest = await db
     .selectFrom('vendor_tenant_directory_snapshots')
-    .select(['id', sql<number>`body = ${body}`.as('sameBody')])
+    .select((eb) => ['id', eb('body', '=', body).as('sameBody')])
     .where('vendor', '=', vendor)
     .where('fhir_version', '=', fhirVersion)
     .orderBy('fetched_at', 'desc')
     .limit(1)
     .executeTakeFirst();
 
-  if (newest?.sameBody === 1) {
+  if (newest?.sameBody) {
     await db
       .updateTable('vendor_tenant_directory_snapshots')
       .set({ fetched_at: fetchedAt })

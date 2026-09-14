@@ -219,7 +219,7 @@ flowchart LR
 | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Commit binary `tenants.db`             | ~2.7 MB/commit gzipped. Git LFS bills the repo owner, and a blocked pull breaks `docker build` with a pointer file. DVC, Dolt, sqlite-diffable rejected. |
 | One capability table, upsert-in-place  | Only directory bodies need history (`vendor_tenant_directory_snapshots`).                                                                                |
-| No ORM. Free functions + prepared SQL  | FTS `MATCH`, bulk upserts, `INSERT…SELECT` fit poorly in ORMs.                                                                                           |
+| Kysely query builder, no ORM           | Queries compile against types generated from the DDL. Raw sql fragments remain where SQL is clearer, like FTS `MATCH`.                                   |
 | FTS prefix matching, no fuzzy fallback | Ranked ~1.5 ms search. Misspellings return nothing.                                                                                                      |
 | Directory decides FHIR version         | The url is version-specific, so the crawl scope is the truth. The server's own version claim is not stored.                                              |
 | Separate DSTU2/R4 identities           | 1,168 Cerner ids span both. Tenant keys include `fhir_version`.                                                                                          |

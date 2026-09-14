@@ -12,6 +12,7 @@ import {
   ProxyVendor,
 } from '@mere/fhir-oauth';
 import { TenantDb, findTenantById } from '@mere/tenant-db';
+import type { Tenant } from '@mere/shared';
 import { toVendorEndpoint } from '@mere/shared';
 import { TENANT_DB } from '../../tenant-db/tenant-db.module';
 
@@ -103,18 +104,11 @@ export class ProxyService {
       };
     }
 
-    const matches = (
-      await Promise.all(
-        PROXY_VENDORS.map(async (proxyVendor) => {
-          const tenant = await findTenantById(
-            this.tenants,
-            proxyVendor,
-            serviceId,
-          );
-          return tenant ? [{ vendor: proxyVendor, tenant }] : [];
-        }),
-      )
-    ).flat();
+    const matches: { vendor: ProxyVendor; tenant: Tenant }[] = [];
+    for (const proxyVendor of PROXY_VENDORS) {
+      const tenant = await findTenantById(this.tenants, proxyVendor, serviceId);
+      if (tenant) matches.push({ vendor: proxyVendor, tenant });
+    }
 
     if (matches.length === 0) {
       return {

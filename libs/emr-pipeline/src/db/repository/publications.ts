@@ -3,12 +3,14 @@
  * with how many rows. Publish records each write and status lists the recent ones
  * to show row-count deltas.
  */
+import type { Selectable } from 'kysely';
 import type { Warehouse } from '../open';
+import type { PublicationsTable } from '../warehouse-schema';
 
-interface Publication {
-  published_at: string;
-  row_count: number;
-}
+type Publication = Pick<
+  Selectable<PublicationsTable>,
+  'published_at' | 'row_count'
+>;
 
 /** Saves one publish's date and row count for the status history. */
 export async function record(

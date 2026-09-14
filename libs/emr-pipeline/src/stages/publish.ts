@@ -10,11 +10,10 @@ import {
 } from '@mere/tenant-db';
 import type { TenantDatabase } from '@mere/tenant-db';
 import type { Warehouse } from '../db/open';
+import { insertChunked } from '../db/insert-chunked';
 import * as tenantListings from '../db/repository/tenant-listings';
 import * as vendorTenantDirectory from '../db/repository/vendor-tenant-directory-snapshots';
 import * as publications from '../db/repository/publications';
-
-const INSERT_CHUNK = 500;
 
 /**
  * Creates a brand-new tenants.db with every publishable and sandbox tenant and
@@ -80,36 +79,39 @@ async function buildArtifact(
     );
 
     const rows = [...directoryRows, ...sandboxRows];
-    for (let start = 0; start < rows.length; start += INSERT_CHUNK) {
-      await artifact
-        .insertInto('tenants')
-        .values(rows.slice(start, start + INSERT_CHUNK))
+    await artifact.transaction().execute(async (trx) => {
+      await insertChunked(rows, (chunk) =>
+        trx.insertInto('tenants').values(chunk).execute(),
+      );
+      await trx
+        .insertInto('tenants_fts')
+        .columns(['rowid', 'name', 'managing_organization'])
+        .expression((eb) =>
+          eb
+            .selectFrom('tenants')
+            .select(['id', 'name', 'managing_organization']),
+        )
         .execute();
-    }
-
-    await artifact
-      .insertInto('tenants_fts')
-      .columns(['rowid', 'name', 'managing_organization'])
-      .expression((eb) =>
-        eb
-          .selectFrom('tenants')
-          .select(['id', 'name', 'managing_organization']),
-      )
-      .execute();
+    });
 
     const count = await artifact
       .selectFrom('tenants')
       .select((eb) => eb.fn.countAll<number>().as('n'))
-      .executeTakeFirst();
+      .executeTakeFirstOrThrow();
     await sql`VACUUM`.execute(artifact);
     await artifact.destroy();
 
     fs.renameSync(building, artifactPath);
     fs.rmSync(`${artifactPath}-wal`, { force: true });
     fs.rmSync(`${artifactPath}-shm`, { force: true });
-    return { rowCount: count?.n ?? 0 };
+    return { rowCount: count.n };
   } catch (error) {
     await artifact.destroy().catch(() => undefined);
+    try {
+      raw.close();
+    } catch {
+      /* already closed by destroy */
+    }
     fs.rmSync(building, { force: true });
     throw error;
   }
