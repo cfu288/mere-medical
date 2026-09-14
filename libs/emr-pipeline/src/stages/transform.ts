@@ -1,10 +1,10 @@
-import type { DatabaseSync } from 'node:sqlite';
 import type {
   CapabilityClassification,
   FhirVersion,
   Vendor,
 } from '@mere/shared';
 import { adapterFor } from '../adapters';
+import type { Warehouse } from '../db/open';
 import type { DirectoryEntry } from '../adapters/types';
 import {
   CapabilityStatement,
@@ -94,11 +94,11 @@ interface MergedNames {
  *
  *   { directoryEntries: 820, capabilities: 815, unparseable: 2, duplicateTenantIds: 0 }
  */
-export function transform(
-  db: DatabaseSync,
+export async function transform(
+  db: Warehouse,
   vendor: Vendor,
   fhirVersion: FhirVersion,
-): TransformCounts {
+): Promise<TransformCounts> {
   const adapter = adapterFor(vendor);
   const counts: TransformCounts = {
     directoryEntries: 0,
@@ -107,7 +107,11 @@ export function transform(
     duplicateTenantIds: 0,
   };
 
-  const history = vendorTenantDirectory.listSnapshots(db, vendor, fhirVersion);
+  const history = await vendorTenantDirectory.listSnapshots(
+    db,
+    vendor,
+    fhirVersion,
+  );
   if (history.length === 0) {
     console.log(
       `${vendor} ${fhirVersion}: no directory snapshots to transform`,
@@ -115,8 +119,7 @@ export function transform(
     return counts;
   }
 
-  db.exec('BEGIN');
-  try {
+  await db.transaction().execute(async (trx) => {
     const merged = new Map<string, MergedNames>();
     const seenUrls = new Map<
       string,
@@ -199,7 +202,7 @@ export function transform(
         url: seenUrl.url,
       });
       if (!capabilityUrl) continue;
-      const download = downloads.findByUrl(db, {
+      const download = await downloads.findByUrl(trx, {
         vendor,
         fhirVersion,
         url: capabilityUrl,
@@ -217,24 +220,25 @@ export function transform(
       });
       if (classified.classification === 'unparseable') counts.unparseable++;
     }
-    tenantListings.replace(db, vendor, fhirVersion, listings, capabilities);
+    await tenantListings.replace(
+      trx,
+      vendor,
+      fhirVersion,
+      listings,
+      capabilities,
+    );
     counts.capabilities = capabilities.length;
 
     if (latest.seenAt !== '') {
-      directoryCounts.record(
-        db,
+      await directoryCounts.record(
+        trx,
         vendor,
         fhirVersion,
         latest.seenAt,
         latest.tenantCount,
       );
     }
-
-    db.exec('COMMIT');
-  } catch (error) {
-    db.exec('ROLLBACK');
-    throw error;
-  }
+  });
 
   console.log(
     `${vendor} ${fhirVersion}: ${counts.directoryEntries} tenants, ${counts.capabilities} capabilities, ${counts.unparseable} unparseable` +

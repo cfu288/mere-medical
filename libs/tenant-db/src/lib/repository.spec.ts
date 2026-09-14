@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { sql } from 'kysely';
 import { DatabaseSync } from 'node:sqlite';
 import { TENANT_DB_SCHEMA, TENANT_DB_USER_VERSION } from './schema';
 import {
@@ -149,8 +150,8 @@ describe('tenant-db', () => {
     db = openTenantDb(writeArtifact(dir, SEEDS, TENANT_DB_USER_VERSION));
   });
 
-  afterEach(() => {
-    db.close();
+  afterEach(async () => {
+    await db.destroy();
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
@@ -174,30 +175,36 @@ describe('tenant-db', () => {
     fs.rmSync(other, { recursive: true, force: true });
   });
 
-  it('finds a tenant by a prefix of its name', () => {
-    const names = searchTenants(db, 'jose').map((tenant) => tenant.name);
+  it('finds a tenant by a prefix of its name', async () => {
+    const names = (await searchTenants(db, 'jose')).map(
+      (tenant) => tenant.name,
+    );
 
     expect(names).toEqual(['Saint Joseph Medical Center']);
   });
 
-  it('finds a tenant by its managing organization', () => {
-    const ids = searchTenants(db, 'mercy').map((tenant) => tenant.tenantId);
+  it('finds a tenant by its managing organization', async () => {
+    const ids = (await searchTenants(db, 'mercy')).map(
+      (tenant) => tenant.tenantId,
+    );
 
     expect(ids.sort()).toEqual(['epic-1', 'epic-2', 'epic-old']);
   });
 
-  it('keeps athena practices out of search results', () => {
-    const vendors = searchTenants(db, 'mercy').map((tenant) => tenant.vendor);
+  it('keeps athena practices out of search results', async () => {
+    const vendors = (await searchTenants(db, 'mercy')).map(
+      (tenant) => tenant.vendor,
+    );
 
     expect(vendors).not.toContain('athena');
   });
 
-  it('treats a typed fts operator as text rather than syntax', () => {
-    expect(searchTenants(db, 'mercy OR joseph')).toEqual([]);
+  it('treats a typed fts operator as text rather than syntax', async () => {
+    expect(await searchTenants(db, 'mercy OR joseph')).toEqual([]);
   });
 
-  it('lists tenants by name when the query is empty', () => {
-    const names = searchTenants(db, '').map((tenant) => tenant.name);
+  it('lists tenants by name when the query is empty', async () => {
+    const names = (await searchTenants(db, '')).map((tenant) => tenant.name);
 
     expect(names).toEqual([
       'Both Versions Health DSTU2',
@@ -209,65 +216,69 @@ describe('tenant-db', () => {
     ]);
   });
 
-  it('filters an empty query to one vendor', () => {
+  it('filters an empty query to one vendor', async () => {
     const vendors = new Set(
-      searchTenants(db, '', { vendors: ['cerner'] }).map((t) => t.vendor),
+      (await searchTenants(db, '', { vendors: ['cerner'] })).map(
+        (t) => t.vendor,
+      ),
     );
 
     expect([...vendors]).toEqual(['cerner']);
   });
 
-  it('filters a matching query to sandbox rows only', () => {
-    const ids = searchTenants(db, 'epic', { source: 'sandbox' }).map(
+  it('filters a matching query to sandbox rows only', async () => {
+    const ids = (await searchTenants(db, 'epic', { source: 'sandbox' })).map(
       (tenant) => tenant.tenantId,
     );
 
     expect(ids).toEqual(['sandbox_epic_r4']);
   });
 
-  it('filters a matching query to one fhir version', () => {
-    const names = searchTenants(db, 'both', { fhirVersion: 'DSTU2' }).map(
-      (tenant) => tenant.name,
-    );
+  it('filters a matching query to one fhir version', async () => {
+    const names = (
+      await searchTenants(db, 'both', { fhirVersion: 'DSTU2' })
+    ).map((tenant) => tenant.name);
 
     expect(names).toEqual(['Both Versions Health DSTU2']);
   });
 
-  it('returns nothing for a query that holds no searchable token', () => {
-    expect(searchTenants(db, '---')).toEqual([]);
+  it('returns nothing for a query that holds no searchable token', async () => {
+    expect(await searchTenants(db, '---')).toEqual([]);
   });
 
-  it('returns nothing for a non-string query value', () => {
-    expect(searchTenants(db, ['one', 'two'])).toEqual([]);
+  it('returns nothing for a non-string query value', async () => {
+    expect(await searchTenants(db, ['one', 'two'])).toEqual([]);
   });
 
-  it('lists the browse page when the query is empty', () => {
-    expect(searchTenants(db, '   ')).toHaveLength(6);
+  it('lists the browse page when the query is empty', async () => {
+    expect(await searchTenants(db, '   ')).toHaveLength(6);
   });
 
-  it('serves a tenant however old its directory sighting is', () => {
-    const names = searchTenants(db, 'legacy').map((tenant) => tenant.name);
+  it('serves a tenant however old its directory sighting is', async () => {
+    const names = (await searchTenants(db, 'legacy')).map(
+      (tenant) => tenant.name,
+    );
 
     expect(names).toEqual(['Mercy Legacy Clinic']);
-    expect(findTenantById(db, 'epic', 'epic-old')?.name).toBe(
+    expect((await findTenantById(db, 'epic', 'epic-old'))?.name).toBe(
       'Mercy Legacy Clinic',
     );
   });
 
-  it('returns the r4 row for an id published under both versions', () => {
-    const tenant = findTenantById(db, 'cerner', 'shared-id');
+  it('returns the r4 row for an id published under both versions', async () => {
+    const tenant = await findTenantById(db, 'cerner', 'shared-id');
 
     expect(tenant?.name).toBe('Both Versions Health R4');
   });
 
-  it('returns the requested version for an id published under both', () => {
-    const tenant = findTenantById(db, 'cerner', 'shared-id', 'DSTU2');
+  it('returns the requested version for an id published under both', async () => {
+    const tenant = await findTenantById(db, 'cerner', 'shared-id', 'DSTU2');
 
     expect(tenant?.name).toBe('Both Versions Health DSTU2');
   });
 
-  it('finds an athena practice that search deliberately hides', () => {
-    const tenant = findTenantById(db, 'athena', '99001');
+  it('finds an athena practice that search deliberately hides', async () => {
+    const tenant = await findTenantById(db, 'athena', '99001');
 
     expect(tenant).toEqual({
       tenantId: '99001',
@@ -283,13 +294,15 @@ describe('tenant-db', () => {
     });
   });
 
-  it('returns null for a tenant id no vendor publishes', () => {
-    expect(findTenantById(db, 'epic', 'nope')).toBeNull();
+  it('returns null for a tenant id no vendor publishes', async () => {
+    expect(await findTenantById(db, 'epic', 'nope')).toBeNull();
   });
 
-  it('opens the artifact read only', () => {
-    expect(() =>
-      db.exec("UPDATE tenants SET name = 'changed' WHERE tenant_id = 'epic-1'"),
-    ).toThrow();
+  it('opens the artifact read only', async () => {
+    await expect(
+      sql`UPDATE tenants SET name = ${'changed'} WHERE tenant_id = ${'epic-1'}`.execute(
+        db,
+      ),
+    ).rejects.toThrow();
   });
 });

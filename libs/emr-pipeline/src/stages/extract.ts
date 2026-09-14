@@ -1,7 +1,7 @@
-import type { DatabaseSync } from 'node:sqlite';
 import { setTimeout as sleep } from 'node:timers/promises';
 import type { FhirVersion, Vendor } from '@mere/shared';
 import { adapterFor } from '../adapters';
+import type { Warehouse } from '../db/open';
 import { parseBundle } from '../adapters/schemas';
 import { DirectoryEntry, FHIR_ACCEPT } from '../adapters/types';
 import * as downloads from '../db/repository/capability-downloads';
@@ -111,12 +111,12 @@ type CapabilityOutcome =
  */
 async function runWorkerPool(
   tasks: (() => Promise<CapabilityOutcome>)[],
-  onResult: (result: CapabilityOutcome) => void,
+  onResult: (result: CapabilityOutcome) => Promise<void>,
 ): Promise<void> {
   let next = 0;
   async function worker(): Promise<void> {
     while (next < tasks.length) {
-      onResult(await tasks[next++]());
+      await onResult(await tasks[next++]());
     }
   }
   const workers = Math.min(CONCURRENCY, Math.max(tasks.length, 1));
@@ -146,7 +146,7 @@ async function runWorkerPool(
  *   epic R4: 815 fetched, 5 failed
  */
 export async function startCapabilityStatementExtractionForVendor(
-  db: DatabaseSync,
+  db: Warehouse,
   vendor: Vendor,
   fhirVersion: FhirVersion,
 ): Promise<ExtractResult> {
@@ -158,15 +158,15 @@ export async function startCapabilityStatementExtractionForVendor(
     throw new Error(`${vendor} publishes no ${fhirVersion} directory`);
   }
 
-  const rejectDirectory = (message: string): ExtractResult => {
-    vendorTenantDirectory.recordFetchAttempt(
+  const rejectDirectory = async (message: string): Promise<ExtractResult> => {
+    await vendorTenantDirectory.recordFetchAttempt(
       db,
       vendor,
       fhirVersion,
       new Date().toISOString(),
       message,
     );
-    runs.record(db, vendor, fhirVersion, 1);
+    await runs.record(db, vendor, fhirVersion, 1);
     console.log(`${vendor} ${fhirVersion}: ${message}`);
     return { status: 'failed' };
   };
@@ -193,7 +193,7 @@ export async function startCapabilityStatementExtractionForVendor(
   if (!check.ok) {
     return rejectDirectory(`directory rejected: ${check.reason}`);
   }
-  vendorTenantDirectory.recordFetchAttempt(
+  await vendorTenantDirectory.recordFetchAttempt(
     db,
     vendor,
     fhirVersion,
@@ -201,13 +201,13 @@ export async function startCapabilityStatementExtractionForVendor(
     null,
   );
   if (
-    !vendorTenantDirectory.saveSnapshot(
+    !(await vendorTenantDirectory.saveSnapshot(
       db,
       vendor,
       fhirVersion,
       new Date().toISOString(),
       body,
-    )
+    ))
   ) {
     console.log(
       `${vendor} ${fhirVersion}: directory unchanged; updated the date on its latest snapshot`,
@@ -223,23 +223,18 @@ export async function startCapabilityStatementExtractionForVendor(
     if (url) capabilityUrls.add(url);
   }
 
-  db.exec('BEGIN');
-  try {
+  await db.transaction().execute(async (trx) => {
     for (const url of capabilityUrls) {
-      downloads.addUrl(db, { vendor, fhirVersion, url });
+      await downloads.addUrl(trx, { vendor, fhirVersion, url });
     }
-    db.exec('COMMIT');
-  } catch (error) {
-    db.exec('ROLLBACK');
-    throw error;
-  }
+  });
 
-  const documents = downloads
-    .selectForDownload(db, vendor, fhirVersion)
-    .filter((row) => capabilityUrls.has(row.url));
+  const documents = (
+    await downloads.selectForDownload(db, vendor, fhirVersion)
+  ).filter((row) => capabilityUrls.has(row.url));
   const insecure = documents.filter((row) => !isHttpsUrl(row.url));
   for (const row of insecure) {
-    downloads.recordFailure(db, {
+    await downloads.recordFailure(db, {
       id: row.id,
       error: new Error(`refusing to fetch non-https url ${row.url}`),
       now: new Date().toISOString(),
@@ -272,18 +267,18 @@ export async function startCapabilityStatementExtractionForVendor(
         return { kind: 'error', id: row.id, error };
       }
     }),
-    (outcome) => {
+    async (outcome) => {
       if (outcome.kind === 'ok' && isValidJson(outcome.body)) {
         const classification = classifyCapability(outcome.body).classification;
         const stored =
           classification === 'usable'
             ? null
-            : downloads.findById(db, outcome.id);
+            : await downloads.findById(db, outcome.id);
         const keepStored =
           stored?.body != null &&
           classifyCapability(stored.body).classification === 'usable';
         if (keepStored) {
-          downloads.recordFailure(db, {
+          await downloads.recordFailure(db, {
             id: outcome.id,
             error: new Error(
               `endpoint answered with an unusable capability (${classification}), keeping the last usable body`,
@@ -292,7 +287,7 @@ export async function startCapabilityStatementExtractionForVendor(
           });
           counts.failed++;
         } else {
-          downloads.recordSuccess(db, {
+          await downloads.recordSuccess(db, {
             id: outcome.id,
             body: outcome.body,
             now: new Date().toISOString(),
@@ -300,14 +295,14 @@ export async function startCapabilityStatementExtractionForVendor(
           counts.fetched++;
         }
       } else if (outcome.kind === 'ok') {
-        downloads.recordFailure(db, {
+        await downloads.recordFailure(db, {
           id: outcome.id,
           error: new Error('endpoint answered 200 with a non-JSON body'),
           now: new Date().toISOString(),
         });
         counts.failed++;
       } else {
-        downloads.recordFailure(db, {
+        await downloads.recordFailure(db, {
           id: outcome.id,
           error: outcome.error,
           now: new Date().toISOString(),
@@ -317,7 +312,7 @@ export async function startCapabilityStatementExtractionForVendor(
     },
   );
 
-  runs.record(db, vendor, fhirVersion, counts.failed);
+  await runs.record(db, vendor, fhirVersion, counts.failed);
   console.log(
     `${vendor} ${fhirVersion}: ${counts.fetched} fetched, ${counts.failed} failed`,
   );

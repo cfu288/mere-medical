@@ -2,7 +2,8 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import { openWarehouse } from '../db/open';
+import { sql } from 'kysely';
+import { openWarehouse, Warehouse } from '../db/open';
 import * as downloads from '../db/repository/capability-downloads';
 import { publish } from './publish';
 import * as vendorTenantDirectory from '../db/repository/vendor-tenant-directory-snapshots';
@@ -70,7 +71,7 @@ describe('warehouse to artifact', () => {
   let dir: string;
   let warehousePath: string;
   let artifactPath: string;
-  let db: DatabaseSync;
+  let db: Warehouse;
 
   beforeEach(() => {
     jest.spyOn(console, 'log').mockImplementation(() => undefined);
@@ -81,37 +82,42 @@ describe('warehouse to artifact', () => {
     process.env['EPIC_R4_ENDPOINTS_URL'] = 'https://directory.example.org/R4';
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     jest.restoreAllMocks();
-    db.close();
+    await db.destroy();
     fs.rmSync(dir, { recursive: true, force: true });
     delete process.env['EPIC_R4_ENDPOINTS_URL'];
   });
 
-  function idOf(url: string): number {
-    return (
-      db
-        .prepare('SELECT id FROM capability_downloads WHERE url = ?')
-        .get(url) as { id: number }
-    ).id;
+  async function idOf(url: string): Promise<number> {
+    const result = await sql<{
+      id: number;
+    }>`SELECT id FROM capability_downloads WHERE url = ${url}`.execute(db);
+    return result.rows[0].id;
   }
 
-  function seedEpicR4() {
-    vendorTenantDirectory.saveSnapshot(db, 'epic', 'R4', NOW, EPIC_DIRECTORY);
+  async function seedEpicR4() {
+    await vendorTenantDirectory.saveSnapshot(
+      db,
+      'epic',
+      'R4',
+      NOW,
+      EPIC_DIRECTORY,
+    );
 
     for (const host of ['one.example.org', 'two.example.org']) {
       const url = `https://${host}/api/FHIR/R4/metadata`;
-      downloads.addUrl(db, { vendor: 'epic', fhirVersion: 'R4', url });
-      downloads.recordSuccess(db, {
-        id: idOf(url),
+      await downloads.addUrl(db, { vendor: 'epic', fhirVersion: 'R4', url });
+      await downloads.recordSuccess(db, {
+        id: await idOf(url),
         body: capabilityBody(host),
         now: NOW,
       });
     }
   }
 
-  function capabilityDocument(): downloads.CapabilityDownload {
-    const document = downloads.findByUrl(db, {
+  async function capabilityDocument(): Promise<downloads.CapabilityDownload> {
+    const document = await downloads.findByUrl(db, {
       vendor: 'epic',
       fhirVersion: 'R4',
       url: 'https://one.example.org/api/FHIR/R4/metadata',
@@ -120,10 +126,10 @@ describe('warehouse to artifact', () => {
     return document;
   }
 
-  it('turns raw bodies into published rows a transform can replay offline', () => {
-    seedEpicR4();
+  it('turns raw bodies into published rows a transform can replay offline', async () => {
+    await seedEpicR4();
 
-    const counts = transform(db, 'epic', 'R4');
+    const counts = await transform(db, 'epic', 'R4');
 
     expect(counts).toEqual({
       directoryEntries: 2,
@@ -133,11 +139,11 @@ describe('warehouse to artifact', () => {
     });
   });
 
-  it('trims whitespace a directory leaves around a tenant name', () => {
-    seedEpicR4();
+  it('trims whitespace a directory leaves around a tenant name', async () => {
+    await seedEpicR4();
     const padded = JSON.parse(EPIC_DIRECTORY);
     padded.entry[0].resource.name = 'Example Health\t';
-    vendorTenantDirectory.saveSnapshot(
+    await vendorTenantDirectory.saveSnapshot(
       db,
       'epic',
       'R4',
@@ -145,22 +151,20 @@ describe('warehouse to artifact', () => {
       JSON.stringify(padded),
     );
 
-    transform(db, 'epic', 'R4');
+    await transform(db, 'epic', 'R4');
 
-    const row = db
-      .prepare(
-        `SELECT name FROM tenant_names
-         WHERE vendor = 'epic' AND fhir_version = 'R4' AND tenant_id = 'epic-1'`,
-      )
-      .get() as unknown as { name: string };
-    expect(row.name).toBe('Example Health');
+    const result = await sql<{ name: string }>`SELECT name FROM tenant_names
+         WHERE vendor = 'epic' AND fhir_version = 'R4' AND tenant_id = 'epic-1'`.execute(
+      db,
+    );
+    expect(result.rows[0].name).toBe('Example Health');
   });
 
-  it('collapses a tenant id repeated at the same url into one row', () => {
-    seedEpicR4();
+  it('collapses a tenant id repeated at the same url into one row', async () => {
+    await seedEpicR4();
     const duplicated = JSON.parse(EPIC_DIRECTORY);
     duplicated.entry.push(duplicated.entry[0]);
-    vendorTenantDirectory.saveSnapshot(
+    await vendorTenantDirectory.saveSnapshot(
       db,
       'epic',
       'R4',
@@ -168,7 +172,7 @@ describe('warehouse to artifact', () => {
       JSON.stringify(duplicated),
     );
 
-    const counts = transform(db, 'epic', 'R4');
+    const counts = await transform(db, 'epic', 'R4');
 
     expect(counts).toEqual({
       directoryEntries: 2,
@@ -178,13 +182,13 @@ describe('warehouse to artifact', () => {
     });
   });
 
-  it('keeps the remembered listing when a tenant id turns ambiguous', () => {
-    seedEpicR4();
+  it('keeps the remembered listing when a tenant id turns ambiguous', async () => {
+    await seedEpicR4();
     const conflicting = JSON.parse(EPIC_DIRECTORY);
     const clone = JSON.parse(JSON.stringify(conflicting.entry[0]));
     clone.resource.address = 'https://elsewhere.example.org/api/FHIR/R4';
     conflicting.entry.push(clone);
-    vendorTenantDirectory.saveSnapshot(
+    await vendorTenantDirectory.saveSnapshot(
       db,
       'epic',
       'R4',
@@ -192,7 +196,7 @@ describe('warehouse to artifact', () => {
       JSON.stringify(conflicting),
     );
 
-    const counts = transform(db, 'epic', 'R4');
+    const counts = await transform(db, 'epic', 'R4');
 
     expect(counts).toEqual({
       directoryEntries: 2,
@@ -200,13 +204,12 @@ describe('warehouse to artifact', () => {
       unparseable: 0,
       duplicateTenantIds: 1,
     });
-    const rows = db
-      .prepare(
-        `SELECT tenant_id, url, last_seen_at FROM tenant_listings
-         WHERE vendor = 'epic' AND fhir_version = 'R4' ORDER BY tenant_id, url`,
-      )
-      .all();
-    expect(rows).toEqual([
+    const result =
+      await sql`SELECT tenant_id, url, last_seen_at FROM tenant_listings
+         WHERE vendor = 'epic' AND fhir_version = 'R4' ORDER BY tenant_id, url`.execute(
+        db,
+      );
+    expect(result.rows).toEqual([
       {
         tenant_id: 'epic-1',
         url: 'https://one.example.org/api/FHIR/R4/',
@@ -220,8 +223,8 @@ describe('warehouse to artifact', () => {
     ]);
   });
 
-  it('merges athena practices into tenant directory entries', () => {
-    vendorTenantDirectory.saveSnapshot(
+  it('merges athena practices into tenant directory entries', async () => {
+    await vendorTenantDirectory.saveSnapshot(
       db,
       'athena',
       'R4',
@@ -245,7 +248,7 @@ describe('warehouse to artifact', () => {
       }),
     );
 
-    const counts = transform(db, 'athena', 'R4');
+    const counts = await transform(db, 'athena', 'R4');
 
     expect(counts).toEqual({
       directoryEntries: 1,
@@ -254,14 +257,12 @@ describe('warehouse to artifact', () => {
       duplicateTenantIds: 0,
     });
     expect(
-      db
-        .prepare(
-          `SELECT n.tenant_id, n.name, l.url FROM tenant_names n
+      (
+        await sql`SELECT n.tenant_id, n.name, l.url FROM tenant_names n
            JOIN tenant_listings l ON l.vendor = n.vendor
              AND l.fhir_version = n.fhir_version AND l.tenant_id = n.tenant_id
-           WHERE n.vendor = 'athena'`,
-        )
-        .all(),
+           WHERE n.vendor = 'athena'`.execute(db)
+      ).rows,
     ).toEqual([
       {
         tenant_id: '12345',
@@ -271,10 +272,10 @@ describe('warehouse to artifact', () => {
     ]);
   });
 
-  it('publishes the register endpoint a capability statement declares', () => {
-    seedEpicR4();
-    transform(db, 'epic', 'R4');
-    publish(db, artifactPath);
+  it('publishes the register endpoint a capability statement declares', async () => {
+    await seedEpicR4();
+    await transform(db, 'epic', 'R4');
+    await publish(db, artifactPath);
 
     const artifact = new DatabaseSync(artifactPath, { readOnly: true });
     const row = artifact
@@ -285,67 +286,64 @@ describe('warehouse to artifact', () => {
     expect(row.register).toBe('https://one.example.org/oauth2/register');
   });
 
-  it('writes an artifact holding the directory rows and every sandbox seed', () => {
-    seedEpicR4();
-    transform(db, 'epic', 'R4');
+  it('writes an artifact holding the directory rows and every sandbox seed', async () => {
+    await seedEpicR4();
+    await transform(db, 'epic', 'R4');
 
-    const result = publish(db, artifactPath);
+    const result = await publish(db, artifactPath);
 
     expect(result.rowCount).toBe(9);
     expect(fs.existsSync(artifactPath)).toBe(true);
   });
 
-  it('keeps a failed capability fetch from erasing the body it already had', () => {
-    seedEpicR4();
-    const before = capabilityDocument();
+  it('keeps a failed capability fetch from erasing the body it already had', async () => {
+    await seedEpicR4();
+    const before = await capabilityDocument();
 
-    downloads.recordFailure(db, {
+    await downloads.recordFailure(db, {
       id: before.id,
       error: new Error('ECONNRESET'),
       now: '2026-08-24T00:00:00.000Z',
     });
-    const after = downloads.findById(db, before.id);
+    const after = await downloads.findById(db, before.id);
 
     expect(after?.body).toBe(before.body);
   });
 
-  it('tracks the last attempted refresh apart from the last successful one', () => {
-    seedEpicR4();
-    const document = capabilityDocument();
+  it('tracks the last attempted refresh apart from the last successful one', async () => {
+    await seedEpicR4();
+    const document = await capabilityDocument();
 
-    downloads.recordFailure(db, {
+    await downloads.recordFailure(db, {
       id: document.id,
       error: new Error('ECONNRESET'),
       now: '2026-08-24T00:00:00.000Z',
     });
-    const row = db
-      .prepare(
-        'SELECT downloaded_at, attempted_at FROM capability_downloads WHERE id = ?',
-      )
-      .get(document.id);
+    const result = await sql`SELECT downloaded_at, attempted_at
+         FROM capability_downloads WHERE id = ${document.id}`.execute(db);
 
-    expect(row).toEqual({
+    expect(result.rows[0]).toEqual({
       downloaded_at: NOW,
       attempted_at: '2026-08-24T00:00:00.000Z',
     });
   });
 
-  it('keeps last-good auth urls for a still-listed tenant whose metadata broke', () => {
-    seedEpicR4();
-    vendorTenantDirectory.saveSnapshot(
+  it('keeps last-good auth urls for a still-listed tenant whose metadata broke', async () => {
+    await seedEpicR4();
+    await vendorTenantDirectory.saveSnapshot(
       db,
       'epic',
       'R4',
       '2026-08-24T00:00:00.000Z',
       EPIC_DIRECTORY,
     );
-    downloads.recordFailure(db, {
-      id: capabilityDocument().id,
+    await downloads.recordFailure(db, {
+      id: (await capabilityDocument()).id,
       error: new Error('endpoint answered 200 with a non-JSON body'),
       now: '2026-08-24T00:00:00.000Z',
     });
-    transform(db, 'epic', 'R4');
-    publish(db, artifactPath);
+    await transform(db, 'epic', 'R4');
+    await publish(db, artifactPath);
 
     const artifact = new DatabaseSync(artifactPath, { readOnly: true });
     const row = artifact
@@ -362,15 +360,15 @@ describe('warehouse to artifact', () => {
     });
   });
 
-  it('publishes the authorize url a re-crawled capability declares', () => {
-    seedEpicR4();
-    downloads.recordSuccess(db, {
-      id: capabilityDocument().id,
+  it('publishes the authorize url a re-crawled capability declares', async () => {
+    await seedEpicR4();
+    await downloads.recordSuccess(db, {
+      id: (await capabilityDocument()).id,
       body: capabilityBody('moved.example.org'),
       now: '2026-08-24T00:00:00.000Z',
     });
-    transform(db, 'epic', 'R4');
-    publish(db, artifactPath);
+    await transform(db, 'epic', 'R4');
+    await publish(db, artifactPath);
 
     const artifact = new DatabaseSync(artifactPath, { readOnly: true });
     const row = artifact
@@ -382,19 +380,19 @@ describe('warehouse to artifact', () => {
     });
   });
 
-  it('keeps the last non-empty name when a snapshot omits it', () => {
-    seedEpicR4();
+  it('keeps the last non-empty name when a snapshot omits it', async () => {
+    await seedEpicR4();
     const blank = JSON.parse(EPIC_DIRECTORY);
     blank.entry[0].resource.name = '';
-    vendorTenantDirectory.saveSnapshot(
+    await vendorTenantDirectory.saveSnapshot(
       db,
       'epic',
       'R4',
       '2026-08-24T00:00:00.000Z',
       JSON.stringify(blank),
     );
-    transform(db, 'epic', 'R4');
-    publish(db, artifactPath);
+    await transform(db, 'epic', 'R4');
+    await publish(db, artifactPath);
 
     const artifact = new DatabaseSync(artifactPath, { readOnly: true });
     const row = artifact
@@ -410,19 +408,19 @@ describe('warehouse to artifact', () => {
     });
   });
 
-  it('keeps auth urls through a url move whose new endpoint has not answered', () => {
-    seedEpicR4();
+  it('keeps auth urls through a url move whose new endpoint has not answered', async () => {
+    await seedEpicR4();
     const moved = JSON.parse(EPIC_DIRECTORY);
     moved.entry[0].resource.address = 'https://moved.example.org/api/FHIR/R4/';
-    vendorTenantDirectory.saveSnapshot(
+    await vendorTenantDirectory.saveSnapshot(
       db,
       'epic',
       'R4',
       '2026-08-24T00:00:00.000Z',
       JSON.stringify(moved),
     );
-    transform(db, 'epic', 'R4');
-    publish(db, artifactPath);
+    await transform(db, 'epic', 'R4');
+    await publish(db, artifactPath);
 
     const artifact = new DatabaseSync(artifactPath, { readOnly: true });
     const row = artifact
@@ -435,22 +433,22 @@ describe('warehouse to artifact', () => {
     });
   });
 
-  it('publishes an omitted tenant with its original directory sighting', () => {
-    seedEpicR4();
+  it('publishes an omitted tenant with its original directory sighting', async () => {
+    await seedEpicR4();
     const withoutFirst = JSON.stringify({
       resourceType: 'Bundle',
       entry: JSON.parse(EPIC_DIRECTORY).entry.slice(1),
     });
-    vendorTenantDirectory.saveSnapshot(
+    await vendorTenantDirectory.saveSnapshot(
       db,
       'epic',
       'R4',
       '2026-08-24T00:00:00.000Z',
       withoutFirst,
     );
-    transform(db, 'epic', 'R4');
+    await transform(db, 'epic', 'R4');
 
-    expect(publish(db, artifactPath).rowCount).toBe(9);
+    expect((await publish(db, artifactPath)).rowCount).toBe(9);
 
     const artifact = new DatabaseSync(artifactPath, { readOnly: true });
     const sightings = artifact
@@ -469,9 +467,9 @@ describe('warehouse to artifact', () => {
     ]);
   });
 
-  it('merges past an unparseable snapshot without losing tenants', () => {
-    seedEpicR4();
-    vendorTenantDirectory.saveSnapshot(
+  it('merges past an unparseable snapshot without losing tenants', async () => {
+    await seedEpicR4();
+    await vendorTenantDirectory.saveSnapshot(
       db,
       'epic',
       'R4',
@@ -479,10 +477,12 @@ describe('warehouse to artifact', () => {
       '<html>not a bundle</html>',
     );
 
-    const counts = transform(db, 'epic', 'R4');
+    const counts = await transform(db, 'epic', 'R4');
 
     expect(counts.directoryEntries).toBe(2);
-    expect(db.prepare('SELECT * FROM directory_counts').all()).toEqual([
+    expect(
+      (await sql`SELECT * FROM directory_counts`.execute(db)).rows,
+    ).toEqual([
       {
         vendor: 'epic',
         fhir_version: 'R4',
@@ -492,10 +492,10 @@ describe('warehouse to artifact', () => {
     ]);
   });
 
-  it('stamps sandbox rows from warehouse state rather than the clock', () => {
-    seedEpicR4();
-    transform(db, 'epic', 'R4');
-    publish(db, artifactPath);
+  it('stamps sandbox rows from warehouse state rather than the clock', async () => {
+    await seedEpicR4();
+    await transform(db, 'epic', 'R4');
+    await publish(db, artifactPath);
 
     const artifact = new DatabaseSync(artifactPath, { readOnly: true });
     const row = artifact
@@ -508,22 +508,26 @@ describe('warehouse to artifact', () => {
     expect(row).toEqual({ last_seen_in_directory: NOW });
   });
 
-  it('leaves a tenant the directory gave no name out of the artifact', () => {
-    seedEpicR4();
-    transform(db, 'epic', 'R4');
-    db.exec("UPDATE tenant_names SET name = NULL WHERE tenant_id = 'epic-1'");
+  it('leaves a tenant the directory gave no name out of the artifact', async () => {
+    await seedEpicR4();
+    await transform(db, 'epic', 'R4');
+    await sql`UPDATE tenant_names SET name = NULL WHERE tenant_id = ${'epic-1'}`.execute(
+      db,
+    );
 
-    expect(publish(db, artifactPath).rowCount).toBe(8);
+    expect((await publish(db, artifactPath)).rowCount).toBe(8);
   });
 
-  it('leaves staging rows in place for a vendor with no directory snapshots yet', () => {
-    seedEpicR4();
-    transform(db, 'epic', 'R4');
+  it('leaves staging rows in place for a vendor with no directory snapshots yet', async () => {
+    await seedEpicR4();
+    await transform(db, 'epic', 'R4');
 
-    const counts = transform(db, 'cerner', 'R4');
-    const remaining = db
-      .prepare('SELECT COUNT(*) AS n FROM tenant_names')
-      .get();
+    const counts = await transform(db, 'cerner', 'R4');
+    const remaining = (
+      await sql<{ n: number }>`SELECT COUNT(*) AS n FROM tenant_names`.execute(
+        db,
+      )
+    ).rows[0];
 
     expect({ counts: counts.directoryEntries, remaining }).toEqual({
       counts: 0,

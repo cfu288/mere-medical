@@ -1,10 +1,9 @@
 /**
- * Owns the `publications` table, which records when `tenants.db` was written and with
- * how many rows. Publish records each write and status lists the recent ones to show
- * row-count deltas.
+ * Owns the `publications` table, which records when `tenants.db` was written and
+ * with how many rows. Publish records each write and status lists the recent ones
+ * to show row-count deltas.
  */
-import type { DatabaseSync } from 'node:sqlite';
-import { allRows } from '@mere/tenant-db';
+import type { Warehouse } from '../open';
 
 interface Publication {
   published_at: string;
@@ -12,23 +11,27 @@ interface Publication {
 }
 
 /** Saves one publish's date and row count for the status history. */
-export function record(
-  db: DatabaseSync,
+export async function record(
+  db: Warehouse,
   publishedAt: string,
   rowCount: number,
-): void {
-  db.prepare(
-    `INSERT INTO publications (published_at, row_count) VALUES (?, ?)`,
-  ).run(publishedAt, rowCount);
+): Promise<void> {
+  await db
+    .insertInto('publications')
+    .values({ published_at: publishedAt, row_count: rowCount })
+    .execute();
 }
 
 /** The newest publishes first, at most `limit` rows. */
-export function listRecent(db: DatabaseSync, limit: number): Publication[] {
-  return allRows<Publication>(
-    db.prepare(
-      `SELECT published_at, row_count FROM publications
-       ORDER BY published_at DESC, id DESC LIMIT ?`,
-    ),
-    [limit],
-  );
+export async function listRecent(
+  db: Warehouse,
+  limit: number,
+): Promise<Publication[]> {
+  return db
+    .selectFrom('publications')
+    .select(['published_at', 'row_count'])
+    .orderBy('published_at', 'desc')
+    .orderBy('id', 'desc')
+    .limit(limit)
+    .execute();
 }

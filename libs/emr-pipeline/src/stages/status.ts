@@ -1,6 +1,6 @@
-import type { DatabaseSync } from 'node:sqlite';
 import type { Vendor } from '@mere/shared';
 import { ADAPTERS } from '../adapters';
+import type { Warehouse } from '../db/open';
 import * as downloads from '../db/repository/capability-downloads';
 import * as directoryCounts from '../db/repository/directory-counts';
 import * as publications from '../db/repository/publications';
@@ -29,7 +29,7 @@ function signed(n: number): string {
  *   publishes
  *     today     39,560 rows (+0)
  */
-export function formatStatus(db: DatabaseSync): string {
+export async function formatStatus(db: Warehouse): Promise<string> {
   const now = new Date().toISOString();
   const age = (ts: string): string => {
     const days = Math.floor((Date.parse(now) - Date.parse(ts)) / 86_400_000);
@@ -55,13 +55,13 @@ export function formatStatus(db: DatabaseSync): string {
   );
   for (const vendor of vendors) {
     for (const version of ADAPTERS[vendor].versions) {
-      const directoryCount = directoryCounts.find(db, vendor, version);
-      const latestSnapshot = vendorTenantDirectory.latestFetchedAt(
+      const directoryCount = await directoryCounts.find(db, vendor, version);
+      const latestSnapshot = await vendorTenantDirectory.latestFetchedAt(
         db,
         vendor,
         version,
       );
-      const latestCapability = downloads.latestDownloadedAt(
+      const latestCapability = await downloads.latestDownloadedAt(
         db,
         vendor,
         version,
@@ -71,7 +71,7 @@ export function formatStatus(db: DatabaseSync): string {
         .sort()
         .at(-1);
 
-      const [lastFailed, previousFailed] = runs.lastTwoFailedCounts(
+      const [lastFailed, previousFailed] = await runs.lastTwoFailedCounts(
         db,
         vendor,
         version,
@@ -104,7 +104,7 @@ export function formatStatus(db: DatabaseSync): string {
     }
   }
 
-  const recent = publications.listRecent(db, 6);
+  const recent = await publications.listRecent(db, 6);
   lines.push('');
   if (recent.length === 0) {
     lines.push('published: never');

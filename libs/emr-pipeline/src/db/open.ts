@@ -1,16 +1,21 @@
 import { DatabaseSync } from 'node:sqlite';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { getRow } from '@mere/tenant-db';
+import { Kysely } from 'kysely';
+import { nodeSqliteDialect } from '@mere/tenant-db';
+import type { WarehouseDatabase } from './warehouse-schema';
 
 const WAREHOUSE_FILE = path.join(__dirname, 'sql', 'warehouse.sql');
 const STAGING_FILE = path.join(__dirname, 'sql', 'staging.sql');
 
-/** Reads the warehouse schema version. */
+/** An open handle to the warehouse. */
+export type Warehouse = Kysely<WarehouseDatabase>;
+
+/** Reads the warehouse schema version, which is zero on a brand-new file. */
 function currentVersion(db: DatabaseSync): number {
-  const row = getRow<{ user_version: number }>(
-    db.prepare('PRAGMA user_version'),
-  );
+  const row = db.prepare('PRAGMA user_version').get() as
+    | { user_version: number }
+    | undefined;
   return row?.user_version ?? 0;
 }
 
@@ -28,29 +33,23 @@ function initialize(db: DatabaseSync): void {
   }
 }
 
-/**
- * Drops and recreates the staging tables for transform to refill.
- */
+/** Drops and recreates the staging tables for transform to refill. */
 function resetStagingTables(db: DatabaseSync): void {
   db.exec(fs.readFileSync(STAGING_FILE, 'utf8'));
 }
 
 /** True when every named table exists. */
 function hasTables(db: DatabaseSync, names: string[]): boolean {
-  const row = getRow<{ n: number }>(
-    db.prepare(
+  const row = db
+    .prepare(
       `SELECT COUNT(*) AS n FROM sqlite_master
        WHERE type = 'table' AND name IN (${names.map(() => '?').join(', ')})`,
-    ),
-    names,
-  );
+    )
+    .get(...names) as { n: number } | undefined;
   return row?.n === names.length;
 }
 
-/**
- * True when all three staging tables exist. A missing one makes openWarehouse
- * recreate the whole disposable layer.
- */
+/** True when all three staging tables exist. */
 function hasStagingTables(db: DatabaseSync): boolean {
   return hasTables(db, [
     'tenant_names',
@@ -59,10 +58,7 @@ function hasStagingTables(db: DatabaseSync): boolean {
   ]);
 }
 
-/**
- * True when every durable table exists. openWarehouse refuses a file without
- * them rather than writing into an unknown schema.
- */
+/** True when every durable table exists. */
 function hasCurrentWarehouseTables(db: DatabaseSync): boolean {
   return hasTables(db, [
     'capability_downloads',
@@ -79,7 +75,7 @@ function hasCurrentWarehouseTables(db: DatabaseSync): boolean {
  * recreating missing staging tables. A file without the warehouse tables is
  * refused.
  */
-export function openWarehouse(dbPath: string): DatabaseSync {
+export function openWarehouse(dbPath: string): Warehouse {
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });
   const db = new DatabaseSync(dbPath);
   try {
@@ -96,7 +92,7 @@ export function openWarehouse(dbPath: string): DatabaseSync {
     if (!hasStagingTables(db)) {
       resetStagingTables(db);
     }
-    return db;
+    return new Kysely<WarehouseDatabase>({ dialect: nodeSqliteDialect(db) });
   } catch (error) {
     db.close();
     throw error;

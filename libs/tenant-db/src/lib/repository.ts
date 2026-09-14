@@ -3,8 +3,10 @@
  * from it and never reaches back into the pipeline warehouse.
  */
 import { DatabaseSync } from 'node:sqlite';
-import { allRows, getRow } from './rows';
+import { Kysely, sql } from 'kysely';
+import { nodeSqliteDialect } from './node-sqlite';
 import { TENANT_DB_USER_VERSION } from './schema';
+import type { TenantDatabase } from './tenant-db-schema';
 import type {
   EndpointSource,
   FhirVersion,
@@ -14,14 +16,28 @@ import type {
 } from '@mere/shared';
 
 /** An open handle to a `tenants.db` artifact. */
-export type TenantDb = DatabaseSync;
+export type TenantDb = Kysely<TenantDatabase>;
 
 const DEFAULT_SEARCH_LIMIT = 50;
 
 /** The picker opens on this list before anyone types. */
 const DEFAULT_BROWSE_LIMIT = 100;
 
-interface TenantSqlRow {
+const SELECT_COLUMNS = [
+  't.tenant_id',
+  't.vendor',
+  't.fhir_version',
+  't.name',
+  't.url',
+  't.token',
+  't.authorize',
+  't.register',
+  't.managing_organization',
+  't.source',
+  't.searchable',
+] as const;
+
+interface TenantRow {
   tenant_id: string;
   vendor: string;
   fhir_version: string;
@@ -35,11 +51,7 @@ interface TenantSqlRow {
   searchable: number;
 }
 
-const SELECT_COLUMNS = `t.tenant_id, t.vendor, t.fhir_version, t.name, t.url,
-  t.token, t.authorize, t.register, t.managing_organization,
-  t.source, t.searchable`;
-
-function toTenant(row: TenantSqlRow): Tenant {
+function toTenant(row: TenantRow): Tenant {
   return {
     tenantId: row.tenant_id,
     vendor: row.vendor as Vendor,
@@ -63,7 +75,7 @@ export function openTenantDb(dbPath: string): TenantDb {
   const db = new DatabaseSync(dbPath, { readOnly: true });
 
   const version =
-    getRow<{ user_version: number }>(db.prepare('PRAGMA user_version'))
+    (db.prepare('PRAGMA user_version').get() as { user_version: number })
       ?.user_version ?? 0;
   if (version !== TENANT_DB_USER_VERSION) {
     db.close();
@@ -72,15 +84,15 @@ export function openTenantDb(dbPath: string): TenantDb {
     );
   }
 
-  const count = getRow<{ n: number }>(
-    db.prepare('SELECT COUNT(*) AS n FROM tenants'),
-  );
+  const count = db.prepare('SELECT COUNT(*) AS n FROM tenants').get() as {
+    n: number;
+  };
   if (!count || count.n === 0) {
     db.close();
     throw new Error(`${dbPath} holds no tenants`);
   }
 
-  return db;
+  return new Kysely<TenantDatabase>({ dialect: nodeSqliteDialect(db) });
 }
 
 /**
@@ -102,93 +114,70 @@ interface SearchOptions {
   source?: EndpointSource;
 }
 
-function filterClauses(options: SearchOptions): {
-  sql: string;
-  params: Record<string, string>;
-} {
-  const clauses: string[] = [];
-  const params: Record<string, string> = {};
-
-  if (options.vendors?.length) {
-    const names = options.vendors.map((vendor, index) => {
-      params[`vendor${index}`] = vendor;
-      return `:vendor${index}`;
-    });
-    clauses.push(`t.vendor IN (${names.join(', ')})`);
-  }
-  if (options.fhirVersion) {
-    clauses.push('t.fhir_version = :fhirVersion');
-    params['fhirVersion'] = options.fhirVersion;
-  }
-  if (options.source) {
-    clauses.push('t.source = :source');
-    params['source'] = options.source;
-  }
-  return { sql: clauses.map((clause) => ` AND ${clause}`).join(''), params };
-}
-
 /**
  * Full-text search over searchable tenants, ranked by FTS5 relevance. An empty
  * query lists tenants by name, the picker's initial view. An empty `vendors`
  * array matches nothing rather than every vendor.
  */
-export function searchTenants(
+export async function searchTenants(
   db: TenantDb,
   query: unknown,
   options: SearchOptions = {},
-): Tenant[] {
+): Promise<Tenant[]> {
   if (query != null && typeof query !== 'string') return [];
   if (options.vendors && options.vendors.length === 0) return [];
   const safeQuery = query ?? '';
-  const { sql: filters, params } = filterClauses(options);
   const match = toFtsQuery(safeQuery);
   const browsing = safeQuery.trim() === '';
-  const limit = browsing ? DEFAULT_BROWSE_LIMIT : DEFAULT_SEARCH_LIMIT;
-
   if (!browsing && !match) return [];
 
-  if (!match) {
-    return allRows<TenantSqlRow>(
-      db.prepare(
-        `SELECT ${SELECT_COLUMNS} FROM tenants t
-         WHERE t.searchable = 1${filters}
-         ORDER BY t.name COLLATE NOCASE LIMIT :limit`,
-      ),
-      { ...params, limit },
-    ).map(toTenant);
-  }
+  let builder = db
+    .selectFrom('tenants as t')
+    .select(SELECT_COLUMNS)
+    .where('t.searchable', '=', 1)
+    .$if(!!options.vendors?.length, (qb) =>
+      qb.where('t.vendor', 'in', options.vendors as string[]),
+    )
+    .$if(options.fhirVersion !== undefined, (qb) =>
+      qb.where('t.fhir_version', '=', options.fhirVersion as string),
+    )
+    .$if(options.source !== undefined, (qb) =>
+      qb.where('t.source', '=', options.source as string),
+    );
 
-  return allRows<TenantSqlRow>(
-    db.prepare(
-      `SELECT ${SELECT_COLUMNS} FROM tenants t
-       JOIN tenants_fts f ON f.rowid = t.id
-       WHERE tenants_fts MATCH :match AND t.searchable = 1${filters}
-       ORDER BY f.rank LIMIT :limit`,
-    ),
-    { ...params, match, limit },
-  ).map(toTenant);
+  builder = match
+    ? builder
+        .innerJoin('tenants_fts as f', 'f.rowid', 't.id')
+        .where(sql<boolean>`tenants_fts MATCH ${match}`)
+        .orderBy(sql`f.rank`)
+        .limit(DEFAULT_SEARCH_LIMIT)
+    : builder.orderBy(sql`t.name COLLATE NOCASE`).limit(DEFAULT_BROWSE_LIMIT);
+
+  const rows = await builder.execute();
+  return rows.map(toTenant);
 }
 
 /**
  * One tenant by vendor and id. Ids published under both versions return the R4
  * row, the newer contract.
  */
-export function findTenantById(
+export async function findTenantById(
   db: TenantDb,
   vendor: Vendor,
   tenantId: string,
   fhirVersion?: FhirVersion,
-): Tenant | null {
-  const row = getRow<TenantSqlRow>(
-    db.prepare(
-      `SELECT ${SELECT_COLUMNS} FROM tenants t
-       WHERE t.vendor = :vendor AND t.tenant_id = :tenantId
-         AND (:fhirVersion IS NULL OR t.fhir_version = :fhirVersion)
-       ORDER BY CASE t.fhir_version WHEN 'R4' THEN 0 ELSE 1 END
-       LIMIT 1`,
-    ),
-    { vendor, tenantId, fhirVersion: fhirVersion ?? null },
-  );
+): Promise<Tenant | null> {
+  const row = await db
+    .selectFrom('tenants as t')
+    .select(SELECT_COLUMNS)
+    .where('t.vendor', '=', vendor)
+    .where('t.tenant_id', '=', tenantId)
+    .$if(fhirVersion !== undefined, (qb) =>
+      qb.where('t.fhir_version', '=', fhirVersion as string),
+    )
+    .orderBy(sql`CASE t.fhir_version WHEN 'R4' THEN 0 ELSE 1 END`)
+    .limit(1)
+    .executeTakeFirst();
 
   return row ? toTenant(row) : null;
 }

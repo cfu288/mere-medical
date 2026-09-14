@@ -1,8 +1,8 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import type { DatabaseSync } from 'node:sqlite';
-import { openWarehouse } from '../db/open';
+import { sql } from 'kysely';
+import { openWarehouse, Warehouse } from '../db/open';
 import * as downloads from '../db/repository/capability-downloads';
 import * as vendorTenantDirectory from '../db/repository/vendor-tenant-directory-snapshots';
 import {
@@ -53,20 +53,20 @@ const DIRECTORY_URL = 'https://directory.example.org/R4';
 const NOW = '2026-08-23T00:00:00.000Z';
 
 describe('checkDirectory', () => {
-  it('accepts a bundle whose declared total counts every entry', () => {
+  it('accepts a bundle whose declared total counts every entry', async () => {
     expect(checkTenantDirectoryCounts(6918, 13836, 13836)).toEqual({
       ok: true,
     });
   });
 
-  it('rejects a bundle declaring a total its entries do not reach', () => {
+  it('rejects a bundle declaring a total its entries do not reach', async () => {
     expect(checkTenantDirectoryCounts(96, 96, 3326)).toEqual({
       ok: false,
       reason: 'directory declares total 3326 but holds 96 entries',
     });
   });
 
-  it('rejects a directory that yielded no tenants', () => {
+  it('rejects a directory that yielded no tenants', async () => {
     expect(checkTenantDirectoryCounts(0, 40, undefined)).toEqual({
       ok: false,
       reason: 'directory yielded no tenants',
@@ -76,7 +76,7 @@ describe('checkDirectory', () => {
 
 describe('extract', () => {
   let dir: string;
-  let db: DatabaseSync;
+  let db: Warehouse;
   const realFetch = globalThis.fetch;
 
   beforeEach(() => {
@@ -87,30 +87,29 @@ describe('extract', () => {
     process.env['EPIC_CLIENT_ID'] = 'client-123';
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     jest.restoreAllMocks();
     jest.useRealTimers();
-    db.close();
+    await db.destroy();
     globalThis.fetch = realFetch;
     fs.rmSync(dir, { recursive: true, force: true });
     delete process.env['EPIC_R4_ENDPOINTS_URL'];
     delete process.env['EPIC_CLIENT_ID'];
   });
 
-  function idOf(url: string): number {
-    return (
-      db
-        .prepare('SELECT id FROM capability_downloads WHERE url = ?')
-        .get(url) as { id: number }
-    ).id;
+  async function idOf(url: string): Promise<number> {
+    const result = await sql<{
+      id: number;
+    }>`SELECT id FROM capability_downloads WHERE url = ${url}`.execute(db);
+    return result.rows[0].id;
   }
 
-  function seedGoodCapability(): number {
-    vendorTenantDirectory.saveSnapshot(db, 'epic', 'R4', NOW, DIRECTORY);
+  async function seedGoodCapability(): Promise<number> {
+    await vendorTenantDirectory.saveSnapshot(db, 'epic', 'R4', NOW, DIRECTORY);
     const url = 'https://one.example.org/api/FHIR/R4/metadata';
-    downloads.addUrl(db, { vendor: 'epic', fhirVersion: 'R4', url });
-    const capabilityId = idOf(url);
-    downloads.recordSuccess(db, {
+    await downloads.addUrl(db, { vendor: 'epic', fhirVersion: 'R4', url });
+    const capabilityId = await idOf(url);
+    await downloads.recordSuccess(db, {
       id: capabilityId,
       body: CAPABILITY,
       now: NOW,
@@ -138,37 +137,41 @@ describe('extract', () => {
   }
 
   it('keeps a good body when the endpoint later answers 404', async () => {
-    const capabilityId = seedGoodCapability();
+    const capabilityId = await seedGoodCapability();
     respondWith(404, '<html>404 Not Found</html>');
 
     await run();
 
-    expect(downloads.findById(db, capabilityId)?.body).toBe(CAPABILITY);
+    expect((await downloads.findById(db, capabilityId))?.body).toBe(CAPABILITY);
   });
 
   it('keeps a good body when the endpoint answers 200 with non-JSON', async () => {
-    const capabilityId = seedGoodCapability();
+    const capabilityId = await seedGoodCapability();
     respondWith(200, '<html>down for maintenance</html>');
 
     await run();
-    const failed = db
-      .prepare('SELECT failed AS n FROM capability_downloads WHERE id = ?')
-      .get(capabilityId);
+    const failed = (
+      await sql`SELECT failed AS n FROM capability_downloads WHERE id = ${capabilityId}`.execute(
+        db,
+      )
+    ).rows[0];
 
-    expect(downloads.findById(db, capabilityId)?.body).toBe(CAPABILITY);
+    expect((await downloads.findById(db, capabilityId))?.body).toBe(CAPABILITY);
     expect(failed).toEqual({ n: 1 });
   });
 
   it('keeps a usable body when the endpoint answers 200 with an unusable one', async () => {
-    const capabilityId = seedGoodCapability();
+    const capabilityId = await seedGoodCapability();
     respondWith(200, JSON.stringify({ resourceType: 'OperationOutcome' }));
 
     await run();
-    const failed = db
-      .prepare('SELECT failed AS n FROM capability_downloads WHERE id = ?')
-      .get(capabilityId);
+    const failed = (
+      await sql`SELECT failed AS n FROM capability_downloads WHERE id = ${capabilityId}`.execute(
+        db,
+      )
+    ).rows[0];
 
-    expect(downloads.findById(db, capabilityId)?.body).toBe(CAPABILITY);
+    expect((await downloads.findById(db, capabilityId))?.body).toBe(CAPABILITY);
     expect(failed).toEqual({ n: 1 });
   });
 
@@ -178,20 +181,26 @@ describe('extract', () => {
     await run();
 
     expect(
-      db
-        .prepare(
-          'SELECT vendor, fhir_version, body FROM vendor_tenant_directory_snapshots',
+      (
+        await sql`SELECT vendor, fhir_version, body FROM vendor_tenant_directory_snapshots`.execute(
+          db,
         )
-        .all(),
+      ).rows,
     ).toEqual([{ vendor: 'epic', fhir_version: 'R4', body: DIRECTORY }]);
   });
 
-  it('updates the snapshot date when the directory body is unchanged', () => {
+  it('updates the snapshot date when the directory body is unchanged', async () => {
     expect(
-      vendorTenantDirectory.saveSnapshot(db, 'epic', 'R4', NOW, DIRECTORY),
+      await vendorTenantDirectory.saveSnapshot(
+        db,
+        'epic',
+        'R4',
+        NOW,
+        DIRECTORY,
+      ),
     ).toBe(true);
     expect(
-      vendorTenantDirectory.saveSnapshot(
+      await vendorTenantDirectory.saveSnapshot(
         db,
         'epic',
         'R4',
@@ -201,21 +210,27 @@ describe('extract', () => {
     ).toBe(false);
 
     expect(
-      db
-        .prepare('SELECT fetched_at FROM vendor_tenant_directory_snapshots')
-        .all(),
+      (
+        await sql`SELECT fetched_at FROM vendor_tenant_directory_snapshots`.execute(
+          db,
+        )
+      ).rows,
     ).toEqual([{ fetched_at: '2026-09-01T00:00:00.000Z' }]);
   });
 
   it('keeps the directory snapshot when the server answers an error', async () => {
-    seedGoodCapability();
+    await seedGoodCapability();
     globalThis.fetch = (async () =>
       new Response('gone', { status: 404 })) as typeof fetch;
 
     await run();
 
     expect(
-      db.prepare('SELECT body FROM vendor_tenant_directory_snapshots').all(),
+      (
+        await sql`SELECT body FROM vendor_tenant_directory_snapshots`.execute(
+          db,
+        )
+      ).rows,
     ).toEqual([{ body: DIRECTORY }]);
   });
 
@@ -245,7 +260,7 @@ describe('extract', () => {
     }) as typeof fetch;
 
     const result = await run();
-    const document = downloads.findByUrl(db, {
+    const document = await downloads.findByUrl(db, {
       vendor: 'epic',
       fhirVersion: 'R4',
       url: 'http://127.0.0.1:8080/api/FHIR/R4/metadata',
@@ -263,13 +278,15 @@ describe('extract', () => {
   });
 
   it('leaves a capability the directory no longer lists unfetched', async () => {
-    seedGoodCapability();
-    downloads.addUrl(db, {
+    await seedGoodCapability();
+    await downloads.addUrl(db, {
       vendor: 'epic',
       fhirVersion: 'R4',
       url: 'https://gone.example.org/api/FHIR/R4/metadata',
     });
-    const delistedId = idOf('https://gone.example.org/api/FHIR/R4/metadata');
+    const delistedId = await idOf(
+      'https://gone.example.org/api/FHIR/R4/metadata',
+    );
     const requested: string[] = [];
     globalThis.fetch = (async (url: string | URL) => {
       if (String(url).includes('directory')) {
@@ -282,11 +299,11 @@ describe('extract', () => {
     await run();
 
     expect(requested).toEqual(['https://one.example.org/api/FHIR/R4/metadata']);
-    expect(downloads.findById(db, delistedId)?.body).toBeNull();
+    expect((await downloads.findById(db, delistedId))?.body).toBeNull();
   });
 
   it('records the rejection of a 200 directory body it cannot parse', async () => {
-    seedGoodCapability();
+    await seedGoodCapability();
     jest.useFakeTimers({ now: new Date('2026-09-01T00:00:00.000Z') });
     globalThis.fetch = (async () =>
       new Response('<html>maintenance</html>', {
@@ -295,9 +312,12 @@ describe('extract', () => {
       })) as typeof fetch;
 
     const result = await run();
-    const attempt = db
-      .prepare('SELECT attempted_at, error FROM directory_fetches')
-      .get() as { attempted_at: string; error: string | null };
+    const attempt = (
+      await sql<{
+        attempted_at: string;
+        error: string | null;
+      }>`SELECT attempted_at, error FROM directory_fetches`.execute(db)
+    ).rows[0];
 
     expect({
       status: result.status,
@@ -311,7 +331,7 @@ describe('extract', () => {
   });
 
   it('keeps the directory snapshot when a refetch loses every tenant', async () => {
-    seedGoodCapability();
+    await seedGoodCapability();
     globalThis.fetch = (async () =>
       new Response(JSON.stringify({ resourceType: 'Bundle', entry: [] }), {
         status: 200,
@@ -322,9 +342,11 @@ describe('extract', () => {
 
     expect({
       status: result.status,
-      copies: db
-        .prepare('SELECT body FROM vendor_tenant_directory_snapshots')
-        .all(),
+      copies: (
+        await sql`SELECT body FROM vendor_tenant_directory_snapshots`.execute(
+          db,
+        )
+      ).rows,
     }).toEqual({
       status: 'failed',
       copies: [{ body: DIRECTORY }],

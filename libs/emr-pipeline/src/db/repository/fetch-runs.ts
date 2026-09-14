@@ -3,35 +3,35 @@
  * count. Extract records a row when a run ends and status reads the last two per
  * vendor and version to render the failing column and its delta.
  */
-import type { DatabaseSync } from 'node:sqlite';
 import type { FhirVersion, Vendor } from '@mere/shared';
-import { allRows } from '@mere/tenant-db';
+import type { Warehouse } from '../open';
 
 /** Saves a finished extract run's failure count for the status deltas. */
-export function record(
-  db: DatabaseSync,
+export async function record(
+  db: Warehouse,
   vendor: Vendor,
   fhirVersion: FhirVersion,
   failed: number,
-): void {
-  db.prepare(
-    `INSERT INTO fetch_runs (vendor, fhir_version, failed)
-     VALUES (?, ?, ?)`,
-  ).run(vendor, fhirVersion, failed);
+): Promise<void> {
+  await db
+    .insertInto('fetch_runs')
+    .values({ vendor, fhir_version: fhirVersion, failed })
+    .execute();
 }
 
 /** The failed counts of the last two finished runs, newest first. */
-export function lastTwoFailedCounts(
-  db: DatabaseSync,
+export async function lastTwoFailedCounts(
+  db: Warehouse,
   vendor: Vendor,
   fhirVersion: FhirVersion,
-): number[] {
-  return allRows<{ failed: number }>(
-    db.prepare(
-      `SELECT failed FROM fetch_runs
-       WHERE vendor = ? AND fhir_version = ?
-       ORDER BY id DESC LIMIT 2`,
-    ),
-    [vendor, fhirVersion],
-  ).map((run) => run.failed);
+): Promise<number[]> {
+  const rows = await db
+    .selectFrom('fetch_runs')
+    .select('failed')
+    .where('vendor', '=', vendor)
+    .where('fhir_version', '=', fhirVersion)
+    .orderBy('id', 'desc')
+    .limit(2)
+    .execute();
+  return rows.map((row) => row.failed);
 }

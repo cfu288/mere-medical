@@ -3,9 +3,8 @@
  * directory listed when transform last parsed it. Transform records it and status
  * reads it for the endpoints column and the transform-behind flag.
  */
-import type { DatabaseSync } from 'node:sqlite';
 import type { FhirVersion, Vendor } from '@mere/shared';
-import { getRow } from '@mere/tenant-db';
+import type { Warehouse } from '../open';
 
 /**
  * How many tenants a vendor's directory listed the last time transform parsed
@@ -20,36 +19,44 @@ interface DirectoryCount {
  * Saves the newest snapshot's tenant count when transform finishes a
  * vendor and version.
  */
-export function record(
-  db: DatabaseSync,
+export async function record(
+  db: Warehouse,
   vendor: Vendor,
   fhirVersion: FhirVersion,
   seenAt: string,
   tenantCount: number,
-): void {
-  db.prepare(
-    `INSERT INTO directory_counts (vendor, fhir_version, seen_at, tenant_count)
-     VALUES (?, ?, ?, ?)
-     ON CONFLICT (vendor, fhir_version) DO UPDATE SET
-       seen_at = excluded.seen_at,
-       tenant_count = excluded.tenant_count`,
-  ).run(vendor, fhirVersion, seenAt, tenantCount);
+): Promise<void> {
+  await db
+    .insertInto('directory_counts')
+    .values({
+      vendor,
+      fhir_version: fhirVersion,
+      seen_at: seenAt,
+      tenant_count: tenantCount,
+    })
+    .onConflict((oc) =>
+      oc.columns(['vendor', 'fhir_version']).doUpdateSet({
+        seen_at: seenAt,
+        tenant_count: tenantCount,
+      }),
+    )
+    .execute();
 }
 
 /**
  * The saved count for one vendor and version, rendered by status as the
  * endpoints column.
  */
-export function find(
-  db: DatabaseSync,
+export async function find(
+  db: Warehouse,
   vendor: Vendor,
   fhirVersion: FhirVersion,
-): DirectoryCount | null {
-  return getRow<DirectoryCount>(
-    db.prepare(
-      `SELECT seen_at, tenant_count FROM directory_counts
-       WHERE vendor = ? AND fhir_version = ?`,
-    ),
-    [vendor, fhirVersion],
-  );
+): Promise<DirectoryCount | null> {
+  const row = await db
+    .selectFrom('directory_counts')
+    .select(['seen_at', 'tenant_count'])
+    .where('vendor', '=', vendor)
+    .where('fhir_version', '=', fhirVersion)
+    .executeTakeFirst();
+  return row ?? null;
 }

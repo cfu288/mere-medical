@@ -76,16 +76,16 @@ async function main(argv: string[]): Promise<number> {
       }
       case 'transform': {
         for (const target of targets()) {
-          transform(db, target.vendor, target.fhirVersion);
+          await transform(db, target.vendor, target.fhirVersion);
         }
         return 0;
       }
       case 'publish': {
-        publish(db, DEFAULT_ARTIFACT);
+        await publish(db, DEFAULT_ARTIFACT);
         return 0;
       }
       case 'status': {
-        console.log(formatStatus(db));
+        console.log(await formatStatus(db));
         return 0;
       }
       default:
@@ -93,7 +93,7 @@ async function main(argv: string[]): Promise<number> {
         return 2;
     }
   } finally {
-    db.close();
+    await db.destroy();
   }
 }
 

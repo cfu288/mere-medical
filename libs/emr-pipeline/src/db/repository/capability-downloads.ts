@@ -3,9 +3,10 @@
  * listed with its last good body and last attempt. Extract writes it, transform
  * reads the bodies, status reads the dates.
  */
-import type { DatabaseSync } from 'node:sqlite';
+import type { Selectable } from 'kysely';
 import type { FhirVersion, Vendor } from '@mere/shared';
-import { allRows, getRow } from '@mere/tenant-db';
+import type { Warehouse } from '../open';
+import type { CapabilityDownloadsTable } from '../warehouse-schema';
 
 interface CapabilityKey {
   vendor: Vendor;
@@ -23,17 +24,8 @@ export type CapabilityDownload = CapabilityKey &
     | { id: number; body: null; downloadedAt: null }
   );
 
-interface CapabilitySqlRow {
-  id: number;
-  vendor: string;
-  fhir_version: string;
-  url: string;
-  body: string | null;
-  downloaded_at: string | null;
-}
-
 /** Maps a raw sql row onto the download shape, pairing body and date. */
-function toRow(row: CapabilitySqlRow): CapabilityDownload {
+function toRow(row: Selectable<CapabilityDownloadsTable>): CapabilityDownload {
   const key = {
     id: row.id,
     vendor: row.vendor as Vendor,
@@ -50,38 +42,41 @@ function toRow(row: CapabilitySqlRow): CapabilityDownload {
  * Registers a url for download. A url already present keeps its stored body and
  * dates.
  */
-export function addUrl(db: DatabaseSync, key: CapabilityKey): void {
-  db.prepare(
-    `INSERT INTO capability_downloads (vendor, fhir_version, url)
-     VALUES (?, ?, ?)
-     ON CONFLICT (vendor, fhir_version, url) DO NOTHING`,
-  ).run(key.vendor, key.fhirVersion, key.url);
+export async function addUrl(db: Warehouse, key: CapabilityKey): Promise<void> {
+  await db
+    .insertInto('capability_downloads')
+    .values({ vendor: key.vendor, fhir_version: key.fhirVersion, url: key.url })
+    .onConflict((oc) =>
+      oc.columns(['vendor', 'fhir_version', 'url']).doNothing(),
+    )
+    .execute();
 }
 
 /** One download by its url. */
-export function findByUrl(
-  db: DatabaseSync,
+export async function findByUrl(
+  db: Warehouse,
   key: CapabilityKey,
-): CapabilityDownload | null {
-  const row = getRow<CapabilitySqlRow>(
-    db.prepare(
-      `SELECT * FROM capability_downloads
-       WHERE vendor = ? AND fhir_version = ? AND url = ?`,
-    ),
-    [key.vendor, key.fhirVersion, key.url],
-  );
+): Promise<CapabilityDownload | null> {
+  const row = await db
+    .selectFrom('capability_downloads')
+    .selectAll()
+    .where('vendor', '=', key.vendor)
+    .where('fhir_version', '=', key.fhirVersion)
+    .where('url', '=', key.url)
+    .executeTakeFirst();
   return row ? toRow(row) : null;
 }
 
 /** One download by its row id. */
-export function findById(
-  db: DatabaseSync,
+export async function findById(
+  db: Warehouse,
   id: number,
-): CapabilityDownload | null {
-  const row = getRow<CapabilitySqlRow>(
-    db.prepare('SELECT * FROM capability_downloads WHERE id = ?'),
-    [id],
-  );
+): Promise<CapabilityDownload | null> {
+  const row = await db
+    .selectFrom('capability_downloads')
+    .selectAll()
+    .where('id', '=', id)
+    .executeTakeFirst();
   return row ? toRow(row) : null;
 }
 
@@ -95,20 +90,21 @@ interface DownloadSuccess {
  * Stores a fetched body with its download and attempt dates and clears any
  * earlier failure.
  */
-export function recordSuccess(db: DatabaseSync, result: DownloadSuccess): void {
-  db.prepare(
-    `UPDATE capability_downloads
-     SET body          = :body,
-         downloaded_at = :now,
-         attempted_at  = :now,
-         failed        = 0,
-         error         = NULL
-     WHERE id = :id`,
-  ).run({
-    id: result.id,
-    body: result.body,
-    now: result.now,
-  });
+export async function recordSuccess(
+  db: Warehouse,
+  result: DownloadSuccess,
+): Promise<void> {
+  await db
+    .updateTable('capability_downloads')
+    .set({
+      body: result.body,
+      downloaded_at: result.now,
+      attempted_at: result.now,
+      failed: 0,
+      error: null,
+    })
+    .where('id', '=', result.id)
+    .execute();
 }
 
 interface DownloadFailure {
@@ -133,56 +129,52 @@ function serializeError(error: unknown): string {
  * Records a failed fetch as an attempt date and error. It never touches the
  * body, so the last good copy survives an outage.
  */
-export function recordFailure(
-  db: DatabaseSync,
+export async function recordFailure(
+  db: Warehouse,
   failure: DownloadFailure,
-): void {
-  db.prepare(
-    `UPDATE capability_downloads
-     SET attempted_at = :now,
-         failed       = 1,
-         error        = :error
-     WHERE id = :id`,
-  ).run({
-    id: failure.id,
-    now: failure.now,
-    error: serializeError(failure.error),
-  });
+): Promise<void> {
+  await db
+    .updateTable('capability_downloads')
+    .set({
+      attempted_at: failure.now,
+      failed: 1,
+      error: serializeError(failure.error),
+    })
+    .where('id', '=', failure.id)
+    .execute();
 }
 
 /** The newest successful download date, shown by status as the crawl age. */
-export function latestDownloadedAt(
-  db: DatabaseSync,
+export async function latestDownloadedAt(
+  db: Warehouse,
   vendor: Vendor,
   fhirVersion: FhirVersion,
-): string | null {
-  return (
-    getRow<{ newest: string | null }>(
-      db.prepare(
-        `SELECT MAX(downloaded_at) AS newest FROM capability_downloads
-         WHERE vendor = ? AND fhir_version = ?`,
-      ),
-      [vendor, fhirVersion],
-    )?.newest ?? null
-  );
+): Promise<string | null> {
+  const row = await db
+    .selectFrom('capability_downloads')
+    .select((eb) => eb.fn.max('downloaded_at').as('newest'))
+    .where('vendor', '=', vendor)
+    .where('fhir_version', '=', fhirVersion)
+    .executeTakeFirst();
+  return row?.newest ?? null;
 }
 
 /**
  * Every url for one vendor and version, never-downloaded first. Each run
  * refetches all of them.
  */
-export function selectForDownload(
-  db: DatabaseSync,
+export async function selectForDownload(
+  db: Warehouse,
   vendor: Vendor,
   fhirVersion: FhirVersion,
-): CapabilityDownload[] {
-  const rows = allRows<CapabilitySqlRow>(
-    db.prepare(
-      `SELECT * FROM capability_downloads
-       WHERE vendor = ? AND fhir_version = ?
-       ORDER BY (body IS NULL) DESC, downloaded_at ASC`,
-    ),
-    [vendor, fhirVersion],
-  );
+): Promise<CapabilityDownload[]> {
+  const rows = await db
+    .selectFrom('capability_downloads')
+    .selectAll()
+    .where('vendor', '=', vendor)
+    .where('fhir_version', '=', fhirVersion)
+    .orderBy((eb) => eb('body', 'is', null), 'desc')
+    .orderBy('downloaded_at', 'asc')
+    .execute();
   return rows.map(toRow);
 }
