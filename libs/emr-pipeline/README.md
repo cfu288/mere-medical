@@ -4,8 +4,6 @@ Build-time ETL that turns vendor EMR directories into `libs/tenant-db/data/tenan
 
 ```
 vendor APIs / files ──▶ warehouse.db ──▶ tenants.db ──▶ apps/api ──▶ apps/web
-     (extract)          (state+staging,     (committed,    (SQL, FTS)   (frozen HTTP
-                         gitignored)       ~13.5 MiB)                  contract)
 ```
 
 ```
@@ -30,9 +28,9 @@ and `HEALOW_R4_FILE_LOCATION` reads healow's practice list from a file instead
 of downloading it.
 
 The directory downloads are large, ~90 MB for Epic and ~132 MB for athena, so a
-run peaks around 1.3 GB of heap. The workflow saves the gitignored
-`data/warehouse.db` between runs as the rolling `warehouse-backup` release
-asset.
+run peaks around 1.3 GB of heap. The workflow keeps the gitignored
+`data/warehouse.db` as the `warehouse` release asset. Each run restores it,
+and only a run that publishes uploads it back.
 
 ## Data flow
 

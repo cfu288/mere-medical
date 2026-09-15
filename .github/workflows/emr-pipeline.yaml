@@ -40,19 +40,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Restore warehouse backup
-        id: restore
+      - name: Restore warehouse
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p libs/emr-pipeline/data
-          if gh release view warehouse-backup >/dev/null 2>&1; then
-            gh release download warehouse-backup --pattern warehouse.db.zst
+          if gh release view warehouse >/dev/null 2>&1; then
+            gh release download warehouse --pattern warehouse.db.zst
             zstd -d warehouse.db.zst -o libs/emr-pipeline/data/warehouse.db
             rm warehouse.db.zst
-            echo "warehouse backup restored"
+            echo "warehouse restored"
           else
-            echo "no backup found; starting from a fresh warehouse"
+            echo "no warehouse release found; starting fresh"
           fi
 
       - name: Extract
@@ -71,17 +70,16 @@ jobs:
           npx nx run emr-pipeline:status >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Save warehouse backup
-        if: always() && steps.restore.outcome == 'success'
+      - name: Upload warehouse
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           zstd -T0 -3 -f libs/emr-pipeline/data/warehouse.db -o warehouse.db.zst
-          gh release create warehouse-backup --prerelease \
-            --title 'EMR warehouse backup' \
-            --notes 'Rolling emr-pipeline warehouse backup; replaced by each refresh run.' \
+          gh release create warehouse --prerelease \
+            --title 'EMR pipeline warehouse' \
+            --notes 'The live warehouse as of the latest publish. Run history lives in its tables.' \
             2>/dev/null || true
-          gh release upload warehouse-backup warehouse.db.zst --clobber
+          gh release upload warehouse warehouse.db.zst --clobber
 
       - name: Open pull request
         id: pr
