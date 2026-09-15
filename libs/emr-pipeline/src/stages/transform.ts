@@ -25,6 +25,18 @@ interface ClassifiedCapability {
 }
 
 /**
+ * Accepts an oauth url only when it is absolute https. Vendor metadata
+ * sometimes declares relative paths, plain http, or junk text, and the
+ * browser opens these urls at login. Returns the trimmed url, or undefined
+ * to mean absent.
+ */
+function httpsUrl(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  if (!trimmed) return undefined;
+  return URL.parse(trimmed)?.protocol === 'https:' ? trimmed : undefined;
+}
+
+/**
  * Reads a CapabilityStatement body into SMART auth urls plus a classification of
  * whether they are usable. Unreadable bodies classify as `unparseable` instead of
  * throwing.
@@ -53,9 +65,9 @@ export function classifyCapability(body: string): ClassifiedCapability {
   }
 
   const classified = {
-    authorizeUrl: uris['authorize'],
-    tokenUrl: uris['token'],
-    registerUrl: uris['register'],
+    authorizeUrl: httpsUrl(uris['authorize']),
+    tokenUrl: httpsUrl(uris['token']),
+    registerUrl: httpsUrl(uris['register']),
   };
 
   if (!classified.authorizeUrl) {

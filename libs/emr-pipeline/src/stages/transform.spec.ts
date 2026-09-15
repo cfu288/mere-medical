@@ -42,6 +42,48 @@ describe('classifyCapability', () => {
     });
   });
 
+  it('classifies a statement whose token uri is not https', () => {
+    const facts = classifyCapability(
+      capability([
+        { url: 'authorize', valueUri: 'https://example.org/oauth2/authorize' },
+        { url: 'token', valueUri: 'http://example.org/oauth2/token' },
+      ]),
+    );
+
+    expect(facts.classification).toBe('missing_token');
+  });
+
+  it('classifies a statement whose authorize uri is a relative path', () => {
+    const facts = classifyCapability(
+      capability([
+        { url: 'authorize', valueUri: '/oauth2/authorize' },
+        { url: 'token', valueUri: 'https://example.org/oauth2/token' },
+      ]),
+    );
+
+    expect(facts.classification).toBe('missing_authorize');
+  });
+
+  it('trims padded uris and drops a malformed register uri', () => {
+    const facts = classifyCapability(
+      capability([
+        {
+          url: 'authorize',
+          valueUri: ' https://example.org/oauth2/authorize ',
+        },
+        { url: 'token', valueUri: 'https://example.org/oauth2/token' },
+        { url: 'register', valueUri: 'not a url' },
+      ]),
+    );
+
+    expect(facts).toEqual({
+      classification: 'usable',
+      authorizeUrl: 'https://example.org/oauth2/authorize',
+      tokenUrl: 'https://example.org/oauth2/token',
+      registerUrl: undefined,
+    });
+  });
+
   it('classifies a statement whose security block declares no token uri', () => {
     const facts = classifyCapability(
       capability([
