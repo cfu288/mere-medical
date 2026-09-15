@@ -36,39 +36,41 @@ asset.
 
 ## Data flow
 
-1. **Discover.** One HTTP GET per vendor and version downloads its tenant
-   directory, a JSON FHIR Bundle listing every tenant. Each vendor lays out
-   ids, names, and urls differently (Epic uses `Endpoint` resources, cerner and
-   healow pair `Organization` with `Endpoint`, athena tags `Organization`s with a
-   practice extension), so each vendor has a `parseDirectory` adapter. A body that
-   parses, yields tenants, and matches its declared total is written verbatim as
-   one JSON text column in `vendor_tenant_directory_snapshots` (vendor,
-   fhir_version, fetched_at, body). Nothing is split into columns here; that is
-   transform's job. Refetching an identical body only updates the newest
-   snapshot's date.
-2. **Extract.** For every tenant url in the directory, one HTTP GET of
-   `{url}/metadata` downloads its CapabilityStatement, the JSON document that
-   declares the tenant's OAuth urls. `capability_downloads` keeps one row per
-   url. A success overwrites the row's `body` and `downloaded_at`. A failure, a
-   non-JSON 200, or a body that would replace a usable one with an unusable one
-   writes only `attempted_at`, `failed`, and `error`. Rows are written as
-   fetches finish, so a killed run keeps everything already fetched.
-3. **Transform.** Offline. Rereads every stored snapshot body oldest to newest
-   through the vendor's adapter and rebuilds the three staging tables with
-   `DELETE` + `INSERT`. `tenant_names` gets each tenant's merged name and
-   managing organization. `tenant_listings` gets one row per tenant and url,
-   with the newest date that listed it. `url_smart_security` gets each url's
-   authorize, token, and register urls read from its stored capability body,
-   plus a classification.
-4. **Publish.** One query joins the staging tables by the derivation rules
-   below and writes a brand-new `tenants.db`. Each row is one publishable
-   tenant, plus the adapters' fixed sandbox rows stamped with the newest
-   snapshot time.
+1. **Discover.** The discover step downloads each vendor and version's tenant
+   directory with a single HTTP GET. The directory is a JSON FHIR Bundle
+   listing every tenant, but each vendor lays out ids, names, and urls
+   differently (Epic uses `Endpoint` resources, cerner and healow pair
+   `Organization` with `Endpoint`, athena tags `Organization`s with a practice
+   extension), so each vendor has its own `parseDirectory` adapter. When the
+   body parses, yields tenants, and matches its declared total, discover
+   stores it verbatim as one JSON text column in
+   `vendor_tenant_directory_snapshots` (vendor, fhir_version, fetched_at,
+   body). Splitting it into columns is transform's job. When a refetch returns
+   an identical body, discover only updates the newest snapshot's date.
+2. **Extract.** The extract step downloads each tenant's CapabilityStatement,
+   the JSON document that declares the tenant's OAuth urls, with one HTTP GET
+   of `{url}/metadata`. `capability_downloads` keeps one row per url. On
+   success, extract overwrites the row's `body` and `downloaded_at`. On a
+   failure, a non-JSON 200, or a body that would replace a usable one with an
+   unusable one, extract writes only `attempted_at`, `failed`, and `error`.
+   Extract writes each row as its fetch finishes, so a killed run keeps
+   everything already fetched.
+3. **Transform.** The transform step runs offline. It rereads every stored
+   snapshot body oldest to newest through the vendor's adapter and rebuilds
+   the three staging tables with `DELETE` + `INSERT`. `tenant_names` gets each
+   tenant's merged name and managing organization. `tenant_listings` gets one
+   row per tenant and url, with the newest date that listed it.
+   `url_smart_security` gets each url's authorize, token, and register urls
+   read from its stored capability body, plus a classification.
+4. **Publish.** The publish step joins the staging tables in one query, using
+   the derivation rules below, and writes a brand-new `tenants.db`. Each row
+   is one publishable tenant. The adapters' fixed sandbox rows are added,
+   stamped with the newest snapshot time.
 
-Rows never leave the artifact, and readers ignore how old
-`last_seen_in_directory` is, so delisted tenants stay reachable and connected
-users keep syncing. Any future expiry belongs in the API as a filter on that
-column.
+Delisted tenants stay reachable and connected users keep syncing, because
+rows never leave the artifact and readers ignore how old
+`last_seen_in_directory` is. Any future expiry belongs in the API as a filter
+on that column.
 
 ## Guardrails
 
