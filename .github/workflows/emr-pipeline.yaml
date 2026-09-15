@@ -45,13 +45,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p libs/emr-pipeline/data
-          if gh release view warehouse >/dev/null 2>&1; then
-            gh release download warehouse --pattern warehouse.db.zst
+          if gh release download warehouse --pattern warehouse.db.zst 2>restore-error.txt; then
             zstd -d warehouse.db.zst -o libs/emr-pipeline/data/warehouse.db
             rm warehouse.db.zst
             echo "warehouse restored"
-          else
+          elif grep -q 'release not found' restore-error.txt; then
             echo "no warehouse release found; starting fresh"
+          else
+            cat restore-error.txt
+            exit 1
           fi
 
       - name: Extract
