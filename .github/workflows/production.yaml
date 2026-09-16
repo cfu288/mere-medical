@@ -39,20 +39,27 @@ jobs:
         id: promote
         run: |
           set -euo pipefail
-          sha7=${GITHUB_SHA:0:7}
           version=$(git show -s --format=%cs HEAD | tr '-' '.')
+
+          digest() {
+            docker buildx imagetools inspect "$1" --format '{{json .Manifest}}' | jq -er '.digest'
+          }
+          app=$(digest "cfu288/mere-medical:sha-$GITHUB_SHA")
+          demo=$(digest "cfu288/mere-medical:sha-$GITHUB_SHA-demo")
+          docs=$(digest "cfu288/mere-medical-docs:sha-$GITHUB_SHA")
+          echo "Promoting $GITHUB_SHA as $version: app=$app demo=$demo docs=$docs"
 
           docker buildx imagetools create \
             -t cfu288/mere-medical:latest \
             -t "cfu288/mere-medical:$version" \
-            "cfu288/mere-medical:sha-$sha7"
+            "cfu288/mere-medical@$app"
           docker buildx imagetools create \
             -t cfu288/mere-medical:latest-demo \
             -t "cfu288/mere-medical:$version-demo" \
-            "cfu288/mere-medical:sha-$sha7-demo"
+            "cfu288/mere-medical@$demo"
           docker buildx imagetools create \
             -t cfu288/mere-medical-docs:latest \
-            "cfu288/mere-medical-docs:sha-$sha7"
+            "cfu288/mere-medical-docs@$docs"
 
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "revision=$GITHUB_SHA" >> "$GITHUB_OUTPUT"

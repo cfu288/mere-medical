@@ -6,6 +6,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: production-promote
+  cancel-in-progress: false
+
 env:
   username: cfu288
 
