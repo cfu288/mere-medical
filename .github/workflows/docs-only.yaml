@@ -6,10 +6,6 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: production-promote
-  cancel-in-progress: false
-
 env:
   username: cfu288
 
@@ -39,8 +35,4 @@ jobs:
           push: true
           file: Dockerfile-docs
           sbom: true
-          labels: |
-            org.opencontainers.image.revision=${{ github.sha }}
-          tags: |
-            cfu288/mere-medical-docs:latest
-            cfu288/mere-medical-docs:beta
+          tags: cfu288/mere-medical-docs:latest

@@ -111,7 +111,9 @@ jobs:
       - name: Create manifest list and push
         working-directory: /tmp/digests
         run: |
-          docker buildx imagetools create -t cfu288/mere-medical:beta \
+          docker buildx imagetools create \
+            -t cfu288/mere-medical:beta \
+            -t "cfu288/mere-medical:sha-${GITHUB_SHA:0:7}" \
             $(printf 'cfu288/mere-medical@sha256:%s ' *)
 
   app-demo:
@@ -123,7 +125,9 @@ jobs:
 
       - name: Get app version
         id: version
-        run: echo "version=$(git show -s --format=%cs HEAD | tr '-' '.')" >> $GITHUB_OUTPUT
+        run: |
+          echo "version=$(git show -s --format=%cs HEAD | tr '-' '.')" >> $GITHUB_OUTPUT
+          echo "sha7=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
@@ -152,7 +156,9 @@ jobs:
           labels: |
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
             org.opencontainers.image.revision=${{ github.sha }}
-          tags: cfu288/mere-medical:beta-demo
+          tags: |
+            cfu288/mere-medical:beta-demo
+            cfu288/mere-medical:sha-${{ steps.version.outputs.sha7 }}-demo
 
   docs:
     if: github.event_name == 'push' || !github.event.pull_request.draft
@@ -160,6 +166,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Get short sha
+        id: sha
+        run: echo "sha7=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
@@ -184,4 +194,6 @@ jobs:
           cache-to: type=gha,mode=max,scope=docs
           labels: |
             org.opencontainers.image.revision=${{ github.sha }}
-          tags: cfu288/mere-medical-docs:beta
+          tags: |
+            cfu288/mere-medical-docs:beta
+            cfu288/mere-medical-docs:sha-${{ steps.sha.outputs.sha7 }}

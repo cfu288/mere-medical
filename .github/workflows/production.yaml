@@ -21,6 +21,9 @@ jobs:
       version: ${{ steps.promote.outputs.version }}
       revision: ${{ steps.promote.outputs.revision }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
         with:
@@ -36,57 +39,23 @@ jobs:
         id: promote
         run: |
           set -euo pipefail
+          sha7=${GITHUB_SHA:0:7}
+          version=$(git show -s --format=%cs HEAD | tr '-' '.')
 
-          digest() {
-            docker buildx imagetools inspect "$1" --format '{{json .Manifest}}' | jq -er '.digest'
-          }
-          config() {
-            docker buildx imagetools inspect "$1" --format '{{json .Image}}'
-          }
-          label() {
-            jq -r --arg key "$2" '(.["linux/amd64"] // .).config.Labels[$key] // empty' <<<"$1"
-          }
-
-          app_digest=$(digest cfu288/mere-medical:beta)
-          demo_digest=$(digest cfu288/mere-medical:beta-demo)
-          docs_digest=$(digest cfu288/mere-medical-docs:beta)
-          echo "Pinned digests: app=$app_digest demo=$demo_digest docs=$docs_digest"
-
-          app_config=$(config "cfu288/mere-medical@$app_digest")
-          demo_config=$(config "cfu288/mere-medical@$demo_digest")
-          docs_config=$(config "cfu288/mere-medical-docs@$docs_digest")
-
-          version=$(label "$app_config" org.opencontainers.image.version)
-          revision=$(label "$app_config" org.opencontainers.image.revision)
-          demo_revision=$(label "$demo_config" org.opencontainers.image.revision)
-          docs_revision=$(label "$docs_config" org.opencontainers.image.revision)
-
-          if ! [[ "$version" =~ ^[0-9]{4}\.[0-9]{2}\.[0-9]{2}$ ]]; then
-            echo "Refusing to promote: app image version label is '$version', expected CalVer. Run a staging build first."
-            exit 1
-          fi
-          if ! [[ "$revision" =~ ^[0-9a-f]{40}$ ]]; then
-            echo "Refusing to promote: app image revision label is '$revision', expected a full commit sha."
-            exit 1
-          fi
-          if [[ "$demo_revision" != "$revision" || "$docs_revision" != "$revision" ]]; then
-            echo "Refusing to promote a mixed set: app=$revision demo=$demo_revision docs=$docs_revision. Wait for the latest staging run to finish green."
-            exit 1
-          fi
           docker buildx imagetools create \
             -t cfu288/mere-medical:latest \
             -t "cfu288/mere-medical:$version" \
-            "cfu288/mere-medical@$app_digest"
+            "cfu288/mere-medical:sha-$sha7"
           docker buildx imagetools create \
             -t cfu288/mere-medical:latest-demo \
             -t "cfu288/mere-medical:$version-demo" \
-            "cfu288/mere-medical@$demo_digest"
+            "cfu288/mere-medical:sha-$sha7-demo"
           docker buildx imagetools create \
             -t cfu288/mere-medical-docs:latest \
-            "cfu288/mere-medical-docs@$docs_digest"
+            "cfu288/mere-medical-docs:sha-$sha7"
 
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "revision=$revision" >> "$GITHUB_OUTPUT"
+          echo "revision=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
 
   release:
     runs-on: ubuntu-latest
