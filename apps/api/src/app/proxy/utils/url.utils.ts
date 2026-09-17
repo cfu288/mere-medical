@@ -20,6 +20,14 @@ export function isAbsolute(path: string) {
  * differently depending on the operating system and also doesn't work for some cases.
  */
 
+function trimTrailingSlashes(value: string): string {
+  let end = value.length;
+  while (end > 0 && value[end - 1] === '/') {
+    end--;
+  }
+  return value.slice(0, end);
+}
+
 function normalize(strArray: string[]) {
   const resultArray: string[] = [];
   if (strArray.length === 0) {
@@ -60,10 +68,12 @@ function normalize(strArray: string[]) {
     }
     if (i < strArray.length - 1) {
       // Removing the ending slashes for each component but the last.
-      component = component.replace(/[/]+$/, '');
+      component = trimTrailingSlashes(component);
     } else {
       // For the last component we will combine multiple slashes to a single one.
-      component = component.replace(/[/]+$/, '/');
+      const trimmed = trimTrailingSlashes(component);
+      component =
+        trimmed.length === component.length ? component : `${trimmed}/`;
     }
 
     resultArray.push(component);
