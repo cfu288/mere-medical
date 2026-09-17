@@ -58,8 +58,8 @@ describe('AppModule boot', () => {
   ])('compiles with %s env', async (_name, env) => {
     process.env = env as NodeJS.ProcessEnv;
     jest.resetModules();
-    const { Test } = require('@nestjs/testing');
-    const { AppModule } = require('./app.module');
+    const { Test } = await import('@nestjs/testing');
+    const { AppModule } = await import('./app.module');
     const compiled: Promise<TestingModule> = Test.createTestingModule({
       imports: [AppModule],
     }).compile();

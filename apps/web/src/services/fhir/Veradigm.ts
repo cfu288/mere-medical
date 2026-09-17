@@ -43,6 +43,12 @@ import {
 } from '../../repositories/ConnectionRepository';
 import uuid4 from '../../shared/utils/UUIDUtils';
 import { ResourceMapper, VendorSync, mapSearchedResources } from './sync';
+import {
+  bulkUpsertDocuments,
+  createDocument,
+  documentExistsByMetadataId,
+  findDocumentsByResourceType,
+} from '../../repositories/ClinicalDocumentRepository';
 
 export {
   createVeradigmClient,
@@ -52,12 +58,6 @@ export {
   type VeradigmTokenSet,
   type VeradigmOAuthConfigOptions,
 } from '@mere/fhir-oauth';
-import {
-  bulkUpsertDocuments,
-  createDocument,
-  documentExistsByMetadataId,
-  findDocumentsByResourceType,
-} from '../../repositories/ClinicalDocumentRepository';
 
 export enum VeradigmLocalStorageKeys {
   VERADIGM_BASE_URL = 'veradigmBaseUrl',

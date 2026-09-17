@@ -116,9 +116,9 @@ export type PartialResultsCallback = (partial: {
 export async function fetchRecordsUntilCompleteDays(
   db: RxDatabase<DatabaseCollections>,
   user_id: string,
-  minDays: number = 5,
-  existingOffset: number = 0,
-  timeoutMs: number = 3000,
+  minDays = 5,
+  existingOffset = 0,
+  timeoutMs = 3000,
   onPartialResults?: PartialResultsCallback,
 ): Promise<{
   records: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>;
@@ -134,7 +134,7 @@ export async function fetchRecordsUntilCompleteDays(
   let hasMore = true;
   let iteration = 0;
 
-  while (true) {
+  for (;;) {
     iteration++;
     const batchStartTime = Date.now();
     const batch = await fetchRawRecords(

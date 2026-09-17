@@ -35,7 +35,7 @@ export function createTestClinicalDocument(
 export function createDocumentsForDays(
   userId: string,
   days: number,
-  recordsPerDay: number = 10,
+  recordsPerDay = 10,
 ): ClinicalDocument<BundleEntry<FhirResource>>[] {
   const docs: ClinicalDocument<BundleEntry<FhirResource>>[] = [];
   const baseDate = new Date('2024-01-15T12:00:00Z');

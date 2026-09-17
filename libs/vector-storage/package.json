@@ -12,8 +12,7 @@
   },
   "dependencies": {
     "tslib": "^2.3.0",
-    "dexie": "^3.2.3",
-    "idb": "^7.1.1"
+    "rxdb": "^13.17.1"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.194",

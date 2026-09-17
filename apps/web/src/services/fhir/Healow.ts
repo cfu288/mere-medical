@@ -59,6 +59,12 @@ import {
   extractRelativeFhirPath,
   type HealowTokenSet,
 } from '@mere/fhir-oauth';
+import {
+  bulkUpsertDocuments,
+  createDocument,
+  documentExistsByMetadataId,
+  findDocumentsByResourceType,
+} from '../../repositories/ClinicalDocumentRepository';
 
 export {
   createHealowClient,
@@ -73,12 +79,6 @@ export {
   type HealowTokenSet,
   type HealowOAuthConfigOptions,
 } from '@mere/fhir-oauth';
-import {
-  bulkUpsertDocuments,
-  createDocument,
-  documentExistsByMetadataId,
-  findDocumentsByResourceType,
-} from '../../repositories/ClinicalDocumentRepository';
 
 export enum HealowLocalStorageKeys {
   HEALOW_BASE_URL = 'healowBaseUrl',
