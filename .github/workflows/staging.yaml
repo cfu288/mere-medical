@@ -14,6 +14,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: staging-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 env:
   username: cfu288
 
@@ -31,12 +35,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
 
       - name: Get app version
         id: version
-        run: echo "version=$(git show -s --format=%cs HEAD | tr '-' '.')+$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        run: echo "version=$(git show -s --format=%cs HEAD | tr '-' '.')" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
@@ -61,6 +63,9 @@ jobs:
           cache-to: type=gha,mode=max,scope=app-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
           build-args: |
             MERE_APP_VERSION=${{ steps.version.outputs.version }}
+          labels: |
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
           outputs: type=image,name=cfu288/mere-medical,push-by-digest=true,name-canonical=true,push=${{ github.event_name == 'push' }}
 
       - name: Export digest
@@ -106,7 +111,9 @@ jobs:
       - name: Create manifest list and push
         working-directory: /tmp/digests
         run: |
-          docker buildx imagetools create -t cfu288/mere-medical:beta \
+          docker buildx imagetools create \
+            -t cfu288/mere-medical:beta \
+            -t "cfu288/mere-medical:sha-$GITHUB_SHA" \
             $(printf 'cfu288/mere-medical@sha256:%s ' *)
 
   app-demo:
@@ -115,12 +122,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
 
       - name: Get app version
         id: version
-        run: echo "version=$(git show -s --format=%cs HEAD | tr '-' '.')+$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        run: echo "version=$(git show -s --format=%cs HEAD | tr '-' '.')" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
@@ -146,7 +151,12 @@ jobs:
           build-args: |
             IS_DEMO=enabled
             MERE_APP_VERSION=${{ steps.version.outputs.version }}
-          tags: cfu288/mere-medical:beta-demo
+          labels: |
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          tags: |
+            cfu288/mere-medical:beta-demo
+            cfu288/mere-medical:sha-${{ github.sha }}-demo
 
   docs:
     if: github.event_name == 'push' || !github.event.pull_request.draft
@@ -176,4 +186,8 @@ jobs:
           sbom: true
           cache-from: type=gha,scope=docs
           cache-to: type=gha,mode=max,scope=docs
-          tags: cfu288/mere-medical-docs:beta
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+          tags: |
+            cfu288/mere-medical-docs:beta
+            cfu288/mere-medical-docs:sha-${{ github.sha }}

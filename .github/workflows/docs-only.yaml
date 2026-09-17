@@ -6,11 +6,16 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: production-promote
+  cancel-in-progress: false
+
 env:
   username: cfu288
 
 jobs:
   docs:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

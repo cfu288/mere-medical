@@ -1,4 +1,4 @@
-name: build production
+name: promote production
 
 on:
   workflow_dispatch:
@@ -6,28 +6,23 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: production-promote
+  cancel-in-progress: false
+
 env:
   username: cfu288
 
 jobs:
-  app-multiplatform:
+  promote:
     if: github.ref == 'refs/heads/main'
-    strategy:
-      matrix:
-        include:
-          - runner: ubuntu-latest
-            platform: linux/amd64
-          - runner: ubuntu-22.04-arm
-            platform: linux/arm64
-    runs-on: ${{ matrix.runner }}
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.promote.outputs.version }}
+      revision: ${{ steps.promote.outputs.revision }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-
-      - name: Generate CalVer env var
-        run: echo "RELEASE_CALVER_VERSION=$(date '+%Y.%m.%d')" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
@@ -40,145 +35,46 @@ jobs:
           username: ${{ env.username }}
           password: ${{ secrets.registry_password }}
 
-      - name: Build and push by platform
-        id: build
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
-        with:
-          context: .
-          platforms: ${{ matrix.platform }}
-          sbom: true
-          cache-from: type=gha,scope=app-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
-          cache-to: type=gha,mode=max,scope=app-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
-          build-args: |
-            MERE_APP_VERSION=${{ env.RELEASE_CALVER_VERSION }}
-          outputs: type=image,name=cfu288/mere-medical,push-by-digest=true,name-canonical=true,push=true
-
-      - name: Export digest
+      - name: Promote staging images
+        id: promote
         run: |
-          mkdir -p /tmp/digests
-          digest="${{ steps.build.outputs.digest }}"
-          touch "/tmp/digests/${digest#sha256:}"
-          echo "RELEASE_CALVER_VERSION=${{ env.RELEASE_CALVER_VERSION }}" >> /tmp/digests/version.txt
+          set -euo pipefail
+          version=$(git show -s --format=%cs HEAD | tr '-' '.')
 
-      - name: Upload digest
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: app-digests-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
-          path: /tmp/digests/*
-          if-no-files-found: error
-          retention-days: 1
+          digest() {
+            docker buildx imagetools inspect "$1" --format '{{json .Manifest}}' | jq -er '.digest'
+          }
+          app=$(digest "cfu288/mere-medical:sha-$GITHUB_SHA")
+          demo=$(digest "cfu288/mere-medical:sha-$GITHUB_SHA-demo")
+          docs=$(digest "cfu288/mere-medical-docs:sha-$GITHUB_SHA")
+          echo "Promoting $GITHUB_SHA as $version: app=$app demo=$demo docs=$docs"
 
-  app-manifest:
+          docker buildx imagetools create \
+            -t cfu288/mere-medical:latest \
+            -t "cfu288/mere-medical:$version" \
+            "cfu288/mere-medical@$app"
+          docker buildx imagetools create \
+            -t cfu288/mere-medical:latest-demo \
+            -t "cfu288/mere-medical:$version-demo" \
+            "cfu288/mere-medical@$demo"
+          docker buildx imagetools create \
+            -t cfu288/mere-medical-docs:latest \
+            "cfu288/mere-medical-docs@$docs"
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "revision=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+
+  release:
     runs-on: ubuntu-latest
-    needs:
-      - app-multiplatform
-    if: github.ref == 'refs/heads/main'
+    needs: promote
     permissions:
       contents: write
     steps:
-      - name: Download digests
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          path: /tmp/digests
-          pattern: app-digests-*
-          merge-multiple: true
-
-      - name: Set CalVer from artifact
-        run: |
-          echo "RELEASE_CALVER_VERSION=$(cat /tmp/digests/version.txt | head -n1 | cut -d= -f2)" >> $GITHUB_ENV
-          rm /tmp/digests/version.txt
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
-        with:
-          version: v0.36.1
-
-      - name: Log in to DockerHub
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
-        with:
-          username: ${{ env.username }}
-          password: ${{ secrets.registry_password }}
-
-      - name: Create manifest list and push
-        working-directory: /tmp/digests
-        run: |
-          docker buildx imagetools create \
-            -t cfu288/mere-medical:latest \
-            -t cfu288/mere-medical:${{ env.RELEASE_CALVER_VERSION }} \
-            $(printf 'cfu288/mere-medical@sha256:%s ' *)
-
       - name: Create a GitHub release
         uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1.21.0
         with:
-          tag: ${{ env.RELEASE_CALVER_VERSION }}
-          name: Release ${{ env.RELEASE_CALVER_VERSION }}
+          tag: ${{ needs.promote.outputs.version }}
+          name: Release ${{ needs.promote.outputs.version }}
+          commit: ${{ needs.promote.outputs.revision }}
           makeLatest: true
           allowUpdates: true
-
-  app-demo:
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-
-      - name: Generate CalVer env var
-        run: echo "RELEASE_CALVER_VERSION=$(date '+%Y.%m.%d')" >> $GITHUB_ENV
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
-        with:
-          version: v0.36.1
-
-      - name: Log in to DockerHub
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
-        with:
-          username: ${{ env.username }}
-          password: ${{ secrets.registry_password }}
-
-      - name: Build and push demo
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
-        with:
-          context: .
-          push: true
-          platforms: linux/amd64
-          sbom: true
-          cache-from: type=gha,scope=app-demo
-          cache-to: type=gha,mode=max,scope=app-demo
-          build-args: |
-            IS_DEMO=enabled
-            MERE_APP_VERSION=${{ env.RELEASE_CALVER_VERSION }}
-          tags: |
-            cfu288/mere-medical:latest-demo
-            cfu288/mere-medical:${{ env.RELEASE_CALVER_VERSION }}-demo
-
-  docs:
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
-        with:
-          version: v0.36.1
-
-      - name: Log in to DockerHub
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
-        with:
-          username: ${{ env.username }}
-          password: ${{ secrets.registry_password }}
-
-      - name: Build and push
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
-        with:
-          context: .
-          push: true
-          file: Dockerfile-docs
-          sbom: true
-          cache-from: type=gha,scope=docs
-          cache-to: type=gha,mode=max,scope=docs
-          tags: cfu288/mere-medical-docs:latest
