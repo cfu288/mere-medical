@@ -94,6 +94,7 @@ async function connectEpicSandbox(page: import('@playwright/test').Page) {
   await page
     .getByRole('textbox', { name: 'MyChart Username' })
     .fill('fhirjason');
+  await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('textbox', { name: 'Password' }).fill('epicepic1');
   await page.getByRole('button', { name: 'Log in', exact: true }).click();
 

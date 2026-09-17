@@ -43,6 +43,7 @@ test.describe('epic sandbox integration', () => {
     await page
       .getByRole('textbox', { name: 'MyChart Username' })
       .fill('fhirjason');
+    await page.getByRole('button', { name: 'Continue' }).click();
     await page.getByRole('textbox', { name: 'Password' }).fill('epicepic1');
     await page.getByRole('button', { name: 'Log in', exact: true }).click();
 
