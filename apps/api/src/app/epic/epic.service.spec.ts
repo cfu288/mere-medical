@@ -1,134 +1,169 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { TenantDbModule } from '../tenant-db/tenant-db.module';
-
 import { EpicService } from './epic.service';
+import {
+  SeededTenantDb,
+  openSeededTenantDb,
+} from '../tenant-db/tenant-db.fixture';
 
 describe('EpicService', () => {
+  let seeded: SeededTenantDb;
   let service: EpicService;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      imports: [TenantDbModule],
-      providers: [EpicService],
-    }).compile();
+  beforeEach(() => {
+    seeded = openSeededTenantDb([
+      {
+        tenantId: 'epic-dstu2-1',
+        vendor: 'epic',
+        fhirVersion: 'DSTU2',
+        name: 'Access Community Health Network',
+        url: 'https://epic.example.org/dstu2/access/',
+        token: 'https://epic.example.org/access/oauth2/token',
+        authorize: 'https://epic.example.org/access/oauth2/authorize',
+      },
+      {
+        tenantId: 'sandbox_epic',
+        vendor: 'epic',
+        fhirVersion: 'DSTU2',
+        name: 'Epic MyChart Sandbox',
+        url: 'https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/DSTU2/',
+        token: 'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/token',
+        authorize:
+          'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/authorize',
+        source: 'sandbox',
+      },
+      {
+        tenantId: 'epic-r4-1',
+        vendor: 'epic',
+        fhirVersion: 'R4',
+        name: 'Billings OBGYN',
+        url: 'https://epic.example.org/r4/billings/',
+        token: 'https://epic.example.org/billings/oauth2/token',
+        authorize: 'https://epic.example.org/billings/oauth2/authorize',
+        managingOrganization: 'Intermountain Health',
+      },
+      {
+        tenantId: 'sandbox_epic_r4',
+        vendor: 'epic',
+        fhirVersion: 'R4',
+        name: 'Epic MyChart Sandbox (R4)',
+        url: 'https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4/',
+        token: 'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/token',
+        authorize:
+          'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/authorize',
+        source: 'sandbox',
+      },
+      {
+        tenantId: 'cerner-r4-1',
+        vendor: 'cerner',
+        fhirVersion: 'R4',
+        name: 'Access Cerner Clinic',
+        url: 'https://cerner.example.org/r4/access/',
+        token: 'https://cerner.example.org/access/token',
+        authorize: 'https://cerner.example.org/access/authorize',
+      },
+    ]);
+    service = new EpicService(seeded.db);
+  });
 
-    service = module.get<EpicService>(EpicService);
+  afterEach(async () => {
+    await seeded.close();
   });
 
   describe('queryTenants (DSTU2)', () => {
-    it('lists tenants by name when the query is empty', async () => {
+    it('lists DSTU2 tenants by name when the query is empty', async () => {
       const result = await service.queryTenants('');
 
-      expect(result.slice(0, 3).map((tenant) => tenant.name)).toEqual([
-        'Access Community Health Network',
-        'Acumen Physician Solutions, LLC.',
-        'Adult & Pediatric Ear, Nose & Throat - Kalamazoo',
+      expect(result.map((tenant) => tenant.id)).toEqual([
+        'epic-dstu2-1',
+        'sandbox_epic',
       ]);
     });
 
-    it('should filter results by query string', async () => {
-      const result = await service.queryTenants('sandbox');
+    it('returns only the matching tenant for a name query', async () => {
+      const result = await service.queryTenants('access');
 
-      expect(result.length).toBeGreaterThan(0);
-      const hasMatchingName = result.some((tenant) =>
-        tenant.name.toLowerCase().includes('sandbox'),
-      );
-      expect(hasMatchingName).toBe(true);
+      expect(result).toEqual([
+        {
+          id: 'epic-dstu2-1',
+          url: 'https://epic.example.org/dstu2/access/',
+          name: 'Access Community Health Network',
+          token: 'https://epic.example.org/access/oauth2/token',
+          authorize: 'https://epic.example.org/access/oauth2/authorize',
+          managingOrganization: undefined,
+        },
+      ]);
     });
 
-    describe('sandboxOnly parameter', () => {
-      it('should return only sandbox endpoints when sandboxOnly is true', async () => {
-        const result = await service.queryTenants('', true);
+    it('returns only the sandbox row when sandboxOnly is true', async () => {
+      const result = await service.queryTenants('', true);
 
-        expect(result.length).toBe(1);
-        expect(result[0].id).toBe('sandbox_epic');
-        expect(result[0].name).toBe('Epic MyChart Sandbox');
-      });
+      expect(result.map((tenant) => tenant.id)).toEqual(['sandbox_epic']);
+    });
 
-      it('should return all endpoints when sandboxOnly is false', async () => {
-        const result = await service.queryTenants('', false);
+    it('returns production and sandbox rows when sandboxOnly is false', async () => {
+      const result = await service.queryTenants('', false);
 
-        expect(result.length).toBeGreaterThan(1);
-        const hasSandbox = result.some((t) => t.id === 'sandbox_epic');
-        const hasProduction = result.some((t) => t.id !== 'sandbox_epic');
-        expect(hasSandbox || hasProduction).toBe(true);
-      });
-
-      it('should return sandbox endpoint even with empty query when sandboxOnly is true', async () => {
-        const result = await service.queryTenants('', true);
-
-        expect(result.length).toBe(1);
-        expect(result[0].id).toBe('sandbox_epic');
-      });
+      expect(result.map((tenant) => tenant.id)).toEqual([
+        'epic-dstu2-1',
+        'sandbox_epic',
+      ]);
     });
   });
 
   describe('queryR4Tenants', () => {
-    it('lists r4 tenants by name when the query is empty', async () => {
+    it('lists R4 tenants by name when the query is empty', async () => {
       const result = await service.queryR4Tenants('');
 
-      expect(result.slice(0, 3).map((tenant) => tenant.name)).toEqual([
-        'AACI',
-        'Access Community Health Centers',
-        'Access Community Health Network',
+      expect(result.map((tenant) => tenant.id)).toEqual([
+        'epic-r4-1',
+        'sandbox_epic_r4',
       ]);
     });
 
-    it('should filter R4 results by query string', async () => {
-      const result = await service.queryR4Tenants('sandbox');
+    it('matches a tenant by managing organization when its name differs', async () => {
+      const result = await service.queryR4Tenants('intermountain');
 
-      expect(result.length).toBeGreaterThan(0);
-      const hasMatchingName = result.some((tenant) =>
-        tenant.name.toLowerCase().includes('sandbox'),
-      );
-      expect(hasMatchingName).toBe(true);
+      expect(result).toEqual([
+        {
+          id: 'epic-r4-1',
+          url: 'https://epic.example.org/r4/billings/',
+          name: 'Billings OBGYN',
+          token: 'https://epic.example.org/billings/oauth2/token',
+          authorize: 'https://epic.example.org/billings/oauth2/authorize',
+          managingOrganization: 'Intermountain Health',
+        },
+      ]);
     });
 
-    it('should match endpoints by managingOrganization when the endpoint name differs', async () => {
-      // Intermountain Health's endpoint is published under the name "Billings OBGYN"
-      const result = await service.queryR4Tenants('Intermountain');
+    it('returns only the R4 sandbox row when sandboxOnly is true', async () => {
+      const result = await service.queryR4Tenants('', true);
 
-      expect(
-        result.some((t) => t.managingOrganization === 'Intermountain Health'),
-      ).toBe(true);
+      expect(result.map((tenant) => tenant.id)).toEqual(['sandbox_epic_r4']);
     });
 
-    describe('sandboxOnly parameter', () => {
-      it('should return only sandbox R4 endpoint when sandboxOnly is true', async () => {
-        const result = await service.queryR4Tenants('', true);
+    it('never returns another vendor even when its name matches', async () => {
+      const result = await service.queryR4Tenants('access');
 
-        expect(result.length).toBe(1);
-        expect(result[0].id).toBe('sandbox_epic_r4');
-        expect(result[0].name).toBe('Epic MyChart Sandbox (R4)');
-      });
-
-      it('should return all R4 endpoints when sandboxOnly is false', async () => {
-        const result = await service.queryR4Tenants('', false);
-
-        expect(result.length).toBeGreaterThan(1);
-      });
-
-      it('should return sandbox R4 endpoint even with empty query when sandboxOnly is true', async () => {
-        const result = await service.queryR4Tenants('', true);
-
-        expect(result.length).toBe(1);
-        expect(result[0].id).toBe('sandbox_epic_r4');
-      });
+      expect(result).toEqual([]);
     });
   });
 
   describe('edge cases', () => {
-    it('should handle undefined query as empty', async () => {
-      const result = await service.queryTenants(undefined as any);
+    it('treats an undefined query as empty', async () => {
+      const result = await service.queryTenants(undefined as unknown as string);
 
-      expect(Array.isArray(result)).toBe(true);
-      expect(result.length).toBeGreaterThan(0);
+      expect(result.map((tenant) => tenant.id)).toEqual([
+        'epic-dstu2-1',
+        'sandbox_epic',
+      ]);
     });
 
-    it('should default sandboxOnly to false when not provided', async () => {
+    it('defaults sandboxOnly to false', async () => {
       const result = await service.queryTenants('');
 
-      expect(result.length).toBeGreaterThan(1);
+      expect(result.map((tenant) => tenant.id)).toEqual([
+        'epic-dstu2-1',
+        'sandbox_epic',
+      ]);
     });
   });
 });
