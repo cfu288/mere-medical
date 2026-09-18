@@ -1,11 +1,11 @@
-FROM node:26.8-bookworm@sha256:e7bc1a4cd2419953c91f9a6f7bb6efb3737773093fb4ded0b1c77a0a5831fac4 AS deps
+FROM node:26.9-bookworm@sha256:acb7243cabea678dc927ec9020c633d3d82b37b86b1bbcd49dd3f95f6b77ba89 AS deps
 
 WORKDIR /app
 COPY package*.json /app/
 RUN npm ci
 
 
-FROM node:26.8-bookworm@sha256:e7bc1a4cd2419953c91f9a6f7bb6efb3737773093fb4ded0b1c77a0a5831fac4 AS prod-deps
+FROM node:26.9-bookworm@sha256:acb7243cabea678dc927ec9020c633d3d82b37b86b1bbcd49dd3f95f6b77ba89 AS prod-deps
 
 WORKDIR /app
 COPY package*.json /app/
@@ -41,7 +41,7 @@ RUN npx nx run web:build:production --verbose
 
 
 # Package React App and API together
-FROM node:26.8-alpine@sha256:ef24c5053d50fdc3e4e56eb4e7ddb7861874ab0fdc797046ba897581deb8e868
+FROM node:26.9-alpine@sha256:dbaa92e5758cbbcf85d65d5403fdb530fe3442cbe8c6dbfb7ef23365450d5070
 
 ARG MERE_APP_VERSION=unknown
 ENV MERE_APP_VERSION=${MERE_APP_VERSION}
