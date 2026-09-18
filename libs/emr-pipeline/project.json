@@ -1,0 +1,59 @@
+{
+  "name": "emr-pipeline",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/emr-pipeline/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/libs/emr-pipeline"],
+      "options": {
+        "jestConfig": "libs/emr-pipeline/jest.config.ts"
+      }
+    },
+    "extract": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node -r ts-node/register/transpile-only -r tsconfig-paths/register libs/emr-pipeline/src/cli.ts extract",
+        "cwd": "{workspaceRoot}",
+        "env": {
+          "TS_NODE_PROJECT": "libs/emr-pipeline/tsconfig.spec.json"
+        }
+      }
+    },
+    "transform": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node -r ts-node/register/transpile-only -r tsconfig-paths/register libs/emr-pipeline/src/cli.ts transform",
+        "cwd": "{workspaceRoot}",
+        "env": {
+          "TS_NODE_PROJECT": "libs/emr-pipeline/tsconfig.spec.json"
+        }
+      }
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node -r ts-node/register/transpile-only -r tsconfig-paths/register libs/emr-pipeline/src/cli.ts publish",
+        "cwd": "{workspaceRoot}",
+        "env": {
+          "TS_NODE_PROJECT": "libs/emr-pipeline/tsconfig.spec.json"
+        }
+      }
+    },
+    "status": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node -r ts-node/register/transpile-only -r tsconfig-paths/register libs/emr-pipeline/src/cli.ts status",
+        "cwd": "{workspaceRoot}",
+        "env": {
+          "TS_NODE_PROJECT": "libs/emr-pipeline/tsconfig.spec.json"
+        }
+      }
+    }
+  }
+}

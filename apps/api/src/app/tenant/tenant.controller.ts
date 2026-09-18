@@ -7,14 +7,12 @@ export class TenantController {
   constructor(private readonly tenantService: TenantService) {}
 
   @Get('dstu2/tenants')
-  async getDSTU2Data(
+  async getDSTU2Tenants(
     @Res() response: Response,
     @Query('query') query: string,
-    @Query('vendor') vendors: string[],
   ) {
     try {
-      const data = await this.tenantService.queryTenants(query, vendors);
-      response.json(data);
+      response.json(await this.tenantService.queryTenants(query));
     } catch (e) {
       Logger.error(e);
       response.status(500).send({ message: 'There was an error' });
@@ -22,29 +20,9 @@ export class TenantController {
   }
 
   @Get('r4/tenants')
-  async getR4Data(
-    @Res() response: Response,
-    @Query('query') query: string,
-    @Query('vendor') vendors: string[],
-  ) {
+  async getR4Tenants(@Res() response: Response, @Query('query') query: string) {
     try {
-      const data = await this.tenantService.queryR4Tenants(query, vendors);
-      response.json(data);
-    } catch (e) {
-      Logger.error(e);
-      response.status(500).send({ message: 'There was an error' });
-    }
-  }
-
-  @Get('tenants')
-  async getAllData(
-    @Res() response: Response,
-    @Query('query') query: string,
-    @Query('vendor') vendors: string[],
-  ) {
-    try {
-      const data = await this.tenantService.queryAllTenants(query, vendors);
-      response.json(data);
+      response.json(await this.tenantService.queryR4Tenants(query));
     } catch (e) {
       Logger.error(e);
       response.status(500).send({ message: 'There was an error' });

@@ -19,7 +19,7 @@ COPY . /app/
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 # Disable Nx daemon in Docker builds
 ENV NX_DAEMON=false
-RUN npx nx test api --configuration=ci
+RUN npx nx test api --configuration=ci --maxWorkers=2
 RUN npx nx run api:build:production
 
 
@@ -35,7 +35,7 @@ COPY . /app/
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 # Disable Nx daemon in Docker builds
 ENV NX_DAEMON=false
-RUN npx nx test web --configuration=ci
+RUN npx nx test web --configuration=ci --maxWorkers=2
 # RUN npx nx run web-e2e:e2e --configuration=ci
 RUN npx nx run web:build:production --verbose
 

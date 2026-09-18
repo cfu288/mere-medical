@@ -1,0 +1,107 @@
+name: EMR tenant catalog refresh
+
+on:
+  schedule:
+    - cron: '17 6 3 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: emr-pipeline-refresh
+
+# Extract fails if any required variable here is missing.
+env:
+  EPIC_CLIENT_ID: ${{ secrets.EPIC_CLIENT_ID }}
+  EPIC_R4_ENDPOINTS_URL: https://open.epic.com/Endpoints/Brands
+  EPIC_DSTU2_ENDPOINTS_URL: https://open.epic.com/Endpoints/DSTU2
+  CERNER_R4_ENDPOINTS_URL: https://raw.githubusercontent.com/oracle-samples/ignite-endpoints/refs/heads/main/oracle_health_fhir_endpoints/millennium_patient_r4_endpoints.json
+  # Pinned to a commit because ignite-endpoints main no longer carries the DSTU2 list.
+  CERNER_DSTU2_ENDPOINTS_URL: https://raw.githubusercontent.com/oracle-samples/ignite-endpoints/30bce23a24731f7c38c1da8aec94321ba9c223cb/millennium_patient_dstu2_endpoints.json
+  VERADIGM_DSTU2_ENDPOINTS_URL: https://open.platform.veradigm.com/fhirendpoints/download/DSTU2
+  HEALOW_R4_ENDPOINTS_URL: https://fhir.eclinicalworks.com/ecwopendev/external/practiceList
+  ATHENA_ENDPOINTS_URL: https://service-base-urls.api.fhir.athena.io/athena-fhir-service-base-urls.json
+
+jobs:
+  refresh:
+    if: github.repository == 'cfu288/mere-medical'
+    timeout-minutes: 300
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 26.7.0
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Restore warehouse
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p libs/emr-pipeline/data
+          if gh release download warehouse --pattern warehouse.db.zst 2>restore-error.txt; then
+            zstd -d warehouse.db.zst -o libs/emr-pipeline/data/warehouse.db
+            rm warehouse.db.zst
+            echo "warehouse restored"
+          elif grep -q 'release not found' restore-error.txt; then
+            echo "no warehouse release found; starting fresh"
+          else
+            cat restore-error.txt
+            exit 1
+          fi
+
+      - name: Extract
+        run: npx nx run emr-pipeline:extract
+
+      - name: Transform
+        run: npx nx run emr-pipeline:transform
+
+      - name: Publish
+        run: npx nx run emr-pipeline:publish
+
+      - name: Report status
+        if: always()
+        run: |
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          npx nx run emr-pipeline:status >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload warehouse
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          zstd -T0 -3 -f libs/emr-pipeline/data/warehouse.db -o warehouse.db.zst
+          gh release create warehouse --prerelease \
+            --title 'EMR pipeline warehouse' \
+            --notes 'The live warehouse as of the latest publish. Run history lives in its tables.' \
+            2>/dev/null || true
+          gh release upload warehouse warehouse.db.zst --clobber
+
+      - name: Open pull request
+        id: pr
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          branch: chore/tenants-refresh
+          add-paths: libs/tenant-db/data/tenants.db
+          commit-message: 'chore(tenant-db): monthly tenants.db refresh'
+          title: 'chore(tenant-db): monthly tenants.db refresh'
+          body: ''
+          delete-branch: true
+
+      - name: Comment status on the pull request
+        if: steps.pr.outputs.pull-request-number
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo '```'
+            npx nx run emr-pipeline:status
+            echo '```'
+          } > status-comment.md
+          gh pr comment '${{ steps.pr.outputs.pull-request-number }}' --body-file status-comment.md

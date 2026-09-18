@@ -1,11 +1,12 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import * as bodyParser from 'body-parser';
+import { TenantDbModule } from '../tenant-db/tenant-db.module';
 import { HealowService } from './healow.service';
 import { HealowController } from './healow.controller';
 import { ConfigModule } from '../config/config.module';
 
 @Module({
-  imports: [ConfigModule],
+  imports: [TenantDbModule, ConfigModule],
   controllers: [HealowController],
   providers: [HealowService],
 })
