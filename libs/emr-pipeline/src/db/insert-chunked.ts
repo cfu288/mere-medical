@@ -1,6 +1,6 @@
 const INSERT_CHUNK = 500;
 
-/** Inserts rows in chunks so one statement never exceeds sqlite's parameter limit. */
+/** Inserts rows in chunks that stay under sqlite's statement parameter limit. */
 export async function insertChunked<T>(
   rows: T[],
   insert: (chunk: T[]) => Promise<unknown>,

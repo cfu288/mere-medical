@@ -17,9 +17,9 @@ import * as publications from '../db/repository/publications';
 
 /**
  * Creates a brand-new tenants.db with every publishable and sandbox tenant and
- * returns its row count. Writes to a temporary `.building` file and swaps it onto
- * `artifactPath` with one rename at the end, so the old artifact stays intact
- * until the new one is complete.
+ * returns its row count. Writes to a temporary `.building` file and swaps it
+ * onto `artifactPath` with one rename at the end. The old artifact stays
+ * intact until the new one is complete.
  */
 async function buildArtifact(
   db: Warehouse,

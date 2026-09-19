@@ -2,8 +2,7 @@ import { z } from 'zod';
 
 /**
  * Every field is `.catch(undefined)`. Resource types collide in one bundle,
- * like `Endpoint.address` (a url) vs `Organization.address` (an array), and
- * a strict type would reject the whole directory over fields never read.
+ * like `Endpoint.address` (a url) vs `Organization.address` (an array).
  */
 const resourceSchema = z
   .object({

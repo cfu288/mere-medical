@@ -13,9 +13,10 @@ import type { Warehouse } from '../open';
 import { insertChunked } from '../insert-chunked';
 
 /**
- * One tenant as its vendor's directory has ever listed it: merged name, and
- * every url with the date of the newest snapshot listing it there. The
- * current listing is the url with the newest date, computed at query time.
+ * One tenant as its vendor's directory has ever listed it. It carries the
+ * merged name and every url with the date of the newest snapshot listing it
+ * there. The current listing is the url with the newest date, computed at
+ * query time.
  */
 export interface TenantListing {
   tenantId: string;

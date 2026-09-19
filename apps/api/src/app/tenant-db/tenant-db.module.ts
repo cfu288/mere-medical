@@ -12,11 +12,8 @@ const IN_WORKSPACE = path.resolve(
 );
 
 /**
- * Locates the shipped tenant catalog.
- *
- * The build copies it beside the bundle as an asset; running from the workspace it is
- * still in `libs/tenant-db/data`. Both are found without configuration, so booting the
- * server never depends on an environment variable being set.
+ * Locates the shipped tenant catalog. The build copies it beside the bundle
+ * as an asset. A workspace run reads it from `libs/tenant-db/data`.
  */
 function tenantDbPath(): string {
   const found = [PACKAGED, IN_WORKSPACE].find((candidate) =>

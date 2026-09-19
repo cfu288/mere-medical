@@ -131,7 +131,8 @@ async function runWorkerPool(
 /**
  * Fetches one vendor and version's directory containing all tenants, saves a snapshot
  * of it in the database, and then for each tenant in the directory, downloads the capability
- * statement document to save in the db. Checks are added to avoid upserting invalid data.
+ * statement document to save in the db. Rejected directories are not saved,
+ * and a stored usable capability body is never overwritten by an unusable one.
  *
  * @returns `{ status: 'ok' }` when the directory was crawled, even if some capability
  *   downloads failed, or `{ status: 'failed' }` when the directory itself was

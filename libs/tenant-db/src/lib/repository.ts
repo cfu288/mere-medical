@@ -96,8 +96,9 @@ export function openTenantDb(dbPath: string): TenantDb {
 }
 
 /**
- * Turns user input into a quoted FTS5 prefix query, or null when nothing is
- * searchable. Quoting makes typed operators match as plain text.
+ * Turns user input into an FTS5 prefix query, or null when it holds no word.
+ * `st. mary's` becomes `"st"* "mary"* "s"*`, and `NEAR OR *` becomes
+ * `"NEAR"* "OR"*`.
  */
 export function toFtsQuery(query: string): string | null {
   return (
@@ -158,8 +159,8 @@ export async function searchTenants(
 }
 
 /**
- * One tenant by vendor and id. Ids published under both versions return the R4
- * row, the newer contract.
+ * One tenant by vendor and id. If fhirVersion is not specified and multiple
+ * tenants match the id, the R4 one is returned.
  */
 export async function findTenantById(
   db: TenantDb,

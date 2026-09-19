@@ -53,8 +53,8 @@ export async function saveSnapshot(
 
 /**
  * Overwrites the single row holding a vendor's last directory fetch date and
- * error. Success clears the error. A failed fetch leaves no snapshot, so this
- * row is its only trace.
+ * error. Success clears the error. This row is the only record of a failed
+ * fetch.
  */
 export async function recordFetchAttempt(
   db: Warehouse,
