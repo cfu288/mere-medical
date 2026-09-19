@@ -132,15 +132,11 @@ describe('extract', () => {
     }) as typeof fetch;
   }
 
-  async function run() {
-    return startCapabilityStatementExtractionForVendor(db, 'epic', 'R4');
-  }
-
   it('keeps a good body when the endpoint later answers 404', async () => {
     const capabilityId = await seedGoodCapability();
     respondWith(404, '<html>404 Not Found</html>');
 
-    await run();
+    await startCapabilityStatementExtractionForVendor(db, 'epic', 'R4');
 
     expect((await downloads.findById(db, capabilityId))?.body).toBe(CAPABILITY);
   });
@@ -149,7 +145,7 @@ describe('extract', () => {
     const capabilityId = await seedGoodCapability();
     respondWith(200, '<html>down for maintenance</html>');
 
-    await run();
+    await startCapabilityStatementExtractionForVendor(db, 'epic', 'R4');
     const failed = (
       await sql`SELECT failed AS n FROM capability_downloads WHERE id = ${capabilityId}`.execute(
         db,
@@ -164,7 +160,7 @@ describe('extract', () => {
     const capabilityId = await seedGoodCapability();
     respondWith(200, JSON.stringify({ resourceType: 'OperationOutcome' }));
 
-    await run();
+    await startCapabilityStatementExtractionForVendor(db, 'epic', 'R4');
     const failed = (
       await sql`SELECT failed AS n FROM capability_downloads WHERE id = ${capabilityId}`.execute(
         db,
@@ -178,7 +174,7 @@ describe('extract', () => {
   it('stores a directory snapshot when the crawl succeeds', async () => {
     respondWith(200, CAPABILITY);
 
-    await run();
+    await startCapabilityStatementExtractionForVendor(db, 'epic', 'R4');
 
     expect(
       (
@@ -223,7 +219,7 @@ describe('extract', () => {
     globalThis.fetch = (async () =>
       new Response('gone', { status: 404 })) as typeof fetch;
 
-    await run();
+    await startCapabilityStatementExtractionForVendor(db, 'epic', 'R4');
 
     expect(
       (
@@ -259,7 +255,11 @@ describe('extract', () => {
       return new Response(CAPABILITY, { status: 200 });
     }) as typeof fetch;
 
-    const result = await run();
+    const result = await startCapabilityStatementExtractionForVendor(
+      db,
+      'epic',
+      'R4',
+    );
     const document = await downloads.findByUrl(db, {
       vendor: 'epic',
       fhirVersion: 'R4',
@@ -296,7 +296,7 @@ describe('extract', () => {
       return new Response(CAPABILITY, { status: 200 });
     }) as typeof fetch;
 
-    await run();
+    await startCapabilityStatementExtractionForVendor(db, 'epic', 'R4');
 
     expect(requested).toEqual(['https://one.example.org/api/FHIR/R4/metadata']);
     expect((await downloads.findById(db, delistedId))?.body).toBeNull();
@@ -311,7 +311,11 @@ describe('extract', () => {
         headers: { 'content-type': 'text/html' },
       })) as typeof fetch;
 
-    const result = await run();
+    const result = await startCapabilityStatementExtractionForVendor(
+      db,
+      'epic',
+      'R4',
+    );
     const attempt = (
       await sql<{
         attempted_at: string;
@@ -338,7 +342,11 @@ describe('extract', () => {
         headers: { 'content-type': 'application/json' },
       })) as typeof fetch;
 
-    const result = await run();
+    const result = await startCapabilityStatementExtractionForVendor(
+      db,
+      'epic',
+      'R4',
+    );
 
     expect({
       status: result.status,
