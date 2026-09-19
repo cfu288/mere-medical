@@ -1,69 +1,41 @@
-import * as fs from 'node:fs';
-import * as os from 'node:os';
-import * as path from 'node:path';
-import { DatabaseSync } from 'node:sqlite';
 import type { Response } from 'express';
-import {
-  TENANT_DB_SCHEMA,
-  TENANT_DB_USER_VERSION,
-  openTenantDb,
-} from '@mere/tenant-db';
 import { TenantController } from './tenant.controller';
 import { TenantService } from './tenant.service';
+import {
+  SeededTenantDb,
+  openSeededTenantDb,
+} from '../tenant-db/tenant-db.fixture';
 
 describe('TenantController', () => {
-  let dir: string;
+  let seeded: SeededTenantDb;
   let controller: TenantController;
-  let db: ReturnType<typeof openTenantDb>;
 
-  beforeEach(() => {
-    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tenant-'));
-    const artifactPath = path.join(dir, 'tenants.db');
-    const artifact = new DatabaseSync(artifactPath);
-    artifact.exec(TENANT_DB_SCHEMA);
-    artifact.exec(`PRAGMA user_version = ${TENANT_DB_USER_VERSION}`);
-    const insert = artifact.prepare(
-      `INSERT INTO tenants
-         (tenant_id, vendor, fhir_version, name, url, token, authorize,
-          source, searchable, last_seen_in_directory)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    );
-    insert.run(
-      'epic-1',
-      'epic',
-      'R4',
-      'Mercy Health',
-      'https://epic.example.org/api/FHIR/R4/',
-      'https://epic.example.org/oauth2/token',
-      'https://epic.example.org/oauth2/authorize',
-      'directory',
-      1,
-      '2026-08-23T00:00:00.000Z',
-    );
-    insert.run(
-      'cerner-1',
-      'cerner',
-      'DSTU2',
-      'Mercy Clinic',
-      'https://cerner.example.org/dstu2/',
-      'https://cerner.example.org/token',
-      'https://cerner.example.org/authorize',
-      'directory',
-      1,
-      '2026-08-23T00:00:00.000Z',
-    );
-    artifact.exec(
-      `INSERT INTO tenants_fts (rowid, name, managing_organization)
-       SELECT id, name, managing_organization FROM tenants WHERE searchable = 1`,
-    );
-    artifact.close();
-    db = openTenantDb(artifactPath);
-    controller = new TenantController(new TenantService(db));
+  beforeEach(async () => {
+    seeded = await openSeededTenantDb([
+      {
+        tenantId: 'epic-1',
+        vendor: 'epic',
+        fhirVersion: 'R4',
+        name: 'Mercy Health',
+        url: 'https://epic.example.org/api/FHIR/R4/',
+        token: 'https://epic.example.org/oauth2/token',
+        authorize: 'https://epic.example.org/oauth2/authorize',
+      },
+      {
+        tenantId: 'cerner-1',
+        vendor: 'cerner',
+        fhirVersion: 'DSTU2',
+        name: 'Mercy Clinic',
+        url: 'https://cerner.example.org/dstu2/',
+        token: 'https://cerner.example.org/token',
+        authorize: 'https://cerner.example.org/authorize',
+      },
+    ]);
+    controller = new TenantController(new TenantService(seeded.db));
   });
 
   afterEach(async () => {
-    await db.destroy();
-    fs.rmSync(dir, { recursive: true, force: true });
+    await seeded.close();
   });
 
   function jsonCapture(): { response: Response; body: () => unknown } {

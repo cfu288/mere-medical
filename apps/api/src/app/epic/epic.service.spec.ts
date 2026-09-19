@@ -8,8 +8,8 @@ describe('EpicService', () => {
   let seeded: SeededTenantDb;
   let service: EpicService;
 
-  beforeEach(() => {
-    seeded = openSeededTenantDb([
+  beforeEach(async () => {
+    seeded = await openSeededTenantDb([
       {
         tenantId: 'epic-dstu2-1',
         vendor: 'epic',

@@ -14,39 +14,11 @@ import {
   defaultProxyOptions,
 } from './proxy.constants';
 import { createProxyServer } from 'http-proxy';
-import * as fs from 'node:fs';
-import * as os from 'node:os';
-import * as path from 'node:path';
-import { DatabaseSync } from 'node:sqlite';
-import {
-  TENANT_DB_SCHEMA,
-  TENANT_DB_USER_VERSION,
-  openTenantDb,
-} from '@mere/tenant-db';
 import { TENANT_DB } from '../tenant-db/tenant-db.module';
-
-function writeCatalog(dir: string, targetPort: number): string {
-  const dbPath = path.join(dir, 'tenants.db');
-  const db = new DatabaseSync(dbPath);
-  db.exec(TENANT_DB_SCHEMA);
-  db.exec(`PRAGMA user_version = ${TENANT_DB_USER_VERSION}`);
-  db.prepare(
-    `INSERT INTO tenants (tenant_id, vendor, fhir_version, name, url, token,
-                          authorize, source, searchable, last_seen_in_directory)
-     VALUES ('test-service', 'epic', 'R4', 'Test Service', ?, ?, ?, 'directory', 1,
-             '2026-08-23T00:00:00.000Z')`,
-  ).run(
-    `http://localhost:${targetPort}`,
-    `http://localhost:${targetPort}/token`,
-    `http://localhost:${targetPort}/auth`,
-  );
-  db.exec(
-    `INSERT INTO tenants_fts (rowid, name, managing_organization)
-     SELECT id, name, managing_organization FROM tenants`,
-  );
-  db.close();
-  return dbPath;
-}
+import {
+  SeededTenantDb,
+  openSeededTenantDb,
+} from '../tenant-db/tenant-db.fixture';
 
 const ALLOWED_HEADERS = [
   'accept',
@@ -85,12 +57,11 @@ describe('Proxy Header Filtering E2E', () => {
   let app: INestApplication;
   let targetServer: http.Server;
   let targetPort: number;
-  let catalogDir: string;
+  let seeded: SeededTenantDb;
   let receivedHeaders: http.IncomingHttpHeaders;
   const originalEnv = process.env;
 
   beforeAll(async () => {
-    catalogDir = fs.mkdtempSync(path.join(os.tmpdir(), 'proxy-e2e-'));
     await new Promise<void>((resolve) => {
       targetServer = http.createServer((req, res) => {
         receivedHeaders = req.headers;
@@ -104,6 +75,18 @@ describe('Proxy Header Filtering E2E', () => {
     });
 
     process.env = { ...originalEnv, PUBLIC_URL: 'https://app.example.com' };
+
+    seeded = await openSeededTenantDb([
+      {
+        tenantId: 'test-service',
+        vendor: 'epic',
+        fhirVersion: 'R4',
+        name: 'Test Service',
+        url: `http://localhost:${targetPort}`,
+        token: `http://localhost:${targetPort}/token`,
+        authorize: `http://localhost:${targetPort}/auth`,
+      },
+    ]);
 
     const proxy = createProxyServer({ ...defaultProxyOptions });
 
@@ -140,7 +123,7 @@ describe('Proxy Header Filtering E2E', () => {
         { provide: PROXY_MODULE_OPTIONS, useValue: {} },
         {
           provide: TENANT_DB,
-          useValue: openTenantDb(writeCatalog(catalogDir, targetPort)),
+          useValue: seeded.db,
         },
         OriginGuard,
         {
@@ -160,7 +143,7 @@ describe('Proxy Header Filtering E2E', () => {
   });
 
   afterAll(async () => {
-    fs.rmSync(catalogDir, { recursive: true, force: true });
+    await seeded.close();
     process.env = originalEnv;
     await app.close();
     await new Promise<void>((resolve) => targetServer.close(() => resolve()));

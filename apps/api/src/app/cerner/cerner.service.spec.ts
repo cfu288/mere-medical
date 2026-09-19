@@ -8,8 +8,8 @@ describe('CernerService', () => {
   let seeded: SeededTenantDb;
   let service: CernerService;
 
-  beforeEach(() => {
-    seeded = openSeededTenantDb([
+  beforeEach(async () => {
+    seeded = await openSeededTenantDb([
       {
         tenantId: 'cerner-dstu2-1',
         vendor: 'cerner',
