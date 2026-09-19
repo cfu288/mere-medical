@@ -1,7 +1,7 @@
 /**
  * Owns the staging tables `tenant_names`, `tenant_listings`, and
- * `url_smart_security`. Transform rebuilds them from the snapshots so publish
- * is one query instead of rereading history.
+ * `url_smart_security`. Transform rebuilds them from the snapshots and
+ * publish reads them.
  */
 import { sql } from 'kysely';
 import type {

@@ -32,11 +32,7 @@ export interface SeededTenantDb {
   close: () => Promise<void>;
 }
 
-/**
- * Opens a throwaway tenants.db seeded with the given rows, so specs assert
- * against literal data instead of the committed artifact that changes with
- * every monthly refresh.
- */
+/** Opens a throwaway tenants.db seeded with the given rows. */
 export async function openSeededTenantDb(
   tenants: TenantSeed[],
 ): Promise<SeededTenantDb> {

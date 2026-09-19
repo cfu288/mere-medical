@@ -69,8 +69,7 @@ function toTenant(row: TenantRow): Tenant {
 }
 
 /**
- * Opens the shipped tenant catalog read-only. A stale or truncated artifact fails
- * here at boot, because an empty tenant picker would look identical to "no matches".
+ * Opens the shipped tenant catalog read-only.
  */
 export function openTenantDb(dbPath: string): TenantDb {
   const db = new DatabaseSync(dbPath, { readOnly: true });
@@ -116,9 +115,7 @@ interface SearchOptions {
 }
 
 /**
- * Full-text search over searchable tenants, ranked by FTS5 relevance. An empty
- * query lists tenants by name, the picker's initial view. An empty `vendors`
- * array matches nothing rather than every vendor.
+ * Full-text search over searchable tenants, ranked by FTS5 relevance.
  */
 export async function searchTenants(
   db: TenantDb,

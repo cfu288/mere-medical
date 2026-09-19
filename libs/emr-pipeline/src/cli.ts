@@ -19,8 +19,8 @@ const DEFAULT_ARTIFACT = path.resolve(
 );
 
 /**
- * Every vendor and version any adapter declares. Transform walks them all
- * because saved history can exist even where fetching is not configured.
+ * Every vendor and version any adapter declares. Saved history can exist
+ * even where fetching is not configured.
  */
 function targets(): { vendor: Vendor; fhirVersion: FhirVersion }[] {
   return (Object.keys(ADAPTERS) as Vendor[]).flatMap((vendor) =>
