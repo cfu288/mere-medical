@@ -27,14 +27,11 @@ export const athenaAdapter: VendorAdapter = {
   },
 
   /**
-   * Athena's directory lists Organization resources, the locations and
-   * departments inside practices. A user selects a practice to connect to.
-   * This returns one tenant per practice, sorted by practice id. An Organization
-   * belongs to a practice through its `ah-practice` extension, whose
-   * reference `Practice-10` yields the practice id `10`. Organizations
-   * without that extension are skipped. Every tenant gets the shared athena
-   * base url. The name is the single name the practice's Organizations agree
-   * on, and undefined when they disagree or none carries a name.
+   * Turns athena's directory bundle, thousands of Organization resources for
+   * locations and departments, into the list of practices a user can pick
+   * from. One entry per practice id, with a name only when the practice's
+   * Organizations agree on one, all pointing at athena's single shared FHIR
+   * base url.
    *
    * @example
    * Two Organizations referencing `Practice-10`, both named
