@@ -2,25 +2,16 @@ import * as fs from 'node:fs';
 import type { FhirVersion } from '@mere/shared';
 import type { FhirBundle } from './schemas';
 
-/**
- * One tenant a directory lists, with its id, base url, and any names the page
- * carried.
- */
+/** One tenant parsed from a vendor directory. */
 export interface DirectoryEntry {
   tenantId: string;
   name?: string;
   url: string;
-  /**
-   * Name of the health system this tenant belongs to, when the directory
-   * carries one.
-   */
+  /** The health system this tenant belongs to. Only epic's directory provides it. */
   managingOrganization?: string;
 }
 
-/**
- * A sandbox tenant an adapter ships as-is, auth urls and all, with no directory
- * or capability download behind it.
- */
+/** A hardcoded sandbox tenant, published without a directory listing or capability fetch. */
 export interface SandboxSeed {
   tenantId: string;
   name: string;
@@ -29,35 +20,26 @@ export interface SandboxSeed {
   authorize: string;
 }
 
-/** Fetches the raw body of a directory, wherever it lives. */
+/** Supplies a directory body as raw text. */
 export interface DirectorySource {
   fetch(): Promise<string>;
 }
 
 const DIRECTORY_TIMEOUT_MS = 300_000;
 
-/**
- * How the pipeline talks to one vendor, covering its directories, how to read
- * them, and its sandbox tenants.
- */
+/** One vendor's directory locations, parsing, and sandbox tenants. */
 export interface VendorAdapter {
   versions: FhirVersion[];
-  /**
-   * Where this vendor's directory for a version lives, or null if it publishes
-   * none.
-   */
+  /** The directory source for a version, or null when the vendor publishes none. */
   directory(version: FhirVersion): DirectorySource | null;
-  /** Reads a fetched directory body into candidate tenants. */
+  /** Reads a parsed directory bundle into tenants. */
   parseDirectory(bundle: FhirBundle): DirectoryEntry[];
   /**
    * The metadata url answering this tenant's CapabilityStatement, or null
    * when the vendor exposes no per-tenant one.
    */
   metadataUrl(entry: DirectoryEntry): string | null;
-  /**
-   * Extra headers a vendor needs on capability fetches, such as Epic's client
-   * id gate.
-   */
+  /** Extra headers for metadata fetches, like Epic's client id. */
   capabilityHeaders?(): Record<string, string>;
   /** Rows this vendor always publishes, independent of its directory. */
   sandbox(version: FhirVersion): SandboxSeed[];
@@ -78,10 +60,7 @@ export function requireEnv(name: string): string {
   return value;
 }
 
-/**
- * A directory source that downloads its body from the url when asked. Any
- * non-ok answer throws.
- */
+/** Downloads the directory body from the url. A non-ok answer throws. */
 export function httpDirectory(url: string): DirectorySource {
   return {
     async fetch() {
@@ -98,7 +77,7 @@ export function httpDirectory(url: string): DirectorySource {
   };
 }
 
-/** A directory source that reads its body from a local file when asked. */
+/** Reads the directory body from a local file. */
 export function fileDirectory(filePath: string): DirectorySource {
   return {
     async fetch() {
