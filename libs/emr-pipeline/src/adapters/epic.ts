@@ -39,8 +39,18 @@ export const epicAdapter: VendorAdapter = {
   },
 
   /**
-   * Reads one tenant per Endpoint resource, dropping a health-system name that
-   * just repeats the tenant name.
+   * Turns epic's directory, one Endpoint resource per tenant, into the tenant
+   * list. The Endpoint's name and address carry over, the address gaining a
+   * trailing slash. The managing organization is kept only when it differs
+   * from the tenant name.
+   *
+   * @example
+   * An Endpoint `e-1` named `MHS` at `https://one.example.org/api/FHIR/R4`
+   * under managing organization `Mercyhealth` becomes:
+   *
+   *   { tenantId: 'e-1', name: 'MHS',
+   *     url: 'https://one.example.org/api/FHIR/R4/',
+   *     managingOrganization: 'Mercyhealth' }
    */
   parseDirectory(bundle: FhirBundle): DirectoryEntry[] {
     const entries: DirectoryEntry[] = [];

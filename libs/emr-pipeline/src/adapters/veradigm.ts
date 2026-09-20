@@ -42,8 +42,17 @@ export const veradigmAdapter: VendorAdapter = {
   },
 
   /**
-   * Reads one tenant per entry, taking its id and name from the contained
-   * Organization.
+   * Turns veradigm's directory, one entry per tenant with a contained
+   * Organization, into the tenant list. The Organization carries the id and
+   * name, the entry's own name is the fallback, and the address gains a
+   * trailing slash.
+   *
+   * @example
+   * An entry at `https://fhir.example.org/fhirroute/fhir/10044205` containing
+   * Organization `4e6b2a54` named `Baldwin Family Medicine` becomes:
+   *
+   *   { tenantId: '4e6b2a54', name: 'Baldwin Family Medicine',
+   *     url: 'https://fhir.example.org/fhirroute/fhir/10044205/' }
    */
   parseDirectory(bundle: FhirBundle): DirectoryEntry[] {
     const entries: DirectoryEntry[] = [];

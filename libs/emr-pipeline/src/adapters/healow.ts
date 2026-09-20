@@ -31,8 +31,16 @@ export const healowAdapter: VendorAdapter = {
   },
 
   /**
-   * Reads one tenant per Endpoint in the practice list, preferring the matching
-   * Organization's name.
+   * Turns healow's practice list, Organization and Endpoint pairs sharing
+   * one id, into the tenant list. The Organization's name wins and the
+   * Endpoint's name is the fallback.
+   *
+   * @example
+   * An Endpoint `AACJCD` at `https://fhir4.healow.com/fhir/r4/AACJCD` paired
+   * with an Organization named `Pointcare Medical Center LLC` becomes:
+   *
+   *   { tenantId: 'AACJCD', name: 'Pointcare Medical Center LLC',
+   *     url: 'https://fhir4.healow.com/fhir/r4/AACJCD' }
    */
   parseDirectory(bundle: FhirBundle): DirectoryEntry[] {
     const names = new Map<string, string>();

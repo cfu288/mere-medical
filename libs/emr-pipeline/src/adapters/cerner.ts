@@ -44,8 +44,17 @@ export const cernerAdapter: VendorAdapter = {
   },
 
   /**
-   * Reads one tenant per Endpoint resource, named by the Organization that
-   * links to it when one does.
+   * Turns cerner's directory, one Endpoint resource per tenant, into the
+   * tenant list. R4 names come from the Organization whose `endpoint`
+   * reference points at the Endpoint, DSTU2 names from the Endpoint's
+   * contained Organization, and the Endpoint's own name is the fallback.
+   *
+   * @example
+   * An Endpoint `t-1` at `https://fhir-myrecord.cerner.com/r4/t-1/`
+   * referenced by an Organization named `Oscar Matthews, MD` becomes:
+   *
+   *   { tenantId: 't-1', name: 'Oscar Matthews, MD',
+   *     url: 'https://fhir-myrecord.cerner.com/r4/t-1/' }
    */
   parseDirectory(bundle: FhirBundle): DirectoryEntry[] {
     const namesByEndpointId = new Map<string, string>();
