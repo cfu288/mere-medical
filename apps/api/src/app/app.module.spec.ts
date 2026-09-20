@@ -29,9 +29,9 @@ describe('AppModule boot', () => {
   });
 
   it.each([
-    ['no', {}],
+    ['no env vars set', {}],
     [
-      'blank',
+      'every vendor env blank',
       {
         PUBLIC_URL: '',
         ONPATIENT_CLIENT_ID: '',
@@ -49,7 +49,7 @@ describe('AppModule boot', () => {
       },
     ],
     [
-      'full vendor',
+      'every vendor configured',
       {
         PUBLIC_URL: 'https://stage.meremedical.co',
         ONPATIENT_CLIENT_ID: 'onpatient-client-id',
@@ -67,7 +67,7 @@ describe('AppModule boot', () => {
       },
     ],
     [
-      'adversarial',
+      'unexpanded and malformed env values',
       {
         PUBLIC_URL: 'mereapp.com',
         ONPATIENT_CLIENT_ID: '$ONPATIENT_CLIENT_ID',
@@ -76,7 +76,7 @@ describe('AppModule boot', () => {
         ATHENA_SANDBOX_CLIENT_ID: '$ATHENA_SANDBOX_CLIENT_ID',
       },
     ],
-  ])('compiles with %s env', async (_name, env) => {
+  ])('the dependency graph boots with %s', async (_name, env) => {
     process.env = env as NodeJS.ProcessEnv;
     jest.resetModules();
     const { Test } = await import('@nestjs/testing');
