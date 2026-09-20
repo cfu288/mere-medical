@@ -230,7 +230,7 @@ describe('extract', () => {
     ).toEqual([{ body: DIRECTORY }]);
   });
 
-  it('refuses to fetch a capability url the directory lists as http', async () => {
+  it('refuses to fetch a metadata url the directory lists as http', async () => {
     let capabilityFetches = 0;
     globalThis.fetch = (async (url: string | URL) => {
       if (String(url).includes('directory')) {

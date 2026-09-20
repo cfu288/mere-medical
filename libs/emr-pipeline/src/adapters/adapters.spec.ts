@@ -17,9 +17,9 @@ describe('vendor adapters', () => {
     expect(fhirBundleSchema.safeParse({}).success).toBe(false);
   });
 
-  it('gives athena no per tenant capability url', () => {
+  it('gives athena no per tenant metadata url', () => {
     expect(
-      adapterFor('athena').capabilityUrl({
+      adapterFor('athena').metadataUrl({
         tenantId: '1',
         url: 'https://api.platform.athenahealth.com/fhir/r4',
       }),
@@ -28,7 +28,7 @@ describe('vendor adapters', () => {
 
   it('appends metadata to an epic base url that already ends in a slash', () => {
     expect(
-      adapterFor('epic').capabilityUrl({
+      adapterFor('epic').metadataUrl({
         tenantId: '1',
         url: 'https://example.org/api/FHIR/R4/',
       }),
@@ -37,7 +37,7 @@ describe('vendor adapters', () => {
 
   it('inserts a slash before metadata for a healow base url', () => {
     expect(
-      adapterFor('healow').capabilityUrl({
+      adapterFor('healow').metadataUrl({
         tenantId: 'AACJCD',
         url: 'https://fhir4.eclinicalworks.com/fhir/r4/AACJCD',
       }),

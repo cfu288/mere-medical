@@ -55,7 +55,7 @@ export const healowAdapter: VendorAdapter = {
     return entries;
   },
 
-  capabilityUrl(entry: DirectoryEntry): string {
+  metadataUrl(entry: DirectoryEntry): string {
     return entry.url.endsWith('/')
       ? `${entry.url}metadata`
       : `${entry.url}/metadata`;

@@ -55,7 +55,7 @@ export function checkTenantDirectoryCounts(
 }
 
 /**
- * Fetches one capability url and returns its body text, retrying errors
+ * Fetches one metadata url and returns its body text, retrying errors
  */
 async function fetchWithExponentialBackoff(
   url: string,
@@ -100,7 +100,7 @@ type CapabilityOutcome =
  * Using a queue + workers to download concurrently. A worker starts
  * the next url as soon as its current one finishes, vs batches which wait for the slowest job.
  *
- * @param tasks - One fetch per capability url, each resolving to an outcome.
+ * @param tasks - One fetch per metadata url, each resolving to an outcome.
  * @param onResult - Called with each outcome as it lands, in completion order.
  * @returns Resolves once every outcome is handed over.
  * @example
@@ -218,21 +218,21 @@ export async function startCapabilityStatementExtractionForVendor(
   console.log(
     `${vendor} ${fhirVersion}: directory holds ${entries.length} tenants`,
   );
-  const capabilityUrls = new Set<string>();
+  const metadataUrls = new Set<string>();
   for (const entry of entries) {
-    const url = adapter.capabilityUrl(entry);
-    if (url) capabilityUrls.add(url);
+    const url = adapter.metadataUrl(entry);
+    if (url) metadataUrls.add(url);
   }
 
   await db
     .transaction()
     .execute((trx) =>
-      downloads.addUrls(trx, vendor, fhirVersion, [...capabilityUrls]),
+      downloads.addUrls(trx, vendor, fhirVersion, [...metadataUrls]),
     );
 
   const documents = (
     await downloads.selectForDownload(db, vendor, fhirVersion)
-  ).filter((row) => capabilityUrls.has(row.url));
+  ).filter((row) => metadataUrls.has(row.url));
   const insecure = documents.filter((row) => !isHttpsUrl(row.url));
   for (const row of insecure) {
     await downloads.recordFailure(db, {
@@ -244,7 +244,7 @@ export async function startCapabilityStatementExtractionForVendor(
   }
   if (insecure.length > 0) {
     console.log(
-      `${vendor} ${fhirVersion}: refused ${insecure.length} non-https capability urls`,
+      `${vendor} ${fhirVersion}: refused ${insecure.length} non-https metadata urls`,
     );
   }
   const fetchable = documents.filter((row) => isHttpsUrl(row.url));

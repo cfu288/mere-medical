@@ -50,10 +50,10 @@ export interface VendorAdapter {
   /** Reads a fetched directory body into candidate tenants. */
   parseDirectory(bundle: FhirBundle): DirectoryEntry[];
   /**
-   * CapabilityStatement location, or null when the vendor exposes no per-tenant
-   * one.
+   * The metadata url answering this tenant's CapabilityStatement, or null
+   * when the vendor exposes no per-tenant one.
    */
-  capabilityUrl(entry: DirectoryEntry): string | null;
+  metadataUrl(entry: DirectoryEntry): string | null;
   /**
    * Extra headers a vendor needs on capability fetches, such as Epic's client
    * id gate.

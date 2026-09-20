@@ -56,7 +56,7 @@ export const athenaAdapter: VendorAdapter = {
       }));
   },
 
-  capabilityUrl(): null {
+  metadataUrl(): null {
     return null;
   },
 

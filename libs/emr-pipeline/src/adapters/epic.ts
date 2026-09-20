@@ -62,7 +62,7 @@ export const epicAdapter: VendorAdapter = {
     return entries;
   },
 
-  capabilityUrl(entry: DirectoryEntry): string {
+  metadataUrl(entry: DirectoryEntry): string {
     return `${entry.url}metadata`;
   },
 

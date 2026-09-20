@@ -209,15 +209,15 @@ export async function transform(
     const classifiedUrls = new Set<string>();
     for (const seenUrl of seenUrls.values()) {
       if (classifiedUrls.has(seenUrl.url)) continue;
-      const capabilityUrl = adapter.capabilityUrl({
+      const metadataUrl = adapter.metadataUrl({
         tenantId: seenUrl.tenantId,
         url: seenUrl.url,
       });
-      if (!capabilityUrl) continue;
+      if (!metadataUrl) continue;
       const download = await downloads.findByUrl(trx, {
         vendor,
         fhirVersion,
-        url: capabilityUrl,
+        url: metadataUrl,
       });
       if (download?.body == null) continue;
 
