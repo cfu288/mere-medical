@@ -33,7 +33,7 @@ async function buildArtifact(
     '1970-01-01T00:00:00.000Z';
 
   const building = `${artifactPath}.building`;
-  for (const stale of [building, `${building}-wal`, `${building}-shm`]) {
+  for (const stale of [building, `${building}-journal`]) {
     fs.rmSync(stale, { force: true });
   }
 
@@ -102,8 +102,6 @@ async function buildArtifact(
     await artifact.destroy();
 
     fs.renameSync(building, artifactPath);
-    fs.rmSync(`${artifactPath}-wal`, { force: true });
-    fs.rmSync(`${artifactPath}-shm`, { force: true });
     return { rowCount: count.n };
   } catch (error) {
     await artifact.destroy().catch(() => undefined);
