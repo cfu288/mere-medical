@@ -12,19 +12,20 @@ import {
   toFtsQuery,
 } from './repository';
 
-interface SeedRow {
+interface SeedRowBase {
   tenantId: string;
   vendor: string;
   fhirVersion: string;
   name: string;
   url: string;
-  token?: string;
-  authorize?: string;
   managingOrganization?: string;
   source?: string;
-  kind?: 'login' | 'lookup';
   lastSeenInDirectory?: string;
 }
+
+type SeedRow =
+  | (SeedRowBase & { kind?: 'login'; token: string; authorize: string })
+  | (SeedRowBase & { kind: 'lookup' });
 
 const SEEDS: SeedRow[] = [
   {
@@ -117,8 +118,8 @@ function writeArtifact(
       row.fhirVersion,
       row.name,
       row.url,
-      row.token ?? null,
-      row.authorize ?? null,
+      row.kind === 'lookup' ? null : row.token,
+      row.kind === 'lookup' ? null : row.authorize,
       row.managingOrganization ?? null,
       row.source ?? 'directory',
       row.kind ?? 'login',
@@ -175,7 +176,7 @@ describe('tenant-db', () => {
     const other = fs.mkdtempSync(path.join(os.tmpdir(), 'tenant-db-'));
 
     expect(() => openTenantDb(writeArtifact(other, SEEDS, 99))).toThrow(
-      /schema version 99, expected 1/,
+      /schema version 99, expected 2/,
     );
 
     fs.rmSync(other, { recursive: true, force: true });
