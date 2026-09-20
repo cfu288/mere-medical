@@ -41,6 +41,8 @@ export interface VendorAdapter {
   metadataUrl(entry: DirectoryEntry): string | null;
   /** Extra headers for metadata fetches, like Epic's client id. */
   capabilityHeaders?(): Record<string, string>;
+  /** Milliseconds between metadata fetches. Set on vendors whose gateway rejects a fast crawl. */
+  requestDelayMs?: number;
   /** Rows this vendor always publishes, independent of its directory. */
   sandbox(version: FhirVersion): SandboxSeed[];
 }

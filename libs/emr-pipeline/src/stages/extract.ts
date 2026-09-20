@@ -104,6 +104,7 @@ type CapabilityOutcome =
  *
  * @param tasks - One fetch per metadata url, each resolving to an outcome.
  * @param onResult - Called with each outcome as it lands, in completion order.
+ * @param delayMs - Milliseconds between fetches. A delay shrinks the pool to one worker.
  * @returns Resolves once every outcome is handed over.
  * @example
  * await runWorkerPool(
@@ -114,14 +115,17 @@ type CapabilityOutcome =
 async function runWorkerPool(
   tasks: (() => Promise<CapabilityOutcome>)[],
   onResult: (result: CapabilityOutcome) => Promise<void>,
+  delayMs = 0,
 ): Promise<void> {
   let next = 0;
   async function worker(): Promise<void> {
     while (next < tasks.length) {
       await onResult(await tasks[next++]());
+      if (delayMs > 0 && next < tasks.length) await sleep(delayMs);
     }
   }
-  const workers = Math.min(CONCURRENCY, Math.max(tasks.length, 1));
+  const poolSize = delayMs > 0 ? 1 : CONCURRENCY;
+  const workers = Math.min(poolSize, Math.max(tasks.length, 1));
   const settled = await Promise.allSettled(
     Array.from({ length: workers }, worker),
   );
@@ -313,6 +317,7 @@ export async function startCapabilityStatementExtractionForVendor(
         counts.failed++;
       }
     },
+    adapter.requestDelayMs,
   );
 
   await runs.record(db, vendor, fhirVersion, counts.failed);

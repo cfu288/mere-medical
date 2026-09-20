@@ -31,6 +31,9 @@ const SANDBOX: SandboxSeed[] = [
 ];
 
 export const veradigmAdapter: VendorAdapter = {
+  // The shared gateway answered 500 to nearly every request after the Sep 2026 crawl passed about 500.
+  requestDelayMs: 1000,
+
   versions: ['DSTU2', 'R4'],
 
   directory(version: FhirVersion): DirectorySource | null {
