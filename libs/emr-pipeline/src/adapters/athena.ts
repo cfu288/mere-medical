@@ -30,8 +30,7 @@ export const athenaAdapter: VendorAdapter = {
    * Turns athena's directory bundle, thousands of Organization resources for
    * locations and departments, into the list of practices a user can pick
    * from, unique by practice id. A practice is named only when its
-   * Organizations agree on one name. Every practice points at athena's
-   * single shared FHIR base url.
+   * Organizations agree on one name.
    *
    * @example
    * Two Organizations referencing `Practice-10`, both named
