@@ -77,7 +77,7 @@ export class HealowController {
       return;
     }
 
-    const tenant = this.healowService.findTenantById(body.tenant_id);
+    const tenant = await this.healowService.findTenantById(body.tenant_id);
     if (!tenant) {
       response.status(400).send({
         error: 'invalid_tenant',
@@ -151,7 +151,7 @@ export class HealowController {
       return;
     }
 
-    const tenant = this.healowService.findTenantById(body.tenant_id);
+    const tenant = await this.healowService.findTenantById(body.tenant_id);
     if (!tenant) {
       response.status(400).send({
         error: 'invalid_tenant',

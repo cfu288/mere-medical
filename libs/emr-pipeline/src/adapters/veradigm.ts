@@ -1,0 +1,79 @@
+import type { FhirVersion } from '@mere/shared';
+import type { FhirBundle } from './schemas';
+import {
+  DirectoryEntry,
+  DirectorySource,
+  SandboxSeed,
+  VendorAdapter,
+  httpDirectory,
+  requireEnv,
+} from './types';
+
+const SANDBOX: SandboxSeed[] = [
+  {
+    tenantId: 'sandbox_veradigm',
+    name: 'Veradigm Sandbox (Professional)',
+    url: 'https://fhir.fhirpoint.open.allscripts.com/fhirroute/fhir/CustProProdSand201SMART/',
+    token:
+      'https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/CustProProdSand201SMART/connect/token',
+    authorize:
+      'https://fhir.fhirpoint.open.allscripts.com/fhirroute/authorization/CustProProdSand201SMART/connect/authorize',
+  },
+  {
+    tenantId: 'sandbox_touchworks',
+    name: 'TouchWorks Sandbox (Offline)',
+    url: 'https://tw181unityfhir.open.allscripts.com/open/',
+    token:
+      'https://open.allscripts.com/fhirroute/patientauth/e75746a4-7f05-4b95-9ff5-44082c988959/connect/token/',
+    authorize:
+      'https://open.allscripts.com/fhirroute/patientauth/e75746a4-7f05-4b95-9ff5-44082c988959/connect/authorize/',
+  },
+];
+
+export const veradigmAdapter: VendorAdapter = {
+  versions: ['DSTU2', 'R4'],
+
+  directory(version: FhirVersion): DirectorySource | null {
+    if (version === 'R4') {
+      const url = process.env['VERADIGM_R4_ENDPOINTS_URL'];
+      return url ? httpDirectory(url) : null;
+    }
+    return httpDirectory(requireEnv('VERADIGM_DSTU2_ENDPOINTS_URL'));
+  },
+
+  /**
+   * Turns veradigm's directory, one entry per tenant with a contained
+   * Organization, into the tenant list. The Organization carries the id and
+   * name, the entry's own name is the fallback, and the address gains a
+   * trailing slash.
+   *
+   * @example
+   * An entry at `https://fhir.example.org/fhirroute/fhir/10044205` containing
+   * Organization `4e6b2a54` named `Baldwin Family Medicine` becomes:
+   *
+   *   { tenantId: '4e6b2a54', name: 'Baldwin Family Medicine',
+   *     url: 'https://fhir.example.org/fhirroute/fhir/10044205/' }
+   */
+  parseDirectory(bundle: FhirBundle): DirectoryEntry[] {
+    const entries: DirectoryEntry[] = [];
+    for (const { resource } of bundle.entry) {
+      const contained = resource?.contained?.[0];
+      const address = resource?.address;
+      if (!contained?.id || !address) continue;
+      entries.push({
+        tenantId: contained.id,
+        name: contained.name ?? resource.name,
+        url: address.endsWith('/') ? address : `${address}/`,
+      });
+    }
+    return entries;
+  },
+
+  metadataUrl(entry: DirectoryEntry): string {
+    return `${entry.url}metadata`;
+  },
+
+  sandbox(version: FhirVersion): SandboxSeed[] {
+    return version === 'DSTU2' ? SANDBOX : [];
+  },
+};

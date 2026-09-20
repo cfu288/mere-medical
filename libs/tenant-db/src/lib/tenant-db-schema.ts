@@ -1,0 +1,30 @@
+// Keep in step with TENANT_DB_SCHEMA in schema.ts.
+import type { Generated } from 'kysely';
+
+export interface TenantsTable {
+  id: Generated<number>;
+  tenant_id: string;
+  vendor: string;
+  fhir_version: string;
+  name: string;
+  url: string;
+  token: string | null;
+  authorize: string | null;
+  register: string | null;
+  managing_organization: string | null;
+  source: string;
+  kind: 'login' | 'lookup';
+  last_seen_in_directory: string;
+}
+
+export interface TenantsFtsTable {
+  rowid: number;
+  rank: number;
+  name: string | null;
+  managing_organization: string | null;
+}
+
+export interface TenantDatabase {
+  tenants: TenantsTable;
+  tenants_fts: TenantsFtsTable;
+}

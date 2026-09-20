@@ -1,0 +1,363 @@
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { sql } from 'kysely';
+import { openWarehouse, Warehouse } from '../db/open';
+import * as downloads from '../db/repository/capability-downloads';
+import * as vendorTenantDirectory from '../db/repository/vendor-tenant-directory-snapshots';
+import {
+  checkTenantDirectoryCounts,
+  startCapabilityStatementExtractionForVendor,
+} from './extract';
+
+const SMART =
+  'http://fhir-registry.smarthealthit.org/StructureDefinition/oauth-uris';
+
+const CAPABILITY = JSON.stringify({
+  resourceType: 'CapabilityStatement',
+  rest: [
+    {
+      security: {
+        extension: [
+          {
+            url: SMART,
+            extension: [
+              {
+                url: 'authorize',
+                valueUri: 'https://one.example.org/authorize',
+              },
+              { url: 'token', valueUri: 'https://one.example.org/token' },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+});
+
+const DIRECTORY = JSON.stringify({
+  resourceType: 'Bundle',
+  entry: [
+    {
+      resource: {
+        resourceType: 'Endpoint',
+        id: 'epic-1',
+        name: 'Example Health',
+        address: 'https://one.example.org/api/FHIR/R4/',
+      },
+    },
+  ],
+});
+
+const DIRECTORY_URL = 'https://directory.example.org/R4';
+const NOW = '2026-08-23T00:00:00.000Z';
+
+describe('checkDirectory', () => {
+  it('accepts a bundle whose declared total counts every entry', async () => {
+    expect(checkTenantDirectoryCounts(6918, 13836, 13836)).toEqual({
+      ok: true,
+    });
+  });
+
+  it('rejects a bundle declaring a total its entries do not reach', async () => {
+    expect(checkTenantDirectoryCounts(96, 96, 3326)).toEqual({
+      ok: false,
+      reason: 'directory declares total 3326 but holds 96 entries',
+    });
+  });
+
+  it('rejects a directory that yielded no tenants', async () => {
+    expect(checkTenantDirectoryCounts(0, 40, undefined)).toEqual({
+      ok: false,
+      reason: 'directory yielded no tenants',
+    });
+  });
+});
+
+describe('extract', () => {
+  let dir: string;
+  let db: Warehouse;
+  const realFetch = globalThis.fetch;
+
+  beforeEach(() => {
+    jest.spyOn(console, 'log').mockImplementation(() => undefined);
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'extract-'));
+    db = openWarehouse(path.join(dir, 'warehouse.db'));
+    process.env['EPIC_R4_ENDPOINTS_URL'] = DIRECTORY_URL;
+    process.env['EPIC_CLIENT_ID'] = 'client-123';
+  });
+
+  afterEach(async () => {
+    jest.restoreAllMocks();
+    jest.useRealTimers();
+    await db.destroy();
+    globalThis.fetch = realFetch;
+    fs.rmSync(dir, { recursive: true, force: true });
+    delete process.env['EPIC_R4_ENDPOINTS_URL'];
+    delete process.env['EPIC_CLIENT_ID'];
+  });
+
+  async function idOf(url: string): Promise<number> {
+    const result = await sql<{
+      id: number;
+    }>`SELECT id FROM capability_downloads WHERE url = ${url}`.execute(db);
+    return result.rows[0].id;
+  }
+
+  async function seedGoodCapability(): Promise<number> {
+    await vendorTenantDirectory.saveSnapshot(db, 'epic', 'R4', NOW, DIRECTORY);
+    const url = 'https://one.example.org/api/FHIR/R4/metadata';
+    await downloads.addUrl(db, { vendor: 'epic', fhirVersion: 'R4', url });
+    const capabilityId = await idOf(url);
+    await downloads.recordSuccess(db, {
+      id: capabilityId,
+      body: CAPABILITY,
+      now: NOW,
+    });
+    return capabilityId;
+  }
+
+  function respondWith(capabilityStatus: number, capabilityBody: string) {
+    globalThis.fetch = (async (url: string | URL) => {
+      if (String(url).includes('directory')) {
+        return new Response(DIRECTORY, {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+      return new Response(capabilityBody, {
+        status: capabilityStatus,
+        headers: { 'content-type': 'text/html' },
+      });
+    }) as typeof fetch;
+  }
+
+  it('keeps a good body when the endpoint later answers 404', async () => {
+    const capabilityId = await seedGoodCapability();
+    respondWith(404, '<html>404 Not Found</html>');
+
+    await startCapabilityStatementExtractionForVendor(db, 'epic', 'R4');
+
+    expect((await downloads.findById(db, capabilityId))?.body).toBe(CAPABILITY);
+  });
+
+  it('keeps a good body when the endpoint answers 200 with non-JSON', async () => {
+    const capabilityId = await seedGoodCapability();
+    respondWith(200, '<html>down for maintenance</html>');
+
+    await startCapabilityStatementExtractionForVendor(db, 'epic', 'R4');
+    const failed = (
+      await sql`SELECT failed AS n FROM capability_downloads WHERE id = ${capabilityId}`.execute(
+        db,
+      )
+    ).rows[0];
+
+    expect((await downloads.findById(db, capabilityId))?.body).toBe(CAPABILITY);
+    expect(failed).toEqual({ n: 1 });
+  });
+
+  it('keeps a usable body when the endpoint answers 200 with an unusable one', async () => {
+    const capabilityId = await seedGoodCapability();
+    respondWith(200, JSON.stringify({ resourceType: 'OperationOutcome' }));
+
+    await startCapabilityStatementExtractionForVendor(db, 'epic', 'R4');
+    const failed = (
+      await sql`SELECT failed AS n FROM capability_downloads WHERE id = ${capabilityId}`.execute(
+        db,
+      )
+    ).rows[0];
+
+    expect((await downloads.findById(db, capabilityId))?.body).toBe(CAPABILITY);
+    expect(failed).toEqual({ n: 1 });
+  });
+
+  it('stores a directory snapshot when the crawl succeeds', async () => {
+    respondWith(200, CAPABILITY);
+
+    await startCapabilityStatementExtractionForVendor(db, 'epic', 'R4');
+
+    expect(
+      (
+        await sql`SELECT vendor, fhir_version, body FROM vendor_tenant_directory_snapshots`.execute(
+          db,
+        )
+      ).rows,
+    ).toEqual([{ vendor: 'epic', fhir_version: 'R4', body: DIRECTORY }]);
+  });
+
+  it('updates the snapshot date when the directory body is unchanged', async () => {
+    expect(
+      await vendorTenantDirectory.saveSnapshot(
+        db,
+        'epic',
+        'R4',
+        NOW,
+        DIRECTORY,
+      ),
+    ).toBe(true);
+    expect(
+      await vendorTenantDirectory.saveSnapshot(
+        db,
+        'epic',
+        'R4',
+        '2026-09-01T00:00:00.000Z',
+        DIRECTORY,
+      ),
+    ).toBe(false);
+
+    expect(
+      (
+        await sql`SELECT fetched_at FROM vendor_tenant_directory_snapshots`.execute(
+          db,
+        )
+      ).rows,
+    ).toEqual([{ fetched_at: '2026-09-01T00:00:00.000Z' }]);
+  });
+
+  it('keeps the directory snapshot when the server answers an error', async () => {
+    await seedGoodCapability();
+    globalThis.fetch = (async () =>
+      new Response('gone', { status: 404 })) as typeof fetch;
+
+    await startCapabilityStatementExtractionForVendor(db, 'epic', 'R4');
+
+    expect(
+      (
+        await sql`SELECT body FROM vendor_tenant_directory_snapshots`.execute(
+          db,
+        )
+      ).rows,
+    ).toEqual([{ body: DIRECTORY }]);
+  });
+
+  it('refuses to fetch a metadata url the directory lists as http', async () => {
+    let capabilityFetches = 0;
+    globalThis.fetch = (async (url: string | URL) => {
+      if (String(url).includes('directory')) {
+        return new Response(
+          JSON.stringify({
+            resourceType: 'Bundle',
+            entry: [
+              {
+                resource: {
+                  resourceType: 'Endpoint',
+                  id: 'epic-1',
+                  name: 'Example Health',
+                  address: 'http://127.0.0.1:8080/api/FHIR/R4/',
+                },
+              },
+            ],
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        );
+      }
+      capabilityFetches++;
+      return new Response(CAPABILITY, { status: 200 });
+    }) as typeof fetch;
+
+    const result = await startCapabilityStatementExtractionForVendor(
+      db,
+      'epic',
+      'R4',
+    );
+    const document = await downloads.findByUrl(db, {
+      vendor: 'epic',
+      fhirVersion: 'R4',
+      url: 'http://127.0.0.1:8080/api/FHIR/R4/metadata',
+    });
+
+    expect({
+      capabilityFetches,
+      status: result.status,
+      storedBody: document?.body,
+    }).toEqual({
+      capabilityFetches: 0,
+      status: 'ok',
+      storedBody: null,
+    });
+  });
+
+  it('leaves a capability the directory no longer lists unfetched', async () => {
+    await seedGoodCapability();
+    await downloads.addUrl(db, {
+      vendor: 'epic',
+      fhirVersion: 'R4',
+      url: 'https://gone.example.org/api/FHIR/R4/metadata',
+    });
+    const delistedId = await idOf(
+      'https://gone.example.org/api/FHIR/R4/metadata',
+    );
+    const requested: string[] = [];
+    globalThis.fetch = (async (url: string | URL) => {
+      if (String(url).includes('directory')) {
+        return new Response(DIRECTORY, { status: 200 });
+      }
+      requested.push(String(url));
+      return new Response(CAPABILITY, { status: 200 });
+    }) as typeof fetch;
+
+    await startCapabilityStatementExtractionForVendor(db, 'epic', 'R4');
+
+    expect(requested).toEqual(['https://one.example.org/api/FHIR/R4/metadata']);
+    expect((await downloads.findById(db, delistedId))?.body).toBeNull();
+  });
+
+  it('records the rejection of a 200 directory body it cannot parse', async () => {
+    await seedGoodCapability();
+    jest.useFakeTimers({ now: new Date('2026-09-01T00:00:00.000Z') });
+    globalThis.fetch = (async () =>
+      new Response('<html>maintenance</html>', {
+        status: 200,
+        headers: { 'content-type': 'text/html' },
+      })) as typeof fetch;
+
+    const result = await startCapabilityStatementExtractionForVendor(
+      db,
+      'epic',
+      'R4',
+    );
+    const attempt = (
+      await sql<{
+        attempted_at: string;
+        error: string | null;
+      }>`SELECT attempted_at, error FROM directory_fetches`.execute(db)
+    ).rows[0];
+
+    expect({
+      status: result.status,
+      attemptedAt: attempt.attempted_at,
+      rejected: attempt.error?.startsWith('directory body rejected'),
+    }).toEqual({
+      status: 'failed',
+      attemptedAt: '2026-09-01T00:00:00.000Z',
+      rejected: true,
+    });
+  });
+
+  it('keeps the directory snapshot when a refetch loses every tenant', async () => {
+    await seedGoodCapability();
+    globalThis.fetch = (async () =>
+      new Response(JSON.stringify({ resourceType: 'Bundle', entry: [] }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      })) as typeof fetch;
+
+    const result = await startCapabilityStatementExtractionForVendor(
+      db,
+      'epic',
+      'R4',
+    );
+
+    expect({
+      status: result.status,
+      copies: (
+        await sql`SELECT body FROM vendor_tenant_directory_snapshots`.execute(
+          db,
+        )
+      ).rows,
+    }).toEqual({
+      status: 'failed',
+      copies: [{ body: DIRECTORY }],
+    });
+  });
+});

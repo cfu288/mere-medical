@@ -58,8 +58,8 @@ if (vendors.healow.status === 'production') {
 const imports: ModuleMetadata['imports'] = [
   StaticModule,
   LoginProxyModule,
-  TenantModule,
   ConfigModule,
+  TenantModule,
 ];
 
 if (vendors.onpatient.status === 'production') {

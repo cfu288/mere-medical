@@ -14,6 +14,11 @@ import {
   defaultProxyOptions,
 } from './proxy.constants';
 import { createProxyServer } from 'http-proxy';
+import { TENANT_DB } from '../tenant-db/tenant-db.module';
+import {
+  SeededTenantDb,
+  openSeededTenantDb,
+} from '../tenant-db/tenant-db.fixture';
 
 const ALLOWED_HEADERS = [
   'accept',
@@ -52,6 +57,7 @@ describe('Proxy Header Filtering E2E', () => {
   let app: INestApplication;
   let targetServer: http.Server;
   let targetPort: number;
+  let seeded: SeededTenantDb;
   let receivedHeaders: http.IncomingHttpHeaders;
   const originalEnv = process.env;
 
@@ -69,6 +75,18 @@ describe('Proxy Header Filtering E2E', () => {
     });
 
     process.env = { ...originalEnv, PUBLIC_URL: 'https://app.example.com' };
+
+    seeded = await openSeededTenantDb([
+      {
+        tenantId: 'test-service',
+        vendor: 'epic',
+        fhirVersion: 'R4',
+        name: 'Test Service',
+        url: `http://localhost:${targetPort}`,
+        token: `http://localhost:${targetPort}/token`,
+        authorize: `http://localhost:${targetPort}/auth`,
+      },
+    ]);
 
     const proxy = createProxyServer({ ...defaultProxyOptions });
 
@@ -102,23 +120,10 @@ describe('Proxy Header Filtering E2E', () => {
       providers: [
         ProxyService,
         { provide: HTTP_PROXY, useValue: proxy },
+        { provide: PROXY_MODULE_OPTIONS, useValue: {} },
         {
-          provide: PROXY_MODULE_OPTIONS,
-          useValue: {
-            services: [
-              {
-                vendor: 'epic',
-                endpoints: [
-                  {
-                    id: 'test-service',
-                    url: `http://localhost:${targetPort}`,
-                    authorize: `http://localhost:${targetPort}/auth`,
-                    token: `http://localhost:${targetPort}/token`,
-                  },
-                ],
-              },
-            ],
-          },
+          provide: TENANT_DB,
+          useValue: seeded.db,
         },
         OriginGuard,
         {
@@ -138,6 +143,7 @@ describe('Proxy Header Filtering E2E', () => {
   });
 
   afterAll(async () => {
+    await seeded.close();
     process.env = originalEnv;
     await app.close();
     await new Promise<void>((resolve) => targetServer.close(() => resolve()));

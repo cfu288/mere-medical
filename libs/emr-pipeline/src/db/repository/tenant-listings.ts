@@ -1,0 +1,187 @@
+/**
+ * Owns the staging tables `tenant_names`, `tenant_listings`, and
+ * `url_smart_security`. Transform rebuilds them from the snapshots and
+ * publish reads them.
+ */
+import { sql } from 'kysely';
+import type {
+  CapabilityClassification,
+  FhirVersion,
+  Vendor,
+} from '@mere/shared';
+import type { Warehouse } from '../open';
+import { insertChunked } from '../insert-chunked';
+
+/**
+ * One tenant as its vendor's directory has ever listed it. It carries the
+ * merged name and every url with the date of the newest snapshot listing it
+ * there. The current listing is the url with the newest date, computed at
+ * query time.
+ */
+export interface TenantListing {
+  tenantId: string;
+  name?: string;
+  managingOrganization?: string;
+  urls: { url: string; lastSeenAt: string }[];
+}
+
+/**
+ * One url's SMART auth urls and whether they are complete enough to log in
+ * with. `listPublishable` keeps only `usable` rows.
+ */
+export interface UrlSmartSecurity {
+  url: string;
+  authorizeUrl: string | null;
+  tokenUrl: string | null;
+  registerUrl: string | null;
+  classification: CapabilityClassification;
+}
+
+/**
+ * Swaps staging over to a newly computed tenant model. Transform calls this
+ * once per vendor and version after folding the snapshot history, inside its
+ * transaction. All three staging tables are deleted and rewritten together.
+ */
+export async function replace(
+  db: Warehouse,
+  vendor: Vendor,
+  fhirVersion: FhirVersion,
+  listings: TenantListing[],
+  capabilities: UrlSmartSecurity[],
+): Promise<void> {
+  for (const table of [
+    'tenant_names',
+    'tenant_listings',
+    'url_smart_security',
+  ] as const) {
+    await db
+      .deleteFrom(table)
+      .where('vendor', '=', vendor)
+      .where('fhir_version', '=', fhirVersion)
+      .execute();
+  }
+
+  await insertChunked(
+    listings.map((listing) => ({
+      vendor,
+      fhir_version: fhirVersion,
+      tenant_id: listing.tenantId,
+      name: listing.name ?? null,
+      managing_organization: listing.managingOrganization ?? null,
+    })),
+    (chunk) => db.insertInto('tenant_names').values(chunk).execute(),
+  );
+  await insertChunked(
+    listings.flatMap((listing) =>
+      listing.urls.map((seen) => ({
+        vendor,
+        fhir_version: fhirVersion,
+        tenant_id: listing.tenantId,
+        url: seen.url,
+        last_seen_at: seen.lastSeenAt,
+      })),
+    ),
+    (chunk) => db.insertInto('tenant_listings').values(chunk).execute(),
+  );
+  await insertChunked(
+    capabilities.map((capability) => ({
+      vendor,
+      fhir_version: fhirVersion,
+      url: capability.url,
+      authorize_url: capability.authorizeUrl,
+      token_url: capability.tokenUrl,
+      register_url: capability.registerUrl,
+      classification: capability.classification,
+    })),
+    (chunk) =>
+      db
+        .insertInto('url_smart_security')
+        .values(chunk)
+        .onConflict((oc) =>
+          oc.columns(['vendor', 'fhir_version', 'url']).doNothing(),
+        )
+        .execute(),
+  );
+}
+
+/**
+ * A tenant ready to ship, named unless athena, with its best usable auth urls.
+ */
+interface PublishableTenant {
+  tenant_id: string;
+  vendor: string;
+  fhir_version: string;
+  name: string;
+  url: string;
+  token: string | null;
+  authorize: string | null;
+  register: string | null;
+  managing_organization: string | null;
+  kind: 'login' | 'lookup';
+  last_seen_in_directory: string;
+}
+
+/**
+ * Returns every publishable tenant with auth urls from its current url's usable
+ * CapabilityStatement, else its most recent usable one. Publish writes exactly
+ * this list to the artifact. The current listing is the tenant's newest
+ * `tenant_listings` row, ties broken by highest id.
+ */
+export async function listPublishable(
+  db: Warehouse,
+): Promise<PublishableTenant[]> {
+  const result = await sql<PublishableTenant>`
+    WITH current AS (
+      SELECT vendor, fhir_version, tenant_id, url, last_seen_at
+      FROM (
+        SELECT l.*, ROW_NUMBER() OVER (
+          PARTITION BY l.vendor, l.fhir_version, l.tenant_id
+          ORDER BY l.last_seen_at DESC, l.id DESC
+        ) AS rn
+        FROM tenant_listings l
+      )
+      WHERE rn = 1
+    ),
+    usable AS (
+      SELECT l.vendor, l.fhir_version, l.tenant_id, l.url, l.last_seen_at,
+             l.id, c.token_url, c.authorize_url, c.register_url
+      FROM tenant_listings l
+      JOIN url_smart_security c
+        ON c.vendor = l.vendor AND c.fhir_version = l.fhir_version AND c.url = l.url
+      WHERE c.classification = 'usable'
+    ),
+    best AS (
+      SELECT u.vendor, u.fhir_version, u.tenant_id,
+             u.token_url, u.authorize_url, u.register_url,
+             ROW_NUMBER() OVER (
+               PARTITION BY u.vendor, u.fhir_version, u.tenant_id
+               ORDER BY (u.url = cur.url) DESC, u.last_seen_at DESC, u.id DESC
+             ) AS rank
+      FROM usable u
+      JOIN current cur
+        ON cur.vendor = u.vendor AND cur.fhir_version = u.fhir_version
+       AND cur.tenant_id = u.tenant_id
+    )
+    SELECT cur.tenant_id, cur.vendor, cur.fhir_version,
+           coalesce(n.name, '') AS name, cur.url,
+           CASE cur.vendor WHEN 'athena' THEN NULL ELSE b.token_url END AS token,
+           CASE cur.vendor WHEN 'athena' THEN NULL ELSE b.authorize_url END AS authorize,
+           CASE cur.vendor WHEN 'athena' THEN NULL ELSE b.register_url END AS register,
+           n.managing_organization,
+           CASE cur.vendor WHEN 'athena' THEN 'lookup' ELSE 'login' END AS kind,
+           cur.last_seen_at AS last_seen_in_directory
+    FROM current cur
+    LEFT JOIN tenant_names n
+      ON n.vendor = cur.vendor AND n.fhir_version = cur.fhir_version
+     AND n.tenant_id = cur.tenant_id
+    LEFT JOIN best b
+      ON b.vendor = cur.vendor AND b.fhir_version = cur.fhir_version
+     AND b.tenant_id = cur.tenant_id AND b.rank = 1
+    WHERE CASE cur.vendor
+            WHEN 'athena' THEN 1
+            ELSE trim(coalesce(n.name, '')) <> '' AND b.tenant_id IS NOT NULL
+          END
+    ORDER BY cur.vendor, cur.fhir_version, cur.tenant_id
+  `.execute(db);
+  return result.rows;
+}

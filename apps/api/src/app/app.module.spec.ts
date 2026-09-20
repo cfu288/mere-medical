@@ -1,16 +1,39 @@
 import type { TestingModule } from '@nestjs/testing';
+import {
+  SeededTenantDb,
+  openSeededTenantDb,
+} from './tenant-db/tenant-db.fixture';
 
 describe('AppModule boot', () => {
   const originalEnv = process.env;
+  let seeded: SeededTenantDb;
+
+  beforeAll(async () => {
+    seeded = await openSeededTenantDb([
+      {
+        tenantId: 'epic-1',
+        vendor: 'epic',
+        fhirVersion: 'R4',
+        name: 'Mercy Health',
+        url: 'https://epic.example.org/api/FHIR/R4/',
+        token: 'https://epic.example.org/oauth2/token',
+        authorize: 'https://epic.example.org/oauth2/authorize',
+      },
+    ]);
+  });
+
+  afterAll(async () => {
+    await seeded.close();
+  });
 
   afterEach(() => {
     process.env = originalEnv;
   });
 
   it.each([
-    ['no', {}],
+    ['no env vars set', {}],
     [
-      'blank',
+      'every vendor env blank',
       {
         PUBLIC_URL: '',
         ONPATIENT_CLIENT_ID: '',
@@ -28,7 +51,7 @@ describe('AppModule boot', () => {
       },
     ],
     [
-      'full vendor',
+      'every vendor configured',
       {
         PUBLIC_URL: 'https://stage.meremedical.co',
         ONPATIENT_CLIENT_ID: 'onpatient-client-id',
@@ -46,7 +69,7 @@ describe('AppModule boot', () => {
       },
     ],
     [
-      'adversarial',
+      'unexpanded and malformed env values',
       {
         PUBLIC_URL: 'mereapp.com',
         ONPATIENT_CLIENT_ID: '$ONPATIENT_CLIENT_ID',
@@ -55,14 +78,18 @@ describe('AppModule boot', () => {
         ATHENA_SANDBOX_CLIENT_ID: '$ATHENA_SANDBOX_CLIENT_ID',
       },
     ],
-  ])('compiles with %s env', async (_name, env) => {
+  ])('the dependency graph boots with %s', async (_name, env) => {
     process.env = env as NodeJS.ProcessEnv;
     jest.resetModules();
-    const { Test } = require('@nestjs/testing');
-    const { AppModule } = require('./app.module');
+    const { Test } = await import('@nestjs/testing');
+    const { AppModule } = await import('./app.module');
+    const { TENANT_DB } = await import('./tenant-db/tenant-db.module');
     const compiled: Promise<TestingModule> = Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(TENANT_DB)
+      .useValue(seeded.db)
+      .compile();
     await expect(compiled).resolves.toBeDefined();
   });
 });

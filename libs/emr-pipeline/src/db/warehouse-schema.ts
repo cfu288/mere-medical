@@ -1,0 +1,88 @@
+// Keep in step with src/db/sql/warehouse.sql and staging.sql.
+import type { Generated } from 'kysely';
+
+export interface CapabilityDownloadsTable {
+  id: Generated<number>;
+  vendor: string;
+  fhir_version: Generated<string>;
+  url: string;
+  body: string | null;
+  downloaded_at: string | null;
+  attempted_at: string | null;
+  failed: Generated<number>;
+  error: string | null;
+}
+
+export interface DirectoryCountsTable {
+  vendor: string;
+  fhir_version: Generated<string>;
+  seen_at: string;
+  tenant_count: number;
+}
+
+export interface DirectoryFetchesTable {
+  vendor: string;
+  fhir_version: Generated<string>;
+  attempted_at: string;
+  error: string | null;
+}
+
+export interface FetchRunsTable {
+  id: Generated<number>;
+  vendor: string;
+  fhir_version: Generated<string>;
+  failed: number;
+}
+
+export interface PublicationsTable {
+  id: Generated<number>;
+  published_at: string;
+  row_count: number;
+}
+
+export interface TenantListingsTable {
+  id: Generated<number>;
+  vendor: string;
+  fhir_version: Generated<string>;
+  tenant_id: string;
+  url: string;
+  last_seen_at: string;
+}
+
+export interface TenantNamesTable {
+  vendor: string;
+  fhir_version: Generated<string>;
+  tenant_id: string;
+  name: string | null;
+  managing_organization: string | null;
+}
+
+export interface UrlSmartSecurityTable {
+  vendor: string;
+  fhir_version: Generated<string>;
+  url: string;
+  authorize_url: string | null;
+  token_url: string | null;
+  register_url: string | null;
+  classification: string;
+}
+
+export interface VendorTenantDirectorySnapshotsTable {
+  id: Generated<number>;
+  vendor: string;
+  fhir_version: Generated<string>;
+  fetched_at: string;
+  body: string;
+}
+
+export interface WarehouseDatabase {
+  capability_downloads: CapabilityDownloadsTable;
+  directory_counts: DirectoryCountsTable;
+  directory_fetches: DirectoryFetchesTable;
+  fetch_runs: FetchRunsTable;
+  publications: PublicationsTable;
+  tenant_listings: TenantListingsTable;
+  tenant_names: TenantNamesTable;
+  url_smart_security: UrlSmartSecurityTable;
+  vendor_tenant_directory_snapshots: VendorTenantDirectorySnapshotsTable;
+}
