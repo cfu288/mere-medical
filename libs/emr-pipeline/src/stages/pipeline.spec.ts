@@ -7,6 +7,7 @@ import { openWarehouse, Warehouse } from '../db/open';
 import * as downloads from '../db/repository/capability-downloads';
 import { publish } from './publish';
 import * as vendorTenantDirectory from '../db/repository/vendor-tenant-directory-snapshots';
+import * as tenantListings from '../db/repository/tenant-listings';
 import { transform } from './transform';
 
 const SMART_URL =
@@ -516,6 +517,99 @@ describe('warehouse to artifact', () => {
     );
 
     expect((await publish(db, artifactPath)).rowCount).toBe(8);
+  });
+
+  it('leaves out a tenant whose only capability history is unusable', async () => {
+    await vendorTenantDirectory.saveSnapshot(
+      db,
+      'epic',
+      'R4',
+      NOW,
+      EPIC_DIRECTORY,
+    );
+    for (const host of ['one.example.org', 'two.example.org']) {
+      const url = `https://${host}/api/FHIR/R4/metadata`;
+      await downloads.addUrl(db, { vendor: 'epic', fhirVersion: 'R4', url });
+    }
+    await downloads.recordSuccess(db, {
+      id: await idOf('https://one.example.org/api/FHIR/R4/metadata'),
+      body: '<html>down for maintenance</html>',
+      now: NOW,
+    });
+    await downloads.recordSuccess(db, {
+      id: await idOf('https://two.example.org/api/FHIR/R4/metadata'),
+      body: capabilityBody('two.example.org'),
+      now: NOW,
+    });
+    await transform(db, 'epic', 'R4');
+    await publish(db, artifactPath);
+
+    const artifact = new DatabaseSync(artifactPath, { readOnly: true });
+    const ids = (
+      artifact
+        .prepare(
+          `SELECT tenant_id FROM tenants WHERE source = 'directory'
+           ORDER BY tenant_id`,
+        )
+        .all() as { tenant_id: string }[]
+    ).map((row) => row.tenant_id);
+    artifact.close();
+    expect(ids).toEqual(['epic-2']);
+  });
+
+  it('publishes the later-inserted listing when two urls share a date', async () => {
+    await db.transaction().execute((trx) =>
+      tenantListings.replace(
+        trx,
+        'epic',
+        'R4',
+        [
+          {
+            tenantId: 'epic-1',
+            name: 'Example Health',
+            managingOrganization: undefined,
+            urls: [
+              { url: 'https://one.example.org/api/FHIR/R4/', lastSeenAt: NOW },
+              { url: 'https://two.example.org/api/FHIR/R4/', lastSeenAt: NOW },
+            ],
+          },
+        ],
+        [
+          {
+            url: 'https://one.example.org/api/FHIR/R4/',
+            authorizeUrl: 'https://one.example.org/oauth2/authorize',
+            tokenUrl: 'https://one.example.org/oauth2/token',
+            registerUrl: null,
+            classification: 'usable',
+          },
+          {
+            url: 'https://two.example.org/api/FHIR/R4/',
+            authorizeUrl: 'https://two.example.org/oauth2/authorize',
+            tokenUrl: 'https://two.example.org/oauth2/token',
+            registerUrl: null,
+            classification: 'usable',
+          },
+        ],
+      ),
+    );
+
+    const tenants = await tenantListings.listPublishable(db);
+
+    expect(tenants).toEqual([
+      {
+        tenant_id: 'epic-1',
+        vendor: 'epic',
+        fhir_version: 'R4',
+        name: 'Example Health',
+        url: 'https://two.example.org/api/FHIR/R4/',
+        token: 'https://two.example.org/oauth2/token',
+        authorize: 'https://two.example.org/oauth2/authorize',
+        register: null,
+        managing_organization: null,
+        kind: 'login',
+        last_seen_in_directory: NOW,
+      },
+    ]);
   });
 
   it('leaves staging rows in place for a vendor with no directory snapshots yet', async () => {
