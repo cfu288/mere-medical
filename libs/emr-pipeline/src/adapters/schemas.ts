@@ -1,10 +1,9 @@
 import { z } from 'zod';
 
 /**
- * Parses any vendor's directory bundle without rejecting unfamiliar
- * resources. Every field is `.catch(undefined)`. Resource types collide in
- * one bundle, like `Endpoint.address` (a url) vs `Organization.address`
- * (an array).
+ * The fields the adapters read from one bundle resource. Every field is
+ * `.catch(undefined)`. Resource types collide in one bundle, like
+ * `Endpoint.address` (a url) vs `Organization.address` (an array).
  */
 const resourceSchema = z
   .object({
@@ -87,8 +86,8 @@ const securityExtensionSchema = z.object({
 });
 
 /**
- * Models only the security extensions carrying SMART urls, the one slice of a
- * CapabilityStatement the pipeline reads.
+ * The security extensions carrying SMART urls. The pipeline reads nothing
+ * else from a CapabilityStatement.
  */
 export const capabilityStatementSchema = z.object({
   resourceType: z.string().optional(),
@@ -118,9 +117,9 @@ const SMART_OAUTH_EXTENSION_URL =
   'http://fhir-registry.smarthealthit.org/StructureDefinition/oauth-uris';
 
 /**
- * The SMART OAuth URIs a CapabilityStatement declares, or null without a
- * security block. Falls back to the first extension when a server omits the
- * registered SMART url.
+ * The SMART OAuth uris a CapabilityStatement declares, or null when it has
+ * no security block. When no extension carries the registered SMART url,
+ * the first one is read instead.
  */
 export function readSmartUris(
   statement: CapabilityStatement,
