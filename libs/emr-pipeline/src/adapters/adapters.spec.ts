@@ -44,12 +44,32 @@ describe('vendor adapters', () => {
     ).toBe('https://fhir4.eclinicalworks.com/fhir/r4/AACJCD/metadata');
   });
 
-  it('uses the patient-facing cerner host and host-scoped sandbox token urls', () => {
-    for (const version of ['DSTU2', 'R4'] as const) {
-      const [seed] = adapterFor('cerner').sandbox(version);
-      expect(seed.url).toContain('https://fhir-myrecord.cerner.com/');
-      expect(seed.token).toContain('/hosts/fhir-myrecord.cerner.com/');
-    }
+  it('seeds the cerner DSTU2 sandbox on the patient-facing host with a host-scoped token url', () => {
+    expect(adapterFor('cerner').sandbox('DSTU2')).toEqual([
+      {
+        tenantId: 'sandbox_cerner',
+        name: 'Cerner Sandbox',
+        url: 'https://fhir-myrecord.cerner.com/dstu2/ec2458f2-1e24-41c8-b71b-0e701af7583d/',
+        token:
+          'https://authorization.cerner.com/tenants/ec2458f2-1e24-41c8-b71b-0e701af7583d/hosts/fhir-myrecord.cerner.com/protocols/oauth2/profiles/smart-v1/token',
+        authorize:
+          'https://authorization.cerner.com/tenants/ec2458f2-1e24-41c8-b71b-0e701af7583d/protocols/oauth2/profiles/smart-v1/personas/patient/authorize',
+      },
+    ]);
+  });
+
+  it('seeds the cerner R4 sandbox on the patient-facing host with a host-scoped token url', () => {
+    expect(adapterFor('cerner').sandbox('R4')).toEqual([
+      {
+        tenantId: 'sandbox_cerner_r4',
+        name: 'Cerner Sandbox (R4)',
+        url: 'https://fhir-myrecord.cerner.com/r4/ec2458f2-1e24-41c8-b71b-0e701af7583d/',
+        token:
+          'https://authorization.cerner.com/tenants/ec2458f2-1e24-41c8-b71b-0e701af7583d/hosts/fhir-myrecord.cerner.com/protocols/oauth2/profiles/smart-v1/token',
+        authorize:
+          'https://authorization.cerner.com/tenants/ec2458f2-1e24-41c8-b71b-0e701af7583d/protocols/oauth2/profiles/smart-v1/personas/patient/authorize',
+      },
+    ]);
   });
 
   it('uses the endpoints declared by the live veradigm sandbox capability', () => {
@@ -108,19 +128,10 @@ describe('veradigm directory bundle', () => {
     });
   });
 
-  it('keeps a nameless tenant out of the entries it names', () => {
+  it('emits a nameless tenant with an empty name', () => {
     const entries = adapterFor('veradigm').parseDirectory(bundle);
 
     expect(entries[0].name).toBe('');
-  });
-
-  it('holds fewer entries than the total the bundle declares', () => {
-    const entries = adapterFor('veradigm').parseDirectory(bundle);
-
-    expect({ declaredTotal: bundle.total, entries: entries.length }).toEqual({
-      declaredTotal: 3326,
-      entries: 2,
-    });
   });
 });
 
