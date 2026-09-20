@@ -97,7 +97,7 @@ type CapabilityOutcome =
   | { kind: 'error'; id: number; error: unknown };
 
 /**
- * Runs the fetch tasks through eight concurrent workers and hands each
+ * Runs the fetch tasks through a pool of concurrent workers and hands each
  * outcome to `onResult` as it completes. A worker takes the next url the
  * moment its current one finishes, where batches wait on their slowest
  * member.
