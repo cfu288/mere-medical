@@ -82,7 +82,6 @@ export function openWarehouse(dbPath: string): Warehouse {
     // Configure waiting before any pragma that may need a lock.
     db.exec('PRAGMA busy_timeout = 5000');
     db.exec('PRAGMA journal_mode = WAL');
-    db.exec('PRAGMA foreign_keys = ON');
     initialize(db);
     if (!hasCurrentWarehouseTables(db)) {
       throw new Error(
