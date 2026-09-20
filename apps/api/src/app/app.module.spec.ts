@@ -1,7 +1,28 @@
 import type { TestingModule } from '@nestjs/testing';
+import {
+  SeededTenantDb,
+  openSeededTenantDb,
+} from './tenant-db/tenant-db.fixture';
 
 describe('AppModule boot', () => {
   const originalEnv = process.env;
+  let seeded: SeededTenantDb;
+
+  beforeAll(async () => {
+    seeded = await openSeededTenantDb([
+      {
+        tenantId: 'epic-1',
+        vendor: 'epic',
+        fhirVersion: 'R4',
+        name: 'Mercy Health',
+        url: 'https://epic.example.org/api/FHIR/R4/',
+      },
+    ]);
+  });
+
+  afterAll(async () => {
+    await seeded.close();
+  });
 
   afterEach(() => {
     process.env = originalEnv;
@@ -60,9 +81,13 @@ describe('AppModule boot', () => {
     jest.resetModules();
     const { Test } = await import('@nestjs/testing');
     const { AppModule } = await import('./app.module');
+    const { TENANT_DB } = await import('./tenant-db/tenant-db.module');
     const compiled: Promise<TestingModule> = Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(TENANT_DB)
+      .useValue(seeded.db)
+      .compile();
     await expect(compiled).resolves.toBeDefined();
   });
 });

@@ -5,26 +5,16 @@ import { TenantDb, openTenantDb } from '@mere/tenant-db';
 
 export const TENANT_DB = 'TENANT_DB';
 
-const PACKAGED = path.join(__dirname, 'assets', 'tenants.db');
-const IN_WORKSPACE = path.resolve(
-  __dirname,
-  '../../../../../libs/tenant-db/data/tenants.db',
-);
+/** The build copies the shipped tenant catalog beside the bundle as an asset. */
+const CATALOG_PATH = path.join(__dirname, 'assets', 'tenants.db');
 
-/**
- * Locates the shipped tenant catalog. The build copies it beside the bundle
- * as an asset. A workspace run reads it from `libs/tenant-db/data`.
- */
 function tenantDbPath(): string {
-  const found = [PACKAGED, IN_WORKSPACE].find((candidate) =>
-    fs.existsSync(candidate),
-  );
-  if (!found) {
+  if (!fs.existsSync(CATALOG_PATH)) {
     throw new Error(
-      `No tenant catalog found at ${PACKAGED} or ${IN_WORKSPACE}. Run: nx run emr-pipeline:publish`,
+      `No tenant catalog found at ${CATALOG_PATH}. Run: nx run api:build`,
     );
   }
-  return found;
+  return CATALOG_PATH;
 }
 
 const tenantDbProvider = {
