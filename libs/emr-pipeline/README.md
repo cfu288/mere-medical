@@ -70,13 +70,6 @@ rows never leave the artifact and readers ignore how old
 `last_seen_in_directory` is. Any future expiry belongs in the API as a filter
 on that column.
 
-## Guardrails
-
-Extract rejects a directory body that does not parse, lists no tenants, or
-declares a total its entries do not match. A rejected body is not saved, so it
-never reaches staging. Publish has no checks of its own. The human reviewing
-the monthly PR's status comment is the gate.
-
 ## Schema
 
 The DDL lives in three files. `src/db/sql/warehouse.sql` holds the durable
@@ -170,7 +163,7 @@ erDiagram
     TEXT fhir_version UK
     TEXT tenant_id UK
     TEXT source
-    INTEGER searchable
+    TEXT kind
     TEXT last_seen_in_directory
   }
   tenants_fts {
@@ -212,25 +205,3 @@ flowchart LR
   seeds --> t
   t --> fts
 ```
-
-## Design decisions
-
-| Decision                               | Why                                                                                                                                                      |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Commit binary `tenants.db`             | ~2.7 MB/commit gzipped. Git LFS bills the repo owner, and a blocked pull breaks `docker build` with a pointer file. DVC, Dolt, sqlite-diffable rejected. |
-| One capability table, upsert-in-place  | Only directory bodies need history (`vendor_tenant_directory_snapshots`).                                                                                |
-| Kysely query builder, no ORM           | Queries compile against types generated from the DDL. Raw sql fragments remain where SQL is clearer, like FTS `MATCH`.                                   |
-| FTS prefix matching, no fuzzy fallback | Ranked ~1.5 ms search. Misspellings return nothing.                                                                                                      |
-| Directory decides FHIR version         | The url is version-specific, so the crawl scope is the truth. The server's own version claim is not stored.                                              |
-| Separate DSTU2/R4 identities           | 1,168 Cerner ids span both. Tenant keys include `fhir_version`.                                                                                          |
-| Exclude single-instance vendors        | `tenants` contains selectable tenants. VA, OnPatient, NextGen endpoints remain `fhir-oauth` literals.                                                    |
-| Retain every downloaded body           | Measure sizes before pruning. No `prune` command yet.                                                                                                    |
-
-## Accepted limits
-
-- Same-scope extracts in the same millisecond collide on snapshot uniqueness and
-  abort. Fine for a monthly job.
-- Artifact rename precedes `publications` insertion across databases. An intervening
-  crash ships the artifact without history until next publish.
-- Reassigned urls give delisted tenants the new owner's auth urls. Vendor base
-  urls are tenant-specific except athena's intentionally shared one.

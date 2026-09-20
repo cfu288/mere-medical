@@ -1,4 +1,5 @@
 -- Durable layer. openWarehouse creates these tables once on a brand-new file.
+-- The shipped artifact's DDL lives in libs/tenant-db/src/lib/schema.ts beside its version.
 
 -- One row per metadata url a directory ever listed, holding its last good
 -- body and last attempt. Extract writes it, transform reads the bodies,
