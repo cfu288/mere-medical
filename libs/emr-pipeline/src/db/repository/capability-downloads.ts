@@ -3,6 +3,7 @@
  * listed with its last good body and last attempt. Extract writes it, transform
  * reads the bodies, status reads the dates.
  */
+import { sql } from 'kysely';
 import type { Selectable } from 'kysely';
 import type { FhirVersion, Vendor } from '@mere/shared';
 import type { Warehouse } from '../open';
@@ -189,4 +190,28 @@ export async function selectForDownload(
     .orderBy('downloaded_at', 'asc')
     .execute();
   return rows.map(toRow);
+}
+
+/** The most common failure messages for a vendor and version, for the status report. */
+export async function topFailureMessages(
+  db: Warehouse,
+  vendor: Vendor,
+  fhirVersion: FhirVersion,
+  limit: number,
+): Promise<{ message: string; count: number }[]> {
+  return db
+    .selectFrom('capability_downloads')
+    .select((eb) => [
+      sql<string>`coalesce(json_extract(error, '$.message'), error)`.as(
+        'message',
+      ),
+      eb.fn.countAll<number>().as('count'),
+    ])
+    .where('vendor', '=', vendor)
+    .where('fhir_version', '=', fhirVersion)
+    .where('failed', '=', 1)
+    .groupBy('message')
+    .orderBy('count', 'desc')
+    .limit(limit)
+    .execute();
 }

@@ -26,6 +26,9 @@ function signed(n: number): string {
  *   vendor     version  endpoints   failing crawled   transform
  *   epic       R4             820         0 today     current
  *
+ *   failures
+ *     veradigm DSTU2  792x HTTP 500
+ *
  *   publishes
  *     today     39,560 rows (+0)
  */
@@ -102,6 +105,21 @@ export async function formatStatus(db: Warehouse): Promise<string> {
         ]),
       );
     }
+  }
+
+  const failureLines: string[] = [];
+  for (const vendor of vendors) {
+    for (const version of ADAPTERS[vendor].versions) {
+      const top = await downloads.topFailureMessages(db, vendor, version, 3);
+      if (top.length === 0) continue;
+      const parts = top
+        .map((failure) => `${failure.count}x ${failure.message}`)
+        .join(', ');
+      failureLines.push(`  ${vendor} ${version}  ${parts}`);
+    }
+  }
+  if (failureLines.length > 0) {
+    lines.push('', 'failures', ...failureLines);
   }
 
   const recent = await publications.listRecent(db, 6);
