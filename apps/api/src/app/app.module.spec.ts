@@ -16,6 +16,8 @@ describe('AppModule boot', () => {
         fhirVersion: 'R4',
         name: 'Mercy Health',
         url: 'https://epic.example.org/api/FHIR/R4/',
+        token: 'https://epic.example.org/oauth2/token',
+        authorize: 'https://epic.example.org/oauth2/authorize',
       },
     ]);
   });

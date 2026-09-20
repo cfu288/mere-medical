@@ -13,19 +13,24 @@ import {
   openTenantDb,
 } from '@mere/tenant-db';
 
-export interface TenantSeed {
+interface TenantSeedBase {
   tenantId: string;
   vendor: string;
   fhirVersion: 'DSTU2' | 'R4';
   name: string;
   url: string;
-  token?: string;
-  authorize?: string;
-  register?: string;
   managingOrganization?: string;
   source?: 'directory' | 'sandbox';
-  searchable?: boolean;
 }
+
+export type TenantSeed =
+  | (TenantSeedBase & {
+      kind?: 'login';
+      token: string;
+      authorize: string;
+      register?: string;
+    })
+  | (TenantSeedBase & { kind: 'lookup' });
 
 export interface SeededTenantDb {
   db: TenantDb;
@@ -48,12 +53,12 @@ export async function openSeededTenantDb(
     fhir_version: tenant.fhirVersion,
     name: tenant.name,
     url: tenant.url,
-    token: tenant.token ?? null,
-    authorize: tenant.authorize ?? null,
-    register: tenant.register ?? null,
+    token: tenant.kind === 'lookup' ? null : tenant.token,
+    authorize: tenant.kind === 'lookup' ? null : tenant.authorize,
+    register: tenant.kind === 'lookup' ? null : tenant.register ?? null,
     managing_organization: tenant.managingOrganization ?? null,
     source: tenant.source ?? 'directory',
-    searchable: tenant.searchable === false ? 0 : 1,
+    kind: tenant.kind ?? 'login',
     last_seen_in_directory: '2026-09-01T00:00:00.000Z',
   }));
 
@@ -67,8 +72,7 @@ export async function openSeededTenantDb(
     .expression(
       writer
         .selectFrom('tenants')
-        .select(['id', 'name', 'managing_organization'])
-        .where('searchable', '=', 1),
+        .select(['id', 'name', 'managing_organization']),
     )
     .execute();
   await writer.destroy();

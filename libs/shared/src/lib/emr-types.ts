@@ -22,20 +22,31 @@ export type CapabilityClassification =
   | 'missing_authorize'
   | 'unparseable';
 
-/** A row of `tenants.db`. Produced by the pipeline, read by `apps/api`. */
-export interface Tenant {
+interface TenantBase {
   tenantId: string;
   vendor: Vendor;
   fhirVersion: FhirVersion;
   name: string;
   url: string;
-  token?: string;
-  authorize?: string;
-  register?: string;
   managingOrganization?: string;
   source: EndpointSource;
-  searchable: boolean;
 }
+
+/** A row the picker lists. Carries its own SMART login urls. */
+export interface LoginTenant extends TenantBase {
+  kind: 'login';
+  token: string;
+  authorize: string;
+  register?: string;
+}
+
+/** A name-resolution row. The user authenticates through the vendor's own flow. */
+export interface LookupTenant extends TenantBase {
+  kind: 'lookup';
+}
+
+/** A row of `tenants.db`. Produced by the pipeline, read by `apps/api`. */
+export type Tenant = LoginTenant | LookupTenant;
 
 /** What a single-vendor tenant route returns to the web app. */
 export interface VendorEndpoint {
@@ -47,17 +58,14 @@ export interface VendorEndpoint {
   managingOrganization?: string;
 }
 
-/**
- * Reshapes a tenant into the endpoint a route returns. A missing token or
- * authorize url becomes an empty string.
- */
-export function toVendorEndpoint(tenant: Tenant): VendorEndpoint {
+/** Reshapes a login tenant into the endpoint a route returns. */
+export function toVendorEndpoint(tenant: LoginTenant): VendorEndpoint {
   return {
     id: tenant.tenantId,
     url: tenant.url,
     name: tenant.name,
-    token: tenant.token ?? '',
-    authorize: tenant.authorize ?? '',
+    token: tenant.token,
+    authorize: tenant.authorize,
     managingOrganization: tenant.managingOrganization,
   };
 }

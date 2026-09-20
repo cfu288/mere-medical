@@ -17,6 +17,6 @@ export class HealowService {
 
   async findTenantById(tenantId: string): Promise<VendorEndpoint | undefined> {
     const tenant = await findTenantById(this.db, 'healow', tenantId, 'R4');
-    return tenant ? toVendorEndpoint(tenant) : undefined;
+    return tenant?.kind === 'login' ? toVendorEndpoint(tenant) : undefined;
   }
 }

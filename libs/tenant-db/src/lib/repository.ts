@@ -10,6 +10,7 @@ import type { TenantDatabase, TenantsTable } from './tenant-db-schema';
 import type {
   EndpointSource,
   FhirVersion,
+  LoginTenant,
   SearchableVendor,
   Tenant,
   Vendor,
@@ -34,7 +35,7 @@ const SELECT_COLUMNS = [
   't.register',
   't.managing_organization',
   't.source',
-  't.searchable',
+  't.kind',
 ] as const;
 
 type TenantRow = Pick<
@@ -49,23 +50,42 @@ type TenantRow = Pick<
   | 'register'
   | 'managing_organization'
   | 'source'
-  | 'searchable'
+  | 'kind'
 >;
 
 function toTenant(row: TenantRow): Tenant {
-  return {
+  const base = {
     tenantId: row.tenant_id,
     vendor: row.vendor as Vendor,
     fhirVersion: row.fhir_version as FhirVersion,
     name: row.name,
     url: row.url,
-    token: row.token ?? undefined,
-    authorize: row.authorize ?? undefined,
-    register: row.register ?? undefined,
     managingOrganization: row.managing_organization ?? undefined,
     source: row.source as EndpointSource,
-    searchable: row.searchable === 1,
   };
+  if (row.kind === 'lookup') {
+    return { ...base, kind: 'lookup' };
+  }
+  if (row.token == null || row.authorize == null) {
+    throw new Error(
+      `${row.vendor} ${row.tenant_id} is a login row without auth urls`,
+    );
+  }
+  return {
+    ...base,
+    kind: 'login',
+    token: row.token,
+    authorize: row.authorize,
+    register: row.register ?? undefined,
+  };
+}
+
+function toLoginTenant(row: TenantRow): LoginTenant {
+  const tenant = toTenant(row);
+  if (tenant.kind !== 'login') {
+    throw new Error(`${row.vendor} ${row.tenant_id} is not a login row`);
+  }
+  return tenant;
 }
 
 /**
@@ -116,13 +136,13 @@ interface SearchOptions {
 }
 
 /**
- * Full-text search over searchable tenants, ranked by FTS5 relevance.
+ * Full-text search over login tenants, ranked by FTS5 relevance.
  */
 export async function searchTenants(
   db: TenantDb,
   query: unknown,
   options: SearchOptions = {},
-): Promise<Tenant[]> {
+): Promise<LoginTenant[]> {
   if (query != null && typeof query !== 'string') return [];
   if (options.vendors && options.vendors.length === 0) return [];
   const safeQuery = query ?? '';
@@ -133,7 +153,7 @@ export async function searchTenants(
   let builder = db
     .selectFrom('tenants as t')
     .select(SELECT_COLUMNS)
-    .where('t.searchable', '=', 1);
+    .where('t.kind', '=', 'login');
   if (options.vendors?.length) {
     builder = builder.where('t.vendor', 'in', options.vendors);
   }
@@ -155,7 +175,7 @@ export async function searchTenants(
         .limit(DEFAULT_BROWSE_LIMIT);
 
   const rows = await builder.execute();
-  return rows.map(toTenant);
+  return rows.map(toLoginTenant);
 }
 
 /**

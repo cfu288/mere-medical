@@ -116,7 +116,7 @@ interface PublishableTenant {
   authorize: string | null;
   register: string | null;
   managing_organization: string | null;
-  searchable: number;
+  kind: 'login' | 'lookup';
   last_seen_in_directory: string;
 }
 
@@ -163,9 +163,11 @@ export async function listPublishable(
     )
     SELECT cur.tenant_id, cur.vendor, cur.fhir_version,
            coalesce(n.name, '') AS name, cur.url,
-           b.token_url AS token, b.authorize_url AS authorize,
-           b.register_url AS register, n.managing_organization,
-           CASE cur.vendor WHEN 'athena' THEN 0 ELSE 1 END AS searchable,
+           CASE cur.vendor WHEN 'athena' THEN NULL ELSE b.token_url END AS token,
+           CASE cur.vendor WHEN 'athena' THEN NULL ELSE b.authorize_url END AS authorize,
+           CASE cur.vendor WHEN 'athena' THEN NULL ELSE b.register_url END AS register,
+           n.managing_organization,
+           CASE cur.vendor WHEN 'athena' THEN 'lookup' ELSE 'login' END AS kind,
            cur.last_seen_at AS last_seen_in_directory
     FROM current cur
     LEFT JOIN tenant_names n

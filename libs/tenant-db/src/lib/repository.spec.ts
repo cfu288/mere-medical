@@ -18,9 +18,11 @@ interface SeedRow {
   fhirVersion: string;
   name: string;
   url: string;
+  token?: string;
+  authorize?: string;
   managingOrganization?: string;
   source?: string;
-  searchable?: number;
+  kind?: 'login' | 'lookup';
   lastSeenInDirectory?: string;
 }
 
@@ -31,6 +33,8 @@ const SEEDS: SeedRow[] = [
     fhirVersion: 'R4',
     name: 'Saint Joseph Medical Center',
     url: 'https://one.example.org/api/FHIR/R4/',
+    token: 'https://one.example.org/oauth2/token',
+    authorize: 'https://one.example.org/oauth2/authorize',
     managingOrganization: 'Mercy Health',
   },
   {
@@ -39,6 +43,8 @@ const SEEDS: SeedRow[] = [
     fhirVersion: 'R4',
     name: 'Mercy Hospital',
     url: 'https://two.example.org/api/FHIR/R4/',
+    token: 'https://two.example.org/oauth2/token',
+    authorize: 'https://two.example.org/oauth2/authorize',
   },
   {
     tenantId: 'sandbox_epic_r4',
@@ -46,6 +52,8 @@ const SEEDS: SeedRow[] = [
     fhirVersion: 'R4',
     name: 'Epic MyChart Sandbox (R4)',
     url: 'https://fhir.epic.com/api/FHIR/R4/',
+    token: 'https://fhir.epic.com/oauth2/token',
+    authorize: 'https://fhir.epic.com/oauth2/authorize',
     source: 'sandbox',
   },
   {
@@ -54,6 +62,8 @@ const SEEDS: SeedRow[] = [
     fhirVersion: 'DSTU2',
     name: 'Both Versions Health DSTU2',
     url: 'https://three.example.org/dstu2/',
+    token: 'https://three.example.org/dstu2/token',
+    authorize: 'https://three.example.org/dstu2/authorize',
     lastSeenInDirectory: '2026-06-01T00:00:00.000Z',
   },
   {
@@ -62,6 +72,8 @@ const SEEDS: SeedRow[] = [
     fhirVersion: 'R4',
     name: 'Both Versions Health R4',
     url: 'https://three.example.org/r4/',
+    token: 'https://three.example.org/r4/token',
+    authorize: 'https://three.example.org/r4/authorize',
   },
   {
     tenantId: 'epic-old',
@@ -69,6 +81,8 @@ const SEEDS: SeedRow[] = [
     fhirVersion: 'R4',
     name: 'Mercy Legacy Clinic',
     url: 'https://legacy.example.org/api/FHIR/R4/',
+    token: 'https://legacy.example.org/oauth2/token',
+    authorize: 'https://legacy.example.org/oauth2/authorize',
     lastSeenInDirectory: '2026-06-01T00:00:00.000Z',
   },
   {
@@ -77,7 +91,7 @@ const SEEDS: SeedRow[] = [
     fhirVersion: 'R4',
     name: 'Athena Practice Mercy',
     url: 'https://api.platform.athenahealth.com/fhir/r4',
-    searchable: 0,
+    kind: 'lookup',
   },
 ];
 
@@ -92,9 +106,9 @@ function writeArtifact(
   db.exec(`PRAGMA user_version = ${userVersion}`);
   const insert = db.prepare(
     `INSERT INTO tenants (tenant_id, vendor, fhir_version, name, url,
-                          managing_organization, source, searchable,
-                          last_seen_in_directory)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                          token, authorize, managing_organization, source,
+                          kind, last_seen_in_directory)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   );
   for (const row of rows) {
     insert.run(
@@ -103,15 +117,17 @@ function writeArtifact(
       row.fhirVersion,
       row.name,
       row.url,
+      row.token ?? null,
+      row.authorize ?? null,
       row.managingOrganization ?? null,
       row.source ?? 'directory',
-      row.searchable ?? 1,
+      row.kind ?? 'login',
       row.lastSeenInDirectory ?? '2026-08-23T00:00:00.000Z',
     );
   }
   db.exec(
     `INSERT INTO tenants_fts (rowid, name, managing_organization)
-     SELECT id, name, managing_organization FROM tenants WHERE searchable = 1`,
+     SELECT id, name, managing_organization FROM tenants`,
   );
   db.close();
   return dbPath;
@@ -281,16 +297,14 @@ describe('tenant-db', () => {
     const tenant = await findTenantById(db, 'athena', '99001');
 
     expect(tenant).toEqual({
+      kind: 'lookup',
       tenantId: '99001',
       vendor: 'athena',
       fhirVersion: 'R4',
       name: 'Athena Practice Mercy',
       url: 'https://api.platform.athenahealth.com/fhir/r4',
-      token: undefined,
-      authorize: undefined,
       managingOrganization: undefined,
       source: 'directory',
-      searchable: false,
     });
   });
 

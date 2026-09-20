@@ -25,8 +25,8 @@ export interface SandboxSeed {
   tenantId: string;
   name: string;
   url: string;
-  token?: string;
-  authorize?: string;
+  token: string;
+  authorize: string;
 }
 
 /** Fetches the raw body of a directory, wherever it lives. */

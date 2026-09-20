@@ -17,9 +17,12 @@ CREATE TABLE tenants (
   register              TEXT,
   managing_organization TEXT,
   source                TEXT NOT NULL,
-  searchable            INTEGER NOT NULL,
+  kind                  TEXT NOT NULL,
   last_seen_in_directory TEXT NOT NULL,
-  UNIQUE (vendor, fhir_version, tenant_id)
+  UNIQUE (vendor, fhir_version, tenant_id),
+  CHECK (kind IN ('login', 'lookup')),
+  CHECK (kind != 'login' OR (authorize IS NOT NULL AND token IS NOT NULL)),
+  CHECK (kind != 'lookup' OR (authorize IS NULL AND token IS NULL AND register IS NULL))
 );
 
 CREATE INDEX idx_tenants_vendor ON tenants (vendor, fhir_version, source);

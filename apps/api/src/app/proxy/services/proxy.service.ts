@@ -12,7 +12,7 @@ import {
   ProxyVendor,
 } from '@mere/fhir-oauth';
 import { TenantDb, findTenantById } from '@mere/tenant-db';
-import type { Tenant } from '@mere/shared';
+import type { LoginTenant } from '@mere/shared';
 import { toVendorEndpoint } from '@mere/shared';
 import { TENANT_DB } from '../../tenant-db/tenant-db.module';
 
@@ -90,7 +90,7 @@ export class ProxyService {
         };
       }
       const tenant = await findTenantById(this.tenants, vendor, serviceId);
-      if (!tenant) {
+      if (tenant?.kind !== 'login') {
         return {
           error: {
             status: 404,
@@ -104,10 +104,12 @@ export class ProxyService {
       };
     }
 
-    const matches: { vendor: ProxyVendor; tenant: Tenant }[] = [];
+    const matches: { vendor: ProxyVendor; tenant: LoginTenant }[] = [];
     for (const proxyVendor of PROXY_VENDORS) {
       const tenant = await findTenantById(this.tenants, proxyVendor, serviceId);
-      if (tenant) matches.push({ vendor: proxyVendor, tenant });
+      if (tenant?.kind === 'login') {
+        matches.push({ vendor: proxyVendor, tenant });
+      }
     }
 
     if (matches.length === 0) {

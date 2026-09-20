@@ -24,7 +24,7 @@ describe('AthenaController', () => {
         fhirVersion: 'R4',
         name: 'Sunrise Family Medicine',
         url: 'https://api.platform.athenahealth.com/fhir/r4',
-        searchable: false,
+        kind: 'lookup',
       },
     ]);
     const module: TestingModule = await Test.createTestingModule({

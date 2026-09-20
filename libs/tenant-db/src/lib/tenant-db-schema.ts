@@ -13,7 +13,7 @@ export interface TenantsTable {
   register: string | null;
   managing_organization: string | null;
   source: string;
-  searchable: number;
+  kind: 'login' | 'lookup';
   last_seen_in_directory: string;
 }
 
