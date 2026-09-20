@@ -1,8 +1,10 @@
 import { z } from 'zod';
 
 /**
- * Every field is `.catch(undefined)`. Resource types collide in one bundle,
- * like `Endpoint.address` (a url) vs `Organization.address` (an array).
+ * Parses any vendor's directory bundle without rejecting unfamiliar
+ * resources. Every field is `.catch(undefined)`. Resource types collide in
+ * one bundle, like `Endpoint.address` (a url) vs `Organization.address`
+ * (an array).
  */
 const resourceSchema = z
   .object({

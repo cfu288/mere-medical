@@ -97,8 +97,10 @@ type CapabilityOutcome =
   | { kind: 'error'; id: number; error: unknown };
 
 /**
- * Using a queue + workers to download concurrently. A worker starts
- * the next url as soon as its current one finishes, vs batches which wait for the slowest job.
+ * Runs the fetch tasks through eight concurrent workers and hands each
+ * outcome to `onResult` as it completes. A worker takes the next url the
+ * moment its current one finishes, where batches wait on their slowest
+ * member.
  *
  * @param tasks - One fetch per metadata url, each resolving to an outcome.
  * @param onResult - Called with each outcome as it lands, in completion order.
