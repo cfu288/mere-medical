@@ -38,8 +38,9 @@ export interface UrlSmartSecurity {
 }
 
 /**
- * Deletes and rewrites a vendor and version's whole tenant model in the
- * caller's transaction, always all three tables together.
+ * Swaps staging over to a newly computed tenant model. Transform calls this
+ * once per vendor and version after folding the snapshot history, inside its
+ * transaction. All three staging tables are deleted and rewritten together.
  */
 export async function replace(
   db: Warehouse,
