@@ -27,9 +27,24 @@ export const athenaAdapter: VendorAdapter = {
   },
 
   /**
-   * Groups the bundle's Organization resources by their practice id and returns one
-   * tenant per practice. Each carries the practice id, the shared athena base url, and
-   * a name only when every Organization in the practice agrees on one.
+   * Reads one tenant per athena practice, sorted by practice id. An
+   * Organization belongs to a practice through its `ah-practice` extension,
+   * whose reference `Practice-10` yields the practice id `10`. Organizations
+   * without that extension are skipped. Every tenant gets the shared athena
+   * base url. The name is the single name the practice's Organizations agree
+   * on, and undefined when they disagree or none carries a name.
+   *
+   * @example
+   * Two Organizations referencing `Practice-10`, both named
+   * `Anchor Medical Associates`, plus one nameless Organization referencing
+   * `Practice-21260`, become:
+   *
+   *   [
+   *     { tenantId: '10', name: 'Anchor Medical Associates',
+   *       url: 'https://api.platform.athenahealth.com/fhir/r4' },
+   *     { tenantId: '21260', name: undefined,
+   *       url: 'https://api.platform.athenahealth.com/fhir/r4' },
+   *   ]
    */
   parseDirectory(bundle: FhirBundle): DirectoryEntry[] {
     const namesByPractice = new Map<string, Set<string>>();
