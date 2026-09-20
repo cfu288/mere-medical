@@ -80,7 +80,6 @@ export async function recordFetchAttempt(
     .execute();
 }
 
-/** The newest snapshot date for a vendor and version. */
 export async function latestFetchedAt(
   db: Warehouse,
   vendor: Vendor,

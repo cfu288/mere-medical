@@ -25,7 +25,6 @@ export type CapabilityDownload = CapabilityKey &
     | { id: number; body: null; downloadedAt: null }
   );
 
-/** Maps a raw sql row onto the download shape, pairing body and date. */
 function toRow(row: Selectable<CapabilityDownloadsTable>): CapabilityDownload {
   const key = {
     id: row.id,
@@ -67,7 +66,6 @@ export async function addUrls(
   );
 }
 
-/** One download by its url. */
 export async function findByUrl(
   db: Warehouse,
   key: CapabilityKey,
@@ -82,7 +80,6 @@ export async function findByUrl(
   return row ? toRow(row) : null;
 }
 
-/** One download by its row id. */
 export async function findById(
   db: Warehouse,
   id: number,

@@ -38,7 +38,6 @@ function resetStagingTables(db: DatabaseSync): void {
   db.exec(fs.readFileSync(STAGING_FILE, 'utf8'));
 }
 
-/** True when every named table exists. */
 function hasTables(db: DatabaseSync, names: string[]): boolean {
   const row = db
     .prepare(
@@ -49,7 +48,6 @@ function hasTables(db: DatabaseSync, names: string[]): boolean {
   return row?.n === names.length;
 }
 
-/** True when all three staging tables exist. */
 function hasStagingTables(db: DatabaseSync): boolean {
   return hasTables(db, [
     'tenant_names',
@@ -58,7 +56,6 @@ function hasStagingTables(db: DatabaseSync): boolean {
   ]);
 }
 
-/** True when every durable table exists. */
 function hasCurrentWarehouseTables(db: DatabaseSync): boolean {
   return hasTables(db, [
     'capability_downloads',
