@@ -100,6 +100,35 @@ describe('formatStatus', () => {
     );
   });
 
+  it('lists the most common failure messages per vendor', async () => {
+    await sql`INSERT INTO capability_downloads (vendor, fhir_version, url, failed, error)
+      VALUES ('veradigm', 'DSTU2', 'https://v.example.org/1/metadata', 1, '{"name":"Error","message":"HTTP 500"}'),
+             ('veradigm', 'DSTU2', 'https://v.example.org/2/metadata', 1, '{"name":"Error","message":"HTTP 500"}'),
+             ('veradigm', 'DSTU2', 'https://v.example.org/3/metadata', 1, '{"name":"TimeoutError","message":"The operation was aborted due to timeout"}'),
+             ('epic', 'R4', 'https://e.example.org/metadata', 0, NULL)`.execute(
+      db,
+    );
+
+    expect(await formatStatus(db)).toBe(
+      [
+        'vendor     version  endpoints   failing crawled   transform',
+        'athena     R4               -         - never     -',
+        'cerner     DSTU2            -         - never     -',
+        'cerner     R4               -         - never     -',
+        'epic       DSTU2            -         - never     -',
+        'epic       R4               -         - never     -',
+        'healow     R4               -         - never     -',
+        'veradigm   DSTU2            -         - never     -',
+        'veradigm   R4               -         - never     -',
+        '',
+        'failures',
+        '  veradigm DSTU2  2x HTTP 500, 1x The operation was aborted due to timeout',
+        '',
+        'published: never',
+      ].join('\n'),
+    );
+  });
+
   it('flags a crawl the transform has not consumed', async () => {
     await sql`INSERT INTO vendor_tenant_directory_snapshots (vendor, fhir_version, fetched_at, body)
       VALUES ('epic', 'R4', '2026-09-07T09:00:00.000Z', '{}')`.execute(db);
