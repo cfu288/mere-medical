@@ -39,7 +39,7 @@ import {
   Draggable,
   Droppable,
   OnDragEndResponder,
-} from 'react-beautiful-dnd';
+} from '@hello-pangea/dnd';
 import { EyeIcon } from '@heroicons/react/24/outline';
 import { EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useLocalConfig } from '../../app/providers/LocalConfigProvider';
