@@ -24,7 +24,7 @@ export const DeveloperLogsProvider = (props: any) => {
       };
     }
 
-    return () => {};
+    return undefined;
   }, [localConfig.developer_mode_enabled]);
   return (
     <DeveloperLogsContext.Provider value={logs}>

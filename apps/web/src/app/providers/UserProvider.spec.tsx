@@ -208,7 +208,7 @@ describe('UserProvider', () => {
         await db.user_documents.insert(user);
       }
 
-      let currentUserId: string = '';
+      let currentUserId = '';
 
       const TestComponent = () => {
         const user = useUser();

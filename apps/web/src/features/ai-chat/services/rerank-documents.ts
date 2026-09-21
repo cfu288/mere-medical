@@ -98,7 +98,7 @@ async function processBatch(
   };
 
   const attemptReranking = async (
-    isRetry: boolean = false,
+    isRetry = false,
     previousError?: string,
   ): Promise<RerankingDocument[]> => {
     const finalSystemPrompt =
