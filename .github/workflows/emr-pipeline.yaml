@@ -14,6 +14,7 @@ concurrency:
 
 # Extract fails if any required variable here is missing.
 env:
+  FORCE_COLOR: '0'
   EPIC_CLIENT_ID: ${{ secrets.EPIC_CLIENT_ID }}
   EPIC_R4_ENDPOINTS_URL: https://open.epic.com/Endpoints/Brands
   EPIC_DSTU2_ENDPOINTS_URL: https://open.epic.com/Endpoints/DSTU2
