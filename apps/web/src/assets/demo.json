@@ -19,11 +19,6 @@
       ]
     },
     {
-      "name": "uspstf_recommendation_documents",
-      "schemaHash": "9c2ct5",
-      "docs": []
-    },
-    {
       "name": "clinical_documents",
       "schemaHash": "aycm5",
       "docs": [

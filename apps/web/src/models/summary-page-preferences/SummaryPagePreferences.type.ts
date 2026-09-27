@@ -12,8 +12,7 @@ export interface SummaryPagePreferencesCard {
     | 'conditions'
     | 'careplans'
     | 'medications'
-    | 'pinned'
-    | 'recommendations';
+    | 'pinned';
   order: number;
   is_visible: boolean;
 }
