@@ -4,7 +4,6 @@ import { UserDocumentCollection } from '../../models/user-document/UserDocument.
 import { UserPreferencesDocumentCollection } from '../../models/user-preferences/UserPreferences.collection';
 import { SummaryPagePreferencesCollection } from '../../models/summary-page-preferences/SummaryPagePreferences.collection';
 import { VectorStorageDocumentCollection } from '../../models/vector-storage-document/VectorStorageDocument.collection';
-import { USPSTFRecommendationDocumentCollection } from '../../models/uspstf-recommendation-document/USPSTFRecommendationDocument.collection';
 import { InstanceConfigDocumentCollection } from '../../models/instance-config/InstanceConfig.collection';
 
 export type DatabaseCollections = {
@@ -14,6 +13,5 @@ export type DatabaseCollections = {
   user_preferences: UserPreferencesDocumentCollection;
   summary_page_preferences: SummaryPagePreferencesCollection;
   vector_storage: VectorStorageDocumentCollection;
-  uspstf_recommendation_documents: USPSTFRecommendationDocumentCollection;
   instance_config: InstanceConfigDocumentCollection;
 };

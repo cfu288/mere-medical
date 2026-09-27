@@ -26,7 +26,6 @@ import { AppPage } from '../../shared/components/AppPage';
 import { useUser } from '../../app/providers/UserProvider';
 import { BookmarkedListCard } from './components/BookmarkedListCard';
 import React from 'react';
-// import { MereRecommendationsListCard } from '../features/ai-recommendations/components/MereRecommendationsListCard';
 import {
   SummaryPagePreferences,
   SummaryPagePreferencesCard,
@@ -288,7 +287,6 @@ function summaryReducer(state: SummaryState, action: SummaryActions) {
 
 const CardTypeToDisplayMap: Record<SummaryPagePreferencesCard['type'], string> =
   {
-    recommendations: 'Mere Assistant Recommendations',
     pinned: 'Bookmarked Items',
     medications: 'Medications',
     conditions: 'Conditions',
@@ -299,38 +297,33 @@ const CardTypeToDisplayMap: Record<SummaryPagePreferencesCard['type'], string> =
 
 const DEFAULT_CARD_ORDER: SummaryPagePreferences['cards'] = [
   {
-    type: 'recommendations',
-    order: 0,
-    is_visible: false, // Disabled USPSTF feature
-  },
-  {
     type: 'pinned',
-    order: 1,
+    order: 0,
     is_visible: true,
   },
   {
     type: 'medications',
-    order: 2,
+    order: 1,
     is_visible: true,
   },
   {
     type: 'conditions',
-    order: 3,
+    order: 2,
     is_visible: true,
   },
   {
     type: 'immunizations',
-    order: 4,
+    order: 3,
     is_visible: true,
   },
   {
     type: 'careplans',
-    order: 5,
+    order: 4,
     is_visible: true,
   },
   {
     type: 'allergies',
-    order: 6,
+    order: 5,
     is_visible: true,
   },
 ];
@@ -400,7 +393,11 @@ function useSummaryData(): [SummaryState, React.Dispatch<SummaryActions>] {
           ),
         ),
         fetchSummaryPagePreferences(db, user.id).then((preferences) => {
-          return preferences?.toMutableJSON().cards || DEFAULT_CARD_ORDER;
+          const savedCards = preferences?.toMutableJSON().cards;
+          // Saved preferences may include card types that no longer exist
+          return savedCards
+            ? savedCards.filter((card) => card.type in CardTypeToDisplayMap)
+            : DEFAULT_CARD_ORDER;
         }),
       ])
         .then(([meds, cond, imm, careplan, allergy, pinned, cards]) => {
@@ -432,7 +429,6 @@ function SummaryTab() {
     reducer,
   ] = useSummaryData();
   const [showEditModal, setShowEditModal] = useState(false);
-  // const { experimental__use_openai_rag } = useLocalConfig(); // Not needed with USPSTF disabled
   // Sort cards based on the order specified in the cards state
   const sortedCards: SummaryPagePreferencesCard[] = useMemo(
     () => cards!.sort((a, b) => a.order - b.order),
@@ -508,8 +504,6 @@ function SummaryTab() {
         {sortedCards.map((card) => {
           if (!card.is_visible) return null;
           switch (card.type) {
-            case 'recommendations':
-              return null; // <MereRecommendationsListCard key={card.type} />;
             case 'pinned':
               return <BookmarkedListCard key={card.type} items={pinned} />;
             case 'medications':
@@ -548,57 +542,49 @@ function SummaryTab() {
                     ref={provided.innerRef}
                     className="border inset bg-gray-50 rounded-md p-2 py-6"
                   >
-                    {sortedCards
-                      .filter((i) => {
-                        // Hide recommendations (USPSTF feature disabled)
-                        if (i.type === 'recommendations') {
-                          return false;
-                        }
-                        return true;
-                      })
-                      .map((card, index) => (
-                        <Draggable
-                          key={card.type}
-                          draggableId={card.type}
-                          index={index}
-                        >
-                          {(provided, snapshot) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              className={`flex justify-between overflow-hidden bg-white px-4 py-4 my-2 shadow sm:rounded-md sm:px-6 ${snapshot.isDragging ? 'border border-primary-400' : ''}`}
-                            >
-                              <div className="flex justify-center align-middle items-center h-full">
-                                {CardTypeToDisplayMap[card.type]}
-                              </div>
-                              <div className="flex justify-center align-middle items-center h-full">
-                                <button
-                                  className="mx-4"
-                                  onClick={() => {
-                                    reducer({
-                                      type: ActionTypes.UPDATE_CARD,
-                                      data: {
-                                        ...card,
-                                        is_visible: !card.is_visible,
-                                      },
-                                    });
-                                  }}
-                                >
-                                  {card.is_visible ? (
-                                    <EyeIcon className="h-auto w-4 text-primary-800" />
-                                  ) : (
-                                    <EyeSlashIcon className="h-auto w-4 text-gray-600" />
-                                  )}
-                                </button>
-                                <p className="h-full text-center align-middle text-xl">
-                                  :::
-                                </p>
-                              </div>
+                    {sortedCards.map((card, index) => (
+                      <Draggable
+                        key={card.type}
+                        draggableId={card.type}
+                        index={index}
+                      >
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            className={`flex justify-between overflow-hidden bg-white px-4 py-4 my-2 shadow sm:rounded-md sm:px-6 ${snapshot.isDragging ? 'border border-primary-400' : ''}`}
+                          >
+                            <div className="flex justify-center align-middle items-center h-full">
+                              {CardTypeToDisplayMap[card.type]}
                             </div>
-                          )}
-                        </Draggable>
-                      ))}
+                            <div className="flex justify-center align-middle items-center h-full">
+                              <button
+                                className="mx-4"
+                                onClick={() => {
+                                  reducer({
+                                    type: ActionTypes.UPDATE_CARD,
+                                    data: {
+                                      ...card,
+                                      is_visible: !card.is_visible,
+                                    },
+                                  });
+                                }}
+                              >
+                                {card.is_visible ? (
+                                  <EyeIcon className="h-auto w-4 text-primary-800" />
+                                ) : (
+                                  <EyeSlashIcon className="h-auto w-4 text-gray-600" />
+                                )}
+                              </button>
+                              <p className="h-full text-center align-middle text-xl">
+                                :::
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
                     {provided.placeholder}
                   </div>
                 )}

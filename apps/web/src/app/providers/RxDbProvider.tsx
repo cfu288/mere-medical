@@ -39,7 +39,6 @@ import { SummaryPagePreferencesMigrations } from '../../models/summary-page-pref
 import { DatabaseCollections } from './DatabaseCollections';
 import { VectorStorageDocumentSchema } from '../../models/vector-storage-document/VectorStorageDocument.collection';
 import { VectorStorageDocumentMigrations } from '../../models/vector-storage-document/VectorStorageDocument.migration';
-import { USPSTFRecommendationDocumentSchema } from '../../models/uspstf-recommendation-document/USPSTFRecommendationDocument.collection';
 import { InstanceConfigDocumentSchema } from '../../models/instance-config/InstanceConfig.collection';
 
 if (process.env.NODE_ENV === 'development') {
@@ -81,9 +80,6 @@ export const databaseCollections = {
     schema: VectorStorageDocumentSchema,
     migrationStrategies: VectorStorageDocumentMigrations,
   },
-  uspstf_recommendation_documents: {
-    schema: USPSTFRecommendationDocumentSchema,
-  },
   instance_config: {
     schema: InstanceConfigDocumentSchema,
     migrationStrategies: {
@@ -100,15 +96,34 @@ export const databaseCollections = {
   },
 };
 
+/**
+ * Drops collections from an exported dump that are no longer part of the
+ * database, e.g. uspstf_recommendation_documents from older backups.
+ * RxDB refuses to import a dump that references a missing collection.
+ */
+export function removeUnknownCollectionsFromDump<T>(
+  dump: RxDumpDatabaseAny<T>,
+): RxDumpDatabaseAny<T> {
+  const knownCollections = Object.keys(databaseCollections);
+  return {
+    ...dump,
+    collections: dump.collections.filter(
+      (col) => col && knownCollections.includes(col.name),
+    ),
+  };
+}
+
 export function handleJSONDataImport(
   jsonString: string,
   db: RxDatabase<DatabaseCollections>,
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     if (jsonString) {
-      const data = JSON.parse(
-        jsonString as string,
-      ) as RxDumpDatabaseAny<DatabaseCollections>;
+      const data = removeUnknownCollectionsFromDump(
+        JSON.parse(
+          jsonString as string,
+        ) as RxDumpDatabaseAny<DatabaseCollections>,
+      );
       Promise.all(
         Object.values(db.collections).map((col) => col?.remove()),
       ).then(async () => {
