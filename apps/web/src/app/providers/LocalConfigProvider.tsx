@@ -6,10 +6,7 @@ import React, {
   useEffect,
   useState,
 } from 'react';
-import {
-  AI_DEFAULTS,
-  DEFAULT_AI_PROVIDER,
-} from '../../features/ai-chat/constants/defaults';
+import { AI_DEFAULTS } from '../../features/ai-chat/constants/defaults';
 
 interface LocalConfig {
   use_encrypted_database: boolean;
@@ -20,8 +17,6 @@ interface LocalConfig {
   experimental__ai_provider?: 'openai' | 'ollama';
   experimental__ollama_endpoint?: string;
   experimental__ollama_model?: string;
-  experimental__ollama_embedding_model?: string;
-  experimental__ollama_rerank_model?: string;
 }
 
 const defaultLocalConfig: LocalConfig = {
@@ -30,11 +25,9 @@ const defaultLocalConfig: LocalConfig = {
   experimental_features_enabled: false,
   experimental__use_openai_rag: false,
   experimental__openai_api_key: '',
-  experimental__ai_provider: DEFAULT_AI_PROVIDER,
+  experimental__ai_provider: 'ollama',
   experimental__ollama_endpoint: AI_DEFAULTS.OLLAMA.ENDPOINT,
   experimental__ollama_model: AI_DEFAULTS.OLLAMA.MODEL,
-  experimental__ollama_embedding_model: AI_DEFAULTS.OLLAMA.EMBEDDING_MODEL,
-  experimental__ollama_rerank_model: AI_DEFAULTS.OLLAMA.RERANK_MODEL,
 };
 
 function getLocalConfig(): LocalConfig {

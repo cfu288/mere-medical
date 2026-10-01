@@ -3,7 +3,6 @@ import { ConnectionDocumentCollection } from '../../models/connection-document/C
 import { UserDocumentCollection } from '../../models/user-document/UserDocument.collection';
 import { UserPreferencesDocumentCollection } from '../../models/user-preferences/UserPreferences.collection';
 import { SummaryPagePreferencesCollection } from '../../models/summary-page-preferences/SummaryPagePreferences.collection';
-import { VectorStorageDocumentCollection } from '../../models/vector-storage-document/VectorStorageDocument.collection';
 import { InstanceConfigDocumentCollection } from '../../models/instance-config/InstanceConfig.collection';
 
 export type DatabaseCollections = {
@@ -12,6 +11,5 @@ export type DatabaseCollections = {
   user_documents: UserDocumentCollection;
   user_preferences: UserPreferencesDocumentCollection;
   summary_page_preferences: SummaryPagePreferencesCollection;
-  vector_storage: VectorStorageDocumentCollection;
   instance_config: InstanceConfigDocumentCollection;
 };

@@ -1,7 +1,5 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { QueryStatus } from '../../TimelineTab';
-import { useLocalConfig } from '../../../../app/providers/LocalConfigProvider';
-import { useVectorSyncStatus } from '../../../vectors/providers/VectorGeneratorSyncInitializer';
 
 function LoadingSpinner({ tailwindColor }: { tailwindColor?: string }) {
   return (
@@ -39,20 +37,6 @@ export function SearchBar({
   setQuery: (s: string) => void;
   status: QueryStatus;
 }) {
-  const { experimental__use_openai_rag } = useLocalConfig();
-  const vectorSyncStatus = useVectorSyncStatus();
-  const isVectorSearchEnabled =
-    experimental__use_openai_rag && vectorSyncStatus === 'COMPLETE';
-
-  const placeholder = useMemo(() => {
-    if (experimental__use_openai_rag && vectorSyncStatus === 'IN_PROGRESS') {
-      return 'Search your records (AI search preparing...)';
-    }
-    return isVectorSearchEnabled
-      ? '✨ Search your records with AI'
-      : 'Search your medical records';
-  }, [experimental__use_openai_rag, vectorSyncStatus, isVectorSearchEnabled]);
-
   return (
     <div className="mb-1 mt-4 w-full sm:mt-6 flex flex-row">
       <div className="relative flex items-center flex-1">
@@ -73,37 +57,19 @@ export function SearchBar({
             ></path>
           </svg>
         </div>
-        {isVectorSearchEnabled ? (
-          <div className="w-full bg-gradient-to-br from-indigo-400 via-purple-300 to-primary-600 p-[3px] background-animate rounded-md">
-            <input
-              tabIndex={1}
-              type="text"
-              name="search"
-              id="search"
-              placeholder={placeholder}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className={`border-transparent border-0 focus:border-transparent focus:ring-0 outline-none transition-colors block w-full rounded-md pl-10 pr-10 shadow-sm sm:text-sm`}
-            />
-            {status === QueryStatus.LOADING && (
-              <LoadingSpinner tailwindColor="text-indigo-400" />
-            )}
-          </div>
-        ) : (
-          <div className="w-full">
-            <input
-              tabIndex={1}
-              type="text"
-              name="search"
-              id="search"
-              placeholder={placeholder}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className={`focus:border-primary-500 focus:ring-primary-500 transition-colors block w-full rounded-md border-gray-300 pl-10 pr-10 shadow-sm sm:text-sm`}
-            />
-            {status === QueryStatus.LOADING && <LoadingSpinner />}
-          </div>
-        )}
+        <div className="w-full">
+          <input
+            tabIndex={1}
+            type="text"
+            name="search"
+            id="search"
+            placeholder="Search your medical records"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className={`focus:border-primary-500 focus:ring-primary-500 transition-colors block w-full rounded-md border-gray-300 pl-10 pr-10 shadow-sm sm:text-sm`}
+          />
+          {status === QueryStatus.LOADING && <LoadingSpinner />}
+        </div>
       </div>
     </div>
   );
