@@ -4,37 +4,17 @@ import {
   useUpdateLocalConfig,
 } from '../../../app/providers/LocalConfigProvider';
 import { classNames } from '../../../shared/utils/StyleUtils';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNotificationDispatch } from '../../../app/providers/NotificationProvider';
+import { isAbortError } from '../../patient-context/agent/abort';
+import { testOllamaConnection } from '../../patient-context/agent/ollamaChat';
+import { detectContextWindow } from '../../patient-context/agent/contextWindow';
+import { detectedServerLines, detectionFailedLines } from './detectedServer';
 import {
   AI_DEFAULTS,
   OLLAMA_CHAT_MODELS,
+  resolveModelServer,
 } from '../../ai-chat/constants/defaults';
-
-const testOllamaConnection = async (
-  endpoint: string = AI_DEFAULTS.OLLAMA.ENDPOINT,
-): Promise<boolean> => {
-  try {
-    console.log(`[Ollama] Testing connection to: ${endpoint}/api/tags`);
-    const response = await fetch(`${endpoint}/api/tags`, {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-      },
-    });
-    console.log('[Ollama] Test response status:', response.status);
-
-    if (response.ok) {
-      const data = await response.json();
-      console.log('[Ollama] Available models:', data.models?.length || 0);
-    }
-
-    return response.ok;
-  } catch (error) {
-    console.error('Ollama connection test failed:', error);
-    return false;
-  }
-};
 
 export function ExperimentalSettingsGroup() {
   const {
@@ -57,6 +37,40 @@ export function ExperimentalSettingsGroup() {
   );
   const [isTestingConnection, setIsTestingConnection] = useState(false);
   const notificationDispatch = useNotificationDispatch();
+  const { endpoint, model } = resolveModelServer(useLocalConfig());
+  const detectionEnabled =
+    experimental_features_enabled &&
+    experimental__use_openai_rag &&
+    experimental__ai_provider === 'ollama';
+  const [detectRequest, setDetectRequest] = useState(0);
+  const detectKey = `${endpoint} ${model} ${detectRequest}`;
+  const [detected, setDetected] = useState<{
+    key: string;
+    lines: string[];
+  } | null>(null);
+
+  useEffect(() => {
+    if (!detectionEnabled) {
+      return;
+    }
+    const abort = new AbortController();
+    detectContextWindow({ endpoint, model, signal: abort.signal })
+      .then((windowTokens) =>
+        setDetected({
+          key: detectKey,
+          lines: detectedServerLines(endpoint, windowTokens),
+        }),
+      )
+      .catch((error) => {
+        if (!isAbortError(error)) {
+          setDetected({
+            key: detectKey,
+            lines: detectionFailedLines(endpoint),
+          });
+        }
+      });
+    return () => abort.abort();
+  }, [detectionEnabled, detectKey, endpoint, model]);
 
   if (!experimental_features_enabled) {
     return null;
@@ -69,7 +83,7 @@ export function ExperimentalSettingsGroup() {
         <div className="px-4 sm:px-6">
           <ul className="mt-2 ">
             <Switch.Group
-              id="experimental__use_rag"
+              id="experimental__use_ai"
               as="li"
               className="flex flex-col pb-4"
             >
@@ -83,7 +97,8 @@ export function ExperimentalSettingsGroup() {
                     Enable Mere Assistant
                   </Switch.Label>
                   <Switch.Description className="pt-2 text-sm text-gray-800">
-                    Enable Mere to use AI models. Choose between OpenAI or
+                    The assistant answers questions about your records by
+                    searching them with tools. Choose between OpenAI or an
                     Ollama (local) instance.
                   </Switch.Description>
                 </div>
@@ -179,7 +194,6 @@ export function ExperimentalSettingsGroup() {
                       type="password"
                       className="bg-gray-50 rounded-md p-2 w-full border-none focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent active:ring-2 active:ring-primary-600"
                       placeholder="OpenAI API Key"
-                      defaultValue={experimental__openai_api_key || ''}
                       value={openApiKey}
                       onChange={(e) => {
                         setOpenApiKey(e.target.value);
@@ -232,8 +246,10 @@ export function ExperimentalSettingsGroup() {
                         onClick={async () => {
                           setIsTestingConnection(true);
                           try {
-                            const isConnected =
-                              await testOllamaConnection(ollamaEndpoint);
+                            const isConnected = await testOllamaConnection(
+                              ollamaEndpoint,
+                              openApiKey || undefined,
+                            );
                             if (isConnected) {
                               notificationDispatch({
                                 type: 'set_notification',
@@ -256,6 +272,7 @@ export function ExperimentalSettingsGroup() {
                             });
                           } finally {
                             setIsTestingConnection(false);
+                            setDetectRequest((n) => n + 1);
                           }
                         }}
                         disabled={isTestingConnection}
@@ -269,29 +286,49 @@ export function ExperimentalSettingsGroup() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Chat Model
                     </label>
-                    <select
+                    <input
+                      type="text"
+                      list="ollama-chat-models"
                       className="bg-gray-50 rounded-md p-2 w-full border-none focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                       value={ollamaModel}
                       onChange={(e) => setOllamaModel(e.target.value)}
-                    >
+                    />
+                    <datalist id="ollama-chat-models">
                       {OLLAMA_CHAT_MODELS.map((model) => (
                         <option key={model.value} value={model.value}>
                           {model.label}
                         </option>
                       ))}
-                    </select>
+                    </datalist>
                     <p className="text-xs text-gray-500 mt-1">
-                      Select the Ollama chat model to use
+                      Pick a tested model or type any model your server offers
                     </p>
+                  </div>
+
+                  <div className="text-xs text-gray-500">
+                    <p className="font-medium text-gray-700">
+                      Detected for the saved endpoint and model
+                    </p>
+                    {detected?.key === detectKey ? (
+                      detected.lines.map((line) => <p key={line}>{line}</p>)
+                    ) : (
+                      <p>Checking…</p>
+                    )}
                   </div>
 
                   <div className="flex space-x-2">
                     <button
                       className="bg-primary-600 hover:bg-primary-700 rounded px-4 py-2 font-bold text-white flex-1"
                       onClick={() => {
+                        const endpoint =
+                          ollamaEndpoint.trim() || AI_DEFAULTS.OLLAMA.ENDPOINT;
+                        const model =
+                          ollamaModel.trim() || AI_DEFAULTS.OLLAMA.MODEL;
+                        setOllamaEndpoint(endpoint);
+                        setOllamaModel(model);
                         updateLocalConfig({
-                          experimental__ollama_endpoint: ollamaEndpoint,
-                          experimental__ollama_model: ollamaModel,
+                          experimental__ollama_endpoint: endpoint,
+                          experimental__ollama_model: model,
                         });
                         notificationDispatch({
                           type: 'set_notification',

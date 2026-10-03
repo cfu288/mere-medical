@@ -32,6 +32,7 @@ describe('detectContextWindow', () => {
     ).toEqual(49152);
     expect(global.fetch).toHaveBeenCalledWith('http://gpu:8000/v1/models', {
       headers: { Accept: 'application/json', Authorization: 'Bearer secret' },
+      signal: expect.any(AbortSignal),
     });
   });
 
@@ -50,6 +51,7 @@ describe('detectContextWindow', () => {
     ).toEqual(16384);
     expect(global.fetch).toHaveBeenCalledWith('http://localhost:11434/api/ps', {
       headers: { Accept: 'application/json' },
+      signal: expect.any(AbortSignal),
     });
   });
 
@@ -75,6 +77,27 @@ describe('detectContextWindow', () => {
         model: 'qwen3.5:latest',
       }),
     ).toEqual(null);
+  });
+
+  it('gives up on a server that never answers once the timeout passes', async () => {
+    jest.useFakeTimers();
+    global.fetch = jest.fn(
+      (_url: string, init?: RequestInit) =>
+        new Promise<Response>((_, reject) =>
+          init?.signal?.addEventListener('abort', () =>
+            reject(new DOMException('aborted', 'AbortError')),
+          ),
+        ),
+    ) as unknown as typeof fetch;
+
+    const pending = detectContextWindow({
+      endpoint: 'http://gpu:8000/v1',
+      model: 'm',
+    });
+    jest.advanceTimersByTime(20_000);
+
+    expect(await pending).toBeNull();
+    jest.useRealTimers();
   });
 
   it('is unknown when the server cannot be reached', async () => {
