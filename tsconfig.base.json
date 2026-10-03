@@ -23,7 +23,6 @@
       "@mere/fhir-oauth/react": ["libs/fhir-oauth/src/react.ts"],
       "@mere/shared": ["libs/shared/src/index.ts"],
       "@mere/tenant-db": ["libs/tenant-db/src/index.ts"],
-      "@mere/vector-storage": ["libs/vector-storage/src/index.ts"],
       "@mere/web": ["apps/web/src/main.tsx"]
     }
   },

@@ -20384,7 +20384,6 @@
         }
       ]
     },
-    { "name": "vector_storage", "schemaHash": "jre6zo", "docs": [] },
     {
       "name": "instance_config",
       "schemaHash": "d2ruq3",

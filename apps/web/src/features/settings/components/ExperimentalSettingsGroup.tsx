@@ -4,17 +4,37 @@ import {
   useUpdateLocalConfig,
 } from '../../../app/providers/LocalConfigProvider';
 import { classNames } from '../../../shared/utils/StyleUtils';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNotificationDispatch } from '../../../app/providers/NotificationProvider';
-import { useRxDb } from '../../../app/providers/RxDbProvider';
-import { useUser } from '../../../app/providers/UserProvider';
-import { testOllamaConnection } from '../../ai-chat/ollama/ollamaEmbeddings';
 import {
   AI_DEFAULTS,
   OLLAMA_CHAT_MODELS,
-  OLLAMA_EMBEDDING_MODELS,
-  OLLAMA_RERANK_MODELS,
 } from '../../ai-chat/constants/defaults';
+
+const testOllamaConnection = async (
+  endpoint: string = AI_DEFAULTS.OLLAMA.ENDPOINT,
+): Promise<boolean> => {
+  try {
+    console.log(`[Ollama] Testing connection to: ${endpoint}/api/tags`);
+    const response = await fetch(`${endpoint}/api/tags`, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+      },
+    });
+    console.log('[Ollama] Test response status:', response.status);
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log('[Ollama] Available models:', data.models?.length || 0);
+    }
+
+    return response.ok;
+  } catch (error) {
+    console.error('Ollama connection test failed:', error);
+    return false;
+  }
+};
 
 export function ExperimentalSettingsGroup() {
   const {
@@ -24,8 +44,6 @@ export function ExperimentalSettingsGroup() {
     experimental__ai_provider,
     experimental__ollama_endpoint,
     experimental__ollama_model,
-    experimental__ollama_embedding_model,
-    experimental__ollama_rerank_model,
   } = useLocalConfig();
   const updateLocalConfig = useUpdateLocalConfig();
   const [openApiKey, setOpenApiKey] = useState(
@@ -37,36 +55,8 @@ export function ExperimentalSettingsGroup() {
   const [ollamaModel, setOllamaModel] = useState(
     experimental__ollama_model || AI_DEFAULTS.OLLAMA.MODEL,
   );
-  const [ollamaEmbeddingModel, setOllamaEmbeddingModel] = useState(
-    experimental__ollama_embedding_model || AI_DEFAULTS.OLLAMA.EMBEDDING_MODEL,
-  );
-  const [ollamaRerankModel, setOllamaRerankModel] = useState(
-    experimental__ollama_rerank_model || '',
-  );
   const [isTestingConnection, setIsTestingConnection] = useState(false);
   const notificationDispatch = useNotificationDispatch();
-  const rxdb = useRxDb();
-  const user = useUser();
-  const [vectorCount, setVectorCount] = useState(0);
-
-  useEffect(() => {
-    if (!user?.id) {
-      setVectorCount(0);
-      return;
-    }
-
-    const subscription = rxdb.vector_storage
-      ?.count({ selector: { user_id: user.id } })
-      .$.subscribe((c) => {
-        if (c !== undefined) {
-          setVectorCount(c);
-        }
-      });
-
-    return () => {
-      subscription?.unsubscribe();
-    };
-  }, [rxdb.vector_storage, user?.id]);
 
   if (!experimental_features_enabled) {
     return null;
@@ -93,10 +83,8 @@ export function ExperimentalSettingsGroup() {
                     Enable Mere Assistant
                   </Switch.Label>
                   <Switch.Description className="pt-2 text-sm text-gray-800">
-                    Enable Mere to use AI models for semantic search and Q&A
-                    features. Semantic search finds relevant medical information
-                    even when exact keywords don't match. Choose between OpenAI
-                    or Ollama (local) instance.
+                    Enable Mere to use AI models. Choose between OpenAI or
+                    Ollama (local) instance.
                   </Switch.Description>
                 </div>
                 <Switch
@@ -297,47 +285,6 @@ export function ExperimentalSettingsGroup() {
                     </p>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Embedding Model
-                    </label>
-                    <select
-                      className="bg-gray-50 rounded-md p-2 w-full border-none focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent"
-                      value={ollamaEmbeddingModel}
-                      onChange={(e) => setOllamaEmbeddingModel(e.target.value)}
-                    >
-                      {OLLAMA_EMBEDDING_MODELS.map((model) => (
-                        <option key={model.value} value={model.value}>
-                          {model.label}
-                        </option>
-                      ))}
-                    </select>
-                    <p className="text-xs text-gray-500 mt-1">
-                      The embedding model for vector search
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Reranking Model
-                    </label>
-                    <select
-                      className="bg-gray-50 rounded-md p-2 w-full border-none focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent"
-                      value={ollamaRerankModel}
-                      onChange={(e) => setOllamaRerankModel(e.target.value)}
-                    >
-                      {OLLAMA_RERANK_MODELS.map((model) => (
-                        <option key={model.value} value={model.value}>
-                          {model.label}
-                        </option>
-                      ))}
-                    </select>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Optional: Specialized model for reranking search results.
-                      Select "None" to disable reranking.
-                    </p>
-                  </div>
-
                   <div className="flex space-x-2">
                     <button
                       className="bg-primary-600 hover:bg-primary-700 rounded px-4 py-2 font-bold text-white flex-1"
@@ -345,9 +292,6 @@ export function ExperimentalSettingsGroup() {
                         updateLocalConfig({
                           experimental__ollama_endpoint: ollamaEndpoint,
                           experimental__ollama_model: ollamaModel,
-                          experimental__ollama_embedding_model:
-                            ollamaEmbeddingModel,
-                          experimental__ollama_rerank_model: ollamaRerankModel,
                         });
                         notificationDispatch({
                           type: 'set_notification',
@@ -363,18 +307,11 @@ export function ExperimentalSettingsGroup() {
                       onClick={() => {
                         setOllamaEndpoint(AI_DEFAULTS.OLLAMA.ENDPOINT);
                         setOllamaModel(AI_DEFAULTS.OLLAMA.MODEL);
-                        setOllamaEmbeddingModel(
-                          AI_DEFAULTS.OLLAMA.EMBEDDING_MODEL,
-                        );
-                        setOllamaRerankModel('');
 
                         updateLocalConfig({
                           experimental__ollama_endpoint:
                             AI_DEFAULTS.OLLAMA.ENDPOINT,
                           experimental__ollama_model: AI_DEFAULTS.OLLAMA.MODEL,
-                          experimental__ollama_embedding_model:
-                            AI_DEFAULTS.OLLAMA.EMBEDDING_MODEL,
-                          experimental__ollama_rerank_model: '',
                         });
 
                         notificationDispatch({
@@ -389,72 +326,6 @@ export function ExperimentalSettingsGroup() {
                   </div>
                 </div>
               )}
-
-            {/* clear stored vector - only show when AI features are enabled */}
-            {experimental__use_openai_rag && (
-              <div className="w-full flex items-center justify-between pt-4">
-                <div className="flex flex-col">
-                  <p className="text-sm text-gray-800">
-                    Stored vectors: {vectorCount}
-                  </p>
-                </div>
-                <button
-                  className="relative ml-4 inline-flex flex-shrink-0 cursor-pointer items-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-bold text-white shadow-sm  hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 disabled:bg-gray-700"
-                  onClick={async () => {
-                    if (
-                      // eslint-disable-next-line no-restricted-globals
-                      confirm(
-                        'Are you sure you want to clear all stored vectors?',
-                      )
-                    ) {
-                      try {
-                        const userVectors = await rxdb.vector_storage
-                          .find({ selector: { user_id: user.id } })
-                          .exec();
-
-                        const validDocs = userVectors.filter(
-                          (doc) =>
-                            doc.id &&
-                            typeof doc.id === 'string' &&
-                            doc.id.length > 0,
-                        );
-
-                        const invalidCount =
-                          userVectors.length - validDocs.length;
-
-                        if (invalidCount > 0) {
-                          console.warn(
-                            `Found ${invalidCount} documents with invalid IDs, skipping them`,
-                          );
-                        }
-
-                        if (validDocs.length > 0) {
-                          await rxdb.vector_storage.bulkRemove(
-                            validDocs.map((doc) => doc.id),
-                          );
-                        }
-
-                        setVectorCount(0);
-                        notificationDispatch({
-                          type: 'set_notification',
-                          variant: 'success',
-                          message: 'Vectors cleared',
-                        });
-                      } catch (error) {
-                        console.error('Error clearing vectors:', error);
-                        notificationDispatch({
-                          type: 'set_notification',
-                          variant: 'error',
-                          message: 'Failed to clear vectors',
-                        });
-                      }
-                    }
-                  }}
-                >
-                  Clear Stored Vectors
-                </button>
-              </div>
-            )}
           </ul>
         </div>
       </div>
