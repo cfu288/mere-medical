@@ -42,6 +42,7 @@ import {
   Person,
 } from 'fhir/r4';
 import { ConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
+import { loincCodes, observationDate } from './observationMetadata';
 import uuid4 from '../../shared/utils/UUIDUtils';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
 import { CreateClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
@@ -162,7 +163,7 @@ export function mapObservationToClinicalDocument(
     },
     metadata: {
       id: parseId(bundleItem),
-      date: bundleItem.resource?.effectiveDateTime || new Date(0).toISOString(),
+      date: observationDate(bundleItem.resource ?? {}),
       display_name: (
         bundleItem.resource?.code?.text ||
         bundleItem.resource?.code?.coding?.[0]?.display ||
@@ -170,12 +171,7 @@ export function mapObservationToClinicalDocument(
       )
         ?.replace(/- final result/gi, '')
         .replace(/- final/gi, ''),
-      loinc_coding:
-        bundleItem.resource?.code?.coding
-          ?.filter(
-            (i) => i.system === 'http://loinc.org' && i.code !== undefined,
-          )
-          .map((i) => i.code as string) || [],
+      loinc_coding: loincCodes(bundleItem.resource?.code?.coding),
     },
   };
   return cd;

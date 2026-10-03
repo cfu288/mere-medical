@@ -67,8 +67,10 @@ import { TimelineCardTitle } from '../TimelineCardTitle';
 import { useClinicalDoc } from '../../../../shared/hooks/useClinicalDoc';
 import { CCDAStructureDefinitionKeys2_1 } from '../document-reference/CCDAStructureDefinitionKeys2_1';
 import useIntersectionObserver from '../../../../shared/hooks/useIntersectionObserver';
-import { checkIfXmlIsCCDA } from '../document-reference/ShowDocumentReferenceAttachmentExpandable';
-import { parseCCDA } from '../document-reference/parseCCDA/parseCCDA';
+import {
+  checkIfXmlIsCCDA,
+  parseCCDA,
+} from '../document-reference/parseCCDA/parseCCDA';
 import parse, { HTMLReactParserOptions, domToReact } from 'html-react-parser';
 import DOMPurify from 'dompurify';
 

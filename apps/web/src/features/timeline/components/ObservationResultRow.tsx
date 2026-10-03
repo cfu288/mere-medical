@@ -12,7 +12,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { RxDatabase, RxDocument } from 'rxdb';
+import { RxDocument } from 'rxdb';
 
 import BillboardJS, { IChart } from '@billboard.js/react';
 import { Disclosure } from '@headlessui/react';
@@ -23,6 +23,8 @@ import { safeFormatDate } from '../../../shared/utils/dateFormatters';
 import uuid4 from '../../../shared/utils/UUIDUtils';
 import { useSummaryPagePreferences } from '../../summary/hooks/useSummaryPagePreferences';
 import { useRxDb } from '../../../app/providers/RxDbProvider';
+import { graphableLabs, sparklineValues } from '../utils/labTrend';
+import { getRelatedLoincLabs } from '../utils/relatedLabs';
 import { useUser } from '../../../app/providers/UserProvider';
 import {
   getReferenceRangeLow,
@@ -38,18 +40,13 @@ import {
   getValueRatioString,
   getComments,
 } from '../utils/fhirpathParsers';
-import { UserDocument } from '../../../models/user-document/UserDocument.type';
-import { DatabaseCollections } from '../../../app/providers/DatabaseCollections';
 
 function SparklineGraphSvg({
   relatedLabs,
 }: {
   relatedLabs: RxDocument<ClinicalDocument<BundleEntry<Observation>>>[];
 }) {
-  const sparklineValues = useMemo(
-    () => relatedLabs.map((rl) => (rl ? getValueQuantity(rl) : 0)) as number[],
-    [relatedLabs],
-  );
+  const values = useMemo(() => sparklineValues(relatedLabs), [relatedLabs]);
   const sparklineSvg = useMemo(() => {
     return relatedLabs.length > 1 ? (
       <svg viewBox="0 0 10 22" className="h-6 w-6" preserveAspectRatio="none">
@@ -57,7 +54,7 @@ function SparklineGraphSvg({
         <path
           d={
             NormalizePathLine(
-              sparklineValues,
+              values,
               getReferenceRangeLow(relatedLabs[0])?.value,
               getReferenceRangeHigh(relatedLabs[0])?.value,
             ).line
@@ -87,7 +84,7 @@ function SparklineGraphSvg({
         />
       </svg>
     );
-  }, [sparklineValues, relatedLabs]);
+  }, [values, relatedLabs]);
 
   return <>{sparklineSvg}</>;
 }
@@ -107,6 +104,7 @@ export function ObservationResultRow({
   const [isPinned, handleTogglePin] = useLabPinning(item);
   const [view, setView] = useState<'LIST' | 'GRAPH'>('GRAPH'),
     relatedLabs = useRelatedLoincLabs(loinc);
+  const graphable = useMemo(() => graphableLabs(relatedLabs), [relatedLabs]);
 
   return (
     <Fragment key={`${item.metadata?.id}`}>
@@ -163,7 +161,7 @@ export function ObservationResultRow({
                         {open ? (
                           <>{closeXSvg}</>
                         ) : (
-                          <SparklineGraphSvg relatedLabs={relatedLabs} />
+                          <SparklineGraphSvg relatedLabs={graphable} />
                         )}
                       </Disclosure.Button>
                     )}
@@ -272,7 +270,7 @@ export function ObservationResultRow({
                         <div className="flex justify-center px-2 align-middle">
                           <div className="mr-4 w-full sm:w-5/6">
                             <HistoricalRelatedLabsChart
-                              relatedLabs={relatedLabs}
+                              relatedLabs={graphable}
                               item={item}
                             />
                           </div>
@@ -553,57 +551,4 @@ export function useRelatedLoincLabs(loinc: string[]) {
   }, [db, loinc, user]);
 
   return relatedLabs;
-}
-
-export function getRelatedLoincLabs({
-  loinc,
-  db,
-  user,
-  limit,
-}: {
-  loinc: string[];
-  db: RxDatabase<DatabaseCollections>;
-  user: UserDocument;
-  limit?: number;
-}): Promise<RxDocument<ClinicalDocument<BundleEntry<Observation>>>[]> {
-  return new Promise((resolve, reject) => {
-    if (loinc && loinc?.length > 0) {
-      const q = db.clinical_documents.find({
-        selector: {
-          user_id: user.id,
-          'metadata.loinc_coding': { $in: loinc },
-        },
-      });
-      if (limit) {
-        q.limit(limit);
-      }
-      q.exec()
-        .then((res) => {
-          const sorted = res.sort((a, b) =>
-            new Date(a.get('metadata.date') || '') <
-            new Date(b.get('metadata.date') || '')
-              ? -1
-              : 1,
-          ) as unknown as RxDocument<
-            ClinicalDocument<BundleEntry<Observation>>
-          >[];
-          // sorted list may have duplicate dates, remove them so only latest of each date is shown
-          const seen = new Set();
-          const unique = sorted.filter((item) => {
-            const date = item.get('metadata.date');
-            if (!seen.has(date)) {
-              seen.add(date);
-              return true;
-            }
-            return false;
-          });
-          return resolve(unique);
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    } else {
-      resolve([]);
-    }
-  });
 }

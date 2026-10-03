@@ -9,34 +9,19 @@ import { useClinicalDoc } from '../../../../shared/hooks/useClinicalDoc';
 import { useConnectionDoc } from '../../../connections/hooks/useConnectionDoc';
 import { CCDAStructureDefinitionKeys2_1 } from './CCDAStructureDefinitionKeys2_1';
 import { DisplayCCDADocument } from './DisplayCCDADocument';
-import { parseCCDA } from './parseCCDA/parseCCDA';
+import { checkIfXmlIsCCDA, parseCCDA } from './parseCCDA/parseCCDA';
 
 export const LOINC_CODE_SYSTEM = '2.16.840.1.113883.6.1';
 export const SNOMED_CT_CODE_SYSTEM = '2.16.840.1.113883.6.96';
-
-function checkIfXmlIsCCDA(xml: string): boolean {
-  try {
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(xml, 'text/xml');
-    const sections = xmlDoc.getElementsByTagName('ClinicalDocument');
-    return sections.length > 0;
-  } catch (e) {
-    return false;
-  }
-}
 
 export function ShowDocumentResultsExpandable({
   item,
   expanded,
   setExpanded,
-  matchedChunks,
-  searchQuery,
 }: {
   item: ClinicalDocument<BundleEntry<DocumentReference>>;
   expanded: boolean;
   setExpanded: React.Dispatch<React.SetStateAction<boolean>>;
-  matchedChunks?: { id: string; metadata?: any }[];
-  searchQuery?: string;
 }) {
   const cd = useConnectionDoc(item.connection_record_id),
     [ccda, setCCDA] = useState<
@@ -159,10 +144,7 @@ export function ShowDocumentResultsExpandable({
             {/* Display CCDA Document */}
             {ccda && (
               <div className="text-md whitespace-wrap overflow-x-scroll p-4 text-gray-900">
-                <DisplayCCDADocument
-                  ccda={ccda}
-                  matchedChunks={matchedChunks}
-                />
+                <DisplayCCDADocument ccda={ccda} />
               </div>
             )}
 

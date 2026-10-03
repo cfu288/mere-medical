@@ -21,7 +21,7 @@ import { SkeletonLoadingText } from '../skeletons/SkeletonLoadingText';
 import { TimelineCardCategoryTitle } from '../TimelineCardCategoryTitle';
 import { TimelineCardSubtitile } from '../TimelineCardSubtitile';
 import { TimelineCardTitle } from '../TimelineCardTitle';
-import { resolveObservationReferences } from '../../../../shared/utils/fhirReferenceResolver';
+import { observationIdCandidates } from '../../../../shared/utils/fhirReferenceResolver';
 
 /**
  * Function that encapsulates the logic of the useRelatedDocuments Hook.
@@ -48,19 +48,21 @@ export async function getRelatedDocuments({
   const listToQuery: string[] = [];
   const isDrResult = item.data_record.raw.resource?.result;
   if (isDrResult) {
-    const resolvedReferences = resolveObservationReferences({
-      references: isDrResult.filter((r) => r.reference) as Array<{
-        reference: string;
-      }>,
-      baseUrl: conn?.location as string | undefined,
-    });
-    listToQuery.push(...resolvedReferences);
+    listToQuery.push(
+      ...observationIdCandidates({
+        references: isDrResult.filter((r) => r.reference) as Array<{
+          reference: string;
+        }>,
+        baseUrl: conn?.location as string | undefined,
+      }),
+    );
   }
 
   const docs = await db.clinical_documents
     .find({
       selector: {
         user_id: user.id,
+        connection_record_id: item.connection_record_id,
         'metadata.id': { $in: listToQuery },
       },
     })
