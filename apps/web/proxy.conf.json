@@ -3,5 +3,12 @@
     "context": ["/api"],
     "target": "https://localhost:4201",
     "secure": false
+  },
+  {
+    "context": ["/vllm"],
+    "target": "http://cfu288-desktop:8000",
+    "pathRewrite": { "^/vllm": "" },
+    "changeOrigin": true,
+    "secure": false
   }
 ]

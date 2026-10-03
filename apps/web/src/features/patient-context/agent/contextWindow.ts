@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { MAX_COMPLETION_TOKENS } from '../constants';
 import { isOpenAiEndpoint } from './ollamaChat';
 
+const DETECT_TIMEOUT_MS = 20_000;
+
 export type ContextBudget = { windowTokens: number; tokensPerChar: number };
 
 const openAiModels = z.object({
@@ -39,13 +41,20 @@ export async function detectContextWindow({
   const url = openAi
     ? `${endpoint.replace(/\/$/, '')}/models`
     : `${endpoint}/api/ps`;
+  const controller = new AbortController();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, DETECT_TIMEOUT_MS);
+  signal?.addEventListener('abort', () => controller.abort(), { once: true });
   try {
     const response = await fetch(url, {
       headers: {
         Accept: 'application/json',
         ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
       },
-      ...(signal ? { signal } : {}),
+      signal: controller.signal,
     });
     if (!response.ok) {
       return null;
@@ -62,10 +71,12 @@ export async function detectContextWindow({
       ? parsed.data.models.find((m) => m.name === model)?.context_length ?? null
       : null;
   } catch (e) {
-    if (isAbortError(e)) {
+    if (isAbortError(e) && !timedOut) {
       throw e;
     }
     return null;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
