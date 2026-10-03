@@ -14,22 +14,11 @@ import { TimelineCardTitle } from '../TimelineCardTitle';
 
 export const DocumentReferenceCard = memo(function DocumentReferenceCard({
   item,
-  matchedChunks,
-  searchQuery,
 }: {
   item: ClinicalDocument<BundleEntry<DocumentReference>>;
-  matchedChunks?: { id: string; metadata?: any }[];
-  searchQuery?: string;
 }) {
   const conn = useConnectionDoc(item.connection_record_id);
   const [expanded, setExpanded] = useState(false);
-
-  if (matchedChunks && matchedChunks.length > 0) {
-    console.log(
-      '[DocumentReferenceCard] Has matchedChunks:',
-      matchedChunks.length,
-    );
-  }
 
   return (
     <>
@@ -61,8 +50,6 @@ export const DocumentReferenceCard = memo(function DocumentReferenceCard({
         item={item}
         expanded={expanded}
         setExpanded={setExpanded}
-        matchedChunks={matchedChunks}
-        searchQuery={searchQuery}
       />
     </>
   );
@@ -71,12 +58,8 @@ export const DocumentReferenceCard = memo(function DocumentReferenceCard({
 export const DocumentReferenceAttachmentCard = memo(
   function DocumentReferenceCard({
     item,
-    matchedChunks,
-    searchQuery,
   }: {
     item: ClinicalDocument<string | Blob>;
-    matchedChunks?: { id: string; metadata?: any }[];
-    searchQuery?: string;
   }) {
     const conn = useConnectionDoc(item.connection_record_id);
     const [expanded, setExpanded] = useState(false);
@@ -114,8 +97,6 @@ export const DocumentReferenceAttachmentCard = memo(
           item={item}
           expanded={expanded}
           setExpanded={setExpanded}
-          matchedChunks={matchedChunks}
-          searchQuery={searchQuery}
         />
       </>
     );

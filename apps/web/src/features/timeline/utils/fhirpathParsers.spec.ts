@@ -237,3 +237,127 @@ describe('isOutOfRangeResult with comparators', () => {
     expect(isOutOfRangeResult(item)).toBe(true);
   });
 });
+
+describe('isOutOfRangeResult with an interpretation', () => {
+  it('is abnormal when a DSTU2 v2 interpretation says high and the range is text only', () => {
+    const item = makeObservation({
+      valueQuantity: { value: 436, unit: 'mg/dL' },
+      referenceRange: [{ low: { unit: 'mg/dL' }, high: { unit: 'mg/dL' } }],
+      interpretation: {
+        text: 'High',
+        coding: [{ system: 'http://hl7.org/fhir/v2/0078', code: 'H' }],
+      },
+    } as never);
+    expect(isOutOfRangeResult(item)).toBe(true);
+  });
+
+  it('is abnormal when an R4 interpretation says low and the range is text only', () => {
+    const item = makeObservation({
+      valueQuantity: { value: 24, unit: 'ng/mL' },
+      referenceRange: [{ text: '30 - 100 ng/mL' }],
+      interpretation: [
+        {
+          coding: [
+            {
+              system:
+                'http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation',
+              code: 'L',
+            },
+          ],
+        },
+      ],
+    } as never);
+    expect(isOutOfRangeResult(item)).toBe(true);
+  });
+
+  it('is abnormal when the interpretation is coded against the value set url', () => {
+    const item = makeObservation({
+      valueQuantity: { value: 109, unit: 'mg/dL' },
+      referenceRange: [{ text: '<100' }],
+      interpretation: {
+        coding: [
+          {
+            system: 'http://hl7.org/fhir/ValueSet/observation-interpretation',
+            code: 'H',
+          },
+        ],
+      },
+    } as never);
+    expect(isOutOfRangeResult(item)).toBe(true);
+  });
+
+  it('is abnormal for a critical STU3 code', () => {
+    const item = makeObservation({
+      valueQuantity: { value: 2.1, unit: 'mmol/L' },
+      interpretation: [
+        {
+          coding: [
+            {
+              system: 'http://hl7.org/fhir/v3/ObservationInterpretation',
+              code: 'HH',
+            },
+          ],
+        },
+      ],
+    } as never);
+    expect(isOutOfRangeResult(item)).toBe(true);
+  });
+
+  it('is abnormal when the source says high even though the value sits inside its range', () => {
+    const item = makeObservation({
+      valueQuantity: { value: 15, unit: 'g/dL' },
+      referenceRange: [{ low: { value: 12 }, high: { value: 17 } }],
+      interpretation: [
+        {
+          coding: [
+            {
+              system:
+                'http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation',
+              code: 'H',
+            },
+          ],
+        },
+      ],
+    } as never);
+    expect(isOutOfRangeResult(item)).toBe(true);
+  });
+
+  it('ignores a code from a vendor system', () => {
+    const item = makeObservation({
+      valueQuantity: { value: 15, unit: 'g/dL' },
+      referenceRange: [{ text: '12 - 17 g/dL' }],
+      interpretation: [
+        {
+          text: 'High',
+          coding: [
+            {
+              system: 'https://fhir.cerner.com/codeSet/52',
+              code: '207',
+              display: 'HI',
+            },
+          ],
+        },
+      ],
+    } as never);
+    expect(isOutOfRangeResult(item)).toBe(false);
+  });
+
+  it('is not abnormal when the interpretation says normal and the value is in range', () => {
+    const item = makeObservation({
+      valueQuantity: { value: 15, unit: 'g/dL' },
+      referenceRange: [{ low: { value: 12 }, high: { value: 17 } }],
+      interpretation: {
+        coding: [{ system: 'http://hl7.org/fhir/v2/0078', code: 'N' }],
+      },
+    } as never);
+    expect(isOutOfRangeResult(item)).toBe(false);
+  });
+
+  it('is not abnormal with a text-only range and no interpretation', () => {
+    const item = makeObservation({
+      valueQuantity: { value: 109, unit: 'mg/dL' },
+      referenceRange: [{ text: '<100' }],
+    });
+    expect(isOutOfRangeResult(item)).toBe(false);
+  });
+});

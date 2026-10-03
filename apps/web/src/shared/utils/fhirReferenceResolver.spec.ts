@@ -1,4 +1,7 @@
-import { resolveObservationReferences } from './fhirReferenceResolver';
+import {
+  observationIdCandidates,
+  resolveObservationReferences,
+} from './fhirReferenceResolver';
 
 describe('resolveObservationReferences', () => {
   describe('absolute URLs (Epic/Cerner R4 format)', () => {
@@ -224,5 +227,27 @@ describe('resolveObservationReferences', () => {
         'https://fhir.veradigm.com/r4/tenant-abc123/Observation/67890',
       ]);
     });
+  });
+});
+
+describe('observationIdCandidates', () => {
+  it('offers a relative reference both as written and resolved against the connection', () => {
+    expect(
+      observationIdCandidates({
+        references: [{ reference: 'Observation/123' }],
+        baseUrl: 'https://onpatient.com',
+      }),
+    ).toEqual(['Observation/123', 'https://onpatient.com/Observation/123']);
+  });
+
+  it('offers an absolute reference once', () => {
+    expect(
+      observationIdCandidates({
+        references: [
+          { reference: 'https://fhir.epic.com/api/FHIR/R4/Observation/456' },
+        ],
+        baseUrl: 'https://fhir.epic.com/api/FHIR/R4/',
+      }),
+    ).toEqual(['https://fhir.epic.com/api/FHIR/R4/Observation/456']);
   });
 });

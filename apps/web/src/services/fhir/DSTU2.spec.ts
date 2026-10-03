@@ -51,3 +51,72 @@ describe('DSTU2', () => {
     expect(res.metadata?.display_name).toBe('IMMUNIZATION ADMIN');
   });
 });
+
+describe('mapObservationToClinicalDocument', () => {
+  const connection = { user_id: '123', id: '456' } as ConnectionDocument;
+  const code = {
+    text: 'Heart rate',
+    coding: [
+      { system: 'http://loinc.org', code: '8867-4', display: 'Heart rate' },
+    ],
+  };
+
+  it.each([
+    ['https://loinc.org/', ['8867-4']],
+    ['http://loinc.org', ['8867-4']],
+    ['https://loinc.org', ['8867-4']],
+    ['urn:oid:1.2.840.114350.1.13.225.2.7.5.737384.26', []],
+  ])('reads a loinc code under the system %s', (system, loincCoding) => {
+    const res = DSTU2.mapObservationToClinicalDocument(
+      {
+        resource: {
+          resourceType: 'Observation',
+          status: 'final',
+          code: { text: 'Heart rate', coding: [{ system, code: '8867-4' }] },
+          effectiveDateTime: '2024-02-01T10:00:00-05:00',
+        },
+        fullUrl: 'Observation/obs-1',
+      } as never,
+      connection,
+    );
+    expect(res.metadata?.loinc_coding).toEqual(loincCoding);
+  });
+
+  it.each([
+    [
+      'effectiveDateTime',
+      { effectiveDateTime: '2024-02-01T10:00:00-05:00' },
+      '2024-02-01T10:00:00-05:00',
+    ],
+    [
+      'effectivePeriod',
+      {
+        effectivePeriod: {
+          start: '2024-02-01T10:00:00-05:00',
+          end: '2024-02-01T11:00:00-05:00',
+        },
+      },
+      '2024-02-01T10:00:00-05:00',
+    ],
+    [
+      'issued',
+      { issued: '2024-02-02T09:00:00-05:00' },
+      '2024-02-02T09:00:00-05:00',
+    ],
+    ['no date at all', {}, '1970-01-01T00:00:00.000Z'],
+  ])('dates the result from %s', (_label, when, date) => {
+    const res = DSTU2.mapObservationToClinicalDocument(
+      {
+        resource: {
+          resourceType: 'Observation',
+          status: 'final',
+          code,
+          ...when,
+        },
+        fullUrl: 'Observation/obs-1',
+      } as never,
+      connection,
+    );
+    expect(res.metadata?.date).toEqual(date);
+  });
+});

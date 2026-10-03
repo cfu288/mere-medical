@@ -295,7 +295,10 @@ export async function fetchRecords(
     ];
     selector = {
       ...selector,
-      'metadata.display_name': { $regex: `.*${parsedQuery}.*`, $options: 'si' },
+      'metadata.display_name': {
+        $regex: parsedQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+        $options: 'si',
+      },
     };
   }
   const gr = db.clinical_documents
