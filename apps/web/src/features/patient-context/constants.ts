@@ -1,0 +1,9 @@
+export const MAX_NOTE_CHARS = 20000;
+export const TOOL_PART_CHARS = 10000;
+export const REFERENCE_FETCH_TIMEOUT_MS = 10000;
+export const MAX_SEARCH_RESULT_CHARS = 4000;
+export const MAX_SEARCH_MATCHES_PER_NOTE = 5;
+export const SEARCH_CONTEXT_CHARS = 200;
+export const MAX_CHAT_ITERATIONS = 40;
+export const OLLAMA_REQUEST_TIMEOUT_MS = 300000;
+export const MAX_COMPLETION_TOKENS = 8192;
