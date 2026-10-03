@@ -37,8 +37,6 @@ import { useLocalConfig } from './LocalConfigProvider';
 import { SummaryPagePreferencesSchema } from '../../models/summary-page-preferences/SummaryPagePreferences.collection';
 import { SummaryPagePreferencesMigrations } from '../../models/summary-page-preferences/SummaryPagePreferences.migration';
 import { DatabaseCollections } from './DatabaseCollections';
-import { VectorStorageDocumentSchema } from '../../models/vector-storage-document/VectorStorageDocument.collection';
-import { VectorStorageDocumentMigrations } from '../../models/vector-storage-document/VectorStorageDocument.migration';
 import { InstanceConfigDocumentSchema } from '../../models/instance-config/InstanceConfig.collection';
 
 if (process.env.NODE_ENV === 'development') {
@@ -75,10 +73,6 @@ export const databaseCollections = {
   summary_page_preferences: {
     schema: SummaryPagePreferencesSchema,
     migrationStrategies: SummaryPagePreferencesMigrations,
-  },
-  vector_storage: {
-    schema: VectorStorageDocumentSchema,
-    migrationStrategies: VectorStorageDocumentMigrations,
   },
   instance_config: {
     schema: InstanceConfigDocumentSchema,

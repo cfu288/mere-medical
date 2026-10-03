@@ -18,7 +18,6 @@ import { TutorialConfigProvider } from '../features/tutorial/TutorialConfigProvi
 import { UpdateAppChecker } from '../app/providers/UpdateAppChecker';
 import { UserPreferencesProvider } from '../app/providers/UserPreferencesProvider';
 import { UserProvider } from '../app/providers/UserProvider';
-import VectorProvider from '../features/vectors';
 import { AppConfigProvider } from '../app/providers/AppConfigProvider';
 import { TabWrapper } from '../shared/components/TabWrapper';
 import { TutorialOverlay } from '../features/tutorial/TutorialOverlay';
@@ -27,7 +26,6 @@ import CernerRedirect from '../features/connections/oauth-callbacks/CernerRedire
 import ConnectionTab from '../features/connections/ConnectionTab';
 import EpicRedirect from '../features/connections/oauth-callbacks/EpicRedirect';
 import HealowRedirect from '../features/connections/oauth-callbacks/HealowRedirect';
-import MereAITab from '../features/ai-chat/MereAITab';
 import NextGenRedirect from '../features/connections/oauth-callbacks/NextGenRedirect';
 import OnPatientRedirect from '../features/connections/oauth-callbacks/OnPatientRedirect';
 import SettingsTab from '../features/settings/SettingsTab';
@@ -52,13 +50,11 @@ export default function App() {
             <RxDbProvider>
               <AppConfigProvider>
                 <UserProvider>
-                  <VectorProvider>
-                    <UserPreferencesProvider>
-                      <SyncJobProvider>
-                        <RouterProvider router={router} />
-                      </SyncJobProvider>
-                    </UserPreferencesProvider>
-                  </VectorProvider>
+                  <UserPreferencesProvider>
+                    <SyncJobProvider>
+                      <RouterProvider router={router} />
+                    </SyncJobProvider>
+                  </UserPreferencesProvider>
                 </UserProvider>
               </AppConfigProvider>
             </RxDbProvider>
@@ -80,10 +76,6 @@ const routes = [
       {
         path: AppRoutes.AddConnection,
         element: <ConnectionTab />,
-      },
-      {
-        path: AppRoutes.MereAIAssistant,
-        element: <MereAITab />,
       },
       {
         path: AppRoutes.Summary,

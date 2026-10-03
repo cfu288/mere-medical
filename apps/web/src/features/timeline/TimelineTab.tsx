@@ -12,8 +12,6 @@ import { MangoQuerySelector, RxDatabase, RxDocument } from 'rxdb';
 
 import { Transition } from '@headlessui/react';
 import { ArrowUpIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import { IVSSimilaritySearchParams, VectorStorage } from '@mere/vector-storage';
-import { SEARCH_CONFIG } from '../ai-chat/constants/config';
 import { useDebounceCallback } from '@react-hook/debounce';
 
 import { AppPage } from '../../shared/components/AppPage';
@@ -22,9 +20,7 @@ import { EmptyRecordsPlaceholder } from '../../shared/components/EmptyRecordsPla
 import useIntersectionObserver from '../../shared/hooks/useIntersectionObserver';
 import { useScrollToHash } from '../../shared/hooks/useScrollToHash';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
-import { useLocalConfig } from '../../app/providers/LocalConfigProvider';
 import { useUser } from '../../app/providers/UserProvider';
-import { useVectorSyncStatus } from '../vectors/providers/VectorGeneratorSyncInitializer';
 import { JumpToPanel } from './components/layout/JumpToPanel';
 import { SearchBar } from './components/layout/SearchBar';
 import { TimelineBanner } from './components/layout/TimelineBanner';
@@ -41,12 +37,8 @@ export { QueryStatus };
 export function TimelineTab() {
   const user = useUser(),
     [query, setQuery] = useState(''),
-    { experimental__use_openai_rag } = useLocalConfig(),
-    vectorSyncStatus = useVectorSyncStatus(),
-    enableVectorSearch =
-      experimental__use_openai_rag && vectorSyncStatus === 'COMPLETE',
     { data, status, initialized, loadNextPage, showIndividualItems } =
-      useRecordQuery(query, enableVectorSearch),
+      useRecordQuery(query),
     hasNoRecords = query === '' && (!data || Object.entries(data).length === 0),
     scrollContainer = useRef<HTMLDivElement>(null),
     scrollToTop = useScrollToTop(scrollContainer),
@@ -103,7 +95,6 @@ export function TimelineTab() {
                       dateKey={dateKey}
                       itemList={itemList}
                       showIndividualItems={showIndividualItems}
-                      searchQuery={query}
                     />
                   </div>
                 ))}
@@ -269,196 +260,6 @@ export const formattedTitleDateDayString = (dateKey: string) =>
     : format(parseISO(dateKey), 'dd');
 
 export const PAGE_SIZE = 50;
-
-export async function fetchRecordsWithVectorSearch({
-  db,
-  vectorStorage,
-  query,
-  userId,
-  numResults = 10,
-  enableSearchAttachments = false,
-  groupByDate = true,
-}: {
-  db: RxDatabase<DatabaseCollections>;
-  vectorStorage: VectorStorage<any>;
-  query?: string;
-  userId?: string;
-  numResults?: number;
-  enableSearchAttachments?: boolean;
-  groupByDate?: boolean;
-}): Promise<{
-  records: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>;
-  idsOfMostRelatedChunksFromSemanticSearch: string[];
-}> {
-  if (!query) {
-    return {
-      records: {},
-      idsOfMostRelatedChunksFromSemanticSearch: [],
-    };
-  }
-
-  let searchParams: IVSSimilaritySearchParams = {
-    query,
-    k: numResults,
-  };
-
-  const includeFilter: Record<string, any> = {};
-  if (userId) {
-    includeFilter['user_id'] = userId;
-  }
-
-  if (!enableSearchAttachments) {
-    searchParams = {
-      ...searchParams,
-      filterOptions: {
-        include: {
-          metadata: includeFilter,
-        },
-        exclude: {
-          metadata: {
-            category: 'documentreference_attachment',
-          },
-        },
-      },
-    };
-  } else if (userId) {
-    searchParams = {
-      ...searchParams,
-      filterOptions: {
-        include: {
-          metadata: includeFilter,
-        },
-      },
-    };
-  }
-
-  const results = await vectorStorage.similaritySearch(searchParams);
-
-  const filteredItems = results.similarItems;
-
-  const ids = filteredItems.map((item) => item.id);
-
-  const docIdToChunks = new Map<string, { id: string; metadata?: any }[]>();
-
-  // Extract document IDs and preserve chunk metadata
-  filteredItems.forEach((item) => {
-    const documentId = item.metadata?.['documentId'];
-    if (documentId) {
-      if (!docIdToChunks.has(documentId)) {
-        docIdToChunks.set(documentId, []);
-      }
-      docIdToChunks.get(documentId)!.push({
-        id: item.id,
-        metadata: item.metadata,
-      });
-    }
-  });
-
-  const cleanedIds = [...docIdToChunks.keys()];
-
-  const docs = await db.clinical_documents
-    .find({
-      selector: {
-        id: { $in: cleanedIds },
-        'data_record.resource_type': {
-          $nin: ['patient', 'careplan', 'allergyintolerance', 'provenance'],
-        },
-      },
-    })
-    .exec();
-
-  const lst = docs as unknown as RxDocument<
-    ClinicalDocument<BundleEntry<FhirResource>>
-  >[];
-
-  if (!groupByDate) {
-    return {
-      records: {
-        [new Date(0).toISOString()]: lst.map((item) => {
-          const docId = item.get('id');
-          const mutableDoc = item.toMutableJSON() as ClinicalDocument<
-            BundleEntry<FhirResource>
-          > & { matchedChunks?: { id: string; metadata?: any }[] };
-
-          if (docIdToChunks.has(docId)) {
-            const chunks = docIdToChunks.get(docId);
-            mutableDoc.matchedChunks = chunks;
-          }
-
-          return mutableDoc;
-        }),
-      },
-      idsOfMostRelatedChunksFromSemanticSearch: ids,
-    };
-  }
-
-  const groupedRecords: Record<
-    string,
-    ClinicalDocument<BundleEntry<FhirResource>>[]
-  > = {};
-
-  lst.forEach((item) => {
-    const docId = item.get('id');
-    const mutableDoc = item.toMutableJSON() as ClinicalDocument<
-      BundleEntry<FhirResource>
-    > & { matchedChunks?: { id: string; metadata?: any }[] };
-
-    if (docIdToChunks.has(docId)) {
-      const chunks = docIdToChunks.get(docId);
-      mutableDoc.matchedChunks = chunks;
-    }
-
-    if (item.get('metadata')?.date === undefined) {
-      console.warn('Date is undefined for object:', item.toJSON());
-      const minDate = new Date(0).toISOString();
-      if (groupedRecords[minDate]) {
-        groupedRecords[minDate].push(mutableDoc);
-      } else {
-        groupedRecords[minDate] = [mutableDoc];
-      }
-    } else {
-      const date = item.get('metadata')?.date
-        ? format(parseISO(item.get('metadata')?.date), 'yyyy-MM-dd')
-        : '-1';
-      if (groupedRecords[date]) {
-        groupedRecords[date].push(mutableDoc);
-      } else {
-        groupedRecords[date] = [mutableDoc];
-      }
-    }
-  });
-  try {
-    const ordered = Object.keys(groupedRecords)
-      .sort((a, b) => {
-        const aDate = parseISO(a);
-        const bDate = parseISO(b);
-        if (aDate > bDate) {
-          return -1;
-        } else if (aDate < bDate) {
-          return 1;
-        } else {
-          return 0;
-        }
-      })
-      .reduce((obj: any, key) => {
-        obj[key] = groupedRecords[key];
-        return obj;
-      }, {});
-    const res = {
-      records: ordered,
-      idsOfMostRelatedChunksFromSemanticSearch: ids,
-    };
-    return res;
-  } catch (e) {
-    console.error(e);
-  }
-
-  const res = {
-    records: groupedRecords,
-    idsOfMostRelatedChunksFromSemanticSearch: ids,
-  };
-  return res;
-}
 
 /**
  * Fetches records from the database and groups them by date
