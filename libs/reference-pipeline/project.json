@@ -1,0 +1,15 @@
+{
+  "name": "reference-pipeline",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/reference-pipeline/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "lint": { "executor": "@nx/eslint:lint" },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/libs/reference-pipeline"],
+      "options": { "jestConfig": "libs/reference-pipeline/jest.config.ts" }
+    }
+  }
+}

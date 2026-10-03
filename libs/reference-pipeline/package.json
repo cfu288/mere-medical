@@ -1,0 +1,13 @@
+{
+  "name": "@mere/reference-pipeline",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "dependencies": {
+    "tslib": "^2.3.0",
+    "turndown": "7.2.1",
+    "@joplin/turndown-plugin-gfm": "1.0.68",
+    "pdfjs-dist": "6.3.289",
+    "zod": "^3.25.76"
+  }
+}

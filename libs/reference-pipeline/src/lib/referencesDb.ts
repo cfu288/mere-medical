@@ -1,0 +1,95 @@
+import { DatabaseSync } from 'node:sqlite';
+
+import { Section } from './sections';
+
+export type ReferenceRecord = {
+  id: string;
+  title: string;
+  edition: string;
+  summary: string;
+  url: string;
+  sections: Section[];
+};
+
+export function openReferencesDb(path: string): DatabaseSync {
+  const db = new DatabaseSync(path);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS documents (
+      id         TEXT PRIMARY KEY,
+      title      TEXT NOT NULL,
+      edition    TEXT NOT NULL,
+      summary    TEXT NOT NULL,
+      url        TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS sections (
+      document_id TEXT NOT NULL,
+      section_id  TEXT NOT NULL,
+      parent_id   TEXT,
+      position    INTEGER NOT NULL,
+      title       TEXT NOT NULL,
+      page_start  INTEGER,
+      page_end    INTEGER,
+      content_md  TEXT NOT NULL,
+      PRIMARY KEY (document_id, section_id)
+    );
+    CREATE VIRTUAL TABLE IF NOT EXISTS sections_fts USING fts5(
+      document_id UNINDEXED,
+      section_id UNINDEXED,
+      title,
+      content_md,
+      tokenize = 'porter unicode61'
+    );
+    CREATE VIRTUAL TABLE IF NOT EXISTS documents_fts USING fts5(
+      id UNINDEXED,
+      title,
+      summary,
+      tokenize = 'porter unicode61'
+    );
+  `);
+  return db;
+}
+
+export function writeReference(db: DatabaseSync, record: ReferenceRecord) {
+  db.prepare(
+    'INSERT INTO documents_fts (id, title, summary) VALUES (?, ?, ?)',
+  ).run(record.id, record.title, record.summary);
+  db.prepare(
+    'INSERT INTO documents (id, title, edition, summary, url) VALUES (?, ?, ?, ?, ?)',
+  ).run(record.id, record.title, record.edition, record.summary, record.url);
+  const insertSection = db.prepare(
+    `INSERT INTO sections
+       (document_id, section_id, parent_id, position, title, page_start, page_end, content_md)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+  );
+  const insertFts = db.prepare(
+    'INSERT INTO sections_fts (document_id, section_id, title, content_md) VALUES (?, ?, ?, ?)',
+  );
+  record.sections.forEach((section, position) => {
+    const pages =
+      section.location.kind === 'pages'
+        ? [section.location.start, section.location.end]
+        : [null, null];
+    insertSection.run(
+      record.id,
+      section.sectionId,
+      section.parentId,
+      position,
+      section.title,
+      pages[0],
+      pages[1],
+      section.contentMd,
+    );
+    insertFts.run(
+      record.id,
+      section.sectionId,
+      section.title,
+      section.contentMd,
+    );
+  });
+}
+
+export function clearReferences(db: DatabaseSync) {
+  db.exec(
+    'DELETE FROM documents; DELETE FROM documents_fts; DELETE FROM sections; DELETE FROM sections_fts;',
+  );
+}
