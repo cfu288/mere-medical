@@ -56,7 +56,8 @@ type Match = {
 
 type NotFound = { error: 'no-reference' | 'no-section' };
 
-const UNAVAILABLE = 'Reference material is unavailable right now.';
+export const UNAVAILABLE = 'Reference material is unavailable right now.';
+export const NO_SECTION_PREFIX = 'No section "';
 const NEXT_FROM_OUTLINE =
   'Call read_section with a section id to read it, or get_outline with a section id to expand it.';
 
@@ -302,7 +303,7 @@ function notFoundMessage(
   section: string,
 ): string {
   return body.error === 'no-section'
-    ? `No section "${section}" in ${reference}. Call get_outline with reference "${reference}" to see its sections.`
+    ? `${NO_SECTION_PREFIX}${section}" in ${reference}. Call get_outline with reference "${reference}" to see its sections.`
     : `No reference "${reference}". Call search_references to find one.`;
 }
 
