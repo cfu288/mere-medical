@@ -65,6 +65,94 @@ Example rows. The VA-DoD hypertension guideline:
 `parent_id` names a `section_id` in the same reference. A PDF section cites its
 pages. A section's own `url`, when set, is the page it lives on.
 
+## How the agent reads it
+
+The agent's tools live in the web app
+(`apps/web/src/features/patient-context/agent/referenceTools.ts`) and call the
+API's `/api/v1/agent/references` routes (`apps/api/src/app/reference`), which
+read this file. The outputs below are real tool outputs, cut where marked.
+
+A guideline question, "Is my blood pressure where it should be?", once the
+record tools return the patient's conditions and readings:
+
+1. `search_references({"query": ["high blood pressure", "hypertension", "BP"]})`
+   ranks references by their titles and summaries, a page at a time with the
+   total:
+
+   ```
+   va-dod-hypertension | VA-DoD Hypertension Guideline | 2026 | High blood pressure in adults: diagnosis, home and office measurement, blood pressure goals, and choice of medications
+   cdc-undiagnosed-hypertension | CDC: Undiagnosed Hypertension | 2023 | Undiagnosed Hypertension
+   [rows cut]
+   Showing 1-18 of 18 references. Call get_outline with a reference id to see its sections.
+   ```
+
+2. `get_outline({"reference": "va-dod-hypertension", "section": "ix-recommendations"})`
+   lists two levels under a section (or under the reference when no section
+   is given), each with the id the next call takes, its size and its place in
+   the source:
+
+   ```
+   VA-DoD Hypertension Guideline (2026)
+   ix-recommendations | IX. Recommendations | 6424 chars | pp. 26-28 | has its own text: read_section to read it
+     a-diagnosis-and-monitoring | A. Diagnosis and Monitoring | 0 chars | p. 29
+       page-29 | Page 29 | 3054 chars | p. 29
+   [rows cut]
+     b-treatment-goals-and-general-approaches-to-hypertension-man | B. Treatment Goals and General Approaches to Hypertension Management | 0 chars | p. 33
+       page-33-2 | Page 33 | 925 chars | p. 33
+       page-34 | Page 34 | 3744 chars | p. 34
+   [rows cut]
+   ```
+
+3. `read_section({"reference": "va-dod-hypertension", "section": "page-34"})`
+   returns the section's own text under its citation, then the ids of its
+   subsections when it has any:
+
+   ```
+   VA-DoD Hypertension Guideline (2026) > Page 34, p. 34
+   https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/htn/HTN-CPG_2026-Guideline_final_20260827.pdf
+
+   cardiovascular causes.(80,81) An additional SR by Matsumoto et al. (2025) found no significant difference [text cut]
+   ```
+
+4. `find_in_reference({"reference": "va-dod-hypertension", "query": ["systolic goal", "<130", "blood pressure goal"]})`
+   is the fallback when titles are not enough. It lists matching sections in
+   document order with a match count and an excerpt, and says how many it
+   left out:
+
+   ```
+   [rows cut]
+   page-33-2 | Page 33 | 11 matches | …Blood Pressure Goals Recommendation 4. For individuals with hypertension, we recomme
+   page-34 | Page 34 | 16 matches | …from one SR including 12 RCTs that intensive systolic blood pressure control (SBP goal
+   [rows cut]
+   [12 more omitted; narrow the terms]
+   ```
+
+Every response is bounded by its unit (a page of catalog rows, two outline
+levels, one section, a list of pointers), never by cutting text at a character
+budget. A paged response states its total and a cut list says how many rows
+it left out.
+
+## Interface
+
+Every endpoint the agent calls lives under `/api/v1/agent`; future CDS Hooks
+services belong there too, at `/api/v1/agent/cds-services`.
+
+| Agent tool                              | Endpoint                                                | Returns                                                                                                                                                        |
+| --------------------------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `search_references(terms[], page?)`     | `GET /api/v1/agent/references/search?q=a&q=b&page=1`    | `{ references: [{ id, title, edition, summary, url }], total, page, pageSize }`, ranked by BM25 over title and summary, terms combined with OR, 20 per page    |
+| `list_references(page?)`                | `GET /api/v1/agent/references?page=1`                   | `{ references, total, page, pageSize }`, alphabetical by title, 50 per page                                                                                    |
+| `get_outline(reference, section?)`      | `GET /api/v1/agent/references/:id/outline[/:sectionId]` | `{ reference, section, sections }`: the expanded section's own entry (null for the whole reference) and the top two levels below it, with ids and child counts |
+| `read_section(reference, section)`      | `GET /api/v1/agent/references/:id/sections/:sectionId`  | `{ reference, section: { title, location, contentMd, subsections } }`                                                                                          |
+| `find_in_reference(reference, terms[])` | `GET /api/v1/agent/references/:id/find?q=a&q=b`         | `{ matches: [{ sectionId, title, count, excerpt }] }`, terms combined with OR, in document order                                                               |
+
+- Documents and sections are addressed by id, and every list prints the ids the
+  next call takes.
+- `location` is `{ kind: 'pages', start, end }` for PDFs and `{ kind: 'webpage' }`
+  for HTML, where the reference url is the citation.
+- An unknown reference or section answers 404 with
+  `{ error: 'no-reference' | 'no-section' }`; the agent tool turns that into the
+  next step to take.
+
 ## Pipeline
 
 ```
@@ -151,7 +239,8 @@ Writes `libs/reference-pipeline/data/references.db` (gitignored), prints
 each document's outline, then prints the audit described below. Requests to a host wait out the `Crawl-delay` its
 robots.txt sets for all user agents (USPSTF asks for 5 seconds). Each attempt
 is given up after 120 seconds, and a server error or rate limit is retried up
-to four attempts with growing waits.
+to four attempts with growing waits. The API reads the file from
+`REFERENCE_DB_PATH`, or that default path.
 
 The audit checks the built library for problems a reader of it would hit. It reports
 sections with no text and no subsections, sections that are only links, HTML
