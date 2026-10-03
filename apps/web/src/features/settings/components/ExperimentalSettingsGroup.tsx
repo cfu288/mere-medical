@@ -11,20 +11,30 @@ import {
   OLLAMA_CHAT_MODELS,
 } from '../../ai-chat/constants/defaults';
 
-async function testOllamaConnection(endpoint: string): Promise<boolean> {
-  const url = /\/v1\/?$/.test(endpoint)
-    ? `${endpoint.replace(/\/$/, '')}/models`
-    : `${endpoint}/api/tags`;
+const testOllamaConnection = async (
+  endpoint: string = AI_DEFAULTS.OLLAMA.ENDPOINT,
+): Promise<boolean> => {
   try {
-    const response = await fetch(url, {
+    console.log(`[Ollama] Testing connection to: ${endpoint}/api/tags`);
+    const response = await fetch(`${endpoint}/api/tags`, {
       method: 'GET',
-      headers: { Accept: 'application/json' },
+      headers: {
+        Accept: 'application/json',
+      },
     });
+    console.log('[Ollama] Test response status:', response.status);
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log('[Ollama] Available models:', data.models?.length || 0);
+    }
+
     return response.ok;
-  } catch {
+  } catch (error) {
+    console.error('Ollama connection test failed:', error);
     return false;
   }
-}
+};
 
 export function ExperimentalSettingsGroup() {
   const {
@@ -59,7 +69,7 @@ export function ExperimentalSettingsGroup() {
         <div className="px-4 sm:px-6">
           <ul className="mt-2 ">
             <Switch.Group
-              id="experimental__use_ai"
+              id="experimental__use_rag"
               as="li"
               className="flex flex-col pb-4"
             >
@@ -73,10 +83,8 @@ export function ExperimentalSettingsGroup() {
                     Enable Mere Assistant
                   </Switch.Label>
                   <Switch.Description className="pt-2 text-sm text-gray-800">
-                    Enable the Mere Assistant and the AI Summary tab. The
-                    assistant answers questions about your records by searching
-                    them with tools. Choose between OpenAI or an Ollama (local)
-                    instance.
+                    Enable Mere to use AI models. Choose between OpenAI or
+                    Ollama (local) instance.
                   </Switch.Description>
                 </div>
                 <Switch
@@ -171,6 +179,7 @@ export function ExperimentalSettingsGroup() {
                       type="password"
                       className="bg-gray-50 rounded-md p-2 w-full border-none focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent active:ring-2 active:ring-primary-600"
                       placeholder="OpenAI API Key"
+                      defaultValue={experimental__openai_api_key || ''}
                       value={openApiKey}
                       onChange={(e) => {
                         setOpenApiKey(e.target.value);
@@ -260,22 +269,19 @@ export function ExperimentalSettingsGroup() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Chat Model
                     </label>
-                    <input
-                      type="text"
-                      list="ollama-chat-models"
+                    <select
                       className="bg-gray-50 rounded-md p-2 w-full border-none focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                       value={ollamaModel}
                       onChange={(e) => setOllamaModel(e.target.value)}
-                    />
-                    <datalist id="ollama-chat-models">
+                    >
                       {OLLAMA_CHAT_MODELS.map((model) => (
                         <option key={model.value} value={model.value}>
                           {model.label}
                         </option>
                       ))}
-                    </datalist>
+                    </select>
                     <p className="text-xs text-gray-500 mt-1">
-                      Pick a tested model or type any model your server offers
+                      Select the Ollama chat model to use
                     </p>
                   </div>
 
@@ -283,15 +289,9 @@ export function ExperimentalSettingsGroup() {
                     <button
                       className="bg-primary-600 hover:bg-primary-700 rounded px-4 py-2 font-bold text-white flex-1"
                       onClick={() => {
-                        const endpoint =
-                          ollamaEndpoint.trim() || AI_DEFAULTS.OLLAMA.ENDPOINT;
-                        const model =
-                          ollamaModel.trim() || AI_DEFAULTS.OLLAMA.MODEL;
-                        setOllamaEndpoint(endpoint);
-                        setOllamaModel(model);
                         updateLocalConfig({
-                          experimental__ollama_endpoint: endpoint,
-                          experimental__ollama_model: model,
+                          experimental__ollama_endpoint: ollamaEndpoint,
+                          experimental__ollama_model: ollamaModel,
                         });
                         notificationDispatch({
                           type: 'set_notification',

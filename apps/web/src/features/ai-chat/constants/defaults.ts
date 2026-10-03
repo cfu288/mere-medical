@@ -8,6 +8,8 @@ export const AI_DEFAULTS = {
   },
 } as const;
 
+export const DEFAULT_AI_PROVIDER = 'ollama' as const;
+
 export const OLLAMA_CHAT_MODELS = [
   {
     value: 'gpt-oss:20b',
