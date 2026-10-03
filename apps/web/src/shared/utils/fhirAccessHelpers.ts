@@ -11,6 +11,7 @@ import {
 import {
   Encounter as DSTU2Encounter,
   DiagnosticReport as DSTU2DiagnosticReport,
+  Immunization as DSTU2Immunization,
   Observation as DSTU2Observation,
   Procedure as DSTU2Procedure,
   AllergyIntolerance as DSTU2AllergyIntolerance,
@@ -194,6 +195,21 @@ export function getAllergyIntoleranceDisplayName(
   }
 }
 
+export function getImmunizationVaccineCode(document: ClinicalDocument): string {
+  const resource = (
+    document.data_record.raw as DSTU2BundleEntry<DSTU2Immunization>
+  )?.resource;
+  let code = resource?.vaccineCode?.coding?.filter((i) =>
+    i.system?.endsWith('cvx'),
+  )?.[0];
+  if (!code) {
+    code = resource?.vaccineCode?.coding?.filter((i) =>
+      i.system?.endsWith('ndc'),
+    )?.[0];
+  }
+  return code?.code || '';
+}
+
 export function getMedicationOrderDisplayName(
   document: ClinicalDocument,
 ): string | undefined {
@@ -208,6 +224,7 @@ export function getMedicationOrderDisplayName(
       return (
         resource?.medicationCodeableConcept?.text ||
         resource?.medicationCodeableConcept?.coding?.[0]?.display ||
+        resource?.medicationReference?.display ||
         resource?.text?.div
       );
     }
@@ -218,6 +235,7 @@ export function getMedicationOrderDisplayName(
       return (
         resource?.medicationCodeableConcept?.text ||
         resource?.medicationCodeableConcept?.coding?.[0]?.display ||
+        resource?.medicationReference?.display ||
         resource?.text?.div
       );
     }
