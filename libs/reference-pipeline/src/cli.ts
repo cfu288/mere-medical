@@ -32,6 +32,7 @@ async function main() {
     references: reports,
     skipped,
     unchanged,
+    missing,
   } = await ingestSources({
     db,
     sources,
@@ -54,6 +55,9 @@ async function main() {
   }
   for (const id of unchanged) {
     console.log(`kept ${id} as it was: its source parsed to nothing`);
+  }
+  for (const id of missing) {
+    console.log(`could not add ${id}: its source parsed to nothing`);
   }
   console.log(`\nwrote ${reports.length} reference(s) to ${dbPath}`);
 }

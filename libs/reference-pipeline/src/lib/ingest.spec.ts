@@ -103,6 +103,7 @@ describe('ingestSources', () => {
       ],
       skipped: [],
       unchanged: [],
+      missing: [],
     });
   });
 
@@ -505,6 +506,20 @@ describe('ingestSources', () => {
         content_md: 'Apply twice weekly.',
       },
     ]);
+  });
+
+  it('reports a reference it could not add when its source parses to nothing on a first run', async () => {
+    const db = openReferencesDb(':memory:');
+
+    const report = await ingestSources({
+      db,
+      sources: [USPSTF],
+      fetchBytes: bytesFor({ 'https://example.com/ab': '' }),
+    });
+
+    expect(report.missing).toEqual([USPSTF.id]);
+    expect(report.unchanged).toEqual([]);
+    expect(db.prepare('SELECT id FROM documents').all()).toEqual([]);
   });
 
   it('keeps a reference as it was when its source now parses to nothing', async () => {

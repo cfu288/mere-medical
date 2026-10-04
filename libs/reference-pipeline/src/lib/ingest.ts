@@ -37,6 +37,7 @@ export async function ingestSources({
   references: IngestReport[];
   skipped: Skipped[];
   unchanged: string[];
+  missing: string[];
 }> {
   const parsed: { record: ReferenceRecord; dropped: string[] }[] = [];
   const skipped: Skipped[] = [];
@@ -66,6 +67,8 @@ export async function ingestSources({
   }
 
   const unchanged: string[] = [];
+  const missing: string[] = [];
+  const stored = db.prepare('SELECT 1 FROM documents WHERE id = ?');
   db.exec('BEGIN');
   try {
     deleteReferencesExcept(
@@ -74,7 +77,7 @@ export async function ingestSources({
     );
     for (const { record } of parsed) {
       if (record.sections.length === 0) {
-        unchanged.push(record.id);
+        (stored.get(record.id) ? unchanged : missing).push(record.id);
         continue;
       }
       deleteReference(db, record.id);
@@ -86,14 +89,22 @@ export async function ingestSources({
     throw e;
   }
 
+  const written = new Set(
+    parsed
+      .map(({ record }) => record.id)
+      .filter((id) => !unchanged.includes(id) && !missing.includes(id)),
+  );
   return {
-    references: parsed.map(({ record, dropped }) => ({
-      id: record.id,
-      outline: outline(record.sections),
-      dropped,
-    })),
+    references: parsed
+      .filter(({ record }) => written.has(record.id))
+      .map(({ record, dropped }) => ({
+        id: record.id,
+        outline: outline(record.sections),
+        dropped,
+      })),
     skipped,
     unchanged,
+    missing,
   };
 }
 
