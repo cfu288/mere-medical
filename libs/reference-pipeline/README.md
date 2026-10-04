@@ -56,27 +56,6 @@ Every response is bounded by its unit (a page of catalog rows, two outline
 levels, one section, a list of pointers), never by cutting text at a character
 budget, and a paged response always states its total.
 
-## Interface
-
-Every endpoint the agent calls lives under `/api/v1/agent`; future CDS Hooks
-services belong there too, at `/api/v1/agent/cds-services`.
-
-| Agent tool                              | Endpoint                                                | Returns                                                                                                                                                        |
-| --------------------------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `search_references(terms[], page?)`     | `GET /api/v1/agent/references/search?q=a&q=b&page=1`    | `{ references: [{ id, title, edition, summary, url }], total, page, pageSize }`, ranked by BM25 over title and summary, terms combined with OR, 20 per page    |
-| `list_references(page?)`                | `GET /api/v1/agent/references?page=1`                   | `{ references, total, page, pageSize }`, alphabetical by title, 50 per page                                                                                    |
-| `get_outline(reference, section?)`      | `GET /api/v1/agent/references/:id/outline[/:sectionId]` | `{ reference, section, sections }`: the expanded section's own entry (null for the whole reference) and the top two levels below it, with ids and child counts |
-| `read_section(reference, section)`      | `GET /api/v1/agent/references/:id/sections/:sectionId`  | `{ reference, section: { title, location, contentMd, subsections } }`                                                                                          |
-| `find_in_reference(reference, terms[])` | `GET /api/v1/agent/references/:id/find?q=a&q=b`         | `{ matches: [{ sectionId, title, count, excerpt }] }`, terms combined with OR, in document order                                                               |
-
-- Documents and sections are addressed by id, and every list prints the ids the
-  next call takes.
-- `location` is `{ kind: 'pages', start, end }` for PDFs and `{ kind: 'webpage' }`
-  for HTML, where the reference url is the citation.
-- An unknown reference or section answers 404 with
-  `{ error: 'no-reference' | 'no-section' }`; the agent tool turns that into the
-  next step to take.
-
 ## Pipeline
 
 ```
