@@ -73,6 +73,7 @@ export function linesToBlocks(lines: PdfLine[]): PagedBlock[] {
       last !== undefined &&
       previous.page === line.page &&
       previous.size === line.size &&
+      previous.y >= line.y &&
       previous.y - line.y <= line.size * PARAGRAPH_GAP_LINE_HEIGHTS;
     if (continues && level > 0 === (last.kind === 'heading')) {
       last.text = `${last.text} ${line.text}`;

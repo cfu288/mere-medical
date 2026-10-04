@@ -79,6 +79,18 @@ describe('linesToBlocks', () => {
     ]);
   });
 
+  it('starts a new paragraph when the next line sits above the previous one', () => {
+    expect(
+      linesToBlocks([
+        { page: 1, size: 11, y: 600, text: 'End of the left column.' },
+        { page: 1, size: 11, y: 650, text: 'Top of the right column.' },
+      ]),
+    ).toEqual([
+      { kind: 'text', text: 'End of the left column.', page: 1 },
+      { kind: 'text', text: 'Top of the right column.', page: 1 },
+    ]);
+  });
+
   it('starts a new paragraph on a new page', () => {
     expect(
       linesToBlocks([
