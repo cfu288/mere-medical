@@ -443,25 +443,17 @@ export function NormalizePathLine(
     }
   }
 
-  const normalized = valueArr.map((v) => {
-    return 20 - ((v - min) / (max - min)) * 20;
-  });
+  const span = max - min;
+  const scale = (v: number) => (span === 0 ? 10 : 20 - ((v - min) / span) * 20);
+  const normalized = valueArr.map(scale);
 
   const res = {
     line: GeneratePathLine(normalized),
     minLine: rangeMin
-      ? GeneratePathLine(
-          Array(normalized.length).fill(
-            20 - ((rangeMin - min) / (max - min)) * 20,
-          ),
-        )
+      ? GeneratePathLine(Array(normalized.length).fill(scale(rangeMin)))
       : '',
     maxLine: rangeMax
-      ? GeneratePathLine(
-          Array(normalized.length).fill(
-            20 - ((rangeMax - min) / (max - min)) * 20,
-          ),
-        )
+      ? GeneratePathLine(Array(normalized.length).fill(scale(rangeMax)))
       : '',
   };
   return res;
