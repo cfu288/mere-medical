@@ -2,7 +2,7 @@ import { BundleEntry, Observation } from 'fhir/r2';
 
 import { ClinicalDocument } from '../../../models/clinical-document/ClinicalDocument.type';
 import { createTestClinicalDocument } from '../../../test-utils/clinicalDocumentTestData';
-import { graphableLabs, sparklineValues } from './labTrend';
+import { graphableLabs, sparklineValues, unplotted } from './labTrend';
 
 function observation(overrides: {
   id: string;
@@ -38,8 +38,8 @@ function observation(overrides: {
 }
 
 describe('graphableLabs', () => {
-  it('keeps the numeric results and leaves out comments', () => {
-    const latest = observation({
+  it("keeps the numeric results in the row's unit and leaves out comments and other units", () => {
+    const row = observation({
       id: 'a',
       date: '2025-11-10T20:39:00Z',
       value: 120,
@@ -50,6 +50,12 @@ describe('graphableLabs', () => {
       date: '2025-11-10T20:39:00Z',
       valueString: 'See Comment',
     });
+    const other = observation({
+      id: 'c',
+      date: '2024-05-01T09:00:00Z',
+      value: 1.1,
+      unit: 'mg/dL',
+    });
     const earlier = observation({
       id: 'd',
       date: '2023-03-14T16:48:00Z',
@@ -57,10 +63,58 @@ describe('graphableLabs', () => {
       unit: 'mL/min/1.73m2',
     });
 
-    expect(graphableLabs([earlier, comment, latest])).toEqual([
+    expect(graphableLabs(row, [earlier, other, comment, row])).toEqual([
       earlier,
-      latest,
+      row,
     ]);
+  });
+});
+
+describe('unplotted', () => {
+  it('counts the numeric results left out of the graph by unit', () => {
+    const row = observation({
+      id: 'a',
+      date: '2025-11-10T20:39:00Z',
+      value: 97,
+      unit: 'mg/dL',
+    });
+    const mmol1 = observation({
+      id: 'b',
+      date: '2024-05-01T09:00:00Z',
+      value: 5.4,
+      unit: 'mmol/L',
+    });
+    const mmol2 = observation({
+      id: 'c',
+      date: '2023-03-14T16:48:00Z',
+      value: 5.1,
+      unit: 'mmol/L',
+    });
+    const unitless = observation({
+      id: 'd',
+      date: '2022-01-13T13:41:00Z',
+      value: 99,
+    });
+    const comment = observation({
+      id: 'e',
+      date: '2021-01-13T13:41:00Z',
+      valueString: 'See Comment',
+    });
+
+    expect(unplotted(row, [row, mmol1, mmol2, unitless, comment])).toEqual([
+      { unit: 'mmol/L', count: 2 },
+      { unit: 'no unit', count: 1 },
+    ]);
+  });
+
+  it('is empty when every numeric result shares the row unit', () => {
+    const row = observation({
+      id: 'a',
+      date: '2025-11-10T20:39:00Z',
+      value: 97,
+      unit: 'mg/dL',
+    });
+    expect(unplotted(row, [row])).toEqual([]);
   });
 });
 

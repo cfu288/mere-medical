@@ -23,7 +23,7 @@ import { safeFormatDate } from '../../../shared/utils/dateFormatters';
 import uuid4 from '../../../shared/utils/UUIDUtils';
 import { useSummaryPagePreferences } from '../../summary/hooks/useSummaryPagePreferences';
 import { useRxDb } from '../../../app/providers/RxDbProvider';
-import { graphableLabs, sparklineValues } from '../utils/labTrend';
+import { graphableLabs, sparklineValues, unplotted } from '../utils/labTrend';
 import { getRelatedLoincLabs } from '../utils/relatedLabs';
 import { useUser } from '../../../app/providers/UserProvider';
 import {
@@ -104,7 +104,14 @@ export function ObservationResultRow({
   const [isPinned, handleTogglePin] = useLabPinning(item);
   const [view, setView] = useState<'LIST' | 'GRAPH'>('GRAPH'),
     relatedLabs = useRelatedLoincLabs(loinc);
-  const graphable = useMemo(() => graphableLabs(relatedLabs), [relatedLabs]);
+  const graphable = useMemo(
+    () => graphableLabs(item, relatedLabs),
+    [item, relatedLabs],
+  );
+  const leftOut = useMemo(
+    () => unplotted(item, relatedLabs),
+    [item, relatedLabs],
+  );
 
   return (
     <Fragment key={`${item.metadata?.id}`}>
@@ -277,6 +284,14 @@ export function ObservationResultRow({
                         </div>
                       ) : (
                         <p> This data cannot be graphed</p>
+                      )}
+                      {leftOut.length > 0 && (
+                        <p className="px-2 pb-2 text-xs text-gray-500">
+                          Not plotted:{' '}
+                          {leftOut
+                            .map((u) => `${u.count} in ${u.unit}`)
+                            .join(', ')}
+                        </p>
                       )}
                     </div>
                   ) : null}
