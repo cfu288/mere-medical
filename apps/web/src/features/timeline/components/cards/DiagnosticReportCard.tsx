@@ -48,14 +48,13 @@ export async function getRelatedDocuments({
   const listToQuery: string[] = [];
   const isDrResult = item.data_record.raw.resource?.result;
   if (isDrResult) {
-    listToQuery.push(
-      ...observationIdCandidates({
-        references: isDrResult.filter((r) => r.reference) as Array<{
-          reference: string;
-        }>,
-        baseUrl: conn?.location as string | undefined,
-      }),
-    );
+    const candidateIds = observationIdCandidates({
+      references: isDrResult.filter((r) => r.reference) as Array<{
+        reference: string;
+      }>,
+      baseUrl: conn?.location as string | undefined,
+    });
+    listToQuery.push(...candidateIds);
   }
 
   const docs = await db.clinical_documents
