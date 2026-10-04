@@ -2,7 +2,9 @@ import { BundleEntry, Observation } from 'fhir/r2';
 
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import {
+  getComments,
   getInterpretationText,
+  getReferenceRangeString,
   getValueQuantityString,
   getValueRangeString,
   getValueRatioString,
@@ -35,7 +37,23 @@ export function labValueText(doc: LabDocument): string | undefined {
   );
 }
 
-/** Two coded results are the same record only when analyte, timestamp, value, and unit all match; uncoded results never are. */
+function interpretationKey(doc: LabDocument): string {
+  const interpretation = doc.data_record.raw?.resource
+    ?.interpretation as unknown;
+  const concepts: { coding?: { code?: string }[] }[] = Array.isArray(
+    interpretation,
+  )
+    ? interpretation
+    : interpretation
+      ? [interpretation as { coding?: { code?: string }[] }]
+      : [];
+  const codes = concepts
+    .flatMap((concept) => (concept.coding ?? []).map((c) => c.code ?? ''))
+    .sort();
+  return [getInterpretationText(doc) ?? '', ...codes].join(',');
+}
+
+/** Two coded results are one record only when every field the timeline shows matches: test, time, value, unit, reference range, interpretation and comments. Uncoded results never merge. */
 function labRecordKey(doc: LabDocument): string {
   if (!doc.metadata?.loinc_coding?.[0]) {
     return `id:${doc.id}`;
@@ -45,6 +63,9 @@ function labRecordKey(doc: LabDocument): string {
     doc.metadata?.date ?? '',
     labValueText(doc) ?? '',
     getValueUnit(doc) ?? '',
+    getReferenceRangeString(doc) ?? '',
+    interpretationKey(doc),
+    getComments(doc) ?? '',
   ].join('|');
 }
 

@@ -192,6 +192,144 @@ describe('groupIdenticalLabRecords', () => {
     ]);
   });
 
+  it('keeps results apart when their reference ranges differ', () => {
+    const wide = observation({
+      id: 'hgb-1',
+      connection: 'epic',
+      name: 'Hgb',
+      date: '2025-11-10T20:39:00Z',
+      loinc: '718-7',
+      value: 16,
+      unit: 'g/dL',
+      resource: {
+        referenceRange: [{ low: { value: 13 }, high: { value: 17 } }],
+      },
+    });
+    const narrow = observation({
+      id: 'hgb-2',
+      connection: 'cerner',
+      name: 'Hemoglobin',
+      date: '2025-11-10T20:39:00Z',
+      loinc: '718-7',
+      value: 16,
+      unit: 'g/dL',
+      resource: {
+        referenceRange: [{ low: { value: 12 }, high: { value: 15.5 } }],
+      },
+    });
+
+    expect(groupIdenticalLabRecords([wide, narrow])).toEqual([
+      [wide],
+      [narrow],
+    ]);
+  });
+
+  it('keeps results apart when their interpretations differ', () => {
+    const flagged = observation({
+      id: 'hgb-1',
+      connection: 'epic',
+      name: 'Hgb',
+      date: '2025-11-10T20:39:00Z',
+      loinc: '718-7',
+      value: 16,
+      unit: 'g/dL',
+      resource: {
+        interpretation: {
+          text: 'High',
+          coding: [{ system: 'http://hl7.org/fhir/v2/0078', code: 'H' }],
+        },
+      },
+    });
+    const plain = observation({
+      id: 'hgb-2',
+      connection: 'cerner',
+      name: 'Hemoglobin',
+      date: '2025-11-10T20:39:00Z',
+      loinc: '718-7',
+      value: 16,
+      unit: 'g/dL',
+    });
+
+    expect(groupIdenticalLabRecords([flagged, plain])).toEqual([
+      [flagged],
+      [plain],
+    ]);
+  });
+
+  it('merges one result whose interpretation two systems encode differently', () => {
+    const dstu2 = observation({
+      id: 'ldl-1',
+      connection: 'epic',
+      name: 'LDL CALC',
+      date: '2025-11-10T20:39:00Z',
+      loinc: '13457-7',
+      value: 138,
+      unit: 'mg/dL',
+      resource: {
+        interpretation: {
+          text: 'High',
+          coding: [
+            {
+              system: 'http://hl7.org/fhir/ValueSet/observation-interpretation',
+              code: 'H',
+              display: 'High',
+            },
+          ],
+        },
+      },
+    });
+    const r4 = observation({
+      id: 'ldl-2',
+      connection: 'cerner',
+      name: 'LDL Calculated',
+      date: '2025-11-10T20:39:00Z',
+      loinc: '13457-7',
+      value: 138,
+      unit: 'mg/dL',
+      resource: {
+        interpretation: [
+          {
+            text: 'High',
+            coding: [
+              {
+                system:
+                  'http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation',
+                code: 'H',
+                display: 'High',
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    expect(groupIdenticalLabRecords([dstu2, r4])).toEqual([[dstu2, r4]]);
+  });
+
+  it('keeps results apart when their comments differ', () => {
+    const noted = observation({
+      id: 'glu-1',
+      connection: 'epic',
+      name: 'Glucose',
+      date: '2025-11-10T20:39:00Z',
+      loinc: '2345-7',
+      value: 97,
+      unit: 'mg/dL',
+      resource: { comments: 'Fasting specimen.' },
+    });
+    const bare = observation({
+      id: 'glu-2',
+      connection: 'quest',
+      name: 'GLUCOSE',
+      date: '2025-11-10T20:39:00Z',
+      loinc: '2345-7',
+      value: 97,
+      unit: 'mg/dL',
+    });
+
+    expect(groupIdenticalLabRecords([noted, bare])).toEqual([[noted], [bare]]);
+  });
+
   it('keeps same-named results with different loinc codes apart', () => {
     const serum = observation({
       id: 'glu-1',
