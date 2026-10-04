@@ -1,4 +1,4 @@
-import { BundleEntry, Observation } from 'fhir/r2';
+import { BundleEntry, Coding, Observation } from 'fhir/r2';
 import * as fhirpath from 'fhirpath';
 import { ClinicalDocument } from '../../../models/clinical-document/ClinicalDocument.type';
 
@@ -160,9 +160,52 @@ export function getInterpretationText(
     'interpretation.text',
   )?.[0];
 }
+/** HL7's observation interpretation code systems, DSTU2 (v2 table 0078), STU3 (v3) and R4+ (terminology.hl7.org), plus the value set url some servers use as the system: https://hl7.org/fhir/DSTU2/valueset-observation-interpretation.html, https://terminology.hl7.org/CodeSystem-v3-ObservationInterpretation.html */
+const INTERPRETATION_SYSTEMS = new Set([
+  'http://hl7.org/fhir/v2/0078',
+  'http://hl7.org/fhir/v3/ObservationInterpretation',
+  'http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation',
+  'http://hl7.org/fhir/ValueSet/observation-interpretation',
+]);
+
+/** The Abnormal branch of that hierarchy: A and every code beneath it. */
+const ABNORMAL_CODES = new Set(['A', 'AA', 'HH', 'LL', 'H', 'HU', 'L', 'LU']);
+
+/** Interpretation codes from HL7's own systems, the ones the timeline acts on, sorted. */
+export function hl7InterpretationCodes(
+  resource: Observation | undefined,
+): string[] {
+  const interpretation = resource?.interpretation as unknown;
+  const concepts: { coding?: Coding[] }[] = Array.isArray(interpretation)
+    ? interpretation
+    : interpretation
+      ? [interpretation as { coding?: Coding[] }]
+      : [];
+  return concepts
+    .flatMap((concept) =>
+      (concept.coding ?? []).flatMap((coding) =>
+        coding.system !== undefined &&
+        INTERPRETATION_SYSTEMS.has(coding.system) &&
+        coding.code !== undefined
+          ? [coding.code]
+          : [],
+      ),
+    )
+    .sort();
+}
+
+function sourceSaysAbnormal(resource: Observation | undefined): boolean {
+  return hl7InterpretationCodes(resource).some((code) =>
+    ABNORMAL_CODES.has(code),
+  );
+}
+
 export function isOutOfRangeResult(
   item: ClinicalDocument<BundleEntry<Observation>>,
 ): boolean {
+  if (sourceSaysAbnormal(item.data_record.raw.resource)) {
+    return true;
+  }
   const low = item.data_record.raw.resource?.referenceRange?.[0]?.low?.value;
   const high = item.data_record.raw.resource?.referenceRange?.[0]?.high?.value;
   const quantity = item.data_record.raw.resource?.valueQuantity;

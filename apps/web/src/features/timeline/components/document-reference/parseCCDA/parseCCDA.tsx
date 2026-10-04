@@ -238,3 +238,14 @@ export function parseCCDASection(
       .join();
   }
 }
+
+export function checkIfXmlIsCCDA(xml: string): boolean {
+  try {
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xml, 'text/xml');
+    const sections = xmlDoc.getElementsByTagName('ClinicalDocument');
+    return sections.length > 0;
+  } catch (e) {
+    return false;
+  }
+}
