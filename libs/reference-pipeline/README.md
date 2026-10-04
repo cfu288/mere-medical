@@ -10,20 +10,25 @@ stored in a SQLite file the API serves.
 The library holds two kinds of thing, and the agent uses them at two different
 moments.
 
-A **reference** (`documents` table) is one published work you could cite by
-name: the VA-DoD hypertension guideline, the USPSTF page on screening for
-hypertension, the CDC adult immunization schedule, the FDA labels for
-estradiol. It has a title, an edition year, a one-line summary and the url a
-citation points to. There are 406 of them: 295 CDC pages, 50 drug labels, 48
+A **reference** (`documents` table) is one entry in the catalog: a published
+work you could cite by name (the VA-DoD hypertension guideline, the USPSTF
+page on screening for hypertension, the CDC adult immunization schedule) or,
+for a drug, the set of FDA labels chosen for its generic name (estradiol). It
+has a title, an edition (a year, or the source's own wording such as "Updated
+continuously"), a one-line summary and the url a citation points to. There are 406 of them: 295 CDC pages, 50 drug labels, 48
 USPSTF recommendations and 13 VA-DoD guidelines. This is the table the agent
 chooses from when it decides _which work to open_.
 
 A **section** (`sections` table) is one heading's worth of text inside a
-reference, in the order the authors wrote it, nested the way the work's table
-of contents nests: chapter, then heading, then subheading. It has a title, the
-text under that heading (and only that heading), its parent heading, its place
-in reading order, and where it sits in the source (page numbers for a PDF, its
-own web page for a drug label). This is the table the agent reads from once it
+reference, in the order the authors wrote it, nested as the headings nest:
+chapter, then heading, then subheading (for a PDF the nesting is inferred from
+font sizes). A few sections are made by the pipeline rather than the authors:
+the text before the first heading ("Opening text"), one page of a PDF section
+too long to read at once, and a drug's route holding one label. A section has
+a title, the text under that heading (and only that heading, not its
+subsections'), its parent section, its place in reading order, and where it
+sits in the source (page numbers for a PDF, its own web page for a drug
+label). This is the table the agent reads from once it
 has opened a work and is deciding _which part to read_.
 
 Why not one table of text chunks? Three facts about the material, with the
@@ -41,7 +46,7 @@ numbers from the built library:
   sections of one guideline drowning out a one-section CDC page. Instead the
   agent first searches only the 406 titles and summaries ("which work?", 18
   hits in the example below), then searches the text of the one work it chose
-  ("which page?", 23 hits). The two tables are those two searches; the two
+  ("which page?", 27 hits). The two tables are those two searches; the two
   `_fts` tables are SQLite's full-text indexes over them.
 - **A citation needs both.** "VA-DoD Hypertension Guideline (2026), p. 34" is
   the reference's name and edition plus the section's page. A section cannot
@@ -52,8 +57,9 @@ numbers from the built library:
 A drug is deliberately one reference, not one per label. The agent picks
 "estradiol" once from the catalog and then sees its four routes (oral, topical,
 transdermal, vaginal) as the top-level sections, each holding one full label.
-Fifty drugs as 70 catalog rows that all match "estradiol" equally would make
-the first search worse and tell the agent nothing the outline does not.
+Separate references for estradiol's four route labels would put four
+candidates for the same generic in the catalog search; grouping them lets the
+agent choose the route from the outline instead.
 
 ```sql
 CREATE TABLE documents (
@@ -79,15 +85,17 @@ CREATE VIRTUAL TABLE documents_fts USING fts5(id UNINDEXED, title, summary, toke
 CREATE VIRTUAL TABLE sections_fts USING fts5(document_id UNINDEXED, section_id UNINDEXED, title, content_md, tokenize = 'porter unicode61');
 ```
 
-`position` is reading order within the reference. `parent_id` is the heading
-this one sits under, null for a top-level one. `page_start`/`page_end` are set
+`position` numbers every section of a reference in reading order, from 0.
+`parent_id` is the `section_id` of the section this one sits under, in the
+same `document_id`, null for a top-level one. `page_start`/`page_end` are set
 for PDF sources and null for web sources; `url` is set only where a section
 cites a page of its own (a drug label's route) and null where the reference's
 url is the citation.
 
 The rows the end-to-end examples below read, from the library built on
 2026-10-04. The guideline `va-dod-hypertension` is one `documents` row and 99
-`sections` rows; four of them:
+`sections` rows; four of them (every row's `document_id` is
+`va-dod-hypertension`):
 
 | id                  | title                         | edition | summary                                                                                                                | url                                                                                                        |
 | ------------------- | ----------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
@@ -101,26 +109,29 @@ The rows the end-to-end examples below read, from the library built on
 | page-34                                                      | b-treatment-goals-and-general-approaches-to-hypertension-man | 39       | Page 34                                                              | 34         | 34       | null | 3,744 chars: "cardiovascular causes.(80,81) An additional SR by Matsumoto et al. (2025) found..."   |
 
 A drug, `label-estradiol`: one reference for the generic, one top section per
-route it is sold in (the spoke), that route's full label nested under it.
+route it is sold in (the spoke), that route's full label nested under it
+(every row's `document_id` is `label-estradiol`).
 
 | id              | title                     | edition | summary                                                                                                                                                             | url                                                                            |
 | --------------- | ------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | label-estradiol | FDA drug label: Estradiol | 2026    | Estradiol (brands: Alora, Climara, Delestrogen, Depo-estradiol, Divigel, Dotti, Elestrin, Estrace, Estring, Estrogel, Evamist, Femring, Imvexxy, Lyllana, Menost... | https://dailymed.nlm.nih.gov/dailymed/search.cfm?labeltype=all&query=estradiol |
 
-| section_id                              | parent_id   | position | title                       | page_start | url                                                                                                              | content_md                                                                                       |
-| --------------------------------------- | ----------- | -------- | --------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| transdermal                             | null        | 103      | Transdermal: Minivelle      | null       | https://dailymed.nlm.nih.gov/dailymed/fda/fdaDrugXsl.cfm?setid=6c5c47ab-28ee-11e1-bfc2-0800200c9a66&type=display | Label NDA203752 by Noven Therapeutics, LLC, effective 2026-07-31.                                |
-| transdermal-2-dosage-and-administration | transdermal | 119      | 2 DOSAGE AND ADMINISTRATION | null       | (the same DailyMed url)                                                                                          | 742 chars: "Generally, when estrogen is prescribed for a postmenopausal woman with a uterus,..." |
+| section_id                              | parent_id   | position | title                       | page_start | page_end | url                                                                                                              | content_md                                                                                       |
+| --------------------------------------- | ----------- | -------- | --------------------------- | ---------- | -------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| transdermal                             | null        | 103      | Transdermal: Minivelle      | null       | null     | https://dailymed.nlm.nih.gov/dailymed/fda/fdaDrugXsl.cfm?setid=6c5c47ab-28ee-11e1-bfc2-0800200c9a66&type=display | Label NDA203752 by Noven Therapeutics, LLC, effective 2026-07-31.                                |
+| transdermal-2-dosage-and-administration | transdermal | 119      | 2 DOSAGE AND ADMINISTRATION | null       | null     | (the same DailyMed url)                                                                                          | 742 chars: "Generally, when estrogen is prescribed for a postmenopausal woman with a uterus,..." |
 
 The transdermal spoke has 34 direct subsections; the oral, topical and vaginal
 spokes sit beside it at positions 0, 25 and 175.
 
 ## How the agent reads the library, end to end
 
-The agent's tools are the web app's reference tools; each one is a GET on the
-API's `/api/v1/agent/references` routes, which read this file. Every output
-below is the real tool output against the library described above, cut only
-where marked.
+The agent's tools live in the web app
+(`apps/web/src/features/patient-context/agent/referenceTools.ts`); each one is
+a GET on the API's `/api/v1/agent/references` routes
+(`apps/api/src/app/reference`), which read this file. Neither is part of this
+library. Every output below is the real tool output against the library
+described above, cut only where marked.
 
 ### A guideline question: "Is my blood pressure where it should be?"
 
@@ -248,7 +259,7 @@ where marked.
 
    Reading the spoke itself,
    `read_section({"reference": "label-estradiol", "section": "transdermal"})`,
-   gives the label's provenance and the full list of its sections:
+   gives the label's provenance and the list of its direct subsections:
 
    ```
    FDA drug label: Estradiol (2026) > Transdermal: Minivelle
@@ -256,7 +267,7 @@ where marked.
 
    Label NDA203752 by Noven Therapeutics, LLC, effective 2026-07-31.
 
-   Subsections: transdermal-opening-text (Opening text, 310 chars); [34 entries, cut here]
+   Subsections: transdermal-opening-text (Opening text, 310 chars); [33 more cut here]
    ```
 
 Every response is bounded by its unit (a page of catalog rows, two outline
@@ -270,8 +281,9 @@ left out.
 fetch -> adapter (html | pdf) -> blocks (headings + text) -> sections -> SQLite
 ```
 
-Each format has its own adapter that produces the same blocks; everything after
-that is shared and does not know the source format.
+Each format has its own adapter that produces the same blocks (headings and
+text); building sections from them is shared, with page handling added for
+PDFs.
 
 - **HTML**: turndown converts the page to markdown and `#` headings become
   heading blocks. When the page has exactly one `<main>` element (or, failing
@@ -310,14 +322,16 @@ that is shared and does not know the source format.
 
 Each run fetches and parses every source before writing, then replaces the
 references one by one in a single transaction. A source that parsed to no
-sections is left as it was in the library (or reported as one the run could
-not add), and a source removed from the config disappears. The run prints each
+sections (for a drug, any of its labels) is left as it was in the library (or
+reported as one the run could not add); a source removed from the config
+disappears, as does a later source that resolves to a url an earlier one
+already covered (the run lists it as skipped). The run prints each
 reference's outline, what it dropped, and which references it kept or could
 not add.
 
 ## Config
 
-`sources.json`:
+`sources.json` is an array of entries like these. A PDF or HTML page:
 
 ```json
 {
@@ -365,8 +379,9 @@ npx ts-node --transpile-only --compiler-options '{"module":"commonjs","moduleRes
 
 Writes `libs/reference-pipeline/data/references.db` (gitignored) and prints
 each document's outline. Requests to a host wait out the `Crawl-delay` its
-robots.txt sets for all user agents (USPSTF asks for 5 seconds), and any
-request is given up after 120 seconds. The API reads the file from
+robots.txt sets for all user agents (USPSTF asks for 5 seconds). Each attempt
+is given up after 120 seconds, and a server error or rate limit is retried up
+to four attempts with growing waits. The API reads the file from
 `REFERENCE_DB_PATH`, or that default path.
 
 ## Known limits
@@ -384,7 +399,8 @@ request is given up after 120 seconds. The API reads the file from
   USPSTF A and B table is one 24,550 character section, and each USPSTF
   recommendation page is also indexed on its own.
 - Heading detection by font size assumes headings are larger than body text;
-  a PDF that marks headings only with bold comes out as one section per page.
+  a PDF that marks headings only with bold comes out as one "Opening text"
+  section, split into one section per page once it passes 12,000 characters.
 - A route's label is the newest one filed under an originator's application
   number, which can be a repackager's copy of it (the content is the
   originator's, the manufacturer named is the repackager), and a drug with
