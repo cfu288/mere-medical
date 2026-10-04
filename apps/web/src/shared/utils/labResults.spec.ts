@@ -256,6 +256,39 @@ describe('groupIdenticalLabRecords', () => {
     ]);
   });
 
+  it('keeps apart an hl7 high flag and a vendor code that the timeline does not flag', () => {
+    const hl7 = observation({
+      id: 'hgb-1',
+      connection: 'epic',
+      name: 'Hgb',
+      date: '2025-11-10T20:39:00Z',
+      loinc: '718-7',
+      value: 16,
+      unit: 'g/dL',
+      resource: {
+        interpretation: {
+          coding: [{ system: 'http://hl7.org/fhir/v2/0078', code: 'H' }],
+        },
+      },
+    });
+    const vendor = observation({
+      id: 'hgb-2',
+      connection: 'cerner',
+      name: 'Hemoglobin',
+      date: '2025-11-10T20:39:00Z',
+      loinc: '718-7',
+      value: 16,
+      unit: 'g/dL',
+      resource: {
+        interpretation: {
+          coding: [{ system: 'https://fhir.cerner.com/codeSet/52', code: 'H' }],
+        },
+      },
+    });
+
+    expect(groupIdenticalLabRecords([hl7, vendor])).toEqual([[hl7], [vendor]]);
+  });
+
   it('merges one result whose interpretation two systems encode differently', () => {
     const dstu2 = observation({
       id: 'ldl-1',

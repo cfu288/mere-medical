@@ -10,6 +10,7 @@ import {
   getValueRatioString,
   getValueString,
   getValueUnit,
+  isOutOfRangeResult,
 } from '../../features/timeline/utils/fhirpathParsers';
 
 type LabDocument = ClinicalDocument<BundleEntry<Observation>>;
@@ -38,19 +39,10 @@ export function labValueText(doc: LabDocument): string | undefined {
 }
 
 function interpretationKey(doc: LabDocument): string {
-  const interpretation = doc.data_record.raw?.resource
-    ?.interpretation as unknown;
-  const concepts: { coding?: { code?: string }[] }[] = Array.isArray(
-    interpretation,
-  )
-    ? interpretation
-    : interpretation
-      ? [interpretation as { coding?: { code?: string }[] }]
-      : [];
-  const codes = concepts
-    .flatMap((concept) => (concept.coding ?? []).map((c) => c.code ?? ''))
-    .sort();
-  return [getInterpretationText(doc) ?? '', ...codes].join(',');
+  return [
+    getInterpretationText(doc) ?? '',
+    isOutOfRangeResult(doc) ? 'abnormal' : 'normal',
+  ].join(',');
 }
 
 /** Two coded results are one record only when every field the timeline shows matches: test, time, value, unit, reference range, interpretation and comments. Uncoded results never merge. */
