@@ -89,19 +89,12 @@ export async function ingestSources({
     throw e;
   }
 
-  const written = new Set(
-    parsed
-      .map(({ record }) => record.id)
-      .filter((id) => !unchanged.includes(id) && !missing.includes(id)),
-  );
   return {
-    references: parsed
-      .filter(({ record }) => written.has(record.id))
-      .map(({ record, dropped }) => ({
-        id: record.id,
-        outline: outline(record.sections),
-        dropped,
-      })),
+    references: parsed.map(({ record, dropped }) => ({
+      id: record.id,
+      outline: outline(record.sections),
+      dropped,
+    })),
     skipped,
     unchanged,
     missing,

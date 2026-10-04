@@ -59,7 +59,9 @@ async function main() {
   for (const id of missing) {
     console.log(`could not add ${id}: its source parsed to nothing`);
   }
-  console.log(`\nwrote ${reports.length} reference(s) to ${dbPath}`);
+  console.log(
+    `\nwrote ${reports.length - unchanged.length - missing.length} reference(s) to ${dbPath}`,
+  );
 }
 
 main().catch((e) => {

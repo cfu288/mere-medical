@@ -522,6 +522,23 @@ describe('ingestSources', () => {
     expect(db.prepare('SELECT id FROM documents').all()).toEqual([]);
   });
 
+  it('still reports the dropped sections of a source that parsed to nothing', async () => {
+    const db = openReferencesDb(':memory:');
+
+    const report = await ingestSources({
+      db,
+      sources: [USPSTF],
+      fetchBytes: bytesFor({
+        'https://example.com/ab': '<h1>References</h1><p>1. Smith 2020.</p>',
+      }),
+    });
+
+    expect(report.references).toEqual([
+      { id: 'uspstf-a-and-b', outline: [], dropped: ['References'] },
+    ]);
+    expect(report.missing).toEqual(['uspstf-a-and-b']);
+  });
+
   it('keeps a reference as it was when its source now parses to nothing', async () => {
     const db = openReferencesDb(':memory:');
     await ingestSources({
