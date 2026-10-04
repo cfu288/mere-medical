@@ -1,40 +1,41 @@
 # reference-pipeline
 
-Builds the reference library the chat agent reads: published clinical guidance
-(guidelines, screening recommendations, schedules) and FDA drug labels, fetched
-from configured sources, split into the sections their authors wrote, and
-stored in a SQLite file the API serves.
+Builds the reference library the chat agent reads. The pipeline fetches
+published clinical guidance and FDA drug labels from configured sources,
+splits them into the sections their authors wrote, and stores them in a SQLite
+file the API serves.
 
 ## Schema
 
 The library holds two kinds of thing, and the agent uses them at two different
 moments.
 
-A **reference** (`documents` table) is one entry in the catalog: a published
-work you could cite by name (the VA-DoD hypertension guideline, the USPSTF
-page on screening for hypertension, the CDC adult immunization schedule) or,
-for a drug, the set of FDA labels chosen for its generic name (estradiol). It
-has a title, an edition (a year, or the source's own wording such as "Updated
-continuously"), a one-line summary and the url a citation points to. There are 406 of them: 295 CDC pages, 50 drug labels, 48
-USPSTF recommendations and 13 VA-DoD guidelines. This is the table the agent
+A **reference** (`documents` table) is a catalog entry for a published work
+you could cite by name, such as the VA-DoD hypertension guideline or the CDC
+adult immunization schedule. For a drug such as estradiol, it holds the FDA
+labels chosen for that generic name. It has a title, an edition (a year, or the
+source's own wording such as "Updated continuously"), a one-line summary and
+the url a citation points to. The catalog holds 406 references, made up of 295
+CDC pages, 50 drug labels, 48 USPSTF recommendations and 13 VA-DoD
+guidelines. This is the table the agent
 chooses from when it decides _which work to open_.
 
-A **section** (`sections` table) is one heading's worth of text inside a
-reference, in the order the authors wrote it, nested as the headings nest:
-chapter, then heading, then subheading (for a PDF the nesting is inferred from
-font sizes). A few sections are made by the pipeline rather than the authors:
-the text before the first heading ("Opening text"), one page of a PDF section
-too long to read at once, and a drug's route holding one label. A section has
+A **section** (`sections` table) holds the text under one heading of a
+reference. Sections follow the authors' order and their heading hierarchy; for
+a PDF the hierarchy is inferred from font sizes. The pipeline also makes
+sections of its own for the text before the first heading ("Opening text"),
+for each page of a PDF section too long to read at once, and for a drug's
+route holding one label. A section has
 a title, the text under that heading (and only that heading, not its
 subsections'), its parent section, its place in reading order, and where it
 sits in the source (page numbers for a PDF, its own web page for a drug
 label). This is the table the agent reads from once it
 has opened a work and is deciding _which part to read_.
 
-Why not one table of text chunks? Three facts about the material, with the
-numbers from the built library:
+Three facts about the material, with numbers from the built library, are why
+references and sections are separate tables.
 
-- **A work is far too big to read; a section is the right size.** The
+- **The agent reads sections, not works.** The
   hypertension guideline is 111 pages and 234,096 characters of text; the
   estradiol labels together are 273,496. The whole library is 13.9 million.
   The agent reads one section at a time (`page-34` is 3,744 characters), so
@@ -49,12 +50,11 @@ numbers from the built library:
   ("which page?", 27 hits). The two tables are those two searches; the two
   `_fts` tables are SQLite's full-text indexes over them.
 - **A citation needs both.** "VA-DoD Hypertension Guideline (2026), p. 34" is
-  the reference's name and edition plus the section's page. A section cannot
-  stand alone: the heading "2 DOSAGE AND ADMINISTRATION" appears in 56 labels,
-  so a section is addressed as reference plus section id, never by its id
-  alone.
+  the reference's name and edition plus the section's page. The heading "2 DOSAGE AND ADMINISTRATION" appears in 56 labels, so a
+  section is addressed by its reference and section id together, never by
+  its id alone.
 
-A drug is deliberately one reference, not one per label. The agent picks
+Each generic drug is one reference holding its chosen labels. The agent picks
 "estradiol" once from the catalog and then sees its four routes (oral, topical,
 transdermal, vaginal) as the top-level sections, each holding one full label.
 Separate references for estradiol's four route labels would put four
@@ -93,9 +93,9 @@ cites a page of its own (a drug label's route) and null where the reference's
 url is the citation.
 
 The rows the end-to-end examples below read, from the library built on
-2026-10-04. The guideline `va-dod-hypertension` is one `documents` row and 99
-`sections` rows; four of them (every row's `document_id` is
-`va-dod-hypertension`):
+2026-10-04. The guideline `va-dod-hypertension` has one `documents` row and 99
+`sections` rows. Four section rows follow, each with `document_id` set to
+`va-dod-hypertension`.
 
 | id                  | title                         | edition | summary                                                                                                                | url                                                                                                        |
 | ------------------- | ----------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
@@ -108,9 +108,9 @@ The rows the end-to-end examples below read, from the library built on
 | page-33-2                                                    | b-treatment-goals-and-general-approaches-to-hypertension-man | 38       | Page 33                                                              | 33         | 33       | null | 925 chars: "a. Blood Pressure Goals ... Recommendation 4. For individuals with hypertension, we..." |
 | page-34                                                      | b-treatment-goals-and-general-approaches-to-hypertension-man | 39       | Page 34                                                              | 34         | 34       | null | 3,744 chars: "cardiovascular causes.(80,81) An additional SR by Matsumoto et al. (2025) found..."   |
 
-A drug, `label-estradiol`: one reference for the generic, one top section per
-route it is sold in (the spoke), that route's full label nested under it
-(every row's `document_id` is `label-estradiol`).
+The drug reference `label-estradiol` has a top-level section for each route
+it is sold in (the spoke), with that route's full label nested beneath it.
+Every row's `document_id` is `label-estradiol`.
 
 | id              | title                     | edition | summary                                                                                                                                                             | url                                                                            |
 | --------------- | ------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
@@ -135,8 +135,8 @@ described above, cut only where marked.
 
 ### A guideline question: "Is my blood pressure where it should be?"
 
-1. The agent reads the patient's own record first (record and lab tools):
-   conditions, recent readings. That decides which references matter.
+1. The agent first uses the record and lab tools to read the patient's
+   conditions and recent readings. That decides which references matter.
 2. `search_references({"query": ["high blood pressure", "hypertension", "BP"]})`
    ranks references by how well title and summary match any term (FTS5 BM25),
    20 per page, always with the total:
@@ -294,10 +294,10 @@ PDFs.
   which becomes the reference url every read cites; the content then goes
   through the HTML adapter. CDC's own attribution block stays in the text.
   Prefer this over CDC PDFs.
-- **Drug labels**: the config names a generic drug. Ingest stores one
-  reference per generic, the node the agent finds first, with one section per
-  route the drug is sold in (oral, transdermal, inhalation, ...), each holding
-  that route's full label as its subsections and citing its own DailyMed page.
+- **Drug labels**: the config names a generic drug. Ingest stores one reference per generic, which the agent finds first. Each
+  route the drug is sold in, such as oral or transdermal, has a section
+  holding that route's full label as its subsections and citing its own
+  DailyMed page.
   For each route openFDA names the labels on file; the originator's label (an
   NDA, whose text the generic copies are required to carry) is taken when one
   exists, otherwise the newest copy. Each label's DailyMed page goes through
@@ -366,10 +366,10 @@ A drug label takes only the generic name as openFDA spells it:
 
 `summary` is what the agent chooses from, so write it for that reader.
 
-Drug-label summaries use RxNav: this product uses publicly available data from
-the U.S. National Library of Medicine (NLM), National Institutes of Health,
-Department of Health and Human Services; NLM is not responsible for the product
-and does not endorse or recommend this or any other product.
+Drug-label summaries use RxNav. This product uses publicly available data
+from the U.S. National Library of Medicine (NLM), National Institutes of
+Health, Department of Health and Human Services. NLM is not responsible for
+the product and does not endorse or recommend this or any other product.
 
 ## Running
 
@@ -398,6 +398,9 @@ to four attempts with growing waits. The API reads the file from
 - HTML sections are never split and carry no anchor, only the page url; the
   USPSTF A and B table is one 24,550 character section, and each USPSTF
   recommendation page is also indexed on its own.
+- A body line repeated on more than half of a PDF's pages, differing only in
+  digits, is dropped as if it were a running header. On the 13 VA-DoD
+  guidelines every dropped line is a running header or page footer.
 - Heading detection by font size assumes headings are larger than body text;
   a PDF that marks headings only with bold comes out as one "Opening text"
   section, split into one section per page once it passes 12,000 characters.
