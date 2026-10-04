@@ -7,60 +7,6 @@ file the API serves.
 
 ## Schema
 
-The library holds two kinds of thing, and the agent uses them at two different
-moments.
-
-A **reference** (`documents` table) is a catalog entry for a published work
-you could cite by name, such as the VA-DoD hypertension guideline or the CDC
-adult immunization schedule. For a drug such as estradiol, it holds the FDA
-labels chosen for that generic name. It has a title, an edition (a year, or the
-source's own wording such as "Updated continuously"), a one-line summary and
-the url a citation points to. The catalog holds 406 references, made up of 295
-CDC pages, 50 drug labels, 48 USPSTF recommendations and 13 VA-DoD
-guidelines. This is the table the agent
-chooses from when it decides _which work to open_.
-
-A **section** (`sections` table) holds the text under one heading of a
-reference. Sections follow the authors' order and their heading hierarchy; for
-a PDF the hierarchy is inferred from font sizes. The pipeline also makes
-sections of its own for the text before the first heading ("Opening text"),
-for each page of a PDF section too long to read at once, and for a drug's
-route holding one label. A section has
-a title, the text under that heading (and only that heading, not its
-subsections'), its parent section, its place in reading order, and where it
-sits in the source (page numbers for a PDF, its own web page for a drug
-label). This is the table the agent reads from once it
-has opened a work and is deciding _which part to read_.
-
-Three facts about the material, with numbers from the built library, are why
-references and sections are separate tables.
-
-- **The agent reads sections, not works.** The
-  hypertension guideline is 111 pages and 234,096 characters of text; the
-  estradiol labels together are 273,496. The whole library is 13.9 million.
-  The agent reads one section at a time (`page-34` is 3,744 characters), so
-  the unit it reads has to be stored as its own row, with enough around it
-  (parent, position, siblings) to move to the next one.
-- **Finding the right work and finding the right page are different
-  searches.** Searching all 13.9 million characters for "blood pressure goal"
-  would return thousands of passages from hundreds of works, with the 99
-  sections of one guideline drowning out a one-section CDC page. Instead the
-  agent first searches only the 406 titles and summaries ("which work?", 18
-  hits in the example below), then searches the text of the one work it chose
-  ("which page?", 27 hits). The two tables are those two searches; the two
-  `_fts` tables are SQLite's full-text indexes over them.
-- **A citation needs both.** "VA-DoD Hypertension Guideline (2026), p. 34" is
-  the reference's name and edition plus the section's page. The heading "2 DOSAGE AND ADMINISTRATION" appears in 56 labels, so a
-  section is addressed by its reference and section id together, never by
-  its id alone.
-
-Each generic drug is one reference holding its chosen labels. The agent picks
-"estradiol" once from the catalog and then sees its four routes (oral, topical,
-transdermal, vaginal) as the top-level sections, each holding one full label.
-Separate references for estradiol's four route labels would put four
-candidates for the same generic in the catalog search; grouping them lets the
-agent choose the route from the outline instead.
-
 ```sql
 CREATE TABLE documents (
   id TEXT PRIMARY KEY,
@@ -85,195 +31,168 @@ CREATE VIRTUAL TABLE documents_fts USING fts5(id UNINDEXED, title, summary, toke
 CREATE VIRTUAL TABLE sections_fts USING fts5(document_id UNINDEXED, section_id UNINDEXED, title, content_md, tokenize = 'porter unicode61');
 ```
 
-`position` numbers every section of a reference in reading order, from 0.
-`parent_id` is the `section_id` of the section this one sits under, in the
-same `document_id`, null for a top-level one. `page_start`/`page_end` are set
-for PDF sources and null for web sources; `url` is set only where a section
-cites a page of its own (a drug label's route) and null where the reference's
-url is the citation.
+A **reference** (`documents`) is a catalog entry for one published work, such
+as a guideline, a USPSTF recommendation page or a CDC schedule, or, for a drug,
+the FDA labels chosen for its generic name. It carries the title, edition,
+summary and url a citation names.
 
-The rows the end-to-end examples below read, from the library built on
-2026-10-04. The guideline `va-dod-hypertension` has one `documents` row and 99
-`sections` rows. Four section rows follow, each with `document_id` set to
-`va-dod-hypertension`.
+A **section** (`sections`) is the text under one heading of a reference,
+nested as the headings nest and numbered in reading order. The pipeline also
+makes sections of its own for the text before the first heading ("Opening
+text"), for each page of a PDF section too long to read at once, and for each
+route a drug is sold in, which holds that route's label.
+
+The agent uses the two tables at different moments. It chooses a reference by
+searching titles and summaries, then reads one section at a time. A guideline
+is far too long to read whole, and searching the text of every section of
+every reference would let one long guideline drown out a one-page CDC topic.
+A citation needs both rows, the reference's title and url and the section's
+page or own url. Section ids repeat across references (every drug label has a
+"2 DOSAGE AND ADMINISTRATION"), so a section is always addressed as reference
+plus section id. The two `_fts` tables are the full-text indexes behind the
+two searches.
+
+Example rows. The VA-DoD hypertension guideline:
 
 | id                  | title                         | edition | summary                                                                                                                | url                                                                                                        |
 | ------------------- | ----------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | va-dod-hypertension | VA-DoD Hypertension Guideline | 2026    | High blood pressure in adults: diagnosis, home and office measurement, blood pressure goals, and choice of medications | https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/htn/HTN-CPG_2026-Guideline_final_20260827.pdf |
 
-| section_id                                                   | parent_id                                                    | position | title                                                                | page_start | page_end | url  | content_md                                                                                          |
-| ------------------------------------------------------------ | ------------------------------------------------------------ | -------- | -------------------------------------------------------------------- | ---------- | -------- | ---- | --------------------------------------------------------------------------------------------------- |
-| ix-recommendations                                           | va-dod-clinical-practice-guideline-for-diagnosis-and-managem | 30       | IX. Recommendations                                                  | 26         | 28       | null | 6,424 chars: "The evidence-based clinical practice recommendations listed in the table below w..."  |
-| b-treatment-goals-and-general-approaches-to-hypertension-man | ix-recommendations                                           | 37       | B. Treatment Goals and General Approaches to Hypertension Management | 33         | 33       | null | empty: the heading's text is split by page below                                                    |
-| page-33-2                                                    | b-treatment-goals-and-general-approaches-to-hypertension-man | 38       | Page 33                                                              | 33         | 33       | null | 925 chars: "a. Blood Pressure Goals ... Recommendation 4. For individuals with hypertension, we..." |
-| page-34                                                      | b-treatment-goals-and-general-approaches-to-hypertension-man | 39       | Page 34                                                              | 34         | 34       | null | 3,744 chars: "cardiovascular causes.(80,81) An additional SR by Matsumoto et al. (2025) found..."   |
+| section_id                                                   | parent_id                                                    | position | title                                                                | page_start | page_end | url  | content_md                                                       |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | -------- | -------------------------------------------------------------------- | ---------- | -------- | ---- | ---------------------------------------------------------------- |
+| ix-recommendations                                           | va-dod-clinical-practice-guideline-for-diagnosis-and-managem | 30       | IX. Recommendations                                                  | 26         | 28       | null | "The evidence-based clinical practice recommendations listed..." |
+| b-treatment-goals-and-general-approaches-to-hypertension-man | ix-recommendations                                           | 37       | B. Treatment Goals and General Approaches to Hypertension Management | 33         | 33       | null | empty; its text is split by page below                           |
+| page-34                                                      | b-treatment-goals-and-general-approaches-to-hypertension-man | 39       | Page 34                                                              | 34         | 34       | null | "cardiovascular causes.(80,81) An additional SR by Matsumoto..." |
 
-The drug reference `label-estradiol` has a top-level section for each route
-it is sold in (the spoke), with that route's full label nested beneath it.
-Every row's `document_id` is `label-estradiol`.
+The estradiol labels, one top-level section per route:
 
-| id              | title                     | edition | summary                                                                                                                                                             | url                                                                            |
-| --------------- | ------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| label-estradiol | FDA drug label: Estradiol | 2026    | Estradiol (brands: Alora, Climara, Delestrogen, Depo-estradiol, Divigel, Dotti, Elestrin, Estrace, Estring, Estrogel, Evamist, Femring, Imvexxy, Lyllana, Menost... | https://dailymed.nlm.nih.gov/dailymed/search.cfm?labeltype=all&query=estradiol |
+| id              | title                     | edition | summary                                                           | url                                                                            |
+| --------------- | ------------------------- | ------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| label-estradiol | FDA drug label: Estradiol | 2026    | Estradiol (brands: Alora, Climara, Delestrogen, ...); Estrogen... | https://dailymed.nlm.nih.gov/dailymed/search.cfm?labeltype=all&query=estradiol |
 
-| section_id                              | parent_id   | position | title                       | page_start | page_end | url                                                                                                              | content_md                                                                                       |
-| --------------------------------------- | ----------- | -------- | --------------------------- | ---------- | -------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| transdermal                             | null        | 103      | Transdermal: Minivelle      | null       | null     | https://dailymed.nlm.nih.gov/dailymed/fda/fdaDrugXsl.cfm?setid=6c5c47ab-28ee-11e1-bfc2-0800200c9a66&type=display | Label NDA203752 by Noven Therapeutics, LLC, effective 2026-07-31.                                |
-| transdermal-2-dosage-and-administration | transdermal | 119      | 2 DOSAGE AND ADMINISTRATION | null       | null     | (the same DailyMed url)                                                                                          | 742 chars: "Generally, when estrogen is prescribed for a postmenopausal woman with a uterus,..." |
+| section_id                              | parent_id   | position | title                       | page_start | page_end | url                                                                                                              | content_md                                                             |
+| --------------------------------------- | ----------- | -------- | --------------------------- | ---------- | -------- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| transdermal                             | null        | 103      | Transdermal: Minivelle      | null       | null     | https://dailymed.nlm.nih.gov/dailymed/fda/fdaDrugXsl.cfm?setid=6c5c47ab-28ee-11e1-bfc2-0800200c9a66&type=display | Label NDA203752 by Noven Therapeutics, LLC, effective 2026-07-31.      |
+| transdermal-2-dosage-and-administration | transdermal | 119      | 2 DOSAGE AND ADMINISTRATION | null       | null     | (the same DailyMed url)                                                                                          | "Generally, when estrogen is prescribed for a postmenopausal woman..." |
 
-The transdermal spoke has 34 direct subsections; the oral, topical and vaginal
-spokes sit beside it at positions 0, 25 and 175.
+`parent_id` names a `section_id` in the same reference. A PDF section cites its
+pages and has no url; a label section cites its route's DailyMed page and has
+no pages.
 
-## How the agent reads the library, end to end
+## How the agent reads it
 
 The agent's tools live in the web app
-(`apps/web/src/features/patient-context/agent/referenceTools.ts`); each one is
-a GET on the API's `/api/v1/agent/references` routes
-(`apps/api/src/app/reference`), which read this file. Neither is part of this
-library. Every output below is the real tool output against the library
-described above, cut only where marked.
+(`apps/web/src/features/patient-context/agent/referenceTools.ts`) and call the
+API's `/api/v1/agent/references` routes (`apps/api/src/app/reference`), which
+read this file. The outputs below are real tool outputs, cut where marked.
 
-### A guideline question: "Is my blood pressure where it should be?"
+A guideline question, "Is my blood pressure where it should be?", once the
+record tools have given the patient's conditions and readings:
 
-1. The agent first uses the record and lab tools to read the patient's
-   conditions and recent readings. That decides which references matter.
-2. `search_references({"query": ["high blood pressure", "hypertension", "BP"]})`
-   ranks references by how well title and summary match any term (FTS5 BM25),
-   20 per page, always with the total:
+1. `search_references({"query": ["high blood pressure", "hypertension", "BP"]})`
+   ranks references by their titles and summaries, a page at a time with the
+   total:
 
    ```
    va-dod-hypertension | VA-DoD Hypertension Guideline | 2026 | High blood pressure in adults: diagnosis, home and office measurement, blood pressure goals, and choice of medications
-   cdc-manage-blood-sugar | CDC: Manage Blood Sugar | 2023 | Find info about how and when to test blood sugar, managing high and low blood sugar, and more.
    cdc-undiagnosed-hypertension | CDC: Undiagnosed Hypertension | 2023 | Undiagnosed Hypertension
-   uspstf-hypertensive-disorders-pregnancy-screening | USPSTF: Hypertensive Disorders of Pregnancy: Screening | 2023 | asymptomatic pregnant persons (grade B)
-   [14 rows cut here]
+   [rows cut]
    Showing 1-18 of 18 references. Call get_outline with a reference id to see its sections.
    ```
 
-   The model chooses from the candidates. `list_references({"page": 1})`
-   browses the whole catalog alphabetically by title, 50 per page, as a
-   fallback.
-
-3. `get_outline({"reference": "va-dod-hypertension"})` returns the top two
-   levels of sections, each with the id the next call takes, its size, and
-   where it sits in the source. Passing a section id expands that branch:
-   `get_outline({"reference": "va-dod-hypertension", "section": "ix-recommendations"})`
+2. `get_outline({"reference": "va-dod-hypertension", "section": "ix-recommendations"})`
+   lists two levels under a section (or under the reference when no section
+   is given), each with the id the next call takes, its size and its place in
+   the source:
 
    ```
    VA-DoD Hypertension Guideline (2026)
    ix-recommendations | IX. Recommendations | 6424 chars | pp. 26-28 | has its own text: read_section to read it
      a-diagnosis-and-monitoring | A. Diagnosis and Monitoring | 0 chars | p. 29
        page-29 | Page 29 | 3054 chars | p. 29
-   [rows cut here]
+   [rows cut]
      b-treatment-goals-and-general-approaches-to-hypertension-man | B. Treatment Goals and General Approaches to Hypertension Management | 0 chars | p. 33
        page-33-2 | Page 33 | 925 chars | p. 33
        page-34 | Page 34 | 3744 chars | p. 34
-   [rows cut here]
-   Call read_section with a section id to read it, or get_outline with a section id to expand it.
+   [rows cut]
    ```
 
-   These are the `sections` rows shown above, rendered one per line.
-
-4. `read_section({"reference": "va-dod-hypertension", "section": "page-34"})`
-   returns that section's own text under its citation (reference, title,
-   pages, url), then the ids of its subsections when it has any:
+3. `read_section({"reference": "va-dod-hypertension", "section": "page-34"})`
+   returns the section's own text under its citation, then the ids of its
+   subsections when it has any:
 
    ```
    VA-DoD Hypertension Guideline (2026) > Page 34, p. 34
    https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/htn/HTN-CPG_2026-Guideline_final_20260827.pdf
 
-   cardiovascular causes.(80,81) An additional SR by Matsumoto et al. (2025) found no significant difference in composite cardiovascular outcome in individuals with HFpEF; [text cut here]
+   cardiovascular causes.(80,81) An additional SR by Matsumoto et al. (2025) found no significant difference [text cut]
    ```
 
-5. When titles are not enough,
-   `find_in_reference({"reference": "va-dod-hypertension", "query": ["systolic goal", "<130", "blood pressure goal"]})`
-   lists the sections matching any term, in document order, each with its
-   match count and an excerpt around the best match, and says how many it
+4. `find_in_reference({"reference": "va-dod-hypertension", "query": ["systolic goal", "<130", "blood pressure goal"]})`
+   is the fallback when titles are not enough. It lists matching sections in
+   document order with a match count and an excerpt, and says how many it
    left out:
 
    ```
-   [4 rows cut here]
-   module-b-treatment | Module B. Treatment | 58 matches | …Blood Pressure Goals/Targets Systolic Blood Pressure Goal (see
-   ix-recommendations | IX. Recommendations | 50 matches | …For individuals with hypertension, we recommend treating to a t
-   page-29 | Page 29 | 37 matches | …various blood pressure levels and the goal blood pressures that lead to reduction in a
-   [2 rows cut here]
+   [rows cut]
+   page-33-2 | Page 33 | 11 matches | …Blood Pressure Goals Recommendation 4. For individuals with hypertension, we recomme
    page-34 | Page 34 | 16 matches | …from one SR including 12 RCTs that intensive systolic blood pressure control (SBP goal
-   [5 rows cut here]
+   [rows cut]
    [12 more omitted; narrow the terms]
    ```
 
-### A drug question: "How do I use my estradiol patch?"
+A drug question, "How do I use my estradiol patch?":
 
 1. `search_references({"query": ["estradiol", "estrogen patch"]})` finds the
-   drug's one node:
+   drug's one reference:
 
    ```
-   label-estradiol | FDA drug label: Estradiol | 2026 | Estradiol (brands: Alora, Climara, Delestrogen, Depo-estradiol, Divigel, Dotti, Elestrin, Estrace, Estring, [summary cut here]
+   label-estradiol | FDA drug label: Estradiol | 2026 | Estradiol (brands: Alora, Climara, Delestrogen, [summary cut]
    Showing 1-1 of 1 references. Call get_outline with a reference id to see its sections.
    ```
 
-2. `get_outline({"reference": "label-estradiol"})` shows the routes as the
-   top level, each a spoke holding one label:
+2. `get_outline({"reference": "label-estradiol"})` shows the routes as the top
+   level:
 
    ```
    FDA drug label: Estradiol (2026)
    oral | Oral: Estradiol | 56 chars
-   [its subsections cut here]
    topical | Topical: Estradiol | 66 chars
-   [its subsections cut here]
    transdermal | Transdermal: Minivelle | 65 chars
-   [its subsections cut here]
    vaginal | Vaginal: Estring | 76 chars
-   [its subsections cut here]
-   Call read_section with a section id to read it, or get_outline with a section id to expand it.
+   [subsections cut]
    ```
 
 3. `get_outline({"reference": "label-estradiol", "section": "transdermal"})`
-   expands the patch label; its section ids carry the route as a prefix so
+   expands the patch label. Its section ids carry the route as a prefix, so
    the same heading in another route's label is a different id:
 
    ```
-   FDA drug label: Estradiol (2026)
    transdermal | Transdermal: Minivelle | 65 chars | has its own text: read_section to read it
-     transdermal-opening-text | Opening text | 310 chars
-     transdermal-highlights-of-prescribing-information | HIGHLIGHTS OF PRESCRIBING INFORMATION | 224 chars
-   [rows cut here]
+   [rows cut]
      transdermal-2-dosage-and-administration | 2 DOSAGE AND ADMINISTRATION | 742 chars
        transdermal-2-1-treatment-of-moderate-to-severe-vasomotor-symptoms-due-t | 2.1 Treatment of Moderate to Severe Vasomotor Symptoms due to Menopause | 201 chars
-   [rows cut here]
-   Call read_section with a section id to read it, or get_outline with a section id to expand it.
+   [rows cut]
    ```
 
 4. `read_section({"reference": "label-estradiol", "section": "transdermal-2-dosage-and-administration"})`
-   cites the spoke's own DailyMed page (the `url` on that row), not the node's
-   search page:
+   cites the route's own DailyMed page. Reading the route section itself
+   (`"section": "transdermal"`) gives the label's application number,
+   manufacturer and effective date:
 
    ```
    FDA drug label: Estradiol (2026) > 2 DOSAGE AND ADMINISTRATION
    https://dailymed.nlm.nih.gov/dailymed/fda/fdaDrugXsl.cfm?setid=6c5c47ab-28ee-11e1-bfc2-0800200c9a66&type=display
 
-   Generally, when estrogen is prescribed for a postmenopausal woman with a uterus, consider addition of a progestogen to reduce the risk of endometrial cancer. [text cut here]
+   Generally, when estrogen is prescribed for a postmenopausal woman with a uterus, consider addition of a progestogen [text cut]
 
    Subsections: transdermal-2-1-treatment-of-moderate-to-severe-vasomotor-symptoms-due-t (2.1 Treatment of Moderate to Severe Vasomotor Symptoms due to Menopause, 201 chars); transdermal-2-3-application-instructions (2.3 Application Instructions, 1172 chars)
    ```
 
-   Reading the spoke itself,
-   `read_section({"reference": "label-estradiol", "section": "transdermal"})`,
-   gives the label's provenance and the list of its direct subsections:
-
-   ```
-   FDA drug label: Estradiol (2026) > Transdermal: Minivelle
-   https://dailymed.nlm.nih.gov/dailymed/fda/fdaDrugXsl.cfm?setid=6c5c47ab-28ee-11e1-bfc2-0800200c9a66&type=display
-
-   Label NDA203752 by Noven Therapeutics, LLC, effective 2026-07-31.
-
-   Subsections: transdermal-opening-text (Opening text, 310 chars); [33 more cut here]
-   ```
-
 Every response is bounded by its unit (a page of catalog rows, two outline
 levels, one section, a list of pointers), never by cutting text at a character
-budget; a paged response states its total and a cut list says how many rows it
-left out.
+budget. A paged response states its total and a cut list says how many rows
+it left out.
 
 ## Pipeline
 
@@ -282,7 +201,7 @@ fetch -> adapter (html | pdf) -> blocks (headings + text) -> sections -> SQLite
 ```
 
 Each format has its own adapter that produces the same blocks (headings and
-text); building sections from them is shared, with page handling added for
+text). Building sections from them is shared, with page handling added for
 PDFs.
 
 - **HTML**: turndown converts the page to markdown and `#` headings become
@@ -294,17 +213,16 @@ PDFs.
   which becomes the reference url every read cites; the content then goes
   through the HTML adapter. CDC's own attribution block stays in the text.
   Prefer this over CDC PDFs.
-- **Drug labels**: the config names a generic drug. Ingest stores one reference per generic, which the agent finds first. Each
-  route the drug is sold in, such as oral or transdermal, has a section
-  holding that route's full label as its subsections and citing its own
-  DailyMed page.
-  For each route openFDA names the labels on file; the originator's label (an
-  NDA, whose text the generic copies are required to carry) is taken when one
+- **Drug labels**: the config names a generic drug. Ingest stores one
+  reference per generic, which the agent finds first. Each route the drug is
+  sold in, such as oral or transdermal, has a section holding that route's
+  full label as its subsections and citing its own DailyMed page. For each
+  route openFDA names the labels on file; the originator's label (an NDA,
+  whose text the generic copies are required to carry) is taken when one
   exists, otherwise the newest copy. Each label's DailyMed page goes through
-  the HTML adapter untouched. The node's summary lists the drug's brand names
-  and FDA drug class from NLM's RxNav, looked up by the configured generic
-  name (so metoprolol succinate and metoprolol tartrate get their own brands),
-  leaving out combination products, and the routes available.
+  the HTML adapter untouched. The reference's summary lists the drug's brand
+  names and FDA drug class from NLM's RxNav, looked up by the configured
+  generic name, leaving out combination products, and the routes available.
 - **PDF**: pdfjs text is rebuilt into lines and paragraphs. The body font size
   is the size covering the most characters; lines at least 2pt larger are
   headings, larger sizes are higher levels, and a heading wrapped over two lines
@@ -322,12 +240,10 @@ PDFs.
 
 Each run fetches and parses every source before writing, then replaces the
 references one by one in a single transaction. A source that parsed to no
-sections (for a drug, any of its labels) is left as it was in the library (or
-reported as one the run could not add); a source removed from the config
+sections (for a drug, any of its labels) is left as it was in the library, or
+reported as one the run could not add. A source removed from the config
 disappears, as does a later source that resolves to a url an earlier one
-already covered (the run lists it as skipped). The run prints each
-reference's outline, what it dropped, and which references it kept or could
-not add.
+already covered (the run lists it as skipped).
 
 ## Config
 
@@ -395,11 +311,11 @@ to four attempts with growing waits. The API reads the file from
   cover title in the outline.
 - The "recommendation categorization" title rule also drops the short
   methodology subsection that explains the categories.
-- HTML sections are never split and carry no anchor, only the page url; the
-  USPSTF A and B table is one 24,550 character section, and each USPSTF
-  recommendation page is also indexed on its own.
+- HTML sections are never split and carry no anchor, only the page url, so a
+  long table such as the USPSTF A and B list is one very long section. Each
+  USPSTF recommendation page is also indexed on its own.
 - A body line repeated on more than half of a PDF's pages, differing only in
-  digits, is dropped as if it were a running header. On the 13 VA-DoD
+  digits, is dropped as if it were a running header. On the configured VA-DoD
   guidelines every dropped line is a running header or page footer.
 - Heading detection by font size assumes headings are larger than body text;
   a PDF that marks headings only with bold comes out as one "Opening text"
