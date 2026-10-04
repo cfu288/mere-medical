@@ -146,6 +146,22 @@ describe('buildSections', () => {
     ).toEqual(['background', 'background-2']);
   });
 
+  it('never gives a title the id a repeated title already took', () => {
+    expect(
+      buildSections({
+        kind: 'webpage',
+        blocks: [
+          { kind: 'heading', level: 1, text: 'Dose' },
+          { kind: 'text', text: 'First.' },
+          { kind: 'heading', level: 1, text: 'Dose' },
+          { kind: 'text', text: 'Second.' },
+          { kind: 'heading', level: 1, text: 'Dose 2' },
+          { kind: 'text', text: 'Third.' },
+        ],
+      }).sections.map((s) => s.sectionId),
+    ).toEqual(['dose', 'dose-2', 'dose-2-2']);
+  });
+
   it('drops reference lists, participant lists, abbreviations, search strategy, and categorization appendices with their subsections', () => {
     expect(
       buildSections({
@@ -244,6 +260,33 @@ describe('buildSections', () => {
 });
 
 describe('buildSpokeSections', () => {
+  it('builds no sections at all when any spoke document parsed to nothing', () => {
+    expect(
+      buildSpokeSections([
+        {
+          id: 'oral',
+          title: 'Oral: Zestril',
+          url: 'https://dailymed.example/oral',
+          contentMd: 'Label NDA019777 by Merck, effective 2025-01-15.',
+          document: {
+            kind: 'webpage',
+            blocks: [
+              { kind: 'heading', level: 1, text: '2 DOSAGE' },
+              { kind: 'text', text: 'One tablet daily.' },
+            ],
+          },
+        },
+        {
+          id: 'transdermal',
+          title: 'Transdermal: Minivelle',
+          url: 'https://dailymed.example/patch',
+          contentMd: 'Label NDA203752 by Noven, effective 2026-07-31.',
+          document: { kind: 'webpage', blocks: [] },
+        },
+      ]),
+    ).toEqual({ sections: [], dropped: [] });
+  });
+
   it('nests each spoke document under its own section, prefixing ids and citing the spoke url', () => {
     expect(
       buildSpokeSections([

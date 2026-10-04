@@ -77,6 +77,9 @@ export function buildSpokeSections(spokes: Spoke[]): {
     });
     const built = buildSections(spoke.document);
     dropped.push(...built.dropped);
+    if (built.sections.length === 0) {
+      return { sections: [], dropped };
+    }
     for (const section of built.sections) {
       sections.push({
         sectionId: `${spoke.id}-${section.sectionId}`,
@@ -171,16 +174,18 @@ function finish<B extends Block>(
   }
 
   const ids = new Map<Draft<B>, string>();
-  const used = new Map<string, number>();
+  const taken = new Set<string>();
   const sections: Section[] = [];
   for (const draft of all) {
     if (droppedDrafts.has(draft) || blank.has(draft)) {
       continue;
     }
     const base = slug(draft.title);
-    const count = (used.get(base) ?? 0) + 1;
-    used.set(base, count);
-    const sectionId = count === 1 ? base : `${base}-${count}`;
+    let sectionId = base;
+    for (let n = 2; taken.has(sectionId); n++) {
+      sectionId = `${base}-${n}`;
+    }
+    taken.add(sectionId);
     ids.set(draft, sectionId);
     sections.push({
       sectionId,
