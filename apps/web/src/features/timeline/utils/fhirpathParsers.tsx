@@ -171,21 +171,32 @@ const INTERPRETATION_SYSTEMS = new Set([
 /** The Abnormal branch of that hierarchy: A and every code beneath it. */
 const ABNORMAL_CODES = new Set(['A', 'AA', 'HH', 'LL', 'H', 'HU', 'L', 'LU']);
 
-function sourceSaysAbnormal(resource: Observation | undefined): boolean {
+/** Interpretation codes from HL7's own systems, the ones the timeline acts on, sorted. */
+export function hl7InterpretationCodes(
+  resource: Observation | undefined,
+): string[] {
   const interpretation = resource?.interpretation as unknown;
-  const concepts = Array.isArray(interpretation)
+  const concepts: { coding?: Coding[] }[] = Array.isArray(interpretation)
     ? interpretation
     : interpretation
-      ? [interpretation]
+      ? [interpretation as { coding?: Coding[] }]
       : [];
-  return concepts.some((concept: { coding?: Coding[] }) =>
-    (concept.coding ?? []).some(
-      (coding) =>
+  return concepts
+    .flatMap((concept) =>
+      (concept.coding ?? []).flatMap((coding) =>
         coding.system !== undefined &&
         INTERPRETATION_SYSTEMS.has(coding.system) &&
-        coding.code !== undefined &&
-        ABNORMAL_CODES.has(coding.code),
-    ),
+        coding.code !== undefined
+          ? [coding.code]
+          : [],
+      ),
+    )
+    .sort();
+}
+
+function sourceSaysAbnormal(resource: Observation | undefined): boolean {
+  return hl7InterpretationCodes(resource).some((code) =>
+    ABNORMAL_CODES.has(code),
   );
 }
 

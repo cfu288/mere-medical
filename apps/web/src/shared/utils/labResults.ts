@@ -10,6 +10,7 @@ import {
   getValueRatioString,
   getValueString,
   getValueUnit,
+  hl7InterpretationCodes,
   isOutOfRangeResult,
 } from '../../features/timeline/utils/fhirpathParsers';
 
@@ -42,6 +43,7 @@ function interpretationKey(doc: LabDocument): string {
   return [
     getInterpretationText(doc) ?? '',
     isOutOfRangeResult(doc) ? 'abnormal' : 'normal',
+    ...hl7InterpretationCodes(doc.data_record.raw?.resource),
   ].join(',');
 }
 

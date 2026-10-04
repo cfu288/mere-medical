@@ -289,6 +289,39 @@ describe('groupIdenticalLabRecords', () => {
     expect(groupIdenticalLabRecords([hl7, vendor])).toEqual([[hl7], [vendor]]);
   });
 
+  it('keeps apart hl7 high and low flags that both read as abnormal', () => {
+    const high = observation({
+      id: 'k-1',
+      connection: 'epic',
+      name: 'Potassium',
+      date: '2025-11-10T20:39:00Z',
+      loinc: '2823-3',
+      value: 4.1,
+      unit: 'mmol/L',
+      resource: {
+        interpretation: {
+          coding: [{ system: 'http://hl7.org/fhir/v2/0078', code: 'H' }],
+        },
+      },
+    });
+    const low = observation({
+      id: 'k-2',
+      connection: 'cerner',
+      name: 'Potassium',
+      date: '2025-11-10T20:39:00Z',
+      loinc: '2823-3',
+      value: 4.1,
+      unit: 'mmol/L',
+      resource: {
+        interpretation: {
+          coding: [{ system: 'http://hl7.org/fhir/v2/0078', code: 'L' }],
+        },
+      },
+    });
+
+    expect(groupIdenticalLabRecords([high, low])).toEqual([[high], [low]]);
+  });
+
   it('merges one result whose interpretation two systems encode differently', () => {
     const dstu2 = observation({
       id: 'ldl-1',
