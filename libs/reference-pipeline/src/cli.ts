@@ -28,7 +28,11 @@ async function main() {
   const sources = parseSources(JSON.parse(readFileSync(sourcesPath, 'utf8')));
   mkdirSync(dirname(dbPath), { recursive: true });
   const db = openReferencesDb(dbPath);
-  const { references: reports, skipped } = await ingestSources({
+  const {
+    references: reports,
+    skipped,
+    unchanged,
+  } = await ingestSources({
     db,
     sources,
     fetchBytes,
@@ -47,6 +51,9 @@ async function main() {
   }
   for (const { id, url } of skipped) {
     console.log(`\nskipped ${id}: ${url} was already ingested`);
+  }
+  for (const id of unchanged) {
+    console.log(`kept ${id} as it was: its source parsed to nothing`);
   }
   console.log(`\nwrote ${reports.length} reference(s) to ${dbPath}`);
 }

@@ -100,6 +100,7 @@ describe('ingestSources', () => {
         },
       ],
       skipped: [],
+      unchanged: [],
     });
   });
 
@@ -327,6 +328,28 @@ describe('ingestSources', () => {
         summary:
           'Examplemab; FDA prescribing information: uses, dosing, warnings, side effects, interactions',
       },
+    ]);
+  });
+
+  it('keeps a reference as it was when its source now parses to nothing', async () => {
+    const db = openReferencesDb(':memory:');
+    await ingestSources({
+      db,
+      sources: [USPSTF],
+      fetchBytes: bytesFor({
+        'https://example.com/ab': '<h1>Screening</h1><p>Screen adults.</p>',
+      }),
+    });
+
+    const report = await ingestSources({
+      db,
+      sources: [USPSTF],
+      fetchBytes: bytesFor({ 'https://example.com/ab': '' }),
+    });
+
+    expect(report.unchanged).toEqual([USPSTF.id]);
+    expect(db.prepare('SELECT section_id FROM sections').all()).toEqual([
+      { section_id: 'screening' },
     ]);
   });
 

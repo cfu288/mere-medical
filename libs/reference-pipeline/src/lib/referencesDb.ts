@@ -88,8 +88,23 @@ export function writeReference(db: DatabaseSync, record: ReferenceRecord) {
   });
 }
 
-export function clearReferences(db: DatabaseSync) {
-  db.exec(
-    'DELETE FROM documents; DELETE FROM documents_fts; DELETE FROM sections; DELETE FROM sections_fts;',
-  );
+export function deleteReference(db: DatabaseSync, id: string) {
+  for (const sql of [
+    'DELETE FROM sections_fts WHERE document_id = ?',
+    'DELETE FROM sections WHERE document_id = ?',
+    'DELETE FROM documents_fts WHERE id = ?',
+    'DELETE FROM documents WHERE id = ?',
+  ]) {
+    db.prepare(sql).run(id);
+  }
+}
+
+/** Removes every reference whose id is not in the catalog any more. */
+export function deleteReferencesExcept(db: DatabaseSync, ids: string[]) {
+  const rows = db.prepare('SELECT id FROM documents').all() as { id: string }[];
+  for (const { id } of rows) {
+    if (!ids.includes(id)) {
+      deleteReference(db, id);
+    }
+  }
 }

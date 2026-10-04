@@ -6,7 +6,8 @@ import { htmlToMarkdown } from './htmlToMarkdown';
 import { linesToBlocks, pdfLines } from './pdfBlocks';
 import {
   ReferenceRecord,
-  clearReferences,
+  deleteReference,
+  deleteReferencesExcept,
   writeReference,
 } from './referencesDb';
 import { ParsedDocument, Section, buildSections } from './sections';
@@ -26,7 +27,11 @@ export async function ingestSources({
   db: DatabaseSync;
   sources: Source[];
   fetchBytes: (url: string) => Promise<Uint8Array>;
-}): Promise<{ references: IngestReport[]; skipped: Skipped[] }> {
+}): Promise<{
+  references: IngestReport[];
+  skipped: Skipped[];
+  unchanged: string[];
+}> {
   const parsed: { record: ReferenceRecord; dropped: string[] }[] = [];
   const skipped: Skipped[] = [];
   const ingestedUrls = new Set<string>();
@@ -51,10 +56,19 @@ export async function ingestSources({
     });
   }
 
+  const unchanged: string[] = [];
   db.exec('BEGIN');
   try {
-    clearReferences(db);
+    deleteReferencesExcept(
+      db,
+      parsed.map(({ record }) => record.id),
+    );
     for (const { record } of parsed) {
+      if (record.sections.length === 0) {
+        unchanged.push(record.id);
+        continue;
+      }
+      deleteReference(db, record.id);
       writeReference(db, record);
     }
     db.exec('COMMIT');
@@ -70,6 +84,7 @@ export async function ingestSources({
       dropped,
     })),
     skipped,
+    unchanged,
   };
 }
 
