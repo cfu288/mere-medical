@@ -40,7 +40,17 @@ async function main() {
   });
   db.close();
   for (const report of reports) {
-    console.log(`\n${report.id}: ${report.outline.length} sections`);
+    if (unchanged.includes(report.id)) {
+      console.log(
+        `\n${report.id}: kept as it was, its source parsed to nothing`,
+      );
+    } else if (missing.includes(report.id)) {
+      console.log(
+        `\n${report.id}: could not add, its source parsed to nothing`,
+      );
+    } else {
+      console.log(`\n${report.id}: ${report.outline.length} sections`);
+    }
     for (const entry of report.outline) {
       console.log(
         `${'  '.repeat(entry.depth + 1)}${entry.sectionId} | ${entry.title} | ${entry.chars} chars`,
@@ -52,12 +62,6 @@ async function main() {
   }
   for (const { id, url } of skipped) {
     console.log(`\nskipped ${id}: ${url} was already ingested`);
-  }
-  for (const id of unchanged) {
-    console.log(`kept ${id} as it was: its source parsed to nothing`);
-  }
-  for (const id of missing) {
-    console.log(`could not add ${id}: its source parsed to nothing`);
   }
   console.log(
     `\nwrote ${reports.length - unchanged.length - missing.length} reference(s) to ${dbPath}`,
