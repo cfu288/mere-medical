@@ -30,6 +30,7 @@ export function openReferencesDb(path: string): DatabaseSync {
       page_start  INTEGER,
       page_end    INTEGER,
       content_md  TEXT NOT NULL,
+      url         TEXT,
       PRIMARY KEY (document_id, section_id)
     );
     CREATE VIRTUAL TABLE IF NOT EXISTS sections_fts USING fts5(
@@ -46,6 +47,13 @@ export function openReferencesDb(path: string): DatabaseSync {
       tokenize = 'porter unicode61'
     );
   `);
+  const columns = db
+    .prepare('PRAGMA table_info(sections)')
+    .all()
+    .map((column) => column['name']);
+  if (!columns.includes('url')) {
+    db.exec('ALTER TABLE sections ADD COLUMN url TEXT');
+  }
   return db;
 }
 
@@ -58,8 +66,8 @@ export function writeReference(db: DatabaseSync, record: ReferenceRecord) {
   ).run(record.id, record.title, record.edition, record.summary, record.url);
   const insertSection = db.prepare(
     `INSERT INTO sections
-       (document_id, section_id, parent_id, position, title, page_start, page_end, content_md)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+       (document_id, section_id, parent_id, position, title, page_start, page_end, content_md, url)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   );
   const insertFts = db.prepare(
     'INSERT INTO sections_fts (document_id, section_id, title, content_md) VALUES (?, ?, ?, ?)',
@@ -78,6 +86,7 @@ export function writeReference(db: DatabaseSync, record: ReferenceRecord) {
       pages[0],
       pages[1],
       section.contentMd,
+      section.location.kind === 'webpage' ? section.location.url ?? null : null,
     );
     insertFts.run(
       record.id,

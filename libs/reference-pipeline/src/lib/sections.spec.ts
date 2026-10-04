@@ -1,4 +1,4 @@
-import { buildSections } from './sections';
+import { buildSections, buildSpokeSections } from './sections';
 
 describe('buildSections', () => {
   it('nests deeper headings under the heading above them', () => {
@@ -236,6 +236,73 @@ describe('buildSections', () => {
           title: 'Page 3',
           location: { kind: 'pages', start: 3, end: 3 },
           contentMd: pageThree,
+        },
+      ],
+      dropped: [],
+    });
+  });
+});
+
+describe('buildSpokeSections', () => {
+  it('nests each spoke document under its own section, prefixing ids and citing the spoke url', () => {
+    expect(
+      buildSpokeSections([
+        {
+          id: 'oral',
+          title: 'Oral: Zestril',
+          url: 'https://dailymed.example/oral',
+          contentMd: 'Label NDA019777 by Merck, effective 2025-01-15.',
+          document: {
+            kind: 'webpage',
+            blocks: [
+              { kind: 'heading', level: 1, text: '2 DOSAGE' },
+              { kind: 'text', text: 'One tablet daily.' },
+            ],
+          },
+        },
+        {
+          id: 'transdermal',
+          title: 'Transdermal: Minivelle',
+          url: 'https://dailymed.example/patch',
+          contentMd: 'Label NDA203752 by Noven, effective 2026-07-31.',
+          document: {
+            kind: 'webpage',
+            blocks: [
+              { kind: 'heading', level: 1, text: '2 DOSAGE' },
+              { kind: 'text', text: 'Apply twice weekly.' },
+            ],
+          },
+        },
+      ]),
+    ).toEqual({
+      sections: [
+        {
+          sectionId: 'oral',
+          parentId: null,
+          title: 'Oral: Zestril',
+          location: { kind: 'webpage', url: 'https://dailymed.example/oral' },
+          contentMd: 'Label NDA019777 by Merck, effective 2025-01-15.',
+        },
+        {
+          sectionId: 'oral-2-dosage',
+          parentId: 'oral',
+          title: '2 DOSAGE',
+          location: { kind: 'webpage', url: 'https://dailymed.example/oral' },
+          contentMd: 'One tablet daily.',
+        },
+        {
+          sectionId: 'transdermal',
+          parentId: null,
+          title: 'Transdermal: Minivelle',
+          location: { kind: 'webpage', url: 'https://dailymed.example/patch' },
+          contentMd: 'Label NDA203752 by Noven, effective 2026-07-31.',
+        },
+        {
+          sectionId: 'transdermal-2-dosage',
+          parentId: 'transdermal',
+          title: '2 DOSAGE',
+          location: { kind: 'webpage', url: 'https://dailymed.example/patch' },
+          contentMd: 'Apply twice weekly.',
         },
       ],
       dropped: [],

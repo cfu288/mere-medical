@@ -74,14 +74,18 @@ that is shared and does not know the source format.
   which becomes the reference url every read cites; the content then goes
   through the HTML adapter. CDC's own attribution block stays in the text.
   Prefer this over CDC PDFs.
-- **Drug labels**: the config names a generic drug. Ingest finds the newest
-  prescription label for that generic in openFDA, from any manufacturer (the
-  prescribing text is the same), fetches its DailyMed
-  printer-friendly page through the HTML adapter, and builds the title,
-  edition, and summary itself. The summary lists the drug's brand names and FDA
-  drug class from NLM's RxNav, looked up for the exact form on the label
-  (metoprolol succinate and metoprolol tartrate get their own brands), leaving
-  out combination products.
+- **Drug labels**: the config names a generic drug. Ingest stores one
+  reference per generic, the node the agent finds first, with one section per
+  route the drug is sold in (oral, transdermal, inhalation, ...), each holding
+  that route's full label as its subsections and citing its own DailyMed page.
+  For each route openFDA names the labels on file; the originator's label (an
+  NDA, whose text the generic copies are required to carry) is taken when one
+  exists, otherwise the newest copy. Each label's DailyMed printer-friendly
+  page goes through the HTML adapter untouched. The node's summary lists the
+  drug's brand names and FDA drug class from NLM's RxNav, looked up for the
+  exact form on the label (metoprolol succinate and metoprolol tartrate get
+  their own brands), leaving out combination products, and the routes
+  available.
 - **PDF**: pdfjs text is rebuilt into lines and paragraphs. The body font size
   is the size covering the most characters; lines at least 2pt larger are
   headings, larger sizes are higher levels, and a heading wrapped over two lines

@@ -10,7 +10,13 @@ import {
   deleteReferencesExcept,
   writeReference,
 } from './referencesDb';
-import { ParsedDocument, Section, buildSections } from './sections';
+import {
+  ParsedDocument,
+  Section,
+  Spoke,
+  buildSections,
+  buildSpokeSections,
+} from './sections';
 import { Source } from './sources';
 
 export type IngestReport = {
@@ -42,7 +48,10 @@ export async function ingestSources({
       continue;
     }
     ingestedUrls.add(result.url);
-    const { sections, dropped } = buildSections(result.document);
+    const { sections, dropped } =
+      'spokes' in result
+        ? buildSpokeSections(result.spokes)
+        : buildSections(result.document);
     parsed.push({
       record: {
         id: source.id,
@@ -101,8 +110,7 @@ type Fetched = {
   edition: string;
   summary: string;
   url: string;
-  document: ParsedDocument;
-};
+} & ({ document: ParsedDocument } | { spokes: Spoke[] });
 
 async function fetchDocument(
   source: Source,
@@ -163,10 +171,20 @@ const labelSearchSchema = z.object({
     .tuple([
       z.object({
         set_id: z.string().min(1),
-        effective_time: z.string().min(4),
+        effective_time: z.string().min(8),
+        openfda: z
+          .object({
+            brand_name: z.array(z.string()).optional(),
+            manufacturer_name: z.array(z.string()).optional(),
+            application_number: z.array(z.string()).optional(),
+          })
+          .optional(),
       }),
     ])
     .rest(z.unknown()),
+});
+const countSchema = z.object({
+  results: z.array(z.object({ term: z.string(), count: z.number() })),
 });
 const rxcuiSchema = z.object({
   idGroup: z.object({ rxnormId: z.array(z.string()).optional() }),
@@ -194,18 +212,50 @@ const classSchema = z.object({
     .optional(),
 });
 
+/** One node per generic, one spoke per route it is sold in, each spoke the originator's label when one exists, else the newest. */
 async function drugLabel(
   generic: string,
   fetchBytes: (url: string) => Promise<Uint8Array>,
 ): Promise<Fetched> {
-  const search = `openfda.generic_name.exact:"${generic}" AND openfda.product_type.exact:"HUMAN PRESCRIPTION DRUG"`;
-  const label = labelSearchSchema.parse(
-    await fetchJson(
-      `${OPENFDA_LABELS}?search=${encodeURIComponent(search)}&sort=${encodeURIComponent('effective_time:desc')}&limit=1`,
-      fetchBytes,
-    ),
-  ).results[0];
-  const url = `https://dailymed.nlm.nih.gov/dailymed/fda/fdaDrugXsl.cfm?setid=${label.set_id}&type=display`;
+  const base = `openfda.generic_name.exact:"${generic}" AND openfda.product_type.exact:"HUMAN PRESCRIPTION DRUG"`;
+  const routes = countSchema
+    .parse(await fetchJson(countUrl(base, 'openfda.route.exact'), fetchBytes))
+    .results.map((r) => r.term)
+    .sort();
+  const spokes: Spoke[] = [];
+  const years: string[] = [];
+  for (const route of routes) {
+    const scoped = `${base} AND openfda.route.exact:"${route}"`;
+    const applications = countSchema
+      .parse(
+        await fetchJson(
+          countUrl(scoped, 'openfda.application_number.exact'),
+          fetchBytes,
+        ),
+      )
+      .results.map((r) => r.term);
+    const query = applications.some((a) => a.startsWith('NDA'))
+      ? `${scoped} AND openfda.application_number:NDA*`
+      : scoped;
+    const label = labelSearchSchema.parse(
+      await fetchJson(
+        `${OPENFDA_LABELS}?search=${encodeURIComponent(query)}&sort=${encodeURIComponent('effective_time:desc')}&limit=1`,
+        fetchBytes,
+      ),
+    ).results[0];
+    const url = `https://dailymed.nlm.nih.gov/dailymed/fda/fdaDrugXsl.cfm?setid=${label.set_id}&type=display`;
+    const maker = label.openfda?.manufacturer_name?.[0];
+    const owner = label.openfda?.brand_name?.[0] ?? maker ?? 'label';
+    const effective = `${label.effective_time.slice(0, 4)}-${label.effective_time.slice(4, 6)}-${label.effective_time.slice(6, 8)}`;
+    years.push(label.effective_time.slice(0, 4));
+    spokes.push({
+      id: routeSlug(route),
+      title: `${routeTitle(route)}: ${owner}`,
+      url,
+      contentMd: `Label ${label.openfda?.application_number?.[0] ?? 'unknown'}${maker ? ` by ${maker}` : ''}, effective ${effective}.`,
+      document: webpage(await fetchBytes(url)),
+    });
+  }
   const name = generic.charAt(0) + generic.slice(1).toLowerCase();
   const { brands, classes } = await brandsAndClasses(
     generic.toLowerCase(),
@@ -213,15 +263,35 @@ async function drugLabel(
   );
   return {
     title: `FDA drug label: ${name}`,
-    edition: label.effective_time.slice(0, 4),
+    edition: years.sort().reverse()[0] ?? '',
     summary: [
       brands.length > 0 ? `${name} (brands: ${brands.join(', ')})` : name,
       ...(classes.length > 0 ? [classes.join(', ')] : []),
+      `routes: ${routes
+        .map(routeSlug)
+        .map((r) => r.replace(/-/g, ' '))
+        .join(', ')}`,
       'FDA prescribing information: uses, dosing, warnings, side effects, interactions',
     ].join('; '),
-    url,
-    document: webpage(await fetchBytes(url)),
+    url: `https://dailymed.nlm.nih.gov/dailymed/search.cfm?labeltype=all&query=${encodeURIComponent(generic.toLowerCase())}`,
+    spokes,
   };
+}
+
+function countUrl(search: string, field: string): string {
+  return `${OPENFDA_LABELS}?search=${encodeURIComponent(search)}&count=${field}`;
+}
+
+function routeSlug(route: string): string {
+  return route
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function routeTitle(route: string): string {
+  const lower = route.toLowerCase();
+  return lower.charAt(0).toUpperCase() + lower.slice(1);
 }
 
 async function brandsAndClasses(
