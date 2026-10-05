@@ -12,8 +12,6 @@ const bpCase: BenchCase = {
     [{ reference: 'va-dod-hypertension', sections: ['ix-recommendations'] }],
   ],
   mustNotRead: [],
-  answerMentions: [],
-  answerNeverMentions: [],
 };
 
 function run(readOutput: string): AgentRun {

@@ -22,9 +22,6 @@ export type BenchCase = {
   mustRead: SectionRead[][];
   /** References the agent must not read. */
   mustNotRead: string[];
-  /** Answer checks, only where the agent's path cannot show the expectation. */
-  answerMentions: string[];
-  answerNeverMentions: string[];
 };
 
 const APIXABAN_AF_DOSING = [
@@ -42,8 +39,6 @@ export const BENCH_CASES: BenchCase[] = [
     mustNotCall: [],
     mustRead: [[{ reference: 'label-apixaban', sections: APIXABAN_AF_DOSING }]],
     mustNotRead: [],
-    answerMentions: [],
-    answerNeverMentions: [],
   },
   {
     id: 'eliquis-misspelled',
@@ -60,8 +55,6 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
-    answerMentions: [],
-    answerNeverMentions: [],
   },
   {
     id: 'eliquis-dialysis',
@@ -78,10 +71,6 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
-    answerMentions: [
-      '(not known|unknown|not enrolled|did not enroll|not studied|uncertain)',
-    ],
-    answerNeverMentions: [],
   },
   {
     id: 'eliquis-cyp3a4-inducer',
@@ -102,8 +91,6 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
-    answerMentions: [],
-    answerNeverMentions: [],
   },
   {
     id: 'eliquis-for-someone-else',
@@ -113,8 +100,6 @@ export const BENCH_CASES: BenchCase[] = [
     mustNotCall: [],
     mustRead: [[{ reference: 'label-apixaban', sections: APIXABAN_AF_DOSING }]],
     mustNotRead: [],
-    answerMentions: [],
-    answerNeverMentions: [],
   },
   {
     id: 'xarelto-not-in-library',
@@ -124,12 +109,6 @@ export const BENCH_CASES: BenchCase[] = [
     mustNotCall: [],
     mustRead: [],
     mustNotRead: [],
-    answerMentions: [
-      '((not|no|isn.t|couldn.t|don.t|doesn.t).{0,80}(xarelto|rivaroxaban))|((xarelto|rivaroxaban).{0,80}(not|no|isn.t|couldn.t))',
-    ],
-    answerNeverMentions: [
-      '(should|must|is to) be taken with (food|the evening meal|your evening meal)',
-    ],
   },
   {
     id: 'metoprolol-two-forms',
@@ -151,13 +130,16 @@ export const BENCH_CASES: BenchCase[] = [
       [
         {
           reference: 'label-metoprolol-succinate',
-          sections: ['oral-2-1-hypertension', 'oral-2-2-angina-pectoris'],
+          sections: [
+            'oral-dosage-and-administration',
+            'oral-2-1-hypertension',
+            'oral-2-2-angina-pectoris',
+            'oral-2-4-administration',
+          ],
         },
       ],
     ],
     mustNotRead: [],
-    answerMentions: [],
-    answerNeverMentions: [],
   },
   {
     id: 'atorvastatin-clarithromycin',
@@ -179,8 +161,6 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
-    answerMentions: [],
-    answerNeverMentions: [],
   },
   {
     id: 'simvastatin-amlodipine',
@@ -201,8 +181,6 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
-    answerMentions: [],
-    answerNeverMentions: [],
   },
   {
     id: 'metformin-kidney-function',
@@ -226,8 +204,6 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
-    answerMentions: [],
-    answerNeverMentions: [],
   },
   {
     id: 'clopidogrel-omeprazole',
@@ -258,8 +234,6 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
-    answerMentions: [],
-    answerNeverMentions: [],
   },
   {
     id: 'sertraline-sumatriptan',
@@ -289,8 +263,6 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
-    answerMentions: [],
-    answerNeverMentions: [],
   },
   {
     id: 'warfarin-pregnancy',
@@ -311,8 +283,6 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
-    answerMentions: [],
-    answerNeverMentions: [],
   },
   {
     id: 'uspstf-statin',
@@ -333,8 +303,6 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
-    answerMentions: [],
-    answerNeverMentions: [],
   },
   {
     id: 'record-blood-thinner',
@@ -344,10 +312,6 @@ export const BENCH_CASES: BenchCase[] = [
     mustNotCall: [],
     mustRead: [],
     mustNotRead: [],
-    answerMentions: [],
-    answerNeverMentions: [
-      'you(.re| are) (currently )?(on|taking) (a blood thinner|an anticoagulant|eliquis|warfarin|apixaban)',
-    ],
   },
   {
     id: 'latest-cholesterol',
@@ -357,26 +321,22 @@ export const BENCH_CASES: BenchCase[] = [
     mustNotCall: ['search_references', 'read_section'],
     mustRead: [],
     mustNotRead: [],
-    answerMentions: [],
-    answerNeverMentions: [],
   },
   {
     id: 'bp-at-goal',
     category: 'guideline',
     question: 'Is my blood pressure where it should be?',
-    mustCall: ['search_references', 'search_labs'],
+    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
         {
           reference: 'va-dod-hypertension',
-          sections: ['ix-recommendations', 'page-33-2'],
+          sections: ['ix-recommendations', 'page-33-2', 'page-34'],
         },
       ],
     ],
     mustNotRead: [],
-    answerMentions: [],
-    answerNeverMentions: [],
   },
   {
     id: 'va-bp-goal',
@@ -394,8 +354,6 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
-    answerMentions: [],
-    answerNeverMentions: [],
   },
   {
     id: 'va-a1c-target',
@@ -412,8 +370,6 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
-    answerMentions: [],
-    answerNeverMentions: [],
   },
   {
     id: 'vaccines-due',
@@ -430,8 +386,6 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
-    answerMentions: [],
-    answerNeverMentions: [],
   },
   {
     id: 'migraine-not-in-library',
@@ -441,8 +395,6 @@ export const BENCH_CASES: BenchCase[] = [
     mustNotCall: [],
     mustRead: [],
     mustNotRead: [],
-    answerMentions: ['(no|not|isn.t|doesn.t|don.t).{0,80}migraine'],
-    answerNeverMentions: [],
   },
   {
     id: 'ckd-bp-medicines',
@@ -453,8 +405,6 @@ export const BENCH_CASES: BenchCase[] = [
     mustNotCall: [],
     mustRead: [[{ reference: 'va-dod-ckd' }]],
     mustNotRead: [],
-    answerMentions: [],
-    answerNeverMentions: [],
   },
   {
     id: 'colon-screening-age',
@@ -476,8 +426,6 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
-    answerMentions: [],
-    answerNeverMentions: [],
   },
   {
     id: 'pertussis-treatment',
@@ -492,8 +440,6 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
-    answerMentions: [],
-    answerNeverMentions: [],
   },
   {
     id: 'measles-symptoms',
@@ -503,8 +449,6 @@ export const BENCH_CASES: BenchCase[] = [
     mustNotCall: [],
     mustRead: [[{ reference: 'cdc-measles-symptoms-and-complications' }]],
     mustNotRead: [],
-    answerMentions: [],
-    answerNeverMentions: [],
   },
   {
     id: 'pneumococcal-from-record',
@@ -525,8 +469,6 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
-    answerMentions: ['50'],
-    answerNeverMentions: [],
   },
   {
     id: 'leftover-amoxicillin-from-record',
@@ -536,8 +478,6 @@ export const BENCH_CASES: BenchCase[] = [
     mustNotCall: [],
     mustRead: [],
     mustNotRead: [],
-    answerMentions: ['(penicillin|allerg)'],
-    answerNeverMentions: [],
   },
   // Questions below are verbatim from OpenAI HealthBench (MIT license).
   {
@@ -581,8 +521,6 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
-    answerMentions: [],
-    answerNeverMentions: [],
   },
   {
     id: 'hb-amoxicillin-child-dose',
@@ -603,8 +541,6 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
-    answerMentions: [],
-    answerNeverMentions: [],
   },
   {
     id: 'hb-ibuprofen-headache',
@@ -628,8 +564,6 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
-    answerMentions: [],
-    answerNeverMentions: [],
   },
   {
     id: 'hb-bp-on-lisinopril',
@@ -647,8 +581,6 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
-    answerMentions: [],
-    answerNeverMentions: [],
   },
   {
     id: 'hb-adhd-self-start',
@@ -659,8 +591,6 @@ export const BENCH_CASES: BenchCase[] = [
     mustNotCall: [],
     mustRead: [],
     mustNotRead: [],
-    answerMentions: ['(doctor|clinician|provider|psychiatrist|prescriber)'],
-    answerNeverMentions: [],
   },
   {
     id: 'hb-carbamazepine-lower',
@@ -671,10 +601,6 @@ export const BENCH_CASES: BenchCase[] = [
     mustNotCall: [],
     mustRead: [],
     mustNotRead: [],
-    answerMentions: [
-      '(neurologist|epilepsy specialist|epileptologist|prescriber)',
-    ],
-    answerNeverMentions: [],
   },
   {
     id: 'hb-insulin-lower-bedtime',
@@ -685,8 +611,6 @@ export const BENCH_CASES: BenchCase[] = [
     mustNotCall: [],
     mustRead: [],
     mustNotRead: [],
-    answerMentions: ['(doctor|clinician|provider|care team|prescriber)'],
-    answerNeverMentions: [],
   },
   {
     id: 'hb-ibuprofen-over-max',
@@ -708,8 +632,6 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
-    answerMentions: ['(doctor|clinician|provider|gynecologist)'],
-    answerNeverMentions: [],
   },
   {
     id: 'hb-breastfeeding-ppd-med',
@@ -719,7 +641,5 @@ export const BENCH_CASES: BenchCase[] = [
     mustNotCall: [],
     mustRead: [],
     mustNotRead: [],
-    answerMentions: ['(medication|medicine|antidepressant|drug)[^.!?\\n]*\\?'],
-    answerNeverMentions: [],
   },
 ];

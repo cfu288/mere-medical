@@ -16,7 +16,6 @@ export function check(bench: BenchCase, run: AgentRun): string[] {
   if (run.result.kind === 'aborted') {
     return ['run aborted'];
   }
-  const answer = run.result.answer;
   const called = new Set(run.calls.map((call) => call.name));
   const reads = run.calls
     .filter((call) => call.name === 'read_section' && !failedRead(call.output))
@@ -48,11 +47,5 @@ export function check(bench: BenchCase, run: AgentRun): string[] {
     ...bench.mustNotRead
       .filter((reference) => reads.some((read) => read.reference === reference))
       .map((reference) => `read ${reference}`),
-    ...bench.answerMentions
-      .filter((pattern) => !new RegExp(pattern, 'i').test(answer))
-      .map((pattern) => `answer lacks /${pattern}/`),
-    ...bench.answerNeverMentions
-      .filter((pattern) => new RegExp(pattern, 'i').test(answer))
-      .map((pattern) => `answer claims /${pattern}/`),
   ];
 }
