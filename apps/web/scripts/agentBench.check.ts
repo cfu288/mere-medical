@@ -7,15 +7,25 @@ import { BenchCase, SectionRead } from './agentBench.cases';
 import { AgentRun } from './agentHarness';
 
 function sameRetrieved(a: Retrieved, b: Retrieved): boolean {
-  return a.kind === 'lab'
-    ? b.kind === 'lab' && a.analyte === b.analyte
-    : b.kind === 'record' && a.type === b.type && a.name === b.name;
+  switch (a.kind) {
+    case 'lab':
+      return b.kind === 'lab' && a.analyte === b.analyte;
+    case 'record':
+      return b.kind === 'record' && a.type === b.type && a.name === b.name;
+    case 'note':
+      return b.kind === 'note' && a.id === b.id;
+  }
 }
 
 function describeRetrieved(item: Retrieved): string {
-  return item.kind === 'lab'
-    ? `lab ${item.analyte}`
-    : `${item.type} ${item.name}`;
+  switch (item.kind) {
+    case 'lab':
+      return `lab ${item.analyte}`;
+    case 'record':
+      return `${item.type} ${item.name}`;
+    case 'note':
+      return `note ${item.id}`;
+  }
 }
 
 function failedRead(output: string): boolean {

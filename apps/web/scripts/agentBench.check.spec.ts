@@ -143,4 +143,16 @@ describe('check retrieval', () => {
       ),
     ).toEqual(['never retrieved allergy PENICILLINS']);
   });
+
+  it('names a required note it never retrieved', () => {
+    expect(
+      check(
+        {
+          ...metforminCase,
+          mustRetrieve: [[{ kind: 'note', id: 'n1' }]],
+        },
+        labRun('77147-7'),
+      ),
+    ).toEqual(['never retrieved note n1']);
+  });
 });

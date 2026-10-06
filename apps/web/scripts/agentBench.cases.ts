@@ -23,11 +23,6 @@ export type BenchCase = {
   mustRetrieve: Retrieved[][];
 };
 
-const APIXABAN_AF_DOSING = [
-  'oral-reduction-of-risk-of-stroke-and-systemic-embolism-in-patient',
-  'oral-reduction-of-risk-of-stroke-and-systemic-embolism-in-patient-2',
-];
-
 export const BENCH_CASES: BenchCase[] = [
   {
     id: 'eliquis-dose-reduction',
@@ -36,7 +31,21 @@ export const BENCH_CASES: BenchCase[] = [
       'I take Eliquis for atrial fibrillation. When would my dose need to be lowered, and to what dose?',
     mustCall: ['search_references'],
     mustNotCall: [],
-    mustRead: [[{ reference: 'label-apixaban', sections: APIXABAN_AF_DOSING }]],
+    mustRead: [
+      [
+        {
+          reference: 'label-apixaban',
+          sections: [
+            'oral-reduction-of-risk-of-stroke-and-systemic-embolism-in-patient',
+            'oral-reduction-of-risk-of-stroke-and-systemic-embolism-in-patient-2',
+            'oral-dosage-and-administration',
+            'oral-2-6-combined-p-gp-and-strong-cyp3a4-inhibitors',
+            'oral-7-1-combined-p-gp-and-strong-cyp3a4-inhibitors',
+            'oral-drug-interactions',
+          ],
+        },
+      ],
+    ],
     mustNotRead: [],
     mustRetrieve: [],
   },
@@ -50,7 +59,10 @@ export const BENCH_CASES: BenchCase[] = [
       [
         {
           reference: 'label-apixaban',
-          sections: ['oral-dosage-and-administration', ...APIXABAN_AF_DOSING],
+          sections: [
+            'oral-dosage-and-administration',
+            'oral-reduction-of-risk-of-stroke-and-systemic-embolism-in-patient',
+          ],
         },
       ],
     ],
@@ -67,7 +79,10 @@ export const BENCH_CASES: BenchCase[] = [
       [
         {
           reference: 'label-apixaban',
-          sections: ['oral-patients-with-end-stage-renal-disease-on-dialysis'],
+          sections: [
+            'oral-patients-with-end-stage-renal-disease-on-dialysis',
+            'oral-prophylaxis-of-deep-vein-thrombosis-following-hip-or-knee-re-2',
+          ],
         },
       ],
     ],
@@ -85,10 +100,7 @@ export const BENCH_CASES: BenchCase[] = [
       [
         {
           reference: 'label-apixaban',
-          sections: [
-            'oral-7-2-combined-p-gp-and-strong-cyp3a4-inducers',
-            'oral-drug-interactions',
-          ],
+          sections: ['oral-7-2-combined-p-gp-and-strong-cyp3a4-inducers'],
         },
       ],
     ],
@@ -101,7 +113,18 @@ export const BENCH_CASES: BenchCase[] = [
     question: 'What dose of Eliquis should I give my 85-year-old mother?',
     mustCall: ['search_references'],
     mustNotCall: [],
-    mustRead: [[{ reference: 'label-apixaban', sections: APIXABAN_AF_DOSING }]],
+    mustRead: [
+      [
+        {
+          reference: 'label-apixaban',
+          sections: [
+            'oral-reduction-of-risk-of-stroke-and-systemic-embolism-in-patient',
+            'oral-reduction-of-risk-of-stroke-and-systemic-embolism-in-patient-2',
+            'oral-dosage-and-administration',
+          ],
+        },
+      ],
+    ],
     mustNotRead: [],
     mustRetrieve: [],
   },
@@ -117,8 +140,8 @@ export const BENCH_CASES: BenchCase[] = [
           reference: 'label-metoprolol-tartrate',
           sections: [
             'oral-dosage-and-administration',
-            'oral-2-1-hypertension',
-            'oral-2-2-angina-pectoris',
+            'oral-2-1-myocardial-infarction',
+            'oral-17-patient-counseling-information',
           ],
         },
       ],
@@ -130,6 +153,10 @@ export const BENCH_CASES: BenchCase[] = [
             'oral-2-1-hypertension',
             'oral-2-2-angina-pectoris',
             'oral-2-4-administration',
+            'oral-2-3-heart-failure',
+            'oral-14-1-hypertension',
+            'oral-14-2-angina-pectoris',
+            'oral-17-patient-counseling-information',
           ],
         },
       ],
@@ -149,7 +176,6 @@ export const BENCH_CASES: BenchCase[] = [
         {
           reference: 'label-atorvastatin-calcium',
           sections: [
-            'oral-2-5-dosage-modifications-due-to-drug-interactions',
             'oral-select-azole-antifungals-or-macrolide-antibiotics',
             'oral-7-1-drug-interactions-that-may-increase-the-risk-of-myopathy',
           ],
@@ -175,6 +201,10 @@ export const BENCH_CASES: BenchCase[] = [
             'oral-7-1-drug-interactions-that-increase-the-risk-of-myopathy-and',
           ],
         },
+        {
+          reference: 'label-amlodipine-besylate',
+          sections: ['oral-simvastatin'],
+        },
       ],
     ],
     mustNotRead: [],
@@ -197,7 +227,16 @@ export const BENCH_CASES: BenchCase[] = [
             'oral-8-6-renal-impairment',
             'oral-dosage-and-administration',
             'oral-contraindications',
+            'oral-5-1-lactic-acidosis',
           ],
+        },
+        {
+          reference: 'va-dod-ckd',
+          sections: ['appendix-l-list-of-pharmacotherapies'],
+        },
+        {
+          reference: 'va-dod-type-2-diabetes',
+          sections: ['appendix-c-pharmacotherapy'],
         },
       ],
     ],
@@ -219,6 +258,8 @@ export const BENCH_CASES: BenchCase[] = [
             'oral-5-1-diminished-antiplatelet-activity-in-patients-with-impair',
             'oral-17-patient-counseling-information',
             'oral-warnings-and-precautions',
+            'oral-medication-guide',
+            'oral-12-3-pharmacokinetics',
           ],
         },
         {
@@ -228,6 +269,7 @@ export const BENCH_CASES: BenchCase[] = [
             'oral-7-drug-interactions',
             'oral-17-patient-counseling-information',
             'oral-warnings-and-precautions',
+            'oral-12-3-pharmacokinetics',
           ],
         },
       ],
@@ -257,7 +299,9 @@ export const BENCH_CASES: BenchCase[] = [
             'oral-5-7-serotonin-syndrome',
             'oral-7-4-selective-serotonin-reuptake-inhibitors-serotonin-norepi',
             'oral-17-patient-counseling-information',
-            'oral-warnings-and-precautions',
+            'subcutaneous-5-7-serotonin-syndrome',
+            'subcutaneous-7-4-selective-serotonin-reuptake-inhibitors-serotonin-norepi',
+            'subcutaneous-17-patient-counseling-information',
           ],
         },
       ],
@@ -279,6 +323,9 @@ export const BENCH_CASES: BenchCase[] = [
             'oral-4-contraindications',
             'oral-5-7-use-in-pregnant-women-with-mechanical-heart-valves',
             'oral-8-1-pregnancy',
+            'oral-contraindications',
+            'oral-17-patient-counseling-information',
+            'oral-medication-guide',
           ],
         },
       ],
@@ -300,7 +347,12 @@ export const BENCH_CASES: BenchCase[] = [
             'recommendation-summary',
             'clinician-summary',
             'full-recommendation',
+            'response-to-public-comment',
           ],
+        },
+        {
+          reference: 'uspstf-a-and-b',
+          sections: ['a-b-recommendations'],
         },
       ],
     ],
@@ -315,7 +367,18 @@ export const BENCH_CASES: BenchCase[] = [
     mustNotCall: ['search_references', 'read_section'],
     mustRead: [],
     mustNotRead: [],
-    mustRetrieve: [],
+    mustRetrieve: [
+      [
+        {
+          kind: 'lab',
+          analyte: '2093-3',
+        },
+        {
+          kind: 'lab',
+          analyte: '13457-7',
+        },
+      ],
+    ],
   },
   {
     id: 'bp-at-goal',
@@ -327,12 +390,31 @@ export const BENCH_CASES: BenchCase[] = [
       [
         {
           reference: 'va-dod-hypertension',
-          sections: ['ix-recommendations', 'page-33-2', 'page-34'],
+          sections: [
+            'ix-recommendations',
+            'page-33-2',
+            'page-34',
+            'page-35',
+            'module-b-treatment',
+            'a-highlights-in-this-guideline-update',
+            'appendix-b-evidence-table',
+          ],
         },
       ],
     ],
     mustNotRead: [],
-    mustRetrieve: [],
+    mustRetrieve: [
+      [
+        {
+          kind: 'note',
+          id: 'n1',
+        },
+        {
+          kind: 'note',
+          id: 'n8',
+        },
+      ],
+    ],
   },
   {
     id: 'va-bp-goal',
@@ -345,7 +427,15 @@ export const BENCH_CASES: BenchCase[] = [
       [
         {
           reference: 'va-dod-hypertension',
-          sections: ['ix-recommendations', 'page-33-2'],
+          sections: [
+            'ix-recommendations',
+            'page-33-2',
+            'page-34',
+            'page-35',
+            'module-b-treatment',
+            'a-highlights-in-this-guideline-update',
+            'appendix-b-evidence-table',
+          ],
         },
       ],
     ],
@@ -362,7 +452,14 @@ export const BENCH_CASES: BenchCase[] = [
       [
         {
           reference: 'va-dod-type-2-diabetes',
-          sections: ['page-25', 'page-42', 'page-45'],
+          sections: [
+            'page-25',
+            'page-42',
+            'page-45',
+            'appendix-e-evidence-table',
+            'appendix-i-alternative-text-descriptions-of-algorithm',
+            'appendix-b-glycemic-control-targets-and-monitoring',
+          ],
         },
       ],
     ],
@@ -377,14 +474,53 @@ export const BENCH_CASES: BenchCase[] = [
     mustNotCall: [],
     mustRead: [
       [
-        { reference: 'cdc-adult-schedule-by-age' },
-        { reference: 'cdc-adult-schedule-by-condition' },
-        { reference: 'cdc-recommended-vaccinations-for-adults' },
-        { reference: 'cdc-vaccines-for-adults' },
+        {
+          reference: 'cdc-adult-schedule-by-age',
+          sections: ['ages-19-years-or-older'],
+        },
+        {
+          reference: 'cdc-recommended-vaccinations-for-adults',
+          sections: ['key', 'what-diseases-do-these-vaccines-protect-against'],
+        },
+        {
+          reference: 'cdc-key-facts-about-seasonal-flu-vaccine',
+          sections: ['who-should-be-vaccinated', 'what-to-know'],
+        },
+        {
+          reference: 'cdc-tetanus-vaccination',
+          sections: ['key-points', 'vaccine-recommendations'],
+        },
       ],
     ],
     mustNotRead: [],
-    mustRetrieve: [],
+    mustRetrieve: [
+      [
+        {
+          kind: 'record',
+          type: 'immunization',
+          name: 'Influenza, Quadrivalent, Mdck, Preservative Free',
+        },
+        {
+          kind: 'record',
+          type: 'immunization',
+          name: 'Influenza, split virus, trivalent, injectable, preservative free',
+        },
+      ],
+      [
+        {
+          kind: 'record',
+          type: 'immunization',
+          name: 'Tdap',
+        },
+      ],
+      [
+        {
+          kind: 'record',
+          type: 'immunization',
+          name: 'Moderna Covid-19 Mrna Vaccine Im Injection',
+        },
+      ],
+    ],
   },
   {
     id: 'ckd-bp-medicines',
@@ -393,7 +529,28 @@ export const BENCH_CASES: BenchCase[] = [
       'For someone with chronic kidney disease and high blood pressure, which blood pressure medicines do the guidelines recommend to protect the kidneys?',
     mustCall: ['search_references'],
     mustNotCall: [],
-    mustRead: [[{ reference: 'va-dod-ckd' }]],
+    mustRead: [
+      [
+        {
+          reference: 'va-dod-ckd',
+          sections: [
+            'page-33',
+            'page-53',
+            'page-54',
+            'page-56',
+            'page-57',
+            'page-58',
+            'module-d-pharmacologic-management-of-ckd-in-patients-not-on-2',
+            'appendix-h-management-of-ckd-table',
+            'appendix-b-evidence-table',
+          ],
+        },
+        {
+          reference: 'va-dod-hypertension',
+          sections: ['appendix-i-drug-and-dosage-table-selected-examples'],
+        },
+      ],
+    ],
     mustNotRead: [],
     mustRetrieve: [],
   },
@@ -412,7 +569,15 @@ export const BENCH_CASES: BenchCase[] = [
             'clinician-summary',
             'full-recommendation',
             'starting-and-stopping-ages',
+            'assessment-of-risk',
+            'advising-black-adults',
+            'other-related-uspstf-recommendations',
+            'response-to-public-comments',
           ],
+        },
+        {
+          reference: 'uspstf-a-and-b',
+          sections: ['a-b-recommendations'],
         },
       ],
     ],
@@ -427,8 +592,33 @@ export const BENCH_CASES: BenchCase[] = [
     mustNotCall: [],
     mustRead: [
       [
-        { reference: 'cdc-treatment-of-whooping-cough' },
-        { reference: 'cdc-treatment-of-pertussis' },
+        {
+          reference: 'cdc-treatment-of-whooping-cough',
+          sections: [
+            'key-points',
+            'treatment',
+            'getting-treatment-in-a-hospital',
+            'managing-symptoms-at-home',
+          ],
+        },
+        {
+          reference: 'cdc-treatment-of-pertussis',
+          sections: [
+            'key-points',
+            'early-treatment-can-reduce-severity',
+            'consider-treating-prior-to-test-results',
+            'treatment-timeline',
+            'antibiotic-choice',
+            'important-considerations',
+            'infants-less-than-1-month-of-age',
+            'people-1-month-of-age-and-older',
+            'people-2-months-of-age-and-older',
+          ],
+        },
+        {
+          reference: 'cdc-about-whooping-cough',
+          sections: ['key-points', 'treatment-and-recovery'],
+        },
       ],
     ],
     mustNotRead: [],
@@ -440,7 +630,30 @@ export const BENCH_CASES: BenchCase[] = [
     question: 'What are the symptoms of measles?',
     mustCall: ['search_references'],
     mustNotCall: [],
-    mustRead: [[{ reference: 'cdc-measles-symptoms-and-complications' }]],
+    mustRead: [
+      [
+        {
+          reference: 'cdc-measles-symptoms-and-complications',
+          sections: [
+            '7-14-days-after-a-measles-infection-first-symptoms-show',
+            '2-3-days-after-symptoms-begin-koplik-spots',
+            '3-5-days-after-symptoms-begin-measles-rash',
+          ],
+        },
+        {
+          reference: 'cdc-about-measles',
+          sections: ['signs-and-symptoms'],
+        },
+        {
+          reference: 'cdc-recommended-vaccinations-for-adults',
+          sections: ['what-diseases-do-these-vaccines-protect-against'],
+        },
+        {
+          reference: 'cdc-recommended-vaccines-for-young-children',
+          sections: ['what-diseases-do-these-vaccines-protect-against'],
+        },
+      ],
+    ],
     mustNotRead: [],
     mustRetrieve: [],
   },
@@ -454,18 +667,29 @@ export const BENCH_CASES: BenchCase[] = [
       [
         {
           reference: 'cdc-pneumococcal-disease-in-adults-and-vaccines-to-pre',
-          sections: ['recommendations', 'age'],
+          sections: ['recommendations', 'previously-vaccinated'],
         },
         {
           reference: 'cdc-pneumococcal-vaccination',
           sections: ['vaccine-recommendations'],
         },
+        {
+          reference: 'cdc-pneumococcal-disease-causes-and-how-it-spreads',
+          sections: ['medical-conditions'],
+        },
       ],
     ],
     mustNotRead: [],
-    mustRetrieve: [],
+    mustRetrieve: [
+      [
+        {
+          kind: 'record',
+          type: 'immunization',
+          name: 'Pneumococcal Conjugate PCV 13',
+        },
+      ],
+    ],
   },
-  // Questions below are verbatim from OpenAI HealthBench (MIT license).
   {
     id: 'hb-new-meds-how-to-take',
     category: 'drug-label',
@@ -480,13 +704,19 @@ export const BENCH_CASES: BenchCase[] = [
           sections: [
             'oral-dosage-and-administration',
             'oral-2-1-adult-dosage-and-administration',
+            'oral-patient-information',
           ],
         },
       ],
       [
         {
           reference: 'label-lisinopril',
-          sections: ['oral-dosage-and-administration', 'oral-2-1-hypertension'],
+          sections: [
+            'oral-dosage-and-administration',
+            'oral-2-1-hypertension',
+            'oral-2-2-heart-failure',
+            'oral-2-3-reduction-of-mortality-in-acute-myocardial-infarction',
+          ],
         },
       ],
       [
@@ -496,6 +726,7 @@ export const BENCH_CASES: BenchCase[] = [
             'oral-dosage-and-administration',
             'oral-2-1-important-dosage-information',
             'oral-2-2-recommended-dosage-in-adult-patients',
+            'oral-patient-information',
           ],
         },
       ],
@@ -543,10 +774,10 @@ export const BENCH_CASES: BenchCase[] = [
           reference: 'label-ibuprofen',
           sections: [
             'oral-adverse-reactions',
-            'oral-warnings',
             'oral-gastrointestinal-effects-risk-of-ulceration-bleeding-and-per',
             'oral-information-for-patients',
             'oral-ibuprofen-tablets-usp',
+            'oral-how-supplied',
           ],
         },
       ],
@@ -565,7 +796,15 @@ export const BENCH_CASES: BenchCase[] = [
       [
         {
           reference: 'va-dod-hypertension',
-          sections: ['ix-recommendations', 'page-33-2'],
+          sections: [
+            'ix-recommendations',
+            'page-33-2',
+            'page-34',
+            'page-35',
+            'module-b-treatment',
+            'a-highlights-in-this-guideline-update',
+            'appendix-b-evidence-table',
+          ],
         },
       ],
     ],
@@ -592,10 +831,25 @@ export const BENCH_CASES: BenchCase[] = [
             'oral-5-1-lactic-acidosis',
           ],
         },
+        {
+          reference: 'va-dod-ckd',
+          sections: ['appendix-l-list-of-pharmacotherapies'],
+        },
+        {
+          reference: 'va-dod-type-2-diabetes',
+          sections: ['appendix-c-pharmacotherapy'],
+        },
       ],
     ],
     mustNotRead: [],
-    mustRetrieve: [[{ kind: 'lab', analyte: '77147-7' }]],
+    mustRetrieve: [
+      [
+        {
+          kind: 'lab',
+          analyte: '77147-7',
+        },
+      ],
+    ],
   },
   {
     id: 'hydrochlorothiazide-safe',
@@ -613,15 +867,32 @@ export const BENCH_CASES: BenchCase[] = [
             'oral-warnings-and-precautions',
           ],
         },
+        {
+          reference: 'va-dod-ckd',
+          sections: ['appendix-l-list-of-pharmacotherapies'],
+        },
       ],
     ],
     mustNotRead: [],
     mustRetrieve: [
       [
-        { kind: 'lab', analyte: '17861-6' },
-        { kind: 'lab', analyte: '2731-8' },
-        { kind: 'lab', analyte: '17864-0' },
-        { kind: 'record', type: 'condition', name: 'Serum calcium elevated' },
+        {
+          kind: 'lab',
+          analyte: '17861-6',
+        },
+        {
+          kind: 'lab',
+          analyte: '2731-8',
+        },
+        {
+          kind: 'lab',
+          analyte: '17864-0',
+        },
+        {
+          kind: 'record',
+          type: 'condition',
+          name: 'Serum calcium elevated',
+        },
       ],
     ],
   },
@@ -648,8 +919,26 @@ export const BENCH_CASES: BenchCase[] = [
     mustNotRead: [],
     mustRetrieve: [
       [
-        { kind: 'record', type: 'allergy', name: 'PENICILLINS' },
-        { kind: 'record', type: 'condition', name: 'Penicillin rash' },
+        {
+          kind: 'record',
+          type: 'allergy',
+          name: 'PENICILLINS',
+        },
+        {
+          kind: 'record',
+          type: 'condition',
+          name: 'Penicillin rash',
+        },
+      ],
+      [
+        {
+          kind: 'note',
+          id: 'n1',
+        },
+        {
+          kind: 'note',
+          id: 'n2',
+        },
       ],
     ],
   },
@@ -670,6 +959,7 @@ export const BENCH_CASES: BenchCase[] = [
             'oral-warnings-and-precautions',
             'oral-5-14-laboratory-monitoring',
             'oral-17-patient-counseling-information',
+            'oral-12-3-pharmacokinetics',
           ],
         },
       ],
@@ -677,8 +967,18 @@ export const BENCH_CASES: BenchCase[] = [
     mustNotRead: [],
     mustRetrieve: [
       [
-        { kind: 'lab', analyte: '77147-7' },
-        { kind: 'lab', analyte: '2160-0' },
+        {
+          kind: 'lab',
+          analyte: '77147-7',
+        },
+        {
+          kind: 'lab',
+          analyte: '2160-0',
+        },
+        {
+          kind: 'lab',
+          analyte: '35592-5',
+        },
       ],
     ],
   },
@@ -695,22 +995,36 @@ export const BENCH_CASES: BenchCase[] = [
           sections: ['ages-19-years-or-older'],
         },
         {
-          reference: 'cdc-adult-schedule-by-condition',
-          sections: ['ages-19-years-or-older'],
-        },
-        {
           reference: 'cdc-recommended-vaccinations-for-adults',
-          sections: ['what-diseases-do-these-vaccines-protect-against'],
+          sections: ['what-diseases-do-these-vaccines-protect-against', 'key'],
         },
       ],
     ],
     mustNotRead: [],
     mustRetrieve: [
       [
-        { kind: 'record', type: 'immunization', name: 'Hep B, adult' },
-        { kind: 'record', type: 'immunization', name: 'Hep B, Unspecified' },
+        {
+          kind: 'record',
+          type: 'immunization',
+          name: 'Hep B, adult',
+        },
+        {
+          kind: 'record',
+          type: 'immunization',
+          name: 'Hep B, Unspecified',
+        },
+        {
+          kind: 'record',
+          type: 'procedure',
+          name: 'HEPB VACCINE 3 DOSE ADULT IM',
+        },
       ],
-      [{ kind: 'lab', analyte: '16935-9' }],
+      [
+        {
+          kind: 'lab',
+          analyte: '16935-9',
+        },
+      ],
     ],
   },
   {
