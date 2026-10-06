@@ -16,12 +16,25 @@ export type Finding = {
   detail: string;
 };
 
-type Row = {
-  document_id: string;
-  section_id: string;
-  parent_id: string | null;
-  content_md: string;
+export type SectionRow = {
+  reference: string;
+  section: string;
+  parent: string | null;
+  title: string;
+  text: string;
 };
+
+export type ReferenceRow = { id: string; title: string; summary: string };
+
+/** Everything the checks read: the library's rows and its two search index tables, in reading order. */
+export type Library = {
+  references: ReferenceRow[];
+  sections: SectionRow[];
+  referenceIndex: ReferenceRow[];
+  sectionIndex: SectionRow[];
+};
+
+type Check = (library: Library) => Finding[];
 
 const SHORT_REFERENCE_CHARS = 500;
 const LINK = /!?\[[^\]]*\]\([^)]*\)/g;
@@ -29,133 +42,208 @@ const HTML_TAG = /<\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
 
 /** Problems in a built library that make a section unreadable, unreachable or misleading to the agent. */
 export function auditLibrary(db: DatabaseSync): Finding[] {
-  const rows = db
-    .prepare(
-      'SELECT document_id, section_id, parent_id, content_md FROM sections ORDER BY document_id, position',
-    )
-    .all() as Row[];
-  const ids = new Set(rows.map((r) => `${r.document_id}/${r.section_id}`));
+  const library = loadLibrary(db);
+  return CHECKS.flatMap((check) => check(library));
+}
+
+export function loadLibrary(db: DatabaseSync): Library {
+  return {
+    references: db
+      .prepare('SELECT id, title, summary FROM documents ORDER BY id')
+      .all() as ReferenceRow[],
+    sections: db
+      .prepare(
+        `SELECT document_id AS reference, section_id AS section, parent_id AS parent, title, content_md AS text
+         FROM sections ORDER BY document_id, position`,
+      )
+      .all() as SectionRow[],
+    referenceIndex: db
+      .prepare('SELECT id, title, summary FROM documents_fts')
+      .all() as ReferenceRow[],
+    sectionIndex: db
+      .prepare(
+        `SELECT document_id AS reference, section_id AS section, NULL AS parent, title, content_md AS text
+         FROM sections_fts`,
+      )
+      .all() as SectionRow[],
+  };
+}
+
+function finding(
+  check: Finding['check'],
+  row: SectionRow,
+  detail: string,
+): Finding {
+  return { check, reference: row.reference, section: row.section, detail };
+}
+
+function key(reference: string, section: string): string {
+  return `${reference}/${section}`;
+}
+
+export function missingParents({ sections }: Library): Finding[] {
+  const ids = new Set(sections.map((s) => key(s.reference, s.section)));
+  return sections
+    .filter((s) => s.parent !== null && !ids.has(key(s.reference, s.parent)))
+    .map((s) => finding('missing-parent', s, `parent ${s.parent} not found`));
+}
+
+export function deadEnds({ sections }: Library): Finding[] {
   const parents = new Set(
-    rows.flatMap((r) =>
-      r.parent_id ? [`${r.document_id}/${r.parent_id}`] : [],
-    ),
+    sections.flatMap((s) => (s.parent ? [key(s.reference, s.parent)] : [])),
   );
-  const firstWithText = new Map<string, string>();
-  const findings: Finding[] = [];
-  for (const row of rows) {
-    const key = `${row.document_id}/${row.section_id}`;
-    const found = (check: Finding['check'], detail: string) =>
-      findings.push({
-        check,
-        reference: row.document_id,
-        section: row.section_id,
-        detail,
-      });
-    const text = row.content_md.trim();
-    if (row.parent_id && !ids.has(`${row.document_id}/${row.parent_id}`)) {
-      found('missing-parent', `parent ${row.parent_id} not found`);
-    }
-    if (!text) {
-      if (!parents.has(key)) {
-        found('dead-end', 'no text and no subsections');
-      }
-      continue;
-    }
-    if (!/\p{L}/u.test(text.replace(LINK, ''))) {
-      found('links-only', 'text is only links');
-    }
+  return sections
+    .filter(
+      (s) => s.text.trim() === '' && !parents.has(key(s.reference, s.section)),
+    )
+    .map((s) => finding('dead-end', s, 'no text and no subsections'));
+}
+
+export function linksOnly({ sections }: Library): Finding[] {
+  return sections
+    .filter(
+      (s) => s.text.trim() !== '' && !/\p{L}/u.test(s.text.replace(LINK, '')),
+    )
+    .map((s) => finding('links-only', s, 'text is only links'));
+}
+
+export function htmlTags({ sections }: Library): Finding[] {
+  return sections.flatMap((s) => {
     const tags = [
       ...new Set(
-        [...text.matchAll(HTML_TAG)].map((m) => `<${m[1].toLowerCase()}>`),
+        [...s.text.matchAll(HTML_TAG)].map((m) => `<${m[1].toLowerCase()}>`),
       ),
     ].sort();
-    if (tags.length > 0) {
-      found('html-tags', tags.join(' '));
-    }
-    if (text.includes('\ufffd')) {
-      found('replacement-character', 'text has \ufffd');
-    }
-    const earlier = firstWithText.get(text);
-    if (earlier) {
-      found('duplicate-text', `same text as ${earlier}`);
-    } else {
-      firstWithText.set(text, key);
-    }
-  }
-  return [
-    ...findings,
-    ...shortReferenceFindings(rows),
-    ...searchIndexFindings(db),
-  ];
+    return tags.length > 0 ? [finding('html-tags', s, tags.join(' '))] : [];
+  });
 }
 
-function shortReferenceFindings(rows: Row[]): Finding[] {
-  const chars = new Map<string, number>();
-  for (const row of rows) {
-    chars.set(
-      row.document_id,
-      (chars.get(row.document_id) ?? 0) + row.content_md.trim().length,
-    );
-  }
-  return [...chars]
-    .filter(([, total]) => total < SHORT_REFERENCE_CHARS)
-    .map(([reference, total]) => ({
-      check: 'short-reference' as const,
-      reference,
-      section: null,
-      detail: `${total} characters of text`,
-    }));
+export function replacementCharacters({ sections }: Library): Finding[] {
+  return sections
+    .filter((s) => s.text.includes('\ufffd'))
+    .map((s) => finding('replacement-character', s, 'text has \ufffd'));
 }
 
-function searchIndexFindings(db: DatabaseSync): Finding[] {
-  const ids = (sql: string) =>
-    db.prepare(sql).all() as { reference: string; section: string | null }[];
-  const found = (
-    rows: { reference: string; section: string | null }[],
-    detail: string,
-  ): Finding[] =>
-    rows.map(({ reference, section }) => ({
-      check: 'search-index',
-      reference,
-      section,
-      detail,
-    }));
-  const { n } = db.prepare('SELECT COUNT(*) AS n FROM documents').get() as {
-    n: number;
-  };
-  return [
-    ...(n === 0
+export function duplicateText({ sections }: Library): Finding[] {
+  const first = new Map<string, SectionRow>();
+  return sections.flatMap((s) => {
+    const text = s.text.trim();
+    if (text === '') {
+      return [];
+    }
+    const earlier = first.get(text);
+    if (!earlier) {
+      first.set(text, s);
+      return [];
+    }
+    return [
+      finding(
+        'duplicate-text',
+        s,
+        `same text as ${key(earlier.reference, earlier.section)}`,
+      ),
+    ];
+  });
+}
+
+export function shortReferences({ references, sections }: Library): Finding[] {
+  return references.flatMap(({ id }) => {
+    const chars = sections
+      .filter((s) => s.reference === id)
+      .reduce((sum, s) => sum + s.text.trim().length, 0);
+    return chars < SHORT_REFERENCE_CHARS
       ? [
           {
-            check: 'empty-library' as const,
-            reference: '(library)',
+            check: 'short-reference' as const,
+            reference: id,
             section: null,
-            detail: 'no references',
+            detail: `${chars} characters of text`,
           },
         ]
-      : []),
-    ...found(
-      ids(`SELECT id AS reference, NULL AS section FROM (
-             SELECT id, title, summary FROM documents
-             EXCEPT SELECT id, title, summary FROM documents_fts)`),
-      'missing from the reference search index or indexed with another title or summary',
-    ),
-    ...found(
-      ids(`SELECT id AS reference, NULL AS section FROM (
-             SELECT id FROM documents_fts EXCEPT SELECT id FROM documents)`),
-      'in the reference search index but not in the library',
-    ),
-    ...found(
-      ids(`SELECT document_id AS reference, section_id AS section FROM (
-             SELECT document_id, section_id, title, content_md FROM sections
-             EXCEPT SELECT document_id, section_id, title, content_md FROM sections_fts)`),
-      'missing from the section search index or indexed with other text',
-    ),
-    ...found(
-      ids(`SELECT document_id AS reference, section_id AS section FROM (
-             SELECT document_id, section_id FROM sections_fts
-             EXCEPT SELECT document_id, section_id FROM sections)`),
-      'in the section search index but not in the library',
-    ),
+      : [];
+  });
+}
+
+export function emptyLibrary({ references }: Library): Finding[] {
+  return references.length === 0
+    ? [
+        {
+          check: 'empty-library',
+          reference: '(library)',
+          section: null,
+          detail: 'no references',
+        },
+      ]
+    : [];
+}
+
+export function searchIndex({
+  references,
+  sections,
+  referenceIndex,
+  sectionIndex,
+}: Library): Finding[] {
+  const referenceKey = (r: ReferenceRow) =>
+    JSON.stringify([r.id, r.title, r.summary]);
+  const sectionKey = (s: SectionRow) =>
+    JSON.stringify([s.reference, s.section, s.title, s.text]);
+  const indexedReferences = new Set(referenceIndex.map(referenceKey));
+  const referenceIds = new Set(references.map((r) => r.id));
+  const indexedSections = new Set(sectionIndex.map(sectionKey));
+  const sectionIds = new Set(sections.map((s) => key(s.reference, s.section)));
+  const searchFinding = (
+    reference: string,
+    section: string | null,
+    detail: string,
+  ): Finding => ({ check: 'search-index', reference, section, detail });
+  return [
+    ...references
+      .filter((r) => !indexedReferences.has(referenceKey(r)))
+      .map((r) =>
+        searchFinding(
+          r.id,
+          null,
+          'missing from the reference search index or indexed with another title or summary',
+        ),
+      ),
+    ...referenceIndex
+      .filter((r) => !referenceIds.has(r.id))
+      .map((r) =>
+        searchFinding(
+          r.id,
+          null,
+          'in the reference search index but not in the library',
+        ),
+      ),
+    ...sections
+      .filter((s) => !indexedSections.has(sectionKey(s)))
+      .map((s) =>
+        searchFinding(
+          s.reference,
+          s.section,
+          'missing from the section search index or indexed with other text',
+        ),
+      ),
+    ...sectionIndex
+      .filter((s) => !sectionIds.has(key(s.reference, s.section)))
+      .map((s) =>
+        searchFinding(
+          s.reference,
+          s.section,
+          'in the section search index but not in the library',
+        ),
+      ),
   ];
 }
+
+const CHECKS: Check[] = [
+  missingParents,
+  deadEnds,
+  linksOnly,
+  htmlTags,
+  replacementCharacters,
+  duplicateText,
+  shortReferences,
+  emptyLibrary,
+  searchIndex,
+];
