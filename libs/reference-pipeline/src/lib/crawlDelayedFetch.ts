@@ -6,7 +6,7 @@ export const FETCH_TIMEOUT_MS = 120_000;
 type Host = { delayMs: number; lastRequestAt: number };
 
 /** A fetch that reads each host's robots.txt once, waits out its crawl delay, retries, and gives up on any request after FETCH_TIMEOUT_MS. */
-export function createPoliteFetch({
+export function createCrawlDelayedFetch({
   fetchImpl,
   sleep,
   now,

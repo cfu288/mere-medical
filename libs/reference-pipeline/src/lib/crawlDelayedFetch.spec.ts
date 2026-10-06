@@ -1,24 +1,24 @@
-import { createPoliteFetch, FETCH_TIMEOUT_MS } from './politeFetch';
+import { createCrawlDelayedFetch, FETCH_TIMEOUT_MS } from './crawlDelayedFetch';
 
 function okResponse(body: string): Response {
   return { ok: true, status: 200, text: async () => body } as Response;
 }
 
-describe('createPoliteFetch', () => {
+describe('createCrawlDelayedFetch', () => {
   it('gives every request a timeout and honors the crawl delay of a host', async () => {
     const fetchImpl = jest
       .fn<Promise<Response>, [string, RequestInit | undefined]>()
       .mockResolvedValueOnce(okResponse('User-agent: *\nCrawl-delay: 2\n'))
       .mockResolvedValue(okResponse('page'));
     const sleep = jest.fn().mockResolvedValue(undefined);
-    const politeFetch = createPoliteFetch({
+    const crawlDelayedFetch = createCrawlDelayedFetch({
       fetchImpl,
       sleep,
       now: () => 1000,
     });
 
-    await politeFetch('https://example.org/a');
-    await politeFetch('https://example.org/b');
+    await crawlDelayedFetch('https://example.org/a');
+    await crawlDelayedFetch('https://example.org/b');
 
     expect(fetchImpl.mock.calls.map(([url]) => url)).toEqual([
       'https://example.org/robots.txt',

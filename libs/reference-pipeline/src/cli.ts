@@ -4,17 +4,17 @@ import { setTimeout as sleep } from 'timers/promises';
 
 import { ingestSources } from './lib/ingest';
 import { openReferencesDb } from './lib/referencesDb';
-import { createPoliteFetch } from './lib/politeFetch';
+import { createCrawlDelayedFetch } from './lib/crawlDelayedFetch';
 import { parseSources } from './lib/sources';
 
-const politeFetch = createPoliteFetch({
+const crawlDelayedFetch = createCrawlDelayedFetch({
   fetchImpl: fetch,
   sleep,
   now: Date.now,
 });
 
 async function fetchBytes(url: string): Promise<Uint8Array> {
-  const response = await politeFetch(url);
+  const response = await crawlDelayedFetch(url);
   if (!response.ok) {
     throw new Error(`GET ${url} returned ${response.status}`);
   }
