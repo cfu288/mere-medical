@@ -1,5 +1,5 @@
 import { ToolCall } from '../agent/ollamaChat';
-import { AgentTool, dispatchTool } from '../agent/tools';
+import { AgentTool, runTool } from '../agent/tools';
 import { Harness } from './events';
 
 export async function loggedToolDispatch(
@@ -16,7 +16,13 @@ export async function loggedToolDispatch(
     name: call.name,
     args: call.args,
   });
-  const result = await dispatchTool(tools, call);
-  harness.emit({ t: 'ToolResult', toolId, name: call.name, result });
-  return result;
+  const { text, retrieved } = await runTool(tools, call);
+  harness.emit({
+    t: 'ToolResult',
+    toolId,
+    name: call.name,
+    result: text,
+    retrieved,
+  });
+  return text;
 }

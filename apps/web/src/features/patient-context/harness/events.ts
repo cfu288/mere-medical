@@ -1,4 +1,5 @@
 import { ToolCall, WireMessage } from '../agent/ollamaChat';
+import { Retrieved } from '../agent/tools';
 import { NoteFormat } from '../notes/extractNoteText';
 
 export type HarnessEvent =
@@ -36,7 +37,13 @@ export type HarnessEvent =
       name: string;
       args: Record<string, unknown>;
     }
-  | { t: 'ToolResult'; toolId: string; name: string; result: string }
+  | {
+      t: 'ToolResult';
+      toolId: string;
+      name: string;
+      result: string;
+      retrieved: Retrieved[];
+    }
   | { t: 'RunCompleted' }
   | { t: 'RunFailed'; message: string }
   | { t: 'RunAborted' };

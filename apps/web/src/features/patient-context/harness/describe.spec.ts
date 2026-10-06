@@ -86,6 +86,7 @@ describe('summarizeRun', () => {
         toolId: 'tool-1',
         name: 'search_labs',
         result: 'No matches for "a1c".',
+        retrieved: [],
         env: { seq: 3, at: '2026-09-29T23:59:28.000Z' },
       },
       {
@@ -194,6 +195,7 @@ describe('projectVisibleLog', () => {
         toolId: 'tool-1',
         name: 'search_labs',
         result: 'No matches for "a1c".',
+        retrieved: [],
         env: { seq: 4, at: '2026-09-20T14:00:04.000Z' },
       },
       {
