@@ -8,7 +8,7 @@ COPY . /app/
 ENV NX_DAEMON=false
 RUN npx nx build docs
 
-FROM nginxinc/nginx-unprivileged:1.31-alpine@sha256:b54ac358b83fc6c965793fd271839b4ea4cdb6e99895bb19618cbc2ca152d972
+FROM nginxinc/nginx-unprivileged:1.31-alpine@sha256:26b0bf6fbf07297983cb341998d79c831508787de26627dd2a112321b9c3a4af
 
 COPY --from=build-stage /app/apps/docs/build /usr/share/nginx/html
 COPY --from=build-stage /app/default.conf /etc/nginx/conf.d/default.conf
