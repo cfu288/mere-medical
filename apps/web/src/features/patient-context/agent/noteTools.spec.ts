@@ -192,7 +192,30 @@ describe('noteTools retrieval', () => {
           args: { id: 'n1' },
         })
       ).retrieved,
-    ).toEqual([{ kind: 'note', id: 'n1' }]);
+    ).toEqual([{ kind: 'note', id: 'n1', part: 1 }]);
+  });
+
+  it('reports the part read_note returned', async () => {
+    expect(
+      (
+        await runTool(
+          noteTools([
+            {
+              alias: 'n9',
+              date: { kind: 'known', iso: '2025-08-14T00:00:00Z' },
+              displayName: 'Long Note',
+              contentType: 'application/pdf',
+              read: async () => ({
+                kind: 'text',
+                format: 'pdf',
+                text: 'aaaa'.repeat(2000) + '\n' + 'bbbb'.repeat(2000),
+              }),
+            },
+          ]),
+          { name: 'read_note', args: { id: 'n9', part: 2 } },
+        )
+      ).retrieved,
+    ).toEqual([{ kind: 'note', id: 'n9', part: 2 }]);
   });
 
   it('reports nothing for a note it could not read', async () => {
@@ -206,7 +229,7 @@ describe('noteTools retrieval', () => {
     ).toEqual([]);
   });
 
-  it('reports each note search_notes quoted', async () => {
+  it('reports nothing for search snippets, which show only part of a note', async () => {
     expect(
       (
         await runTool(noteTools(notes), {
@@ -214,7 +237,7 @@ describe('noteTools retrieval', () => {
           args: { query: ['hypertension'] },
         })
       ).retrieved,
-    ).toEqual([{ kind: 'note', id: 'n1' }]);
+    ).toEqual([]);
   });
 
   it('reports nothing for the note list, which shows only titles', async () => {

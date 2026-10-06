@@ -3,11 +3,12 @@ import { MAX_SEARCH_RESULT_CHARS } from '../constants';
 import { OllamaToolDef, ToolCall } from './ollamaChat';
 import { RecordType } from '../types';
 
-/** A lab analyte (its LOINC code, else its name), a record entry or a note whose details a tool result showed. */
+/** What a tool result showed: a lab analyte (its LOINC code, else its name), a record entry, one part of a note, or one section of a reference. */
 export type Retrieved =
   | { kind: 'lab'; analyte: string }
   | { kind: 'record'; type: RecordType; name: string }
-  | { kind: 'note'; id: string };
+  | { kind: 'note'; id: string; part: number }
+  | { kind: 'section'; reference: string; section: string };
 
 /** A tool's reply to the model and the patient data it showed. */
 export type ToolOutput = { text: string; retrieved: Retrieved[] };

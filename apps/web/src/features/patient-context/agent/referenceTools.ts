@@ -1,5 +1,5 @@
 import { isAbortError } from './abort';
-import { AgentTool, capLines, toTerms } from './tools';
+import { AgentTool, ToolOutput, capLines, toTerms } from './tools';
 import { REFERENCE_FETCH_TIMEOUT_MS } from '../constants';
 
 type Location =
@@ -71,8 +71,8 @@ async function fetchJson<T>(
   url: string,
   signal: AbortSignal | undefined,
   notFound: (body: NotFound) => string,
-  render: (body: T) => string,
-): Promise<string> {
+  render: (body: T) => string | ToolOutput,
+): Promise<string | ToolOutput> {
   try {
     const response = await boundedFetch(url, signal);
     if (response.status === 404) {
@@ -338,7 +338,23 @@ function entryLine(entry: OutlineEntry, indent: string): string {
   return `${indent}${entry.sectionId} | ${entry.title} | ${entry.chars} chars${where ? ` | ${where}` : ''}`;
 }
 
-function renderSection({ reference, section }: SectionRead): string {
+function renderSection(read: SectionRead): string | ToolOutput {
+  const text = sectionText(read);
+  return read.section.contentMd
+    ? {
+        text,
+        retrieved: [
+          {
+            kind: 'section',
+            reference: read.reference.id,
+            section: read.section.sectionId,
+          },
+        ],
+      }
+    : text;
+}
+
+function sectionText({ reference, section }: SectionRead): string {
   const where = locationText(section.location);
   const cited =
     section.location.kind === 'webpage' && section.location.url

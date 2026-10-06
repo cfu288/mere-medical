@@ -1,6 +1,6 @@
 import { ToolCall } from './ollamaChat';
 import { referenceTools } from './referenceTools';
-import { dispatchTool } from './tools';
+import { dispatchTool, runTool } from './tools';
 
 function run(call: ToolCall): Promise<string> {
   return dispatchTool(referenceTools(), call);
@@ -470,6 +470,89 @@ describe('read_section', () => {
         '(No text of its own; read a subsection.)\n\n' +
         'Subsections: hypertension (Hypertension, 40 chars)',
     );
+  });
+});
+
+describe('read_section retrieval', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('reports the section whose text it returned', async () => {
+    global.fetch = jest.fn().mockResolvedValue(
+      jsonResponse({
+        reference: {
+          id: 'va-dod-hypertension',
+          title: 'VA-DoD Hypertension Guideline',
+          edition: '2026',
+          url: 'https://example.com/htn.pdf',
+        },
+        section: {
+          sectionId: 'page-34',
+          title: 'Page 34',
+          location: { kind: 'pages', start: 34, end: 34 },
+          contentMd: 'We recommend a systolic goal of <130 mmHg.',
+          subsections: [],
+        },
+      }),
+    );
+
+    expect(
+      (
+        await runTool(referenceTools(), {
+          name: 'read_section',
+          args: { reference: 'va-dod-hypertension', section: 'page-34' },
+        })
+      ).retrieved,
+    ).toEqual([
+      { kind: 'section', reference: 'va-dod-hypertension', section: 'page-34' },
+    ]);
+  });
+
+  it('reports nothing for a section with no text of its own', async () => {
+    global.fetch = jest.fn().mockResolvedValue(
+      jsonResponse({
+        reference: {
+          id: 'uspstf-a-and-b',
+          title: 'USPSTF A and B Recommendations',
+          edition: 'Updated continuously',
+          url: 'https://example.com/ab',
+        },
+        section: {
+          sectionId: 'screening',
+          title: 'Screening',
+          location: { kind: 'webpage' },
+          contentMd: '',
+          subsections: [
+            { sectionId: 'hypertension', title: 'Hypertension', chars: 40 },
+          ],
+        },
+      }),
+    );
+
+    expect(
+      (
+        await runTool(referenceTools(), {
+          name: 'read_section',
+          args: { reference: 'uspstf-a-and-b', section: 'screening' },
+        })
+      ).retrieved,
+    ).toEqual([]);
+  });
+
+  it('reports nothing when the section does not exist', async () => {
+    global.fetch = jest
+      .fn()
+      .mockResolvedValue(jsonResponse({ error: 'no-section' }, 404));
+
+    expect(
+      (
+        await runTool(referenceTools(), {
+          name: 'read_section',
+          args: { reference: 'va-dod-hypertension', section: 'page-99' },
+        })
+      ).retrieved,
+    ).toEqual([]);
   });
 });
 

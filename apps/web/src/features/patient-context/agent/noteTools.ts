@@ -114,7 +114,7 @@ async function readNote(
   if (!Number.isInteger(part) || part < 1 || part > parts.length) {
     return `Note "${id}" has ${parts.length} part(s); ask for a part between 1 and ${parts.length}.`;
   }
-  const retrieved = [{ kind: 'note' as const, id: note.alias }];
+  const retrieved = [{ kind: 'note' as const, id: note.alias, part }];
   if (parts.length === 1) {
     return { text: parts[0], retrieved };
   }
@@ -138,7 +138,6 @@ export async function searchNotes(
     return { text: 'Empty search query.', retrieved: [] };
   }
   const matches: string[] = [];
-  const quoted: string[] = [];
   const matchedTerms = new Set<string>();
   let totalChars = 0;
   let scanned = 0;
@@ -181,9 +180,6 @@ export async function searchNotes(
         matches.push(line);
         totalChars += line.length;
         perNote += 1;
-        if (!quoted.includes(note.alias)) {
-          quoted.push(note.alias);
-        }
       }
     }
   }
@@ -208,6 +204,6 @@ export async function searchNotes(
   }
   return {
     text: result + unreadableNote,
-    retrieved: quoted.map((id) => ({ kind: 'note', id })),
+    retrieved: [],
   };
 }
