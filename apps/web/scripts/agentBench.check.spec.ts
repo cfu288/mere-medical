@@ -1,6 +1,6 @@
 import { AgentRun } from './agentHarness';
 import { BenchCase } from './agentBench.cases';
-import { check } from './agentBench.check';
+import { check, precision } from './agentBench.check';
 
 const bpCase: BenchCase = {
   id: 'bp-at-goal',
@@ -9,150 +9,253 @@ const bpCase: BenchCase = {
   mustCall: ['search_references'],
   mustNotCall: [],
   mustRead: [
-    [{ reference: 'va-dod-hypertension', sections: ['ix-recommendations'] }],
+    [
+      {
+        reference: 'va-dod-hypertension',
+        sections: ['ix-recommendations', 'page-34'],
+      },
+    ],
   ],
   mustNotRead: [],
-  mustRetrieve: [],
+  mustRetrieve: [[{ kind: 'note', id: 'n8', part: 1 }]],
 };
 
-function run(readOutput: string): AgentRun {
-  return {
-    result: {
-      kind: 'answered',
-      answer: 'Your pressure is at goal.',
-      context: null,
-    },
-    turns: 2,
-    calls: [
-      {
-        turn: 1,
-        name: 'search_references',
-        args: { query: 'blood pressure' },
-        output: 'va-dod-hypertension',
-        retrieved: [],
-      },
-      {
-        turn: 2,
-        name: 'read_section',
-        args: {
-          reference: 'va-dod-hypertension',
-          section: 'ix-recommendations',
-        },
-        output: readOutput,
-        retrieved: [],
-      },
-    ],
-  };
-}
+const answered = {
+  kind: 'answered' as const,
+  answer: 'Your pressure is at goal.',
+  context: null,
+};
 
 describe('check', () => {
-  it('counts a section read only when the tool returned the section', () => {
-    expect(
-      check(bpCase, run('Recommendation 1: treat to a goal below 130/90.')),
-    ).toEqual([]);
+  it('passes a run that was shown an accepted section and note part', () => {
+    const run: AgentRun = {
+      result: answered,
+      turns: 3,
+      calls: [
+        {
+          turn: 1,
+          name: 'search_references',
+          args: { query: 'blood pressure' },
+          output: 'va-dod-hypertension | VA-DoD Hypertension',
+          retrieved: [],
+        },
+        {
+          turn: 2,
+          name: 'read_section',
+          args: { reference: 'va-dod-hypertension', section: 'page-34' },
+          output: 'We recommend a systolic goal of <130 mmHg.',
+          retrieved: [
+            {
+              kind: 'section',
+              reference: 'va-dod-hypertension',
+              section: 'page-34',
+            },
+          ],
+        },
+        {
+          turn: 2,
+          name: 'read_note',
+          args: { id: 'n8' },
+          output: 'BP 125/84',
+          retrieved: [{ kind: 'note', id: 'n8', part: 1 }],
+        },
+      ],
+    };
+
+    expect(check(bpCase, run)).toEqual([]);
   });
 
-  it('does not count a read the tool answered with no section', () => {
-    expect(
-      check(
-        bpCase,
-        run(
-          'No section "ix-recommendations" in va-dod-hypertension. Call get_outline with reference "va-dod-hypertension" to see its sections.',
-        ),
-      ),
-    ).toEqual(['never read va-dod-hypertension (ix-recommendations)']);
-  });
+  it('does not count a read that returned no section text', () => {
+    const run: AgentRun = {
+      result: answered,
+      turns: 2,
+      calls: [
+        {
+          turn: 1,
+          name: 'search_references',
+          args: { query: 'blood pressure' },
+          output: 'va-dod-hypertension | VA-DoD Hypertension',
+          retrieved: [],
+        },
+        {
+          turn: 1,
+          name: 'read_section',
+          args: { reference: 'va-dod-hypertension', section: 'page-34' },
+          output: 'Reference material is unavailable right now.',
+          retrieved: [],
+        },
+        {
+          turn: 2,
+          name: 'read_note',
+          args: { id: 'n8' },
+          output: 'BP 125/84',
+          retrieved: [{ kind: 'note', id: 'n8', part: 1 }],
+        },
+      ],
+    };
 
-  it('does not count a read the tool answered as unavailable', () => {
-    expect(
-      check(bpCase, run('Reference material is unavailable right now.')),
-    ).toEqual(['never read va-dod-hypertension (ix-recommendations)']);
-  });
-});
-
-const metforminCase: BenchCase = {
-  id: 'metformin-safe',
-  category: 'drug-label',
-  question:
-    'I was just prescribed metformin 1000 mg twice a day. Is that safe?',
-  mustCall: [],
-  mustNotCall: [],
-  mustRead: [],
-  mustNotRead: [],
-  mustRetrieve: [[{ kind: 'lab', analyte: '77147-7' }]],
-};
-
-function labRun(analyte: string): AgentRun {
-  return {
-    result: {
-      kind: 'answered',
-      answer: 'Your kidneys are fine.',
-      context: null,
-    },
-    turns: 2,
-    calls: [
-      {
-        turn: 1,
-        name: 'get_lab_history',
-        args: { analyte: 'egfr' },
-        output: 'eGFR: 120 (2025-11-10)',
-        retrieved: [{ kind: 'lab', analyte }],
-      },
-    ],
-  };
-}
-
-describe('check retrieval', () => {
-  it('passes when a tool showed the required analyte', () => {
-    expect(check(metforminCase, labRun('77147-7'))).toEqual([]);
-  });
-
-  it('fails when the tools showed only another analyte', () => {
-    expect(check(metforminCase, labRun('98979-8'))).toEqual([
-      'never retrieved lab 77147-7',
+    expect(check(bpCase, run)).toEqual([
+      'never read va-dod-hypertension (ix-recommendations | page-34)',
     ]);
   });
 
-  it('passes an any-of group on any one of its entries', () => {
-    expect(
-      check(
+  it('does not count another part of a required note', () => {
+    const run: AgentRun = {
+      result: answered,
+      turns: 2,
+      calls: [
         {
-          ...metforminCase,
-          mustRetrieve: [
-            [
-              { kind: 'lab', analyte: '2160-0' },
-              { kind: 'lab', analyte: '98979-8' },
-            ],
+          turn: 1,
+          name: 'search_references',
+          args: { query: 'blood pressure' },
+          output: 'va-dod-hypertension | VA-DoD Hypertension',
+          retrieved: [],
+        },
+        {
+          turn: 1,
+          name: 'read_section',
+          args: { reference: 'va-dod-hypertension', section: 'page-34' },
+          output: 'We recommend a systolic goal of <130 mmHg.',
+          retrieved: [
+            {
+              kind: 'section',
+              reference: 'va-dod-hypertension',
+              section: 'page-34',
+            },
           ],
         },
-        labRun('98979-8'),
-      ),
-    ).toEqual([]);
+        {
+          turn: 2,
+          name: 'read_note',
+          args: { id: 'n8', part: 2 },
+          output: 'Plan: follow up in a year.',
+          retrieved: [{ kind: 'note', id: 'n8', part: 2 }],
+        },
+      ],
+    };
+
+    expect(check(bpCase, run)).toEqual(['never retrieved note n8 part 1']);
   });
 
-  it('names a required record it never retrieved', () => {
-    expect(
-      check(
+  it('fails a run where fewer than half of what it opened is accepted', () => {
+    const run: AgentRun = {
+      result: answered,
+      turns: 3,
+      calls: [
         {
-          ...metforminCase,
-          mustRetrieve: [
-            [{ kind: 'record', type: 'allergy', name: 'PENICILLINS' }],
+          turn: 1,
+          name: 'search_references',
+          args: { query: 'blood pressure' },
+          output: 'va-dod-hypertension | VA-DoD Hypertension',
+          retrieved: [],
+        },
+        {
+          turn: 2,
+          name: 'read_section',
+          args: { reference: 'va-dod-hypertension', section: 'page-34' },
+          output: 'We recommend a systolic goal of <130 mmHg.',
+          retrieved: [
+            {
+              kind: 'section',
+              reference: 'va-dod-hypertension',
+              section: 'page-34',
+            },
           ],
         },
-        labRun('77147-7'),
-      ),
-    ).toEqual(['never retrieved allergy PENICILLINS']);
+        {
+          turn: 2,
+          name: 'read_section',
+          args: { reference: 'va-dod-hypertension', section: 'page-77' },
+          output: 'Key question methodology.',
+          retrieved: [
+            {
+              kind: 'section',
+              reference: 'va-dod-hypertension',
+              section: 'page-77',
+            },
+          ],
+        },
+        {
+          turn: 2,
+          name: 'get_lab_history',
+          args: { analyte: 'glucose' },
+          output: 'Glucose [2345-7]: 88 mg/dL (2025-11-10)',
+          retrieved: [{ kind: 'lab', analyte: '2345-7' }],
+        },
+        {
+          turn: 3,
+          name: 'read_note',
+          args: { id: 'n8' },
+          output: 'BP 125/84',
+          retrieved: [{ kind: 'note', id: 'n8', part: 1 }],
+        },
+        {
+          turn: 3,
+          name: 'read_note',
+          args: { id: 'n3' },
+          output: 'Consent form.',
+          retrieved: [{ kind: 'note', id: 'n3', part: 1 }],
+        },
+        {
+          turn: 3,
+          name: 'read_note',
+          args: { id: 'n4' },
+          output: 'Correspondence.',
+          retrieved: [{ kind: 'note', id: 'n4', part: 1 }],
+        },
+      ],
+    };
+
+    expect(check(bpCase, run)).toEqual([
+      'opened 6 sections, note parts or lab histories, only 2 of them accepted',
+    ]);
   });
 
-  it('names a required note it never retrieved', () => {
-    expect(
-      check(
+  it('counts each opened item once and leaves searches out of precision', () => {
+    const run: AgentRun = {
+      result: answered,
+      turns: 2,
+      calls: [
         {
-          ...metforminCase,
-          mustRetrieve: [[{ kind: 'note', id: 'n1' }]],
+          turn: 1,
+          name: 'search_labs',
+          args: { query: ['glucose', 'a1c'] },
+          output:
+            'Glucose [2345-7] | 88 mg/dL\nHemoglobin A1c [4548-4] | 5.1 %',
+          retrieved: [
+            { kind: 'lab', analyte: '2345-7' },
+            { kind: 'lab', analyte: '4548-4' },
+          ],
         },
-        labRun('77147-7'),
-      ),
-    ).toEqual(['never retrieved note n1']);
+        {
+          turn: 1,
+          name: 'read_section',
+          args: { reference: 'va-dod-hypertension', section: 'page-34' },
+          output: 'We recommend a systolic goal of <130 mmHg.',
+          retrieved: [
+            {
+              kind: 'section',
+              reference: 'va-dod-hypertension',
+              section: 'page-34',
+            },
+          ],
+        },
+        {
+          turn: 2,
+          name: 'read_section',
+          args: { reference: 'va-dod-hypertension', section: 'page-34' },
+          output: 'We recommend a systolic goal of <130 mmHg.',
+          retrieved: [
+            {
+              kind: 'section',
+              reference: 'va-dod-hypertension',
+              section: 'page-34',
+            },
+          ],
+        },
+      ],
+    };
+
+    expect(precision(bpCase, run)).toEqual({ opened: 1, accepted: 1 });
   });
 });

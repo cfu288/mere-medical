@@ -11,7 +11,7 @@ import {
   loadStore,
 } from './agentHarness';
 import { BENCH_CASES, BenchCase } from './agentBench.cases';
-import { check } from './agentBench.check';
+import { check, describeRetrieved, precision } from './agentBench.check';
 import {
   CaseResult,
   Outcome,
@@ -33,6 +33,16 @@ function transcript(
     lines.push(
       `[turn ${call.turn}] ${call.name}(${JSON.stringify(call.args)})`,
       call.output,
+      ...(call.retrieved.length > 0
+        ? [`retrieved: ${call.retrieved.map(describeRetrieved).join('; ')}`]
+        : []),
+      '',
+    );
+  }
+  if (run) {
+    const share = precision(bench, run);
+    lines.push(
+      `opened ${share.opened} sections, note parts or lab histories; ${share.accepted} accepted`,
       '',
     );
   }
@@ -71,6 +81,7 @@ async function runCase(
     outcome,
     turns: run?.turns ?? null,
     calls: run?.calls.length ?? 0,
+    opened: run ? precision(bench, run) : null,
     windowTokens:
       run?.result.kind === 'answered'
         ? run.result.context?.windowTokens ?? null

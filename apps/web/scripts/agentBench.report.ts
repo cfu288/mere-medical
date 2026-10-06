@@ -11,6 +11,8 @@ export type CaseResult = {
   outcome: Outcome;
   turns: number | null;
   calls: number;
+  /** Distinct sections, note parts and lab histories the run opened, and how many of them its case accepts. */
+  opened: { opened: number; accepted: number } | null;
   /** Context window the app detected from the model server, if it reported one. */
   windowTokens: number | null;
 };
@@ -33,7 +35,10 @@ export function scoreByCategory(results: CaseResult[]): CategoryScore[] {
 }
 
 function caseLines(result: CaseResult): string[] {
-  const stats = `(${result.turns} turns, ${result.calls} calls)`;
+  const opened = result.opened
+    ? `, ${result.opened.accepted} of ${result.opened.opened} opened accepted`
+    : '';
+  const stats = `(${result.turns} turns, ${result.calls} calls${opened})`;
   switch (result.outcome.kind) {
     case 'pass':
       return [`  PASS  ${result.id}  ${stats}`];

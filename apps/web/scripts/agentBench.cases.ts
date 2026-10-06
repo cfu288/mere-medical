@@ -1,7 +1,7 @@
 import { Retrieved } from '../src/features/patient-context/agent/tools';
 
-/** A read of this reference; when sections are listed, a read of one of them. */
-export type SectionRead = { reference: string; sections?: string[] };
+/** A read of any one of these sections of this reference. */
+export type SectionRead = { reference: string; sections: string[] };
 
 export const CATEGORIES = ['drug-label', 'guideline', 'record'] as const;
 export type Category = (typeof CATEGORIES)[number];
@@ -15,7 +15,7 @@ export type BenchCase = {
   mustCall: string[];
   /** Tools the agent must not call. */
   mustNotCall: string[];
-  /** Each entry is satisfied by any one of its reads; sections listed are the ones that hold the answer. */
+  /** Each entry is satisfied by any one of its reads; the sections listed are every one that holds the answer. */
   mustRead: SectionRead[][];
   /** References the agent must not read. */
   mustNotRead: string[];
@@ -408,10 +408,12 @@ export const BENCH_CASES: BenchCase[] = [
         {
           kind: 'note',
           id: 'n1',
+          part: 1,
         },
         {
           kind: 'note',
           id: 'n8',
+          part: 1,
         },
       ],
     ],
@@ -934,10 +936,7 @@ export const BENCH_CASES: BenchCase[] = [
         {
           kind: 'note',
           id: 'n1',
-        },
-        {
-          kind: 'note',
-          id: 'n2',
+          part: 1,
         },
       ],
     ],
