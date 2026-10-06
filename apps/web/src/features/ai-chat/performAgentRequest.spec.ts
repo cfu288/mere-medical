@@ -97,6 +97,7 @@ describe('runAgentChat', () => {
       name: 'search_labs',
       result:
         'No matches for "a1c". Use list_lab_analytes to see every analyte name on record.',
+      retrieved: [],
     });
 
     const firstBody = JSON.parse(
