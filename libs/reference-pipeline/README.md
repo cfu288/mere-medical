@@ -300,6 +300,17 @@ is given up after 120 seconds, and a server error or rate limit is retried up
 to four attempts with growing waits. The API reads the file from
 `REFERENCE_DB_PATH`, or that default path.
 
+```
+npx ts-node --transpile-only --compiler-options '{"module":"commonjs","moduleResolution":"node"}' libs/reference-pipeline/src/audit.ts
+```
+
+Checks the built library for problems a reader of it would hit. It reports
+sections with no text and no subsections, sections that are only links, HTML
+tags left in the text, unreadable characters, text repeated from another
+section, references with under 500 characters of text, and a search index out
+of step with the tables. It prints each check's count with examples, then the
+largest sections.
+
 ## Known limits
 
 - Recommendations are not extracted as units with their strength. In the
