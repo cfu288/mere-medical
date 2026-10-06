@@ -387,7 +387,7 @@
     "id": "cdc-child-schedule-by-age",
     "title": "CDC Child and Adolescent Immunization Schedule by Age",
     "edition": "2025",
-    "summary": "Which vaccines children and teens get from birth to 18 years and at what ages",
+    "summary": "Which vaccines children and teens get from birth to 18 years and at what ages: hepatitis B, rotavirus, DTaP and Tdap, Hib, pneumococcal, polio, COVID-19, influenza, RSV, MMR, varicella (chickenpox), hepatitis A, HPV, meningococcal ACWY and B, dengue, and mpox",
     "type": "cdc-media",
     "mediaId": 133745
   },
@@ -395,7 +395,7 @@
     "id": "cdc-adult-schedule-by-age",
     "title": "CDC Adult Immunization Schedule by Age",
     "edition": "2025",
-    "summary": "Which vaccines adults 19 and older get at each age",
+    "summary": "Which vaccines adults 19 and older get at each age: COVID-19, influenza, RSV, Tdap and Td, MMR, varicella (chickenpox), zoster (shingles), HPV, pneumococcal, hepatitis A, hepatitis B, meningococcal ACWY and B, Hib, polio, and mpox",
     "type": "cdc-media",
     "mediaId": 266012
   },
@@ -403,7 +403,7 @@
     "id": "cdc-adult-schedule-by-condition",
     "title": "CDC Adult Immunization Schedule by Medical Condition",
     "edition": "2025",
-    "summary": "Which vaccines adults need for medical conditions and situations such as pregnancy, immune problems, diabetes, heart, lung, liver, or kidney disease",
+    "summary": "Which vaccines adults need for medical conditions and situations such as pregnancy, immune problems, diabetes, heart, lung, liver, or kidney disease, and health care work: COVID-19, influenza, RSV, Tdap, MMR, varicella (chickenpox), zoster (shingles), HPV, pneumococcal, hepatitis A, hepatitis B, meningococcal ACWY and B, Hib, polio, and mpox",
     "type": "cdc-media",
     "mediaId": 266010
   },
@@ -1096,14 +1096,6 @@
     "summary": "Spina bifida is a condition that affects the spine and is usually apparent at birth.",
     "type": "cdc-media",
     "mediaId": 126809
-  },
-  {
-    "id": "cdc-submitting-specimens-for-rabies-testing",
-    "title": "CDC: Submitting Specimens for Rabies Testing",
-    "edition": "2024",
-    "summary": "This page provides the protocol for safe submission of specimens for rabies testing.",
-    "type": "cdc-media",
-    "mediaId": 126888
   },
   {
     "id": "cdc-about-hantavirus",
@@ -2384,14 +2376,6 @@
     "summary": "The best way to prevent Heartland is to protect yourself and your family from tick bites.",
     "type": "cdc-media",
     "mediaId": 334544
-  },
-  {
-    "id": "cdc-symptoms-diagnosis-and-treatment",
-    "title": "CDC: Symptoms, Diagnosis, and Treatment",
-    "edition": "2025",
-    "summary": "Symptoms of Heartland include fever, fatigue, aches, and pain. Consult a doctor for a diagnosis.",
-    "type": "cdc-media",
-    "mediaId": 334546
   },
   {
     "id": "cdc-about-influenza",
