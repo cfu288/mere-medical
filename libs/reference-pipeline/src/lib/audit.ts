@@ -9,7 +9,8 @@ export type Finding = {
     | 'missing-parent'
     | 'replacement-character'
     | 'short-reference'
-    | 'search-index';
+    | 'search-index'
+    | 'empty-library';
   reference: string;
   section: string | null;
   detail: string;
@@ -84,7 +85,7 @@ export function auditLibrary(db: DatabaseSync): Finding[] {
   return [
     ...findings,
     ...shortReferenceFindings(rows),
-    ...searchIndexFindings(db, rows.length),
+    ...searchIndexFindings(db),
   ];
 }
 
@@ -106,32 +107,55 @@ function shortReferenceFindings(rows: Row[]): Finding[] {
     }));
 }
 
-function searchIndexFindings(db: DatabaseSync, sections: number): Finding[] {
-  const count = (table: string) =>
-    (db.prepare(`SELECT COUNT(*) AS n FROM ${table}`).get() as { n: number }).n;
-  const documents = count('documents');
-  const documentIndex = count('documents_fts');
-  const sectionIndex = count('sections_fts');
+function searchIndexFindings(db: DatabaseSync): Finding[] {
+  const ids = (sql: string) =>
+    db.prepare(sql).all() as { reference: string; section: string | null }[];
+  const found = (
+    rows: { reference: string; section: string | null }[],
+    detail: string,
+  ): Finding[] =>
+    rows.map(({ reference, section }) => ({
+      check: 'search-index',
+      reference,
+      section,
+      detail,
+    }));
+  const { n } = db.prepare('SELECT COUNT(*) AS n FROM documents').get() as {
+    n: number;
+  };
   return [
-    ...(documents === documentIndex
-      ? []
-      : [
+    ...(n === 0
+      ? [
           {
-            check: 'search-index' as const,
+            check: 'empty-library' as const,
             reference: '(library)',
             section: null,
-            detail: `${documents} references, ${documentIndex} in the reference search index`,
+            detail: 'no references',
           },
-        ]),
-    ...(sections === sectionIndex
-      ? []
-      : [
-          {
-            check: 'search-index' as const,
-            reference: '(library)',
-            section: null,
-            detail: `${sections} sections, ${sectionIndex} in the section search index`,
-          },
-        ]),
+        ]
+      : []),
+    ...found(
+      ids(`SELECT id AS reference, NULL AS section FROM (
+             SELECT id, title, summary FROM documents
+             EXCEPT SELECT id, title, summary FROM documents_fts)`),
+      'missing from the reference search index or indexed with another title or summary',
+    ),
+    ...found(
+      ids(`SELECT id AS reference, NULL AS section FROM (
+             SELECT id FROM documents_fts EXCEPT SELECT id FROM documents)`),
+      'in the reference search index but not in the library',
+    ),
+    ...found(
+      ids(`SELECT document_id AS reference, section_id AS section FROM (
+             SELECT document_id, section_id, title, content_md FROM sections
+             EXCEPT SELECT document_id, section_id, title, content_md FROM sections_fts)`),
+      'missing from the section search index or indexed with other text',
+    ),
+    ...found(
+      ids(`SELECT document_id AS reference, section_id AS section FROM (
+             SELECT document_id, section_id FROM sections_fts
+             EXCEPT SELECT document_id, section_id FROM sections)`),
+      'in the section search index but not in the library',
+    ),
   ];
 }

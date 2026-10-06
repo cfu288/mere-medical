@@ -1,3 +1,4 @@
+import { existsSync } from 'fs';
 import { join } from 'path';
 
 import { auditLibrary, Finding } from './lib/audit';
@@ -9,6 +10,10 @@ const LARGEST_SECTIONS = 10;
 function main() {
   const dbPath =
     process.argv[2] ?? join(__dirname, '..', 'data', 'references.db');
+  if (!existsSync(dbPath)) {
+    console.error(`${dbPath}: no library here; build it with the CLI first`);
+    process.exit(1);
+  }
   const db = openReferencesDb(dbPath);
   const findings = auditLibrary(db);
   const byCheck = new Map<Finding['check'], Finding[]>();

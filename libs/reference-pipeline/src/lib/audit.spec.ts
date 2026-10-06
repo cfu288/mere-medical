@@ -159,18 +159,86 @@ describe('auditLibrary', () => {
     ]);
   });
 
-  it('reports a search index that has fallen out of step with the sections', () => {
+  it('reports a section missing from the search index', () => {
     const db = library([
       { sectionId: 'goals', parentId: null, contentMd: 'Below 130.' },
     ]);
-    db.exec('DELETE FROM sections_fts');
+    db.exec("DELETE FROM sections_fts WHERE section_id = 'goals'");
 
     expect(auditLibrary(db)).toEqual([
       {
         check: 'search-index',
+        reference: 'guide',
+        section: 'goals',
+        detail:
+          'missing from the section search index or indexed with other text',
+      },
+    ]);
+  });
+
+  it('reports a section indexed with stale text', () => {
+    const db = library([
+      { sectionId: 'goals', parentId: null, contentMd: 'Below 130.' },
+    ]);
+    db.exec(
+      "UPDATE sections_fts SET content_md = 'Below 140.' WHERE section_id = 'goals'",
+    );
+
+    expect(auditLibrary(db)).toEqual([
+      {
+        check: 'search-index',
+        reference: 'guide',
+        section: 'goals',
+        detail:
+          'missing from the section search index or indexed with other text',
+      },
+    ]);
+  });
+
+  it('reports an indexed section the library no longer has', () => {
+    const db = library([
+      { sectionId: 'goals', parentId: null, contentMd: 'Below 130.' },
+    ]);
+    db.exec(
+      "INSERT INTO sections_fts (document_id, section_id, title, content_md) VALUES ('guide', 'old', 'old', 'Gone.')",
+    );
+
+    expect(auditLibrary(db)).toEqual([
+      {
+        check: 'search-index',
+        reference: 'guide',
+        section: 'old',
+        detail: 'in the section search index but not in the library',
+      },
+    ]);
+  });
+
+  it('reports a reference indexed with a stale summary', () => {
+    const db = library([
+      { sectionId: 'goals', parentId: null, contentMd: 'Below 130.' },
+    ]);
+    db.exec(
+      "UPDATE documents_fts SET summary = 'Old summary' WHERE id = 'guide'",
+    );
+
+    expect(auditLibrary(db)).toEqual([
+      {
+        check: 'search-index',
+        reference: 'guide',
+        section: null,
+        detail:
+          'missing from the reference search index or indexed with another title or summary',
+      },
+    ]);
+  });
+
+  it('reports a library with no references', () => {
+    expect(auditLibrary(openReferencesDb(':memory:'))).toEqual([
+      {
+        check: 'empty-library',
         reference: '(library)',
         section: null,
-        detail: '2 sections, 0 in the section search index',
+        detail: 'no references',
       },
     ]);
   });

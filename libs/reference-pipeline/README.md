@@ -307,9 +307,10 @@ npx ts-node --transpile-only --compiler-options '{"module":"commonjs","moduleRes
 Checks the built library for problems a reader of it would hit. It reports
 sections with no text and no subsections, sections that are only links, HTML
 tags left in the text, unreadable characters, text repeated from another
-section, references with under 500 characters of text, and a search index out
-of step with the tables. It prints each check's count with examples, then the
-largest sections.
+section, references with under 500 characters of text, an empty library, and
+any reference or section whose search index row is missing, stale or left over.
+It prints each check's count with examples, then the largest sections. It exits
+with an error when no library exists at the path.
 
 ## Known limits
 
