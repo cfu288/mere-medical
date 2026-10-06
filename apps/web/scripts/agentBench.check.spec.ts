@@ -1,6 +1,6 @@
 import { AgentRun } from './agentHarness';
 import { BenchCase } from './agentBench.cases';
-import { check, precision } from './agentBench.check';
+import { check, precision, score } from './agentBench.check';
 
 const bpCase: BenchCase = {
   id: 'bp-at-goal',
@@ -135,9 +135,10 @@ describe('check', () => {
     };
 
     expect(check(bpCase, run)).toEqual(['never retrieved note n8 part 1']);
+    expect(score(bpCase, run)).toEqual(0);
   });
 
-  it('fails a run where fewer than half of what it opened is accepted', () => {
+  it('scores a run that met its requirements by the share of what it opened that was accepted', () => {
     const run: AgentRun = {
       result: answered,
       turns: 3,
@@ -206,9 +207,8 @@ describe('check', () => {
       ],
     };
 
-    expect(check(bpCase, run)).toEqual([
-      'opened 6 sections, note parts or lab histories, only 2 of them accepted',
-    ]);
+    expect(check(bpCase, run)).toEqual([]);
+    expect(score(bpCase, run)).toEqual(2 / 6);
   });
 
   it('counts each opened item once and leaves searches out of precision', () => {
@@ -257,5 +257,47 @@ describe('check', () => {
     };
 
     expect(precision(bpCase, run)).toEqual({ opened: 1, accepted: 1 });
+  });
+
+  it('scores a run that met its requirements without opening anything as 1', () => {
+    const run: AgentRun = {
+      result: answered,
+      turns: 1,
+      calls: [
+        {
+          turn: 1,
+          name: 'search_records',
+          args: { types: ['medication'] },
+          output: '[medication] BENZONATATE 100 MG CAPSULE | 2021-12-18',
+          retrieved: [
+            {
+              kind: 'record',
+              type: 'medication',
+              name: 'BENZONATATE 100 MG CAPSULE',
+            },
+          ],
+        },
+      ],
+    };
+
+    expect(
+      score(
+        {
+          ...bpCase,
+          mustCall: [],
+          mustRead: [],
+          mustRetrieve: [
+            [
+              {
+                kind: 'record',
+                type: 'medication',
+                name: 'BENZONATATE 100 MG CAPSULE',
+              },
+            ],
+          ],
+        },
+        run,
+      ),
+    ).toEqual(1);
   });
 });

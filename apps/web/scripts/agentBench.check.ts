@@ -2,9 +2,6 @@ import { Retrieved } from '../src/features/patient-context/agent/tools';
 import { BenchCase } from './agentBench.cases';
 import { AgentRun } from './agentHarness';
 
-/** Below this share of accepted items among everything a run opened, the run fails. */
-export const PRECISION_FLOOR = 0.5;
-
 const OPENING_TOOLS = ['read_section', 'read_note', 'get_lab_history'];
 
 function sameRetrieved(a: Retrieved, b: Retrieved): boolean {
@@ -87,7 +84,6 @@ export function check(bench: BenchCase, run: AgentRun): string[] {
   const retrieved = run.calls.flatMap((call) => call.retrieved);
   const seen = (item: Retrieved) =>
     retrieved.some((got) => sameRetrieved(item, got));
-  const share = precision(bench, run);
   return [
     ...bench.mustCall
       .filter((tool) => !called.has(tool))
@@ -123,10 +119,14 @@ export function check(bench: BenchCase, run: AgentRun): string[] {
         (anyOf) =>
           `never retrieved ${anyOf.map(describeRetrieved).join(' or ')}`,
       ),
-    ...(share.opened > 0 && share.accepted / share.opened < PRECISION_FLOOR
-      ? [
-          `opened ${share.opened} sections, note parts or lab histories, only ${share.accepted} of them accepted`,
-        ]
-      : []),
   ];
+}
+
+/** 0 when the run missed a requirement, else the share of what it opened that its case accepts (1 when it opened nothing). */
+export function score(bench: BenchCase, run: AgentRun): number {
+  if (check(bench, run).length > 0) {
+    return 0;
+  }
+  const share = precision(bench, run);
+  return share.opened === 0 ? 1 : share.accepted / share.opened;
 }

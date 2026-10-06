@@ -7,7 +7,7 @@ describe('formatReport', () => {
         {
           id: 'eliquis-dose',
           category: 'drug-label',
-          outcome: { kind: 'pass' },
+          outcome: { kind: 'scored', score: 0.75, problems: [] },
           turns: 7,
           calls: 13,
           opened: { opened: 4, accepted: 3 },
@@ -17,7 +17,8 @@ describe('formatReport', () => {
           id: 'bp-at-goal',
           category: 'guideline',
           outcome: {
-            kind: 'fail',
+            kind: 'scored',
+            score: 0,
             problems: ['never read va-dod-hypertension'],
           },
           turns: 9,
@@ -37,16 +38,16 @@ describe('formatReport', () => {
       ]),
     ).toEqual(
       [
-        'drug-label  1/1',
-        '  PASS  eliquis-dose  (7 turns, 13 calls, 3 of 4 opened accepted)',
+        'drug-label  mean 0.75 over 1 case',
+        '  0.75  eliquis-dose  (7 turns, 13 calls, 3 of 4 opened accepted)',
         '',
-        'guideline  0/2',
-        '  FAIL  bp-at-goal  (9 turns, 16 calls, 1 of 5 opened accepted)',
+        'guideline  mean 0.00 over 2 cases',
+        '  0.00  bp-at-goal  (9 turns, 16 calls, 1 of 5 opened accepted)',
         '          never read va-dod-hypertension',
         '  ERROR measles',
         '          model unreachable',
         '',
-        'total  1/3',
+        'total  mean 0.25 over 3 cases',
       ].join('\n'),
     );
   });

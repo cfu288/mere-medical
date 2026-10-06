@@ -11,7 +11,7 @@ import {
   loadStore,
 } from './agentHarness';
 import { BENCH_CASES, BenchCase } from './agentBench.cases';
-import { check, describeRetrieved, precision } from './agentBench.check';
+import { check, describeRetrieved, precision, score } from './agentBench.check';
 import {
   CaseResult,
   Outcome,
@@ -42,7 +42,7 @@ function transcript(
   if (run) {
     const share = precision(bench, run);
     lines.push(
-      `opened ${share.opened} sections, note parts or lab histories; ${share.accepted} accepted`,
+      `opened ${share.opened} sections, note parts or lab histories; ${share.accepted} accepted; score ${score(bench, run).toFixed(2)}`,
       '',
     );
   }
@@ -64,9 +64,11 @@ async function runCase(
   let outcome: Outcome;
   try {
     run = await askAgent(store, bench.question);
-    const problems = check(bench, run);
-    outcome =
-      problems.length === 0 ? { kind: 'pass' } : { kind: 'fail', problems };
+    outcome = {
+      kind: 'scored',
+      score: score(bench, run),
+      problems: check(bench, run),
+    };
   } catch (e) {
     outcome = { kind: 'error', message: String(e) };
   }

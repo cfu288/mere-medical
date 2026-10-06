@@ -1,8 +1,7 @@
 import { CATEGORIES, Category } from './agentBench.cases';
 
 export type Outcome =
-  | { kind: 'pass' }
-  | { kind: 'fail'; problems: string[] }
+  | { kind: 'scored'; score: number; problems: string[] }
   | { kind: 'error'; message: string };
 
 export type CaseResult = {
@@ -19,16 +18,28 @@ export type CaseResult = {
 
 export type CategoryScore = {
   category: Category;
-  passed: number;
+  mean: number;
   total: number;
 };
+
+function scoreOf(result: CaseResult): number {
+  return result.outcome.kind === 'scored' ? result.outcome.score : 0;
+}
+
+function mean(results: CaseResult[]): number {
+  return results.reduce((sum, r) => sum + scoreOf(r), 0) / results.length;
+}
+
+function cases(total: number): string {
+  return `${total} ${total === 1 ? 'case' : 'cases'}`;
+}
 
 export function scoreByCategory(results: CaseResult[]): CategoryScore[] {
   return CATEGORIES.map((category) => {
     const inCategory = results.filter((r) => r.category === category);
     return {
       category,
-      passed: inCategory.filter((r) => r.outcome.kind === 'pass').length,
+      mean: inCategory.length > 0 ? mean(inCategory) : 0,
       total: inCategory.length,
     };
   }).filter((score) => score.total > 0);
@@ -40,11 +51,9 @@ function caseLines(result: CaseResult): string[] {
     : '';
   const stats = `(${result.turns} turns, ${result.calls} calls${opened})`;
   switch (result.outcome.kind) {
-    case 'pass':
-      return [`  PASS  ${result.id}  ${stats}`];
-    case 'fail':
+    case 'scored':
       return [
-        `  FAIL  ${result.id}  ${stats}`,
+        `  ${result.outcome.score.toFixed(2)}  ${result.id}  ${stats}`,
         ...result.outcome.problems.map((problem) => `          ${problem}`),
       ];
     case 'error':
@@ -53,12 +62,13 @@ function caseLines(result: CaseResult): string[] {
 }
 
 export function formatReport(results: CaseResult[]): string {
-  const scores = scoreByCategory(results);
-  const sections = scores.map((score) => [
-    `${score.category}  ${score.passed}/${score.total}`,
+  const sections = scoreByCategory(results).map((score) => [
+    `${score.category}  mean ${score.mean.toFixed(2)} over ${cases(score.total)}`,
     ...results.filter((r) => r.category === score.category).flatMap(caseLines),
     '',
   ]);
-  const passed = scores.reduce((sum, s) => sum + s.passed, 0);
-  return [...sections.flat(), `total  ${passed}/${results.length}`].join('\n');
+  return [
+    ...sections.flat(),
+    `total  mean ${mean(results).toFixed(2)} over ${cases(results.length)}`,
+  ].join('\n');
 }
