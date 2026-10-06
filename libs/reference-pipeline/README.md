@@ -290,7 +290,7 @@ the product and does not endorse or recommend this or any other product.
 ## Running
 
 ```
-npx ts-node --transpile-only --compiler-options '{"module":"commonjs","moduleResolution":"node"}' libs/reference-pipeline/src/cli.ts
+npx tsx libs/reference-pipeline/src/cli.ts
 ```
 
 Writes `libs/reference-pipeline/data/references.db` (gitignored) and prints
@@ -301,7 +301,7 @@ to four attempts with growing waits. The API reads the file from
 `REFERENCE_DB_PATH`, or that default path.
 
 ```
-npx ts-node --transpile-only --compiler-options '{"module":"commonjs","moduleResolution":"node"}' libs/reference-pipeline/src/audit.ts
+npx tsx libs/reference-pipeline/src/audit.ts
 ```
 
 Checks the built library for problems a reader of it would hit. It reports
