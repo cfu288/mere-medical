@@ -19,12 +19,88 @@ import {
 import { Source } from './sources';
 import { fetchJson, webpage } from './webpage';
 
+/**
+ * What one configured reference parsed into, for the CLI to print.
+ *
+ * - `id`: the source's configured id.
+ * - `outline`: every kept section in document order, with its nesting depth
+ *   (0 for a top-level section), id, title and markdown length in characters.
+ * - `dropped`: titles of sections left out by rule, such as reference lists
+ *   and appendices. Empty when nothing was dropped.
+ *
+ * @example
+ * {
+ *   id: 'uspstf-a-and-b',
+ *   outline: [
+ *     { depth: 0, sectionId: 'screening', title: 'Screening', chars: 14 },
+ *     { depth: 1, sectionId: 'hypertension', title: 'Hypertension', chars: 23 },
+ *   ],
+ *   dropped: ['References'],
+ * }
+ */
 export type IngestReport = {
   id: string;
   outline: { depth: number; sectionId: string; title: string; chars: number }[];
   dropped: string[];
 };
 
+/**
+ * Rebuilds the reference library in `db` so it holds exactly the configured
+ * `sources`.
+ *
+ * Every source is fetched and parsed before anything is written. A failed
+ * fetch or a malformed response rejects the promise and leaves the library
+ * as it was. The write then runs in one transaction.
+ *
+ * - A stored reference whose id is no longer configured is deleted.
+ * - A source that parsed to at least one section replaces its stored copy.
+ * - A source that parsed to no sections keeps its stored copy and is listed
+ *   in `unchanged`, or is listed in `missing` when nothing was stored.
+ * - A source that resolves to a url an earlier source already used is not
+ *   stored and is listed in `skipped`.
+ *
+ * @param args.db A library opened with `openReferencesDb`.
+ * @param args.sources Parsed configuration, from `parseSources`.
+ * @param args.fetchBytes Returns the body at a url, and throws when it cannot.
+ * @returns
+ * - `references`: one {@link IngestReport} per source that was not skipped,
+ *   in configuration order.
+ * - `skipped`: the id of each skipped source and the url it shared.
+ * - `unchanged`: ids kept as they were stored.
+ * - `missing`: ids that could not be added.
+ *
+ * @example
+ * const report = await ingestSources({
+ *   db: openReferencesDb('references.db'),
+ *   sources: parseSources([
+ *     {
+ *       id: 'uspstf-a-and-b',
+ *       type: 'html',
+ *       url: 'https://example.com/ab',
+ *       title: 'USPSTF A and B Recommendations',
+ *       edition: 'Updated continuously',
+ *       summary: 'Screening and prevention',
+ *     },
+ *     { id: 'label-estradiol', type: 'drug-label', generic: 'estradiol' },
+ *   ]),
+ *   fetchBytes: async (url) => {
+ *     const response = await fetch(url);
+ *     if (!response.ok) {
+ *       throw new Error(`GET ${url} returned ${response.status}`);
+ *     }
+ *     return new Uint8Array(await response.arrayBuffer());
+ *   },
+ * });
+ * // {
+ * //   references: [
+ * //     { id: 'uspstf-a-and-b', outline: [...], dropped: ['References'] },
+ * //     { id: 'label-estradiol', outline: [...], dropped: [] },
+ * //   ],
+ * //   skipped: [],
+ * //   unchanged: [],
+ * //   missing: [],
+ * // }
+ */
 export async function ingestSources({
   db,
   sources,
