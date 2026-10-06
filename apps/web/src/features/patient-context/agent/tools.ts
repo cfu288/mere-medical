@@ -1,30 +1,58 @@
 import { isAbortError } from './abort';
 import { MAX_SEARCH_RESULT_CHARS } from '../constants';
 import { OllamaToolDef, ToolCall } from './ollamaChat';
+import { RecordType } from '../types';
+
+/** A lab analyte (its LOINC code, else its name) or a record entry whose details a tool result showed. */
+export type Retrieved =
+  | { kind: 'lab'; analyte: string }
+  | { kind: 'record'; type: RecordType; name: string };
+
+/** A tool's reply to the model and the patient data it showed. */
+export type ToolOutput = { text: string; retrieved: Retrieved[] };
 
 export type AgentTool = {
   def: OllamaToolDef;
-  run: (args: Record<string, unknown>) => string | Promise<string>;
+  run: (
+    args: Record<string, unknown>,
+  ) => string | ToolOutput | Promise<string | ToolOutput>;
 };
 
-export async function dispatchTool(
+/** Runs the named tool, turning an unknown tool or a thrown error into a reply the model can recover from. */
+export async function runTool(
   tools: AgentTool[],
   call: ToolCall,
-): Promise<string> {
+): Promise<ToolOutput> {
   const tool = tools.find((t) => t.def.function.name === call.name);
   if (!tool) {
     const names = tools.map((t) => t.def.function.name).join(', ');
-    return `Unknown tool: ${call.name}. Available tools: ${names}.`;
+    return {
+      text: `Unknown tool: ${call.name}. Available tools: ${names}.`,
+      retrieved: [],
+    };
   }
   try {
-    return await tool.run(call.args);
+    const output = await tool.run(call.args);
+    return typeof output === 'string'
+      ? { text: output, retrieved: [] }
+      : output;
   } catch (e) {
     if (isAbortError(e)) {
       throw e;
     }
     const message = e instanceof Error ? e.message : String(e);
-    return `Tool ${call.name} failed: ${message}. Try a different tool or answer from what you already have.`;
+    return {
+      text: `Tool ${call.name} failed: ${message}. Try a different tool or answer from what you already have.`,
+      retrieved: [],
+    };
   }
+}
+
+export async function dispatchTool(
+  tools: AgentTool[],
+  call: ToolCall,
+): Promise<string> {
+  return (await runTool(tools, call)).text;
 }
 
 export function toTerms(query: unknown): string[] {
@@ -69,6 +97,15 @@ export function capLines(
   more: string,
   maxChars = MAX_SEARCH_RESULT_CHARS,
 ): string {
+  return capShown(lines, more, maxChars).text;
+}
+
+/** Keeps lines up to maxChars, noting how many were left out, and counts the lines kept. */
+export function capShown(
+  lines: string[],
+  more: string,
+  maxChars = MAX_SEARCH_RESULT_CHARS,
+): { text: string; shown: number } {
   const kept: string[] = [];
   let total = 0;
   for (const line of lines) {
@@ -78,13 +115,18 @@ export function capLines(
       continue;
     }
     if (total + line.length > maxChars) {
-      kept.push(`[${lines.length - kept.length} more omitted; ${more}]`);
-      break;
+      return {
+        text: [
+          ...kept,
+          `[${lines.length - kept.length} more omitted; ${more}]`,
+        ].join('\n'),
+        shown: kept.length,
+      };
     }
     kept.push(line);
     total += line.length;
   }
-  return kept.join('\n');
+  return { text: kept.join('\n'), shown: kept.length };
 }
 
 function breakLine(line: string, maxChars: number): string[] {

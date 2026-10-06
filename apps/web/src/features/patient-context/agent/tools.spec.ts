@@ -1,7 +1,9 @@
 import {
   AgentTool,
   capLines,
+  capShown,
   dispatchTool,
+  runTool,
   splitDocument,
   toTerms,
   matchIndices,
@@ -117,5 +119,30 @@ describe('matchIndices', () => {
 
   it('matches a short term containing punctuation as a bare token', () => {
     expect(matchIndices('lytes stable. k+ 4.1 today.', 'k+')).toEqual([14]);
+  });
+});
+
+describe('capShown', () => {
+  it('counts the lines it kept before the omission note', () => {
+    expect(capShown(['aaaa', 'bbbb', 'cccc'], 'narrow the terms', 8)).toEqual({
+      text: 'aaaa\nbbbb\n[1 more omitted; narrow the terms]',
+      shown: 2,
+    });
+  });
+});
+
+describe('runTool', () => {
+  it('reports nothing retrieved for a tool that returns only text', async () => {
+    expect(await runTool(tools, { name: 'nope', args: {} })).toEqual({
+      text: 'Unknown tool: nope. Available tools: broken_tool.',
+      retrieved: [],
+    });
+  });
+
+  it('reports nothing retrieved when a tool throws', async () => {
+    expect(await runTool(tools, { name: 'broken_tool', args: {} })).toEqual({
+      text: 'Tool broken_tool failed: pdf worker crashed. Try a different tool or answer from what you already have.',
+      retrieved: [],
+    });
   });
 });

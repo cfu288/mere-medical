@@ -1,7 +1,7 @@
 import { LabIndexEntry } from '../sections/labs';
 import { labTools } from './labTools';
 import { ToolCall } from './ollamaChat';
-import { dispatchTool } from './tools';
+import { dispatchTool, runTool } from './tools';
 
 const index: LabIndexEntry[] = [
   {
@@ -136,5 +136,51 @@ LC- QFT INCUBATE`);
     ).toEqual(
       'No analyte matching "troponin". Use list_lab_analytes to see every analyte name on record.',
     );
+  });
+});
+
+describe('labTools retrieval', () => {
+  it('reports each analyte search_labs showed results for', async () => {
+    expect(
+      (
+        await runTool(labTools(index), {
+          name: 'search_labs',
+          args: { query: ['hemoglobin', 'qft'] },
+        })
+      ).retrieved,
+    ).toEqual([
+      { kind: 'lab', analyte: '718-7' },
+      { kind: 'lab', analyte: 'LC- QFT INCUBATE' },
+      { kind: 'lab', analyte: '4548-4' },
+    ]);
+  });
+
+  it('reports the one analyte get_lab_history returned', async () => {
+    expect(
+      (
+        await runTool(labTools(index), {
+          name: 'get_lab_history',
+          args: { analyte: 'Hemoglobin A1c' },
+        })
+      ).retrieved,
+    ).toEqual([{ kind: 'lab', analyte: '4548-4' }]);
+  });
+
+  it('reports nothing when get_lab_history matches several analytes', async () => {
+    expect(
+      (
+        await runTool(labTools(index), {
+          name: 'get_lab_history',
+          args: { analyte: 'hem' },
+        })
+      ).retrieved,
+    ).toEqual([]);
+  });
+
+  it('reports nothing for the analyte list, which shows no results', async () => {
+    expect(
+      (await runTool(labTools(index), { name: 'list_lab_analytes', args: {} }))
+        .retrieved,
+    ).toEqual([]);
   });
 });

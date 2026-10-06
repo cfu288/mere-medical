@@ -1,7 +1,7 @@
 import { RECORD_TYPES, RecordEntry, RecordType } from '../types';
 import { RecordIndex } from '../sections/recordIndex';
 import { formatDate } from '../types';
-import { AgentTool, capLines, termMatches, toTerms } from './tools';
+import { AgentTool, ToolOutput, capShown, termMatches, toTerms } from './tools';
 
 export function recordTools(index: RecordIndex): AgentTool[] {
   return [
@@ -37,7 +37,7 @@ export function recordTools(index: RecordIndex): AgentTool[] {
 function searchRecords(
   args: Record<string, unknown>,
   index: RecordIndex,
-): string {
+): string | ToolOutput {
   const typeList = toTerms(args['types']);
   const unknown = typeList.find(
     (t) => !(RECORD_TYPES as readonly string[]).includes(t),
@@ -66,13 +66,19 @@ function searchRecords(
     return [prefix, ...overviewLines(index)].join('\n');
   }
   const missed = terms.filter((term) => !pool.some((e) => matches(e, term)));
-  const listing = capLines(
+  const listing = capShown(
     hits.map(entryLine),
     'narrow the query or the types',
   );
-  return missed.length > 0
-    ? `${listing}\nNo matches for ${quoted(missed)}.`
-    : listing;
+  return {
+    text:
+      missed.length > 0
+        ? `${listing.text}\nNo matches for ${quoted(missed)}.`
+        : listing.text,
+    retrieved: hits
+      .slice(0, listing.shown)
+      .map((e) => ({ kind: 'record', type: e.type, name: e.name })),
+  };
 }
 
 function quoted(terms: string[]): string {

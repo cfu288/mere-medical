@@ -1,6 +1,6 @@
 import { LabIndexEntry } from '../sections/labs';
 import { formatDate } from '../types';
-import { AgentTool, capLines, toTerms } from './tools';
+import { AgentTool, ToolOutput, capLines, capShown, toTerms } from './tools';
 
 export function labTools(index: LabIndexEntry[]): AgentTool[] {
   return [
@@ -66,7 +66,10 @@ function matches(entry: LabIndexEntry, term: string): boolean {
   );
 }
 
-function searchLabs(terms: string[], index: LabIndexEntry[]): string {
+function searchLabs(
+  terms: string[],
+  index: LabIndexEntry[],
+): string | ToolOutput {
   if (terms.length === 0) {
     return 'Empty search query.';
   }
@@ -79,13 +82,17 @@ function searchLabs(terms: string[], index: LabIndexEntry[]): string {
   const missed = terms.filter(
     (term) => !index.some((entry) => matches(entry, term)),
   );
-  const listing = capLines(
+  const listing = capShown(
     hits.map(summaryLine),
     'narrow the terms or use get_lab_history for one analyte',
   );
-  return missed.length > 0
-    ? `${listing}\nNo matches for ${quoted(missed)}.`
-    : listing;
+  return {
+    text:
+      missed.length > 0
+        ? `${listing.text}\nNo matches for ${quoted(missed)}.`
+        : listing.text,
+    retrieved: hits.slice(0, listing.shown).map(retrievedLab),
+  };
 }
 
 function quoted(terms: string[]): string {
@@ -125,7 +132,10 @@ function listLabAnalytes(index: LabIndexEntry[]): string {
   return capLines(lines, 'search_labs finds analytes by name');
 }
 
-function getLabHistory(ref: string, index: LabIndexEntry[]): string {
+function getLabHistory(
+  ref: string,
+  index: LabIndexEntry[],
+): string | ToolOutput {
   const raw = ref.trim();
   if (!raw) {
     return 'Empty analyte.';
@@ -141,11 +151,14 @@ function getLabHistory(ref: string, index: LabIndexEntry[]): string {
     )
       ? bracket[2].trim()
       : undefined;
-  const withCodeNote = (entry: LabIndexEntry): string => {
+  const withCodeNote = (entry: LabIndexEntry): ToolOutput => {
     const note = codeMiss
       ? `No analyte with code "${codeMiss}"; matched "${entry.names[0]}" by name.\n`
       : '';
-    return note + renderHistory(entry);
+    return {
+      text: note + renderHistory(entry),
+      retrieved: [retrievedLab(entry)],
+    };
   };
   for (const needle of needles) {
     const exact = index.filter(
@@ -174,6 +187,10 @@ function renderHistory(entry: LabIndexEntry): string {
     .map((r) => `${valueOf(r)} (${formatDate(r.date)})`)
     .join(', ');
   return `${labelFor(entry)}: ${series}`;
+}
+
+function retrievedLab(entry: LabIndexEntry): ToolOutput['retrieved'][number] {
+  return { kind: 'lab', analyte: entry.code ?? entry.names[0] };
 }
 
 function labelFor(entry: LabIndexEntry): string {

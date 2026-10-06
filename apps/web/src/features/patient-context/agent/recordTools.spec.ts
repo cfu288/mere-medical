@@ -1,7 +1,7 @@
 import { RecordIndex } from '../sections/recordIndex';
 import { ToolCall } from './ollamaChat';
 import { recordTools } from './recordTools';
-import { dispatchTool } from './tools';
+import { dispatchTool, runTool } from './tools';
 
 const index: RecordIndex = {
   entries: [
@@ -113,5 +113,28 @@ Lab results are searchable with search_labs; note text with search_notes.`);
     ).toEqual(
       'Nothing on record.\nLab results are searchable with search_labs; note text with search_notes.',
     );
+  });
+});
+
+describe('recordTools retrieval', () => {
+  it('reports each record a search showed', async () => {
+    expect(
+      (
+        await runTool(recordTools(index), {
+          name: 'search_records',
+          args: { query: ['penicillin'] },
+        })
+      ).retrieved,
+    ).toEqual([
+      { kind: 'record', type: 'condition', name: 'Penicillin rash' },
+      { kind: 'record', type: 'allergy', name: 'PENICILLINS' },
+    ]);
+  });
+
+  it('reports nothing for the overview, which shows only counts', async () => {
+    expect(
+      (await runTool(recordTools(index), { name: 'search_records', args: {} }))
+        .retrieved,
+    ).toEqual([]);
   });
 });
