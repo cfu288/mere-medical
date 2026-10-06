@@ -588,6 +588,8 @@ export const BENCH_CASES: BenchCase[] = [
             'oral-8-6-renal-impairment',
             'oral-4-contraindications',
             'oral-contraindications',
+            'oral-dosage-and-administration',
+            'oral-5-1-lactic-acidosis',
           ],
         },
       ],
@@ -618,6 +620,7 @@ export const BENCH_CASES: BenchCase[] = [
       [
         { kind: 'lab', analyte: '17861-6' },
         { kind: 'lab', analyte: '2731-8' },
+        { kind: 'lab', analyte: '17864-0' },
         { kind: 'record', type: 'condition', name: 'Serum calcium elevated' },
       ],
     ],
@@ -636,6 +639,8 @@ export const BENCH_CASES: BenchCase[] = [
             'oral-4-contraindications',
             'oral-contraindications',
             'oral-5-1-anaphylactic-reactions',
+            'oral-warnings-and-precautions',
+            'oral-17-patient-counseling-information',
           ],
         },
       ],
@@ -662,6 +667,9 @@ export const BENCH_CASES: BenchCase[] = [
             'oral-5-6-renal-toxicity-and-hyperkalemia',
             'oral-2-5-renal-impairment',
             'oral-8-7-renal-impairment',
+            'oral-warnings-and-precautions',
+            'oral-5-14-laboratory-monitoring',
+            'oral-17-patient-counseling-information',
           ],
         },
       ],
@@ -684,6 +692,10 @@ export const BENCH_CASES: BenchCase[] = [
       [
         {
           reference: 'cdc-adult-schedule-by-age',
+          sections: ['ages-19-years-or-older'],
+        },
+        {
+          reference: 'cdc-adult-schedule-by-condition',
           sections: ['ages-19-years-or-older'],
         },
         {
