@@ -135,7 +135,7 @@ describe('check', () => {
     };
 
     expect(check(bpCase, run)).toEqual(['never retrieved note n8 part 1']);
-    expect(score(bpCase, run)).toEqual(0);
+    expect(score(bpCase, run)).toEqual((2 / 3) ** 2 * (1 / 2));
   });
 
   it('scores a run that met its requirements by the share of what it opened that was accepted', () => {
@@ -299,5 +299,58 @@ describe('check', () => {
         run,
       ),
     ).toEqual(1);
+  });
+});
+
+const twoSections: BenchCase = {
+  id: 'two-sections',
+  category: 'guideline',
+  question: 'What does the guideline say?',
+  mustCall: [],
+  mustNotCall: [],
+  mustRead: [
+    [{ reference: 'guide', sections: ['a'] }],
+    [{ reference: 'guide', sections: ['b'] }],
+  ],
+  mustNotRead: [],
+  mustRetrieve: [],
+};
+
+function readsOf(sections: string[]): AgentRun {
+  return {
+    result: answered,
+    turns: 1,
+    calls: sections.map((section) => ({
+      turn: 1,
+      name: 'read_section',
+      args: { reference: 'guide', section },
+      output: `Text of ${section}.`,
+      retrieved: [{ kind: 'section', reference: 'guide', section }],
+    })),
+  };
+}
+
+describe('score', () => {
+  it('gives a run that found everything with some extra reading 0.5', () => {
+    expect(score(twoSections, readsOf(['a', 'b', 'c', 'd']))).toEqual(0.5);
+  });
+
+  it('gives a selective run that found half of what it needed 0.25', () => {
+    expect(score(twoSections, readsOf(['a']))).toEqual(0.25);
+  });
+
+  it('gives a run that opened everything to find what it needed 1/6', () => {
+    expect(
+      score(
+        twoSections,
+        readsOf(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l']),
+      ),
+    ).toEqual(1 / 6);
+  });
+
+  it('gives a run that read a forbidden reference 0', () => {
+    expect(
+      score({ ...twoSections, mustNotRead: ['guide'] }, readsOf(['a', 'b'])),
+    ).toEqual(0);
   });
 });

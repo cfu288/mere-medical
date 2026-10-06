@@ -73,6 +73,57 @@ export function precision(
   };
 }
 
+/** What the run missed of its case's requirements and which forbidden calls or reads it made. */
+function findings(
+  bench: BenchCase,
+  run: AgentRun,
+): { missed: string[]; forbidden: string[] } {
+  const called = new Set(run.calls.map((call) => call.name));
+  const retrieved = run.calls.flatMap((call) => call.retrieved);
+  const seen = (item: Retrieved) =>
+    retrieved.some((got) => sameRetrieved(item, got));
+  return {
+    missed: [
+      ...bench.mustCall
+        .filter((tool) => !called.has(tool))
+        .map((tool) => `never called ${tool}`),
+      ...bench.mustRead
+        .filter(
+          (anyOf) =>
+            !anyOf.some((read) =>
+              read.sections.some((section) =>
+                seen({ kind: 'section', reference: read.reference, section }),
+              ),
+            ),
+        )
+        .map(
+          (anyOf) =>
+            `never read ${anyOf
+              .map((read) => `${read.reference} (${read.sections.join(' | ')})`)
+              .join(' or ')}`,
+        ),
+      ...bench.mustRetrieve
+        .filter((anyOf) => !anyOf.some(seen))
+        .map(
+          (anyOf) =>
+            `never retrieved ${anyOf.map(describeRetrieved).join(' or ')}`,
+        ),
+    ],
+    forbidden: [
+      ...bench.mustNotCall
+        .filter((tool) => called.has(tool))
+        .map((tool) => `called ${tool}`),
+      ...bench.mustNotRead
+        .filter((reference) =>
+          retrieved.some(
+            (got) => got.kind === 'section' && got.reference === reference,
+          ),
+        )
+        .map((reference) => `read ${reference}`),
+    ],
+  };
+}
+
 export function check(bench: BenchCase, run: AgentRun): string[] {
   if (run.result.kind === 'failed') {
     return [run.result.message];
@@ -80,53 +131,26 @@ export function check(bench: BenchCase, run: AgentRun): string[] {
   if (run.result.kind === 'aborted') {
     return ['run aborted'];
   }
-  const called = new Set(run.calls.map((call) => call.name));
-  const retrieved = run.calls.flatMap((call) => call.retrieved);
-  const seen = (item: Retrieved) =>
-    retrieved.some((got) => sameRetrieved(item, got));
-  return [
-    ...bench.mustCall
-      .filter((tool) => !called.has(tool))
-      .map((tool) => `never called ${tool}`),
-    ...bench.mustNotCall
-      .filter((tool) => called.has(tool))
-      .map((tool) => `called ${tool}`),
-    ...bench.mustRead
-      .filter(
-        (anyOf) =>
-          !anyOf.some((read) =>
-            read.sections.some((section) =>
-              seen({ kind: 'section', reference: read.reference, section }),
-            ),
-          ),
-      )
-      .map(
-        (anyOf) =>
-          `never read ${anyOf
-            .map((read) => `${read.reference} (${read.sections.join(' | ')})`)
-            .join(' or ')}`,
-      ),
-    ...bench.mustNotRead
-      .filter((reference) =>
-        retrieved.some(
-          (got) => got.kind === 'section' && got.reference === reference,
-        ),
-      )
-      .map((reference) => `read ${reference}`),
-    ...bench.mustRetrieve
-      .filter((anyOf) => !anyOf.some(seen))
-      .map(
-        (anyOf) =>
-          `never retrieved ${anyOf.map(describeRetrieved).join(' or ')}`,
-      ),
-  ];
+  const { missed, forbidden } = findings(bench, run);
+  return [...missed, ...forbidden];
 }
 
-/** 0 when the run missed a requirement, else the share of what it opened that its case accepts (1 when it opened nothing). */
+/** Share of the case's requirements the run met: tools called, section groups read and record groups retrieved. */
+export function recall(bench: BenchCase, run: AgentRun): number {
+  const total =
+    bench.mustCall.length + bench.mustRead.length + bench.mustRetrieve.length;
+  return total === 0 ? 1 : (total - findings(bench, run).missed.length) / total;
+}
+
+/** recall squared times precision, so missing what was needed costs more than reading extra, and reading everything costs most; 0 for a run that failed or made a forbidden call or read. */
 export function score(bench: BenchCase, run: AgentRun): number {
-  if (check(bench, run).length > 0) {
+  if (
+    run.result.kind !== 'answered' ||
+    findings(bench, run).forbidden.length > 0
+  ) {
     return 0;
   }
   const share = precision(bench, run);
-  return share.opened === 0 ? 1 : share.accepted / share.opened;
+  const shareAccepted = share.opened === 0 ? 1 : share.accepted / share.opened;
+  return recall(bench, run) ** 2 * shareAccepted;
 }
