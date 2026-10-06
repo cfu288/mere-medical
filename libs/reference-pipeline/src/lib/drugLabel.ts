@@ -14,23 +14,24 @@ export type DrugLabel = {
 const OPENFDA_LABELS = 'https://api.fda.gov/drug/label.json';
 const RXNAV = 'https://rxnav.nlm.nih.gov/REST';
 
-const labelSearchSchema = z.object({
-  results: z
-    .tuple([
-      z.object({
-        set_id: z.string().min(1),
-        effective_time: z.string().min(8),
-        openfda: z
-          .object({
-            brand_name: z.array(z.string()).optional(),
-            manufacturer_name: z.array(z.string()).optional(),
-            application_number: z.array(z.string()).optional(),
-          })
-          .optional(),
-      }),
-    ])
-    .rest(z.unknown()),
+const labelRecordSchema = z.object({
+  set_id: z.string().min(1),
+  effective_time: z.string().min(8),
+  openfda: z
+    .object({
+      brand_name: z.array(z.string()).optional(),
+      manufacturer_name: z.array(z.string()).optional(),
+      application_number: z.array(z.string()).optional(),
+    })
+    .optional(),
 });
+const labelSearchSchema = z.object({
+  results: z.tuple([labelRecordSchema]).rest(z.unknown()),
+});
+
+/** One openFDA label record, as the label search returns it. */
+export type LabelRecord = z.infer<typeof labelRecordSchema>;
+
 const countSchema = z.object({
   results: z.array(z.object({ term: z.string(), count: z.number() })),
 });
@@ -82,27 +83,15 @@ export async function drugLabel(
         ),
       )
       .results.map((r) => r.term);
-    const query = applications.some((a) => a.startsWith('NDA'))
-      ? `${scoped} AND openfda.application_number:NDA*`
-      : scoped;
     const label = labelSearchSchema.parse(
       await fetchJson(
-        `${OPENFDA_LABELS}?search=${encodeURIComponent(query)}&sort=${encodeURIComponent('effective_time:desc')}&limit=1`,
+        `${OPENFDA_LABELS}?search=${encodeURIComponent(labelSearch(scoped, applications))}&sort=${encodeURIComponent('effective_time:desc')}&limit=1`,
         fetchBytes,
       ),
     ).results[0];
-    const url = `https://dailymed.nlm.nih.gov/dailymed/fda/fdaDrugXsl.cfm?setid=${label.set_id}&type=display`;
-    const maker = label.openfda?.manufacturer_name?.[0];
-    const owner = label.openfda?.brand_name?.[0] ?? maker ?? 'label';
-    const effective = `${label.effective_time.slice(0, 4)}-${label.effective_time.slice(4, 6)}-${label.effective_time.slice(6, 8)}`;
+    const spoke = labelSpoke(route, label);
     years.push(label.effective_time.slice(0, 4));
-    spokes.push({
-      id: routeSlug(route),
-      title: `${routeTitle(route)}: ${owner}`,
-      url,
-      contentMd: `Label ${label.openfda?.application_number?.[0] ?? 'unknown'}${maker ? ` by ${maker}` : ''}, effective ${effective}.`,
-      document: webpage(await fetchBytes(url)),
-    });
+    spokes.push({ ...spoke, document: webpage(await fetchBytes(spoke.url)) });
   }
   const name = generic.charAt(0) + generic.slice(1).toLowerCase();
   const { brands, classes } = await brandsAndClasses(
@@ -112,15 +101,7 @@ export async function drugLabel(
   return {
     title: `FDA drug label: ${name}`,
     edition: years.sort().reverse()[0] ?? '',
-    summary: [
-      brands.length > 0 ? `${name} (brands: ${brands.join(', ')})` : name,
-      ...(classes.length > 0 ? [classes.join(', ')] : []),
-      `routes: ${routes
-        .map(routeSlug)
-        .map((r) => r.replace(/-/g, ' '))
-        .join(', ')}`,
-      'FDA prescribing information: uses, dosing, warnings, side effects, interactions',
-    ].join('; '),
+    summary: labelSummary({ name, brands, classes, routes }),
     url: `https://dailymed.nlm.nih.gov/dailymed/search.cfm?labeltype=all&query=${encodeURIComponent(generic.toLowerCase())}`,
     spokes,
   };
@@ -158,11 +139,10 @@ async function brandsAndClasses(
   const products = brandedSchema.parse(
     await fetchJson(`${RXNAV}/rxcui/${rxcui}/related.json?tty=SBD`, fetchBytes),
   );
-  const brands = new Set(
+  const brands = brandNames(
     (products.relatedGroup.conceptGroup ?? [])
       .flatMap((group) => group.conceptProperties ?? [])
-      .filter((product) => !product.name.includes(' / '))
-      .flatMap((product) => /\[([^\]]+)\]/.exec(product.name)?.[1] ?? []),
+      .map((product) => product.name),
   );
   const classes = new Set(
     (
@@ -174,5 +154,62 @@ async function brandsAndClasses(
       ).rxclassDrugInfoList?.rxclassDrugInfo ?? []
     ).map((info) => info.rxclassMinConceptItem.className),
   );
-  return { brands: [...brands].sort(), classes: [...classes].sort() };
+  return { brands, classes: [...classes].sort() };
+}
+
+/** The openFDA search for a route's label: the originator's (an NDA) when the route has one, else any label. */
+export function labelSearch(scoped: string, applications: string[]): string {
+  return applications.some((a) => a.startsWith('NDA'))
+    ? `${scoped} AND openfda.application_number:NDA*`
+    : scoped;
+}
+
+/** A route's spoke, named for the label's brand, else its maker, citing the label's DailyMed page. */
+export function labelSpoke(
+  route: string,
+  label: LabelRecord,
+): Omit<Spoke, 'document'> {
+  const maker = label.openfda?.manufacturer_name?.[0];
+  const owner = label.openfda?.brand_name?.[0] ?? maker ?? 'label';
+  const effective = `${label.effective_time.slice(0, 4)}-${label.effective_time.slice(4, 6)}-${label.effective_time.slice(6, 8)}`;
+  return {
+    id: routeSlug(route),
+    title: `${routeTitle(route)}: ${owner}`,
+    url: `https://dailymed.nlm.nih.gov/dailymed/fda/fdaDrugXsl.cfm?setid=${label.set_id}&type=display`,
+    contentMd: `Label ${label.openfda?.application_number?.[0] ?? 'unknown'}${maker ? ` by ${maker}` : ''}, effective ${effective}.`,
+  };
+}
+
+/** Brand names from RxNav branded product names, leaving out combination products. */
+export function brandNames(productNames: string[]): string[] {
+  return [
+    ...new Set(
+      productNames
+        .filter((name) => !name.includes(' / '))
+        .flatMap((name) => /\[([^\]]+)\]/.exec(name)?.[1] ?? []),
+    ),
+  ].sort();
+}
+
+/** The one-line description search matches a drug by. */
+export function labelSummary({
+  name,
+  brands,
+  classes,
+  routes,
+}: {
+  name: string;
+  brands: string[];
+  classes: string[];
+  routes: string[];
+}): string {
+  return [
+    brands.length > 0 ? `${name} (brands: ${brands.join(', ')})` : name,
+    ...(classes.length > 0 ? [classes.join(', ')] : []),
+    `routes: ${routes
+      .map(routeSlug)
+      .map((r) => r.replace(/-/g, ' '))
+      .join(', ')}`,
+    'FDA prescribing information: uses, dosing, warnings, side effects, interactions',
+  ].join('; ');
 }
