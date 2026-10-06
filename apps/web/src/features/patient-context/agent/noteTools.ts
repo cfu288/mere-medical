@@ -8,6 +8,7 @@ import { NoteRecord } from '../notes/noteRecord';
 import { formatDate } from '../types';
 import {
   AgentTool,
+  ToolOutput,
   capLines,
   matchIndices,
   splitDocument,
@@ -100,7 +101,7 @@ async function readNote(
   id: string,
   part: number,
   notes: NoteRecord[],
-): Promise<string> {
+): Promise<string | ToolOutput> {
   const note = resolveNote(id, notes);
   if (!note) {
     return `No note with id "${id}". Use list_recent_notes to see valid ids.`;
@@ -113,14 +114,18 @@ async function readNote(
   if (!Number.isInteger(part) || part < 1 || part > parts.length) {
     return `Note "${id}" has ${parts.length} part(s); ask for a part between 1 and ${parts.length}.`;
   }
+  const retrieved = [{ kind: 'note' as const, id: note.alias }];
   if (parts.length === 1) {
-    return parts[0];
+    return { text: parts[0], retrieved };
   }
   const footer =
     part < parts.length
       ? `\n\nCall read_note with part ${part + 1} to continue.`
       : '';
-  return `[part ${part} of ${parts.length}]\n${parts[part - 1]}${footer}`;
+  return {
+    text: `[part ${part} of ${parts.length}]\n${parts[part - 1]}${footer}`,
+    retrieved,
+  };
 }
 
 export async function searchNotes(
@@ -128,11 +133,12 @@ export async function searchNotes(
   notes: NoteRecord[],
   maxChars = MAX_SEARCH_RESULT_CHARS,
   signal?: AbortSignal,
-): Promise<string> {
+): Promise<ToolOutput> {
   if (terms.length === 0) {
-    return 'Empty search query.';
+    return { text: 'Empty search query.', retrieved: [] };
   }
   const matches: string[] = [];
+  const quoted: string[] = [];
   const matchedTerms = new Set<string>();
   let totalChars = 0;
   let scanned = 0;
@@ -175,13 +181,19 @@ export async function searchNotes(
         matches.push(line);
         totalChars += line.length;
         perNote += 1;
+        if (!quoted.includes(note.alias)) {
+          quoted.push(note.alias);
+        }
       }
     }
   }
   const unreadableNote =
     unreadable > 0 ? `\n[${unreadable} unreadable note(s) not searched]` : '';
   if (matches.length === 0) {
-    return `No matches for ${terms.map((t) => `"${t}"`).join(', ')}. Use list_recent_notes and read_note to scan individual notes.${unreadableNote}`;
+    return {
+      text: `No matches for ${terms.map((t) => `"${t}"`).join(', ')}. Use list_recent_notes and read_note to scan individual notes.${unreadableNote}`,
+      retrieved: [],
+    };
   }
   const scannedAll = scanned === notes.length;
   const missed = scannedAll
@@ -194,5 +206,8 @@ export async function searchNotes(
   if (missed.length > 0) {
     result += `\nNo matches for ${missed.map((t) => `"${t}"`).join(', ')}.`;
   }
-  return result + unreadableNote;
+  return {
+    text: result + unreadableNote,
+    retrieved: quoted.map((id) => ({ kind: 'note', id })),
+  };
 }

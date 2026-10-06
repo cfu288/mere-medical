@@ -1,6 +1,6 @@
 import { NoteRecord } from '../notes/noteRecord';
 import { noteTools, searchNotes } from './noteTools';
-import { dispatchTool } from './tools';
+import { dispatchTool, runTool } from './tools';
 
 const notes: NoteRecord[] = [
   {
@@ -122,7 +122,7 @@ n2 | 2025-06-01 | Scanned Letter | application/pdf`);
         }),
       },
     ];
-    expect(await searchNotes(['needle'], twoNotes, 30)).toEqual(
+    expect((await searchNotes(['needle'], twoNotes, 30)).text).toEqual(
       'n8 (2025-08-14): ...alpha needle beta...\n[stopped after 1 of 2 notes; narrow the terms to search the rest]',
     );
   });
@@ -180,5 +180,47 @@ No matches for "ppd".
     ).toEqual(
       'No matches for "colonoscopy". Use list_recent_notes and read_note to scan individual notes.\n[1 unreadable note(s) not searched]',
     );
+  });
+});
+
+describe('noteTools retrieval', () => {
+  it('reports the note read_note returned', async () => {
+    expect(
+      (
+        await runTool(noteTools(notes), {
+          name: 'read_note',
+          args: { id: 'n1' },
+        })
+      ).retrieved,
+    ).toEqual([{ kind: 'note', id: 'n1' }]);
+  });
+
+  it('reports nothing for a note it could not read', async () => {
+    expect(
+      (
+        await runTool(noteTools(notes), {
+          name: 'read_note',
+          args: { id: 'n2' },
+        })
+      ).retrieved,
+    ).toEqual([]);
+  });
+
+  it('reports each note search_notes quoted', async () => {
+    expect(
+      (
+        await runTool(noteTools(notes), {
+          name: 'search_notes',
+          args: { query: ['hypertension'] },
+        })
+      ).retrieved,
+    ).toEqual([{ kind: 'note', id: 'n1' }]);
+  });
+
+  it('reports nothing for the note list, which shows only titles', async () => {
+    expect(
+      (await runTool(noteTools(notes), { name: 'list_recent_notes', args: {} }))
+        .retrieved,
+    ).toEqual([]);
   });
 });
