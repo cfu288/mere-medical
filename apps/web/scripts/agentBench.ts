@@ -76,6 +76,12 @@ async function runCase(
     join(runDir, `${bench.id}.txt`),
     transcript(bench, run, outcome.kind === 'error' ? outcome.message : null),
   );
+  if (run) {
+    writeFileSync(
+      join(runDir, `${bench.id}.json`),
+      JSON.stringify(run, null, 2),
+    );
+  }
   console.log(`done ${bench.id}`);
   return {
     id: bench.id,
@@ -102,7 +108,7 @@ async function main() {
     throw new Error(`No bench case or category matches: ${FILTERS.join(' ')}`);
   }
   const startedAt = new Date().toISOString();
-  const runDir = join(HISTORY_DIR, startedAt.replace(/:/g, '-').slice(0, 19));
+  const runDir = join(HISTORY_DIR, startedAt.split(':').join('-').slice(0, 19));
   mkdirSync(runDir, { recursive: true });
   const store = loadStore(exportPath());
   const results = new Map<BenchCase, CaseResult>();
