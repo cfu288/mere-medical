@@ -10,6 +10,7 @@ import {
   ClinicalDoc,
   ClinicalDocStore,
 } from '../src/features/patient-context/clinicalDocs';
+import { Retrieved } from '../src/features/patient-context/agent/tools';
 import { createHarness } from '../src/features/patient-context/harness/events';
 
 export const ENDPOINT =
@@ -32,6 +33,7 @@ export type ToolCallLog = {
   name: string;
   args: Record<string, unknown>;
   output: string;
+  retrieved: Retrieved[];
 };
 
 export type AgentRun = {
@@ -75,7 +77,7 @@ export async function askAgent(
   store: ClinicalDocStore,
   question: string,
 ): Promise<AgentRun> {
-  const pending = new Map<string, Omit<ToolCallLog, 'output'>>();
+  const pending = new Map<string, Omit<ToolCallLog, 'output' | 'retrieved'>>();
   const calls: ToolCallLog[] = [];
   let turns = 0;
   const harness = createHarness('bench', (event) => {
@@ -90,7 +92,11 @@ export async function askAgent(
     } else if (event.t === 'ToolResult') {
       const called = pending.get(event.toolId);
       if (called) {
-        calls.push({ ...called, output: event.result });
+        calls.push({
+          ...called,
+          output: event.result,
+          retrieved: event.retrieved,
+        });
       }
     }
   });

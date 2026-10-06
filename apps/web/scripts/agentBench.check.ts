@@ -2,8 +2,21 @@ import {
   NO_SECTION_PREFIX,
   UNAVAILABLE,
 } from '../src/features/patient-context/agent/referenceTools';
+import { Retrieved } from '../src/features/patient-context/agent/tools';
 import { BenchCase, SectionRead } from './agentBench.cases';
 import { AgentRun } from './agentHarness';
+
+function sameRetrieved(a: Retrieved, b: Retrieved): boolean {
+  return a.kind === 'lab'
+    ? b.kind === 'lab' && a.analyte === b.analyte
+    : b.kind === 'record' && a.type === b.type && a.name === b.name;
+}
+
+function describeRetrieved(item: Retrieved): string {
+  return item.kind === 'lab'
+    ? `lab ${item.analyte}`
+    : `${item.type} ${item.name}`;
+}
 
 function failedRead(output: string): boolean {
   return output.startsWith(NO_SECTION_PREFIX) || output.startsWith(UNAVAILABLE);
@@ -23,6 +36,7 @@ export function check(bench: BenchCase, run: AgentRun): string[] {
       reference: String(call.args['reference']),
       section: String(call.args['section']),
     }));
+  const retrieved = run.calls.flatMap((call) => call.retrieved);
   const satisfies = (expected: SectionRead) =>
     reads.some(
       (read) =>
@@ -47,5 +61,16 @@ export function check(bench: BenchCase, run: AgentRun): string[] {
     ...bench.mustNotRead
       .filter((reference) => reads.some((read) => read.reference === reference))
       .map((reference) => `read ${reference}`),
+    ...bench.mustRetrieve
+      .filter(
+        (anyOf) =>
+          !anyOf.some((item) =>
+            retrieved.some((seen) => sameRetrieved(item, seen)),
+          ),
+      )
+      .map(
+        (anyOf) =>
+          `never retrieved ${anyOf.map(describeRetrieved).join(' or ')}`,
+      ),
   ];
 }

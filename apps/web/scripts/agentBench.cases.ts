@@ -1,3 +1,5 @@
+import { Retrieved } from '../src/features/patient-context/agent/tools';
+
 /** A read of this reference; when sections are listed, a read of one of them. */
 export type SectionRead = { reference: string; sections?: string[] };
 
@@ -17,6 +19,8 @@ export type BenchCase = {
   mustRead: SectionRead[][];
   /** References the agent must not read. */
   mustNotRead: string[];
+  /** Patient data a tool result must have shown; each entry is satisfied by any one of its items. */
+  mustRetrieve: Retrieved[][];
 };
 
 const APIXABAN_AF_DOSING = [
@@ -34,6 +38,7 @@ export const BENCH_CASES: BenchCase[] = [
     mustNotCall: [],
     mustRead: [[{ reference: 'label-apixaban', sections: APIXABAN_AF_DOSING }]],
     mustNotRead: [],
+    mustRetrieve: [],
   },
   {
     id: 'eliquis-misspelled',
@@ -50,6 +55,7 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
+    mustRetrieve: [],
   },
   {
     id: 'eliquis-dialysis',
@@ -66,6 +72,7 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
+    mustRetrieve: [],
   },
   {
     id: 'eliquis-cyp3a4-inducer',
@@ -86,6 +93,7 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
+    mustRetrieve: [],
   },
   {
     id: 'eliquis-for-someone-else',
@@ -95,6 +103,7 @@ export const BENCH_CASES: BenchCase[] = [
     mustNotCall: [],
     mustRead: [[{ reference: 'label-apixaban', sections: APIXABAN_AF_DOSING }]],
     mustNotRead: [],
+    mustRetrieve: [],
   },
   {
     id: 'metoprolol-two-forms',
@@ -126,6 +135,7 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
+    mustRetrieve: [],
   },
   {
     id: 'atorvastatin-clarithromycin',
@@ -147,6 +157,7 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
+    mustRetrieve: [],
   },
   {
     id: 'simvastatin-amlodipine',
@@ -167,6 +178,7 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
+    mustRetrieve: [],
   },
   {
     id: 'metformin-kidney-function',
@@ -190,6 +202,7 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
+    mustRetrieve: [],
   },
   {
     id: 'clopidogrel-omeprazole',
@@ -220,6 +233,7 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
+    mustRetrieve: [],
   },
   {
     id: 'sertraline-sumatriptan',
@@ -249,6 +263,7 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
+    mustRetrieve: [],
   },
   {
     id: 'warfarin-pregnancy',
@@ -269,6 +284,7 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
+    mustRetrieve: [],
   },
   {
     id: 'uspstf-statin',
@@ -289,6 +305,7 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
+    mustRetrieve: [],
   },
   {
     id: 'latest-cholesterol',
@@ -298,6 +315,7 @@ export const BENCH_CASES: BenchCase[] = [
     mustNotCall: ['search_references', 'read_section'],
     mustRead: [],
     mustNotRead: [],
+    mustRetrieve: [],
   },
   {
     id: 'bp-at-goal',
@@ -314,6 +332,7 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
+    mustRetrieve: [],
   },
   {
     id: 'va-bp-goal',
@@ -331,6 +350,7 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
+    mustRetrieve: [],
   },
   {
     id: 'va-a1c-target',
@@ -347,6 +367,7 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
+    mustRetrieve: [],
   },
   {
     id: 'vaccines-due',
@@ -363,6 +384,7 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
+    mustRetrieve: [],
   },
   {
     id: 'ckd-bp-medicines',
@@ -373,6 +395,7 @@ export const BENCH_CASES: BenchCase[] = [
     mustNotCall: [],
     mustRead: [[{ reference: 'va-dod-ckd' }]],
     mustNotRead: [],
+    mustRetrieve: [],
   },
   {
     id: 'colon-screening-age',
@@ -394,6 +417,7 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
+    mustRetrieve: [],
   },
   {
     id: 'pertussis-treatment',
@@ -408,6 +432,7 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
+    mustRetrieve: [],
   },
   {
     id: 'measles-symptoms',
@@ -417,6 +442,7 @@ export const BENCH_CASES: BenchCase[] = [
     mustNotCall: [],
     mustRead: [[{ reference: 'cdc-measles-symptoms-and-complications' }]],
     mustNotRead: [],
+    mustRetrieve: [],
   },
   {
     id: 'pneumococcal-from-record',
@@ -437,6 +463,7 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
+    mustRetrieve: [],
   },
   // Questions below are verbatim from OpenAI HealthBench (MIT license).
   {
@@ -480,6 +507,7 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
+    mustRetrieve: [],
   },
   {
     id: 'hb-amoxicillin-child-dose',
@@ -500,6 +528,7 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
+    mustRetrieve: [],
   },
   {
     id: 'hb-ibuprofen-headache',
@@ -523,6 +552,7 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
+    mustRetrieve: [],
   },
   {
     id: 'hb-bp-on-lisinopril',
@@ -540,5 +570,163 @@ export const BENCH_CASES: BenchCase[] = [
       ],
     ],
     mustNotRead: [],
+    mustRetrieve: [],
+  },
+  {
+    id: 'metformin-safe',
+    category: 'drug-label',
+    question:
+      'I was just prescribed metformin 1000 mg twice a day. Is that safe?',
+    mustCall: ['search_references'],
+    mustNotCall: [],
+    mustRead: [
+      [
+        {
+          reference: 'label-metformin-hydrochloride',
+          sections: [
+            'oral-2-2-recommendations-for-use-in-renal-impairment',
+            'oral-8-6-renal-impairment',
+            'oral-4-contraindications',
+            'oral-contraindications',
+          ],
+        },
+      ],
+    ],
+    mustNotRead: [],
+    mustRetrieve: [[{ kind: 'lab', analyte: '77147-7' }]],
+  },
+  {
+    id: 'hydrochlorothiazide-safe',
+    category: 'drug-label',
+    question:
+      'My doctor wants to start me on hydrochlorothiazide. Is that safe?',
+    mustCall: ['search_references'],
+    mustNotCall: [],
+    mustRead: [
+      [
+        {
+          reference: 'label-hydrochlorothiazide',
+          sections: [
+            'oral-5-3-metabolic-disturbances',
+            'oral-warnings-and-precautions',
+          ],
+        },
+      ],
+    ],
+    mustNotRead: [],
+    mustRetrieve: [
+      [
+        { kind: 'lab', analyte: '17861-6' },
+        { kind: 'lab', analyte: '2731-8' },
+        { kind: 'record', type: 'condition', name: 'Serum calcium elevated' },
+      ],
+    ],
+  },
+  {
+    id: 'amoxicillin-safe',
+    category: 'drug-label',
+    question: 'My dentist prescribed amoxicillin. Is that safe?',
+    mustCall: ['search_references'],
+    mustNotCall: [],
+    mustRead: [
+      [
+        {
+          reference: 'label-amoxicillin',
+          sections: [
+            'oral-4-contraindications',
+            'oral-contraindications',
+            'oral-5-1-anaphylactic-reactions',
+          ],
+        },
+      ],
+    ],
+    mustNotRead: [],
+    mustRetrieve: [
+      [
+        { kind: 'record', type: 'allergy', name: 'PENICILLINS' },
+        { kind: 'record', type: 'condition', name: 'Penicillin rash' },
+      ],
+    ],
+  },
+  {
+    id: 'meloxicam-daily-safe',
+    category: 'drug-label',
+    question: 'Is it safe to take meloxicam every day?',
+    mustCall: ['search_references'],
+    mustNotCall: [],
+    mustRead: [
+      [
+        {
+          reference: 'label-meloxicam',
+          sections: [
+            'oral-5-6-renal-toxicity-and-hyperkalemia',
+            'oral-2-5-renal-impairment',
+            'oral-8-7-renal-impairment',
+          ],
+        },
+      ],
+    ],
+    mustNotRead: [],
+    mustRetrieve: [
+      [
+        { kind: 'lab', analyte: '77147-7' },
+        { kind: 'lab', analyte: '2160-0' },
+      ],
+    ],
+  },
+  {
+    id: 'hep-b-nursing-school',
+    category: 'guideline',
+    question: 'Do I need a hepatitis B vaccine before nursing school?',
+    mustCall: ['search_references'],
+    mustNotCall: [],
+    mustRead: [
+      [
+        {
+          reference: 'cdc-adult-schedule-by-age',
+          sections: ['ages-19-years-or-older'],
+        },
+        {
+          reference: 'cdc-recommended-vaccinations-for-adults',
+          sections: ['what-diseases-do-these-vaccines-protect-against'],
+        },
+      ],
+    ],
+    mustNotRead: [],
+    mustRetrieve: [
+      [
+        { kind: 'record', type: 'immunization', name: 'Hep B, adult' },
+        { kind: 'record', type: 'immunization', name: 'Hep B, Unspecified' },
+      ],
+      [{ kind: 'lab', analyte: '16935-9' }],
+    ],
+  },
+  {
+    id: 'metformin-dose-not-on-it',
+    category: 'record',
+    question: 'Is my metformin dose right?',
+    mustCall: [],
+    mustNotCall: [],
+    mustRead: [],
+    mustNotRead: [],
+    mustRetrieve: [
+      [
+        {
+          kind: 'record',
+          type: 'medication',
+          name: 'cholecalciferol 25 MCG (1000 UT) tablet',
+        },
+        {
+          kind: 'record',
+          type: 'medication',
+          name: 'BENZONATATE 100 MG CAPSULE',
+        },
+        {
+          kind: 'record',
+          type: 'medication',
+          name: 'valACYclovir 500 mg oral tablet',
+        },
+      ],
+    ],
   },
 ];
