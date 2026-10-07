@@ -28,6 +28,7 @@ export type HarnessEvent =
       content: string;
       toolCalls: ToolCall[];
       durationMs: number;
+      promptTokens: number | null;
     }
   | { t: 'ChatFailed'; callId: string; message: string; durationMs: number }
   | {

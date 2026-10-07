@@ -26,6 +26,7 @@ export async function loggedChat(
       content: result.content,
       toolCalls: result.toolCalls,
       durationMs: Date.now() - startedAt,
+      promptTokens: result.promptTokens,
     });
     return result;
   } catch (e) {

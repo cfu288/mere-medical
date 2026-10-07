@@ -53,4 +53,24 @@ describe('loggedChat', () => {
     expect(requested.seedMessages).toBeUndefined();
     expect(requested.requestChars).toEqual(35);
   });
+
+  it('logs the prompt size the model server reported', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        message: { role: 'assistant', content: 'ok' },
+        prompt_eval_count: 1234,
+      }),
+    } as Response);
+
+    const { harness, events } = recordingHarness();
+    await loggedChat(harness, 1, {
+      endpoint: 'http://localhost:11434',
+      model: 'qwen3.8:27b-mlx',
+      messages: [{ role: 'user', content: 'first' }],
+    });
+
+    const completed = events[1] as Extract<RunEvent, { t: 'ChatCompleted' }>;
+    expect(completed.promptTokens).toEqual(1234);
+  });
 });

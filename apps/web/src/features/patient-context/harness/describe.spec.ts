@@ -16,6 +16,7 @@ describe('describeEvent', () => {
       content: '',
       toolCalls: [],
       durationMs: 99000,
+      promptTokens: null,
       env,
     };
     expect(describeEvent(event)).toEqual({
@@ -37,6 +38,7 @@ describe('describeEvent', () => {
         { name: 'read_note', args: { id: 'note-1' } },
       ],
       durationMs: 3200,
+      promptTokens: null,
       env,
     };
     expect(describeEvent(event)).toEqual({
@@ -69,6 +71,7 @@ describe('summarizeRun', () => {
         content: '',
         toolCalls: [{ name: 'search_labs', args: { query: 'a1c' } }],
         durationMs: 2000,
+        promptTokens: null,
         env: { seq: 1, at: '2026-09-29T23:59:28.000Z' },
       },
       {
@@ -96,6 +99,7 @@ describe('summarizeRun', () => {
         content: 'No A1c on record.',
         toolCalls: [],
         durationMs: 3000,
+        promptTokens: null,
         env: { seq: 4, at: '2026-09-29T23:59:31.000Z' },
       },
       {
