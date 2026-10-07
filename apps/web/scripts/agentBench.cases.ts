@@ -11,16 +11,14 @@ export type BenchCase = {
   /** drug-label and guideline cases answer from the library, record cases from the patient's record. */
   category: Category;
   question: string;
-  /** Tools the agent must call at least once. */
-  mustCall: string[];
   /** Tools the agent must not call. */
   mustNotCall: string[];
   /** Each entry is satisfied by any one of its reads; the sections listed are every one that holds the answer. */
   mustRead: SectionRead[][];
-  /** References the agent must not read. */
-  mustNotRead: string[];
   /** Patient data a tool result must have shown; each entry is satisfied by any one of its items. */
   mustRetrieve: Retrieved[][];
+  /** Items worth opening that no requirement needs; opening them is not waste. */
+  alsoRelevant: Retrieved[];
 };
 
 export const BENCH_CASES: BenchCase[] = [
@@ -29,7 +27,6 @@ export const BENCH_CASES: BenchCase[] = [
     category: 'drug-label',
     question:
       'I take Eliquis for atrial fibrillation. When would my dose need to be lowered, and to what dose?',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -46,14 +43,13 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [],
+    alsoRelevant: [],
   },
   {
     id: 'eliquis-misspelled',
     category: 'drug-label',
     question: 'What is the usual Eliquiss dose for atrial fibrillation?',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -66,14 +62,13 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [],
+    alsoRelevant: [],
   },
   {
     id: 'eliquis-dialysis',
     category: 'drug-label',
     question: 'I am on dialysis. Does that change my Eliquis dose?',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -86,15 +81,14 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [],
+    alsoRelevant: [],
   },
   {
     id: 'eliquis-cyp3a4-inducer',
     category: 'drug-label',
     question:
       'Is carbamazepine a CYP3A4 inducer, and can I take it with my Eliquis?',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -104,14 +98,13 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [],
+    alsoRelevant: [],
   },
   {
     id: 'eliquis-for-someone-else',
     category: 'drug-label',
     question: 'What dose of Eliquis should I give my 85-year-old mother?',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -125,14 +118,13 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [],
+    alsoRelevant: [],
   },
   {
     id: 'metoprolol-two-forms',
     category: 'drug-label',
     question: 'How is Lopressor taken compared with Toprol XL?',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -161,15 +153,14 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [],
+    alsoRelevant: [],
   },
   {
     id: 'atorvastatin-clarithromycin',
     category: 'drug-label',
     question:
       'I take atorvastatin and my doctor wants to start clarithromycin. Is there a limit on my atorvastatin dose?',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -182,15 +173,14 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [],
+    alsoRelevant: [],
   },
   {
     id: 'simvastatin-amlodipine',
     category: 'drug-label',
     question:
       'I take Zocor and Norvasc together. What is the most Zocor I can take?',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -207,15 +197,14 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [],
+    alsoRelevant: [],
   },
   {
     id: 'metformin-kidney-function',
     category: 'drug-label',
     question:
       'At what kidney function should metformin not be started, or not be used at all?',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -240,14 +229,13 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [],
+    alsoRelevant: [],
   },
   {
     id: 'clopidogrel-omeprazole',
     category: 'drug-label',
     question: 'Can I take Prilosec with my Plavix?',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -274,14 +262,13 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [],
+    alsoRelevant: [],
   },
   {
     id: 'sertraline-sumatriptan',
     category: 'drug-label',
     question: 'Is it safe to take Imitrex while I am on Zoloft?',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -306,14 +293,13 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [],
+    alsoRelevant: [],
   },
   {
     id: 'warfarin-pregnancy',
     category: 'drug-label',
     question: 'Can warfarin be used during pregnancy?',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -330,14 +316,13 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [],
+    alsoRelevant: [],
   },
   {
     id: 'uspstf-statin',
     category: 'guideline',
     question: 'When does the USPSTF recommend starting a statin?',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -356,17 +341,15 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [],
+    alsoRelevant: [],
   },
   {
     id: 'latest-cholesterol',
     category: 'record',
     question: 'What was my most recent cholesterol result?',
-    mustCall: ['search_labs'],
     mustNotCall: ['search_references', 'read_section'],
     mustRead: [],
-    mustNotRead: [],
     mustRetrieve: [
       [
         {
@@ -379,12 +362,12 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
+    alsoRelevant: [],
   },
   {
     id: 'bp-at-goal',
     category: 'guideline',
     question: 'Is my blood pressure where it should be?',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -402,7 +385,6 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [
       [
         {
@@ -417,13 +399,13 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
+    alsoRelevant: [],
   },
   {
     id: 'va-bp-goal',
     category: 'guideline',
     question:
       'According to the VA hypertension guideline, what blood pressure goal is recommended for adults with hypertension?',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -441,14 +423,13 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [],
+    alsoRelevant: [],
   },
   {
     id: 'va-a1c-target',
     category: 'guideline',
     question: 'What A1c target does the VA diabetes guideline recommend?',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -465,14 +446,13 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [],
+    alsoRelevant: [],
   },
   {
     id: 'vaccines-due',
     category: 'record',
     question: 'Am I due for any vaccines?',
-    mustCall: ['search_records', 'search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -494,7 +474,6 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [
       [
         {
@@ -523,13 +502,13 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
+    alsoRelevant: [],
   },
   {
     id: 'ckd-bp-medicines',
     category: 'guideline',
     question:
       'For someone with chronic kidney disease and high blood pressure, which blood pressure medicines do the guidelines recommend to protect the kidneys?',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -553,14 +532,13 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [],
+    alsoRelevant: [],
   },
   {
     id: 'colon-screening-age',
     category: 'guideline',
     question: 'At what age should I start colon cancer screening?',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -583,14 +561,13 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [],
+    alsoRelevant: [],
   },
   {
     id: 'pertussis-treatment',
     category: 'guideline',
     question: 'My kid has pertussis. How is it treated?',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -623,14 +600,13 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [],
+    alsoRelevant: [],
   },
   {
     id: 'measles-symptoms',
     category: 'guideline',
     question: 'What are the symptoms of measles?',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -656,14 +632,13 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [],
+    alsoRelevant: [],
   },
   {
     id: 'pneumococcal-from-record',
     category: 'record',
     question: 'Should I get the pneumococcal vaccine?',
-    mustCall: ['search_records', 'search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -681,7 +656,6 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [
       [
         {
@@ -691,13 +665,13 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
+    alsoRelevant: [],
   },
   {
     id: 'hb-new-meds-how-to-take',
     category: 'drug-label',
     question:
       'Received new medications: metformin 500 mg twice a day, lisinopril 10 mg once daily, atorvastatin 20 mg at bedtime, aspirin 81 mg once daily, and furosemide 40 mg once daily. How do I take these?',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -739,15 +713,14 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [],
+    alsoRelevant: [],
   },
   {
     id: 'hb-amoxicillin-child-dose',
     category: 'drug-label',
     question:
       'Help me figure out if I’m giving the correct dose to my 4-year-old for her ear infection. She weighs 36 pounds, the pediatrician wrote in big letters 400 mg of amoxicillin twice a day for 10 days, so I’ve been giving her the first dose around 9am and the second around 9pm. She doesn’t seem to have side effects, but I’m worried I might be missing something. I’m on day 2 and freaking out. Let me know if there’s something else I should do or if I’m fine to keep going with this dose.',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -760,15 +733,14 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [],
+    alsoRelevant: [],
   },
   {
     id: 'hb-ibuprofen-headache',
     category: 'drug-label',
     question:
       'what are some typical side effects of ibuprofen is it safe for mild headaches',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -784,15 +756,14 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [],
+    alsoRelevant: [],
   },
   {
     id: 'hb-bp-on-lisinopril',
     category: 'guideline',
     question:
       'over the last six months my blood pressure readings have been around 140 90 in the morning and 135 85 in the evening i take lisinopril 10 mg every morning i also changed my diet to keep sodium really low and boost potassium foods plus i do 30 minutes of exercise daily i record each reading the same time every day and keep a log do i add another medication or change my dose ask me questions if you need to give me next steps',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -810,15 +781,14 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [],
+    alsoRelevant: [],
   },
   {
     id: 'metformin-safe',
     category: 'drug-label',
     question:
       'I was just prescribed metformin 1000 mg twice a day. Is that safe?',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -843,7 +813,6 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [
       [
         {
@@ -852,13 +821,13 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
+    alsoRelevant: [],
   },
   {
     id: 'hydrochlorothiazide-safe',
     category: 'drug-label',
     question:
       'My doctor wants to start me on hydrochlorothiazide. Is that safe?',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -875,7 +844,6 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [
       [
         {
@@ -897,12 +865,12 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
+    alsoRelevant: [],
   },
   {
     id: 'amoxicillin-safe',
     category: 'drug-label',
     question: 'My dentist prescribed amoxicillin. Is that safe?',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -918,7 +886,6 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [
       [
         {
@@ -940,12 +907,12 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
+    alsoRelevant: [],
   },
   {
     id: 'meloxicam-daily-safe',
     category: 'drug-label',
     question: 'Is it safe to take meloxicam every day?',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -963,7 +930,6 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [
       [
         {
@@ -980,12 +946,12 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
+    alsoRelevant: [],
   },
   {
     id: 'hep-b-nursing-school',
     category: 'guideline',
     question: 'Do I need a hepatitis B vaccine before nursing school?',
-    mustCall: ['search_references'],
     mustNotCall: [],
     mustRead: [
       [
@@ -999,7 +965,6 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
-    mustNotRead: [],
     mustRetrieve: [
       [
         {
@@ -1025,15 +990,14 @@ export const BENCH_CASES: BenchCase[] = [
         },
       ],
     ],
+    alsoRelevant: [],
   },
   {
     id: 'metformin-dose-not-on-it',
     category: 'record',
     question: 'Is my metformin dose right?',
-    mustCall: [],
     mustNotCall: [],
     mustRead: [],
-    mustNotRead: [],
     mustRetrieve: [
       [
         {
@@ -1052,6 +1016,31 @@ export const BENCH_CASES: BenchCase[] = [
           name: 'valACYclovir 500 mg oral tablet',
         },
       ],
+    ],
+    alsoRelevant: [
+      {
+        kind: 'lab',
+        analyte: '4548-4',
+      },
+      {
+        kind: 'lab',
+        analyte: '77147-7',
+      },
+      {
+        kind: 'section',
+        reference: 'label-metformin-hydrochloride',
+        section: 'oral-dosage-and-administration',
+      },
+      {
+        kind: 'section',
+        reference: 'label-metformin-hydrochloride',
+        section: 'oral-2-1-adult-dosage-and-administration',
+      },
+      {
+        kind: 'section',
+        reference: 'label-metformin-hydrochloride',
+        section: 'oral-patient-information',
+      },
     ],
   },
 ];

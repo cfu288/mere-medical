@@ -1,13 +1,12 @@
 import { AgentRun } from './agentHarness';
 import { BenchCase } from './agentBench.cases';
-import { check, precision, score } from './agentBench.check';
+import { evaluate } from './agentBench.check';
 
 const bpCase: BenchCase = {
   id: 'bp-at-goal',
   category: 'guideline',
   question: 'Is my blood pressure where it should be?',
-  mustCall: ['search_references'],
-  mustNotCall: [],
+  mustNotCall: ['search_labs'],
   mustRead: [
     [
       {
@@ -16,8 +15,8 @@ const bpCase: BenchCase = {
       },
     ],
   ],
-  mustNotRead: [],
   mustRetrieve: [[{ kind: 'note', id: 'n8', part: 1 }]],
+  alsoRelevant: [{ kind: 'lab', analyte: '8480-6' }],
 };
 
 const answered = {
@@ -26,21 +25,15 @@ const answered = {
   context: null,
 };
 
-describe('check', () => {
-  it('passes a run that was shown an accepted section and note part', () => {
+describe('evaluate', () => {
+  it('finds nothing wrong with a run that was shown everything it needed and nothing else', () => {
     const run: AgentRun = {
       result: answered,
-      turns: 3,
+      turns: 2,
+      promptTokens: [1800, 5200],
       calls: [
         {
           turn: 1,
-          name: 'search_references',
-          args: { query: 'blood pressure' },
-          output: 'va-dod-hypertension | VA-DoD Hypertension',
-          retrieved: [],
-        },
-        {
-          turn: 2,
           name: 'read_section',
           args: { reference: 'va-dod-hypertension', section: 'page-34' },
           output: 'We recommend a systolic goal of <130 mmHg.',
@@ -62,21 +55,22 @@ describe('check', () => {
       ],
     };
 
-    expect(check(bpCase, run)).toEqual([]);
+    expect(evaluate(bpCase, run)).toEqual({
+      requirements: 2,
+      missed: [],
+      forbidden: [],
+      waste: [],
+      repeats: 0,
+      peakPromptTokens: 5200,
+    });
   });
 
-  it('does not count a read that returned no section text', () => {
+  it('names each requirement the run missed and each forbidden tool it called', () => {
     const run: AgentRun = {
       result: answered,
-      turns: 2,
+      turns: 1,
+      promptTokens: [],
       calls: [
-        {
-          turn: 1,
-          name: 'search_references',
-          args: { query: 'blood pressure' },
-          output: 'va-dod-hypertension | VA-DoD Hypertension',
-          retrieved: [],
-        },
         {
           turn: 1,
           name: 'read_section',
@@ -85,32 +79,34 @@ describe('check', () => {
           retrieved: [],
         },
         {
-          turn: 2,
-          name: 'read_note',
-          args: { id: 'n8' },
-          output: 'BP 125/84',
-          retrieved: [{ kind: 'note', id: 'n8', part: 1 }],
+          turn: 1,
+          name: 'search_labs',
+          args: { query: 'blood pressure' },
+          output: 'No matches for "blood pressure".',
+          retrieved: [],
         },
       ],
     };
 
-    expect(check(bpCase, run)).toEqual([
-      'never read va-dod-hypertension (ix-recommendations | page-34)',
-    ]);
+    expect(evaluate(bpCase, run)).toEqual({
+      requirements: 2,
+      missed: [
+        'va-dod-hypertension (ix-recommendations | page-34)',
+        'note n8 part 1',
+      ],
+      forbidden: ['search_labs'],
+      waste: [],
+      repeats: 0,
+      peakPromptTokens: null,
+    });
   });
 
-  it('does not count another part of a required note', () => {
+  it('counts unneeded opened items with what they returned, repeat opens, and not relevant extras', () => {
     const run: AgentRun = {
       result: answered,
-      turns: 2,
+      turns: 3,
+      promptTokens: [2400],
       calls: [
-        {
-          turn: 1,
-          name: 'search_references',
-          args: { query: 'blood pressure' },
-          output: 'va-dod-hypertension | VA-DoD Hypertension',
-          retrieved: [],
-        },
         {
           turn: 1,
           name: 'read_section',
@@ -123,32 +119,6 @@ describe('check', () => {
               section: 'page-34',
             },
           ],
-        },
-        {
-          turn: 2,
-          name: 'read_note',
-          args: { id: 'n8', part: 2 },
-          output: 'Plan: follow up in a year.',
-          retrieved: [{ kind: 'note', id: 'n8', part: 2 }],
-        },
-      ],
-    };
-
-    expect(check(bpCase, run)).toEqual(['never retrieved note n8 part 1']);
-    expect(score(bpCase, run)).toEqual((2 / 3) ** 2 * (1 / 2));
-  });
-
-  it('scores a run that met its requirements by the share of what it opened that was accepted', () => {
-    const run: AgentRun = {
-      result: answered,
-      turns: 3,
-      calls: [
-        {
-          turn: 1,
-          name: 'search_references',
-          args: { query: 'blood pressure' },
-          output: 'va-dod-hypertension | VA-DoD Hypertension',
-          retrieved: [],
         },
         {
           turn: 2,
@@ -177,11 +147,11 @@ describe('check', () => {
           ],
         },
         {
-          turn: 2,
+          turn: 3,
           name: 'get_lab_history',
-          args: { analyte: 'glucose' },
-          output: 'Glucose [2345-7]: 88 mg/dL (2025-11-10)',
-          retrieved: [{ kind: 'lab', analyte: '2345-7' }],
+          args: { analyte: '8480-6' },
+          output: 'Systolic blood pressure [8480-6]: 125 mmHg (2025-11-13)',
+          retrieved: [{ kind: 'lab', analyte: '8480-6' }],
         },
         {
           turn: 3,
@@ -190,167 +160,16 @@ describe('check', () => {
           output: 'BP 125/84',
           retrieved: [{ kind: 'note', id: 'n8', part: 1 }],
         },
-        {
-          turn: 3,
-          name: 'read_note',
-          args: { id: 'n3' },
-          output: 'Consent form.',
-          retrieved: [{ kind: 'note', id: 'n3', part: 1 }],
-        },
-        {
-          turn: 3,
-          name: 'read_note',
-          args: { id: 'n4' },
-          output: 'Correspondence.',
-          retrieved: [{ kind: 'note', id: 'n4', part: 1 }],
-        },
       ],
     };
 
-    expect(check(bpCase, run)).toEqual([]);
-    expect(score(bpCase, run)).toEqual(2 / 6);
-  });
-
-  it('counts each opened item once and leaves searches out of precision', () => {
-    const run: AgentRun = {
-      result: answered,
-      turns: 2,
-      calls: [
-        {
-          turn: 1,
-          name: 'search_labs',
-          args: { query: ['glucose', 'a1c'] },
-          output:
-            'Glucose [2345-7] | 88 mg/dL\nHemoglobin A1c [4548-4] | 5.1 %',
-          retrieved: [
-            { kind: 'lab', analyte: '2345-7' },
-            { kind: 'lab', analyte: '4548-4' },
-          ],
-        },
-        {
-          turn: 1,
-          name: 'read_section',
-          args: { reference: 'va-dod-hypertension', section: 'page-34' },
-          output: 'We recommend a systolic goal of <130 mmHg.',
-          retrieved: [
-            {
-              kind: 'section',
-              reference: 'va-dod-hypertension',
-              section: 'page-34',
-            },
-          ],
-        },
-        {
-          turn: 2,
-          name: 'read_section',
-          args: { reference: 'va-dod-hypertension', section: 'page-34' },
-          output: 'We recommend a systolic goal of <130 mmHg.',
-          retrieved: [
-            {
-              kind: 'section',
-              reference: 'va-dod-hypertension',
-              section: 'page-34',
-            },
-          ],
-        },
-      ],
-    };
-
-    expect(precision(bpCase, run)).toEqual({ opened: 1, accepted: 1 });
-  });
-
-  it('scores a run that met its requirements without opening anything as 1', () => {
-    const run: AgentRun = {
-      result: answered,
-      turns: 1,
-      calls: [
-        {
-          turn: 1,
-          name: 'search_records',
-          args: { types: ['medication'] },
-          output: '[medication] BENZONATATE 100 MG CAPSULE | 2021-12-18',
-          retrieved: [
-            {
-              kind: 'record',
-              type: 'medication',
-              name: 'BENZONATATE 100 MG CAPSULE',
-            },
-          ],
-        },
-      ],
-    };
-
-    expect(
-      score(
-        {
-          ...bpCase,
-          mustCall: [],
-          mustRead: [],
-          mustRetrieve: [
-            [
-              {
-                kind: 'record',
-                type: 'medication',
-                name: 'BENZONATATE 100 MG CAPSULE',
-              },
-            ],
-          ],
-        },
-        run,
-      ),
-    ).toEqual(1);
-  });
-});
-
-const twoSections: BenchCase = {
-  id: 'two-sections',
-  category: 'guideline',
-  question: 'What does the guideline say?',
-  mustCall: [],
-  mustNotCall: [],
-  mustRead: [
-    [{ reference: 'guide', sections: ['a'] }],
-    [{ reference: 'guide', sections: ['b'] }],
-  ],
-  mustNotRead: [],
-  mustRetrieve: [],
-};
-
-function readsOf(sections: string[]): AgentRun {
-  return {
-    result: answered,
-    turns: 1,
-    calls: sections.map((section) => ({
-      turn: 1,
-      name: 'read_section',
-      args: { reference: 'guide', section },
-      output: `Text of ${section}.`,
-      retrieved: [{ kind: 'section', reference: 'guide', section }],
-    })),
-  };
-}
-
-describe('score', () => {
-  it('gives a run that found everything with some extra reading 0.5', () => {
-    expect(score(twoSections, readsOf(['a', 'b', 'c', 'd']))).toEqual(0.5);
-  });
-
-  it('gives a selective run that found half of what it needed 0.25', () => {
-    expect(score(twoSections, readsOf(['a']))).toEqual(0.25);
-  });
-
-  it('gives a run that opened everything to find what it needed 1/6', () => {
-    expect(
-      score(
-        twoSections,
-        readsOf(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l']),
-      ),
-    ).toEqual(1 / 6);
-  });
-
-  it('gives a run that read a forbidden reference 0', () => {
-    expect(
-      score({ ...twoSections, mustNotRead: ['guide'] }, readsOf(['a', 'b'])),
-    ).toEqual(0);
+    expect(evaluate(bpCase, run)).toEqual({
+      requirements: 2,
+      missed: [],
+      forbidden: [],
+      waste: [{ item: 'va-dod-hypertension/page-77', chars: 25 }],
+      repeats: 1,
+      peakPromptTokens: 2400,
+    });
   });
 });

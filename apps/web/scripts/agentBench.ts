@@ -11,22 +11,45 @@ import {
   loadStore,
 } from './agentHarness';
 import { BENCH_CASES, BenchCase } from './agentBench.cases';
-import { check, describeRetrieved, precision, score } from './agentBench.check';
+import { Evaluation, describeRetrieved, evaluate } from './agentBench.check';
 import {
-  CaseResult,
+  CaseRun,
   Outcome,
   formatReport,
-  scoreByCategory,
+  isComplete,
 } from './agentBench.report';
 
 const HISTORY_DIR = 'tmp/agent-bench';
 const FILTERS = process.argv.slice(2);
 const CONCURRENCY = 4;
 
+/** How many times each case runs, from BENCH_REPEATS; agents vary run to run, so one run cannot tell a real difference from chance. */
+function repeats(): number {
+  const raw = process.env['BENCH_REPEATS'] ?? '3';
+  const n = Number(raw.trim());
+  if (!Number.isInteger(n) || n < 1) {
+    throw new Error(
+      `BENCH_REPEATS must be a whole number of 1 or more, got "${raw}"`,
+    );
+  }
+  return n;
+}
+
+function summary(evaluation: Evaluation): string[] {
+  return [
+    `requirements met ${evaluation.requirements - evaluation.missed.length}/${evaluation.requirements}`,
+    ...evaluation.missed.map((m) => `missed ${m}`),
+    ...evaluation.forbidden.map((f) => `forbidden call ${f}`),
+    `waste ${evaluation.waste.length} items, ${evaluation.waste.reduce((sum, w) => sum + w.chars, 0)} characters${evaluation.waste.length > 0 ? `: ${evaluation.waste.map((w) => w.item).join('; ')}` : ''}`,
+    `repeat reads ${evaluation.repeats}`,
+    `peak prompt ${evaluation.peakPromptTokens ?? 'not reported'} tokens`,
+  ];
+}
+
 function transcript(
   bench: BenchCase,
   run: AgentRun | null,
-  error: string | null,
+  outcome: Outcome,
 ): string {
   const lines = [`# ${bench.id}`, `question: ${bench.question}`, ''];
   for (const call of run?.calls ?? []) {
@@ -39,18 +62,13 @@ function transcript(
       '',
     );
   }
-  if (run) {
-    const share = precision(bench, run);
-    lines.push(
-      `opened ${share.opened} sections, note parts or lab histories; ${share.accepted} accepted; score ${score(bench, run).toFixed(2)}`,
-      '',
-    );
-  }
   lines.push(
-    error ??
-      (run?.result.kind === 'answered'
-        ? `=== final answer (turn ${run.turns}) ===\n${run.result.answer}`
-        : `no final answer: ${run?.result.kind === 'failed' ? run.result.message : 'aborted'}`),
+    ...(outcome.kind === 'evaluated'
+      ? [...summary(outcome.evaluation), '']
+      : [`error: ${outcome.message}`, '']),
+    run?.result.kind === 'answered'
+      ? `=== final answer (turn ${run.turns}) ===\n${run.result.answer}`
+      : 'no final answer',
   );
   return lines.join('\n');
 }
@@ -58,43 +76,44 @@ function transcript(
 async function runCase(
   store: ReturnType<typeof loadStore>,
   bench: BenchCase,
+  repeat: number,
   runDir: string,
-): Promise<CaseResult> {
+): Promise<CaseRun> {
   let run: AgentRun | null = null;
   let outcome: Outcome;
   try {
     run = await askAgent(store, bench.question);
-    outcome = {
-      kind: 'scored',
-      score: score(bench, run),
-      problems: check(bench, run),
-    };
+    outcome =
+      run.result.kind === 'answered'
+        ? { kind: 'evaluated', evaluation: evaluate(bench, run) }
+        : {
+            kind: 'error',
+            message:
+              run.result.kind === 'failed' ? run.result.message : 'run aborted',
+          };
   } catch (e) {
     outcome = { kind: 'error', message: String(e) };
   }
-  writeFileSync(
-    join(runDir, `${bench.id}.txt`),
-    transcript(bench, run, outcome.kind === 'error' ? outcome.message : null),
-  );
+  const name = `${bench.id}.${repeat}`;
+  writeFileSync(join(runDir, `${name}.txt`), transcript(bench, run, outcome));
   if (run) {
-    writeFileSync(
-      join(runDir, `${bench.id}.json`),
-      JSON.stringify(run, null, 2),
-    );
+    writeFileSync(join(runDir, `${name}.json`), JSON.stringify(run, null, 2));
   }
-  console.log(`done ${bench.id}`);
-  return {
+  const result: CaseRun = {
     id: bench.id,
     category: bench.category,
+    needsPatientData: bench.mustRetrieve.length > 0,
+    repeat,
     outcome,
     turns: run?.turns ?? null,
     calls: run?.calls.length ?? 0,
-    opened: run ? precision(bench, run) : null,
     windowTokens:
       run?.result.kind === 'answered'
         ? run.result.context?.windowTokens ?? null
         : null,
   };
+  console.log(`done ${name}${isComplete(result) ? '' : ' (incomplete)'}`);
+  return result;
 }
 
 async function main() {
@@ -107,20 +126,27 @@ async function main() {
   if (cases.length === 0) {
     throw new Error(`No bench case or category matches: ${FILTERS.join(' ')}`);
   }
+  const times = repeats();
   const startedAt = new Date().toISOString();
   const runDir = join(HISTORY_DIR, startedAt.split(':').join('-').slice(0, 19));
   mkdirSync(runDir, { recursive: true });
   const store = loadStore(exportPath());
-  const results = new Map<BenchCase, CaseResult>();
-  const queue = [...cases];
+  const jobs = cases.flatMap((bench) =>
+    Array.from({ length: times }, (_, i) => ({ bench, repeat: i + 1 })),
+  );
+  const queue = [...jobs];
+  const runs: CaseRun[] = [];
   await Promise.all(
     Array.from({ length: CONCURRENCY }, async () => {
-      for (let bench = queue.shift(); bench; bench = queue.shift()) {
-        results.set(bench, await runCase(store, bench, runDir));
+      for (let job = queue.shift(); job; job = queue.shift()) {
+        runs.push(await runCase(store, job.bench, job.repeat, runDir));
       }
     }),
   );
-  const ordered = cases.flatMap((bench) => results.get(bench) ?? []);
+  const ordered = jobs.flatMap(
+    (job) =>
+      runs.find((r) => r.id === job.bench.id && r.repeat === job.repeat) ?? [],
+  );
   writeFileSync(
     join(runDir, 'results.json'),
     JSON.stringify(
@@ -130,16 +156,15 @@ async function main() {
         model: MODEL,
         endpoint: ENDPOINT,
         filters: FILTERS,
-        scores: scoreByCategory(ordered),
-        results: ordered,
+        repeats: times,
+        runs: ordered,
       },
       null,
       2,
     ),
   );
-  const windows = [...new Set(ordered.map((r) => r.windowTokens))];
   console.log(
-    `\n${formatReport(ordered)}\n\n${MODEL} at ${ENDPOINT}, detected context window: ${windows.map((w) => w ?? 'none').join(', ')} tokens\nsaved to ${runDir}`,
+    `\n${formatReport(ordered)}\n\n${MODEL} at ${ENDPOINT}, ${times} run(s) per case\nsaved to ${runDir}`,
   );
 }
 

@@ -40,6 +40,8 @@ export type AgentRun = {
   result: AgentChatResult;
   turns: number;
   calls: ToolCallLog[];
+  /** Prompt size of each model call that reported one, in tokens. */
+  promptTokens: number[];
 };
 
 type ExportCollection = { name: string; docs: unknown[] };
@@ -79,10 +81,13 @@ export async function askAgent(
 ): Promise<AgentRun> {
   const pending = new Map<string, Omit<ToolCallLog, 'output' | 'retrieved'>>();
   const calls: ToolCallLog[] = [];
+  const promptTokens: number[] = [];
   let turns = 0;
   const harness = createHarness('bench', (event) => {
     if (event.t === 'ChatRequested') {
       turns = Math.max(turns, event.turn);
+    } else if (event.t === 'ChatCompleted' && event.promptTokens !== null) {
+      promptTokens.push(event.promptTokens);
     } else if (event.t === 'ToolCalled') {
       pending.set(event.toolId, {
         turn: event.turn,
@@ -108,5 +113,5 @@ export async function askAgent(
     model: MODEL,
     harness,
   });
-  return { result, turns, calls };
+  return { result, turns, calls, promptTokens };
 }
