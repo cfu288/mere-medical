@@ -149,6 +149,30 @@ describe('unsafeLinks', () => {
       },
     ]);
   });
+
+  it('reports unsafe autolinks', () => {
+    expect(
+      unsafeLinks({
+        ...NOTHING,
+        sections: [
+          {
+            reference: 'guide',
+            section: 'page-3',
+            parent: null,
+            title: 'Page 3',
+            text: 'See <javascript:alert(1)> or <https://www.cdc.gov/>.',
+          },
+        ],
+      }),
+    ).toEqual([
+      {
+        check: 'unsafe-link',
+        reference: 'guide',
+        section: 'page-3',
+        detail: 'links to javascript:',
+      },
+    ]);
+  });
 });
 
 describe('htmlTags', () => {
@@ -353,6 +377,70 @@ describe('searchIndex', () => {
         reference: 'guide',
         section: 'old',
         detail: 'in the section search index but not in the library',
+      },
+    ]);
+  });
+});
+
+describe('searchIndex duplicates', () => {
+  it('reports a section indexed more than once even when one row is current', () => {
+    expect(
+      searchIndex({
+        references: [],
+        referenceIndex: [],
+        sections: [
+          {
+            reference: 'guide',
+            section: 'goals',
+            parent: null,
+            title: 'Goals',
+            text: 'Below 130.',
+          },
+        ],
+        sectionIndex: [
+          {
+            reference: 'guide',
+            section: 'goals',
+            parent: null,
+            title: 'Goals',
+            text: 'Below 130.',
+          },
+          {
+            reference: 'guide',
+            section: 'goals',
+            parent: null,
+            title: 'Goals',
+            text: 'Below 140.',
+          },
+        ],
+      }),
+    ).toEqual([
+      {
+        check: 'search-index',
+        reference: 'guide',
+        section: 'goals',
+        detail: 'indexed 2 times',
+      },
+    ]);
+  });
+
+  it('reports a reference indexed more than once', () => {
+    expect(
+      searchIndex({
+        references: [{ id: 'guide', title: 'Guide', summary: 'BP goals' }],
+        referenceIndex: [
+          { id: 'guide', title: 'Guide', summary: 'BP goals' },
+          { id: 'guide', title: 'Guide', summary: 'Old summary' },
+        ],
+        sections: [],
+        sectionIndex: [],
+      }),
+    ).toEqual([
+      {
+        check: 'search-index',
+        reference: 'guide',
+        section: null,
+        detail: 'indexed 2 times',
       },
     ]);
   });

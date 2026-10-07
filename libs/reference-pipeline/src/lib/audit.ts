@@ -41,7 +41,8 @@ type Check = (library: Library) => Finding[];
 
 const SHORT_REFERENCE_CHARS = 500;
 const LINK = /!?\[[^\]]*\]\([^)]*\)/g;
-const LINK_TARGET = /!?\[[^\]]*\]\(\s*([^\s)]+)/g;
+const LINK_TARGET =
+  /!?\[[^\]]*\]\(\s*([^\s)]+)|<([a-z][a-z0-9+.-]*:[^>\s]*)>/gi;
 const HTML_TAG = /<\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
 
 /** Problems in a built library that make a section unreadable, unreachable or misleading to the agent. */
@@ -127,7 +128,7 @@ export function unsafeLinks({ sections }: Library): Finding[] {
     const schemes = [
       ...new Set(
         [...s.text.matchAll(LINK_TARGET)]
-          .map((m) => m[1])
+          .map((m) => m[1] ?? m[2])
           .filter((target) => !isSafeUrl(target))
           .map((target) => `${target.slice(0, target.indexOf(':'))}:`),
       ),
@@ -197,6 +198,22 @@ export function emptyLibrary({ references }: Library): Finding[] {
     : [];
 }
 
+function repeated<T>(
+  rows: T[],
+  keyOf: (row: T) => string,
+): { row: T; times: number }[] {
+  const counts = new Map<string, { row: T; times: number }>();
+  for (const row of rows) {
+    const seen = counts.get(keyOf(row));
+    if (seen) {
+      seen.times += 1;
+    } else {
+      counts.set(keyOf(row), { row, times: 1 });
+    }
+  }
+  return [...counts.values()].filter(({ times }) => times > 1);
+}
+
 export function searchIndex({
   references,
   sections,
@@ -217,6 +234,13 @@ export function searchIndex({
     detail: string,
   ): Finding => ({ check: 'search-index', reference, section, detail });
   return [
+    ...repeated(referenceIndex, (r) => r.id).map(({ row, times }) =>
+      searchFinding(row.id, null, `indexed ${times} times`),
+    ),
+    ...repeated(sectionIndex, (s) => key(s.reference, s.section)).map(
+      ({ row, times }) =>
+        searchFinding(row.reference, row.section, `indexed ${times} times`),
+    ),
     ...references
       .filter((r) => !indexedReferences.has(referenceKey(r)))
       .map((r) =>

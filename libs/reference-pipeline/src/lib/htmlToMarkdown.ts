@@ -22,7 +22,7 @@ export function htmlToMarkdown(html: string): string {
     filter: (node) =>
       node.nodeName === 'IMG' && !isSafeUrl(node.getAttribute('src') ?? ''),
     replacement: (_content, node) =>
-      (node as HTMLElement).getAttribute('alt') ?? '',
+      turndown.escape((node as HTMLElement).getAttribute('alt') ?? ''),
   });
   turndown.remove([
     'script',

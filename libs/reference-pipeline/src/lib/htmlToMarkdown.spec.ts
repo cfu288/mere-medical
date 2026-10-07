@@ -113,4 +113,12 @@ describe('htmlToMarkdown', () => {
       ),
     ).toEqual('chart ![safe chart](https://www.cdc.gov/chart.png)');
   });
+
+  it('keeps the alt text of an unsafe image as text, never as markdown', () => {
+    expect(
+      htmlToMarkdown(
+        '<p><img src="javascript:alert(1)" alt="[click](javascript:alert(1))"></p>',
+      ),
+    ).toEqual('\\[click\\](javascript:alert(1))');
+  });
 });
