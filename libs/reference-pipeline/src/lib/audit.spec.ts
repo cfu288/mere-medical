@@ -10,6 +10,7 @@ import {
   replacementCharacters,
   searchIndex,
   shortReferences,
+  unsafeLinks,
 } from './audit';
 import { openReferencesDb, writeReference } from './referencesDb';
 
@@ -119,6 +120,32 @@ describe('linksOnly', () => {
         reference: 'guide',
         section: 'contents',
         detail: 'text is only links',
+      },
+    ]);
+  });
+});
+
+describe('unsafeLinks', () => {
+  it('reports the schemes of links and images that are not web, mail or relative addresses', () => {
+    expect(
+      unsafeLinks({
+        ...NOTHING,
+        sections: [
+          {
+            reference: 'cdc-schedule',
+            section: 'how-to-use',
+            parent: null,
+            title: 'How to use',
+            text: '[Table 1](javascript:scroll\\(\\)) and [Print](javascript:window.print\\(\\) "Print") ![chart](data:image/png;base64,AAA) [notes](https://www.cdc.gov/notes) [jump](#table-2)',
+          },
+        ],
+      }),
+    ).toEqual([
+      {
+        check: 'unsafe-link',
+        reference: 'cdc-schedule',
+        section: 'how-to-use',
+        detail: 'links to data:, javascript:',
       },
     ]);
   });

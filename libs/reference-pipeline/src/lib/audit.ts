@@ -1,10 +1,13 @@
 import { DatabaseSync } from 'node:sqlite';
 
+import { isSafeUrl } from './htmlToMarkdown';
+
 export type Finding = {
   check:
     | 'dead-end'
     | 'links-only'
     | 'html-tags'
+    | 'unsafe-link'
     | 'duplicate-text'
     | 'missing-parent'
     | 'replacement-character'
@@ -38,6 +41,7 @@ type Check = (library: Library) => Finding[];
 
 const SHORT_REFERENCE_CHARS = 500;
 const LINK = /!?\[[^\]]*\]\([^)]*\)/g;
+const LINK_TARGET = /!?\[[^\]]*\]\(\s*([^\s)]+)/g;
 const HTML_TAG = /<\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
 
 /** Problems in a built library that make a section unreadable, unreachable or misleading to the agent. */
@@ -115,6 +119,22 @@ export function htmlTags({ sections }: Library): Finding[] {
       ),
     ].sort();
     return tags.length > 0 ? [finding('html-tags', s, tags.join(' '))] : [];
+  });
+}
+
+export function unsafeLinks({ sections }: Library): Finding[] {
+  return sections.flatMap((s) => {
+    const schemes = [
+      ...new Set(
+        [...s.text.matchAll(LINK_TARGET)]
+          .map((m) => m[1])
+          .filter((target) => !isSafeUrl(target))
+          .map((target) => `${target.slice(0, target.indexOf(':'))}:`),
+      ),
+    ].sort();
+    return schemes.length > 0
+      ? [finding('unsafe-link', s, `links to ${schemes.join(', ')}`)]
+      : [];
   });
 }
 
@@ -241,6 +261,7 @@ const CHECKS: Check[] = [
   deadEnds,
   linksOnly,
   htmlTags,
+  unsafeLinks,
   replacementCharacters,
   duplicateText,
   shortReferences,

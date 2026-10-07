@@ -13,8 +13,40 @@ export function htmlToMarkdown(html: string): string {
       isInLayoutTable(node),
     replacement: (content) => `\n\n${content}\n\n`,
   });
-  turndown.remove(['script', 'style']);
+  turndown.addRule('unsafeLink', {
+    filter: (node) =>
+      node.nodeName === 'A' && !isSafeUrl(node.getAttribute('href') ?? ''),
+    replacement: (content) => content,
+  });
+  turndown.addRule('unsafeImage', {
+    filter: (node) =>
+      node.nodeName === 'IMG' && !isSafeUrl(node.getAttribute('src') ?? ''),
+    replacement: (_content, node) =>
+      (node as HTMLElement).getAttribute('alt') ?? '',
+  });
+  turndown.remove([
+    'script',
+    'style',
+    'noscript',
+    'iframe',
+    'object',
+    'embed',
+    'template',
+  ]);
   return turndown.turndown(mainContent(html)).trim();
+}
+
+const SAFE_PROTOCOLS = ['http:', 'https:', 'mailto:'];
+
+/** True for web, mail and relative addresses, judged by the URL parser so case, spacing and tab tricks in a scheme are caught. */
+export function isSafeUrl(value: string): boolean {
+  try {
+    return SAFE_PROTOCOLS.includes(
+      new URL(value, 'https://relative.invalid/').protocol,
+    );
+  } catch {
+    return false;
+  }
 }
 
 function isInLayoutTable(node: HTMLElement): boolean {

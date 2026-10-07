@@ -58,4 +58,59 @@ describe('htmlToMarkdown', () => {
       htmlToMarkdown('<p>Keep</p><script>alert(1)</script><style>p{}</style>'),
     ).toEqual('Keep');
   });
+
+  it('drops scripts however they are typed or nested', () => {
+    expect(
+      htmlToMarkdown(
+        '<main><p>Keep</p><script type="module">import x from "y"</script>' +
+          '<script type="application/ld+json">{"@type":"Drug"}</script>' +
+          '<svg><script>alert(1)</script></svg></main>',
+      ),
+    ).toEqual('Keep');
+  });
+
+  it('drops noscript fallbacks, frames, embedded objects and templates', () => {
+    expect(
+      htmlToMarkdown(
+        '<p>Keep</p><noscript>Enable JavaScript to view this page</noscript>' +
+          '<iframe src="https://evil.example">frame</iframe>' +
+          '<object data="x.swf">object</object><embed src="x.swf">' +
+          '<template><p>hidden</p></template>',
+      ),
+    ).toEqual('Keep');
+  });
+
+  it('keeps only the text of a link whose target is not a web, mail or relative address', () => {
+    expect(
+      htmlToMarkdown(
+        '<p><a href="javascript:alert(1)">print</a> ' +
+          '<a href=" JaVaScRiPt:alert(1)">mixed case</a> ' +
+          '<a href="java&#9;script:alert(1)">tab</a> ' +
+          '<a href="data:text/html,hi">data</a> ' +
+          '<a href="vbscript:msgbox">vb</a></p>',
+      ),
+    ).toEqual('print mixed case tab data vb');
+  });
+
+  it('keeps web, mail and relative links', () => {
+    expect(
+      htmlToMarkdown(
+        '<p><a href="https://www.cdc.gov/x">cdc</a> ' +
+          '<a href="mailto:help@example.com">mail</a> ' +
+          '<a href="/vaccines/notes">notes</a> ' +
+          '<a href="#section-5">jump</a></p>',
+      ),
+    ).toEqual(
+      '[cdc](https://www.cdc.gov/x) [mail](mailto:help@example.com) [notes](/vaccines/notes) [jump](#section-5)',
+    );
+  });
+
+  it('keeps only the alt text of an image whose source is not a web or relative address', () => {
+    expect(
+      htmlToMarkdown(
+        '<p><img src="javascript:alert(1)" alt="chart"> ' +
+          '<img src="https://www.cdc.gov/chart.png" alt="safe chart"></p>',
+      ),
+    ).toEqual('chart ![safe chart](https://www.cdc.gov/chart.png)');
+  });
 });
