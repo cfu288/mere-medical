@@ -207,7 +207,10 @@ PDFs.
 - **HTML**: turndown converts the page to markdown and `#` headings become
   heading blocks. When the page has exactly one `<main>` element (or, failing
   that, exactly one `<article>`), only that element is converted, which leaves
-  out site navigation and footers.
+  out site navigation and footers. Scripts, styles, `<noscript>`, frames,
+  embedded objects and templates are dropped. A link or image whose address is
+  not web, mail or relative (such as `javascript:` or `data:`) keeps only its
+  text or alt text.
 - **CDC media**: CDC's content syndication API serves a page's content without
   site navigation. The media's metadata gives the cdc.gov page it syndicates,
   which becomes the reference url every read cites; the content then goes
@@ -306,7 +309,8 @@ npx tsx libs/reference-pipeline/src/audit.ts
 
 Checks the built library for problems a reader of it would hit. It reports
 sections with no text and no subsections, sections that are only links, HTML
-tags left in the text, unreadable characters, text repeated from another
+tags left in the text, links that are not web, mail or relative addresses,
+unreadable characters, text repeated from another
 section, references with under 500 characters of text, an empty library, and
 any reference or section whose search index row is missing, stale or left over.
 It prints each check's count with examples, then the largest sections. It exits
