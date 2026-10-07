@@ -77,6 +77,7 @@ export const MessageBubble = memo(function MessageBubble({
             remarkPlugins={[remarkGfm]}
             components={{
               img: () => null,
+              a: ({ children }) => <>{children}</>,
               h1: ({ ...props }) => (
                 <h1 {...props} className={textColorClass} />
               ),
