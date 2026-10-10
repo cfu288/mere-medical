@@ -6,7 +6,7 @@ describe('formatReport', () => {
       formatReport([
         {
           id: 'eliquis-dose',
-          category: 'drug-label',
+          category: 'record',
           needsPatientData: false,
           repeat: 1,
           turns: 7,
@@ -31,7 +31,7 @@ describe('formatReport', () => {
         },
         {
           id: 'eliquis-dose',
-          category: 'drug-label',
+          category: 'record',
           needsPatientData: false,
           repeat: 2,
           turns: 6,
@@ -83,8 +83,8 @@ describe('formatReport', () => {
     ).toEqual(
       [
         'complete runs  2/4  (cases complete in every run: 1/2)',
-        '  drug-label  2/2',
         '  guideline  0/2',
+        '  record  2/2',
         '  needs patient data  0/2',
         'forbidden calls  in 0 runs',
         'waste in complete runs  median 0.5 items (90th percentile 1), median 2,000 characters',
