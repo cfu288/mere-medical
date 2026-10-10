@@ -47,13 +47,6 @@ export function openReferencesDb(path: string): DatabaseSync {
       tokenize = 'porter unicode61'
     );
   `);
-  const columns = db
-    .prepare('PRAGMA table_info(sections)')
-    .all()
-    .map((column) => column['name']);
-  if (!columns.includes('url')) {
-    db.exec('ALTER TABLE sections ADD COLUMN url TEXT');
-  }
   return db;
 }
 
@@ -108,7 +101,7 @@ export function deleteReference(db: DatabaseSync, id: string) {
   }
 }
 
-/** Removes every reference whose id is not in the catalog any more. */
+/** Deletes every reference whose id is not in the catalog any more. */
 export function deleteReferencesExcept(db: DatabaseSync, ids: string[]) {
   const rows = db.prepare('SELECT id FROM documents').all() as { id: string }[];
   for (const { id } of rows) {

@@ -29,27 +29,26 @@ async function main() {
   const sources = parseSources(JSON.parse(readFileSync(sourcesPath, 'utf8')));
   mkdirSync(dirname(dbPath), { recursive: true });
   const db = openReferencesDb(dbPath);
-  const {
-    references: reports,
-    skipped,
-    unchanged,
-    missing,
-  } = await ingestSources({
+  const { references, skipped } = await ingestSources({
     db,
     sources,
     fetchBytes,
   });
-  for (const report of reports) {
-    if (unchanged.includes(report.id)) {
-      console.log(
-        `\n${report.id}: kept as it was, its source parsed to nothing`,
-      );
-    } else if (missing.includes(report.id)) {
-      console.log(
-        `\n${report.id}: could not add, its source parsed to nothing`,
-      );
-    } else {
-      console.log(`\n${report.id}: ${report.outline.length} sections`);
+  for (const report of references) {
+    switch (report.status) {
+      case 'written':
+        console.log(`\n${report.id}: ${report.outline.length} sections`);
+        break;
+      case 'unchanged':
+        console.log(
+          `\n${report.id}: kept as it was, its source parsed to nothing`,
+        );
+        break;
+      case 'missing':
+        console.log(
+          `\n${report.id}: could not add, its source parsed to nothing`,
+        );
+        break;
     }
     for (const entry of report.outline) {
       console.log(
@@ -64,7 +63,7 @@ async function main() {
     console.log(`\nskipped ${id}: ${url} was already ingested`);
   }
   console.log(
-    `\nwrote ${reports.length - unchanged.length - missing.length} reference(s) to ${dbPath}`,
+    `\nwrote ${references.filter((r) => r.status === 'written').length} reference(s) to ${dbPath}`,
   );
   console.log();
   printAudit(db, dbPath);

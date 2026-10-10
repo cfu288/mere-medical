@@ -1,49 +1,6 @@
-import { DatabaseSync } from 'node:sqlite';
-import { mkdtempSync } from 'fs';
-import { tmpdir } from 'os';
-import { join } from 'path';
-
 import { openReferencesDb, writeReference } from './referencesDb';
 
-describe('openReferencesDb', () => {
-  it('adds the section url column to a library created before it existed', () => {
-    const path = join(mkdtempSync(join(tmpdir(), 'refs-')), 'references.db');
-    const old = new DatabaseSync(path);
-    old.exec(`
-      CREATE TABLE sections (
-        document_id TEXT NOT NULL,
-        section_id  TEXT NOT NULL,
-        parent_id   TEXT,
-        position    INTEGER NOT NULL,
-        title       TEXT NOT NULL,
-        page_start  INTEGER,
-        page_end    INTEGER,
-        content_md  TEXT NOT NULL,
-        PRIMARY KEY (document_id, section_id)
-      );
-    `);
-    old.close();
-
-    const db = openReferencesDb(path);
-
-    expect(
-      db
-        .prepare('PRAGMA table_info(sections)')
-        .all()
-        .map((column) => column['name']),
-    ).toEqual([
-      'document_id',
-      'section_id',
-      'parent_id',
-      'position',
-      'title',
-      'page_start',
-      'page_end',
-      'content_md',
-      'url',
-    ]);
-  });
-
+describe('writeReference', () => {
   it('stores a section url and leaves it empty for sections without one', () => {
     const db = openReferencesDb(':memory:');
     writeReference(db, {

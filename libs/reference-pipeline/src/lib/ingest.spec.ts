@@ -59,6 +59,7 @@ describe('ingestSources', () => {
       references: [
         {
           id: 'uspstf-a-and-b',
+          status: 'written',
           outline: [
             { depth: 0, sectionId: 'screening', title: 'Screening', chars: 14 },
             {
@@ -72,8 +73,6 @@ describe('ingestSources', () => {
         },
       ],
       skipped: [],
-      unchanged: [],
-      missing: [],
     });
   });
 
@@ -170,8 +169,9 @@ describe('ingestSources', () => {
       fetchBytes: fakeFetch({ 'https://example.com/ab': '' }),
     });
 
-    expect(report.missing).toEqual(['uspstf-a-and-b']);
-    expect(report.unchanged).toEqual([]);
+    expect(report.references).toEqual([
+      { id: 'uspstf-a-and-b', status: 'missing', outline: [], dropped: [] },
+    ]);
     expect(db.prepare('SELECT id FROM documents').all()).toEqual([]);
   });
 
@@ -187,9 +187,13 @@ describe('ingestSources', () => {
     });
 
     expect(report.references).toEqual([
-      { id: 'uspstf-a-and-b', outline: [], dropped: ['References'] },
+      {
+        id: 'uspstf-a-and-b',
+        status: 'missing',
+        outline: [],
+        dropped: ['References'],
+      },
     ]);
-    expect(report.missing).toEqual(['uspstf-a-and-b']);
   });
 
   it('keeps a reference as it was when its source now parses to nothing', async () => {
@@ -208,7 +212,9 @@ describe('ingestSources', () => {
       fetchBytes: fakeFetch({ 'https://example.com/ab': '' }),
     });
 
-    expect(report.unchanged).toEqual(['uspstf-a-and-b']);
+    expect(report.references).toEqual([
+      { id: 'uspstf-a-and-b', status: 'unchanged', outline: [], dropped: [] },
+    ]);
     expect(db.prepare('SELECT section_id FROM sections').all()).toEqual([
       { section_id: 'screening' },
     ]);

@@ -1,4 +1,4 @@
-import { createCrawlDelayedFetch, FETCH_TIMEOUT_MS } from './crawlDelayedFetch';
+import { createCrawlDelayedFetch } from './crawlDelayedFetch';
 
 function okResponse(body: string): Response {
   return { ok: true, status: 200, text: async () => body } as Response;
@@ -29,6 +29,5 @@ describe('createCrawlDelayedFetch', () => {
       expect(init?.signal).toBeInstanceOf(AbortSignal);
     }
     expect(sleep.mock.calls).toEqual([[2000], [2000]]);
-    expect(FETCH_TIMEOUT_MS).toEqual(120000);
   });
 });

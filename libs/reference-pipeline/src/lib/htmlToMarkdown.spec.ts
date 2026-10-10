@@ -1,7 +1,7 @@
 import { htmlToMarkdown } from './htmlToMarkdown';
 
 describe('htmlToMarkdown', () => {
-  it('keeps table structure as a gfm table', () => {
+  it('keeps a data table with no headings or lists as a gfm table', () => {
     expect(
       htmlToMarkdown(
         '<table><thead><tr><th>Topic</th><th>Grade</th></tr></thead>' +
@@ -53,29 +53,17 @@ describe('htmlToMarkdown', () => {
     );
   });
 
-  it('drops scripts and styles', () => {
-    expect(
-      htmlToMarkdown('<p>Keep</p><script>alert(1)</script><style>p{}</style>'),
-    ).toEqual('Keep');
-  });
-
-  it('drops scripts however they are typed or nested', () => {
+  it('drops scripts however they are typed or nested, styles, noscript fallbacks, frames, embedded objects and templates', () => {
     expect(
       htmlToMarkdown(
-        '<main><p>Keep</p><script type="module">import x from "y"</script>' +
+        '<main><p>Keep</p><script>alert(1)</script><style>p{}</style>' +
+          '<script type="module">import x from "y"</script>' +
           '<script type="application/ld+json">{"@type":"Drug"}</script>' +
-          '<svg><script>alert(1)</script></svg></main>',
-      ),
-    ).toEqual('Keep');
-  });
-
-  it('drops noscript fallbacks, frames, embedded objects and templates', () => {
-    expect(
-      htmlToMarkdown(
-        '<p>Keep</p><noscript>Enable JavaScript to view this page</noscript>' +
+          '<svg><script>alert(1)</script></svg>' +
+          '<noscript>Enable JavaScript to view this page</noscript>' +
           '<iframe src="https://evil.example">frame</iframe>' +
           '<object data="x.swf">object</object><embed src="x.swf">' +
-          '<template><p>hidden</p></template>',
+          '<template><p>hidden</p></template></main>',
       ),
     ).toEqual('Keep');
   });
@@ -114,20 +102,13 @@ describe('htmlToMarkdown', () => {
     ).toEqual('chart ![safe chart](https://www.cdc.gov/chart.png)');
   });
 
-  it('keeps the alt text of an unsafe image as text, never as markdown', () => {
+  it('keeps the alt text of an unsafe image as text, never as a markdown link or autolink', () => {
     expect(
       htmlToMarkdown(
-        '<p><img src="javascript:alert(1)" alt="[click](javascript:alert(1))"></p>',
+        '<p><img src="javascript:alert(1)" alt="[click](javascript:alert(1))"> ' +
+          '<img src="javascript:alert(1)" alt="<javascript:alert(1)>"></p>',
       ),
-    ).toEqual('\\[click\\](javascript:alert(1))');
-  });
-
-  it('keeps the alt text of an unsafe image that spells an autolink as text', () => {
-    expect(
-      htmlToMarkdown(
-        '<p><img src="javascript:alert(1)" alt="<javascript:alert(1)>"></p>',
-      ),
-    ).toEqual('\\<javascript:alert(1)>');
+    ).toEqual('\\[click\\](javascript:alert(1)) \\<javascript:alert(1)>');
   });
 
   it('keeps page text that spells a link or tag as text, leaving a less-than sign before a number alone', () => {

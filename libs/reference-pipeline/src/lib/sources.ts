@@ -17,10 +17,9 @@ const common = {
 const sourceSchema = z.discriminatedUnion('type', [
   z.object({
     ...common,
-    type: z.literal('html'),
+    type: z.enum(['html', 'pdf']),
     url: z.string().trim().url(),
   }),
-  z.object({ ...common, type: z.literal('pdf'), url: z.string().trim().url() }),
   z.object({
     ...common,
     type: z.literal('cdc-media'),

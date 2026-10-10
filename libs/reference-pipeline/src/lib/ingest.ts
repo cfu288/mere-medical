@@ -10,12 +10,15 @@ import {
 } from './referencesDb';
 import { ParsedDocument, Section, buildSections } from './sections';
 import { Source } from './sources';
-import { fetchJson, webpage } from './webpage';
+import { webpage } from './webpage';
 
 /**
  * What one configured reference parsed into, for the CLI to print.
  *
  * - `id`: the source's configured id.
+ * - `status`: `written` when its sections replaced the stored copy,
+ *   `unchanged` when it parsed to no sections and the stored copy stays, or
+ *   `missing` when it parsed to no sections and nothing was stored.
  * - `outline`: every kept section in document order, with its nesting depth
  *   (0 for a top-level section), id, title and markdown length in characters.
  * - `dropped`: titles of sections left out by rule, such as reference lists
@@ -24,6 +27,7 @@ import { fetchJson, webpage } from './webpage';
  * @example
  * {
  *   id: 'uspstf-a-and-b',
+ *   status: 'written',
  *   outline: [
  *     { depth: 0, sectionId: 'screening', title: 'Screening', chars: 14 },
  *     { depth: 1, sectionId: 'hypertension', title: 'Hypertension', chars: 23 },
@@ -33,6 +37,7 @@ import { fetchJson, webpage } from './webpage';
  */
 export type IngestReport = {
   id: string;
+  status: 'written' | 'unchanged' | 'missing';
   outline: { depth: number; sectionId: string; title: string; chars: number }[];
   dropped: string[];
 };
@@ -47,8 +52,7 @@ export type IngestReport = {
  *
  * - A stored reference whose id is no longer configured is deleted.
  * - A source that parsed to at least one section replaces its stored copy.
- * - A source that parsed to no sections keeps its stored copy and is listed
- *   in `unchanged`, or is listed in `missing` when nothing was stored.
+ * - A source that parsed to no sections keeps its stored copy, if any.
  * - A source that resolves to a url an earlier source already used is not
  *   stored and is listed in `skipped`.
  *
@@ -59,8 +63,6 @@ export type IngestReport = {
  * - `references`: one {@link IngestReport} per source that was not skipped,
  *   in configuration order.
  * - `skipped`: the id of each skipped source and the url it shared.
- * - `unchanged`: ids kept as they were stored.
- * - `missing`: ids that could not be added.
  *
  * @example
  * const report = await ingestSources({
@@ -85,11 +87,14 @@ export type IngestReport = {
  * });
  * // {
  * //   references: [
- * //     { id: 'uspstf-a-and-b', outline: [...], dropped: ['References'] },
+ * //     {
+ * //       id: 'uspstf-a-and-b',
+ * //       status: 'written',
+ * //       outline: [...],
+ * //       dropped: ['References'],
+ * //     },
  * //   ],
  * //   skipped: [],
- * //   unchanged: [],
- * //   missing: [],
  * // }
  */
 export async function ingestSources({
@@ -100,12 +105,7 @@ export async function ingestSources({
   db: DatabaseSync;
   sources: Source[];
   fetchBytes: (url: string) => Promise<Uint8Array>;
-}): Promise<{
-  references: IngestReport[];
-  skipped: Skipped[];
-  unchanged: string[];
-  missing: string[];
-}> {
+}): Promise<{ references: IngestReport[]; skipped: Skipped[] }> {
   const parsed: { record: ReferenceRecord; dropped: string[] }[] = [];
   const skipped: Skipped[] = [];
   const ingestedUrls = new Set<string>();
@@ -120,9 +120,9 @@ export async function ingestSources({
     parsed.push({
       record: {
         id: source.id,
-        title: result.title,
-        edition: result.edition,
-        summary: result.summary,
+        title: source.title,
+        edition: source.edition,
+        summary: source.summary,
         url: result.url,
         sections,
       },
@@ -130,8 +130,7 @@ export async function ingestSources({
     });
   }
 
-  const unchanged: string[] = [];
-  const missing: string[] = [];
+  const references: IngestReport[] = [];
   const stored = db.prepare('SELECT 1 FROM documents WHERE id = ?');
   db.exec('BEGIN');
   try {
@@ -139,13 +138,23 @@ export async function ingestSources({
       db,
       parsed.map(({ record }) => record.id),
     );
-    for (const { record } of parsed) {
-      if (record.sections.length === 0) {
-        (stored.get(record.id) ? unchanged : missing).push(record.id);
-        continue;
+    for (const { record, dropped } of parsed) {
+      const status =
+        record.sections.length > 0
+          ? 'written'
+          : stored.get(record.id)
+            ? 'unchanged'
+            : 'missing';
+      if (status === 'written') {
+        deleteReference(db, record.id);
+        writeReference(db, record);
       }
-      deleteReference(db, record.id);
-      writeReference(db, record);
+      references.push({
+        id: record.id,
+        status,
+        outline: outline(record.sections),
+        dropped,
+      });
     }
     db.exec('COMMIT');
   } catch (e) {
@@ -153,16 +162,7 @@ export async function ingestSources({
     throw e;
   }
 
-  return {
-    references: parsed.map(({ record, dropped }) => ({
-      id: record.id,
-      outline: outline(record.sections),
-      dropped,
-    })),
-    skipped,
-    unchanged,
-    missing,
-  };
+  return { references, skipped };
 }
 
 const CDC_MEDIA_API = 'https://tools.cdc.gov/api/v2/resources/media';
@@ -173,13 +173,7 @@ const cdcMediaSchema = z.object({
     .rest(z.unknown()),
 });
 
-type Fetched = {
-  title: string;
-  edition: string;
-  summary: string;
-  url: string;
-  document: ParsedDocument;
-};
+type Fetched = { url: string; document: ParsedDocument };
 
 async function fetchDocument(
   source: Source,
@@ -188,7 +182,6 @@ async function fetchDocument(
   switch (source.type) {
     case 'pdf':
       return {
-        ...described(source),
         url: source.url,
         document: {
           kind: 'paged',
@@ -197,16 +190,17 @@ async function fetchDocument(
       };
     case 'html':
       return {
-        ...described(source),
         url: source.url,
         document: webpage(await fetchBytes(source.url)),
       };
     case 'cdc-media': {
+      const metadata = await fetchBytes(
+        `${CDC_MEDIA_API}/${source.mediaId}.json`,
+      );
       const url = cdcMediaSchema.parse(
-        await fetchJson(`${CDC_MEDIA_API}/${source.mediaId}.json`, fetchBytes),
+        JSON.parse(new TextDecoder().decode(metadata)),
       ).results[0].sourceUrl;
       return {
-        ...described(source),
         url,
         document: webpage(
           await fetchBytes(`${CDC_MEDIA_API}/${source.mediaId}/content.html`),
@@ -217,18 +211,6 @@ async function fetchDocument(
 }
 
 type Skipped = { id: string; url: string };
-
-function described(source: {
-  title: string;
-  edition: string;
-  summary: string;
-}) {
-  return {
-    title: source.title,
-    edition: source.edition,
-    summary: source.summary,
-  };
-}
 
 function outline(sections: Section[]): IngestReport['outline'] {
   const depthOf = new Map<string, number>();

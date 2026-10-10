@@ -1,7 +1,7 @@
 import { fetchWithRetries } from './retry';
 import { crawlDelaySeconds } from './robots';
 
-export const FETCH_TIMEOUT_MS = 120_000;
+const FETCH_TIMEOUT_MS = 120_000;
 
 type Host = { delayMs: number; lastRequestAt: number };
 

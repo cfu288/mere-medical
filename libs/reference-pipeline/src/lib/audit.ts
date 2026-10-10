@@ -19,7 +19,7 @@ export type Finding = {
   detail: string;
 };
 
-export type SectionRow = {
+type SectionRow = {
   reference: string;
   section: string;
   parent: string | null;
@@ -27,7 +27,7 @@ export type SectionRow = {
   text: string;
 };
 
-export type ReferenceRow = { id: string; title: string; summary: string };
+type ReferenceRow = { id: string; title: string; summary: string };
 
 /** Everything the checks read: the library's rows and its two search index tables, in reading order. */
 export type Library = {
@@ -51,7 +51,7 @@ export function auditLibrary(db: DatabaseSync): Finding[] {
   return CHECKS.flatMap((check) => check(library));
 }
 
-export function loadLibrary(db: DatabaseSync): Library {
+function loadLibrary(db: DatabaseSync): Library {
   return {
     references: db
       .prepare('SELECT id, title, summary FROM documents ORDER BY id')

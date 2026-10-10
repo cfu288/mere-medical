@@ -414,9 +414,7 @@ describe('searchIndex', () => {
       },
     ]);
   });
-});
 
-describe('searchIndex duplicates', () => {
   it('reports a section indexed more than once even when one row is current', () => {
     expect(
       searchIndex({

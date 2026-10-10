@@ -1,6 +1,6 @@
 import { PagedBlock } from './blocks';
 
-export type PdfLine = { page: number; size: number; y: number; text: string };
+type PdfLine = { page: number; size: number; y: number; text: string };
 
 const HEADING_MIN_EXTRA_PT = 2;
 const PARAGRAPH_GAP_LINE_HEIGHTS = 1.8;
