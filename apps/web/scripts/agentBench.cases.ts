@@ -242,11 +242,10 @@ export const BENCH_CASES: BenchCase[] = [
         {
           reference: 'label-clopidogrel-bisulfate',
           sections: [
-            'oral-7-2cyp2c19-inhibitors',
+            'oral-7-2-cyp2c19-inhibitors',
             'oral-5-1-diminished-antiplatelet-activity-in-patients-with-impair',
             'oral-17-patient-counseling-information',
             'oral-warnings-and-precautions',
-            'oral-medication-guide',
             'oral-12-3-pharmacokinetics',
           ],
         },
