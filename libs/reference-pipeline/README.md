@@ -59,78 +59,11 @@ Example rows. The VA-DoD hypertension guideline:
 | section_id                                                   | parent_id                                                    | position | title                                                                | page_start | page_end | url  | content_md                                                       |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | -------- | -------------------------------------------------------------------- | ---------- | -------- | ---- | ---------------------------------------------------------------- |
 | ix-recommendations                                           | va-dod-clinical-practice-guideline-for-diagnosis-and-managem | 30       | IX. Recommendations                                                  | 26         | 28       | null | "The evidence-based clinical practice recommendations listed..." |
-| b-treatment-goals-and-general-approaches-to-hypertension-man | ix-recommendations                                           | 37       | B. Treatment Goals and General Approaches to Hypertension Management | 33         | 33       | null | empty; its text is split by page below                           |
+| b-treatment-goals-and-general-approaches-to-hypertension-man | ix-recommendations                                           | 37       | B. Treatment Goals and General Approaches to Hypertension Management | 33         | 33       | null | empty. Its text is split by page below                           |
 | page-34                                                      | b-treatment-goals-and-general-approaches-to-hypertension-man | 39       | Page 34                                                              | 34         | 34       | null | "cardiovascular causes.(80,81) An additional SR by Matsumoto..." |
 
 `parent_id` names a `section_id` in the same reference. A PDF section cites its
 pages. A section's own `url`, when set, is the page it lives on.
-
-## How the agent reads it
-
-The agent's tools live in the web app
-(`apps/web/src/features/patient-context/agent/referenceTools.ts`) and call the
-API's `/api/v1/agent/references` routes (`apps/api/src/app/reference`), which
-read this file. The outputs below are real tool outputs, cut where marked.
-
-A guideline question, "Is my blood pressure where it should be?", once the
-record tools have given the patient's conditions and readings:
-
-1. `search_references({"query": ["high blood pressure", "hypertension", "BP"]})`
-   ranks references by their titles and summaries, a page at a time with the
-   total:
-
-   ```
-   va-dod-hypertension | VA-DoD Hypertension Guideline | 2026 | High blood pressure in adults: diagnosis, home and office measurement, blood pressure goals, and choice of medications
-   cdc-undiagnosed-hypertension | CDC: Undiagnosed Hypertension | 2023 | Undiagnosed Hypertension
-   [rows cut]
-   Showing 1-18 of 18 references. Call get_outline with a reference id to see its sections.
-   ```
-
-2. `get_outline({"reference": "va-dod-hypertension", "section": "ix-recommendations"})`
-   lists two levels under a section (or under the reference when no section
-   is given), each with the id the next call takes, its size and its place in
-   the source:
-
-   ```
-   VA-DoD Hypertension Guideline (2026)
-   ix-recommendations | IX. Recommendations | 6424 chars | pp. 26-28 | has its own text: read_section to read it
-     a-diagnosis-and-monitoring | A. Diagnosis and Monitoring | 0 chars | p. 29
-       page-29 | Page 29 | 3054 chars | p. 29
-   [rows cut]
-     b-treatment-goals-and-general-approaches-to-hypertension-man | B. Treatment Goals and General Approaches to Hypertension Management | 0 chars | p. 33
-       page-33-2 | Page 33 | 925 chars | p. 33
-       page-34 | Page 34 | 3744 chars | p. 34
-   [rows cut]
-   ```
-
-3. `read_section({"reference": "va-dod-hypertension", "section": "page-34"})`
-   returns the section's own text under its citation, then the ids of its
-   subsections when it has any:
-
-   ```
-   VA-DoD Hypertension Guideline (2026) > Page 34, p. 34
-   https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/htn/HTN-CPG_2026-Guideline_final_20260827.pdf
-
-   cardiovascular causes.(80,81) An additional SR by Matsumoto et al. (2025) found no significant difference [text cut]
-   ```
-
-4. `find_in_reference({"reference": "va-dod-hypertension", "query": ["systolic goal", "<130", "blood pressure goal"]})`
-   is the fallback when titles are not enough. It lists matching sections in
-   document order with a match count and an excerpt, and says how many it
-   left out:
-
-   ```
-   [rows cut]
-   page-33-2 | Page 33 | 11 matches | …Blood Pressure Goals Recommendation 4. For individuals with hypertension, we recomme
-   page-34 | Page 34 | 16 matches | …from one SR including 12 RCTs that intensive systolic blood pressure control (SBP goal
-   [rows cut]
-   [12 more omitted; narrow the terms]
-   ```
-
-Every response is bounded by its unit (a page of catalog rows, two outline
-levels, one section, a list of pointers), never by cutting text at a character
-budget. A paged response states its total and a cut list says how many rows
-it left out.
 
 ## Pipeline
 
@@ -152,16 +85,16 @@ PDFs.
   as an encoded `<javascript:alert(1)>` or `<b>`, is escaped so it stays text.
 - **CDC media**: CDC's content syndication API serves a page's content without
   site navigation. The media's metadata gives the cdc.gov page it syndicates,
-  which becomes the reference url every read cites; the content then goes
+  which becomes the reference url every read cites. The content then goes
   through the HTML adapter. CDC's own attribution block stays in the text.
   Prefer this over CDC PDFs.
 - **PDF**: pdfjs text is rebuilt into lines and paragraphs. The body font size
-  is the size covering the most characters; lines at least 2pt larger are
+  is the size covering the most characters. Lines at least 2pt larger are
   headings, larger sizes are higher levels, and a heading wrapped over two lines
   is joined. Lines repeated on more than half the pages (running headers,
   "Page 3 of 123") are dropped. Every block keeps its page number.
 - **Sections**: each heading starts a section holding the text up to the next
-  heading; deeper headings become its subsections. Text before the first
+  heading. Deeper headings become its subsections. Text before the first
   heading becomes an "Opening text" section. A PDF section whose own text is
   longer than 12,000 characters is split into one subsection per page.
 - **Dropped sections**: References, participant lists, abbreviation lists,
@@ -218,8 +151,7 @@ Writes `libs/reference-pipeline/data/references.db` (gitignored), prints
 each document's outline, then prints the audit described below. Requests to a host wait out the `Crawl-delay` its
 robots.txt sets for all user agents (USPSTF asks for 5 seconds). Each attempt
 is given up after 120 seconds, and a server error or rate limit is retried up
-to four attempts with growing waits. The API reads the file from
-`REFERENCE_DB_PATH`, or that default path.
+to four attempts with growing waits.
 
 The audit checks the built library for problems a reader of it would hit. It reports
 sections with no text and no subsections, sections that are only links, HTML
@@ -253,6 +185,6 @@ This exits with an error when no library exists at the path.
 - A body line repeated on more than half of a PDF's pages, differing only in
   digits, is dropped as if it were a running header. On the configured VA-DoD
   guidelines every dropped line is a running header or page footer.
-- Heading detection by font size assumes headings are larger than body text;
-  a PDF that marks headings only with bold comes out as one "Opening text"
+- Heading detection by font size assumes headings are larger than body text.
+  A PDF that marks headings only with bold comes out as one "Opening text"
   section, split into one section per page once it passes 12,000 characters.

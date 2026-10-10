@@ -91,7 +91,7 @@
     "id": "uspstf-chlamydia-and-gonorrhea-screening",
     "title": "USPSTF: Chlamydia and Gonorrhea: Screening",
     "edition": "2021",
-    "summary": "sexually active women, including pregnant persons (grade B); sexually active women, including pregnant persons (grade B)",
+    "summary": "Screening for chlamydia (grade B) and gonorrhea (grade B). For sexually active women, including pregnant persons, 24 years or younger or 25 years or older at increased risk",
     "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/chlamydia-and-gonorrhea-screening",
     "type": "html"
   },
@@ -99,7 +99,7 @@
     "id": "uspstf-colorectal-cancer-screening",
     "title": "USPSTF: Colorectal Cancer: Screening",
     "edition": "2021",
-    "summary": "adults aged 45 to 49 years (grade B); adults aged 50 to 75 years (grade A)",
+    "summary": "Adults aged 45 to 49 years (grade B). Adults aged 50 to 75 years (grade A)",
     "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/colorectal-cancer-screening",
     "type": "html"
   },
@@ -195,7 +195,7 @@
     "id": "uspstf-human-immunodeficiency-virus-hiv-infection-screening",
     "title": "USPSTF: Human Immunodeficiency Virus (HIV) Infection: Screening",
     "edition": "2019",
-    "summary": "adolescents and adults aged 15 to 65 years (grade A); pregnant persons (grade A)",
+    "summary": "Adolescents and adults aged 15 to 65 years (grade A). Pregnant persons (grade A)",
     "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/human-immunodeficiency-virus-hiv-infection-screening",
     "type": "html"
   },
@@ -251,7 +251,7 @@
     "id": "uspstf-osteoporosis-screening",
     "title": "USPSTF: Osteoporosis to Prevent Fractures: Screening",
     "edition": "2025",
-    "summary": "postmenopausal women younger than 65 years with 1 or more risk factors for osteoporosis (grade B); women 65 years or older (grade B)",
+    "summary": "Postmenopausal women younger than 65 years with 1 or more risk factors for osteoporosis (grade B). Women 65 years or older (grade B)",
     "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/osteoporosis-screening",
     "type": "html"
   },
@@ -283,7 +283,7 @@
     "id": "uspstf-prevention-of-dental-caries-in-children-younger-than",
     "title": "USPSTF: Prevention of Dental Caries in Children Younger Than 5 Years: Screening and Interventions",
     "edition": "2021",
-    "summary": "children younger than 5 years (grade B); children younger than 5 years (grade B)",
+    "summary": "Children younger than 5 years: oral fluoride supplements from age 6 months when the water is low in fluoride (grade B). Fluoride varnish on primary teeth from tooth eruption (grade B)",
     "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/prevention-of-dental-caries-in-children-younger-than-age-5-years-screening-and-interventions1",
     "type": "html"
   },
@@ -291,7 +291,7 @@
     "id": "uspstf-rh-d-incompatibility-screening",
     "title": "USPSTF: Rh(D) Incompatibility: Screening",
     "edition": "2004",
-    "summary": "pregnant women, during the first pregnancy-related care visit (grade A); unsensitized rh(d)-negative pregnant women (grade B)",
+    "summary": "Pregnant women, during the first pregnancy-related care visit (grade A). Unsensitized rh(d)-negative pregnant women (grade B)",
     "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/rh-d-incompatibility-screening",
     "type": "html"
   },
@@ -339,7 +339,7 @@
     "id": "uspstf-tobacco-use-in-adults-and-pregnant-women-counseling",
     "title": "USPSTF: Tobacco Smoking Cessation in Adults, Including Pregnant Persons: Interventions",
     "edition": "2021",
-    "summary": "nonpregnant adults (grade A); pregnant persons (grade A)",
+    "summary": "Nonpregnant adults (grade A). Pregnant persons (grade A)",
     "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/tobacco-use-in-adults-and-pregnant-women-counseling-and-interventions",
     "type": "html"
   },
@@ -387,7 +387,7 @@
     "id": "cdc-child-schedule-by-age",
     "title": "CDC Child and Adolescent Immunization Schedule by Age",
     "edition": "2025",
-    "summary": "Which vaccines children and teens get from birth to 18 years and at what ages: hepatitis B, rotavirus, DTaP and Tdap, Hib, pneumococcal, polio, COVID-19, influenza, RSV, MMR, varicella (chickenpox), hepatitis A, HPV, meningococcal ACWY and B, dengue, and mpox",
+    "summary": "Which vaccines children and teens get from birth to 18 years and at what ages. Vaccines: hepatitis B, rotavirus, DTaP and Tdap, Hib, pneumococcal, polio, COVID-19, influenza, RSV, MMR, varicella (chickenpox), hepatitis A, HPV, meningococcal ACWY and B, dengue, and mpox",
     "type": "cdc-media",
     "mediaId": 133745
   },
@@ -395,7 +395,7 @@
     "id": "cdc-adult-schedule-by-age",
     "title": "CDC Adult Immunization Schedule by Age",
     "edition": "2025",
-    "summary": "Which vaccines adults 19 and older get at each age: COVID-19, influenza, RSV, Tdap and Td, MMR, varicella (chickenpox), zoster (shingles), HPV, pneumococcal, hepatitis A, hepatitis B, meningococcal ACWY and B, Hib, polio, and mpox",
+    "summary": "Which vaccines adults 19 and older get at each age. Vaccines: COVID-19, influenza, RSV, Tdap and Td, MMR, varicella (chickenpox), zoster (shingles), HPV, pneumococcal, hepatitis A, hepatitis B, meningococcal ACWY and B, Hib, polio, and mpox",
     "type": "cdc-media",
     "mediaId": 266012
   },
@@ -403,7 +403,7 @@
     "id": "cdc-adult-schedule-by-condition",
     "title": "CDC Adult Immunization Schedule by Medical Condition",
     "edition": "2025",
-    "summary": "Which vaccines adults need for medical conditions and situations such as pregnancy, immune problems, diabetes, heart, lung, liver, or kidney disease, and health care work: COVID-19, influenza, RSV, Tdap, MMR, varicella (chickenpox), zoster (shingles), HPV, pneumococcal, hepatitis A, hepatitis B, meningococcal ACWY and B, Hib, polio, and mpox",
+    "summary": "Which vaccines adults need for medical conditions and situations such as pregnancy, immune problems, diabetes, heart, lung, liver, or kidney disease, and health care work. Vaccines: COVID-19, influenza, RSV, Tdap, MMR, varicella (chickenpox), zoster (shingles), HPV, pneumococcal, hepatitis A, hepatitis B, meningococcal ACWY and B, Hib, polio, and mpox",
     "type": "cdc-media",
     "mediaId": 266010
   },
@@ -1195,7 +1195,7 @@
     "id": "cdc-veterinary-guidance-for-testing-for-seoul-virus-in",
     "title": "CDC: Veterinary Guidance for Testing for Seoul Virus in Pet Rats",
     "edition": "2024",
-    "summary": "Seoul virus in rats; testing, diagnostic, and safety guidance for veterinarians",
+    "summary": "Seoul virus in rats: testing, diagnostic, and safety guidance for veterinarians",
     "type": "cdc-media",
     "mediaId": 221177
   },

@@ -8,7 +8,9 @@ function main() {
   const dbPath =
     process.argv[2] ?? join(__dirname, '..', 'data', 'references.db');
   if (!existsSync(dbPath)) {
-    console.error(`${dbPath}: no library here; build it with the CLI first`);
+    console.error(
+      `${dbPath}: no library is at this path. Build it with the CLI first.`,
+    );
     process.exit(1);
   }
   printAudit(openReferencesDb(dbPath), dbPath);
