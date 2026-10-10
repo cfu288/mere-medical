@@ -173,6 +173,23 @@ describe('unsafeLinks', () => {
       },
     ]);
   });
+
+  it('ignores escaped text that only looks like a link', () => {
+    expect(
+      unsafeLinks({
+        ...NOTHING,
+        sections: [
+          {
+            reference: 'guide',
+            section: 'page-3',
+            parent: null,
+            title: 'Page 3',
+            text: '\\[click\\](javascript:alert(1)) and \\<javascript:alert(1)>',
+          },
+        ],
+      }),
+    ).toEqual([]);
+  });
 });
 
 describe('htmlTags', () => {
@@ -198,6 +215,23 @@ describe('htmlTags', () => {
         detail: '<br> <em>',
       },
     ]);
+  });
+
+  it('ignores escaped text that only looks like a tag', () => {
+    expect(
+      htmlTags({
+        ...NOTHING,
+        sections: [
+          {
+            reference: 'guide',
+            section: 'schedule',
+            parent: null,
+            title: 'Schedule',
+            text: 'Write \\<b>bold\\</b> for emphasis',
+          },
+        ],
+      }),
+    ).toEqual([]);
   });
 });
 

@@ -42,8 +42,8 @@ type Check = (library: Library) => Finding[];
 const SHORT_REFERENCE_CHARS = 500;
 const LINK = /!?\[[^\]]*\]\([^)]*\)/g;
 const LINK_TARGET =
-  /!?\[[^\]]*\]\(\s*([^\s)]+)|<([a-z][a-z0-9+.-]*:[^>\s]*)>/gi;
-const HTML_TAG = /<\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
+  /(?<!\\)!?\[[^\]]*\]\(\s*([^\s)]+)|(?<!\\)<([a-z][a-z0-9+.-]*:[^>\s]*)>/gi;
+const HTML_TAG = /(?<!\\)<\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
 
 /** Problems in a built library that make a section unreadable, unreachable or misleading to the agent. */
 export function auditLibrary(db: DatabaseSync): Finding[] {

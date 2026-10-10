@@ -148,7 +148,8 @@ PDFs.
   out site navigation and footers. Scripts, styles, `<noscript>`, frames,
   embedded objects and templates are dropped. A link or image whose address is
   not web, mail or relative (such as `javascript:` or `data:`) keeps only its
-  text or alt text.
+  text or alt text. Text that would open a Markdown link or an HTML tag, such
+  as an encoded `<javascript:alert(1)>` or `<b>`, is escaped so it stays text.
 - **CDC media**: CDC's content syndication API serves a page's content without
   site navigation. The media's metadata gives the cdc.gov page it syndicates,
   which becomes the reference url every read cites; the content then goes

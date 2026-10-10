@@ -7,6 +7,8 @@ export function htmlToMarkdown(html: string): string {
     codeBlockStyle: 'fenced',
   });
   turndown.use(tables);
+  const escapeMarkdown = turndown.escape.bind(turndown);
+  turndown.escape = (text) => escapeMarkdown(text).replace(MARKUP_START, '\\<');
   turndown.addRule('layoutTable', {
     filter: (node) =>
       ['TABLE', 'TBODY', 'THEAD', 'TR', 'TD', 'TH'].includes(node.nodeName) &&
@@ -37,6 +39,7 @@ export function htmlToMarkdown(html: string): string {
 }
 
 const SAFE_PROTOCOLS = ['http:', 'https:', 'mailto:'];
+const MARKUP_START = /<(?=[a-z/!?])/gi;
 
 /** True for web, mail and relative addresses, judged by the URL parser so case, spacing and tab tricks in a scheme are caught. */
 export function isSafeUrl(value: string): boolean {

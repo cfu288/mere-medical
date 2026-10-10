@@ -121,4 +121,22 @@ describe('htmlToMarkdown', () => {
       ),
     ).toEqual('\\[click\\](javascript:alert(1))');
   });
+
+  it('keeps the alt text of an unsafe image that spells an autolink as text', () => {
+    expect(
+      htmlToMarkdown(
+        '<p><img src="javascript:alert(1)" alt="<javascript:alert(1)>"></p>',
+      ),
+    ).toEqual('\\<javascript:alert(1)>');
+  });
+
+  it('keeps page text that spells a link or tag as text, leaving a less-than sign before a number alone', () => {
+    expect(
+      htmlToMarkdown(
+        '<p>See &lt;javascript:alert(1)&gt; and &lt;b&gt;bold&lt;/b&gt;; aim for SBP &lt;130 mmHg</p>',
+      ),
+    ).toEqual(
+      'See \\<javascript:alert(1)> and \\<b>bold\\</b>; aim for SBP <130 mmHg',
+    );
+  });
 });
