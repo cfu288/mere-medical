@@ -8,15 +8,6 @@ export type Location =
   | { kind: 'pages'; start: number; end: number }
   | { kind: 'webpage'; url?: string };
 
-/** One document that hangs off a node reference, cited by its own url. */
-export type Spoke = {
-  id: string;
-  title: string;
-  url: string;
-  contentMd: string;
-  document: ParsedDocument;
-};
-
 export type Section = {
   sectionId: string;
   parentId: string | null;
@@ -57,42 +48,6 @@ export function buildSections(doc: ParsedDocument): {
         drafts(doc.blocks, () => []),
         () => ({ kind: 'webpage' }),
       );
-}
-
-/** Each spoke becomes a top section whose children are its document's sections, ids prefixed with the spoke id. */
-export function buildSpokeSections(spokes: Spoke[]): {
-  sections: Section[];
-  dropped: string[];
-} {
-  const sections: Section[] = [];
-  const dropped: string[] = [];
-  for (const spoke of spokes) {
-    const location: Location = { kind: 'webpage', url: spoke.url };
-    sections.push({
-      sectionId: spoke.id,
-      parentId: null,
-      title: spoke.title,
-      location,
-      contentMd: spoke.contentMd,
-    });
-    const built = buildSections(spoke.document);
-    dropped.push(...built.dropped);
-    if (built.sections.length === 0) {
-      return { sections: [], dropped };
-    }
-    for (const section of built.sections) {
-      sections.push({
-        sectionId: `${spoke.id}-${section.sectionId}`,
-        parentId: section.parentId
-          ? `${spoke.id}-${section.parentId}`
-          : spoke.id,
-        title: section.title,
-        location,
-        contentMd: section.contentMd,
-      });
-    }
-  }
-  return { sections, dropped };
 }
 
 function drafts<B extends Block>(

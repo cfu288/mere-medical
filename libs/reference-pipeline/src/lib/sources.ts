@@ -26,11 +26,6 @@ const sourceSchema = z.discriminatedUnion('type', [
     type: z.literal('cdc-media'),
     mediaId: z.coerce.number().int().positive(),
   }),
-  z.object({
-    id,
-    type: z.literal('drug-label'),
-    generic: text.transform((g) => g.toUpperCase()),
-  }),
 ]);
 
 export type Source = z.infer<typeof sourceSchema>;

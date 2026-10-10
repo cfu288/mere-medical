@@ -1,7 +1,6 @@
 import { DatabaseSync } from 'node:sqlite';
 import { z } from 'zod';
 
-import { drugLabel } from './drugLabel';
 import { linesToBlocks, pdfLines } from './pdfBlocks';
 import {
   ReferenceRecord,
@@ -9,13 +8,7 @@ import {
   deleteReferencesExcept,
   writeReference,
 } from './referencesDb';
-import {
-  ParsedDocument,
-  Section,
-  Spoke,
-  buildSections,
-  buildSpokeSections,
-} from './sections';
+import { ParsedDocument, Section, buildSections } from './sections';
 import { Source } from './sources';
 import { fetchJson, webpage } from './webpage';
 
@@ -81,7 +74,6 @@ export type IngestReport = {
  *       edition: 'Updated continuously',
  *       summary: 'Screening and prevention',
  *     },
- *     { id: 'label-estradiol', type: 'drug-label', generic: 'estradiol' },
  *   ]),
  *   fetchBytes: async (url) => {
  *     const response = await fetch(url);
@@ -94,7 +86,6 @@ export type IngestReport = {
  * // {
  * //   references: [
  * //     { id: 'uspstf-a-and-b', outline: [...], dropped: ['References'] },
- * //     { id: 'label-estradiol', outline: [...], dropped: [] },
  * //   ],
  * //   skipped: [],
  * //   unchanged: [],
@@ -125,10 +116,7 @@ export async function ingestSources({
       continue;
     }
     ingestedUrls.add(result.url);
-    const { sections, dropped } =
-      'spokes' in result
-        ? buildSpokeSections(result.spokes)
-        : buildSections(result.document);
+    const { sections, dropped } = buildSections(result.document);
     parsed.push({
       record: {
         id: source.id,
@@ -190,7 +178,8 @@ type Fetched = {
   edition: string;
   summary: string;
   url: string;
-} & ({ document: ParsedDocument } | { spokes: Spoke[] });
+  document: ParsedDocument;
+};
 
 async function fetchDocument(
   source: Source,
@@ -224,8 +213,6 @@ async function fetchDocument(
         ),
       };
     }
-    case 'drug-label':
-      return drugLabel(source.generic, fetchBytes);
   }
 }
 

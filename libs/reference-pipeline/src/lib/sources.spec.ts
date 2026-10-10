@@ -1,7 +1,7 @@
 import { parseSources } from './sources';
 
 describe('parseSources', () => {
-  it('parses every source type, trimming text, coercing a cdc media id and upper-casing a drug generic', () => {
+  it('parses every source type, trimming text, and coercing a cdc media id', () => {
     expect(
       parseSources([
         {
@@ -28,11 +28,6 @@ describe('parseSources', () => {
           type: 'cdc-media',
           mediaId: ' 266012 ',
         },
-        {
-          id: 'label-metoprolol-succinate',
-          type: 'drug-label',
-          generic: '  metoprolol succinate ',
-        },
       ]),
     ).toEqual([
       {
@@ -58,11 +53,6 @@ describe('parseSources', () => {
         summary: 'Vaccines adults get by age',
         type: 'cdc-media',
         mediaId: 266012,
-      },
-      {
-        id: 'label-metoprolol-succinate',
-        type: 'drug-label',
-        generic: 'METOPROLOL SUCCINATE',
       },
     ]);
   });
