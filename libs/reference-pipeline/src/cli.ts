@@ -6,6 +6,7 @@ import { ingestSources } from './lib/ingest';
 import { openReferencesDb } from './lib/referencesDb';
 import { createCrawlDelayedFetch } from './lib/crawlDelayedFetch';
 import { parseSources } from './lib/sources';
+import { printAudit } from './printAudit';
 
 const crawlDelayedFetch = createCrawlDelayedFetch({
   fetchImpl: fetch,
@@ -38,7 +39,6 @@ async function main() {
     sources,
     fetchBytes,
   });
-  db.close();
   for (const report of reports) {
     if (unchanged.includes(report.id)) {
       console.log(
@@ -66,6 +66,9 @@ async function main() {
   console.log(
     `\nwrote ${reports.length - unchanged.length - missing.length} reference(s) to ${dbPath}`,
   );
+  console.log();
+  printAudit(db, dbPath);
+  db.close();
 }
 
 main().catch((e) => {
