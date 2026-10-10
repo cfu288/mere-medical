@@ -1,0 +1,2834 @@
+[
+  {
+    "id": "uspstf-a-and-b",
+    "title": "USPSTF A and B Recommendations",
+    "edition": "Updated continuously",
+    "summary": "Preventive care the USPSTF recommends for adults and children: cancer, heart, infection, and mental health screening, plus preventive medications",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation-topics/uspstf-a-and-b-recommendations",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-abdominal-aortic-aneurysm-screening",
+    "title": "USPSTF: Abdominal Aortic Aneurysm: Screening",
+    "edition": "2019",
+    "summary": "men aged 65 to 75 years who have ever smoked (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/abdominal-aortic-aneurysm-screening",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-anxiety-adults-screening",
+    "title": "USPSTF: Anxiety Disorders in Adults: Screening",
+    "edition": "2023",
+    "summary": "adults 64 years or younger, including pregnant and postpartum persons (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/anxiety-adults-screening",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-screening-anxiety-children-adolescents",
+    "title": "USPSTF: Anxiety in Children and Adolescents: Screening",
+    "edition": "2022",
+    "summary": "children and adolescents aged 8 to 18 years (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/screening-anxiety-children-adolescents",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-low-dose-aspirin-use-for-the-prevention-of-morbidity",
+    "title": "USPSTF: Aspirin Use to Prevent Preeclampsia and Related Morbidity and Mortality: Preventive Medication",
+    "edition": "2021",
+    "summary": "pregnant persons at high risk for preeclampsia (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/low-dose-aspirin-use-for-the-prevention-of-morbidity-and-mortality-from-preeclampsia-preventive-medication",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-asymptomatic-bacteriuria-in-adults-screening",
+    "title": "USPSTF: Asymptomatic Bacteriuria in Adults: Screening",
+    "edition": "2019",
+    "summary": "pregnant persons (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/asymptomatic-bacteriuria-in-adults-screening",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-brca-related-cancer-risk-assessment-genetic-counseli",
+    "title": "USPSTF: BRCA-Related Cancer: Risk Assessment, Genetic Counseling, and Genetic Testing",
+    "edition": "2019",
+    "summary": "women with a personal or family history of breast, ovarian, tubal, or peritoneal cancer or an ancestry associated with brca1/2 gene mutation (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/brca-related-cancer-risk-assessment-genetic-counseling-and-genetic-testing",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-breast-cancer-medications-for-risk-reduction",
+    "title": "USPSTF: Breast Cancer: Medication Use to Reduce Risk",
+    "edition": "2019",
+    "summary": "women at increased risk for breast cancer aged 35 years or older (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/breast-cancer-medications-for-risk-reduction",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-breast-cancer-screening",
+    "title": "USPSTF: Breast Cancer: Screening",
+    "edition": "2024",
+    "summary": "women aged 40 to 74 years (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/breast-cancer-screening",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-breastfeeding-primary-care-interventions",
+    "title": "USPSTF: Breastfeeding: Primary Care Behavioral Counseling Interventions",
+    "edition": "2025",
+    "summary": "pregnant and postpartum women (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/breastfeeding-primary-care-interventions",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-cervical-cancer-screening",
+    "title": "USPSTF: Cervical Cancer: Screening",
+    "edition": "2018",
+    "summary": "women aged 21 to 65 years (grade A)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/cervical-cancer-screening",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-chlamydia-and-gonorrhea-screening",
+    "title": "USPSTF: Chlamydia and Gonorrhea: Screening",
+    "edition": "2021",
+    "summary": "Screening for chlamydia (grade B) and gonorrhea (grade B). For sexually active women, including pregnant persons, 24 years or younger or 25 years or older at increased risk",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/chlamydia-and-gonorrhea-screening",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-colorectal-cancer-screening",
+    "title": "USPSTF: Colorectal Cancer: Screening",
+    "edition": "2021",
+    "summary": "Adults aged 45 to 49 years (grade B). Adults aged 50 to 75 years (grade A)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/colorectal-cancer-screening",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-screening-depression-suicide-risk-adults",
+    "title": "USPSTF: Depression and Suicide Risk in Adults: Screening",
+    "edition": "2023",
+    "summary": "adults, including pregnant and postpartum persons, and older adults (65 years or older) (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/screening-depression-suicide-risk-adults",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-screening-depression-suicide-risk-children-adolescen",
+    "title": "USPSTF: Depression and Suicide Risk in Children and Adolescents: Screening",
+    "edition": "2022",
+    "summary": "adolescents aged 12 to 18 years (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/screening-depression-suicide-risk-children-adolescents",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-falls-prevention-community-dwelling-older-adults-int",
+    "title": "USPSTF: Falls Prevention in Community-Dwelling Older Adults: Interventions",
+    "edition": "2024",
+    "summary": "community-dwelling adults 65 years or older (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/falls-prevention-community-dwelling-older-adults-interventions",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-folic-acid-for-the-prevention-of-neural-tube-defects",
+    "title": "USPSTF: Folic Acid Supplementation to Prevent Neural Tube Defects: Preventive Medication",
+    "edition": "2023",
+    "summary": "persons who plan to or could become pregnant (grade A)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/folic-acid-for-the-prevention-of-neural-tube-defects-preventive-medication",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-gestational-diabetes-screening",
+    "title": "USPSTF: Gestational Diabetes: Screening",
+    "edition": "2021",
+    "summary": "asymptomatic pregnant persons at 24 weeks of gestation or after (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/gestational-diabetes-screening",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-healthy-diet-and-physical-activity-counseling-adults",
+    "title": "USPSTF: Healthy Diet and Physical Activity for Cardiovascular Disease Prevention in Adults With Cardiovascular Risk Factors: Behavioral Counseling Interventions",
+    "edition": "2020",
+    "summary": "adults with cardiovascular disease risk factors (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/healthy-diet-and-physical-activity-counseling-adults-with-high-risk-of-cvd",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-healthy-weight-and-weight-gain-during-pregnancy-beha",
+    "title": "USPSTF: Healthy Weight and Weight Gain In Pregnancy: Behavioral Counseling Interventions",
+    "edition": "2021",
+    "summary": "pregnant persons (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/healthy-weight-and-weight-gain-during-pregnancy-behavioral-counseling-interventions",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-hepatitis-b-virus-infection-screening",
+    "title": "USPSTF: Hepatitis B Virus Infection in Adolescents and Adults: Screening",
+    "edition": "2020",
+    "summary": "adolescents and adults at increased risk for infection (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/hepatitis-b-virus-infection-screening",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-hepatitis-b-virus-infection-in-pregnant-women-screen",
+    "title": "USPSTF: Hepatitis B Virus Infection in Pregnant Women: Screening",
+    "edition": "2019",
+    "summary": "pregnant women (grade A)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/hepatitis-b-virus-infection-in-pregnant-women-screening",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-hepatitis-c-screening",
+    "title": "USPSTF: Hepatitis C Virus Infection in Adolescents and Adults: Screening",
+    "edition": "2020",
+    "summary": "adults aged 18 to 79 years (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/hepatitis-c-screening",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-obesity-in-children-and-adolescents-screening",
+    "title": "USPSTF: High Body Mass Index in Children and Adolescents: Interventions",
+    "edition": "2024",
+    "summary": "children and adolescents 6 years or older (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/obesity-in-children-and-adolescents-screening",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-human-immunodeficiency-virus-hiv-infection-screening",
+    "title": "USPSTF: Human Immunodeficiency Virus (HIV) Infection: Screening",
+    "edition": "2019",
+    "summary": "Adolescents and adults aged 15 to 65 years (grade A). Pregnant persons (grade A)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/human-immunodeficiency-virus-hiv-infection-screening",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-hypertension-in-adults-screening",
+    "title": "USPSTF: Hypertension in Adults: Screening",
+    "edition": "2021",
+    "summary": "adults 18 years or older without known hypertension (grade A)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/hypertension-in-adults-screening",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-hypertensive-disorders-pregnancy-screening",
+    "title": "USPSTF: Hypertensive Disorders of Pregnancy: Screening",
+    "edition": "2023",
+    "summary": "asymptomatic pregnant persons (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/hypertensive-disorders-pregnancy-screening",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-intimate-partner-violence-and-abuse-of-elderly-and-v",
+    "title": "USPSTF: Intimate Partner Violence and Caregiver Abuse of Older or Vulnerable Adults: Screening",
+    "edition": "2025",
+    "summary": "women of reproductive age, including pregnant and postpartum women (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/intimate-partner-violence-and-abuse-of-elderly-and-vulnerable-adults-screening",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-latent-tuberculosis-infection-screening",
+    "title": "USPSTF: Latent Tuberculosis Infection in Adults: Screening",
+    "edition": "2023",
+    "summary": "asymptomatic adults at increased risk of latent tuberculosis infection (ltbi) (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/latent-tuberculosis-infection-screening",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-lung-cancer-screening",
+    "title": "USPSTF: Lung Cancer: Screening",
+    "edition": "2021",
+    "summary": "adults aged 50 to 80 years who have a 20 pack-year smoking history and currently smoke or have quit within the past 15 years (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/lung-cancer-screening",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-ocular-prophylaxis-for-gonococcal-ophthalmia-neonato",
+    "title": "USPSTF: Ocular Prophylaxis for Gonococcal Ophthalmia Neonatorum: Preventive Medication",
+    "edition": "2019",
+    "summary": "newborns (grade A)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/ocular-prophylaxis-for-gonococcal-ophthalmia-neonatorum-preventive-medication",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-osteoporosis-screening",
+    "title": "USPSTF: Osteoporosis to Prevent Fractures: Screening",
+    "edition": "2025",
+    "summary": "Postmenopausal women younger than 65 years with 1 or more risk factors for osteoporosis (grade B). Women 65 years or older (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/osteoporosis-screening",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-perinatal-depression-preventive-interventions",
+    "title": "USPSTF: Perinatal Depression: Preventive Interventions",
+    "edition": "2019",
+    "summary": "pregnant and postpartum persons (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/perinatal-depression-preventive-interventions",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-screening-for-prediabetes-and-type-2-diabetes",
+    "title": "USPSTF: Prediabetes and Type 2 Diabetes: Screening",
+    "edition": "2021",
+    "summary": "asymptomatic adults aged 35 to 70 years who have overweight or obesity (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/screening-for-prediabetes-and-type-2-diabetes",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-prevention-of-human-immunodeficiency-virus-hiv-infec",
+    "title": "USPSTF: Prevention of Acquisition of HIV: Preexposure Prophylaxis",
+    "edition": "2023",
+    "summary": "adolescents and adults at increased risk of hiv (grade A)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/prevention-of-human-immunodeficiency-virus-hiv-infection-pre-exposure-prophylaxis",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-prevention-of-dental-caries-in-children-younger-than",
+    "title": "USPSTF: Prevention of Dental Caries in Children Younger Than 5 Years: Screening and Interventions",
+    "edition": "2021",
+    "summary": "Children younger than 5 years: oral fluoride supplements from age 6 months when the water is low in fluoride (grade B). Fluoride varnish on primary teeth from tooth eruption (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/prevention-of-dental-caries-in-children-younger-than-age-5-years-screening-and-interventions1",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-rh-d-incompatibility-screening",
+    "title": "USPSTF: Rh(D) Incompatibility: Screening",
+    "edition": "2004",
+    "summary": "Pregnant women, during the first pregnancy-related care visit (grade A). Unsensitized rh(d)-negative pregnant women (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/rh-d-incompatibility-screening",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-sexually-transmitted-infections-behavioral-counselin",
+    "title": "USPSTF: Sexually Transmitted Infections: Behavioral Counseling",
+    "edition": "2020",
+    "summary": "sexually active adolescents and adults at increased risk (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/sexually-transmitted-infections-behavioral-counseling",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-skin-cancer-counseling",
+    "title": "USPSTF: Skin Cancer Prevention: Behavioral Counseling",
+    "edition": "2018",
+    "summary": "young adults, adolescents, children, and parents of young children (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/skin-cancer-counseling",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-statin-use-in-adults-preventive-medication",
+    "title": "USPSTF: Statin Use for the Primary Prevention of Cardiovascular Disease in Adults: Preventive Medication",
+    "edition": "2022",
+    "summary": "adults aged 40 to 75 years who have 1 or more cardiovascular risk factors and an estimated 10-year cardiovascular disease (cvd) risk of 10% or greater (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/statin-use-in-adults-preventive-medication",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-syphilis-infection-in-pregnancy-screening",
+    "title": "USPSTF: Syphilis Infection During Pregnancy: Screening",
+    "edition": "2025",
+    "summary": "asymptomatic pregnant women (grade A)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/syphilis-infection-in-pregnancy-screening",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-syphilis-infection-nonpregnant-adults-adolescents-sc",
+    "title": "USPSTF: Syphilis Infection in Nonpregnant Adolescents and Adults: Screening",
+    "edition": "2022",
+    "summary": "asymptomatic, nonpregnant adolescents and adults who are at increased risk for syphilis infection (grade A)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/syphilis-infection-nonpregnant-adults-adolescents-screening",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-tobacco-use-in-adults-and-pregnant-women-counseling",
+    "title": "USPSTF: Tobacco Smoking Cessation in Adults, Including Pregnant Persons: Interventions",
+    "edition": "2021",
+    "summary": "Nonpregnant adults (grade A). Pregnant persons (grade A)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/tobacco-use-in-adults-and-pregnant-women-counseling-and-interventions",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-tobacco-and-nicotine-use-prevention-in-children-and",
+    "title": "USPSTF: Tobacco Use in Children and Adolescents: Primary Care Interventions",
+    "edition": "2020",
+    "summary": "school-aged children and adolescents who have not started to use tobacco (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/tobacco-and-nicotine-use-prevention-in-children-and-adolescents-primary-care-interventions",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-unhealthy-alcohol-use-in-adolescents-and-adults-scre",
+    "title": "USPSTF: Unhealthy Alcohol Use in Adolescents and Adults: Screening and Behavioral Counseling Interventions",
+    "edition": "2018",
+    "summary": "adults 18 years or older, including pregnant women (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/unhealthy-alcohol-use-in-adolescents-and-adults-screening-and-behavioral-counseling-interventions",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-drug-use-illicit-screening",
+    "title": "USPSTF: Unhealthy Drug Use: Screening",
+    "edition": "2020",
+    "summary": "adults age 18 years or older (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/drug-use-illicit-screening",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-vision-in-children-ages-6-months-to-5-years-screenin",
+    "title": "USPSTF: Vision in Children Ages 6 Months to 5 Years: Screening",
+    "edition": "2017",
+    "summary": "children aged 3 to 5 years (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/vision-in-children-ages-6-months-to-5-years-screening",
+    "type": "html"
+  },
+  {
+    "id": "uspstf-obesity-in-adults-interventions",
+    "title": "USPSTF: Weight Loss to Prevent Obesity-Related Morbidity and Mortality in Adults: Behavioral Interventions",
+    "edition": "2018",
+    "summary": "adults (grade B)",
+    "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/obesity-in-adults-interventions",
+    "type": "html"
+  },
+  {
+    "id": "cdc-child-schedule-by-age",
+    "title": "CDC Child and Adolescent Immunization Schedule by Age",
+    "edition": "2025",
+    "summary": "Which vaccines children and teens get from birth to 18 years and at what ages. Vaccines: hepatitis B, rotavirus, DTaP and Tdap, Hib, pneumococcal, polio, COVID-19, influenza, RSV, MMR, varicella (chickenpox), hepatitis A, HPV, meningococcal ACWY and B, dengue, and mpox",
+    "type": "cdc-media",
+    "mediaId": 133745
+  },
+  {
+    "id": "cdc-adult-schedule-by-age",
+    "title": "CDC Adult Immunization Schedule by Age",
+    "edition": "2025",
+    "summary": "Which vaccines adults 19 and older get at each age. Vaccines: COVID-19, influenza, RSV, Tdap and Td, MMR, varicella (chickenpox), zoster (shingles), HPV, pneumococcal, hepatitis A, hepatitis B, meningococcal ACWY and B, Hib, polio, and mpox",
+    "type": "cdc-media",
+    "mediaId": 266012
+  },
+  {
+    "id": "cdc-adult-schedule-by-condition",
+    "title": "CDC Adult Immunization Schedule by Medical Condition",
+    "edition": "2025",
+    "summary": "Which vaccines adults need for medical conditions and situations such as pregnancy, immune problems, diabetes, heart, lung, liver, or kidney disease, and health care work. Vaccines: COVID-19, influenza, RSV, Tdap, MMR, varicella (chickenpox), zoster (shingles), HPV, pneumococcal, hepatitis A, hepatitis B, meningococcal ACWY and B, Hib, polio, and mpox",
+    "type": "cdc-media",
+    "mediaId": 266010
+  },
+  {
+    "id": "va-dod-hypertension",
+    "title": "VA-DoD Hypertension Guideline",
+    "edition": "2026",
+    "summary": "High blood pressure in adults: diagnosis, home and office measurement, blood pressure goals, and choice of medications",
+    "url": "https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/htn/HTN-CPG_2026-Guideline_final_20260827.pdf",
+    "type": "pdf"
+  },
+  {
+    "id": "va-dod-lipids",
+    "title": "VA-DoD Lipids Guideline",
+    "edition": "2025",
+    "summary": "Cholesterol and heart disease risk in adults: risk assessment, statins and other lipid-lowering drugs, and lab monitoring",
+    "url": "https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/lipids/Lipids-CPG_2025-Guideline_final_20260106.pdf",
+    "type": "pdf"
+  },
+  {
+    "id": "va-dod-type-2-diabetes",
+    "title": "VA-DoD Type 2 Diabetes Guideline",
+    "edition": "2023",
+    "summary": "Type 2 diabetes in adults: A1c goals, glucose monitoring, diabetes medications, and heart and kidney protection",
+    "url": "https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/diabetes/VADOD-Diabetes-CPG_Final_508.pdf",
+    "type": "pdf"
+  },
+  {
+    "id": "va-dod-ckd",
+    "title": "VA-DoD Chronic Kidney Disease Guideline",
+    "edition": "2025",
+    "summary": "Chronic kidney disease in adults seen in primary care: eGFR and urine albumin testing, staging, blood pressure, and medications that protect the kidneys",
+    "url": "https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/ckd/CKD-CPG_2025-Guideline_final_20250509.pdf",
+    "type": "pdf"
+  },
+  {
+    "id": "va-dod-obesity",
+    "title": "VA-DoD Overweight and Obesity Guideline",
+    "edition": "2025",
+    "summary": "Overweight and obesity in adults: weight assessment, lifestyle and behavior programs, weight-loss medicines, and bariatric surgery referral",
+    "url": "https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/obesity/OBE-CPG_2025-Guideline_final_20251105.pdf",
+    "type": "pdf"
+  },
+  {
+    "id": "va-dod-asthma",
+    "title": "VA-DoD Asthma Guideline",
+    "edition": "2025",
+    "summary": "Asthma in adults and teens in primary care: diagnosis, inhalers and controller medicines, flare-ups, and monitoring",
+    "url": "https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/asthma/Asthma-CPG_2025-Guideline_final_20250528.pdf",
+    "type": "pdf"
+  },
+  {
+    "id": "va-dod-tobacco",
+    "title": "VA-DoD Tobacco Use Treatment Guideline",
+    "edition": "2026",
+    "summary": "Quitting smoking, vaping, and other tobacco: counseling, nicotine replacement, varenicline, bupropion, and relapse",
+    "url": "https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/tobacco/Tobacco-Cessation-CPG_2026-Guideline_final_20260109.pdf",
+    "type": "pdf"
+  },
+  {
+    "id": "va-dod-osteoarthritis",
+    "title": "VA-DoD Hip and Knee Osteoarthritis Guideline",
+    "edition": "2026",
+    "summary": "Hip and knee arthritis without surgery: exercise, weight loss, pain medicines, injections, and devices",
+    "url": "https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/OA/Osteoarthritis-CPG_2026-Guideline_final_20260618.pdf",
+    "type": "pdf"
+  },
+  {
+    "id": "va-dod-insomnia-sleep-apnea",
+    "title": "VA-DoD Insomnia and Obstructive Sleep Apnea Guideline",
+    "edition": "2025",
+    "summary": "Chronic insomnia and obstructive sleep apnea: diagnosis, sleep studies, CBT for insomnia, sleep medicines, and CPAP",
+    "url": "https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/insomnia/I-OSA-CPG_2025-Guideline_final_20250915.pdf",
+    "type": "pdf"
+  },
+  {
+    "id": "va-dod-menopause",
+    "title": "VA-DoD Menopause Guideline",
+    "edition": "2026",
+    "summary": "Menopause symptoms such as hot flashes, sleep and mood changes, vaginal dryness: hormone therapy and non-hormone options",
+    "url": "https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/WH/menopause/Menopause-CPG_2026-Guideline_v1_20260930.pdf",
+    "type": "pdf"
+  },
+  {
+    "id": "va-dod-depression",
+    "title": "VA-DoD Major Depressive Disorder Guideline",
+    "edition": "2022",
+    "summary": "Depression in adults: screening, diagnosis, psychotherapy, antidepressant medicines, and treatment that is not working",
+    "url": "https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/MH/mdd/VADODMDDCPGFinal508.pdf",
+    "type": "pdf"
+  },
+  {
+    "id": "va-dod-low-back-pain",
+    "title": "VA-DoD Low Back Pain Guideline",
+    "edition": "2022",
+    "summary": "Low back pain in adults: when to image, exercise and physical therapy, pain medicines, and other treatments",
+    "url": "https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/Pain/lbp/VADODLBPCPGFinal508.pdf",
+    "type": "pdf"
+  },
+  {
+    "id": "va-dod-copd",
+    "title": "VA-DoD COPD Guideline",
+    "edition": "2026",
+    "summary": "Chronic obstructive pulmonary disease (COPD, emphysema, chronic bronchitis): diagnosis, inhalers, flare-ups, oxygen, and rehabilitation",
+    "url": "https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/copd/COPD-CPG_2026-CPG_final_20261007.pdf",
+    "type": "pdf"
+  },
+  {
+    "id": "cdc-signs-and-symptoms-of-cholera",
+    "title": "CDC: Signs and Symptoms of Cholera",
+    "edition": "2025",
+    "summary": "Cholera can kill quickly. Seek medical care if you have diarrhea, vomiting, & these other symptoms.",
+    "type": "cdc-media",
+    "mediaId": 121116
+  },
+  {
+    "id": "cdc-treating-cholera",
+    "title": "CDC: Treating Cholera",
+    "edition": "2025",
+    "summary": "Replacing lost fluids through rehydration therapy is essential to treating cholera.",
+    "type": "cdc-media",
+    "mediaId": 121119
+  },
+  {
+    "id": "cdc-ebola-disease-basics",
+    "title": "CDC: Ebola Disease Basics",
+    "edition": "2026",
+    "summary": "Learn about Ebola disease, where it occurs, symptoms, and how to protect yourself.",
+    "type": "cdc-media",
+    "mediaId": 121340
+  },
+  {
+    "id": "cdc-pneumonia-prevention-and-control",
+    "title": "CDC: Pneumonia Prevention and Control",
+    "edition": "2026",
+    "summary": "Lower your risk of pneumonia with vaccines and other healthy living practices.",
+    "type": "cdc-media",
+    "mediaId": 121494
+  },
+  {
+    "id": "cdc-treatment-of-whooping-cough",
+    "title": "CDC: Treatment of Whooping Cough",
+    "edition": "2025",
+    "summary": "Early antibiotic treatment may make the infection less serious.",
+    "type": "cdc-media",
+    "mediaId": 122021
+  },
+  {
+    "id": "cdc-about-whooping-cough",
+    "title": "CDC: About Whooping Cough",
+    "edition": "2026",
+    "summary": "Learn about whooping cough: what it is and how to prevent it.",
+    "type": "cdc-media",
+    "mediaId": 122024
+  },
+  {
+    "id": "cdc-rabies-prevention-and-control-rabies-cdc",
+    "title": "CDC: Rabies Prevention and Control | Rabies | CDC",
+    "edition": "2024",
+    "summary": "An animal just bit me, what should I do?",
+    "type": "cdc-media",
+    "mediaId": 122113
+  },
+  {
+    "id": "cdc-central-line-associated-bloodstream-infection-clab",
+    "title": "CDC: Central Line-associated Bloodstream Infection (CLABSI) Basics",
+    "edition": "2025",
+    "summary": "CLABSIs occur when germs enter the bloodstream through a central line.",
+    "type": "cdc-media",
+    "mediaId": 122116
+  },
+  {
+    "id": "cdc-how-to-prevent-pink-eye",
+    "title": "CDC: How to Prevent Pink Eye",
+    "edition": "2024",
+    "summary": "Learn how to prevent catching and spreading pink eye.",
+    "type": "cdc-media",
+    "mediaId": 122119
+  },
+  {
+    "id": "cdc-vaccines-immunizations-vaccines-immunizations-cdc",
+    "title": "CDC: Vaccines & Immunizations | Vaccines & Immunizations | CDC",
+    "edition": "2023",
+    "summary": "CDC's Vaccines and Immunizations web site HOME PAGE.",
+    "type": "cdc-media",
+    "mediaId": 122164
+  },
+  {
+    "id": "cdc-about-ehrlichiosis",
+    "title": "CDC: About Ehrlichiosis",
+    "edition": "2024",
+    "summary": "Lone star and blacklegged ticks can spread bacteria through bites, which may cause ehrlichiosis.",
+    "type": "cdc-media",
+    "mediaId": 122480
+  },
+  {
+    "id": "cdc-chronic-symptoms-and-lyme-disease",
+    "title": "CDC: Chronic Symptoms and Lyme Disease",
+    "edition": "2026",
+    "summary": "After antibiotic treatment for Lyme disease, some people may experience prolonged symptoms.",
+    "type": "cdc-media",
+    "mediaId": 122737
+  },
+  {
+    "id": "cdc-signs-and-symptoms-of-untreated-lyme-disease",
+    "title": "CDC: Signs and Symptoms of Untreated Lyme Disease",
+    "edition": "2024",
+    "summary": "Lyme disease can cause fever, rash, and arthritis. Seek prompt medical care if symptoms appear.",
+    "type": "cdc-media",
+    "mediaId": 122747
+  },
+  {
+    "id": "cdc-preventing-ticks-on-pets",
+    "title": "CDC: Preventing Ticks on Pets",
+    "edition": "2024",
+    "summary": "Pets can get sick from germs spread by ticks. Learn how to prevent ticks on pets.",
+    "type": "cdc-media",
+    "mediaId": 123002
+  },
+  {
+    "id": "cdc-preventing-tick-bites",
+    "title": "CDC: Preventing Tick Bites",
+    "edition": "2024",
+    "summary": "Reducing exposure to ticks is the best defense against tickborne diseases.",
+    "type": "cdc-media",
+    "mediaId": 123009
+  },
+  {
+    "id": "cdc-about-ticks-and-tickborne-disease",
+    "title": "CDC: About Ticks and Tickborne Disease",
+    "edition": "2024",
+    "summary": "General information on diseases spread by ticks and signs and symptoms of tickborne disease.",
+    "type": "cdc-media",
+    "mediaId": 123010
+  },
+  {
+    "id": "cdc-cancer-screening-tests",
+    "title": "CDC: Cancer Screening Tests",
+    "edition": "2025",
+    "summary": "Screening tests can find several types of cancer early.",
+    "type": "cdc-media",
+    "mediaId": 123232
+  },
+  {
+    "id": "cdc-preventing-cancer",
+    "title": "CDC: Preventing Cancer",
+    "edition": "2025",
+    "summary": "You can lower your risk of getting many common kinds of cancer.",
+    "type": "cdc-media",
+    "mediaId": 123238
+  },
+  {
+    "id": "cdc-vaccines-shots",
+    "title": "CDC: Vaccines (Shots)",
+    "edition": "2024",
+    "summary": "The HPV vaccine and the hepatitis B vaccine can help prevent cancer.",
+    "type": "cdc-media",
+    "mediaId": 123239
+  },
+  {
+    "id": "cdc-about-tuberculosis",
+    "title": "CDC: About Tuberculosis",
+    "edition": "2025",
+    "summary": "Tuberculosis is a disease caused by germs that are spread from person to person through the air.",
+    "type": "cdc-media",
+    "mediaId": 123757
+  },
+  {
+    "id": "cdc-about-asthma",
+    "title": "CDC: About Asthma",
+    "edition": "2023",
+    "summary": "Basic information about what asthma is, how it is diagnosed, and how to control it.",
+    "type": "cdc-media",
+    "mediaId": 123816
+  },
+  {
+    "id": "cdc-about-folic-acid",
+    "title": "CDC: About Folic Acid",
+    "edition": "2026",
+    "summary": "Learn about folic acid, its benefits, and role in preventing neural tube defects.",
+    "type": "cdc-media",
+    "mediaId": 123982
+  },
+  {
+    "id": "cdc-symptoms-of-breast-cancer",
+    "title": "CDC: Symptoms of Breast Cancer",
+    "edition": "2026",
+    "summary": "A list of possible symptoms of breast cancer.",
+    "type": "cdc-media",
+    "mediaId": 124207
+  },
+  {
+    "id": "cdc-about-genital-hpv-infection",
+    "title": "CDC: About Genital HPV Infection",
+    "edition": "2025",
+    "summary": "This page answers basic questions about human papillomavirus (HPV).",
+    "type": "cdc-media",
+    "mediaId": 124248
+  },
+  {
+    "id": "cdc-treating-flu-with-antiviral-drugs",
+    "title": "CDC: Treating Flu with Antiviral Drugs",
+    "edition": "2024",
+    "summary": "Learn about flu treatment with antiviral drugs.",
+    "type": "cdc-media",
+    "mediaId": 124616
+  },
+  {
+    "id": "cdc-symptoms-of-adhd",
+    "title": "CDC: Symptoms of ADHD",
+    "edition": "2026",
+    "summary": "ADHD symptoms can change over time and present themselves in three different ways.",
+    "type": "cdc-media",
+    "mediaId": 124799
+  },
+  {
+    "id": "cdc-treatment-of-adhd",
+    "title": "CDC: Treatment of ADHD",
+    "edition": "2026",
+    "summary": "ADHD treatment recommendations vary by age group.",
+    "type": "cdc-media",
+    "mediaId": 124806
+  },
+  {
+    "id": "cdc-about-meningitis",
+    "title": "CDC: About Meningitis",
+    "edition": "2025",
+    "summary": "Many things can cause the lining of the brain and spinal cord to swell.",
+    "type": "cdc-media",
+    "mediaId": 124837
+  },
+  {
+    "id": "cdc-about-fungal-meningitis",
+    "title": "CDC: About Fungal Meningitis",
+    "edition": "2025",
+    "summary": "Fungal meningitis is uncommon, difficult to diagnose, and treated with antifungal medicines.",
+    "type": "cdc-media",
+    "mediaId": 124838
+  },
+  {
+    "id": "cdc-about-parasitic-meningitis",
+    "title": "CDC: About Parasitic Meningitis",
+    "edition": "2025",
+    "summary": "Three parasites are the main causes of parasitic meningitis, which is uncommon and hard to diagnose.",
+    "type": "cdc-media",
+    "mediaId": 124840
+  },
+  {
+    "id": "cdc-about-viral-meningitis",
+    "title": "CDC: About Viral Meningitis",
+    "edition": "2025",
+    "summary": "Many viruses can cause meningitis. How they spread and who is at risk varies by virus.",
+    "type": "cdc-media",
+    "mediaId": 124841
+  },
+  {
+    "id": "cdc-preventing-tuberculosis",
+    "title": "CDC: Preventing Tuberculosis",
+    "edition": "2025",
+    "summary": "Take steps to prevent tuberculosis (TB).",
+    "type": "cdc-media",
+    "mediaId": 124858
+  },
+  {
+    "id": "cdc-treating-tuberculosis",
+    "title": "CDC: Treating Tuberculosis",
+    "edition": "2025",
+    "summary": "Both inactive tuberculosis (TB) and active TB disease can be treated.",
+    "type": "cdc-media",
+    "mediaId": 124861
+  },
+  {
+    "id": "cdc-about-drug-resistant-tuberculosis-disease",
+    "title": "CDC: About Drug-Resistant Tuberculosis Disease",
+    "edition": "2023",
+    "summary": "TB germs can become resistant to the medicines used to treat TB disease.",
+    "type": "cdc-media",
+    "mediaId": 124863
+  },
+  {
+    "id": "cdc-testing-for-tuberculosis",
+    "title": "CDC: Testing for Tuberculosis",
+    "edition": "2024",
+    "summary": "The tuberculosis (TB) blood test and the TB skin test are the two types of tests for TB infection.",
+    "type": "cdc-media",
+    "mediaId": 124866
+  },
+  {
+    "id": "cdc-about-bartonella",
+    "title": "CDC: About Bartonella",
+    "edition": "2026",
+    "summary": "Bartonellosis is a disease caused by Bartonella bacteria spread by fleas, body lice, and sand flies.",
+    "type": "cdc-media",
+    "mediaId": 124941
+  },
+  {
+    "id": "cdc-about-sodium-and-health",
+    "title": "CDC: About Sodium and Health",
+    "edition": "2026",
+    "summary": "Most people eat too much sodium from everyday foods. Too much sodium is bad for your health.",
+    "type": "cdc-media",
+    "mediaId": 125427
+  },
+  {
+    "id": "cdc-about-stroke",
+    "title": "CDC: About Stroke",
+    "edition": "2024",
+    "summary": "Learn about what causes stroke, what happens during stroke, and when to call 9-1-1.",
+    "type": "cdc-media",
+    "mediaId": 125429
+  },
+  {
+    "id": "cdc-signs-and-symptoms-of-stroke",
+    "title": "CDC: Signs and Symptoms of Stroke",
+    "edition": "2026",
+    "summary": "Learn about the signs of stroke in men and women and when to seek emergency treatment.",
+    "type": "cdc-media",
+    "mediaId": 125431
+  },
+  {
+    "id": "cdc-preventing-hiv-with-prep",
+    "title": "CDC: Preventing HIV with PrEP",
+    "edition": "2026",
+    "summary": "Information about using PrEP for HIV prevention.",
+    "type": "cdc-media",
+    "mediaId": 126352
+  },
+  {
+    "id": "cdc-about-anthrax",
+    "title": "CDC: About Anthrax",
+    "edition": "2026",
+    "summary": "Anthrax is a serious bacterial disease found naturally in soil that affects animals and people.",
+    "type": "cdc-media",
+    "mediaId": 126565
+  },
+  {
+    "id": "cdc-about-spina-bifida",
+    "title": "CDC: About Spina Bifida",
+    "edition": "2026",
+    "summary": "Spina bifida is a condition that affects the spine and is usually apparent at birth.",
+    "type": "cdc-media",
+    "mediaId": 126809
+  },
+  {
+    "id": "cdc-about-hantavirus",
+    "title": "CDC: About Hantavirus",
+    "edition": "2024",
+    "summary": "An overview of hantavirus, how it's spread and how it can be treated.",
+    "type": "cdc-media",
+    "mediaId": 127008
+  },
+  {
+    "id": "cdc-about-surveys",
+    "title": "CDC: About Surveys",
+    "edition": "2023",
+    "summary": "Browse different surveys related to commercial tobacco use.",
+    "type": "cdc-media",
+    "mediaId": 127058
+  },
+  {
+    "id": "cdc-about-birth-defects",
+    "title": "CDC: About Birth Defects",
+    "edition": "2025",
+    "summary": "Birth defects are structural changes that are present at birth.",
+    "type": "cdc-media",
+    "mediaId": 127168
+  },
+  {
+    "id": "cdc-about-infectious-mononucleosis-mono",
+    "title": "CDC: About Infectious Mononucleosis (Mono)",
+    "edition": "2024",
+    "summary": "Learn about mono symptoms, how it's spread, and how to prevent it.",
+    "type": "cdc-media",
+    "mediaId": 127309
+  },
+  {
+    "id": "cdc-preventing-bird-flu-infections",
+    "title": "CDC: Preventing Bird Flu Infections",
+    "edition": "2025",
+    "summary": "The best way to prevent H5N1 bird flu is to avoid sources of exposure whenever possible.",
+    "type": "cdc-media",
+    "mediaId": 127483
+  },
+  {
+    "id": "cdc-about-bird-flu",
+    "title": "CDC: About Bird Flu",
+    "edition": "2024",
+    "summary": "There are four types of influenza viruses. Many wild birds are hosts for avian influenza A viruses.",
+    "type": "cdc-media",
+    "mediaId": 127536
+  },
+  {
+    "id": "cdc-about-mycoplasma-pneumoniae-infection",
+    "title": "CDC: About Mycoplasma pneumoniae Infection",
+    "edition": "2026",
+    "summary": "These bacteria can cause respiratory tract infections that are generally mild.",
+    "type": "cdc-media",
+    "mediaId": 127672
+  },
+  {
+    "id": "cdc-mycoplasma-pneumoniae-infection-causes-and-how-it",
+    "title": "CDC: Mycoplasma pneumoniae Infection: Causes and How It Spreads",
+    "edition": "2026",
+    "summary": "Mycoplasma pneumoniae infections are caused by bacteria spread through coughing or sneezing.",
+    "type": "cdc-media",
+    "mediaId": 127673
+  },
+  {
+    "id": "cdc-cervical-cancer-basics",
+    "title": "CDC: Cervical Cancer Basics",
+    "edition": "2023",
+    "summary": "Screening tests and the HPV vaccine can help prevent cervical cancer.",
+    "type": "cdc-media",
+    "mediaId": 128710
+  },
+  {
+    "id": "cdc-preventing-hpv-associated-cancers",
+    "title": "CDC: Preventing HPV-Associated Cancers",
+    "edition": "2024",
+    "summary": "The HPV vaccine and cervical cancer screening can help prevent cancer.",
+    "type": "cdc-media",
+    "mediaId": 128756
+  },
+  {
+    "id": "cdc-diagnosing-breast-cancer",
+    "title": "CDC: Diagnosing Breast Cancer",
+    "edition": "2026",
+    "summary": "Tests used to find or diagnose breast cancer.",
+    "type": "cdc-media",
+    "mediaId": 128781
+  },
+  {
+    "id": "cdc-about-ncird",
+    "title": "CDC: About NCIRD",
+    "edition": "2023",
+    "summary": "Find out more about NCIRD's mission, goals, and activities.",
+    "type": "cdc-media",
+    "mediaId": 129263
+  },
+  {
+    "id": "cdc-about-shigella-infection",
+    "title": "CDC: About Shigella Infection",
+    "edition": "2023",
+    "summary": "What Shigella is, who is at higher risk of infection, and how to protect yourself",
+    "type": "cdc-media",
+    "mediaId": 129342
+  },
+  {
+    "id": "cdc-risk-factors-for-meningococcal-disease",
+    "title": "CDC: Risk Factors for Meningococcal Disease",
+    "edition": "2023",
+    "summary": "The most effective way to protect you and your child against certain types of meningococcal is to complete the childhood vaccine schedule.",
+    "type": "cdc-media",
+    "mediaId": 129403
+  },
+  {
+    "id": "cdc-meningococcal-disease-symptoms-and-complications",
+    "title": "CDC: Meningococcal Disease Symptoms and Complications",
+    "edition": "2026",
+    "summary": "Seek medical attention if you have symptoms of meningococcal meningitis or bloodstream infections.",
+    "type": "cdc-media",
+    "mediaId": 129405
+  },
+  {
+    "id": "cdc-pneumococcal-disease-in-adults-and-vaccines-to-pre",
+    "title": "CDC: Pneumococcal Disease in Adults and Vaccines to Prevent It",
+    "edition": "2026",
+    "summary": "Pneumococcal disease information for adults including vaccine recommendations",
+    "type": "cdc-media",
+    "mediaId": 129407
+  },
+  {
+    "id": "cdc-pneumococcal-vaccination",
+    "title": "CDC: Pneumococcal Vaccination",
+    "edition": "2024",
+    "summary": "Young children, older adults, and people with certain risk conditions need pneumococcal vaccines.",
+    "type": "cdc-media",
+    "mediaId": 129413
+  },
+  {
+    "id": "cdc-screening-for-autism-spectrum-disorder",
+    "title": "CDC: Screening for Autism Spectrum Disorder",
+    "edition": "2025",
+    "summary": "Screening and diagnosis of autism spectrum disorder.",
+    "type": "cdc-media",
+    "mediaId": 129528
+  },
+  {
+    "id": "cdc-methicillin-resistant-staphylococcus-aureus-mrsa-b",
+    "title": "CDC: Methicillin-resistant Staphylococcus aureus (MRSA) Basics",
+    "edition": "2024",
+    "summary": "Protect yourself and your family from potentially serious MRSA infections.",
+    "type": "cdc-media",
+    "mediaId": 129548
+  },
+  {
+    "id": "cdc-about-norovirus",
+    "title": "CDC: About Norovirus",
+    "edition": "2024",
+    "summary": "Norovirus is the leading cause of vomiting and diarrhea, and foodborne illness in the United States.",
+    "type": "cdc-media",
+    "mediaId": 129566
+  },
+  {
+    "id": "cdc-best-practices-for-use-of-polymerase-chain-reactio",
+    "title": "CDC: Best Practices for Use of Polymerase Chain Reaction for Diagnosing Pertussis",
+    "edition": "2025",
+    "summary": "Learn best practices for using polymerase chain reaction (PCR) for diagnosing pertussis.",
+    "type": "cdc-media",
+    "mediaId": 129742
+  },
+  {
+    "id": "cdc-laboratory-testing-for-pertussis",
+    "title": "CDC: Laboratory Testing for Pertussis",
+    "edition": "2025",
+    "summary": "Several test methods can be used to diagnose pertussis.",
+    "type": "cdc-media",
+    "mediaId": 129827
+  },
+  {
+    "id": "cdc-treatment-of-pertussis",
+    "title": "CDC: Treatment of Pertussis",
+    "edition": "2025",
+    "summary": "Guidance on treatment of pertussis for people of all ages.",
+    "type": "cdc-media",
+    "mediaId": 129897
+  },
+  {
+    "id": "cdc-about-rubella",
+    "title": "CDC: About Rubella",
+    "edition": "2024",
+    "summary": "Learn about rubella, how contagious it is, who is at risk, symptoms, and how to prevent spread.",
+    "type": "cdc-media",
+    "mediaId": 130558
+  },
+  {
+    "id": "cdc-measles-symptoms-and-complications",
+    "title": "CDC: Measles Symptoms and Complications",
+    "edition": "2026",
+    "summary": "First signs of measles are fever, cough, & runny nose 7–14 days after infection.",
+    "type": "cdc-media",
+    "mediaId": 131306
+  },
+  {
+    "id": "cdc-symptoms-of-whooping-cough",
+    "title": "CDC: Symptoms of Whooping Cough",
+    "edition": "2025",
+    "summary": "See a healthcare provider if you have whooping cough symptoms.",
+    "type": "cdc-media",
+    "mediaId": 131707
+  },
+  {
+    "id": "cdc-about-escherichia-coli-infection",
+    "title": "CDC: About Escherichia coli Infection",
+    "edition": "2024",
+    "summary": "Learn the basics of E. coli infection.",
+    "type": "cdc-media",
+    "mediaId": 131785
+  },
+  {
+    "id": "cdc-about-rat-bite-fever-rbf",
+    "title": "CDC: About Rat Bite Fever (RBF)",
+    "edition": "2024",
+    "summary": "An overview of Rat bite fever, the risk factors, symptoms and treatment",
+    "type": "cdc-media",
+    "mediaId": 131982
+  },
+  {
+    "id": "cdc-about-leptospirosis",
+    "title": "CDC: About Leptospirosis",
+    "edition": "2026",
+    "summary": "General information about leptospirosis, including symptoms, treatment, prevention, and resources.",
+    "type": "cdc-media",
+    "mediaId": 131997
+  },
+  {
+    "id": "cdc-cancer-prevention-starts-in-childhood",
+    "title": "CDC: Cancer Prevention Starts in Childhood",
+    "edition": "2025",
+    "summary": "You can lower your children’s risk of getting cancer later in life.",
+    "type": "cdc-media",
+    "mediaId": 132129
+  },
+  {
+    "id": "cdc-about-venous-thromboembolism-blood-clots",
+    "title": "CDC: About Venous Thromboembolism (Blood Clots)",
+    "edition": "2025",
+    "summary": "Learn about symptoms, risk factors, and treatment for venous thromboembolism (blood clots).",
+    "type": "cdc-media",
+    "mediaId": 132146
+  },
+  {
+    "id": "cdc-about-sexually-transmitted-infections-stis",
+    "title": "CDC: About Sexually Transmitted Infections (STIs)",
+    "edition": "2024",
+    "summary": "What are STIs? How are they different from STDs? How are they transmitted?",
+    "type": "cdc-media",
+    "mediaId": 132865
+  },
+  {
+    "id": "cdc-preventing-zika",
+    "title": "CDC: Preventing Zika",
+    "edition": "2025",
+    "summary": "Prevent Zika by protecting yourself from mosquito bites, by using condoms, or by not having sex.",
+    "type": "cdc-media",
+    "mediaId": 133844
+  },
+  {
+    "id": "cdc-zika-symptoms-and-complications",
+    "title": "CDC: Zika Symptoms and Complications",
+    "edition": "2024",
+    "summary": "Many people with Zika have no or mild symptoms. Infection during pregnancy can cause birth defects.",
+    "type": "cdc-media",
+    "mediaId": 133845
+  },
+  {
+    "id": "cdc-preventing-shigella-infection",
+    "title": "CDC: Preventing Shigella Infection",
+    "edition": "2024",
+    "summary": "Information about how to prevent Shigella infection",
+    "type": "cdc-media",
+    "mediaId": 217791
+  },
+  {
+    "id": "cdc-preventing-epilepsy",
+    "title": "CDC: Preventing Epilepsy",
+    "edition": "2024",
+    "summary": "A description of health habits that someone can do to help prevent epilepsy.",
+    "type": "cdc-media",
+    "mediaId": 217943
+  },
+  {
+    "id": "cdc-hantavirus-prevention",
+    "title": "CDC: Hantavirus Prevention",
+    "edition": "2024",
+    "summary": "How to clean up after pet rodents and safely clean up after infestations.",
+    "type": "cdc-media",
+    "mediaId": 217989
+  },
+  {
+    "id": "cdc-about-stillbirth",
+    "title": "CDC: About Stillbirth",
+    "edition": "2026",
+    "summary": "Stillbirth is more common than people may realize and remains a sad reality for many families.",
+    "type": "cdc-media",
+    "mediaId": 218136
+  },
+  {
+    "id": "cdc-preventing-powassan",
+    "title": "CDC: Preventing Powassan",
+    "edition": "2024",
+    "summary": "Protect yourself and your family from tick bites to prevent Powassan.",
+    "type": "cdc-media",
+    "mediaId": 219407
+  },
+  {
+    "id": "cdc-about-hand-foot-and-mouth-disease",
+    "title": "CDC: About Hand, Foot, and Mouth Disease",
+    "edition": "2024",
+    "summary": "Learn about hand, foot, and mouth disease. It is very contagious and most common in young children.",
+    "type": "cdc-media",
+    "mediaId": 219634
+  },
+  {
+    "id": "cdc-hib-vaccination",
+    "title": "CDC: Hib Vaccination",
+    "edition": "2024",
+    "summary": "All children younger than 5 years old should get Haemophilus influenzae type b or Hib vaccines.",
+    "type": "cdc-media",
+    "mediaId": 220550
+  },
+  {
+    "id": "cdc-diphtheria-symptoms-and-complications",
+    "title": "CDC: Diphtheria Symptoms and Complications",
+    "edition": "2026",
+    "summary": "Respiratory diphtheria causes more serious symptoms and disease than diphtheria skin infections.",
+    "type": "cdc-media",
+    "mediaId": 220625
+  },
+  {
+    "id": "cdc-specimen-collection-for-varicella-zoster-virus-vzv",
+    "title": "CDC: Specimen Collection for Varicella-Zoster Virus (VZV) Testing",
+    "edition": "2024",
+    "summary": "Learn about collecting and shipping specimens for VZV testing, and sources for suitable supplies.",
+    "type": "cdc-media",
+    "mediaId": 220907
+  },
+  {
+    "id": "cdc-veterinary-guidance-for-testing-for-seoul-virus-in",
+    "title": "CDC: Veterinary Guidance for Testing for Seoul Virus in Pet Rats",
+    "edition": "2024",
+    "summary": "Seoul virus in rats: testing, diagnostic, and safety guidance for veterinarians",
+    "type": "cdc-media",
+    "mediaId": 221177
+  },
+  {
+    "id": "cdc-about-shingles-herpes-zoster",
+    "title": "CDC: About Shingles (Herpes Zoster)",
+    "edition": "2025",
+    "summary": "Identify common symptoms, causes and spread, treatment, and risks of shingles (herpes zoster).",
+    "type": "cdc-media",
+    "mediaId": 221883
+  },
+  {
+    "id": "cdc-risk-factors-for-stroke",
+    "title": "CDC: Risk Factors for Stroke",
+    "edition": "2024",
+    "summary": "Learn about stroke risk and which risk factors you can manage.",
+    "type": "cdc-media",
+    "mediaId": 221885
+  },
+  {
+    "id": "cdc-tetanus-vaccination",
+    "title": "CDC: Tetanus Vaccination",
+    "edition": "2026",
+    "summary": "Tetanus vaccination is recommended for people of all ages.",
+    "type": "cdc-media",
+    "mediaId": 222444
+  },
+  {
+    "id": "cdc-pneumococcal-disease-symptoms-and-complications",
+    "title": "CDC: Pneumococcal Disease Symptoms and Complications",
+    "edition": "2026",
+    "summary": "Pneumococcal disease symptoms depend on which part of the body is affected.",
+    "type": "cdc-media",
+    "mediaId": 222655
+  },
+  {
+    "id": "cdc-about-giardia-infection",
+    "title": "CDC: About Giardia Infection",
+    "edition": "2024",
+    "summary": "Giardia is a tiny parasite (germ) that spreads easily and causes diarrhea.",
+    "type": "cdc-media",
+    "mediaId": 223502
+  },
+  {
+    "id": "cdc-tetanus-causes-and-how-it-spreads",
+    "title": "CDC: Tetanus: Causes and How It Spreads",
+    "edition": "2026",
+    "summary": "What you need to know about the cause of tetanus infection.",
+    "type": "cdc-media",
+    "mediaId": 223524
+  },
+  {
+    "id": "cdc-mantoux-tuberculin-skin-testing-fact-sheet",
+    "title": "CDC: Mantoux Tuberculin Skin Testing Fact Sheet",
+    "edition": "2024",
+    "summary": "Health care providers can use this fact sheet to learn about the Mantoux tuberculin skin test.",
+    "type": "cdc-media",
+    "mediaId": 223532
+  },
+  {
+    "id": "cdc-about-rotavirus",
+    "title": "CDC: About Rotavirus",
+    "edition": "2024",
+    "summary": "Learn about rotavirus symptoms, how it spreads, and protecting your child with the vaccine.",
+    "type": "cdc-media",
+    "mediaId": 223736
+  },
+  {
+    "id": "cdc-preventing-stroke",
+    "title": "CDC: Preventing Stroke",
+    "edition": "2024",
+    "summary": "Prevent stroke by making healthy living choices and managing your health conditions",
+    "type": "cdc-media",
+    "mediaId": 224197
+  },
+  {
+    "id": "cdc-about-group-a-strep-infection",
+    "title": "CDC: About Group A Strep Infection",
+    "edition": "2025",
+    "summary": "These bacteria spread easily and can cause infections like strep throat, impetigo, and cellulitis.",
+    "type": "cdc-media",
+    "mediaId": 224478
+  },
+  {
+    "id": "cdc-diphtheria-vaccination",
+    "title": "CDC: Diphtheria Vaccination",
+    "edition": "2026",
+    "summary": "People of all ages should get vaccinated against diphtheria.",
+    "type": "cdc-media",
+    "mediaId": 224548
+  },
+  {
+    "id": "cdc-pneumococcal-disease-causes-and-how-it-spreads",
+    "title": "CDC: Pneumococcal Disease: Causes and How It Spreads",
+    "edition": "2026",
+    "summary": "Learn what causes pneumococcal disease, how these bacteria spread, and who's most at risk.",
+    "type": "cdc-media",
+    "mediaId": 224799
+  },
+  {
+    "id": "cdc-about-sleep",
+    "title": "CDC: About Sleep",
+    "edition": "2024",
+    "summary": "General information and recommendations about sleep and sleep health.",
+    "type": "cdc-media",
+    "mediaId": 225480
+  },
+  {
+    "id": "cdc-prevention-epicenters",
+    "title": "CDC: Prevention Epicenters",
+    "edition": "2024",
+    "summary": "CDC's Prevention Epicenters Program works to improve healthcare quality and patient safety.",
+    "type": "cdc-media",
+    "mediaId": 226159
+  },
+  {
+    "id": "cdc-hfmd-causes-and-how-it-spreads",
+    "title": "CDC: HFMD: Causes and How It Spreads",
+    "edition": "2024",
+    "summary": "HFMD is caused by several viruses and spreads easily from person to person.",
+    "type": "cdc-media",
+    "mediaId": 226352
+  },
+  {
+    "id": "cdc-treatment-and-intervention-for-stroke",
+    "title": "CDC: Treatment and Intervention for Stroke",
+    "edition": "2024",
+    "summary": "If you have a stroke, you will receive emergency care, treatment, and rehabilitation",
+    "type": "cdc-media",
+    "mediaId": 226396
+  },
+  {
+    "id": "cdc-viral-hepatitis-prevention-priorities",
+    "title": "CDC: Viral Hepatitis Prevention Priorities",
+    "edition": "2026",
+    "summary": "Strategic priorities of NCHHSTP's Division of Viral Hepatitis",
+    "type": "cdc-media",
+    "mediaId": 227222
+  },
+  {
+    "id": "cdc-chickenpox-vaccine-saves-lives-infographic",
+    "title": "CDC: Chickenpox Vaccine Saves Lives Infographic",
+    "edition": "2024",
+    "summary": "Print resource showing the success of the chickenpox vaccine program over the first 25 years.",
+    "type": "cdc-media",
+    "mediaId": 227690
+  },
+  {
+    "id": "cdc-laboratory-testing-for-varicella-zoster-virus-vzv",
+    "title": "CDC: Laboratory Testing for Varicella-Zoster Virus (VZV)",
+    "edition": "2024",
+    "summary": "Learn about lab testing for varicella-zoster virus, the cause of chickenpox and shingles.",
+    "type": "cdc-media",
+    "mediaId": 227922
+  },
+  {
+    "id": "cdc-about-diphtheria",
+    "title": "CDC: About Diphtheria",
+    "edition": "2026",
+    "summary": "Learn about diphtheria: types, cause, risk factors, treatment, and prevention.",
+    "type": "cdc-media",
+    "mediaId": 227960
+  },
+  {
+    "id": "cdc-viral-hepatitis-basics",
+    "title": "CDC: Viral Hepatitis Basics",
+    "edition": "2025",
+    "summary": "Learn about the details and differences between hepatitis A, hepatitis B, and hepatitis C.",
+    "type": "cdc-media",
+    "mediaId": 228011
+  },
+  {
+    "id": "cdc-prevention",
+    "title": "CDC: Prevention",
+    "edition": "2026",
+    "summary": "Preventing anthrax before and after exposure to the disease.",
+    "type": "cdc-media",
+    "mediaId": 228904
+  },
+  {
+    "id": "cdc-about-the-national-center-for-emerging-and-zoonoti",
+    "title": "CDC: About the National Center for Emerging and Zoonotic Infectious Diseases",
+    "edition": "2025",
+    "summary": "NCEZID works to prevent, detect, and respond to emerging and zoonotic infectious diseases.",
+    "type": "cdc-media",
+    "mediaId": 229085
+  },
+  {
+    "id": "cdc-preventing-high-cholesterol",
+    "title": "CDC: Preventing High Cholesterol",
+    "edition": "2026",
+    "summary": "By living a healthy lifestyle, you can help keep your cholesterol in a healthy range.",
+    "type": "cdc-media",
+    "mediaId": 229679
+  },
+  {
+    "id": "cdc-about-haemophilus-influenzae-disease",
+    "title": "CDC: About Haemophilus influenzae Disease",
+    "edition": "2025",
+    "summary": "Learn about these infections, including types, treatment, and prevention.",
+    "type": "cdc-media",
+    "mediaId": 229771
+  },
+  {
+    "id": "cdc-risk-factors-for-high-cholesterol",
+    "title": "CDC: Risk Factors for High Cholesterol",
+    "edition": "2024",
+    "summary": "You can’t control some risk factors for high cholesterol, such as your age or your family history.",
+    "type": "cdc-media",
+    "mediaId": 230005
+  },
+  {
+    "id": "cdc-about-cholesterol",
+    "title": "CDC: About Cholesterol",
+    "edition": "2024",
+    "summary": "Learn about the two sources of cholesterol and the role that food plays.",
+    "type": "cdc-media",
+    "mediaId": 230244
+  },
+  {
+    "id": "cdc-about-tetanus",
+    "title": "CDC: About Tetanus",
+    "edition": "2026",
+    "summary": "What you need to know about tetanus: symptoms, treatment, and prevention.",
+    "type": "cdc-media",
+    "mediaId": 230353
+  },
+  {
+    "id": "cdc-treatment-of-thalassemia",
+    "title": "CDC: Treatment of Thalassemia",
+    "edition": "2025",
+    "summary": "Thalassemia can be well managed with appropriate treatment. Learn more.",
+    "type": "cdc-media",
+    "mediaId": 232498
+  },
+  {
+    "id": "cdc-haemophilus-influenzae-disease-symptoms-and-compli",
+    "title": "CDC: Haemophilus influenzae Disease Symptoms and Complications",
+    "edition": "2025",
+    "summary": "A wide range of symptoms and complications can occur based on the part of the body affected.",
+    "type": "cdc-media",
+    "mediaId": 232871
+  },
+  {
+    "id": "cdc-prediabetes-your-chance-to-prevent-type-2-diabetes",
+    "title": "CDC: Prediabetes – Your Chance to Prevent Type 2 Diabetes",
+    "edition": "2023",
+    "summary": "If you have prediabetes or think you might, find out how you can prevent or delay type 2 diabetes.",
+    "type": "cdc-media",
+    "mediaId": 233257
+  },
+  {
+    "id": "cdc-risk-factors-for-haemophilus-influenzae-disease",
+    "title": "CDC: Risk Factors for Haemophilus influenzae Disease",
+    "edition": "2025",
+    "summary": "Anyone can get it, but factors, like age, can increase someone's risk.",
+    "type": "cdc-media",
+    "mediaId": 233644
+  },
+  {
+    "id": "cdc-powassan-causes-and-how-it-spreads",
+    "title": "CDC: Powassan: Causes and How It Spreads",
+    "edition": "2026",
+    "summary": "Infected ticks spread Powassan virus in the eastern United States.",
+    "type": "cdc-media",
+    "mediaId": 234196
+  },
+  {
+    "id": "cdc-about-zika-virus",
+    "title": "CDC: About Zika Virus",
+    "edition": "2026",
+    "summary": "Mosquitoes spread Zika virus. Illness is generally mild, but infection can cause birth defects.",
+    "type": "cdc-media",
+    "mediaId": 234528
+  },
+  {
+    "id": "cdc-collecting-and-submitting-placental-and-fetal-tiss",
+    "title": "CDC: Collecting and Submitting Placental and Fetal Tissue Specimens for Zika Virus Testing",
+    "edition": "2024",
+    "summary": "Healthcare providers and health departments can test placental or fetal tissue for Zika.",
+    "type": "cdc-media",
+    "mediaId": 234645
+  },
+  {
+    "id": "cdc-living-with-diabetes",
+    "title": "CDC: Living with Diabetes",
+    "edition": "2026",
+    "summary": "Use these tips to help you live well with diabetes.",
+    "type": "cdc-media",
+    "mediaId": 235606
+  },
+  {
+    "id": "cdc-laboratory-testing-for-legionella",
+    "title": "CDC: Laboratory Testing for Legionella",
+    "edition": "2026",
+    "summary": "Culture and Legionella urinary antigen testing are recommended for Legionnaires' disease diagnosis.",
+    "type": "cdc-media",
+    "mediaId": 236227
+  },
+  {
+    "id": "cdc-about-amebic-meningitis",
+    "title": "CDC: About Amebic Meningitis",
+    "edition": "2025",
+    "summary": "Amebic meningitis is rare, difficult to diagnose, and usually deadly even with treatment.",
+    "type": "cdc-media",
+    "mediaId": 241220
+  },
+  {
+    "id": "cdc-living-with-asthma",
+    "title": "CDC: Living with Asthma",
+    "edition": "2024",
+    "summary": "Learn how to formulate an Asthma Action Plan.",
+    "type": "cdc-media",
+    "mediaId": 242375
+  },
+  {
+    "id": "cdc-about-dengue",
+    "title": "CDC: About Dengue",
+    "edition": "2025",
+    "summary": "Mosquito bites spread dengue viruses to people, infecting millions annually, often multiple times.",
+    "type": "cdc-media",
+    "mediaId": 242823
+  },
+  {
+    "id": "cdc-preventing-dengue",
+    "title": "CDC: Preventing Dengue",
+    "edition": "2026",
+    "summary": "Use repellent, control mosquitoes, and take steps to prevent mosquito bites that spread dengue",
+    "type": "cdc-media",
+    "mediaId": 242836
+  },
+  {
+    "id": "cdc-symptoms-of-dengue-and-testing",
+    "title": "CDC: Symptoms of Dengue and Testing",
+    "edition": "2025",
+    "summary": "About 1 in 4 people infected with dengue get sick. Severe dengue is a medical emergency.",
+    "type": "cdc-media",
+    "mediaId": 242838
+  },
+  {
+    "id": "cdc-about-cyclosporiasis",
+    "title": "CDC: About Cyclosporiasis",
+    "edition": "2026",
+    "summary": "Learn about the intestinal illness caused by the microscopic parasite Cyclospora.",
+    "type": "cdc-media",
+    "mediaId": 257659
+  },
+  {
+    "id": "cdc-treatment-of-pubic-lice",
+    "title": "CDC: Treatment of Pubic Lice",
+    "edition": "2024",
+    "summary": "Treat pubic lice with a lice-killing lotion or mousse available over-the-counter.",
+    "type": "cdc-media",
+    "mediaId": 257790
+  },
+  {
+    "id": "cdc-tuberculosis-risk-factors",
+    "title": "CDC: Tuberculosis Risk Factors",
+    "edition": "2024",
+    "summary": "Anyone can get tuberculosis, but some people are at higher risk than others.",
+    "type": "cdc-media",
+    "mediaId": 260324
+  },
+  {
+    "id": "cdc-signs-and-symptoms-of-tuberculosis",
+    "title": "CDC: Signs and Symptoms of Tuberculosis",
+    "edition": "2025",
+    "summary": "Common symptoms of active tuberculosis disease include cough, chest pain, and coughing up blood.",
+    "type": "cdc-media",
+    "mediaId": 260325
+  },
+  {
+    "id": "cdc-about-tularemia",
+    "title": "CDC: About Tularemia",
+    "edition": "2026",
+    "summary": "Tularemia is a treatable, but potentially serious illness. People become infected in several ways.",
+    "type": "cdc-media",
+    "mediaId": 260822
+  },
+  {
+    "id": "cdc-preventing-tularemia",
+    "title": "CDC: Preventing Tularemia",
+    "edition": "2025",
+    "summary": "Prevent tularemia by preventing tick and deer fly bites and avoiding contact with infected animals.",
+    "type": "cdc-media",
+    "mediaId": 260824
+  },
+  {
+    "id": "cdc-signs-and-symptoms-of-tularemia",
+    "title": "CDC: Signs and Symptoms of Tularemia",
+    "edition": "2024",
+    "summary": "The signs and symptoms of tularemia vary depending on how the bacteria enter the body.",
+    "type": "cdc-media",
+    "mediaId": 260826
+  },
+  {
+    "id": "cdc-risk-factors-for-cerebral-palsy",
+    "title": "CDC: Risk Factors for Cerebral Palsy",
+    "edition": "2026",
+    "summary": "Risk factors for congenital cerebral palsy, and how to prevent it before, during, and after birth.",
+    "type": "cdc-media",
+    "mediaId": 261870
+  },
+  {
+    "id": "cdc-about-cerebral-palsy",
+    "title": "CDC: About Cerebral Palsy",
+    "edition": "2026",
+    "summary": "Learn about cerebral palsy: symptoms, causes, screening, treatment, and CDC's work.",
+    "type": "cdc-media",
+    "mediaId": 261873
+  },
+  {
+    "id": "cdc-chickenpox-symptoms-and-complications",
+    "title": "CDC: Chickenpox Symptoms and Complications",
+    "edition": "2024",
+    "summary": "Identify signs, symptoms, and potential complications from chickenpox.",
+    "type": "cdc-media",
+    "mediaId": 262449
+  },
+  {
+    "id": "cdc-how-to-treat-chickenpox",
+    "title": "CDC: How to Treat Chickenpox",
+    "edition": "2024",
+    "summary": "Identify ways to help relieve chickenpox symptoms and when to contact a doctor.",
+    "type": "cdc-media",
+    "mediaId": 262450
+  },
+  {
+    "id": "cdc-about-tick-and-louse-borne-relapsing-fevers",
+    "title": "CDC: About Tick and Louse-borne Relapsing Fevers",
+    "edition": "2024",
+    "summary": "Relapsing fever is caused by several species of Borrelia bacteria and categorized into 3 diseases.",
+    "type": "cdc-media",
+    "mediaId": 263086
+  },
+  {
+    "id": "cdc-about-soft-tick-relapsing-fever-strf",
+    "title": "CDC: About Soft Tick Relapsing Fever (STRF)",
+    "edition": "2024",
+    "summary": "STRF is caused by Borrelia bacteria spread to people through the bite of infected soft-bodied ticks.",
+    "type": "cdc-media",
+    "mediaId": 263088
+  },
+  {
+    "id": "cdc-about-louse-borne-relapsing-fever-lbrf",
+    "title": "CDC: About Louse-borne Relapsing Fever (LBRF)",
+    "edition": "2025",
+    "summary": "LBRF is caused by Borrelia recurrentis bacteria spread to people by the human body louse.",
+    "type": "cdc-media",
+    "mediaId": 263091
+  },
+  {
+    "id": "cdc-meningococcal-vaccination",
+    "title": "CDC: Meningococcal Vaccination",
+    "edition": "2024",
+    "summary": "Meningococcal vaccines are recommended for all preteens, teens, and people at increased risk.",
+    "type": "cdc-media",
+    "mediaId": 263408
+  },
+  {
+    "id": "cdc-about-chikungunya-virus",
+    "title": "CDC: About Chikungunya Virus",
+    "edition": "2026",
+    "summary": "Mosquitoes spread chikungunya virus in many parts of the world. Travelers can consider vaccination.",
+    "type": "cdc-media",
+    "mediaId": 264157
+  },
+  {
+    "id": "cdc-preventing-chikungunya",
+    "title": "CDC: Preventing Chikungunya",
+    "edition": "2025",
+    "summary": "Use insect repellent, wear protective clothing, and consider a vaccine to prevent chikungunya.",
+    "type": "cdc-media",
+    "mediaId": 264159
+  },
+  {
+    "id": "cdc-about-plague",
+    "title": "CDC: About Plague",
+    "edition": "2026",
+    "summary": "Plague is a disease that affects humans and other mammals, caused by the bacterium, Yersinia pestis.",
+    "type": "cdc-media",
+    "mediaId": 264229
+  },
+  {
+    "id": "cdc-diagnosing-plague",
+    "title": "CDC: Diagnosing Plague",
+    "edition": "2024",
+    "summary": "Plague is a serious illness but is treatable with commonly available antibiotics.",
+    "type": "cdc-media",
+    "mediaId": 264230
+  },
+  {
+    "id": "cdc-preventing-plague",
+    "title": "CDC: Preventing Plague",
+    "edition": "2025",
+    "summary": "People who live in areas where plague occurs can take steps to reduce their risk of infection.",
+    "type": "cdc-media",
+    "mediaId": 264238
+  },
+  {
+    "id": "cdc-signs-and-symptoms-of-plague",
+    "title": "CDC: Signs and Symptoms of Plague",
+    "edition": "2024",
+    "summary": "Signs and symptoms of each form of plague - bubonic, septicemic, and pneumonic.",
+    "type": "cdc-media",
+    "mediaId": 264240
+  },
+  {
+    "id": "cdc-how-to-prevent-stis",
+    "title": "CDC: How to Prevent STIs",
+    "edition": "2024",
+    "summary": "How to prevent sexually transmitted infections (STIs).",
+    "type": "cdc-media",
+    "mediaId": 265301
+  },
+  {
+    "id": "cdc-about-cronobacter-infection",
+    "title": "CDC: About Cronobacter Infection",
+    "edition": "2025",
+    "summary": "Cronobacter infections are rare but serious and most common in infants less than 2 months old",
+    "type": "cdc-media",
+    "mediaId": 265838
+  },
+  {
+    "id": "cdc-about-legionnaires-disease",
+    "title": "CDC: About Legionnaires’ Disease",
+    "edition": "2025",
+    "summary": "Information about a serious pneumonia caused by Legionella.",
+    "type": "cdc-media",
+    "mediaId": 266037
+  },
+  {
+    "id": "cdc-about-hereditary-hemorrhagic-telangiectasia-hht",
+    "title": "CDC: About Hereditary Hemorrhagic Telangiectasia (HHT)",
+    "edition": "2024",
+    "summary": "Learn about HHT, a blood vessel disorder that leads to bleeding.",
+    "type": "cdc-media",
+    "mediaId": 266364
+  },
+  {
+    "id": "cdc-about-whole-genome-sequencing",
+    "title": "CDC: About Whole Genome Sequencing",
+    "edition": "2023",
+    "summary": "Information on whole genome sequencing, and how PulseNet uses this technology",
+    "type": "cdc-media",
+    "mediaId": 266728
+  },
+  {
+    "id": "cdc-risk-factors-for-fungal-diseases",
+    "title": "CDC: Risk Factors for Fungal Diseases",
+    "edition": "2024",
+    "summary": "Some medical conditions and treatments increase risk for fungal diseases.",
+    "type": "cdc-media",
+    "mediaId": 268853
+  },
+  {
+    "id": "cdc-recommended-vaccines-for-young-children",
+    "title": "CDC: Recommended Vaccines for Young Children",
+    "edition": "2025",
+    "summary": "Guide for parents and caregivers to ensure their child is up-to-date on recommended childhood vaccin",
+    "type": "cdc-media",
+    "mediaId": 270534
+  },
+  {
+    "id": "cdc-recommended-vaccinations-for-adults",
+    "title": "CDC: Recommended Vaccinations for Adults",
+    "edition": "2025",
+    "summary": "Guide for individuals to ensure they stay up-to-date on recommended vaccines.",
+    "type": "cdc-media",
+    "mediaId": 270535
+  },
+  {
+    "id": "cdc-preventing-cholera-in-families",
+    "title": "CDC: Preventing Cholera in Families",
+    "edition": "2025",
+    "summary": "If someone in your family has cholera, take these steps to keep it from spreading to others",
+    "type": "cdc-media",
+    "mediaId": 270645
+  },
+  {
+    "id": "cdc-cholera-vaccines",
+    "title": "CDC: Cholera Vaccines",
+    "edition": "2025",
+    "summary": "Consider getting a cholera vaccine if you're going somewhere with cholera or unsafe water & food",
+    "type": "cdc-media",
+    "mediaId": 270650
+  },
+  {
+    "id": "cdc-about-prion-diseases",
+    "title": "CDC: About Prion Diseases",
+    "edition": "2026",
+    "summary": "Prions are misfolded proteins in the body that cause fatal illnesses in people and animals.",
+    "type": "cdc-media",
+    "mediaId": 271661
+  },
+  {
+    "id": "cdc-lyme-disease-vaccine",
+    "title": "CDC: Lyme Disease Vaccine",
+    "edition": "2026",
+    "summary": "A vaccine for Lyme disease is not currently available, clinical trials of new vaccines are underway.",
+    "type": "cdc-media",
+    "mediaId": 271724
+  },
+  {
+    "id": "cdc-about-steadi",
+    "title": "CDC: About STEADI",
+    "edition": "2025",
+    "summary": "Overview of STEADI and video resources for older adults, health care providers, and caregivers.",
+    "type": "cdc-media",
+    "mediaId": 272117
+  },
+  {
+    "id": "cdc-about-botulism",
+    "title": "CDC: About Botulism",
+    "edition": "2026",
+    "summary": "This page provides an overview of botulism, its causes, and symptoms of botulism.",
+    "type": "cdc-media",
+    "mediaId": 273019
+  },
+  {
+    "id": "cdc-botulism-prevention",
+    "title": "CDC: Botulism Prevention",
+    "edition": "2026",
+    "summary": "This page describes how to prevent various types of botulism.",
+    "type": "cdc-media",
+    "mediaId": 273490
+  },
+  {
+    "id": "cdc-testing-for-botulism",
+    "title": "CDC: Testing for Botulism",
+    "edition": "2024",
+    "summary": "This page describes how botulism is diagnosed.",
+    "type": "cdc-media",
+    "mediaId": 273496
+  },
+  {
+    "id": "cdc-tuberculosis-causes-and-how-it-spreads",
+    "title": "CDC: Tuberculosis: Causes and How It Spreads",
+    "edition": "2025",
+    "summary": "Tuberculosis germs spread through the air from one person to another.",
+    "type": "cdc-media",
+    "mediaId": 273528
+  },
+  {
+    "id": "cdc-about-inactive-tuberculosis",
+    "title": "CDC: About Inactive Tuberculosis",
+    "edition": "2025",
+    "summary": "TB germs can live in the body without making you sick. This is called inactive TB.",
+    "type": "cdc-media",
+    "mediaId": 273531
+  },
+  {
+    "id": "cdc-treatment-for-drug-resistant-tuberculosis-disease",
+    "title": "CDC: Treatment for Drug-Resistant Tuberculosis Disease",
+    "edition": "2025",
+    "summary": "Treating drug-resistant TB disease is complicated and requires consultation with TB experts.",
+    "type": "cdc-media",
+    "mediaId": 273540
+  },
+  {
+    "id": "cdc-treatment-for-latent-tuberculosis-infection",
+    "title": "CDC: Treatment for Latent Tuberculosis Infection",
+    "edition": "2025",
+    "summary": "Several regimens are available to treat latent tuberculosis (TB) infection.",
+    "type": "cdc-media",
+    "mediaId": 273542
+  },
+  {
+    "id": "cdc-athletic-facilities-mrsa-prevention-and-control",
+    "title": "CDC: Athletic Facilities: MRSA Prevention and Control",
+    "edition": "2024",
+    "summary": "Keeping equipment clean and encouraging athletes to practice good hygiene are ways to prevent MRSA.",
+    "type": "cdc-media",
+    "mediaId": 273622
+  },
+  {
+    "id": "cdc-preventing-methicillin-resistant-staphylococcus-au",
+    "title": "CDC: Preventing Methicillin-resistant Staphylococcus aureus (MRSA)",
+    "edition": "2024",
+    "summary": "Information on how to prevent methicillin-resistant Staphylococcus aureus (MRSA) infections.",
+    "type": "cdc-media",
+    "mediaId": 273623
+  },
+  {
+    "id": "cdc-about-million-hearts-2027",
+    "title": "CDC: About Million Hearts® 2027",
+    "edition": "2024",
+    "summary": "Read how Million Hearts® aims to prevent 1 million CVD events in 5 years and how you can help protect people impacted by heart disease and stroke.",
+    "type": "cdc-media",
+    "mediaId": 277936
+  },
+  {
+    "id": "cdc-preventing-typhoid-fever-and-paratyphoid-fever",
+    "title": "CDC: Preventing Typhoid Fever and Paratyphoid Fever",
+    "edition": "2026",
+    "summary": "Typhoid fever and paratyphoid fever are preventable. Learn about steps you can take to avoid them.",
+    "type": "cdc-media",
+    "mediaId": 278893
+  },
+  {
+    "id": "cdc-about-typhoid-fever-and-paratyphoid-fever",
+    "title": "CDC: About Typhoid Fever and Paratyphoid Fever",
+    "edition": "2024",
+    "summary": "Typhoid fever and paratyphoid fever are are life-threatening illnesses. Learn how they spread.",
+    "type": "cdc-media",
+    "mediaId": 278895
+  },
+  {
+    "id": "cdc-symptoms-of-typhoid-fever-and-paratyphoid-fever",
+    "title": "CDC: Symptoms of Typhoid Fever and Paratyphoid Fever",
+    "edition": "2025",
+    "summary": "Symptoms of typhoid fever and paratyphoid fever, complications, and when to call your doctor.",
+    "type": "cdc-media",
+    "mediaId": 278896
+  },
+  {
+    "id": "cdc-whooping-cough-vaccination",
+    "title": "CDC: Whooping Cough Vaccination",
+    "edition": "2025",
+    "summary": "CDC recommends whooping cough vaccination for people of all ages.",
+    "type": "cdc-media",
+    "mediaId": 278953
+  },
+  {
+    "id": "cdc-preventing-vibrio-infection",
+    "title": "CDC: Preventing Vibrio Infection",
+    "edition": "2025",
+    "summary": "Information to prevent Vibrio foodborne and wound infections.",
+    "type": "cdc-media",
+    "mediaId": 278973
+  },
+  {
+    "id": "cdc-best-practices-for-diagnosis-of-haemophilus-influe",
+    "title": "CDC: Best practices for diagnosis of Haemophilus influenzae and Neisseria meningitidis disease",
+    "edition": "2026",
+    "summary": "Various laboratory tests can identify Haemophilus influenzae (Hi) or Neisseria meningitidis (Nm).",
+    "type": "cdc-media",
+    "mediaId": 279311
+  },
+  {
+    "id": "cdc-about-yersinia-infection",
+    "title": "CDC: About Yersinia Infection",
+    "edition": "2024",
+    "summary": "Overview of symptoms, diagnosis & treatment, prevention, and treatment of Yersinia.",
+    "type": "cdc-media",
+    "mediaId": 279424
+  },
+  {
+    "id": "cdc-about-micronutrient-malnutrition-prevention",
+    "title": "CDC: About Micronutrient Malnutrition Prevention",
+    "edition": "2025",
+    "summary": "Micronutrient malnutrition prevention work at CDC",
+    "type": "cdc-media",
+    "mediaId": 280317
+  },
+  {
+    "id": "cdc-testing-for-zika",
+    "title": "CDC: Testing for Zika",
+    "edition": "2025",
+    "summary": "Get tested for Zika if you have symptoms and traveled or had sex with a traveler to a risk area.",
+    "type": "cdc-media",
+    "mediaId": 280492
+  },
+  {
+    "id": "cdc-treatment-of-zika",
+    "title": "CDC: Treatment of Zika",
+    "edition": "2024",
+    "summary": "No medicines are available to treat Zika. Rest, fluids, and over-the-counter medicines may help.",
+    "type": "cdc-media",
+    "mediaId": 280583
+  },
+  {
+    "id": "cdc-guide-to-infection-prevention-for-outpatient-setti",
+    "title": "CDC: Guide to Infection Prevention for Outpatient Settings: Minimum Expectations for Safe Care",
+    "edition": "2025",
+    "summary": "A helpful guide to the minimum expectations for safe care for outpatient settings.",
+    "type": "cdc-media",
+    "mediaId": 282739
+  },
+  {
+    "id": "cdc-about-cdc-funded-lupus-research",
+    "title": "CDC: About CDC-Funded Lupus Research",
+    "edition": "2024",
+    "summary": "An overview of CDC's investment in lupus research and results.",
+    "type": "cdc-media",
+    "mediaId": 282781
+  },
+  {
+    "id": "cdc-keep-them-steadi-preventing-older-adult-falls-in-h",
+    "title": "CDC: Keep Them STEADI: Preventing Older Adult Falls in Hospitals",
+    "edition": "2025",
+    "summary": "The Rees-Jones Trauma Center in Dallas, Texas integrated STEADI into its fall prevention program.",
+    "type": "cdc-media",
+    "mediaId": 282946
+  },
+  {
+    "id": "cdc-about-zoonotic-diseases",
+    "title": "CDC: About Zoonotic Diseases",
+    "edition": "2025",
+    "summary": "About zoonotic diseases, how germs spread between animals and people, and how to protect yourself.",
+    "type": "cdc-media",
+    "mediaId": 286406
+  },
+  {
+    "id": "cdc-hpv-vaccine-recommendations",
+    "title": "CDC: HPV Vaccine Recommendations",
+    "edition": "2024",
+    "summary": "Find vaccine recommendations by age and other considerations for HPV vaccine.",
+    "type": "cdc-media",
+    "mediaId": 297729
+  },
+  {
+    "id": "cdc-lupus-basics",
+    "title": "CDC: Lupus Basics",
+    "edition": "2024",
+    "summary": "Basic information about lupus, such as diagnosis, treatment, and management.",
+    "type": "cdc-media",
+    "mediaId": 305331
+  },
+  {
+    "id": "cdc-typhus-fevers-basics",
+    "title": "CDC: Typhus Fevers Basics",
+    "edition": "2025",
+    "summary": "Typhus fevers, spread by fleas, lice, and chiggers, cause fever, headaches, and sometimes rash.",
+    "type": "cdc-media",
+    "mediaId": 306609
+  },
+  {
+    "id": "cdc-about-epidemic-typhus",
+    "title": "CDC: About Epidemic Typhus",
+    "edition": "2024",
+    "summary": "Infected body lice spread epidemic typhus, causing illness. Early treatment is critical.",
+    "type": "cdc-media",
+    "mediaId": 306610
+  },
+  {
+    "id": "cdc-about-flea-borne-typhus",
+    "title": "CDC: About Flea-borne Typhus",
+    "edition": "2025",
+    "summary": "Infected fleas spread flea-borne typhus, causing illness. Early treatment is critical.",
+    "type": "cdc-media",
+    "mediaId": 306613
+  },
+  {
+    "id": "cdc-about-scrub-typhus",
+    "title": "CDC: About Scrub Typhus",
+    "edition": "2024",
+    "summary": "Infected chiggers spread scrub typhus, causing illness. Early treatment is critical.",
+    "type": "cdc-media",
+    "mediaId": 306614
+  },
+  {
+    "id": "cdc-about-mumps",
+    "title": "CDC: About Mumps",
+    "edition": "2024",
+    "summary": "Learn about mumps, common symptoms, how it spreads, and how to protect against this viral infection.",
+    "type": "cdc-media",
+    "mediaId": 306713
+  },
+  {
+    "id": "cdc-health-care-strategies-for-obesity-diagnosis-codes",
+    "title": "CDC: Health Care Strategies for Obesity: Diagnosis Codes",
+    "edition": "2025",
+    "summary": "Evidence-based guidelines, tools, and obesity resources for health care providers and payers.",
+    "type": "cdc-media",
+    "mediaId": 309208
+  },
+  {
+    "id": "cdc-cochlear-implants-and-vaccine-recommendations",
+    "title": "CDC: Cochlear Implants and Vaccine Recommendations",
+    "edition": "2026",
+    "summary": "People with cochlear implants can benefit from the protection offered by some vaccines.",
+    "type": "cdc-media",
+    "mediaId": 324192
+  },
+  {
+    "id": "cdc-about-st-louis-encephalitis-virus",
+    "title": "CDC: About St. Louis Encephalitis Virus",
+    "edition": "2026",
+    "summary": "Mosquitoes spread St. Louis encephalitis virus. Illness is uncommon but ranges from mild to severe.",
+    "type": "cdc-media",
+    "mediaId": 331841
+  },
+  {
+    "id": "cdc-what-causes-me-cfs",
+    "title": "CDC: What Causes ME/CFS",
+    "edition": "2026",
+    "summary": "The causes of ME/CFS are unknown but may include infections and environmental factors.",
+    "type": "cdc-media",
+    "mediaId": 332485
+  },
+  {
+    "id": "cdc-diagnosing-me-cfs",
+    "title": "CDC: Diagnosing ME/CFS",
+    "edition": "2024",
+    "summary": "How healthcare providers assess a patient's health and diagnose ME/CFS.",
+    "type": "cdc-media",
+    "mediaId": 332500
+  },
+  {
+    "id": "cdc-symptoms-of-me-cfs",
+    "title": "CDC: Symptoms of ME/CFS",
+    "edition": "2024",
+    "summary": "ME/CFS has 5 core symptoms. Diagnosis requires 3 main symptoms and at least 1 other symptom",
+    "type": "cdc-media",
+    "mediaId": 332502
+  },
+  {
+    "id": "cdc-manage-me-cfs",
+    "title": "CDC: Manage ME/CFS",
+    "edition": "2024",
+    "summary": "There is no approved treatment for ME/CFS. However, there are some strategies for managing the disease.",
+    "type": "cdc-media",
+    "mediaId": 332503
+  },
+  {
+    "id": "cdc-about-heartland-virus",
+    "title": "CDC: About Heartland Virus",
+    "edition": "2026",
+    "summary": "Ticks spread Heartland virus. Illness is rare but can be severe.",
+    "type": "cdc-media",
+    "mediaId": 334540
+  },
+  {
+    "id": "cdc-preventing-heartland",
+    "title": "CDC: Preventing Heartland",
+    "edition": "2024",
+    "summary": "The best way to prevent Heartland is to protect yourself and your family from tick bites.",
+    "type": "cdc-media",
+    "mediaId": 334544
+  },
+  {
+    "id": "cdc-about-influenza",
+    "title": "CDC: About Influenza",
+    "edition": "2026",
+    "summary": "Flu is a contagious respiratory illness that infect the nose, throat, and sometimes the lungs.",
+    "type": "cdc-media",
+    "mediaId": 334606
+  },
+  {
+    "id": "cdc-treatment-of-flu",
+    "title": "CDC: Treatment of Flu",
+    "edition": "2025",
+    "summary": "If you get sick with flu, flu antiviral drugs may be a treatment option.",
+    "type": "cdc-media",
+    "mediaId": 334612
+  },
+  {
+    "id": "cdc-diabetes-testing",
+    "title": "CDC: Diabetes Testing",
+    "edition": "2024",
+    "summary": "Learn about different kinds of diabetes tests and what the results mean.",
+    "type": "cdc-media",
+    "mediaId": 335184
+  },
+  {
+    "id": "cdc-diabetes-basics",
+    "title": "CDC: Diabetes Basics",
+    "edition": "2026",
+    "summary": "Diabetes is a long-lasting health condition that affects how your body turns food into energy.",
+    "type": "cdc-media",
+    "mediaId": 335185
+  },
+  {
+    "id": "cdc-diabetes-risk-factors",
+    "title": "CDC: Diabetes Risk Factors",
+    "edition": "2023",
+    "summary": "Find out risk factors for different types of diabetes and steps you can take for prevention.",
+    "type": "cdc-media",
+    "mediaId": 335186
+  },
+  {
+    "id": "cdc-symptoms-of-diabetes",
+    "title": "CDC: Symptoms of Diabetes",
+    "edition": "2023",
+    "summary": "Learn about the signs and symptoms of type 1, type 2, and gestational diabetes.",
+    "type": "cdc-media",
+    "mediaId": 335187
+  },
+  {
+    "id": "cdc-about-get-ahead-of-sepsis",
+    "title": "CDC: About Get Ahead of Sepsis",
+    "edition": "2025",
+    "summary": "Learn how CDC is educating patients and healthcare providers about sepsis.",
+    "type": "cdc-media",
+    "mediaId": 337747
+  },
+  {
+    "id": "cdc-managing-recovery-from-sepsis",
+    "title": "CDC: Managing Recovery from Sepsis",
+    "edition": "2025",
+    "summary": "Sepsis survivors: use these tips to help your body and mind recover.",
+    "type": "cdc-media",
+    "mediaId": 337750
+  },
+  {
+    "id": "cdc-about-sepsis",
+    "title": "CDC: About Sepsis",
+    "edition": "2026",
+    "summary": "Sepsis is a medical emergency. Learn the risks, spot the signs and symptoms, and act fast.",
+    "type": "cdc-media",
+    "mediaId": 337751
+  },
+  {
+    "id": "cdc-risk-factors-for-sepsis",
+    "title": "CDC: Risk Factors for Sepsis",
+    "edition": "2025",
+    "summary": "Learn what conditions can increase your risk of developing sepsis",
+    "type": "cdc-media",
+    "mediaId": 337752
+  },
+  {
+    "id": "cdc-symptoms-of-campylobacter-infection",
+    "title": "CDC: Symptoms of Campylobacter Infection",
+    "edition": "2026",
+    "summary": "Learn about the symptoms of Campylobacter infection, complications, and when to call your doctor.",
+    "type": "cdc-media",
+    "mediaId": 338343
+  },
+  {
+    "id": "cdc-prevent-type-2-diabetes-talking-to-your-patients-a",
+    "title": "CDC: Prevent Type 2 Diabetes: Talking to Your Patients About Lifestyle Change",
+    "edition": "2024",
+    "summary": "Facts about preventing type 2 diabetes and talking to your patients about lifestyle change program.",
+    "type": "cdc-media",
+    "mediaId": 338616
+  },
+  {
+    "id": "cdc-athletes-mrsa-prevention-and-control",
+    "title": "CDC: Athletes: MRSA Prevention and Control",
+    "edition": "2024",
+    "summary": "Athletes can take steps to prevent MRSA skin infections.",
+    "type": "cdc-media",
+    "mediaId": 341732
+  },
+  {
+    "id": "cdc-diagnosis-of-campylobacter-infection",
+    "title": "CDC: Diagnosis of Campylobacter Infection",
+    "edition": "2026",
+    "summary": "Laboratory tests are used to diagnose Campylobacter infections and guide treatment decisions.",
+    "type": "cdc-media",
+    "mediaId": 341733
+  },
+  {
+    "id": "cdc-about-campylobacter-infection",
+    "title": "CDC: About Campylobacter infection",
+    "edition": "2026",
+    "summary": "Campylobacter are a top cause of diarrheal illness, often spread through raw or undercooked poultry",
+    "type": "cdc-media",
+    "mediaId": 341734
+  },
+  {
+    "id": "cdc-preventing-campylobacter-infection",
+    "title": "CDC: Preventing Campylobacter Infection",
+    "edition": "2026",
+    "summary": "You can prevent infections by washing hands often and handling food and animals safely.",
+    "type": "cdc-media",
+    "mediaId": 341736
+  },
+  {
+    "id": "cdc-preventing-shigella-infection-while-traveling",
+    "title": "CDC: Preventing Shigella Infection While Traveling",
+    "edition": "2024",
+    "summary": "Information about preventing Shigella infection while traveling",
+    "type": "cdc-media",
+    "mediaId": 341976
+  },
+  {
+    "id": "cdc-signs-and-symptoms-of-shigella-infection",
+    "title": "CDC: Signs and Symptoms of Shigella Infection",
+    "edition": "2024",
+    "summary": "Information about signs and symptoms of Shigella infection",
+    "type": "cdc-media",
+    "mediaId": 341983
+  },
+  {
+    "id": "cdc-how-to-prevent-cholera",
+    "title": "CDC: How to Prevent Cholera",
+    "edition": "2025",
+    "summary": "Take these steps to protect yourself if you're going to a place where cholera is present.",
+    "type": "cdc-media",
+    "mediaId": 342267
+  },
+  {
+    "id": "cdc-treat-and-manage-high-cholesterol",
+    "title": "CDC: Treat and Manage High Cholesterol",
+    "edition": "2024",
+    "summary": "If you are concerned, talk with your health care team about how you can lower your cholesterol.",
+    "type": "cdc-media",
+    "mediaId": 343841
+  },
+  {
+    "id": "cdc-epilepsy-basics",
+    "title": "CDC: Epilepsy Basics",
+    "edition": "2024",
+    "summary": "Describes basic information about epilepsy and seizures.",
+    "type": "cdc-media",
+    "mediaId": 350659
+  },
+  {
+    "id": "cdc-about-brucellosis",
+    "title": "CDC: About Brucellosis",
+    "edition": "2026",
+    "summary": "Learn more about brucellosis, including who's at risk, signs and symptoms, and how to prevent it.",
+    "type": "cdc-media",
+    "mediaId": 351477
+  },
+  {
+    "id": "cdc-managing-insulin-in-an-emergency",
+    "title": "CDC: Managing Insulin in an Emergency",
+    "edition": "2024",
+    "summary": "Find out how to manage your insulin in case you're in an emergency situation.",
+    "type": "cdc-media",
+    "mediaId": 351494
+  },
+  {
+    "id": "cdc-about-the-national-als-biorepository",
+    "title": "CDC: About the National ALS Biorepository",
+    "edition": "2024",
+    "summary": "ALS Meta description needed.",
+    "type": "cdc-media",
+    "mediaId": 353590
+  },
+  {
+    "id": "cdc-about-breastfeeding",
+    "title": "CDC: About Breastfeeding",
+    "edition": "2026",
+    "summary": "Why breastfeeding matters and what CDC is doing to improve U.S. breastfeeding rates.",
+    "type": "cdc-media",
+    "mediaId": 353615
+  },
+  {
+    "id": "cdc-about-sti-risk-and-oral-sex",
+    "title": "CDC: About STI Risk and Oral Sex",
+    "edition": "2024",
+    "summary": "Provides basic information about STD Risk and Oral Sex, including prevention and testing.",
+    "type": "cdc-media",
+    "mediaId": 353823
+  },
+  {
+    "id": "cdc-about-e-cigarettes-vapes",
+    "title": "CDC: About E-Cigarettes (Vapes)",
+    "edition": "2024",
+    "summary": "Get information about e-cigarettes, harmful substances they contain, and the situation in the U.S.",
+    "type": "cdc-media",
+    "mediaId": 382885
+  },
+  {
+    "id": "cdc-managing-diabetes-at-school",
+    "title": "CDC: Managing Diabetes at School",
+    "edition": "2024",
+    "summary": "Make a diabetes management plan to handle your child's diabetes care at school.",
+    "type": "cdc-media",
+    "mediaId": 396864
+  },
+  {
+    "id": "cdc-about-pneumonia",
+    "title": "CDC: About Pneumonia",
+    "edition": "2026",
+    "summary": "Many different bacteria, fungi, and viruses can cause pneumonia (a lung infection).",
+    "type": "cdc-media",
+    "mediaId": 397081
+  },
+  {
+    "id": "cdc-measles-serology-testing",
+    "title": "CDC: Measles Serology Testing",
+    "edition": "2024",
+    "summary": "Learn about the collection of serum for measles IgM/IgG confirmation and CDC lab tests.",
+    "type": "cdc-media",
+    "mediaId": 397139
+  },
+  {
+    "id": "cdc-testing-for-cholesterol",
+    "title": "CDC: Testing for Cholesterol",
+    "edition": "2024",
+    "summary": "High cholesterol usually has no symptoms. The only way to know whether you have high cholesterol is to get a simple blood test, called a “lipid profile.”",
+    "type": "cdc-media",
+    "mediaId": 397505
+  },
+  {
+    "id": "cdc-about-measles",
+    "title": "CDC: About Measles",
+    "edition": "2026",
+    "summary": "Measles is a highly contagious virus. Two doses of the MMR vaccine provide the best protection.",
+    "type": "cdc-media",
+    "mediaId": 397567
+  },
+  {
+    "id": "cdc-key-facts-about-seasonal-flu-vaccine",
+    "title": "CDC: Key Facts About Seasonal Flu Vaccine",
+    "edition": "2026",
+    "summary": "Vaccination has been shown to reduce the risk of flu illness, hospitalization and flu-related death.",
+    "type": "cdc-media",
+    "mediaId": 397629
+  },
+  {
+    "id": "cdc-hpv-associated-cancer-diagnosis-by-age",
+    "title": "CDC: HPV-Associated Cancer Diagnosis by Age",
+    "edition": "2025",
+    "summary": "Lists the median age at diagnosis for six HPV-associated cancers.",
+    "type": "cdc-media",
+    "mediaId": 399137
+  },
+  {
+    "id": "cdc-staying-healthy-after-cancer-treatment",
+    "title": "CDC: Staying Healthy After Cancer Treatment",
+    "edition": "2025",
+    "summary": "How to lower the chance that your cancer will come back and find it early if it does.",
+    "type": "cdc-media",
+    "mediaId": 399185
+  },
+  {
+    "id": "cdc-what-you-can-expect-after-getting-shingrix-vaccine",
+    "title": "CDC: What You Can Expect After Getting Shingrix Vaccine Fact Sheet",
+    "edition": "2024",
+    "summary": "This fact sheet describes the benefits and common side effects of the shingles vaccine Shingrix.",
+    "type": "cdc-media",
+    "mediaId": 401572
+  },
+  {
+    "id": "cdc-preventing-childhood-obesity-6-things-families-can",
+    "title": "CDC: Preventing Childhood Obesity: 6 Things Families Can Do",
+    "edition": "2026",
+    "summary": "Ways parents and caregivers can help children have a healthy weight and establish healthy habits.",
+    "type": "cdc-media",
+    "mediaId": 401646
+  },
+  {
+    "id": "cdc-about-vibrio-infection",
+    "title": "CDC: About Vibrio Infection",
+    "edition": "2024",
+    "summary": "Overview of Vibrio infection, including information on symptoms, treatment, and more.",
+    "type": "cdc-media",
+    "mediaId": 402214
+  },
+  {
+    "id": "cdc-1-leadership-and-management",
+    "title": "CDC: 1. Leadership and Management",
+    "edition": "2024",
+    "summary": "Leadership and Management: Infrastructure and Routine Practices",
+    "type": "cdc-media",
+    "mediaId": 402240
+  },
+  {
+    "id": "cdc-5-occupational-infection-prevention-and-control-ed",
+    "title": "CDC: 5. Occupational Infection Prevention and Control: Education and Training",
+    "edition": "2024",
+    "summary": "Education and training for occupational infection prevention and control",
+    "type": "cdc-media",
+    "mediaId": 402245
+  },
+  {
+    "id": "cdc-7-management-of-potentially-infectious-exposures-a",
+    "title": "CDC: 7. Management of Potentially Infectious Exposures and Illnesses",
+    "edition": "2024",
+    "summary": "Management of Potentially Infectious Exposures and Illnesses from the Infection Control in Healthcar",
+    "type": "cdc-media",
+    "mediaId": 402247
+  },
+  {
+    "id": "cdc-how-to-prevent-norovirus",
+    "title": "CDC: How to Prevent Norovirus",
+    "edition": "2025",
+    "summary": "Learn how to prevent catching and spreading norovirus.",
+    "type": "cdc-media",
+    "mediaId": 402715
+  },
+  {
+    "id": "cdc-preventing-type-2-diabetes-in-kids",
+    "title": "CDC: Preventing Type 2 Diabetes in Kids",
+    "edition": "2023",
+    "summary": "More kids are being diagnosed with type 2 diabetes, but families can help prevent or manage it.",
+    "type": "cdc-media",
+    "mediaId": 402961
+  },
+  {
+    "id": "cdc-preventt2-curriculum-and-handouts",
+    "title": "CDC: PreventT2 Curriculum and Handouts",
+    "edition": "2024",
+    "summary": "Provide information and materials for the PreventT2 diabetes prevention program and its curriculum.",
+    "type": "cdc-media",
+    "mediaId": 404397
+  },
+  {
+    "id": "cdc-preventing-cronobacter-in-infants",
+    "title": "CDC: Preventing Cronobacter in Infants",
+    "edition": "2025",
+    "summary": "Maintain clean surfaces & feeding items to safely prepare & store formula, preventing Cronobacter.",
+    "type": "cdc-media",
+    "mediaId": 404502
+  },
+  {
+    "id": "cdc-about-secondhand-smoke",
+    "title": "CDC: About Secondhand Smoke",
+    "edition": "2023",
+    "summary": "Find information on secondhand smoke, smokefree policies, and more.",
+    "type": "cdc-media",
+    "mediaId": 405788
+  },
+  {
+    "id": "cdc-estimated-hypertension-prevalence-treatment-and-co",
+    "title": "CDC: Estimated Hypertension Prevalence, Treatment, and Control Among U.S. Adults",
+    "edition": "2023",
+    "summary": "Learn about hypertension prevalence in the U.S. This information uses criteria from the 2017 ACC/AHA guideline and applies it to NHANES 2017 to 2020 data.",
+    "type": "cdc-media",
+    "mediaId": 406505
+  },
+  {
+    "id": "cdc-about-insulin-resistance-and-type-2-diabetes",
+    "title": "CDC: About Insulin Resistance and Type 2 Diabetes",
+    "edition": "2024",
+    "summary": "Find out how insulin resistance can lead to type 2 diabetes.",
+    "type": "cdc-media",
+    "mediaId": 408950
+  },
+  {
+    "id": "cdc-managing-sick-days",
+    "title": "CDC: Managing Sick Days",
+    "edition": "2024",
+    "summary": "Be prepared in case you get sick so you'll know how to still manage your diabetes.",
+    "type": "cdc-media",
+    "mediaId": 408952
+  },
+  {
+    "id": "cdc-manage-blood-sugar",
+    "title": "CDC: Manage Blood Sugar",
+    "edition": "2023",
+    "summary": "Find info about how and when to test blood sugar, managing high and low blood sugar, and more.",
+    "type": "cdc-media",
+    "mediaId": 408953
+  },
+  {
+    "id": "cdc-managing-diabetes-in-the-heat",
+    "title": "CDC: Managing Diabetes in the Heat",
+    "edition": "2024",
+    "summary": "Take these steps to keep your cool when the weather gets warm.",
+    "type": "cdc-media",
+    "mediaId": 410421
+  },
+  {
+    "id": "cdc-preventing-type-2-diabetes",
+    "title": "CDC: Preventing Type 2 Diabetes",
+    "edition": "2023",
+    "summary": "Prediabetes is your wakeup call to prevent type 2 diabetes. Find out if you're at risk.",
+    "type": "cdc-media",
+    "mediaId": 412053
+  },
+  {
+    "id": "cdc-urgent-maternal-warning-signs-and-symptoms",
+    "title": "CDC: Urgent Maternal Warning Signs and Symptoms",
+    "edition": "2024",
+    "summary": "Know the urgent maternal warning signs, and what to do if you are experiencing them.",
+    "type": "cdc-media",
+    "mediaId": 419062
+  },
+  {
+    "id": "cdc-about-pregnancy-related-deaths-in-the-united-state",
+    "title": "CDC: About Pregnancy-Related Deaths in the United States",
+    "edition": "2024",
+    "summary": "Most pregnancy-related deaths are preventable.",
+    "type": "cdc-media",
+    "mediaId": 419065
+  },
+  {
+    "id": "cdc-matte-article-recognizing-urgent-pregnancy-related",
+    "title": "CDC: Matte Article: Recognizing Urgent Pregnancy-Related Warning Signs",
+    "edition": "2024",
+    "summary": "Prewritten matte article about Hear Her®",
+    "type": "cdc-media",
+    "mediaId": 419328
+  },
+  {
+    "id": "cdc-about-reproductive-health",
+    "title": "CDC: About Reproductive Health",
+    "edition": "2024",
+    "summary": "Division of Reproductive Health focuses on reproductive health, maternal health, and infant health.",
+    "type": "cdc-media",
+    "mediaId": 420494
+  },
+  {
+    "id": "cdc-about-men-and-stroke",
+    "title": "CDC: About Men and Stroke",
+    "edition": "2026",
+    "summary": "Learn why men are at risk for stroke and what men’s unique risk factors for stroke are.",
+    "type": "cdc-media",
+    "mediaId": 421908
+  },
+  {
+    "id": "cdc-antifungal-susceptibility-testing-for-c-auris",
+    "title": "CDC: Antifungal Susceptibility Testing for C. auris",
+    "edition": "2026",
+    "summary": "Learn C. auris antifungal testing guidance and tentative breakpoints, plus U.S. resistance rates.",
+    "type": "cdc-media",
+    "mediaId": 422045
+  },
+  {
+    "id": "cdc-preventing-infections-that-can-lead-to-sepsis",
+    "title": "CDC: Preventing Infections That Can Lead to Sepsis",
+    "edition": "2025",
+    "summary": "Protect yourself and your loved ones from infections that can lead to sepsis with these steps.",
+    "type": "cdc-media",
+    "mediaId": 426092
+  },
+  {
+    "id": "cdc-about-overdose-prevention",
+    "title": "CDC: About Overdose Prevention",
+    "edition": "2023",
+    "summary": "About Overdose Prevention",
+    "type": "cdc-media",
+    "mediaId": 426582
+  },
+  {
+    "id": "cdc-3-ways-to-help-manage-your-child-s-type-1-diabetes",
+    "title": "CDC: 3 Ways to Help Manage Your Child’s Type 1 Diabetes",
+    "edition": "2024",
+    "summary": "These approaches can help make diabetes care easier for parents now and in the future.",
+    "type": "cdc-media",
+    "mediaId": 428044
+  },
+  {
+    "id": "cdc-7-common-withdrawal-symptoms",
+    "title": "CDC: 7 Common Withdrawal Symptoms",
+    "edition": "2024",
+    "summary": "The Tips From Former Smokers campaign features real people suffering as a result of smoking and exposure to secondhand smoke.",
+    "type": "cdc-media",
+    "mediaId": 472057
+  },
+  {
+    "id": "cdc-fiber-the-carb-that-helps-you-manage-diabetes",
+    "title": "CDC: Fiber: The Carb That Helps You Manage Diabetes",
+    "edition": "2024",
+    "summary": "Fiber can help you manage diabetes. Learn more about the surprising role of fiber.",
+    "type": "cdc-media",
+    "mediaId": 479048
+  },
+  {
+    "id": "cdc-treatment-of-low-blood-sugar-hypoglycemia",
+    "title": "CDC: Treatment of Low Blood Sugar (Hypoglycemia)",
+    "edition": "2023",
+    "summary": "Low blood sugar can be dangerous. Here’s how to treat your low.",
+    "type": "cdc-media",
+    "mediaId": 496783
+  },
+  {
+    "id": "cdc-cholesterol-management",
+    "title": "CDC: Cholesterol Management",
+    "edition": "2026",
+    "summary": "Cholesterol management is an important part of reducing cardiovascular disease. Learn about evidence-based treatments and read updated guidelines.",
+    "type": "cdc-media",
+    "mediaId": 541712
+  },
+  {
+    "id": "cdc-undiagnosed-hypertension",
+    "title": "CDC: Undiagnosed Hypertension",
+    "edition": "2023",
+    "summary": "Undiagnosed Hypertension",
+    "type": "cdc-media",
+    "mediaId": 541715
+  },
+  {
+    "id": "cdc-preventing-suicide",
+    "title": "CDC: Preventing Suicide",
+    "edition": "2026",
+    "summary": "Learn tips for how everyone can help prevent suicide.",
+    "type": "cdc-media",
+    "mediaId": 565108
+  },
+  {
+    "id": "cdc-about-cystic-fibrosis",
+    "title": "CDC: About Cystic Fibrosis",
+    "edition": "2026",
+    "summary": "Cystic fibrosis (CF) is a genetic disorder that causes problems with breathing and digestion.",
+    "type": "cdc-media",
+    "mediaId": 729194
+  },
+  {
+    "id": "cdc-about-women-and-stroke",
+    "title": "CDC: About Women and Stroke",
+    "edition": "2026",
+    "summary": "Learn why women are at risk for stroke and what women’s unique risk factors for stroke are.",
+    "type": "cdc-media",
+    "mediaId": 729364
+  },
+  {
+    "id": "cdc-just-diagnosed-with-type-1-diabetes",
+    "title": "CDC: Just Diagnosed With Type 1 Diabetes",
+    "edition": "2023",
+    "summary": "Learn about day-to-day diabetes care and all the tools available to help you manage diabetes.",
+    "type": "cdc-media",
+    "mediaId": 729566
+  },
+  {
+    "id": "cdc-about-leprosy-hansen-s-disease",
+    "title": "CDC: About Leprosy (Hansen’s Disease)",
+    "edition": "2024",
+    "summary": "Learn how Hansen's disease (leprosy) does and does not spread.",
+    "type": "cdc-media",
+    "mediaId": 729657
+  },
+  {
+    "id": "cdc-preventing-mosquito-bites-while-traveling",
+    "title": "CDC: Preventing Mosquito Bites While Traveling",
+    "edition": "2024",
+    "summary": "Prevent mosquito bites when traveling. Remember to pack repellent and protective clothing.",
+    "type": "cdc-media",
+    "mediaId": 730348
+  },
+  {
+    "id": "cdc-about-chickenpox",
+    "title": "CDC: About Chickenpox",
+    "edition": "2024",
+    "summary": "Learn about chickenpox, signs, prevention, how the disease spreads, and common myths.",
+    "type": "cdc-media",
+    "mediaId": 730368
+  },
+  {
+    "id": "cdc-about-carbapenem-resistant-enterobacterales-cre",
+    "title": "CDC: About Carbapenem-resistant Enterobacterales (CRE)",
+    "edition": "2025",
+    "summary": "CRE are germs resistant to one or several antibiotics called",
+    "type": "cdc-media",
+    "mediaId": 731276
+  },
+  {
+    "id": "cdc-coping-with-a-type-2-diabetes-diagnosis",
+    "title": "CDC: Coping With a Type 2 Diabetes Diagnosis",
+    "edition": "2023",
+    "summary": "Living with diabetes takes work, but there are things you can do that can help you cope.",
+    "type": "cdc-media",
+    "mediaId": 731455
+  },
+  {
+    "id": "cdc-about-on-your-way-to-preventing-type-2-diabetes",
+    "title": "CDC: About “On Your Way to Preventing Type 2 Diabetes”",
+    "edition": "2023",
+    "summary": "This practical guide will help you take small steps that add up to a healthy lifestyle.",
+    "type": "cdc-media",
+    "mediaId": 731494
+  },
+  {
+    "id": "cdc-imagine-you-preventing-type-2-videos",
+    "title": "CDC: Imagine You Preventing Type 2 Videos",
+    "edition": "2024",
+    "summary": "Explore our video collections on prediabetes, preventing type 2 diabetes, and living well with diabetes.",
+    "type": "cdc-media",
+    "mediaId": 732376
+  },
+  {
+    "id": "cdc-about-rabies",
+    "title": "CDC: About Rabies",
+    "edition": "2026",
+    "summary": "Find out more about rabies disease, how it spreads, who's at risk, and how to prevent it.",
+    "type": "cdc-media",
+    "mediaId": 735536
+  },
+  {
+    "id": "cdc-about-mosquitoes",
+    "title": "CDC: About Mosquitoes",
+    "edition": "2024",
+    "summary": "About types of mosquitoes, facts about mosquitoes, and parts of adult mosquitoes.",
+    "type": "cdc-media",
+    "mediaId": 735661
+  },
+  {
+    "id": "cdc-preventing-salmonella-infection",
+    "title": "CDC: Preventing Salmonella Infection",
+    "edition": "2024",
+    "summary": "See tips for preventing Salmonella infection, including from food, pets, and international travel.",
+    "type": "cdc-media",
+    "mediaId": 735666
+  },
+  {
+    "id": "cdc-treatment-of-anaplasmosis",
+    "title": "CDC: Treatment of Anaplasmosis",
+    "edition": "2025",
+    "summary": "Doxycycline effectively treats anaplasmosis in all ages, preventing severe illness and death.",
+    "type": "cdc-media",
+    "mediaId": 736077
+  },
+  {
+    "id": "cdc-vaccines-for-adults",
+    "title": "CDC: Vaccines for Adults",
+    "edition": "2026",
+    "summary": "Information on RSV vaccines to protect adults ages 50 and older against severe RSV illness.",
+    "type": "cdc-media",
+    "mediaId": 737399
+  },
+  {
+    "id": "cdc-about-micronutrients",
+    "title": "CDC: About Micronutrients",
+    "edition": "2025",
+    "summary": "Vitamins and minerals, called micronutrients, are essential. See CDC's work to improve nutrition.",
+    "type": "cdc-media",
+    "mediaId": 744660
+  },
+  {
+    "id": "cdc-risk-factors-for-obesity",
+    "title": "CDC: Risk Factors for Obesity",
+    "edition": "2025",
+    "summary": "Obesity is influenced by many factors, including health behaviors, stress, and medical conditions.",
+    "type": "cdc-media",
+    "mediaId": 745685
+  },
+  {
+    "id": "cdc-cholesterol-management-change-package",
+    "title": "CDC: Cholesterol Management Change Package",
+    "edition": "2024",
+    "summary": "The Cholesterol Management Change Package lists process improvements to help clinicians implement optimal cholesterol management.",
+    "type": "cdc-media",
+    "mediaId": 751082
+  },
+  {
+    "id": "cdc-quiz-test-your-knowledge-about-urgent-maternal-war",
+    "title": "CDC: Quiz: Test Your Knowledge about Urgent Maternal Warning Signs",
+    "edition": "2024",
+    "summary": "Test your knowledge about urgent maternal warning signs.",
+    "type": "cdc-media",
+    "mediaId": 753106
+  },
+  {
+    "id": "cdc-how-to-prevent-e-coli-infection",
+    "title": "CDC: How to Prevent E. coli infection",
+    "edition": "2024",
+    "summary": "This page includes information on how to prevent an E. coli infection.",
+    "type": "cdc-media",
+    "mediaId": 759921
+  },
+  {
+    "id": "cdc-about-bacterial-meningitis",
+    "title": "CDC: About Bacterial Meningitis",
+    "edition": "2025",
+    "summary": "Many bacteria can cause meningitis. How they spread and who is at risk varies by bacteria type.",
+    "type": "cdc-media",
+    "mediaId": 766408
+  }
+]
