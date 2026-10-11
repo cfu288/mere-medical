@@ -1,3 +1,5 @@
+import { setTimeout } from 'timers/promises';
+
 import { fetchWithRetries } from './retry';
 import { crawlDelaySeconds } from './robots';
 
@@ -7,14 +9,14 @@ type Host = { delayMs: number; lastRequestAt: number };
 
 /** A fetch that reads each host's robots.txt once, waits out its crawl delay, retries, and gives up on any request after FETCH_TIMEOUT_MS. */
 export function createCrawlDelayedFetch({
-  fetchImpl,
-  sleep,
-  now,
+  fetchImpl = fetch,
+  sleep = setTimeout,
+  now = Date.now,
 }: {
-  fetchImpl: (url: string, init?: RequestInit) => Promise<Response>;
-  sleep: (ms: number) => Promise<unknown>;
-  now: () => number;
-}): (url: string) => Promise<Response> {
+  fetchImpl?: (url: string, init?: RequestInit) => Promise<Response>;
+  sleep?: (ms: number) => Promise<unknown>;
+  now?: () => number;
+} = {}): (url: string) => Promise<Response> {
   const hosts = new Map<string, Host>();
   const timed = (url: string) =>
     fetchImpl(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });

@@ -5,10 +5,6 @@ import { ParsedDocument } from './sections';
 export function webpage(bytes: Uint8Array): ParsedDocument {
   return {
     kind: 'webpage',
-    blocks: markdownToBlocks(htmlToMarkdown(decode(bytes))),
+    blocks: markdownToBlocks(htmlToMarkdown(new TextDecoder().decode(bytes))),
   };
-}
-
-function decode(bytes: Uint8Array): string {
-  return new TextDecoder().decode(bytes);
 }

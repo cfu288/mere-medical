@@ -1,6 +1,5 @@
 import { mkdirSync, readFileSync } from 'fs';
 import { dirname, join } from 'path';
-import { setTimeout as sleep } from 'timers/promises';
 
 import { ingestSources } from './lib/ingest';
 import { openReferencesDb } from './lib/referencesDb';
@@ -8,11 +7,7 @@ import { createCrawlDelayedFetch } from './lib/crawlDelayedFetch';
 import { parseSources } from './lib/sources';
 import { printAudit } from './printAudit';
 
-const crawlDelayedFetch = createCrawlDelayedFetch({
-  fetchImpl: fetch,
-  sleep,
-  now: Date.now,
-});
+const crawlDelayedFetch = createCrawlDelayedFetch();
 
 async function fetchBytes(url: string): Promise<Uint8Array> {
   const response = await crawlDelayedFetch(url);
