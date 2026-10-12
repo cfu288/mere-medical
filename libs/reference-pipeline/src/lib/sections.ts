@@ -1,8 +1,10 @@
-import { Block, PagedBlock } from './blocks';
-
-export type ParsedDocument =
-  | { kind: 'paged'; blocks: PagedBlock[] }
-  | { kind: 'webpage'; blocks: Block[] };
+/**
+ * One heading or run of text from a parsed document, in reading order. `page`
+ * is the PDF page it is on, or null for a webpage.
+ */
+export type Block =
+  | { kind: 'heading'; level: number; text: string; page: number | null }
+  | { kind: 'text'; text: string; page: number | null };
 
 export type Location =
   | { kind: 'pages'; start: number; end: number }
@@ -29,11 +31,11 @@ const DROPPED_TITLES = [
   /recommendation categorization/,
 ];
 
-type Draft<B> = {
+type Draft = {
   title: string;
-  parent: Draft<B> | null;
+  parent: Draft | null;
   pages: number[];
-  body: B[];
+  body: Block[];
 };
 
 /**
@@ -49,23 +51,19 @@ type Draft<B> = {
  * - Section ids are made from titles and are unique in the document. A
  *   repeated title gets `-2`, `-3` and so on.
  *
- * @param doc `ParsedDocument`. Paged blocks from a PDF or blocks from a
- * webpage.
+ * @param blocks `Block[]`. A document's blocks in reading order.
  * @returns `{ sections: Section[]; dropped: string[] }`. The sections in
  * reading order, and the titles of the dropped sections in that list.
- * A PDF section's location gives its first and last page.
+ * A section with pages gives its first and last page as its location.
  *
  * @example
- * buildSections({
- *   kind: 'webpage',
- *   blocks: [
- *     { kind: 'text', text: 'Updated 2026.' },
- *     { kind: 'heading', level: 1, text: 'Goals' },
- *     { kind: 'text', text: 'Below 130.' },
- *     { kind: 'heading', level: 1, text: 'References' },
- *     { kind: 'text', text: '1. Smith.' },
- *   ],
- * });
+ * buildSections([
+ *   { kind: 'text', text: 'Updated 2026.', page: null },
+ *   { kind: 'heading', level: 1, text: 'Goals', page: null },
+ *   { kind: 'text', text: 'Below 130.', page: null },
+ *   { kind: 'heading', level: 1, text: 'References', page: null },
+ *   { kind: 'text', text: '1. Smith.', page: null },
+ * ]);
  * // {
  * //   sections: [
  * //     { sectionId: 'opening-text', parentId: null, title: 'Opening text', location: { kind: 'webpage' }, contentMd: 'Updated 2026.' },
@@ -74,30 +72,19 @@ type Draft<B> = {
  * //   dropped: ['References'],
  * // }
  */
-export function buildSections(doc: ParsedDocument): {
+export function buildSections(blocks: Block[]): {
   sections: Section[];
   dropped: string[];
 } {
-  return doc.kind === 'paged'
-    ? finish(splitLongPages(drafts(doc.blocks, (b) => [b.page])), (draft) => ({
-        kind: 'pages',
-        start: Math.min(...draft.pages),
-        end: Math.max(...draft.pages),
-      }))
-    : finish(
-        drafts(doc.blocks, () => []),
-        () => ({ kind: 'webpage' }),
-      );
+  return finish(splitLongPages(drafts(blocks)));
 }
 
-function drafts<B extends Block>(
-  blocks: B[],
-  pagesOf: (block: B) => number[],
-): Draft<B>[] {
-  const all: Draft<B>[] = [];
-  const stack: { level: number; draft: Draft<B> }[] = [];
-  let current: Draft<B> | null = null;
+function drafts(blocks: Block[]): Draft[] {
+  const all: Draft[] = [];
+  const stack: { level: number; draft: Draft }[] = [];
+  let current: Draft | null = null;
   for (const block of blocks) {
+    const pages = block.page === null ? [] : [block.page];
     if (block.kind === 'heading') {
       while (stack.length > 0 && stack[stack.length - 1].level >= block.level) {
         stack.pop();
@@ -105,7 +92,7 @@ function drafts<B extends Block>(
       current = {
         title: block.text,
         parent: stack[stack.length - 1]?.draft ?? null,
-        pages: pagesOf(block),
+        pages,
         body: [],
       };
       stack.push({ level: block.level, draft: current });
@@ -116,38 +103,38 @@ function drafts<B extends Block>(
         all.push(current);
       }
       current.body.push(block);
-      current.pages.push(...pagesOf(block));
+      current.pages.push(...pages);
     }
   }
   return all;
 }
 
-function splitLongPages(all: Draft<PagedBlock>[]): Draft<PagedBlock>[] {
+function splitLongPages(all: Draft[]): Draft[] {
   return all.flatMap((draft) => {
-    if (bodyText(draft.body).length <= MAX_PDF_SECTION_CHARS) {
+    if (
+      draft.pages.length === 0 ||
+      bodyText(draft.body).length <= MAX_PDF_SECTION_CHARS
+    ) {
       return [draft];
     }
     const pages = [...new Set(draft.body.map((b) => b.page))];
     const children = pages.map((page) => ({
       title: `Page ${page}`,
       parent: draft,
-      pages: [page],
+      pages: page === null ? [] : [page],
       body: draft.body.filter((b) => b.page === page),
     }));
     const headingPages = draft.pages.filter(
       (p) => !draft.body.some((b) => b.page === p),
     );
     draft.body = [];
-    draft.pages = headingPages.length > 0 ? headingPages : [pages[0]];
+    draft.pages = headingPages.length > 0 ? headingPages : children[0].pages;
     return [draft, ...children];
   });
 }
 
-function finish<B extends Block>(
-  all: Draft<B>[],
-  locate: (draft: Draft<B>) => Location,
-): { sections: Section[]; dropped: string[] } {
-  const droppedDrafts = new Set<Draft<B>>();
+function finish(all: Draft[]): { sections: Section[]; dropped: string[] } {
+  const droppedDrafts = new Set<Draft>();
   const dropped: string[] = [];
   for (const draft of all) {
     if (draft.parent && droppedDrafts.has(draft.parent)) {
@@ -158,7 +145,7 @@ function finish<B extends Block>(
     }
   }
 
-  const blank = new Set<Draft<B>>();
+  const blank = new Set<Draft>();
   for (const draft of [...all].reverse()) {
     const children = all.filter(
       (other) => other.parent === draft && !droppedDrafts.has(other),
@@ -168,7 +155,7 @@ function finish<B extends Block>(
     }
   }
 
-  const ids = new Map<Draft<B>, string>();
+  const ids = new Map<Draft, string>();
   const taken = new Set<string>();
   const sections: Section[] = [];
   for (const draft of all) {
@@ -186,7 +173,14 @@ function finish<B extends Block>(
       sectionId,
       parentId: draft.parent ? ids.get(draft.parent) ?? null : null,
       title: draft.title,
-      location: locate(draft),
+      location:
+        draft.pages.length > 0
+          ? {
+              kind: 'pages',
+              start: Math.min(...draft.pages),
+              end: Math.max(...draft.pages),
+            }
+          : { kind: 'webpage' },
       contentMd: bodyText(draft.body),
     });
   }

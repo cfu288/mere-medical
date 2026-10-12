@@ -27,8 +27,9 @@ CREATE TABLE sections (
   url TEXT,
   PRIMARY KEY (document_id, section_id)
 );
-CREATE VIRTUAL TABLE documents_fts USING fts5(id UNINDEXED, title, summary, tokenize = 'porter unicode61');
-CREATE VIRTUAL TABLE sections_fts USING fts5(document_id UNINDEXED, section_id UNINDEXED, title, content_md, tokenize = 'porter unicode61');
+CREATE VIRTUAL TABLE documents_fts USING fts5(id UNINDEXED, title, summary, content = 'documents', tokenize = 'porter unicode61');
+CREATE VIRTUAL TABLE sections_fts USING fts5(document_id UNINDEXED, section_id UNINDEXED, title, content_md, content = 'sections', tokenize = 'porter unicode61');
+-- plus insert, update and delete triggers on documents and sections that keep both indexes current
 ```
 
 A **reference** (`documents`) is a catalog entry for one published work, such
@@ -48,7 +49,8 @@ A citation needs both rows, the reference's title and url and the section's
 page or own url. Section ids repeat across references (most CDC pages have a
 "key-points"), so a section is always addressed as reference plus section
 id. The two `_fts` tables are the full-text indexes behind the
-two searches.
+two searches. They store no text of their own, and triggers update them with
+every change to `documents` and `sections`.
 
 Example rows. The VA-DoD hypertension guideline:
 
@@ -75,9 +77,10 @@ Each format has its own adapter that produces the same blocks (headings and
 text). Building sections from them is shared, with page handling added for
 PDFs.
 
-- **HTML**: turndown converts the page to markdown and `#` headings become
-  heading blocks. When the page has exactly one `<main>` element (or, failing
-  that, exactly one `<article>`), only that element is converted, which leaves
+- **HTML**: the page is parsed into a DOM. Each `<h1>` to `<h6>` becomes a
+  heading block, and turndown converts the content between headings to
+  markdown. When the page has exactly one `<main>` element (or, failing
+  that, exactly one `<article>`), only that element is read, which leaves
   out site navigation and footers. Scripts, styles, `<noscript>`, frames,
   embedded objects and templates are dropped. A link or image whose address is
   not web, mail or relative (such as `javascript:` or `data:`) keeps only its
@@ -157,8 +160,7 @@ The audit checks the built library for problems a reader of it would hit. It rep
 sections with no text and no subsections, sections that are only links, HTML
 tags left in the text, links that are not web, mail or relative addresses,
 unreadable characters, text repeated from another
-section, references with under 500 characters of text, an empty library, and
-any reference or section whose search index row is missing, stale or left over.
+section, references with under 500 characters of text, and an empty library.
 It prints each check's count with examples, then the largest sections. To
 audit an existing library without rebuilding it:
 

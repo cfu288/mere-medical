@@ -1,4 +1,4 @@
-import { PagedBlock } from './blocks';
+import { Block } from './sections';
 
 type PdfLine = { page: number; size: number; y: number; text: string };
 
@@ -83,7 +83,7 @@ export async function pdfLines(bytes: Uint8Array): Promise<PdfLine[]> {
  *   heights, a move up the page, or a new page.
  *
  * @param lines `PdfLine[]`. From {@link pdfLines}.
- * @returns `PagedBlock[]`. Blocks in reading order, each with its page.
+ * @returns `Block[]`. Blocks in reading order, each with its page.
  *
  * @example
  * linesToBlocks([
@@ -96,7 +96,7 @@ export async function pdfLines(bytes: Uint8Array): Promise<PdfLine[]> {
  * //   { kind: 'text', text: 'We recommend a goal below 130 mmHg.', page: 1 },
  * // ]
  */
-export function linesToBlocks(lines: PdfLine[]): PagedBlock[] {
+export function linesToBlocks(lines: PdfLine[]): Block[] {
   const kept = withoutFurniture(lines);
   const body = bodySize(kept);
   const headingSizes = [
@@ -107,7 +107,7 @@ export function linesToBlocks(lines: PdfLine[]): PagedBlock[] {
     ),
   ].sort((a, b) => b - a);
 
-  const blocks: PagedBlock[] = [];
+  const blocks: Block[] = [];
   let previous: PdfLine | null = null;
   for (const line of kept) {
     const level = headingSizes.indexOf(line.size) + 1;

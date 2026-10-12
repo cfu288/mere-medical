@@ -3,19 +3,16 @@ import { buildSections } from './sections';
 describe('buildSections', () => {
   it('nests deeper headings under the heading above them', () => {
     expect(
-      buildSections({
-        kind: 'webpage',
-        blocks: [
-          { kind: 'heading', level: 1, text: 'Screening' },
-          { kind: 'text', text: 'Screen adults.' },
-          { kind: 'heading', level: 2, text: 'Hypertension' },
-          { kind: 'text', text: 'Measure blood pressure.' },
-          { kind: 'heading', level: 2, text: 'Diabetes' },
-          { kind: 'text', text: 'Check A1c.' },
-          { kind: 'heading', level: 1, text: 'Immunizations' },
-          { kind: 'text', text: 'Influenza yearly.' },
-        ],
-      }),
+      buildSections([
+        { kind: 'heading', level: 1, text: 'Screening', page: null },
+        { kind: 'text', text: 'Screen adults.', page: null },
+        { kind: 'heading', level: 2, text: 'Hypertension', page: null },
+        { kind: 'text', text: 'Measure blood pressure.', page: null },
+        { kind: 'heading', level: 2, text: 'Diabetes', page: null },
+        { kind: 'text', text: 'Check A1c.', page: null },
+        { kind: 'heading', level: 1, text: 'Immunizations', page: null },
+        { kind: 'text', text: 'Influenza yearly.', page: null },
+      ]),
     ).toEqual({
       sections: [
         {
@@ -53,14 +50,11 @@ describe('buildSections', () => {
 
   it('keeps text before the first heading as an opening section', () => {
     expect(
-      buildSections({
-        kind: 'webpage',
-        blocks: [
-          { kind: 'text', text: 'Published by the task force.' },
-          { kind: 'heading', level: 2, text: 'Scope' },
-          { kind: 'text', text: 'Adults in primary care.' },
-        ],
-      }),
+      buildSections([
+        { kind: 'text', text: 'Published by the task force.', page: null },
+        { kind: 'heading', level: 2, text: 'Scope', page: null },
+        { kind: 'text', text: 'Adults in primary care.', page: null },
+      ]),
     ).toEqual({
       sections: [
         {
@@ -84,15 +78,12 @@ describe('buildSections', () => {
 
   it('locates a pdf section by the pages of its heading and its own text', () => {
     expect(
-      buildSections({
-        kind: 'paged',
-        blocks: [
-          { kind: 'heading', level: 1, text: 'IX. Recommendations', page: 26 },
-          { kind: 'heading', level: 2, text: 'Blood Pressure Goals', page: 31 },
-          { kind: 'text', text: 'We recommend a goal of <130 mmHg.', page: 31 },
-          { kind: 'text', text: 'Discussion continues.', page: 33 },
-        ],
-      }),
+      buildSections([
+        { kind: 'heading', level: 1, text: 'IX. Recommendations', page: 26 },
+        { kind: 'heading', level: 2, text: 'Blood Pressure Goals', page: 31 },
+        { kind: 'text', text: 'We recommend a goal of <130 mmHg.', page: 31 },
+        { kind: 'text', text: 'Discussion continues.', page: 33 },
+      ]),
     ).toEqual({
       sections: [
         {
@@ -117,76 +108,81 @@ describe('buildSections', () => {
 
   it('drops headings with no text of their own or in their subsections', () => {
     expect(
-      buildSections({
-        kind: 'webpage',
-        blocks: [
-          { kind: 'heading', level: 1, text: 'Final Recommendation Statement' },
-          { kind: 'heading', level: 1, text: 'Cover' },
-          { kind: 'heading', level: 2, text: 'and' },
-          { kind: 'heading', level: 2, text: 'Office of Quality' },
-          { kind: 'heading', level: 1, text: 'Recommendations' },
-          { kind: 'heading', level: 2, text: 'Goals' },
-          { kind: 'text', text: 'A goal of <130 mmHg.' },
-        ],
-      }).sections.map((s) => s.sectionId),
+      buildSections([
+        {
+          kind: 'heading',
+          level: 1,
+          text: 'Final Recommendation Statement',
+          page: null,
+        },
+        { kind: 'heading', level: 1, text: 'Cover', page: null },
+        { kind: 'heading', level: 2, text: 'and', page: null },
+        { kind: 'heading', level: 2, text: 'Office of Quality', page: null },
+        { kind: 'heading', level: 1, text: 'Recommendations', page: null },
+        { kind: 'heading', level: 2, text: 'Goals', page: null },
+        { kind: 'text', text: 'A goal of <130 mmHg.', page: null },
+      ]).sections.map((s) => s.sectionId),
     ).toEqual(['recommendations', 'goals']);
   });
 
   it('gives repeated titles distinct ids', () => {
     expect(
-      buildSections({
-        kind: 'webpage',
-        blocks: [
-          { kind: 'heading', level: 1, text: 'Background' },
-          { kind: 'text', text: 'First.' },
-          { kind: 'heading', level: 1, text: 'Background' },
-          { kind: 'text', text: 'Second.' },
-        ],
-      }).sections.map((s) => s.sectionId),
+      buildSections([
+        { kind: 'heading', level: 1, text: 'Background', page: null },
+        { kind: 'text', text: 'First.', page: null },
+        { kind: 'heading', level: 1, text: 'Background', page: null },
+        { kind: 'text', text: 'Second.', page: null },
+      ]).sections.map((s) => s.sectionId),
     ).toEqual(['background', 'background-2']);
   });
 
   it('never gives a title the id a repeated title already took', () => {
     expect(
-      buildSections({
-        kind: 'webpage',
-        blocks: [
-          { kind: 'heading', level: 1, text: 'Dose' },
-          { kind: 'text', text: 'First.' },
-          { kind: 'heading', level: 1, text: 'Dose' },
-          { kind: 'text', text: 'Second.' },
-          { kind: 'heading', level: 1, text: 'Dose 2' },
-          { kind: 'text', text: 'Third.' },
-        ],
-      }).sections.map((s) => s.sectionId),
+      buildSections([
+        { kind: 'heading', level: 1, text: 'Dose', page: null },
+        { kind: 'text', text: 'First.', page: null },
+        { kind: 'heading', level: 1, text: 'Dose', page: null },
+        { kind: 'text', text: 'Second.', page: null },
+        { kind: 'heading', level: 1, text: 'Dose 2', page: null },
+        { kind: 'text', text: 'Third.', page: null },
+      ]).sections.map((s) => s.sectionId),
     ).toEqual(['dose', 'dose-2', 'dose-2-2']);
   });
 
   it('drops reference lists, participant lists, abbreviations, search strategy, and categorization appendices with their subsections', () => {
     expect(
-      buildSections({
-        kind: 'webpage',
-        blocks: [
-          { kind: 'heading', level: 1, text: 'Recommendations' },
-          { kind: 'text', text: 'We recommend a goal of <130 mmHg.' },
-          {
-            kind: 'heading',
-            level: 1,
-            text: 'Appendix C: 2020 Recommendation Categorization',
-          },
-          { kind: 'heading', level: 2, text: 'Carried Forward' },
-          { kind: 'text', text: 'We suggest a goal of <130 mmHg.' },
-          { kind: 'heading', level: 1, text: 'Appendix D: Participant List' },
-          {
-            kind: 'heading',
-            level: 1,
-            text: 'Appendix F. Literature Review Search Terms and Strategy',
-          },
-          { kind: 'heading', level: 1, text: 'Appendix L. Abbreviation List' },
-          { kind: 'heading', level: 1, text: 'References' },
-          { kind: 'text', text: '1. Smith J. Trial. 2020.' },
-        ],
-      }),
+      buildSections([
+        { kind: 'heading', level: 1, text: 'Recommendations', page: null },
+        { kind: 'text', text: 'We recommend a goal of <130 mmHg.', page: null },
+        {
+          kind: 'heading',
+          level: 1,
+          text: 'Appendix C: 2020 Recommendation Categorization',
+          page: null,
+        },
+        { kind: 'heading', level: 2, text: 'Carried Forward', page: null },
+        { kind: 'text', text: 'We suggest a goal of <130 mmHg.', page: null },
+        {
+          kind: 'heading',
+          level: 1,
+          text: 'Appendix D: Participant List',
+          page: null,
+        },
+        {
+          kind: 'heading',
+          level: 1,
+          text: 'Appendix F. Literature Review Search Terms and Strategy',
+          page: null,
+        },
+        {
+          kind: 'heading',
+          level: 1,
+          text: 'Appendix L. Abbreviation List',
+          page: null,
+        },
+        { kind: 'heading', level: 1, text: 'References', page: null },
+        { kind: 'text', text: '1. Smith J. Trial. 2020.', page: null },
+      ]),
     ).toEqual({
       sections: [
         {
@@ -209,12 +205,14 @@ describe('buildSections', () => {
 
   it('keeps a section whose title only mentions references', () => {
     expect(
-      buildSections({
-        kind: 'webpage',
-        blocks: [
-          { kind: 'heading', level: 1, text: 'Patient References and Values' },
-        ],
-      }).dropped,
+      buildSections([
+        {
+          kind: 'heading',
+          level: 1,
+          text: 'Patient References and Values',
+          page: null,
+        },
+      ]).dropped,
     ).toEqual([]);
   });
 
@@ -222,14 +220,11 @@ describe('buildSections', () => {
     const pageTwo = 'a'.repeat(7000);
     const pageThree = 'b'.repeat(7000);
     expect(
-      buildSections({
-        kind: 'paged',
-        blocks: [
-          { kind: 'heading', level: 1, text: 'Adult Schedule', page: 2 },
-          { kind: 'text', text: pageTwo, page: 2 },
-          { kind: 'text', text: pageThree, page: 3 },
-        ],
-      }),
+      buildSections([
+        { kind: 'heading', level: 1, text: 'Adult Schedule', page: 2 },
+        { kind: 'text', text: pageTwo, page: 2 },
+        { kind: 'text', text: pageThree, page: 3 },
+      ]),
     ).toEqual({
       sections: [
         {

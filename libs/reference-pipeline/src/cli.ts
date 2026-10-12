@@ -3,19 +3,9 @@ import { dirname, join } from 'path';
 
 import { ingestSources } from './lib/ingest';
 import { openReferencesDb } from './lib/referencesDb';
-import { createCrawlDelayedFetch } from './lib/crawlDelayedFetch';
+import { createFetchBytes } from './lib/fetchBytes';
 import { parseSources } from './lib/sources';
 import { printAudit } from './printAudit';
-
-const crawlDelayedFetch = createCrawlDelayedFetch();
-
-async function fetchBytes(url: string): Promise<Uint8Array> {
-  const response = await crawlDelayedFetch(url);
-  if (!response.ok) {
-    throw new Error(`GET ${url} returned ${response.status}`);
-  }
-  return new Uint8Array(await response.arrayBuffer());
-}
 
 async function main() {
   const root = join(__dirname, '..');
@@ -24,12 +14,16 @@ async function main() {
   const sources = parseSources(JSON.parse(readFileSync(sourcesPath, 'utf8')));
   mkdirSync(dirname(dbPath), { recursive: true });
   const db = openReferencesDb(dbPath);
-  const { references, skipped } = await ingestSources({
+  const reports = await ingestSources({
     db,
     sources,
-    fetchBytes,
+    fetchBytes: createFetchBytes(),
   });
-  for (const report of references) {
+  for (const report of reports) {
+    if (report.status === 'skipped') {
+      console.log(`\nskipped ${report.id}: ${report.url} was already ingested`);
+      continue;
+    }
     switch (report.status) {
       case 'written':
         console.log(`\n${report.id}: ${report.outline.length} sections`);
@@ -54,11 +48,8 @@ async function main() {
       console.log(`  dropped: ${report.dropped.join('; ')}`);
     }
   }
-  for (const { id, url } of skipped) {
-    console.log(`\nskipped ${id}: ${url} was already ingested`);
-  }
   console.log(
-    `\nwrote ${references.filter((r) => r.status === 'written').length} reference(s) to ${dbPath}`,
+    `\nwrote ${reports.filter((r) => r.status === 'written').length} reference(s) to ${dbPath}`,
   );
   console.log();
   printAudit(db, dbPath);

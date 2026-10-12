@@ -55,25 +55,22 @@ describe('ingestSources', () => {
       { section_id: 'screening', parent_id: null },
       { section_id: 'hypertension', parent_id: 'screening' },
     ]);
-    expect(report).toEqual({
-      references: [
-        {
-          id: 'uspstf-a-and-b',
-          status: 'written',
-          outline: [
-            { depth: 0, sectionId: 'screening', title: 'Screening', chars: 14 },
-            {
-              depth: 1,
-              sectionId: 'hypertension',
-              title: 'Hypertension',
-              chars: 23,
-            },
-          ],
-          dropped: ['References'],
-        },
-      ],
-      skipped: [],
-    });
+    expect(report).toEqual([
+      {
+        id: 'uspstf-a-and-b',
+        status: 'written',
+        outline: [
+          { depth: 0, sectionId: 'screening', title: 'Screening', chars: 14 },
+          {
+            depth: 1,
+            sectionId: 'hypertension',
+            title: 'Hypertension',
+            chars: 23,
+          },
+        ],
+        dropped: ['References'],
+      },
+    ]);
   });
 
   it('stores a pdf source with page locations', async () => {
@@ -130,9 +127,16 @@ describe('ingestSources', () => {
         url: 'https://www.cdc.gov/shingles/about/index.html',
       },
     ]);
-    expect(report.skipped).toEqual([
+    expect(report).toEqual([
+      {
+        id: 'cdc-about-shingles',
+        status: 'written',
+        outline: [{ depth: 0, sectionId: 'about', title: 'About', chars: 27 }],
+        dropped: [],
+      },
       {
         id: 'cdc-about-shingles-2',
+        status: 'skipped',
         url: 'https://www.cdc.gov/shingles/about/index.html',
       },
     ]);
@@ -169,7 +173,7 @@ describe('ingestSources', () => {
       fetchBytes: fakeFetch({ 'https://example.com/ab': '' }),
     });
 
-    expect(report.references).toEqual([
+    expect(report).toEqual([
       { id: 'uspstf-a-and-b', status: 'missing', outline: [], dropped: [] },
     ]);
     expect(db.prepare('SELECT id FROM documents').all()).toEqual([]);
@@ -186,7 +190,7 @@ describe('ingestSources', () => {
       }),
     });
 
-    expect(report.references).toEqual([
+    expect(report).toEqual([
       {
         id: 'uspstf-a-and-b',
         status: 'missing',
@@ -212,7 +216,7 @@ describe('ingestSources', () => {
       fetchBytes: fakeFetch({ 'https://example.com/ab': '' }),
     });
 
-    expect(report.references).toEqual([
+    expect(report).toEqual([
       { id: 'uspstf-a-and-b', status: 'unchanged', outline: [], dropped: [] },
     ]);
     expect(db.prepare('SELECT section_id FROM sections').all()).toEqual([
