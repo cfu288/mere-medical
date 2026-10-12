@@ -39,7 +39,7 @@ const sourcesSchema = z
 /**
  * Parses the source configuration, such as the contents of sources.json.
  *
- * Text fields are trimmed and a string `mediaId` becomes a number. Ids are
+ * It trims text fields and turns a string `mediaId` into a number. Ids are
  * lowercase words joined by hyphens and must be unique.
  *
  * @param raw `unknown`. The parsed JSON.

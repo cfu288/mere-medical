@@ -15,16 +15,16 @@ type Host = { delayMs: number; lastRequestAt: number };
  *   `Crawl-delay` for all user agents (`User-agent: *`) sets the wait between
  *   requests to that host. A missing or unreadable robots.txt means no wait.
  *   It reads only `Crawl-delay`, not `Disallow`.
- * - Each request waits until the host's delay has passed since its last
- *   request, robots.txt included.
- * - A request is given up after 120 seconds.
- * - A 429 or 5xx response, or a thrown error, is retried up to 4 attempts in
+ * - Each request waits until the host's delay passes after its last request,
+ *   robots.txt included.
+ * - It abandons a request after 120 seconds.
+ * - It retries a 429 or 5xx response, or a thrown error, up to 4 attempts in
  *   all. The waits between attempts are 2, 4 and 8 seconds.
  * - Call it one request at a time. Two first requests to a host at once both
  *   read robots.txt and race on the wait.
  *
- * @param options Optional. Each field defaults to the real implementation and
- * is replaced only in tests.
+ * @param options Optional. Each field defaults to the real implementation. Only
+ * tests pass their own.
  * @param options.fetchImpl `(url: string, init?: RequestInit) => Promise<Response>`.
  * Defaults to the global `fetch`.
  * @param options.sleep `(ms: number) => Promise<unknown>`. Defaults to

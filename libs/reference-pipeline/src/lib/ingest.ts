@@ -11,13 +11,13 @@ import { Source } from './sources';
  * What happened to one configured source, for the CLI to print.
  *
  * - `id`: the source's configured id.
- * - `status`: `written` when its sections were stored, or `empty` when it
- *   parsed to no sections and nothing was stored.
+ * - `status`: `written` when the library holds its sections, or `empty` when it
+ *   parsed to no sections and the library holds nothing for it.
  * - `outline`: for a written source, every kept section in document order.
  *   Each entry holds the section's nesting depth (0 for a top-level section),
  *   id, title and markdown length in characters.
  * - `dropped`: titles of sections left out by rule, such as reference lists
- *   and appendices. Empty when nothing was dropped.
+ *   and appendices. Empty when no rule dropped a section.
  *
  * @example
  * {
@@ -47,12 +47,11 @@ export type IngestReport =
 /**
  * Builds a new reference library at `path` from the configured `sources`.
  *
- * Every source is fetched and parsed first. A failed fetch or a malformed
- * response rejects the promise and leaves any library at `path` as it was.
- * The library is then written to `<path>.building` and renamed over `path`.
- * A reader of `path` sees the old library or the new one, never a partial
- * one. A source that parsed to no sections is reported as `empty` and not
- * stored.
+ * It fetches and parses every source first. A failed fetch or a malformed
+ * response rejects the promise and leaves any library at `path` as it was. It
+ * then writes the library to `<path>.building` and renames it over `path`. A
+ * reader of `path` sees the old library or the new one, never a partial one. It
+ * reports a source that parsed to no sections as `empty` and does not store it.
  *
  * @param args.path `string`. Where the library file goes.
  * @param args.sources `Source[]`. Parsed configuration, from `parseSources`.

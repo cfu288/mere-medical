@@ -54,9 +54,9 @@ every change to `documents` and `sections`.
 
 The rows below come from the VA-DoD hypertension guideline.
 
-| id                  | title                         | edition | summary                                                                                                                  | url                                                                                                        |
-| ------------------- | ----------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
-| va-dod-hypertension | VA-DoD Hypertension Guideline | 2026    | Diagnosis of high blood pressure in adults, home and office measurement, blood pressure goals, and choice of medications | https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/htn/HTN-CPG_2026-Guideline_final_20260827.pdf |
+| id                  | title                         | edition | summary                                                                                                                          | url                                                                                                        |
+| ------------------- | ----------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| va-dod-hypertension | VA-DoD Hypertension Guideline | 2026    | High blood pressure in adults. It covers diagnosis, home and office measurement, blood pressure goals, and choice of medications | https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/htn/HTN-CPG_2026-Guideline_final_20260827.pdf |
 
 | section_id                                                   | parent_id                                                    | position | title                                                                | page_start | page_end | url  | content_md                                                       |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | -------- | -------------------------------------------------------------------- | ---------- | -------- | ---- | ---------------------------------------------------------------- |
@@ -74,18 +74,18 @@ fetch -> adapter (html | pdf) -> blocks (headings + text) -> sections -> SQLite
 ```
 
 Each format has its own adapter that produces the same blocks (headings and
-text). Building sections from them is shared, with page handling added for
+text). Both formats share one section builder, which adds page handling for
 PDFs.
 
-- **HTML**: the page is parsed into a DOM. Each `<h1>` to `<h6>` becomes a
-  heading block, and turndown converts the content between headings to
-  markdown. When the page has exactly one `<main>` element (or, failing
-  that, exactly one `<article>`), only that element is read, which leaves
-  out site navigation and footers. Scripts, styles, `<noscript>`, frames,
-  embedded objects and templates are dropped. A link or image whose address is
-  not web, mail or relative (such as `javascript:` or `data:`) keeps only its
-  text or alt text. Text that would open a Markdown link or an HTML tag, such
-  as an encoded `<javascript:alert(1)>` or `<b>`, is escaped so it stays text.
+- **HTML**: domino parses the page into a DOM. Each `<h1>` to `<h6>` becomes a
+  heading block, and turndown converts the content between headings to markdown.
+  When the page has exactly one `<main>` element (or, failing that, exactly one
+  `<article>`), the adapter reads only that element. That leaves out site navigation and footers. The adapter drops scripts, styles, `<noscript>`,
+  frames, embedded objects and templates. A link or image whose address is not
+  web, mail or relative (such as `javascript:` or `data:`) keeps only its text
+  or alt text. The adapter escapes text that would open a Markdown link or an
+  HTML tag, such as an encoded `<javascript:alert(1)>` or `<b>`, so it stays
+  text.
 - **CDC media**: CDC's content syndication API serves a page's content without
   site navigation. The media's metadata gives the cdc.gov page it syndicates,
   which becomes the reference url every read cites. The content then goes
@@ -93,10 +93,9 @@ PDFs.
   Prefer this over CDC PDFs.
 - **PDF**: pdfjs text is rebuilt into lines and paragraphs. The body font size
   is the size covering the most characters. Lines at least 2pt larger are
-  headings, larger sizes are higher levels, and a heading wrapped over two lines
-  is joined. Lines repeated on more than half the pages (running headers,
-  "Page 3 of 123") are dropped. Body text is escaped as markdown, as HTML text
-  is. Every block keeps its page number.
+  headings, larger sizes are higher levels, and the adapter joins a heading
+  wrapped over two lines. The adapter drops lines repeated on more than half the
+  pages (running headers, "Page 3 of 123"). Body text has the same markdown escaping as HTML text. Every block keeps its page number.
 - **Sections**: each heading starts a section holding the text up to the next
   heading. Deeper headings become its subsections. Text before the first
   heading becomes an "Opening text" section. A PDF section whose own text is
@@ -104,13 +103,13 @@ PDFs.
 - **Dropped sections**: References, participant lists, abbreviation lists,
   literature search strategy, and recommendation categorization appendices
   (which repeat superseded wording from the previous edition). The run prints
-  what was dropped for each document so a missed title is caught when the
-  config is reviewed.
+  the dropped titles for each document, so a reviewer of the config can catch a
+  missed title.
 
-Each run fetches and parses every source, writes a new library next to the
-old one, and then renames it over the old one. A failed fetch stops the run
-and leaves the old library in place. A source that parsed to no sections is
-reported and left out.
+Each run fetches and parses every source, writes a new library next to the old
+one, and then renames it over the old one. A failed fetch stops the run and
+leaves the old library in place. The run reports a source that parsed to no
+sections and leaves it out.
 
 ## Config
 
@@ -122,7 +121,7 @@ the same fields with `"type": "html"`.
   "id": "va-dod-hypertension",
   "title": "VA-DoD Hypertension Guideline",
   "edition": "2026",
-  "summary": "Diagnosis of high blood pressure in adults, home and office measurement, blood pressure goals, and choice of medications",
+  "summary": "High blood pressure in adults. It covers diagnosis, home and office measurement, blood pressure goals, and choice of medications",
   "url": "https://www.healthquality.va.gov/.../HTN-CPG_2026-Guideline_final_20260827.pdf",
   "type": "pdf"
 }
@@ -150,11 +149,11 @@ page's [Media Library](https://tools.cdc.gov/medialibrary/index.aspx) address.
 npx tsx libs/reference-pipeline/src/cli.ts
 ```
 
-Writes `libs/reference-pipeline/data/references.db` (gitignored) and prints
-each document's outline. Requests to a host wait out the `Crawl-delay` its
-robots.txt sets for all user agents (USPSTF asks for 5 seconds). Each attempt
-is given up after 120 seconds, and a server error or rate limit is retried up
-to four attempts with growing waits.
+Writes `libs/reference-pipeline/data/references.db` (gitignored) and prints each
+document's outline. Requests to a host wait out the `Crawl-delay` its robots.txt
+sets for all user agents (USPSTF asks for 5 seconds). The fetch abandons an
+attempt after 120 seconds. It retries a server error or rate limit, up to four
+attempts with growing waits.
 
 ## Known limits
 
@@ -170,9 +169,10 @@ to four attempts with growing waits.
 - HTML sections are never split and carry no anchor, only the page url. A
   long table such as the USPSTF A and B list is one very long section. Each
   USPSTF recommendation page is also indexed on its own.
-- A body line repeated on more than half of a PDF's pages, differing only in
-  digits, is dropped as if it were a running header. On the configured VA-DoD
-  guidelines every dropped line is a running header or page footer.
+- The PDF adapter drops a body line that repeats on more than half the pages,
+  differing only in digits. It treats such a line as a running header. On the
+  configured VA-DoD guidelines every dropped line is a running header or page
+  footer.
 - Heading detection by font size assumes headings are larger than body text.
   A PDF that marks headings only with bold comes out as one "Opening text"
   section. That section is split into one section per page once it passes

@@ -3,7 +3,7 @@
  *
  * Only a `Crawl-delay` in a group whose `User-agent` lines include `*` counts.
  * The fetch sends Node's default user agent. Only `*` applies to it.
- * Comments after `#` are ignored and keys are matched in any case.
+ * It ignores comments after `#` and matches keys in any case.
  *
  * @param robotsTxt `string`. The body of a robots.txt file.
  * @returns `number`. The delay in seconds, or 0 when there is none or it is

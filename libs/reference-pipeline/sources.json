@@ -3,7 +3,7 @@
     "id": "uspstf-a-and-b",
     "title": "USPSTF A and B Recommendations",
     "edition": "Updated continuously",
-    "summary": "Preventive care the USPSTF recommends for adults and children: cancer, heart, infection, and mental health screening, plus preventive medications",
+    "summary": "Preventive care the USPSTF recommends for adults and children. It covers cancer, heart, infection, and mental health screening, plus preventive medications",
     "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation-topics/uspstf-a-and-b-recommendations",
     "type": "html"
   },
@@ -283,7 +283,7 @@
     "id": "uspstf-prevention-of-dental-caries-in-children-younger-than",
     "title": "USPSTF: Prevention of Dental Caries in Children Younger Than 5 Years: Screening and Interventions",
     "edition": "2021",
-    "summary": "Children younger than 5 years: oral fluoride supplements from age 6 months when the water is low in fluoride (grade B). Fluoride varnish on primary teeth from tooth eruption (grade B)",
+    "summary": "Oral fluoride supplements for children younger than 5 years, from age 6 months when the water is low in fluoride (grade B). Fluoride varnish on primary teeth from tooth eruption (grade B)",
     "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/prevention-of-dental-caries-in-children-younger-than-age-5-years-screening-and-interventions1",
     "type": "html"
   },
@@ -411,7 +411,7 @@
     "id": "va-dod-hypertension",
     "title": "VA-DoD Hypertension Guideline",
     "edition": "2026",
-    "summary": "Diagnosis of high blood pressure in adults, home and office measurement, blood pressure goals, and choice of medications",
+    "summary": "High blood pressure in adults. It covers diagnosis, home and office measurement, blood pressure goals, and choice of medications",
     "url": "https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/htn/HTN-CPG_2026-Guideline_final_20260827.pdf",
     "type": "pdf"
   },
@@ -419,7 +419,7 @@
     "id": "va-dod-lipids",
     "title": "VA-DoD Lipids Guideline",
     "edition": "2025",
-    "summary": "Cholesterol and heart disease risk in adults: risk assessment, statins and other lipid-lowering drugs, and lab monitoring",
+    "summary": "Cholesterol and heart disease risk in adults. It covers risk assessment, statins and other lipid-lowering drugs, and lab monitoring",
     "url": "https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/lipids/Lipids-CPG_2025-Guideline_final_20260106.pdf",
     "type": "pdf"
   },
@@ -427,7 +427,7 @@
     "id": "va-dod-type-2-diabetes",
     "title": "VA-DoD Type 2 Diabetes Guideline",
     "edition": "2023",
-    "summary": "Type 2 diabetes in adults: A1c goals, glucose monitoring, diabetes medications, and heart and kidney protection",
+    "summary": "Type 2 diabetes in adults. It covers A1c goals, glucose monitoring, diabetes medications, and heart and kidney protection",
     "url": "https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/diabetes/VADOD-Diabetes-CPG_Final_508.pdf",
     "type": "pdf"
   },
@@ -435,7 +435,7 @@
     "id": "va-dod-ckd",
     "title": "VA-DoD Chronic Kidney Disease Guideline",
     "edition": "2025",
-    "summary": "Chronic kidney disease in adults seen in primary care: eGFR and urine albumin testing, staging, blood pressure, and medications that protect the kidneys",
+    "summary": "Chronic kidney disease in adults seen in primary care. It covers eGFR and urine albumin testing, staging, blood pressure, and medications that protect the kidneys",
     "url": "https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/ckd/CKD-CPG_2025-Guideline_final_20250509.pdf",
     "type": "pdf"
   },
@@ -443,7 +443,7 @@
     "id": "va-dod-obesity",
     "title": "VA-DoD Overweight and Obesity Guideline",
     "edition": "2025",
-    "summary": "Overweight and obesity in adults: weight assessment, lifestyle and behavior programs, weight-loss medicines, and bariatric surgery referral",
+    "summary": "Overweight and obesity in adults. It covers weight assessment, lifestyle and behavior programs, weight-loss medicines, and bariatric surgery referral",
     "url": "https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/obesity/OBE-CPG_2025-Guideline_final_20251105.pdf",
     "type": "pdf"
   },
@@ -451,7 +451,7 @@
     "id": "va-dod-asthma",
     "title": "VA-DoD Asthma Guideline",
     "edition": "2025",
-    "summary": "Asthma in adults and teens in primary care: diagnosis, inhalers and controller medicines, flare-ups, and monitoring",
+    "summary": "Asthma in adults and teens in primary care. It covers diagnosis, inhalers and controller medicines, flare-ups, and monitoring",
     "url": "https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/asthma/Asthma-CPG_2025-Guideline_final_20250528.pdf",
     "type": "pdf"
   },
@@ -459,7 +459,7 @@
     "id": "va-dod-tobacco",
     "title": "VA-DoD Tobacco Use Treatment Guideline",
     "edition": "2026",
-    "summary": "Quitting smoking, vaping, and other tobacco: counseling, nicotine replacement, varenicline, bupropion, and relapse",
+    "summary": "Quitting smoking, vaping, and other tobacco. It covers counseling, nicotine replacement, varenicline, bupropion, and relapse",
     "url": "https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/tobacco/Tobacco-Cessation-CPG_2026-Guideline_final_20260109.pdf",
     "type": "pdf"
   },
@@ -467,7 +467,7 @@
     "id": "va-dod-osteoarthritis",
     "title": "VA-DoD Hip and Knee Osteoarthritis Guideline",
     "edition": "2026",
-    "summary": "Hip and knee arthritis without surgery: exercise, weight loss, pain medicines, injections, and devices",
+    "summary": "Hip and knee arthritis without surgery. It covers exercise, weight loss, pain medicines, injections, and devices",
     "url": "https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/OA/Osteoarthritis-CPG_2026-Guideline_final_20260618.pdf",
     "type": "pdf"
   },
@@ -475,7 +475,7 @@
     "id": "va-dod-insomnia-sleep-apnea",
     "title": "VA-DoD Insomnia and Obstructive Sleep Apnea Guideline",
     "edition": "2025",
-    "summary": "Chronic insomnia and obstructive sleep apnea: diagnosis, sleep studies, CBT for insomnia, sleep medicines, and CPAP",
+    "summary": "Chronic insomnia and obstructive sleep apnea. It covers diagnosis, sleep studies, CBT for insomnia, sleep medicines, and CPAP",
     "url": "https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/insomnia/I-OSA-CPG_2025-Guideline_final_20250915.pdf",
     "type": "pdf"
   },
@@ -483,7 +483,7 @@
     "id": "va-dod-menopause",
     "title": "VA-DoD Menopause Guideline",
     "edition": "2026",
-    "summary": "Menopause symptoms such as hot flashes, sleep and mood changes, vaginal dryness: hormone therapy and non-hormone options",
+    "summary": "Menopause symptoms such as hot flashes, sleep and mood changes, and vaginal dryness. It covers hormone therapy and non-hormone options",
     "url": "https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/WH/menopause/Menopause-CPG_2026-Guideline_v1_20260930.pdf",
     "type": "pdf"
   },
@@ -491,7 +491,7 @@
     "id": "va-dod-depression",
     "title": "VA-DoD Major Depressive Disorder Guideline",
     "edition": "2022",
-    "summary": "Depression in adults: screening, diagnosis, psychotherapy, antidepressant medicines, and treatment that is not working",
+    "summary": "Depression in adults. It covers screening, diagnosis, psychotherapy, antidepressant medicines, and treatment that is not working",
     "url": "https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/MH/mdd/VADODMDDCPGFinal508.pdf",
     "type": "pdf"
   },
@@ -499,7 +499,7 @@
     "id": "va-dod-low-back-pain",
     "title": "VA-DoD Low Back Pain Guideline",
     "edition": "2022",
-    "summary": "Low back pain in adults: when to image, exercise and physical therapy, pain medicines, and other treatments",
+    "summary": "Low back pain in adults. It covers when to image, exercise and physical therapy, pain medicines, and other treatments",
     "url": "https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/Pain/lbp/VADODLBPCPGFinal508.pdf",
     "type": "pdf"
   },
@@ -507,7 +507,7 @@
     "id": "va-dod-copd",
     "title": "VA-DoD COPD Guideline",
     "edition": "2026",
-    "summary": "Chronic obstructive pulmonary disease (COPD, emphysema, chronic bronchitis): diagnosis, inhalers, flare-ups, oxygen, and rehabilitation",
+    "summary": "Chronic obstructive pulmonary disease (COPD, emphysema, chronic bronchitis). It covers diagnosis, inhalers, flare-ups, oxygen, and rehabilitation",
     "url": "https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/copd/COPD-CPG_2026-CPG_final_20261007.pdf",
     "type": "pdf"
   },

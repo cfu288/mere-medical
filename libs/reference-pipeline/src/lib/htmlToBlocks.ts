@@ -22,19 +22,18 @@ const turndown = createTurndown();
 /**
  * Parses an HTML page into heading and text blocks.
  *
- * - Only the page's one `<main>` is read, or else its one `<article>`, or
+ * - It reads only the page's one `<main>`, or else its one `<article>`, or
  *   else the whole body.
  * - Each `<h1>` to `<h6>`, at any depth, becomes a heading block with its
  *   text.
  * - The content between headings becomes one markdown text block.
  * - A table that holds headings or lists becomes plain blocks. Other tables
  *   become GFM tables.
- * - Scripts, styles, noscript, frames, embedded objects and templates are
- *   dropped.
+ * - It drops scripts, styles, noscript, frames, embedded objects and templates.
  * - A link or image whose address is not safe (see {@link isSafeUrl}) keeps
  *   only its text or alt text.
- * - Page text that spells a tag or an `<scheme:...>` link is escaped and
- *   stays text.
+ * - It escapes page text that spells a tag or a `<scheme:...>` link. Markdown
+ *   shows that text as written.
  *
  * @param html `string`.
  * @returns `Block[]`, in reading order, each with a null page.

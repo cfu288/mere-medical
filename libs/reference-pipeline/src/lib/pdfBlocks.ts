@@ -10,9 +10,8 @@ const FURNITURE_MIN_PAGES = 4;
 /**
  * Reads the text lines of a PDF with pdf.js.
  *
- * Text items drawn at the same height are joined into one line, at the
- * largest of their font sizes. Whitespace is collapsed and empty lines are
- * skipped.
+ * It joins text items drawn at the same height into one line, at the largest of
+ * their font sizes. It collapses whitespace and skips empty lines.
  *
  * @param bytes `Uint8Array`. The PDF file.
  * @returns `Promise<PdfLine[]>`. Each line's page (from 1), font size, height
@@ -76,13 +75,13 @@ export async function pdfLines(bytes: Uint8Array): Promise<PdfLine[]> {
 /**
  * Turns PDF lines into heading and text blocks.
  *
- * - In a document of 4 or more pages, a line that repeats on more than half
- *   the pages is dropped. Running headers and page numbers are such lines.
+ * - In a document of 4 or more pages, it drops a line that repeats on more than
+ *   half the pages. Running headers and page numbers are such lines.
  * - The font size with the most text is the body size. A line at least 2 pt
  *   larger is a heading, and larger sizes are higher levels.
  * - Body lines join into a paragraph until a gap of more than 1.8 line
  *   heights, a move up the page, or a new page.
- * - Body text is escaped as markdown. Heading text stays plain.
+ * - It escapes body text as markdown. Heading text stays plain.
  *
  * @param lines `PdfLine[]`. From {@link pdfLines}.
  * @returns `Block[]`. Blocks in reading order, each with its page.

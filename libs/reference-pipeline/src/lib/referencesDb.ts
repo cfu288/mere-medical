@@ -16,8 +16,8 @@ export type ReferenceRecord = {
  * `sections` tables and their two full-text search tables if they are missing.
  *
  * The search tables hold no text of their own. They index `documents` and
- * `sections`, and insert triggers add each new row to them. A library is
- * written once and never edited.
+ * `sections`, and insert triggers add each new row to them. The pipeline writes
+ * a library once and never edits it.
  *
  * @param path `string`. A file path, or `':memory:'` for a library that is
  * not saved.

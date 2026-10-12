@@ -44,12 +44,12 @@ type Draft = {
  * headings nest.
  *
  * - Text before the first heading becomes an "Opening text" section.
- * - A section titled as a reference list, participant list, abbreviations,
- *   search strategy or recommendation categorization is dropped with its
+ * - It drops a section titled as a reference list, participant list,
+ *   abbreviations, search strategy or recommendation categorization, with its
  *   subsections.
- * - A section with no text and no subsections with text is dropped.
+ * - It drops a section with no text and no subsections with text.
  * - A PDF section over 12,000 characters gets a "Page N" subsection per page.
- * - Section ids are made from titles and are unique in the document. A
+ * - It makes section ids from titles, unique in the document. A
  *   repeated title gets `-2`, `-3` and so on.
  *
  * @param blocks `Block[]`. A document's blocks in reading order.
