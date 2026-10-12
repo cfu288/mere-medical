@@ -151,26 +151,11 @@ page's [Media Library](https://tools.cdc.gov/medialibrary/index.aspx) address):
 npx tsx libs/reference-pipeline/src/cli.ts
 ```
 
-Writes `libs/reference-pipeline/data/references.db` (gitignored), prints
-each document's outline, then prints the audit described below. Requests to a host wait out the `Crawl-delay` its
+Writes `libs/reference-pipeline/data/references.db` (gitignored) and prints
+each document's outline. Requests to a host wait out the `Crawl-delay` its
 robots.txt sets for all user agents (USPSTF asks for 5 seconds). Each attempt
 is given up after 120 seconds, and a server error or rate limit is retried up
 to four attempts with growing waits.
-
-The audit checks the built library for problems a reader of it would hit. It reports
-sections with no text and no subsections, sections whose parent is missing,
-unreadable characters, text repeated from another section, references with
-under 500 characters of text, and an empty library. Raw HTML and unsafe links
-cannot reach the library, since both adapters escape text with the same
-markdown escaping and the HTML adapter keeps only web, mail and relative links.
-It prints each check's count with examples, then the largest sections. To
-audit an existing library without rebuilding it:
-
-```
-npx tsx libs/reference-pipeline/src/audit.ts
-```
-
-This exits with an error when no library exists at the path.
 
 ## Known limits
 

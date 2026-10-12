@@ -5,7 +5,6 @@ import { ingestSources } from './lib/ingest';
 import { openReferencesDb } from './lib/referencesDb';
 import { createFetchBytes } from './lib/fetchBytes';
 import { parseSources } from './lib/sources';
-import { printAudit } from './printAudit';
 
 async function main() {
   const root = join(__dirname, '..');
@@ -52,8 +51,6 @@ async function main() {
   console.log(
     `\nwrote ${reports.filter((r) => r.status === 'written').length} reference(s) to ${dbPath}`,
   );
-  console.log();
-  printAudit(db, dbPath);
   db.close();
 }
 
