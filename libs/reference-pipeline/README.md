@@ -52,11 +52,11 @@ id. The two `_fts` tables are the full-text indexes behind the
 two searches. They store no text of their own, and triggers update them with
 every change to `documents` and `sections`.
 
-Example rows. The VA-DoD hypertension guideline:
+The rows below come from the VA-DoD hypertension guideline.
 
-| id                  | title                         | edition | summary                                                                                                                | url                                                                                                        |
-| ------------------- | ----------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| va-dod-hypertension | VA-DoD Hypertension Guideline | 2026    | High blood pressure in adults: diagnosis, home and office measurement, blood pressure goals, and choice of medications | https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/htn/HTN-CPG_2026-Guideline_final_20260827.pdf |
+| id                  | title                         | edition | summary                                                                                                                  | url                                                                                                        |
+| ------------------- | ----------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| va-dod-hypertension | VA-DoD Hypertension Guideline | 2026    | Diagnosis of high blood pressure in adults, home and office measurement, blood pressure goals, and choice of medications | https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/htn/HTN-CPG_2026-Guideline_final_20260827.pdf |
 
 | section_id                                                   | parent_id                                                    | position | title                                                                | page_start | page_end | url  | content_md                                                       |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | -------- | -------------------------------------------------------------------- | ---------- | -------- | ---- | ---------------------------------------------------------------- |
@@ -114,21 +114,22 @@ reported and left out.
 
 ## Config
 
-`sources.json` is an array of entries like these. A PDF or HTML page:
+`sources.json` is an array of entries. This entry is a PDF. An HTML page has
+the same fields with `"type": "html"`.
 
 ```json
 {
   "id": "va-dod-hypertension",
   "title": "VA-DoD Hypertension Guideline",
   "edition": "2026",
-  "summary": "Adults; diagnosis, BP goals, drug choice, home monitoring",
+  "summary": "Diagnosis of high blood pressure in adults, home and office measurement, blood pressure goals, and choice of medications",
   "url": "https://www.healthquality.va.gov/.../HTN-CPG_2026-Guideline_final_20260827.pdf",
   "type": "pdf"
 }
 ```
 
-A CDC syndicated page takes its media id instead of a url (the id is in the
-page's [Media Library](https://tools.cdc.gov/medialibrary/index.aspx) address):
+A CDC syndicated page takes its media id instead of a url. The id is in the
+page's [Media Library](https://tools.cdc.gov/medialibrary/index.aspx) address.
 
 ```json
 {

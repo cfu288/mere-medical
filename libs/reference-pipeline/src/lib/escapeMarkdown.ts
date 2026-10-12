@@ -4,8 +4,8 @@ const MARKUP_START = /<(?=[a-z/!?])/gi;
 
 /**
  * Escapes text so markdown shows it as written. It applies turndown's own
- * escaping, then escapes a `<` that would start an HTML tag or a
- * `<scheme:...>` link.
+ * escaping, then escapes each `<` that markdown reads as the start of an HTML
+ * tag or a `<scheme:...>` link.
  *
  * @param text `string`. Plain text.
  * @returns `string`. Markdown that renders as `text`.

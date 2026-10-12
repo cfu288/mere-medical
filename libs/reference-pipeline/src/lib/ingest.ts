@@ -49,8 +49,8 @@ export type IngestReport =
  *
  * Every source is fetched and parsed first. A failed fetch or a malformed
  * response rejects the promise and leaves any library at `path` as it was.
- * The library is then written to `<path>.building` and renamed over `path`,
- * so a reader of `path` sees the old library or the new one, never a partial
+ * The library is then written to `<path>.building` and renamed over `path`.
+ * A reader of `path` sees the old library or the new one, never a partial
  * one. A source that parsed to no sections is reported as `empty` and not
  * stored.
  *
