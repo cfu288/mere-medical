@@ -13,9 +13,9 @@ import { Source } from './sources';
  * - `id`: the source's configured id.
  * - `status`: `written` when its sections were stored, or `empty` when it
  *   parsed to no sections and nothing was stored.
- * - `outline`: for a written source, every kept section in document order,
- *   with its nesting depth (0 for a top-level section), id, title and
- *   markdown length in characters.
+ * - `outline`: for a written source, every kept section in document order.
+ *   Each entry holds the section's nesting depth (0 for a top-level section),
+ *   id, title and markdown length in characters.
  * - `dropped`: titles of sections left out by rule, such as reference lists
  *   and appendices. Empty when nothing was dropped.
  *

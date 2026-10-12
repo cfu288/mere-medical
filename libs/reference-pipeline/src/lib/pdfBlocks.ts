@@ -77,7 +77,7 @@ export async function pdfLines(bytes: Uint8Array): Promise<PdfLine[]> {
  * Turns PDF lines into heading and text blocks.
  *
  * - In a document of 4 or more pages, a line that repeats on more than half
- *   the pages, such as a running header or page number, is dropped.
+ *   the pages is dropped. Running headers and page numbers are such lines.
  * - The font size with the most text is the body size. A line at least 2 pt
  *   larger is a heading, and larger sizes are higher levels.
  * - Body lines join into a paragraph until a gap of more than 1.8 line

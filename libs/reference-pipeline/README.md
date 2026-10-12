@@ -1,9 +1,9 @@
 # reference-pipeline
 
 Builds the reference library the chat agent reads. The pipeline fetches
-published clinical guidance from configured sources,
-splits them into the sections their authors wrote, and stores them in a SQLite
-file the API serves.
+published clinical guidance from configured sources. It splits each source
+into the sections its authors wrote and stores them in a SQLite file the API
+serves.
 
 ## Schema
 
@@ -37,14 +37,14 @@ as a guideline, a USPSTF recommendation page or a CDC schedule. It carries the
 title, edition, summary and url a citation names.
 
 A **section** (`sections`) is the text under one heading of a reference,
-nested as the headings nest and numbered in reading order. The pipeline also
-makes sections of its own for the text before the first heading ("Opening
-text") and for each page of a PDF section too long to read at once.
+nested as the headings nest and numbered in reading order. The pipeline adds a
+section for the text before the first heading ("Opening text"). It also makes
+one section for each page of a PDF section too long to read at once.
 
 The agent uses the two tables at different moments. It chooses a reference by
 searching titles and summaries, then reads one section at a time. A guideline
-is far too long to read whole, and searching the text of every section of
-every reference would let one long guideline drown out a one-page CDC topic.
+is far too long to read whole. Searching the text of every section of every
+reference would let one long guideline drown out a one-page CDC topic.
 A citation needs both rows, the reference's title and url and the section's
 page or own url. Section ids repeat across references (most CDC pages have a
 "key-points"), so a section is always addressed as reference plus section
@@ -158,16 +158,16 @@ to four attempts with growing waits.
 
 ## Known limits
 
-- Recommendations are not extracted as units with their strength. In the
-  VA-DoD guidelines the per-recommendation headings are not set in a larger
-  font, so each recommendation chapter is split by page (`page-34`), and a
-  page can start mid-sentence. Recommendation tables come out as flowing text.
+- Recommendations are not extracted as units with their strength. The VA-DoD
+  guidelines do not set per-recommendation headings in a larger font. Each
+  recommendation chapter is split by page (`page-34`), and a page can start
+  mid-sentence. Recommendation tables come out as flowing text.
 - Large-font cover page lines become sections ("and", "Office of Quality and
-  Patient Safety ..."), so a guideline's chapters sit one level below its
+  Patient Safety ..."). A guideline's chapters then sit one level below its
   cover title in the outline.
 - The "recommendation categorization" title rule also drops the short
   methodology subsection that explains the categories.
-- HTML sections are never split and carry no anchor, only the page url, so a
+- HTML sections are never split and carry no anchor, only the page url. A
   long table such as the USPSTF A and B list is one very long section. Each
   USPSTF recommendation page is also indexed on its own.
 - A body line repeated on more than half of a PDF's pages, differing only in
@@ -175,4 +175,5 @@ to four attempts with growing waits.
   guidelines every dropped line is a running header or page footer.
 - Heading detection by font size assumes headings are larger than body text.
   A PDF that marks headings only with bold comes out as one "Opening text"
-  section, split into one section per page once it passes 12,000 characters.
+  section. That section is split into one section per page once it passes
+  12,000 characters.
