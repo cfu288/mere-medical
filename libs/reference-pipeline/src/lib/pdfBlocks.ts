@@ -111,6 +111,7 @@ export function linesToBlocks(lines: PdfLine[]): Block[] {
   let previous: PdfLine | null = null;
   for (const line of kept) {
     const level = headingSizes.indexOf(line.size) + 1;
+    const isHeading = level > 0;
     const last = blocks[blocks.length - 1];
     // A line above the previous one starts a new column or text box.
     const continues =
@@ -120,9 +121,9 @@ export function linesToBlocks(lines: PdfLine[]): Block[] {
       previous.size === line.size &&
       previous.y >= line.y &&
       previous.y - line.y <= line.size * PARAGRAPH_GAP_LINE_HEIGHTS;
-    if (continues && level > 0 === (last.kind === 'heading')) {
+    if (continues && isHeading === (last.kind === 'heading')) {
       last.text = `${last.text} ${line.text}`;
-    } else if (level > 0) {
+    } else if (isHeading) {
       blocks.push({ kind: 'heading', level, text: line.text, page: line.page });
     } else {
       blocks.push({ kind: 'text', text: line.text, page: line.page });

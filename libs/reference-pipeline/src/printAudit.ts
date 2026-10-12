@@ -1,6 +1,6 @@
 import { DatabaseSync } from 'node:sqlite';
 
-import { auditLibrary, Finding } from './lib/audit';
+import { auditLibrary } from './lib/audit';
 
 const EXAMPLES_PER_CHECK = 10;
 const LARGEST_SECTIONS = 10;
@@ -27,13 +27,7 @@ const LARGEST_SECTIONS = 10;
  */
 export function printAudit(db: DatabaseSync, label: string) {
   const findings = auditLibrary(db);
-  const byCheck = new Map<Finding['check'], Finding[]>();
-  for (const finding of findings) {
-    byCheck.set(finding.check, [
-      ...(byCheck.get(finding.check) ?? []),
-      finding,
-    ]);
-  }
+  const byCheck = Map.groupBy(findings, (finding) => finding.check);
   console.log(`${label}: ${findings.length} findings`);
   for (const [check, list] of byCheck) {
     console.log(`\n${check} (${list.length})`);

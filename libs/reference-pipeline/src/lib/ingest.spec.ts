@@ -174,7 +174,7 @@ describe('ingestSources', () => {
     });
 
     expect(report).toEqual([
-      { id: 'uspstf-a-and-b', status: 'missing', outline: [], dropped: [] },
+      { id: 'uspstf-a-and-b', status: 'missing', dropped: [] },
     ]);
     expect(db.prepare('SELECT id FROM documents').all()).toEqual([]);
   });
@@ -194,7 +194,6 @@ describe('ingestSources', () => {
       {
         id: 'uspstf-a-and-b',
         status: 'missing',
-        outline: [],
         dropped: ['References'],
       },
     ]);
@@ -217,7 +216,7 @@ describe('ingestSources', () => {
     });
 
     expect(report).toEqual([
-      { id: 'uspstf-a-and-b', status: 'unchanged', outline: [], dropped: [] },
+      { id: 'uspstf-a-and-b', status: 'unchanged', dropped: [] },
     ]);
     expect(db.prepare('SELECT section_id FROM sections').all()).toEqual([
       { section_id: 'screening' },

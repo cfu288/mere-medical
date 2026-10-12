@@ -125,4 +125,54 @@ describe('writeReference', () => {
         .all(),
     ]).toEqual([[{ id: 'measles' }], [], [{ section_id: 'doses' }], []]);
   });
+
+  it('replaces the stored copy of a reference written again', () => {
+    const db = openReferencesDb(':memory:');
+    writeReference(db, {
+      id: 'measles',
+      title: 'Measles',
+      edition: '2025',
+      summary: 'Vaccine schedule',
+      url: 'https://example.com/measles',
+      sections: [
+        {
+          sectionId: 'doses',
+          parentId: null,
+          title: 'Doses',
+          location: { kind: 'webpage' },
+          contentMd: 'Two doses.',
+        },
+      ],
+    });
+    writeReference(db, {
+      id: 'measles',
+      title: 'Measles',
+      edition: '2026',
+      summary: 'Vaccine schedule',
+      url: 'https://example.com/measles',
+      sections: [
+        {
+          sectionId: 'boosters',
+          parentId: null,
+          title: 'Boosters',
+          location: { kind: 'webpage' },
+          contentMd: 'One booster.',
+        },
+      ],
+    });
+
+    expect([
+      db.prepare('SELECT id, edition FROM documents').all(),
+      db.prepare('SELECT section_id FROM sections').all(),
+      db
+        .prepare(
+          "SELECT section_id FROM sections_fts WHERE sections_fts MATCH 'doses'",
+        )
+        .all(),
+    ]).toEqual([
+      [{ id: 'measles', edition: '2026' }],
+      [{ section_id: 'boosters' }],
+      [],
+    ]);
+  });
 });

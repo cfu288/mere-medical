@@ -22,11 +22,10 @@ type SectionRow = {
   reference: string;
   section: string;
   parent: string | null;
-  title: string;
   text: string;
 };
 
-type ReferenceRow = { id: string; title: string; summary: string };
+type ReferenceRow = { id: string };
 
 /**
  * Every row the checks read, loaded once by `auditLibrary`. Each check is a
@@ -87,11 +86,11 @@ export function auditLibrary(db: DatabaseSync): Finding[] {
 function loadLibrary(db: DatabaseSync): Library {
   return {
     references: db
-      .prepare('SELECT id, title, summary FROM documents ORDER BY id')
+      .prepare('SELECT id FROM documents ORDER BY id')
       .all() as ReferenceRow[],
     sections: db
       .prepare(
-        `SELECT document_id AS reference, section_id AS section, parent_id AS parent, title, content_md AS text
+        `SELECT document_id AS reference, section_id AS section, parent_id AS parent, content_md AS text
          FROM sections ORDER BY document_id, position`,
       )
       .all() as SectionRow[],
@@ -117,7 +116,7 @@ function key(reference: string, section: string): string {
  * @returns `Finding[]`. One finding per problem, or none.
  *
  * @example
- * missingParents({ references: [], sections: [{ reference: 'measles', section: 'doses', parent: 'schedule', title: 'T', text: 'Two doses.' }], referenceIndex: [], sectionIndex: [] });
+ * missingParents({ references: [], sections: [{ reference: 'measles', section: 'doses', parent: 'schedule', text: 'Two doses.' }] });
  * // [{ check: 'missing-parent', reference: 'measles', section: 'doses', detail: 'parent schedule not found' }]
  */
 export function missingParents({ sections }: Library): Finding[] {
@@ -134,7 +133,7 @@ export function missingParents({ sections }: Library): Finding[] {
  * @returns `Finding[]`. One finding per problem, or none.
  *
  * @example
- * deadEnds({ references: [], sections: [{ reference: 'measles', section: 'schedule', parent: null, title: 'T', text: '' }, { reference: 'measles', section: 'doses', parent: 'schedule', title: 'T', text: 'Two doses.' }, { reference: 'measles', section: 'notes', parent: null, title: 'T', text: '' }], referenceIndex: [], sectionIndex: [] });
+ * deadEnds({ references: [], sections: [{ reference: 'measles', section: 'schedule', parent: null, text: '' }, { reference: 'measles', section: 'doses', parent: 'schedule', text: 'Two doses.' }, { reference: 'measles', section: 'notes', parent: null, text: '' }] });
  * // [{ check: 'dead-end', reference: 'measles', section: 'notes', detail: 'no text and no subsections' }]
  */
 export function deadEnds({ sections }: Library): Finding[] {
@@ -155,7 +154,7 @@ export function deadEnds({ sections }: Library): Finding[] {
  * @returns `Finding[]`. One finding per problem, or none.
  *
  * @example
- * linksOnly({ references: [], sections: [{ reference: 'measles', section: 'more', parent: null, title: 'T', text: '[CDC](https://www.cdc.gov) [WHO](https://www.who.int)' }], referenceIndex: [], sectionIndex: [] });
+ * linksOnly({ references: [], sections: [{ reference: 'measles', section: 'more', parent: null, text: '[CDC](https://www.cdc.gov) [WHO](https://www.who.int)' }] });
  * // [{ check: 'links-only', reference: 'measles', section: 'more', detail: 'text is only links' }]
  */
 export function linksOnly({ sections }: Library): Finding[] {
@@ -173,7 +172,7 @@ export function linksOnly({ sections }: Library): Finding[] {
  * @returns `Finding[]`. One finding per problem, or none.
  *
  * @example
- * htmlTags({ references: [], sections: [{ reference: 'measles', section: 'doses', parent: null, title: 'T', text: 'Two <b>doses</b>.<br>' }], referenceIndex: [], sectionIndex: [] });
+ * htmlTags({ references: [], sections: [{ reference: 'measles', section: 'doses', parent: null, text: 'Two <b>doses</b>.<br>' }] });
  * // [{ check: 'html-tags', reference: 'measles', section: 'doses', detail: '<b> <br>' }]
  */
 export function htmlTags({ sections }: Library): Finding[] {
@@ -194,7 +193,7 @@ export function htmlTags({ sections }: Library): Finding[] {
  * @returns `Finding[]`. One finding per problem, or none.
  *
  * @example
- * unsafeLinks({ references: [], sections: [{ reference: 'measles', section: 'doses', parent: null, title: 'T', text: '[print](javascript:print()) [CDC](https://www.cdc.gov)' }], referenceIndex: [], sectionIndex: [] });
+ * unsafeLinks({ references: [], sections: [{ reference: 'measles', section: 'doses', parent: null, text: '[print](javascript:print()) [CDC](https://www.cdc.gov)' }] });
  * // [{ check: 'unsafe-link', reference: 'measles', section: 'doses', detail: 'links to javascript:' }]
  */
 export function unsafeLinks({ sections }: Library): Finding[] {
@@ -220,7 +219,7 @@ export function unsafeLinks({ sections }: Library): Finding[] {
  * @returns `Finding[]`. One finding per problem, or none.
  *
  * @example
- * replacementCharacters({ references: [], sections: [{ reference: 'measles', section: 'doses', parent: null, title: 'T', text: 'Two doses \ufffd apart.' }], referenceIndex: [], sectionIndex: [] });
+ * replacementCharacters({ references: [], sections: [{ reference: 'measles', section: 'doses', parent: null, text: 'Two doses \ufffd apart.' }] });
  * // [{ check: 'replacement-character', reference: 'measles', section: 'doses', detail: 'text has \ufffd' }]
  */
 export function replacementCharacters({ sections }: Library): Finding[] {
@@ -236,7 +235,7 @@ export function replacementCharacters({ sections }: Library): Finding[] {
  * @returns `Finding[]`. One finding per problem, or none.
  *
  * @example
- * duplicateText({ references: [], sections: [{ reference: 'measles', section: 'doses', parent: null, title: 'T', text: 'Two doses.' }, { reference: 'measles', section: 'schedule', parent: null, title: 'T', text: 'Two doses.' }], referenceIndex: [], sectionIndex: [] });
+ * duplicateText({ references: [], sections: [{ reference: 'measles', section: 'doses', parent: null, text: 'Two doses.' }, { reference: 'measles', section: 'schedule', parent: null, text: 'Two doses.' }] });
  * // [{ check: 'duplicate-text', reference: 'measles', section: 'schedule', detail: 'same text as measles/doses' }]
  */
 export function duplicateText({ sections }: Library): Finding[] {
@@ -268,7 +267,7 @@ export function duplicateText({ sections }: Library): Finding[] {
  * @returns `Finding[]`. One finding per problem, or none.
  *
  * @example
- * shortReferences({ references: [{ id: 'measles', title: 'Measles', summary: 'Vaccine schedule' }], sections: [{ reference: 'measles', section: 'doses', parent: null, title: 'T', text: 'Two doses.' }], referenceIndex: [], sectionIndex: [] });
+ * shortReferences({ references: [{ id: 'measles' }], sections: [{ reference: 'measles', section: 'doses', parent: null, text: 'Two doses.' }] });
  * // [{ check: 'short-reference', reference: 'measles', section: null, detail: '10 characters of text' }]
  */
 export function shortReferences({ references, sections }: Library): Finding[] {
@@ -296,7 +295,7 @@ export function shortReferences({ references, sections }: Library): Finding[] {
  * @returns `Finding[]`. One finding per problem, or none.
  *
  * @example
- * emptyLibrary({ references: [], sections: [], referenceIndex: [], sectionIndex: [] });
+ * emptyLibrary({ references: [], sections: [] });
  * // [{ check: 'empty-library', reference: '(library)', section: null, detail: 'no references' }]
  */
 export function emptyLibrary({ references }: Library): Finding[] {

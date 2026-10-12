@@ -4,7 +4,6 @@ import { z } from 'zod';
 import { linesToBlocks, pdfLines } from './pdfBlocks';
 import {
   ReferenceRecord,
-  deleteReference,
   deleteReferencesExcept,
   writeReference,
 } from './referencesDb';
@@ -20,10 +19,12 @@ import { htmlToBlocks } from './htmlToBlocks';
  *   `unchanged` when it parsed to no sections and the stored copy stays,
  *   `missing` when it parsed to no sections and nothing was stored, or
  *   `skipped` when an earlier source already resolved to the same url.
- * - `outline`: every kept section in document order, with its nesting depth
- *   (0 for a top-level section), id, title and markdown length in characters.
- * - `dropped`: titles of sections left out by rule, such as reference lists
- *   and appendices. Empty when nothing was dropped.
+ * - `outline`: for a written source, every kept section in document order,
+ *   with its nesting depth (0 for a top-level section), id, title and
+ *   markdown length in characters.
+ * - `dropped`: for a source that was not skipped, titles of sections left out
+ *   by rule, such as reference lists and appendices. Empty when nothing was
+ *   dropped.
  * - `url`: for a skipped source, the url the earlier source already used.
  *
  * @example
@@ -40,7 +41,7 @@ import { htmlToBlocks } from './htmlToBlocks';
 export type IngestReport =
   | {
       id: string;
-      status: 'written' | 'unchanged' | 'missing';
+      status: 'written';
       outline: {
         depth: number;
         sectionId: string;
@@ -49,6 +50,7 @@ export type IngestReport =
       }[];
       dropped: string[];
     }
+  | { id: string; status: 'unchanged' | 'missing'; dropped: string[] }
   | { id: string; status: 'skipped'; url: string };
 
 /**
@@ -167,19 +169,16 @@ function store(
   record: ReferenceRecord,
   dropped: string[],
 ): IngestReport {
-  const status =
-    record.sections.length > 0
-      ? 'written'
-      : db.prepare('SELECT 1 FROM documents WHERE id = ?').get(record.id)
-        ? 'unchanged'
-        : 'missing';
-  if (status === 'written') {
-    deleteReference(db, record.id);
-    writeReference(db, record);
+  if (record.sections.length === 0) {
+    const stored = db
+      .prepare('SELECT 1 FROM documents WHERE id = ?')
+      .get(record.id);
+    return { id: record.id, status: stored ? 'unchanged' : 'missing', dropped };
   }
+  writeReference(db, record);
   return {
     id: record.id,
-    status,
+    status: 'written',
     outline: outline(record.sections),
     dropped,
   };

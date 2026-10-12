@@ -95,18 +95,17 @@ export function openReferencesDb(path: string): DatabaseSync {
 }
 
 /**
- * Adds a reference and its sections to the library. Sections keep their order
- * in `record.sections` as their position.
+ * Writes a reference and its sections to the library, replacing any stored
+ * copy of it. Sections keep their order in `record.sections` as their
+ * position.
  *
- * The reference must not be in the library yet. Call {@link deleteReference}
- * first to replace one. Call it inside a transaction. A failed write leaves
- * the rows it wrote before the failure.
+ * Call it inside a transaction. A failed write leaves the rows it wrote before
+ * the failure.
  *
  * @param db `DatabaseSync`. From {@link openReferencesDb}.
  * @param record `ReferenceRecord`. The reference and its sections.
  * @returns `void`.
- * @throws `Error` when a reference or section with the same id is already
- * stored.
+ * @throws `Error` when two of the record's sections share an id.
  *
  * @example
  * writeReference(db, {
@@ -123,6 +122,7 @@ export function openReferencesDb(path: string): DatabaseSync {
  * // [{ document_id: 'measles', section_id: 'doses', title: 'Doses', content_md: 'Two doses.' }]
  */
 export function writeReference(db: DatabaseSync, record: ReferenceRecord) {
+  deleteReference(db, record.id);
   db.prepare(
     'INSERT INTO documents (id, title, edition, summary, url) VALUES (?, ?, ?, ?, ?)',
   ).run(record.id, record.title, record.edition, record.summary, record.url);
@@ -182,10 +182,11 @@ export function deleteReference(db: DatabaseSync, id: string) {
  * // [{ id: 'flu' }]
  */
 export function deleteReferencesExcept(db: DatabaseSync, ids: string[]) {
-  const rows = db.prepare('SELECT id FROM documents').all() as { id: string }[];
-  for (const { id } of rows) {
-    if (!ids.includes(id)) {
-      deleteReference(db, id);
-    }
-  }
+  const keep = JSON.stringify(ids);
+  db.prepare(
+    'DELETE FROM sections WHERE document_id NOT IN (SELECT value FROM json_each(?))',
+  ).run(keep);
+  db.prepare(
+    'DELETE FROM documents WHERE id NOT IN (SELECT value FROM json_each(?))',
+  ).run(keep);
 }

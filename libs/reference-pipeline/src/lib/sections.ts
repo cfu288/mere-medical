@@ -22,7 +22,7 @@ export type Section = {
 const MAX_PDF_SECTION_CHARS = 12000;
 const OPENING_TITLE = 'Opening text';
 
-// Back matter of the VA-DoD guidelines that holds no clinical guidance.
+// Back matter that holds no clinical guidance, titled as in the VA-DoD guidelines.
 const DROPPED_TITLES = [
   /^references$/,
   /participant list/,

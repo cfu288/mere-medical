@@ -20,13 +20,14 @@ async function main() {
     fetchBytes: createFetchBytes(),
   });
   for (const report of reports) {
-    if (report.status === 'skipped') {
-      console.log(`\nskipped ${report.id}: ${report.url} was already ingested`);
-      continue;
-    }
     switch (report.status) {
       case 'written':
         console.log(`\n${report.id}: ${report.outline.length} sections`);
+        for (const entry of report.outline) {
+          console.log(
+            `${'  '.repeat(entry.depth + 1)}${entry.sectionId} | ${entry.title} | ${entry.chars} chars`,
+          );
+        }
         break;
       case 'unchanged':
         console.log(
@@ -38,13 +39,13 @@ async function main() {
           `\n${report.id}: could not add, its source parsed to nothing`,
         );
         break;
+      case 'skipped':
+        console.log(
+          `\nskipped ${report.id}: ${report.url} was already ingested`,
+        );
+        break;
     }
-    for (const entry of report.outline) {
-      console.log(
-        `${'  '.repeat(entry.depth + 1)}${entry.sectionId} | ${entry.title} | ${entry.chars} chars`,
-      );
-    }
-    if (report.dropped.length > 0) {
+    if (report.status !== 'skipped' && report.dropped.length > 0) {
       console.log(`  dropped: ${report.dropped.join('; ')}`);
     }
   }
