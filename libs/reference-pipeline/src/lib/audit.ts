@@ -1,6 +1,6 @@
 import { DatabaseSync } from 'node:sqlite';
 
-import { isSafeUrl } from './htmlToMarkdown';
+import { isSafeUrl } from './htmlToBlocks';
 
 export type Finding = {
   check:
@@ -12,7 +12,6 @@ export type Finding = {
     | 'missing-parent'
     | 'replacement-character'
     | 'short-reference'
-    | 'search-index'
     | 'empty-library';
   reference: string;
   section: string | null;
@@ -82,7 +81,7 @@ const CHECKS: Check[] = [
  */
 export function auditLibrary(db: DatabaseSync): Finding[] {
   const library = loadLibrary(db);
-  return [...CHECKS.flatMap((check) => check(library)), ...searchIndex(db)];
+  return CHECKS.flatMap((check) => check(library));
 }
 
 function loadLibrary(db: DatabaseSync): Library {
@@ -311,54 +310,4 @@ export function emptyLibrary({ references }: Library): Finding[] {
         },
       ]
     : [];
-}
-
-const SEARCH_INDEX_PROBLEMS = [
-  `SELECT id AS reference, NULL AS section, 'indexed ' || count(*) || ' times' AS detail
-   FROM documents_fts GROUP BY id HAVING count(*) > 1 ORDER BY min(rowid)`,
-  `SELECT document_id AS reference, section_id AS section, 'indexed ' || count(*) || ' times' AS detail
-   FROM sections_fts GROUP BY document_id, section_id HAVING count(*) > 1 ORDER BY min(rowid)`,
-  `SELECT id AS reference, NULL AS section,
-          'missing from the reference search index or indexed with another title or summary' AS detail
-   FROM (SELECT id, title, summary FROM documents EXCEPT SELECT id, title, summary FROM documents_fts)
-   ORDER BY id`,
-  `SELECT id AS reference, NULL AS section, 'in the reference search index but not in the library' AS detail
-   FROM documents_fts WHERE id NOT IN (SELECT id FROM documents) ORDER BY rowid`,
-  `SELECT s.document_id AS reference, s.section_id AS section,
-          'missing from the section search index or indexed with other text' AS detail
-   FROM sections s
-   JOIN (SELECT document_id, section_id, title, content_md FROM sections
-         EXCEPT SELECT document_id, section_id, title, content_md FROM sections_fts) m
-     USING (document_id, section_id)
-   ORDER BY s.document_id, s.position`,
-  `SELECT document_id AS reference, section_id AS section,
-          'in the section search index but not in the library' AS detail
-   FROM sections_fts WHERE (document_id, section_id) NOT IN (SELECT document_id, section_id FROM sections)
-   ORDER BY rowid`,
-];
-
-/**
- * Finds references and sections that are missing from their search table,
- * indexed with other text, indexed more than once, or left in it after
- * deletion. The search tables have no triggers. `writeReference` and
- * `deleteReference` fill and clear them next to the rows.
- *
- * @param db `DatabaseSync`. From `openReferencesDb`.
- * @returns `Finding[]`. One finding per problem, or none.
- *
- * @example
- * // The library holds 'measles' with section 'doses', and the section search table lost that row.
- * searchIndex(db);
- * // [{ check: 'search-index', reference: 'measles', section: 'doses', detail: 'missing from the section search index or indexed with other text' }]
- */
-export function searchIndex(db: DatabaseSync): Finding[] {
-  return SEARCH_INDEX_PROBLEMS.flatMap((sql) =>
-    (
-      db.prepare(sql).all() as {
-        reference: string;
-        section: string | null;
-        detail: string;
-      }[]
-    ).map((row) => ({ check: 'search-index' as const, ...row })),
-  );
 }

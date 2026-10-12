@@ -8,7 +8,6 @@ import {
   linksOnly,
   missingParents,
   replacementCharacters,
-  searchIndex,
   shortReferences,
   unsafeLinks,
 } from './audit';
@@ -334,137 +333,6 @@ describe('emptyLibrary', () => {
   });
 });
 
-describe('searchIndex', () => {
-  it('reports rows missing from, stale in or left over in either search index', () => {
-    const db = openReferencesDb(':memory:');
-    writeReference(db, {
-      id: 'guide',
-      title: 'Guide',
-      edition: '2026',
-      summary: 'BP goals',
-      url: 'https://example.com/guide',
-      sections: [
-        {
-          sectionId: 'goals',
-          parentId: null,
-          title: 'Goals',
-          location: { kind: 'webpage' },
-          contentMd: 'Below 130.',
-        },
-        {
-          sectionId: 'targets',
-          parentId: null,
-          title: 'Targets',
-          location: { kind: 'webpage' },
-          contentMd: 'Below 90.',
-        },
-      ],
-    });
-    db.exec(`
-      UPDATE documents_fts SET summary = 'Old summary' WHERE id = 'guide';
-      INSERT INTO documents_fts (id, title, summary) VALUES ('gone', 'Gone', 'Removed');
-      UPDATE sections_fts SET content_md = 'Below 140.' WHERE section_id = 'goals';
-      DELETE FROM sections_fts WHERE section_id = 'targets';
-      INSERT INTO sections_fts (document_id, section_id, title, content_md)
-        VALUES ('guide', 'old', 'Old', 'Gone.');
-    `);
-
-    expect(searchIndex(db)).toEqual([
-      {
-        check: 'search-index',
-        reference: 'guide',
-        section: null,
-        detail:
-          'missing from the reference search index or indexed with another title or summary',
-      },
-      {
-        check: 'search-index',
-        reference: 'gone',
-        section: null,
-        detail: 'in the reference search index but not in the library',
-      },
-      {
-        check: 'search-index',
-        reference: 'guide',
-        section: 'goals',
-        detail:
-          'missing from the section search index or indexed with other text',
-      },
-      {
-        check: 'search-index',
-        reference: 'guide',
-        section: 'targets',
-        detail:
-          'missing from the section search index or indexed with other text',
-      },
-      {
-        check: 'search-index',
-        reference: 'guide',
-        section: 'old',
-        detail: 'in the section search index but not in the library',
-      },
-    ]);
-  });
-
-  it('reports a section indexed more than once even when one row is current', () => {
-    const db = openReferencesDb(':memory:');
-    writeReference(db, {
-      id: 'guide',
-      title: 'Guide',
-      edition: '2026',
-      summary: 'BP goals',
-      url: 'https://example.com/guide',
-      sections: [
-        {
-          sectionId: 'goals',
-          parentId: null,
-          title: 'Goals',
-          location: { kind: 'webpage' },
-          contentMd: 'Below 130.',
-        },
-      ],
-    });
-    db.exec(`
-      INSERT INTO sections_fts (document_id, section_id, title, content_md)
-        VALUES ('guide', 'goals', 'Goals', 'Below 140.');
-    `);
-
-    expect(searchIndex(db)).toEqual([
-      {
-        check: 'search-index',
-        reference: 'guide',
-        section: 'goals',
-        detail: 'indexed 2 times',
-      },
-    ]);
-  });
-
-  it('reports a reference indexed more than once', () => {
-    const db = openReferencesDb(':memory:');
-    writeReference(db, {
-      id: 'guide',
-      title: 'Guide',
-      edition: '2026',
-      summary: 'BP goals',
-      url: 'https://example.com/guide',
-      sections: [],
-    });
-    db.exec(`
-      INSERT INTO documents_fts (id, title, summary)
-        VALUES ('guide', 'Guide', 'Old summary');
-    `);
-
-    expect(searchIndex(db)).toEqual([
-      {
-        check: 'search-index',
-        reference: 'guide',
-        section: null,
-        detail: 'indexed 2 times',
-      },
-    ]);
-  });
-});
-
 describe('auditLibrary', () => {
   it('finds nothing in a clean library', () => {
     const db = openReferencesDb(':memory:');
@@ -511,17 +379,22 @@ describe('auditLibrary', () => {
           location: { kind: 'webpage' },
           contentMd: BACKGROUND,
         },
+        {
+          sectionId: 'appendix',
+          parentId: null,
+          title: 'Appendix',
+          location: { kind: 'webpage' },
+          contentMd: '',
+        },
       ],
     });
-    db.exec("DELETE FROM sections_fts WHERE section_id = 'background'");
 
     expect(auditLibrary(db)).toEqual([
       {
-        check: 'search-index',
+        check: 'dead-end',
         reference: 'guide',
-        section: 'background',
-        detail:
-          'missing from the section search index or indexed with other text',
+        section: 'appendix',
+        detail: 'no text and no subsections',
       },
     ]);
   });
