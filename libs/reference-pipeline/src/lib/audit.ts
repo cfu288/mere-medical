@@ -29,7 +29,10 @@ type SectionRow = {
 
 type ReferenceRow = { id: string; title: string; summary: string };
 
-/** Everything the checks read: the library's rows and its two search index tables, in reading order. */
+/**
+ * The rows the checks read. They are the library's references and sections
+ * and the rows of its two search tables, in reading order.
+ */
 export type Library = {
   references: ReferenceRow[];
   sections: SectionRow[];
@@ -45,7 +48,22 @@ const LINK_TARGET =
   /(?<!\\)!?\[[^\]]*\]\(\s*([^\s)]+)|(?<!\\)<([a-z][a-z0-9+.-]*:[^>\s]*)>/gi;
 const HTML_TAG = /(?<!\\)<\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
 
-/** Problems in a built library that make a section unreadable, unreachable or misleading to the agent. */
+/**
+ * Finds problems in a built library that make a section unreadable,
+ * unreachable or misleading to the agent. Runs every check in this file.
+ *
+ * @param db `DatabaseSync`. From `openReferencesDb`.
+ * @returns `Finding[]`. Grouped by check, in reading order within a check.
+ * Empty for a clean library.
+ *
+ * @example
+ * // The library holds one reference, 'measles', with one empty section 'doses'.
+ * auditLibrary(db);
+ * // [
+ * //   { check: 'dead-end', reference: 'measles', section: 'doses', detail: 'no text and no subsections' },
+ * //   { check: 'short-reference', reference: 'measles', section: null, detail: '0 characters of text' },
+ * // ]
+ */
 export function auditLibrary(db: DatabaseSync): Finding[] {
   const library = loadLibrary(db);
   return CHECKS.flatMap((check) => check(library));
@@ -86,6 +104,16 @@ function key(reference: string, section: string): string {
   return `${reference}/${section}`;
 }
 
+/**
+ * Finds sections whose parent id names no section in the same reference.
+ *
+ * @param library `Library`. The library's rows, as `auditLibrary` loads them.
+ * @returns `Finding[]`. One finding per problem, or none.
+ *
+ * @example
+ * missingParents({ references: [], sections: [{ reference: 'measles', section: 'doses', parent: 'schedule', title: 'T', text: 'Two doses.' }], referenceIndex: [], sectionIndex: [] });
+ * // [{ check: 'missing-parent', reference: 'measles', section: 'doses', detail: 'parent schedule not found' }]
+ */
 export function missingParents({ sections }: Library): Finding[] {
   const ids = new Set(sections.map((s) => key(s.reference, s.section)));
   return sections
@@ -93,6 +121,16 @@ export function missingParents({ sections }: Library): Finding[] {
     .map((s) => finding('missing-parent', s, `parent ${s.parent} not found`));
 }
 
+/**
+ * Finds sections with no text and no subsections. An empty section that has subsections is fine.
+ *
+ * @param library `Library`. The library's rows, as `auditLibrary` loads them.
+ * @returns `Finding[]`. One finding per problem, or none.
+ *
+ * @example
+ * deadEnds({ references: [], sections: [{ reference: 'measles', section: 'schedule', parent: null, title: 'T', text: '' }, { reference: 'measles', section: 'doses', parent: 'schedule', title: 'T', text: 'Two doses.' }, { reference: 'measles', section: 'notes', parent: null, title: 'T', text: '' }], referenceIndex: [], sectionIndex: [] });
+ * // [{ check: 'dead-end', reference: 'measles', section: 'notes', detail: 'no text and no subsections' }]
+ */
 export function deadEnds({ sections }: Library): Finding[] {
   const parents = new Set(
     sections.flatMap((s) => (s.parent ? [key(s.reference, s.parent)] : [])),
@@ -104,6 +142,16 @@ export function deadEnds({ sections }: Library): Finding[] {
     .map((s) => finding('dead-end', s, 'no text and no subsections'));
 }
 
+/**
+ * Finds sections whose text is only links, with no letters outside them.
+ *
+ * @param library `Library`. The library's rows, as `auditLibrary` loads them.
+ * @returns `Finding[]`. One finding per problem, or none.
+ *
+ * @example
+ * linksOnly({ references: [], sections: [{ reference: 'measles', section: 'more', parent: null, title: 'T', text: '[CDC](https://www.cdc.gov) [WHO](https://www.who.int)' }], referenceIndex: [], sectionIndex: [] });
+ * // [{ check: 'links-only', reference: 'measles', section: 'more', detail: 'text is only links' }]
+ */
 export function linksOnly({ sections }: Library): Finding[] {
   return sections
     .filter(
@@ -112,6 +160,16 @@ export function linksOnly({ sections }: Library): Finding[] {
     .map((s) => finding('links-only', s, 'text is only links'));
 }
 
+/**
+ * Finds HTML tags left in section text. Escaped text such as `\<b>` is not a tag.
+ *
+ * @param library `Library`. The library's rows, as `auditLibrary` loads them.
+ * @returns `Finding[]`. One finding per problem, or none.
+ *
+ * @example
+ * htmlTags({ references: [], sections: [{ reference: 'measles', section: 'doses', parent: null, title: 'T', text: 'Two <b>doses</b>.<br>' }], referenceIndex: [], sectionIndex: [] });
+ * // [{ check: 'html-tags', reference: 'measles', section: 'doses', detail: '<b> <br>' }]
+ */
 export function htmlTags({ sections }: Library): Finding[] {
   return sections.flatMap((s) => {
     const tags = [
@@ -123,6 +181,16 @@ export function htmlTags({ sections }: Library): Finding[] {
   });
 }
 
+/**
+ * Finds links, images and autolinks whose address is not safe (see `isSafeUrl`). Escaped text that only looks like a link is ignored.
+ *
+ * @param library `Library`. The library's rows, as `auditLibrary` loads them.
+ * @returns `Finding[]`. One finding per problem, or none.
+ *
+ * @example
+ * unsafeLinks({ references: [], sections: [{ reference: 'measles', section: 'doses', parent: null, title: 'T', text: '[print](javascript:print()) [CDC](https://www.cdc.gov)' }], referenceIndex: [], sectionIndex: [] });
+ * // [{ check: 'unsafe-link', reference: 'measles', section: 'doses', detail: 'links to javascript:' }]
+ */
 export function unsafeLinks({ sections }: Library): Finding[] {
   return sections.flatMap((s) => {
     const schemes = [
@@ -139,12 +207,32 @@ export function unsafeLinks({ sections }: Library): Finding[] {
   });
 }
 
+/**
+ * Finds sections with the Unicode replacement character, a sign of text that did not decode.
+ *
+ * @param library `Library`. The library's rows, as `auditLibrary` loads them.
+ * @returns `Finding[]`. One finding per problem, or none.
+ *
+ * @example
+ * replacementCharacters({ references: [], sections: [{ reference: 'measles', section: 'doses', parent: null, title: 'T', text: 'Two doses \ufffd apart.' }], referenceIndex: [], sectionIndex: [] });
+ * // [{ check: 'replacement-character', reference: 'measles', section: 'doses', detail: 'text has \ufffd' }]
+ */
 export function replacementCharacters({ sections }: Library): Finding[] {
   return sections
     .filter((s) => s.text.includes('\ufffd'))
     .map((s) => finding('replacement-character', s, 'text has \ufffd'));
 }
 
+/**
+ * Finds sections whose text repeats an earlier section, in any reference. Empty sections are skipped.
+ *
+ * @param library `Library`. The library's rows, as `auditLibrary` loads them.
+ * @returns `Finding[]`. One finding per problem, or none.
+ *
+ * @example
+ * duplicateText({ references: [], sections: [{ reference: 'measles', section: 'doses', parent: null, title: 'T', text: 'Two doses.' }, { reference: 'measles', section: 'schedule', parent: null, title: 'T', text: 'Two doses.' }], referenceIndex: [], sectionIndex: [] });
+ * // [{ check: 'duplicate-text', reference: 'measles', section: 'schedule', detail: 'same text as measles/doses' }]
+ */
 export function duplicateText({ sections }: Library): Finding[] {
   const first = new Map<string, SectionRow>();
   return sections.flatMap((s) => {
@@ -167,6 +255,16 @@ export function duplicateText({ sections }: Library): Finding[] {
   });
 }
 
+/**
+ * Finds references with under 500 characters of section text in all.
+ *
+ * @param library `Library`. The library's rows, as `auditLibrary` loads them.
+ * @returns `Finding[]`. One finding per problem, or none.
+ *
+ * @example
+ * shortReferences({ references: [{ id: 'measles', title: 'Measles', summary: 'Vaccine schedule' }], sections: [{ reference: 'measles', section: 'doses', parent: null, title: 'T', text: 'Two doses.' }], referenceIndex: [], sectionIndex: [] });
+ * // [{ check: 'short-reference', reference: 'measles', section: null, detail: '10 characters of text' }]
+ */
 export function shortReferences({ references, sections }: Library): Finding[] {
   return references.flatMap(({ id }) => {
     const chars = sections
@@ -185,6 +283,16 @@ export function shortReferences({ references, sections }: Library): Finding[] {
   });
 }
 
+/**
+ * Finds a library with no references.
+ *
+ * @param library `Library`. The library's rows, as `auditLibrary` loads them.
+ * @returns `Finding[]`. One finding per problem, or none.
+ *
+ * @example
+ * emptyLibrary({ references: [], sections: [], referenceIndex: [], sectionIndex: [] });
+ * // [{ check: 'empty-library', reference: '(library)', section: null, detail: 'no references' }]
+ */
 export function emptyLibrary({ references }: Library): Finding[] {
   return references.length === 0
     ? [
@@ -214,6 +322,21 @@ function repeated<T>(
   return [...counts.values()].filter(({ times }) => times > 1);
 }
 
+/**
+ * Finds references and sections that are missing from their search table, indexed with other text, indexed more than once, or left in it after deletion.
+ *
+ * @param library `Library`. The library's rows, as `auditLibrary` loads them.
+ * @returns `Finding[]`. One finding per problem, or none.
+ *
+ * @example
+ * searchIndex({
+ *   references: [{ id: 'measles', title: 'Measles', summary: 'Vaccine schedule' }],
+ *   sections: [{ reference: 'measles', section: 'doses', parent: null, title: 'T', text: 'Two doses.' }],
+ *   referenceIndex: [{ id: 'measles', title: 'Measles', summary: 'Vaccine schedule' }],
+ *   sectionIndex: [],
+ * });
+ * // [{ check: 'search-index', reference: 'measles', section: 'doses', detail: 'missing from the section search index or indexed with other text' }]
+ */
 export function searchIndex({
   references,
   sections,

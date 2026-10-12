@@ -7,7 +7,36 @@ const FETCH_TIMEOUT_MS = 120_000;
 
 type Host = { delayMs: number; lastRequestAt: number };
 
-/** A fetch that reads each host's robots.txt once, waits out its crawl delay, retries, and gives up on any request after FETCH_TIMEOUT_MS. */
+/**
+ * Makes a fetch that is polite to each host it visits.
+ *
+ * - On the first request to a host it reads that host's robots.txt once. A
+ *   `Crawl-delay` for all user agents (`User-agent: *`) sets the wait between
+ *   requests to that host. A missing or unreadable robots.txt means no wait.
+ * - Each request waits until the host's delay has passed since its last
+ *   request, robots.txt included.
+ * - A request is given up after 120 seconds.
+ * - A 429 or 5xx response, or a thrown error, is retried by
+ *   {@link fetchWithRetries}.
+ *
+ * @param options Optional. Each field defaults to the real implementation and
+ * is replaced only in tests.
+ * @param options.fetchImpl `(url: string, init?: RequestInit) => Promise<Response>`.
+ * Defaults to the global `fetch`.
+ * @param options.sleep `(ms: number) => Promise<unknown>`. Defaults to
+ * `setTimeout` from `timers/promises`.
+ * @param options.now `() => number`, the time in milliseconds. Defaults to
+ * `Date.now`.
+ * @returns `(url: string) => Promise<Response>`. Resolves with the first
+ * response that is not a 429 or 5xx, which can still be a 4xx. Rejects when
+ * every attempt fails.
+ *
+ * @example
+ * // https://example.org/robots.txt has "User-agent: *" and "Crawl-delay: 5".
+ * const crawlDelayedFetch = createCrawlDelayedFetch();
+ * await crawlDelayedFetch('https://example.org/a'); // waits 5 s after reading robots.txt
+ * await crawlDelayedFetch('https://example.org/b'); // waits 5 s after the first request
+ */
 export function createCrawlDelayedFetch({
   fetchImpl = fetch,
   sleep = setTimeout,

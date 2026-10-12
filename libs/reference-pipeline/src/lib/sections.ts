@@ -34,6 +34,44 @@ type Draft<B> = {
   body: B[];
 };
 
+/**
+ * Groups a document's blocks into sections, one per heading, nested as the
+ * headings nest.
+ *
+ * - Text before the first heading becomes an "Opening text" section.
+ * - A section titled as a reference list, participant list, abbreviations,
+ *   search strategy or recommendation categorization is dropped with its
+ *   subsections.
+ * - A section with no text and no subsections with text is dropped.
+ * - A PDF section over 12,000 characters gets a "Page N" subsection per page.
+ * - Section ids are made from titles and are unique in the document. A
+ *   repeated title gets `-2`, `-3` and so on.
+ *
+ * @param doc `ParsedDocument`. Paged blocks from a PDF or blocks from a
+ * webpage.
+ * @returns `{ sections: Section[]; dropped: string[] }`. The sections in
+ * reading order, and the titles of the dropped sections in that list.
+ * A PDF section's location gives its first and last page.
+ *
+ * @example
+ * buildSections({
+ *   kind: 'webpage',
+ *   blocks: [
+ *     { kind: 'text', text: 'Updated 2026.' },
+ *     { kind: 'heading', level: 1, text: 'Goals' },
+ *     { kind: 'text', text: 'Below 130.' },
+ *     { kind: 'heading', level: 1, text: 'References' },
+ *     { kind: 'text', text: '1. Smith.' },
+ *   ],
+ * });
+ * // {
+ * //   sections: [
+ * //     { sectionId: 'opening-text', parentId: null, title: 'Opening text', location: { kind: 'webpage' }, contentMd: 'Updated 2026.' },
+ * //     { sectionId: 'goals', parentId: null, title: 'Goals', location: { kind: 'webpage' }, contentMd: 'Below 130.' },
+ * //   ],
+ * //   dropped: ['References'],
+ * // }
+ */
 export function buildSections(doc: ParsedDocument): {
   sections: Section[];
   dropped: string[];

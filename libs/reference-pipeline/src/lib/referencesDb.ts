@@ -11,6 +11,17 @@ export type ReferenceRecord = {
   sections: Section[];
 };
 
+/**
+ * Opens or creates a reference library. It creates the `documents` and
+ * `sections` tables and their two full-text search tables if they are missing.
+ *
+ * @param path `string`. A file path, or `':memory:'` for a library that is
+ * not saved.
+ * @returns `DatabaseSync`. The open library. The caller closes it.
+ *
+ * @example
+ * const db = openReferencesDb('libs/reference-pipeline/data/references.db');
+ */
 export function openReferencesDb(path: string): DatabaseSync {
   const db = new DatabaseSync(path);
   db.exec(`
@@ -50,6 +61,33 @@ export function openReferencesDb(path: string): DatabaseSync {
   return db;
 }
 
+/**
+ * Adds a reference and its sections to the library, and to the search
+ * tables. Sections keep their order in `record.sections` as their position.
+ *
+ * The reference must not be in the library yet. Call {@link deleteReference}
+ * first to replace one.
+ *
+ * @param db `DatabaseSync`. From {@link openReferencesDb}.
+ * @param record `ReferenceRecord`. The reference and its sections.
+ * @returns `void`.
+ * @throws `Error` when a reference or section with the same id is already
+ * stored.
+ *
+ * @example
+ * writeReference(db, {
+ *   id: 'measles',
+ *   title: 'Measles',
+ *   edition: '2026',
+ *   summary: 'Vaccine schedule',
+ *   url: 'https://example.com/measles',
+ *   sections: [
+ *     { sectionId: 'doses', parentId: null, title: 'Doses', location: { kind: 'webpage' }, contentMd: 'Two doses.' },
+ *   ],
+ * });
+ * db.prepare('SELECT document_id, section_id, title, content_md FROM sections').all();
+ * // [{ document_id: 'measles', section_id: 'doses', title: 'Doses', content_md: 'Two doses.' }]
+ */
 export function writeReference(db: DatabaseSync, record: ReferenceRecord) {
   db.prepare(
     'INSERT INTO documents_fts (id, title, summary) VALUES (?, ?, ?)',
@@ -90,6 +128,19 @@ export function writeReference(db: DatabaseSync, record: ReferenceRecord) {
   });
 }
 
+/**
+ * Deletes a reference and its sections from the library and from the search
+ * tables. An id that is not stored is ignored.
+ *
+ * @param db `DatabaseSync`. From {@link openReferencesDb}.
+ * @param id `string`. The reference id.
+ * @returns `void`.
+ *
+ * @example
+ * deleteReference(db, 'measles');
+ * db.prepare("SELECT id FROM documents WHERE id = 'measles'").all();
+ * // []
+ */
 export function deleteReference(db: DatabaseSync, id: string) {
   for (const sql of [
     'DELETE FROM sections_fts WHERE document_id = ?',
@@ -101,7 +152,19 @@ export function deleteReference(db: DatabaseSync, id: string) {
   }
 }
 
-/** Deletes every reference whose id is not in the catalog any more. */
+/**
+ * Deletes every reference whose id is not in the catalog any more.
+ *
+ * @param db `DatabaseSync`. From {@link openReferencesDb}.
+ * @param ids `string[]`. The ids to keep.
+ * @returns `void`.
+ *
+ * @example
+ * // The library holds 'measles' and 'flu'.
+ * deleteReferencesExcept(db, ['flu']);
+ * db.prepare('SELECT id FROM documents').all();
+ * // [{ id: 'flu' }]
+ */
 export function deleteReferencesExcept(db: DatabaseSync, ids: string[]) {
   const rows = db.prepare('SELECT id FROM documents').all() as { id: string }[];
   for (const { id } of rows) {

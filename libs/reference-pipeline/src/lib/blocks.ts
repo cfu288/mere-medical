@@ -8,6 +8,27 @@ const HEADING = /^(#{1,6})\s+(.*)$/;
 const FENCE = /^(```|~~~)/;
 const PAGE_LINK = /^\[[^\]]*\]\(#[^)]*\)$/;
 
+/**
+ * Splits markdown into heading and text blocks.
+ *
+ * - An ATX heading (`#` to `######`) becomes a heading block, with link
+ *   markup removed from its text.
+ * - A heading that is only a link to a place on the page, such as
+ *   `## [Goals](#goals)`, is kept as text.
+ * - Lines between headings join into one text block. A `#` line inside a
+ *   fenced code block is text.
+ *
+ * @param markdown `string`.
+ * @returns `Block[]`, in document order. Text blocks are trimmed and never
+ * empty.
+ *
+ * @example
+ * markdownToBlocks('# Hypertension\n\nScreen adults yearly.\n\n## [Goals](#goals)\n\nBelow 130.');
+ * // [
+ * //   { kind: 'heading', level: 1, text: 'Hypertension' },
+ * //   { kind: 'text', text: 'Screen adults yearly.\n\n[Goals](#goals)\n\nBelow 130.' },
+ * // ]
+ */
 export function markdownToBlocks(markdown: string): Block[] {
   const blocks: Block[] = [];
   let pending: string[] = [];

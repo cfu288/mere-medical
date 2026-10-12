@@ -6,6 +6,25 @@ const HEADING_MIN_EXTRA_PT = 2;
 const PARAGRAPH_GAP_LINE_HEIGHTS = 1.8;
 const FURNITURE_MIN_PAGES = 4;
 
+/**
+ * Reads the text lines of a PDF with pdf.js.
+ *
+ * Text items drawn at the same height are joined into one line, at the
+ * largest of their font sizes. Whitespace is collapsed and empty lines are
+ * skipped.
+ *
+ * @param bytes `Uint8Array`. The PDF file.
+ * @returns `Promise<PdfLine[]>`. Each line's page (from 1), font size, height
+ * on the page and text, in drawing order.
+ *
+ * @example
+ * // A one-page PDF with a 14 pt heading above an 11 pt line.
+ * await pdfLines(readFileSync('guideline.pdf'));
+ * // [
+ * //   { page: 1, size: 14, y: 720, text: 'I. Introduction' },
+ * //   { page: 1, size: 11, y: 700, text: 'Tdap booster every 10 years.' },
+ * // ]
+ */
 export async function pdfLines(bytes: Uint8Array): Promise<PdfLine[]> {
   const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
   const task = pdfjs.getDocument({ data: bytes, verbosity: 0 });
@@ -52,6 +71,30 @@ export async function pdfLines(bytes: Uint8Array): Promise<PdfLine[]> {
   }
 }
 
+/**
+ * Turns PDF lines into heading and text blocks.
+ *
+ * - In a document of 4 or more pages, a line that repeats on more than half
+ *   the pages, such as a running header or page number, is dropped.
+ * - The font size with the most text is the body size. A line at least 2 pt
+ *   larger is a heading, and larger sizes are higher levels.
+ * - Body lines join into a paragraph until a gap of more than 1.8 line
+ *   heights, a move up the page, or a new page.
+ *
+ * @param lines `PdfLine[]`. From {@link pdfLines}.
+ * @returns `PagedBlock[]`. Blocks in reading order, each with its page.
+ *
+ * @example
+ * linesToBlocks([
+ *   { page: 1, size: 14, y: 700, text: 'Recommendations' },
+ *   { page: 1, size: 10, y: 680, text: 'We recommend a goal' },
+ *   { page: 1, size: 10, y: 668, text: 'below 130 mmHg.' },
+ * ]);
+ * // [
+ * //   { kind: 'heading', level: 1, text: 'Recommendations', page: 1 },
+ * //   { kind: 'text', text: 'We recommend a goal below 130 mmHg.', page: 1 },
+ * // ]
+ */
 export function linesToBlocks(lines: PdfLine[]): PagedBlock[] {
   const kept = withoutFurniture(lines);
   const body = bodySize(kept);

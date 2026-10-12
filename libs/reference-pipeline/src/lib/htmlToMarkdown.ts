@@ -1,6 +1,27 @@
 import TurndownService from 'turndown';
 import { tables } from '@joplin/turndown-plugin-gfm';
 
+/**
+ * Converts an HTML page to markdown.
+ *
+ * - Only the page's one `<main>` is converted, or else its one `<article>`,
+ *   or else the whole page.
+ * - A table that holds headings or lists becomes plain blocks. Other tables
+ *   become GFM tables.
+ * - Scripts, styles, noscript, frames, embedded objects and templates are
+ *   dropped.
+ * - A link or image whose address is not safe (see {@link isSafeUrl}) keeps
+ *   only its text or alt text.
+ * - Page text that spells a tag or an `<scheme:...>` link is escaped and
+ *   stays text.
+ *
+ * @param html `string`.
+ * @returns `string`. Markdown with ATX headings, trimmed.
+ *
+ * @example
+ * htmlToMarkdown('<nav>Home</nav><main><h1>Measles</h1><p>See <a href="https://www.cdc.gov/measles">CDC</a>.</p></main>');
+ * // '# Measles\n\nSee [CDC](https://www.cdc.gov/measles).'
+ */
 export function htmlToMarkdown(html: string): string {
   const turndown = new TurndownService({
     headingStyle: 'atx',
@@ -41,7 +62,20 @@ export function htmlToMarkdown(html: string): string {
 const SAFE_PROTOCOLS = ['http:', 'https:', 'mailto:'];
 const MARKUP_START = /<(?=[a-z/!?])/gi;
 
-/** True for web, mail and relative addresses, judged by the URL parser so case, spacing and tab tricks in a scheme are caught. */
+/**
+ * Says whether a link address is safe to keep. Web, mail and relative
+ * addresses are safe. The URL parser reads the scheme, and it catches case,
+ * spacing and tab tricks.
+ *
+ * @param value `string`. A link or image address.
+ * @returns `boolean`. True for `http:`, `https:`, `mailto:` and relative
+ * addresses. False for any other scheme and for addresses that do not parse.
+ *
+ * @example
+ * isSafeUrl('https://www.cdc.gov'); // true
+ * isSafeUrl('/vaccines'); // true
+ * isSafeUrl(' JaVaScRiPt:alert(1)'); // false
+ */
 export function isSafeUrl(value: string): boolean {
   try {
     return SAFE_PROTOCOLS.includes(

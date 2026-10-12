@@ -1,3 +1,17 @@
+/**
+ * Reads the crawl delay that a robots.txt sets for all user agents.
+ *
+ * Only a `Crawl-delay` in a group whose `User-agent` lines include `*` counts.
+ * Comments after `#` are ignored and keys are matched in any case.
+ *
+ * @param robotsTxt `string`. The body of a robots.txt file.
+ * @returns `number`. The delay in seconds, or 0 when there is none or it is
+ * not a positive number.
+ *
+ * @example
+ * crawlDelaySeconds('User-agent: *\nCrawl-delay: 5\n');
+ * // 5
+ */
 export function crawlDelaySeconds(robotsTxt: string): number {
   let agents: string[] = [];
   let inRules = false;
