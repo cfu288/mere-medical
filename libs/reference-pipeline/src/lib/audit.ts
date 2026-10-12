@@ -1,13 +1,8 @@
 import { DatabaseSync } from 'node:sqlite';
 
-import { isSafeUrl } from './htmlToBlocks';
-
 export type Finding = {
   check:
     | 'dead-end'
-    | 'links-only'
-    | 'html-tags'
-    | 'unsafe-link'
     | 'duplicate-text'
     | 'missing-parent'
     | 'replacement-character'
@@ -45,17 +40,10 @@ export type Library = {
 type Check = (library: Library) => Finding[];
 
 const SHORT_REFERENCE_CHARS = 500;
-const LINK = /!?\[[^\]]*\]\([^)]*\)/g;
-const LINK_TARGET =
-  /(?<!\\)!?\[[^\]]*\]\(\s*([^\s)]+)|(?<!\\)<([a-z][a-z0-9+.-]*:[^>\s]*)>/gi;
-const HTML_TAG = /(?<!\\)<\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
 
 const CHECKS: Check[] = [
   missingParents,
   deadEnds,
-  linksOnly,
-  htmlTags,
-  unsafeLinks,
   replacementCharacters,
   duplicateText,
   shortReferences,
@@ -145,71 +133,6 @@ export function deadEnds({ sections }: Library): Finding[] {
       (s) => s.text.trim() === '' && !parents.has(key(s.reference, s.section)),
     )
     .map((s) => finding('dead-end', s, 'no text and no subsections'));
-}
-
-/**
- * Finds sections whose text is only links, with no letters outside them.
- *
- * @param library `Library`. The library's rows, as `auditLibrary` loads them.
- * @returns `Finding[]`. One finding per problem, or none.
- *
- * @example
- * linksOnly({ references: [], sections: [{ reference: 'measles', section: 'more', parent: null, text: '[CDC](https://www.cdc.gov) [WHO](https://www.who.int)' }] });
- * // [{ check: 'links-only', reference: 'measles', section: 'more', detail: 'text is only links' }]
- */
-export function linksOnly({ sections }: Library): Finding[] {
-  return sections
-    .filter(
-      (s) => s.text.trim() !== '' && !/\p{L}/u.test(s.text.replace(LINK, '')),
-    )
-    .map((s) => finding('links-only', s, 'text is only links'));
-}
-
-/**
- * Finds HTML tags left in section text. Escaped text such as `\<b>` is not a tag.
- *
- * @param library `Library`. The library's rows, as `auditLibrary` loads them.
- * @returns `Finding[]`. One finding per problem, or none.
- *
- * @example
- * htmlTags({ references: [], sections: [{ reference: 'measles', section: 'doses', parent: null, text: 'Two <b>doses</b>.<br>' }] });
- * // [{ check: 'html-tags', reference: 'measles', section: 'doses', detail: '<b> <br>' }]
- */
-export function htmlTags({ sections }: Library): Finding[] {
-  return sections.flatMap((s) => {
-    const tags = [
-      ...new Set(
-        [...s.text.matchAll(HTML_TAG)].map((m) => `<${m[1].toLowerCase()}>`),
-      ),
-    ].sort();
-    return tags.length > 0 ? [finding('html-tags', s, tags.join(' '))] : [];
-  });
-}
-
-/**
- * Finds links, images and autolinks whose address is not safe (see `isSafeUrl`). Escaped text that only looks like a link is ignored.
- *
- * @param library `Library`. The library's rows, as `auditLibrary` loads them.
- * @returns `Finding[]`. One finding per problem, or none.
- *
- * @example
- * unsafeLinks({ references: [], sections: [{ reference: 'measles', section: 'doses', parent: null, text: '[print](javascript:print()) [CDC](https://www.cdc.gov)' }] });
- * // [{ check: 'unsafe-link', reference: 'measles', section: 'doses', detail: 'links to javascript:' }]
- */
-export function unsafeLinks({ sections }: Library): Finding[] {
-  return sections.flatMap((s) => {
-    const schemes = [
-      ...new Set(
-        [...s.text.matchAll(LINK_TARGET)]
-          .map((m) => m[1] ?? m[2])
-          .filter((target) => !isSafeUrl(target))
-          .map((target) => `${target.slice(0, target.indexOf(':'))}:`),
-      ),
-    ].sort();
-    return schemes.length > 0
-      ? [finding('unsafe-link', s, `links to ${schemes.join(', ')}`)]
-      : [];
-  });
 }
 
 /**

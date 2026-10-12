@@ -1,6 +1,7 @@
 /**
- * One heading or run of text from a parsed document, in reading order. `page`
- * is the PDF page it is on, or null for a webpage.
+ * One heading or run of text from a parsed document, in reading order. A
+ * heading's text is plain, and a text block's text is markdown. `page` is the
+ * PDF page it is on, or null for a webpage.
  */
 export type Block =
   | { kind: 'heading'; level: number; text: string; page: number | null }

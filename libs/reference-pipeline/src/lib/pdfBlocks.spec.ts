@@ -19,6 +19,27 @@ describe('pdfLines', () => {
 });
 
 describe('linesToBlocks', () => {
+  it('escapes markdown and markup in body text and leaves heading text plain', () => {
+    expect(
+      linesToBlocks([
+        { page: 1, size: 14, y: 700, text: 'Use of *Tdap* [1]' },
+        {
+          page: 1,
+          size: 11,
+          y: 680,
+          text: 'Give <b>one dose</b> of *Tdap* [1] by 3_months.',
+        },
+      ]),
+    ).toEqual([
+      { kind: 'heading', level: 1, text: 'Use of *Tdap* [1]', page: 1 },
+      {
+        kind: 'text',
+        text: 'Give \\<b>one dose\\</b> of \\*Tdap\\* \\[1\\] by 3\\_months.',
+        page: 1,
+      },
+    ]);
+  });
+
   it('makes lines at least 2pt above the body size headings, larger sizes higher levels', () => {
     expect(
       linesToBlocks([

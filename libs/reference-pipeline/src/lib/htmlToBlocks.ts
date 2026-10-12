@@ -2,6 +2,7 @@ import { createDocument } from '@mixmark-io/domino';
 import TurndownService from 'turndown';
 import { tables } from '@joplin/turndown-plugin-gfm';
 
+import { escapeMarkdown } from './escapeMarkdown';
 import { Block } from './sections';
 
 const HEADINGS = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
@@ -15,7 +16,6 @@ const REMOVED = [
   'template',
 ] as const;
 const SAFE_PROTOCOLS = ['http:', 'https:', 'mailto:'];
-const MARKUP_START = /<(?=[a-z/!?])/gi;
 
 const turndown = createTurndown();
 
@@ -102,7 +102,7 @@ export function htmlToBlocks(html: string): Block[] {
  * isSafeUrl('/vaccines'); // true
  * isSafeUrl(' JaVaScRiPt:alert(1)'); // false
  */
-export function isSafeUrl(value: string): boolean {
+function isSafeUrl(value: string): boolean {
   try {
     return SAFE_PROTOCOLS.includes(
       new URL(value, 'https://relative.invalid/').protocol,
@@ -118,9 +118,7 @@ function createTurndown(): TurndownService {
     codeBlockStyle: 'fenced',
   });
   service.use(tables);
-  const escapeMarkdown = service.escape.bind(service);
-  // Markdown reads a bare <tag or <scheme:...> as HTML or a link.
-  service.escape = (text) => escapeMarkdown(text).replace(MARKUP_START, '\\<');
+  service.escape = escapeMarkdown;
   // A GFM table cell cannot hold a heading or a list. Tables with them are layout.
   service.addRule('layoutTable', {
     filter: (node) =>

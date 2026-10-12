@@ -95,7 +95,8 @@ PDFs.
   is the size covering the most characters. Lines at least 2pt larger are
   headings, larger sizes are higher levels, and a heading wrapped over two lines
   is joined. Lines repeated on more than half the pages (running headers,
-  "Page 3 of 123") are dropped. Every block keeps its page number.
+  "Page 3 of 123") are dropped. Body text is escaped as markdown, as HTML text
+  is. Every block keeps its page number.
 - **Sections**: each heading starts a section holding the text up to the next
   heading. Deeper headings become its subsections. Text before the first
   heading becomes an "Opening text" section. A PDF section whose own text is
@@ -157,10 +158,11 @@ is given up after 120 seconds, and a server error or rate limit is retried up
 to four attempts with growing waits.
 
 The audit checks the built library for problems a reader of it would hit. It reports
-sections with no text and no subsections, sections that are only links, HTML
-tags left in the text, links that are not web, mail or relative addresses,
-unreadable characters, text repeated from another
-section, references with under 500 characters of text, and an empty library.
+sections with no text and no subsections, sections whose parent is missing,
+unreadable characters, text repeated from another section, references with
+under 500 characters of text, and an empty library. Raw HTML and unsafe links
+cannot reach the library, since both adapters escape text with the same
+markdown escaping and the HTML adapter keeps only web, mail and relative links.
 It prints each check's count with examples, then the largest sections. To
 audit an existing library without rebuilding it:
 

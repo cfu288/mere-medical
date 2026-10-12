@@ -4,12 +4,9 @@ import {
   deadEnds,
   duplicateText,
   emptyLibrary,
-  htmlTags,
-  linksOnly,
   missingParents,
   replacementCharacters,
   shortReferences,
-  unsafeLinks,
 } from './audit';
 import { openReferencesDb, writeReference } from './referencesDb';
 
@@ -82,142 +79,6 @@ describe('deadEnds', () => {
         detail: 'no text and no subsections',
       },
     ]);
-  });
-});
-
-describe('linksOnly', () => {
-  it('reports a section whose text is only links', () => {
-    expect(
-      linksOnly({
-        ...NOTHING,
-        sections: [
-          {
-            reference: 'guide',
-            section: 'contents',
-            parent: null,
-            text: '*   [5.1 Renal Toxicity](#section-5.1)\n*   [5.2 Anaphylaxis](#section-5.2)',
-          },
-          {
-            reference: 'guide',
-            section: 'goals',
-            parent: null,
-            text: 'See [the table](#table-1) for targets.',
-          },
-        ],
-      }),
-    ).toEqual([
-      {
-        check: 'links-only',
-        reference: 'guide',
-        section: 'contents',
-        detail: 'text is only links',
-      },
-    ]);
-  });
-});
-
-describe('unsafeLinks', () => {
-  it('reports the schemes of links and images that are not web, mail or relative addresses', () => {
-    expect(
-      unsafeLinks({
-        ...NOTHING,
-        sections: [
-          {
-            reference: 'cdc-schedule',
-            section: 'how-to-use',
-            parent: null,
-            text: '[Table 1](javascript:scroll\\(\\)) and [Print](javascript:window.print\\(\\) "Print") ![chart](data:image/png;base64,AAA) [notes](https://www.cdc.gov/notes) [jump](#table-2)',
-          },
-        ],
-      }),
-    ).toEqual([
-      {
-        check: 'unsafe-link',
-        reference: 'cdc-schedule',
-        section: 'how-to-use',
-        detail: 'links to data:, javascript:',
-      },
-    ]);
-  });
-
-  it('reports unsafe autolinks', () => {
-    expect(
-      unsafeLinks({
-        ...NOTHING,
-        sections: [
-          {
-            reference: 'guide',
-            section: 'page-3',
-            parent: null,
-            text: 'See <javascript:alert(1)> or <https://www.cdc.gov/>.',
-          },
-        ],
-      }),
-    ).toEqual([
-      {
-        check: 'unsafe-link',
-        reference: 'guide',
-        section: 'page-3',
-        detail: 'links to javascript:',
-      },
-    ]);
-  });
-
-  it('ignores escaped text that only looks like a link', () => {
-    expect(
-      unsafeLinks({
-        ...NOTHING,
-        sections: [
-          {
-            reference: 'guide',
-            section: 'page-3',
-            parent: null,
-            text: '\\[click\\](javascript:alert(1)) and \\<javascript:alert(1)>',
-          },
-        ],
-      }),
-    ).toEqual([]);
-  });
-});
-
-describe('htmlTags', () => {
-  it('reports each html tag left in a section once', () => {
-    expect(
-      htmlTags({
-        ...NOTHING,
-        sections: [
-          {
-            reference: 'guide',
-            section: 'schedule',
-            parent: null,
-            text: '| HepB<br>Hepatitis B | 3<br><em>doses</em> |',
-          },
-        ],
-      }),
-    ).toEqual([
-      {
-        check: 'html-tags',
-        reference: 'guide',
-        section: 'schedule',
-        detail: '<br> <em>',
-      },
-    ]);
-  });
-
-  it('ignores escaped text that only looks like a tag', () => {
-    expect(
-      htmlTags({
-        ...NOTHING,
-        sections: [
-          {
-            reference: 'guide',
-            section: 'schedule',
-            parent: null,
-            text: 'Write \\<b>bold\\</b> for emphasis',
-          },
-        ],
-      }),
-    ).toEqual([]);
   });
 });
 

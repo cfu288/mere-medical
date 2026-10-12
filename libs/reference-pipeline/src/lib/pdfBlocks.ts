@@ -1,3 +1,4 @@
+import { escapeMarkdown } from './escapeMarkdown';
 import { Block } from './sections';
 
 type PdfLine = { page: number; size: number; y: number; text: string };
@@ -81,6 +82,7 @@ export async function pdfLines(bytes: Uint8Array): Promise<PdfLine[]> {
  *   larger is a heading, and larger sizes are higher levels.
  * - Body lines join into a paragraph until a gap of more than 1.8 line
  *   heights, a move up the page, or a new page.
+ * - Body text is escaped as markdown. Heading text stays plain.
  *
  * @param lines `PdfLine[]`. From {@link pdfLines}.
  * @returns `Block[]`. Blocks in reading order, each with its page.
@@ -130,7 +132,11 @@ export function linesToBlocks(lines: PdfLine[]): Block[] {
     }
     previous = line;
   }
-  return blocks;
+  return blocks.map((block) =>
+    block.kind === 'text'
+      ? { ...block, text: escapeMarkdown(block.text) }
+      : block,
+  );
 }
 
 function bodySize(lines: PdfLine[]): number {
