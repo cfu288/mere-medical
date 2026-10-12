@@ -17,8 +17,6 @@ import { openReferencesDb, writeReference } from './referencesDb';
 const NOTHING: Library = {
   references: [],
   sections: [],
-  referenceIndex: [],
-  sectionIndex: [],
 };
 
 const BACKGROUND =
@@ -338,47 +336,40 @@ describe('emptyLibrary', () => {
 
 describe('searchIndex', () => {
   it('reports rows missing from, stale in or left over in either search index', () => {
-    expect(
-      searchIndex({
-        references: [{ id: 'guide', title: 'Guide', summary: 'BP goals' }],
-        referenceIndex: [
-          { id: 'guide', title: 'Guide', summary: 'Old summary' },
-          { id: 'gone', title: 'Gone', summary: 'Removed' },
-        ],
-        sections: [
-          {
-            reference: 'guide',
-            section: 'goals',
-            parent: null,
-            title: 'Goals',
-            text: 'Below 130.',
-          },
-          {
-            reference: 'guide',
-            section: 'targets',
-            parent: null,
-            title: 'Targets',
-            text: 'Below 90.',
-          },
-        ],
-        sectionIndex: [
-          {
-            reference: 'guide',
-            section: 'goals',
-            parent: null,
-            title: 'Goals',
-            text: 'Below 140.',
-          },
-          {
-            reference: 'guide',
-            section: 'old',
-            parent: null,
-            title: 'Old',
-            text: 'Gone.',
-          },
-        ],
-      }),
-    ).toEqual([
+    const db = openReferencesDb(':memory:');
+    writeReference(db, {
+      id: 'guide',
+      title: 'Guide',
+      edition: '2026',
+      summary: 'BP goals',
+      url: 'https://example.com/guide',
+      sections: [
+        {
+          sectionId: 'goals',
+          parentId: null,
+          title: 'Goals',
+          location: { kind: 'webpage' },
+          contentMd: 'Below 130.',
+        },
+        {
+          sectionId: 'targets',
+          parentId: null,
+          title: 'Targets',
+          location: { kind: 'webpage' },
+          contentMd: 'Below 90.',
+        },
+      ],
+    });
+    db.exec(`
+      UPDATE documents_fts SET summary = 'Old summary' WHERE id = 'guide';
+      INSERT INTO documents_fts (id, title, summary) VALUES ('gone', 'Gone', 'Removed');
+      UPDATE sections_fts SET content_md = 'Below 140.' WHERE section_id = 'goals';
+      DELETE FROM sections_fts WHERE section_id = 'targets';
+      INSERT INTO sections_fts (document_id, section_id, title, content_md)
+        VALUES ('guide', 'old', 'Old', 'Gone.');
+    `);
+
+    expect(searchIndex(db)).toEqual([
       {
         check: 'search-index',
         reference: 'guide',
@@ -416,37 +407,29 @@ describe('searchIndex', () => {
   });
 
   it('reports a section indexed more than once even when one row is current', () => {
-    expect(
-      searchIndex({
-        references: [],
-        referenceIndex: [],
-        sections: [
-          {
-            reference: 'guide',
-            section: 'goals',
-            parent: null,
-            title: 'Goals',
-            text: 'Below 130.',
-          },
-        ],
-        sectionIndex: [
-          {
-            reference: 'guide',
-            section: 'goals',
-            parent: null,
-            title: 'Goals',
-            text: 'Below 130.',
-          },
-          {
-            reference: 'guide',
-            section: 'goals',
-            parent: null,
-            title: 'Goals',
-            text: 'Below 140.',
-          },
-        ],
-      }),
-    ).toEqual([
+    const db = openReferencesDb(':memory:');
+    writeReference(db, {
+      id: 'guide',
+      title: 'Guide',
+      edition: '2026',
+      summary: 'BP goals',
+      url: 'https://example.com/guide',
+      sections: [
+        {
+          sectionId: 'goals',
+          parentId: null,
+          title: 'Goals',
+          location: { kind: 'webpage' },
+          contentMd: 'Below 130.',
+        },
+      ],
+    });
+    db.exec(`
+      INSERT INTO sections_fts (document_id, section_id, title, content_md)
+        VALUES ('guide', 'goals', 'Goals', 'Below 140.');
+    `);
+
+    expect(searchIndex(db)).toEqual([
       {
         check: 'search-index',
         reference: 'guide',
@@ -457,17 +440,21 @@ describe('searchIndex', () => {
   });
 
   it('reports a reference indexed more than once', () => {
-    expect(
-      searchIndex({
-        references: [{ id: 'guide', title: 'Guide', summary: 'BP goals' }],
-        referenceIndex: [
-          { id: 'guide', title: 'Guide', summary: 'BP goals' },
-          { id: 'guide', title: 'Guide', summary: 'Old summary' },
-        ],
-        sections: [],
-        sectionIndex: [],
-      }),
-    ).toEqual([
+    const db = openReferencesDb(':memory:');
+    writeReference(db, {
+      id: 'guide',
+      title: 'Guide',
+      edition: '2026',
+      summary: 'BP goals',
+      url: 'https://example.com/guide',
+      sections: [],
+    });
+    db.exec(`
+      INSERT INTO documents_fts (id, title, summary)
+        VALUES ('guide', 'Guide', 'Old summary');
+    `);
+
+    expect(searchIndex(db)).toEqual([
       {
         check: 'search-index',
         reference: 'guide',

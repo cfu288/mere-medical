@@ -30,14 +30,18 @@ type SectionRow = {
 type ReferenceRow = { id: string; title: string; summary: string };
 
 /**
- * The rows the checks read. They are the library's references and sections
- * and the rows of its two search tables, in reading order.
+ * Every row the checks read, loaded once by `auditLibrary`. Each check is a
+ * pure function of this object, and a test passes literal rows with no
+ * database.
+ *
+ * - `references`: the `documents` rows, ordered by id.
+ * - `sections`: the `sections` rows, ordered by reference and then position.
+ *   This is reading order, and "earlier" in `duplicateText` means earlier in
+ *   it.
  */
 export type Library = {
   references: ReferenceRow[];
   sections: SectionRow[];
-  referenceIndex: ReferenceRow[];
-  sectionIndex: SectionRow[];
 };
 
 type Check = (library: Library) => Finding[];
@@ -47,6 +51,18 @@ const LINK = /!?\[[^\]]*\]\([^)]*\)/g;
 const LINK_TARGET =
   /(?<!\\)!?\[[^\]]*\]\(\s*([^\s)]+)|(?<!\\)<([a-z][a-z0-9+.-]*:[^>\s]*)>/gi;
 const HTML_TAG = /(?<!\\)<\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
+
+const CHECKS: Check[] = [
+  missingParents,
+  deadEnds,
+  linksOnly,
+  htmlTags,
+  unsafeLinks,
+  replacementCharacters,
+  duplicateText,
+  shortReferences,
+  emptyLibrary,
+];
 
 /**
  * Finds problems in a built library that make a section unreadable,
@@ -66,7 +82,7 @@ const HTML_TAG = /(?<!\\)<\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
  */
 export function auditLibrary(db: DatabaseSync): Finding[] {
   const library = loadLibrary(db);
-  return CHECKS.flatMap((check) => check(library));
+  return [...CHECKS.flatMap((check) => check(library)), ...searchIndex(db)];
 }
 
 function loadLibrary(db: DatabaseSync): Library {
@@ -78,15 +94,6 @@ function loadLibrary(db: DatabaseSync): Library {
       .prepare(
         `SELECT document_id AS reference, section_id AS section, parent_id AS parent, title, content_md AS text
          FROM sections ORDER BY document_id, position`,
-      )
-      .all() as SectionRow[],
-    referenceIndex: db
-      .prepare('SELECT id, title, summary FROM documents_fts')
-      .all() as ReferenceRow[],
-    sectionIndex: db
-      .prepare(
-        `SELECT document_id AS reference, section_id AS section, NULL AS parent, title, content_md AS text
-         FROM sections_fts`,
       )
       .all() as SectionRow[],
   };
@@ -306,112 +313,52 @@ export function emptyLibrary({ references }: Library): Finding[] {
     : [];
 }
 
-function repeated<T>(
-  rows: T[],
-  keyOf: (row: T) => string,
-): { row: T; times: number }[] {
-  const counts = new Map<string, { row: T; times: number }>();
-  for (const row of rows) {
-    const seen = counts.get(keyOf(row));
-    if (seen) {
-      seen.times += 1;
-    } else {
-      counts.set(keyOf(row), { row, times: 1 });
-    }
-  }
-  return [...counts.values()].filter(({ times }) => times > 1);
-}
+const SEARCH_INDEX_PROBLEMS = [
+  `SELECT id AS reference, NULL AS section, 'indexed ' || count(*) || ' times' AS detail
+   FROM documents_fts GROUP BY id HAVING count(*) > 1 ORDER BY min(rowid)`,
+  `SELECT document_id AS reference, section_id AS section, 'indexed ' || count(*) || ' times' AS detail
+   FROM sections_fts GROUP BY document_id, section_id HAVING count(*) > 1 ORDER BY min(rowid)`,
+  `SELECT id AS reference, NULL AS section,
+          'missing from the reference search index or indexed with another title or summary' AS detail
+   FROM (SELECT id, title, summary FROM documents EXCEPT SELECT id, title, summary FROM documents_fts)
+   ORDER BY id`,
+  `SELECT id AS reference, NULL AS section, 'in the reference search index but not in the library' AS detail
+   FROM documents_fts WHERE id NOT IN (SELECT id FROM documents) ORDER BY rowid`,
+  `SELECT s.document_id AS reference, s.section_id AS section,
+          'missing from the section search index or indexed with other text' AS detail
+   FROM sections s
+   JOIN (SELECT document_id, section_id, title, content_md FROM sections
+         EXCEPT SELECT document_id, section_id, title, content_md FROM sections_fts) m
+     USING (document_id, section_id)
+   ORDER BY s.document_id, s.position`,
+  `SELECT document_id AS reference, section_id AS section,
+          'in the section search index but not in the library' AS detail
+   FROM sections_fts WHERE (document_id, section_id) NOT IN (SELECT document_id, section_id FROM sections)
+   ORDER BY rowid`,
+];
 
 /**
- * Finds references and sections that are missing from their search table, indexed with other text, indexed more than once, or left in it after deletion.
+ * Finds references and sections that are missing from their search table,
+ * indexed with other text, indexed more than once, or left in it after
+ * deletion. The search tables have no triggers. `writeReference` and
+ * `deleteReference` fill and clear them next to the rows.
  *
- * @param library `Library`. The library's rows, as `auditLibrary` loads them.
+ * @param db `DatabaseSync`. From `openReferencesDb`.
  * @returns `Finding[]`. One finding per problem, or none.
  *
  * @example
- * searchIndex({
- *   references: [{ id: 'measles', title: 'Measles', summary: 'Vaccine schedule' }],
- *   sections: [{ reference: 'measles', section: 'doses', parent: null, title: 'T', text: 'Two doses.' }],
- *   referenceIndex: [{ id: 'measles', title: 'Measles', summary: 'Vaccine schedule' }],
- *   sectionIndex: [],
- * });
+ * // The library holds 'measles' with section 'doses', and the section search table lost that row.
+ * searchIndex(db);
  * // [{ check: 'search-index', reference: 'measles', section: 'doses', detail: 'missing from the section search index or indexed with other text' }]
  */
-export function searchIndex({
-  references,
-  sections,
-  referenceIndex,
-  sectionIndex,
-}: Library): Finding[] {
-  const referenceKey = (r: ReferenceRow) =>
-    JSON.stringify([r.id, r.title, r.summary]);
-  const sectionKey = (s: SectionRow) =>
-    JSON.stringify([s.reference, s.section, s.title, s.text]);
-  const indexedReferences = new Set(referenceIndex.map(referenceKey));
-  const referenceIds = new Set(references.map((r) => r.id));
-  const indexedSections = new Set(sectionIndex.map(sectionKey));
-  const sectionIds = new Set(sections.map((s) => key(s.reference, s.section)));
-  const searchFinding = (
-    reference: string,
-    section: string | null,
-    detail: string,
-  ): Finding => ({ check: 'search-index', reference, section, detail });
-  return [
-    ...repeated(referenceIndex, (r) => r.id).map(({ row, times }) =>
-      searchFinding(row.id, null, `indexed ${times} times`),
-    ),
-    ...repeated(sectionIndex, (s) => key(s.reference, s.section)).map(
-      ({ row, times }) =>
-        searchFinding(row.reference, row.section, `indexed ${times} times`),
-    ),
-    ...references
-      .filter((r) => !indexedReferences.has(referenceKey(r)))
-      .map((r) =>
-        searchFinding(
-          r.id,
-          null,
-          'missing from the reference search index or indexed with another title or summary',
-        ),
-      ),
-    ...referenceIndex
-      .filter((r) => !referenceIds.has(r.id))
-      .map((r) =>
-        searchFinding(
-          r.id,
-          null,
-          'in the reference search index but not in the library',
-        ),
-      ),
-    ...sections
-      .filter((s) => !indexedSections.has(sectionKey(s)))
-      .map((s) =>
-        searchFinding(
-          s.reference,
-          s.section,
-          'missing from the section search index or indexed with other text',
-        ),
-      ),
-    ...sectionIndex
-      .filter((s) => !sectionIds.has(key(s.reference, s.section)))
-      .map((s) =>
-        searchFinding(
-          s.reference,
-          s.section,
-          'in the section search index but not in the library',
-        ),
-      ),
-  ];
+export function searchIndex(db: DatabaseSync): Finding[] {
+  return SEARCH_INDEX_PROBLEMS.flatMap((sql) =>
+    (
+      db.prepare(sql).all() as {
+        reference: string;
+        section: string | null;
+        detail: string;
+      }[]
+    ).map((row) => ({ check: 'search-index' as const, ...row })),
+  );
 }
-
-const CHECKS: Check[] = [
-  missingParents,
-  deadEnds,
-  linksOnly,
-  htmlTags,
-  unsafeLinks,
-  replacementCharacters,
-  duplicateText,
-  shortReferences,
-  emptyLibrary,
-  searchIndex,
-];
