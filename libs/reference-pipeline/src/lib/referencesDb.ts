@@ -66,7 +66,8 @@ export function openReferencesDb(path: string): DatabaseSync {
  * tables. Sections keep their order in `record.sections` as their position.
  *
  * The reference must not be in the library yet. Call {@link deleteReference}
- * first to replace one.
+ * first to replace one. Call it inside a transaction. A failed write leaves
+ * the rows it wrote before the failure.
  *
  * @param db `DatabaseSync`. From {@link openReferencesDb}.
  * @param record `ReferenceRecord`. The reference and its sections.

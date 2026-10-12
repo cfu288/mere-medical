@@ -9,7 +9,8 @@ const FIRST_WAIT_MS = 2000;
  * @param attempt `() => Promise<Response>`. Makes one request.
  * @param sleep `(ms: number) => Promise<unknown>`. Waits between attempts.
  * @returns `Promise<Response>`. The first response with a status below 500
- * other than 429. A 4xx such as 404 is returned, not retried.
+ * other than 429. A 4xx such as 404 is returned, not retried. A `Retry-After`
+ * header is ignored.
  * @throws `Error` "GET <url> failed after 4 attempts: <last failure>" when
  * every attempt returns a 429 or 5xx or throws.
  *

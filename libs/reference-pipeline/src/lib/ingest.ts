@@ -165,6 +165,7 @@ export async function ingestSources({
   return { references, skipped };
 }
 
+// Serves a cdc.gov page's content without the site navigation.
 const CDC_MEDIA_API = 'https://tools.cdc.gov/api/v2/resources/media';
 
 const cdcMediaSchema = z.object({

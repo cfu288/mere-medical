@@ -16,9 +16,11 @@ export type Section = {
   contentMd: string;
 };
 
+// Font-size heading detection can miss PDF headings and leave one huge section.
 const MAX_PDF_SECTION_CHARS = 12000;
 const OPENING_TITLE = 'Opening text';
 
+// Back matter of the VA-DoD guidelines that holds no clinical guidance.
 const DROPPED_TITLES = [
   /^references$/,
   /participant list/,

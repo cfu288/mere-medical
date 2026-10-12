@@ -29,7 +29,9 @@ export function htmlToMarkdown(html: string): string {
   });
   turndown.use(tables);
   const escapeMarkdown = turndown.escape.bind(turndown);
+  // Markdown reads a bare <tag or <scheme:...> as HTML or a link.
   turndown.escape = (text) => escapeMarkdown(text).replace(MARKUP_START, '\\<');
+  // A GFM table cell cannot hold a heading or a list. Tables with them are layout.
   turndown.addRule('layoutTable', {
     filter: (node) =>
       ['TABLE', 'TBODY', 'THEAD', 'TR', 'TD', 'TH'].includes(node.nodeName) &&
@@ -96,6 +98,7 @@ function mainContent(html: string): string {
   return onlyElement(html, 'main') ?? onlyElement(html, 'article') ?? html;
 }
 
+// Node has no DOM here, and turndown parses the HTML string itself.
 function onlyElement(html: string, tag: string): string | null {
   const opens = [...html.matchAll(new RegExp(`<${tag}[\\s>]`, 'gi'))];
   const closes = [...html.matchAll(new RegExp(`</${tag}>`, 'gi'))];

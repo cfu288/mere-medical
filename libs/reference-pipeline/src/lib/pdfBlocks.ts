@@ -26,6 +26,7 @@ const FURNITURE_MIN_PAGES = 4;
  * // ]
  */
 export async function pdfLines(bytes: Uint8Array): Promise<PdfLine[]> {
+  // pdf.js asks for its legacy build in Node.
   const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
   const task = pdfjs.getDocument({ data: bytes, verbosity: 0 });
   try {
@@ -111,6 +112,7 @@ export function linesToBlocks(lines: PdfLine[]): PagedBlock[] {
   for (const line of kept) {
     const level = headingSizes.indexOf(line.size) + 1;
     const last = blocks[blocks.length - 1];
+    // A line above the previous one starts a new column or text box.
     const continues =
       previous !== null &&
       last !== undefined &&

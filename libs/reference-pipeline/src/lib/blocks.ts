@@ -6,6 +6,7 @@ export type PagedBlock = Block & { page: number };
 
 const HEADING = /^(#{1,6})\s+(.*)$/;
 const FENCE = /^(```|~~~)/;
+// A heading that only links to an anchor is a table of contents entry.
 const PAGE_LINK = /^\[[^\]]*\]\(#[^)]*\)$/;
 
 /**

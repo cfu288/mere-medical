@@ -18,6 +18,9 @@ type Host = { delayMs: number; lastRequestAt: number };
  * - A request is given up after 120 seconds.
  * - A 429 or 5xx response, or a thrown error, is retried by
  *   {@link fetchWithRetries}.
+ * - It reads only `Crawl-delay` from robots.txt, not `Disallow`.
+ * - Call it one request at a time. Two first requests to a host at once both
+ *   read robots.txt and race on the wait.
  *
  * @param options Optional. Each field defaults to the real implementation and
  * is replaced only in tests.

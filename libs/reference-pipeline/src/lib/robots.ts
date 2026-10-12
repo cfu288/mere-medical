@@ -2,6 +2,7 @@
  * Reads the crawl delay that a robots.txt sets for all user agents.
  *
  * Only a `Crawl-delay` in a group whose `User-agent` lines include `*` counts.
+ * The fetch sends Node's default user agent. Only `*` applies to it.
  * Comments after `#` are ignored and keys are matched in any case.
  *
  * @param robotsTxt `string`. The body of a robots.txt file.
