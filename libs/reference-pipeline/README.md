@@ -107,12 +107,10 @@ PDFs.
   what was dropped for each document so a missed title is caught when the
   config is reviewed.
 
-Each run fetches and parses every source before writing, then replaces the
-references one by one in a single transaction. A source that parsed to no
-sections is left as it was in the library, or
-reported as one the run could not add. A source removed from the config
-disappears, as does a later source that resolves to a url an earlier one
-already covered (the run lists it as skipped).
+Each run fetches and parses every source, writes a new library next to the
+old one, and then renames it over the old one. A failed fetch stops the run
+and leaves the old library in place. A source that parsed to no sections is
+reported and left out.
 
 ## Config
 

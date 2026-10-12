@@ -1,20 +1,19 @@
 import { mkdirSync, readFileSync } from 'fs';
-import { dirname, join } from 'path';
+import { join } from 'path';
 
-import { ingestSources } from './lib/ingest';
-import { openReferencesDb } from './lib/referencesDb';
 import { createFetchBytes } from './lib/fetchBytes';
+import { buildLibrary } from './lib/ingest';
 import { parseSources } from './lib/sources';
 
+const ROOT = join(__dirname, '..');
+const SOURCES_PATH = join(ROOT, 'sources.json');
+const LIBRARY_PATH = join(ROOT, 'data', 'references.db');
+
 async function main() {
-  const root = join(__dirname, '..');
-  const sourcesPath = process.argv[2] ?? join(root, 'sources.json');
-  const dbPath = process.argv[3] ?? join(root, 'data', 'references.db');
-  const sources = parseSources(JSON.parse(readFileSync(sourcesPath, 'utf8')));
-  mkdirSync(dirname(dbPath), { recursive: true });
-  const db = openReferencesDb(dbPath);
-  const reports = await ingestSources({
-    db,
+  const sources = parseSources(JSON.parse(readFileSync(SOURCES_PATH, 'utf8')));
+  mkdirSync(join(ROOT, 'data'), { recursive: true });
+  const reports = await buildLibrary({
+    path: LIBRARY_PATH,
     sources,
     fetchBytes: createFetchBytes(),
   });
@@ -28,30 +27,17 @@ async function main() {
           );
         }
         break;
-      case 'unchanged':
-        console.log(
-          `\n${report.id}: kept as it was, its source parsed to nothing`,
-        );
-        break;
-      case 'missing':
-        console.log(
-          `\n${report.id}: could not add, its source parsed to nothing`,
-        );
-        break;
-      case 'skipped':
-        console.log(
-          `\nskipped ${report.id}: ${report.url} was already ingested`,
-        );
+      case 'empty':
+        console.log(`\n${report.id}: not added, its source parsed to nothing`);
         break;
     }
-    if (report.status !== 'skipped' && report.dropped.length > 0) {
+    if (report.dropped.length > 0) {
       console.log(`  dropped: ${report.dropped.join('; ')}`);
     }
   }
   console.log(
-    `\nwrote ${reports.filter((r) => r.status === 'written').length} reference(s) to ${dbPath}`,
+    `\nwrote ${reports.filter((r) => r.status === 'written').length} reference(s) to ${LIBRARY_PATH}`,
   );
-  db.close();
 }
 
 main().catch((e) => {

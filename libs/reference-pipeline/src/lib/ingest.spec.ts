@@ -1,6 +1,10 @@
+import { existsSync, mkdtempSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
+
 import { fakeFetch } from './__fixtures__/fakeFetch';
 import { TWO_SIZE_PDF } from './__fixtures__/twoSizePdf';
-import { ingestSources } from './ingest';
+import { buildLibrary } from './ingest';
 import { openReferencesDb } from './referencesDb';
 import { Source } from './sources';
 
@@ -22,17 +26,22 @@ const CDC_ADULT: Source = {
   type: 'pdf',
 };
 
-describe('ingestSources', () => {
+function libraryPath(): string {
+  return join(mkdtempSync(join(tmpdir(), 'references-')), 'references.db');
+}
+
+describe('buildLibrary', () => {
   it('stores an html source with its configured description and its section tree, reporting the outline and dropped sections', async () => {
-    const db = openReferencesDb(':memory:');
-    const report = await ingestSources({
-      db,
+    const path = libraryPath();
+    const report = await buildLibrary({
+      path,
       sources: [USPSTF],
       fetchBytes: fakeFetch({
         'https://example.com/ab':
           '<h1>Screening</h1><p>Screen adults.</p><h2>Hypertension</h2><p>Measure blood pressure.</p><h1>References</h1><p>1. Smith.</p>',
       }),
     });
+    const db = openReferencesDb(path);
 
     expect(
       db
@@ -74,23 +83,24 @@ describe('ingestSources', () => {
   });
 
   it('stores a pdf source with page locations', async () => {
-    const db = openReferencesDb(':memory:');
-    await ingestSources({
-      db,
+    const path = libraryPath();
+    await buildLibrary({
+      path,
       sources: [CDC_ADULT],
       fetchBytes: fakeFetch({ 'https://example.com/adult.pdf': TWO_SIZE_PDF }),
     });
 
     expect(
-      db.prepare('SELECT section_id, page_start, page_end FROM sections').all(),
+      openReferencesDb(path)
+        .prepare('SELECT section_id, page_start, page_end FROM sections')
+        .all(),
     ).toEqual([{ section_id: 'i-introduction', page_start: 1, page_end: 1 }]);
   });
 
-  it('stores a cdc media source under the cdc page it syndicates and skips a second media id for the same page', async () => {
-    const db = openReferencesDb(':memory:');
-
-    const report = await ingestSources({
-      db,
+  it('stores a cdc media source under the cdc page it syndicates', async () => {
+    const path = libraryPath();
+    await buildLibrary({
+      path,
       sources: [
         {
           id: 'cdc-about-shingles',
@@ -100,50 +110,27 @@ describe('ingestSources', () => {
           type: 'cdc-media',
           mediaId: 1,
         },
-        {
-          id: 'cdc-about-shingles-2',
-          title: 'CDC: About Shingles',
-          edition: '2025',
-          summary: 'Shingles basics',
-          type: 'cdc-media',
-          mediaId: 2,
-        },
       ],
       fetchBytes: fakeFetch({
         'https://tools.cdc.gov/api/v2/resources/media/1.json':
           '{"results":[{"sourceUrl":"https://www.cdc.gov/shingles/about/index.html"}]}',
         'https://tools.cdc.gov/api/v2/resources/media/1/content.html':
           '<h2>About</h2><p>Shingles is a painful rash.</p>',
-        'https://tools.cdc.gov/api/v2/resources/media/2.json':
-          '{"results":[{"sourceUrl":"https://www.cdc.gov/shingles/about/index.html"}]}',
-        'https://tools.cdc.gov/api/v2/resources/media/2/content.html':
-          '<h2>About</h2><p>Shingles is a painful rash.</p>',
       }),
     });
 
-    expect(db.prepare('SELECT id, url FROM documents').all()).toEqual([
+    expect(
+      openReferencesDb(path).prepare('SELECT id, url FROM documents').all(),
+    ).toEqual([
       {
         id: 'cdc-about-shingles',
-        url: 'https://www.cdc.gov/shingles/about/index.html',
-      },
-    ]);
-    expect(report).toEqual([
-      {
-        id: 'cdc-about-shingles',
-        status: 'written',
-        outline: [{ depth: 0, sectionId: 'about', title: 'About', chars: 27 }],
-        dropped: [],
-      },
-      {
-        id: 'cdc-about-shingles-2',
-        status: 'skipped',
         url: 'https://www.cdc.gov/shingles/about/index.html',
       },
     ]);
   });
 
-  it('replaces the whole library, removing documents no longer configured', async () => {
-    const db = openReferencesDb(':memory:');
+  it('replaces the previous library with one holding only the configured sources', async () => {
+    const path = libraryPath();
     const adultPage: Source = {
       ...CDC_ADULT,
       type: 'html',
@@ -153,37 +140,21 @@ describe('ingestSources', () => {
       'https://example.com/ab': '<h1>Screening</h1><p>Screen adults.</p>',
       'https://example.com/adult': '<h1>Adults</h1><p>Tdap every 10 years.</p>',
     });
-    await ingestSources({ db, sources: [USPSTF, adultPage], fetchBytes });
-    await ingestSources({ db, sources: [adultPage], fetchBytes });
+    await buildLibrary({ path, sources: [USPSTF, adultPage], fetchBytes });
+    await buildLibrary({ path, sources: [adultPage], fetchBytes });
 
-    expect(db.prepare('SELECT id FROM documents').all()).toEqual([
-      { id: 'cdc-adult-schedule' },
-    ]);
     expect(
-      db.prepare('SELECT DISTINCT document_id FROM sections').all(),
-    ).toEqual([{ document_id: 'cdc-adult-schedule' }]);
+      openReferencesDb(path)
+        .prepare('SELECT document_id, section_id FROM sections')
+        .all(),
+    ).toEqual([{ document_id: 'cdc-adult-schedule', section_id: 'adults' }]);
   });
 
-  it('reports a reference it could not add when its source parses to nothing on a first run', async () => {
-    const db = openReferencesDb(':memory:');
+  it('reports a source that parses to nothing, with its dropped sections, and stores nothing for it', async () => {
+    const path = libraryPath();
 
-    const report = await ingestSources({
-      db,
-      sources: [USPSTF],
-      fetchBytes: fakeFetch({ 'https://example.com/ab': '' }),
-    });
-
-    expect(report).toEqual([
-      { id: 'uspstf-a-and-b', status: 'missing', dropped: [] },
-    ]);
-    expect(db.prepare('SELECT id FROM documents').all()).toEqual([]);
-  });
-
-  it('still reports the dropped sections of a source that parsed to nothing', async () => {
-    const db = openReferencesDb(':memory:');
-
-    const report = await ingestSources({
-      db,
+    const report = await buildLibrary({
+      path,
       sources: [USPSTF],
       fetchBytes: fakeFetch({
         'https://example.com/ab': '<h1>References</h1><p>1. Smith 2020.</p>',
@@ -191,42 +162,17 @@ describe('ingestSources', () => {
     });
 
     expect(report).toEqual([
-      {
-        id: 'uspstf-a-and-b',
-        status: 'missing',
-        dropped: ['References'],
-      },
+      { id: 'uspstf-a-and-b', status: 'empty', dropped: ['References'] },
     ]);
+    expect(
+      openReferencesDb(path).prepare('SELECT id FROM documents').all(),
+    ).toEqual([]);
   });
 
-  it('keeps a reference as it was when its source now parses to nothing', async () => {
-    const db = openReferencesDb(':memory:');
-    await ingestSources({
-      db,
-      sources: [USPSTF],
-      fetchBytes: fakeFetch({
-        'https://example.com/ab': '<h1>Screening</h1><p>Screen adults.</p>',
-      }),
-    });
-
-    const report = await ingestSources({
-      db,
-      sources: [USPSTF],
-      fetchBytes: fakeFetch({ 'https://example.com/ab': '' }),
-    });
-
-    expect(report).toEqual([
-      { id: 'uspstf-a-and-b', status: 'unchanged', dropped: [] },
-    ]);
-    expect(db.prepare('SELECT section_id FROM sections').all()).toEqual([
-      { section_id: 'screening' },
-    ]);
-  });
-
-  it('leaves the previous library intact when any fetch fails', async () => {
-    const db = openReferencesDb(':memory:');
-    await ingestSources({
-      db,
+  it('leaves the previous library as it was when any fetch fails', async () => {
+    const path = libraryPath();
+    await buildLibrary({
+      path,
       sources: [USPSTF],
       fetchBytes: fakeFetch({
         'https://example.com/ab': '<h1>Screening</h1><p>Screen adults.</p>',
@@ -234,15 +180,16 @@ describe('ingestSources', () => {
     });
 
     await expect(
-      ingestSources({
-        db,
+      buildLibrary({
+        path,
         sources: [USPSTF, CDC_ADULT],
         fetchBytes: fakeFetch({ 'https://example.com/ab': '<h1>Changed</h1>' }),
       }),
     ).rejects.toThrow('no fake body for https://example.com/adult.pdf');
 
-    expect(db.prepare('SELECT section_id FROM sections').all()).toEqual([
-      { section_id: 'screening' },
-    ]);
+    expect([
+      openReferencesDb(path).prepare('SELECT section_id FROM sections').all(),
+      existsSync(`${path}.building`),
+    ]).toEqual([[{ section_id: 'screening' }], false]);
   });
 });

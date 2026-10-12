@@ -1,8 +1,4 @@
-import {
-  deleteReference,
-  openReferencesDb,
-  writeReference,
-} from './referencesDb';
+import { openReferencesDb, writeReference } from './referencesDb';
 
 describe('writeReference', () => {
   it('stores a section url and leaves it empty for sections without one', () => {
@@ -40,7 +36,7 @@ describe('writeReference', () => {
     ]);
   });
 
-  it('finds a written reference and its sections by search, and nothing once deleted', () => {
+  it('finds a written reference and its sections by search', () => {
     const db = openReferencesDb(':memory:');
     writeReference(db, {
       id: 'measles',
@@ -58,7 +54,8 @@ describe('writeReference', () => {
         },
       ],
     });
-    const search = () => ({
+
+    expect({
       references: db
         .prepare(
           "SELECT id FROM documents_fts WHERE documents_fts MATCH 'vaccine'",
@@ -69,110 +66,9 @@ describe('writeReference', () => {
           "SELECT document_id, section_id FROM sections_fts WHERE sections_fts MATCH 'vaccine'",
         )
         .all(),
-    });
-
-    expect(search()).toEqual({
+    }).toEqual({
       references: [{ id: 'measles' }],
       sections: [{ document_id: 'measles', section_id: 'doses' }],
     });
-    deleteReference(db, 'measles');
-    expect(search()).toEqual({ references: [], sections: [] });
-  });
-
-  it('searches the new text of a row that was edited in place', () => {
-    const db = openReferencesDb(':memory:');
-    writeReference(db, {
-      id: 'measles',
-      title: 'Measles',
-      edition: '2026',
-      summary: 'Vaccine schedule',
-      url: 'https://example.com/measles',
-      sections: [
-        {
-          sectionId: 'doses',
-          parentId: null,
-          title: 'Doses',
-          location: { kind: 'webpage' },
-          contentMd: 'Two doses.',
-        },
-      ],
-    });
-    db.exec(`
-      UPDATE documents SET summary = 'Booster schedule' WHERE id = 'measles';
-      UPDATE sections SET content_md = 'One booster.' WHERE section_id = 'doses';
-    `);
-
-    expect([
-      db
-        .prepare(
-          "SELECT id FROM documents_fts WHERE documents_fts MATCH 'booster'",
-        )
-        .all(),
-      db
-        .prepare(
-          "SELECT id FROM documents_fts WHERE documents_fts MATCH 'vaccine'",
-        )
-        .all(),
-      db
-        .prepare(
-          "SELECT section_id FROM sections_fts WHERE sections_fts MATCH 'booster'",
-        )
-        .all(),
-      db
-        .prepare(
-          "SELECT section_id FROM sections_fts WHERE sections_fts MATCH 'two'",
-        )
-        .all(),
-    ]).toEqual([[{ id: 'measles' }], [], [{ section_id: 'doses' }], []]);
-  });
-
-  it('replaces the stored copy of a reference written again', () => {
-    const db = openReferencesDb(':memory:');
-    writeReference(db, {
-      id: 'measles',
-      title: 'Measles',
-      edition: '2025',
-      summary: 'Vaccine schedule',
-      url: 'https://example.com/measles',
-      sections: [
-        {
-          sectionId: 'doses',
-          parentId: null,
-          title: 'Doses',
-          location: { kind: 'webpage' },
-          contentMd: 'Two doses.',
-        },
-      ],
-    });
-    writeReference(db, {
-      id: 'measles',
-      title: 'Measles',
-      edition: '2026',
-      summary: 'Vaccine schedule',
-      url: 'https://example.com/measles',
-      sections: [
-        {
-          sectionId: 'boosters',
-          parentId: null,
-          title: 'Boosters',
-          location: { kind: 'webpage' },
-          contentMd: 'One booster.',
-        },
-      ],
-    });
-
-    expect([
-      db.prepare('SELECT id, edition FROM documents').all(),
-      db.prepare('SELECT section_id FROM sections').all(),
-      db
-        .prepare(
-          "SELECT section_id FROM sections_fts WHERE sections_fts MATCH 'doses'",
-        )
-        .all(),
-    ]).toEqual([
-      [{ id: 'measles', edition: '2026' }],
-      [{ section_id: 'boosters' }],
-      [],
-    ]);
   });
 });

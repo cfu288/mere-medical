@@ -25,8 +25,7 @@ const turndown = createTurndown();
  * - Only the page's one `<main>` is read, or else its one `<article>`, or
  *   else the whole body.
  * - Each `<h1>` to `<h6>`, at any depth, becomes a heading block with its
- *   text. A heading that only links to an anchor on the page is a table of
- *   contents entry and stays text.
+ *   text.
  * - The content between headings becomes one markdown text block.
  * - A table that holds headings or lists becomes plain blocks. Other tables
  *   become GFM tables.
@@ -67,7 +66,7 @@ export function htmlToBlocks(html: string): Block[] {
       run.push(node);
     } else if (REMOVED.some((tag) => node.matches(tag))) {
       return;
-    } else if (HEADINGS.includes(node.nodeName) && !onlyLinksWithinPage(node)) {
+    } else if (HEADINGS.includes(node.nodeName)) {
       flush();
       blocks.push({
         kind: 'heading',
@@ -75,8 +74,6 @@ export function htmlToBlocks(html: string): Block[] {
         text: plainText(node),
         page: null,
       });
-    } else if (HEADINGS.includes(node.nodeName)) {
-      run.push(...Array.from(node.childNodes));
     } else if (node.querySelector(HEADINGS.join(', '))) {
       node.childNodes.forEach(visit);
     } else {
@@ -153,15 +150,6 @@ function mainContent(doc: Document): Element {
 
 function isElement(node: Node): node is Element {
   return node.nodeType === node.ELEMENT_NODE;
-}
-
-function onlyLinksWithinPage(heading: Element): boolean {
-  const links = heading.querySelectorAll('a');
-  return (
-    links.length === 1 &&
-    (links[0].getAttribute('href') ?? '').startsWith('#') &&
-    plainText(links[0]) === plainText(heading)
-  );
 }
 
 function plainText(element: Element): string {

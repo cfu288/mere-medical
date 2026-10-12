@@ -1,31 +1,23 @@
-import { DatabaseSync } from 'node:sqlite';
+import { renameSync, rmSync } from 'fs';
 import { z } from 'zod';
 
+import { htmlToBlocks } from './htmlToBlocks';
 import { linesToBlocks, pdfLines } from './pdfBlocks';
-import {
-  ReferenceRecord,
-  deleteReferencesExcept,
-  writeReference,
-} from './referencesDb';
+import { openReferencesDb, writeReference } from './referencesDb';
 import { Block, Section, buildSections } from './sections';
 import { Source } from './sources';
-import { htmlToBlocks } from './htmlToBlocks';
 
 /**
  * What happened to one configured source, for the CLI to print.
  *
  * - `id`: the source's configured id.
- * - `status`: `written` when its sections replaced the stored copy,
- *   `unchanged` when it parsed to no sections and the stored copy stays,
- *   `missing` when it parsed to no sections and nothing was stored, or
- *   `skipped` when an earlier source already resolved to the same url.
+ * - `status`: `written` when its sections were stored, or `empty` when it
+ *   parsed to no sections and nothing was stored.
  * - `outline`: for a written source, every kept section in document order,
  *   with its nesting depth (0 for a top-level section), id, title and
  *   markdown length in characters.
- * - `dropped`: for a source that was not skipped, titles of sections left out
- *   by rule, such as reference lists and appendices. Empty when nothing was
- *   dropped.
- * - `url`: for a skipped source, the url the earlier source already used.
+ * - `dropped`: titles of sections left out by rule, such as reference lists
+ *   and appendices. Empty when nothing was dropped.
  *
  * @example
  * {
@@ -50,32 +42,28 @@ export type IngestReport =
       }[];
       dropped: string[];
     }
-  | { id: string; status: 'unchanged' | 'missing'; dropped: string[] }
-  | { id: string; status: 'skipped'; url: string };
+  | { id: string; status: 'empty'; dropped: string[] };
 
 /**
- * Rebuilds the reference library in `db` so it holds exactly the configured
- * `sources`.
+ * Builds a new reference library at `path` from the configured `sources`.
  *
- * Every source is fetched and parsed before anything is written. A failed
- * fetch or a malformed response rejects the promise and leaves the library
- * as it was. The write then runs in one transaction.
+ * Every source is fetched and parsed first. A failed fetch or a malformed
+ * response rejects the promise and leaves any library at `path` as it was.
+ * The library is then written to `<path>.building` and renamed over `path`,
+ * so a reader of `path` sees the old library or the new one, never a partial
+ * one. A source that parsed to no sections is reported as `empty` and not
+ * stored.
  *
- * - A stored reference whose id is no longer configured is deleted.
- * - A source that parsed to at least one section replaces its stored copy.
- * - A source that parsed to no sections keeps its stored copy, if any.
- * - A source that resolves to a url an earlier source already used is not
- *   stored and is reported as `skipped`.
- *
- * @param args.db A library opened with `openReferencesDb`.
- * @param args.sources Parsed configuration, from `parseSources`.
- * @param args.fetchBytes Returns the body at a url, and throws when it cannot.
+ * @param args.path `string`. Where the library file goes.
+ * @param args.sources `Source[]`. Parsed configuration, from `parseSources`.
+ * @param args.fetchBytes `(url: string) => Promise<Uint8Array>`. Returns the
+ * body at a url, and throws when it cannot.
  * @returns `Promise<IngestReport[]>`. One {@link IngestReport} per source, in
  * configuration order.
  *
  * @example
- * const report = await ingestSources({
- *   db: openReferencesDb('references.db'),
+ * const report = await buildLibrary({
+ *   path: 'libs/reference-pipeline/data/references.db',
  *   sources: parseSources([
  *     {
  *       id: 'uspstf-a-and-b',
@@ -86,13 +74,7 @@ export type IngestReport =
  *       summary: 'Screening and prevention',
  *     },
  *   ]),
- *   fetchBytes: async (url) => {
- *     const response = await fetch(url);
- *     if (!response.ok) {
- *       throw new Error(`GET ${url} returned ${response.status}`);
- *     }
- *     return new Uint8Array(await response.arrayBuffer());
- *   },
+ *   fetchBytes: createFetchBytes(),
  * });
  * // [
  * //   {
@@ -103,85 +85,55 @@ export type IngestReport =
  * //   },
  * // ]
  */
-export async function ingestSources({
-  db,
+export async function buildLibrary({
+  path,
   sources,
   fetchBytes,
 }: {
-  db: DatabaseSync;
+  path: string;
   sources: Source[];
   fetchBytes: (url: string) => Promise<Uint8Array>;
 }): Promise<IngestReport[]> {
-  const results: Parsed[] = [];
-  const ingestedUrls = new Set<string>();
+  const parsed: {
+    source: Source;
+    url: string;
+    sections: Section[];
+    dropped: string[];
+  }[] = [];
   for (const source of sources) {
-    const result = await fetchDocument(source, fetchBytes);
-    if (ingestedUrls.has(result.url)) {
-      results.push({ kind: 'skipped', id: source.id, url: result.url });
-      continue;
-    }
-    ingestedUrls.add(result.url);
-    const { sections, dropped } = buildSections(result.blocks);
-    results.push({
-      kind: 'parsed',
-      record: {
+    const { url, blocks } = await fetchDocument(source, fetchBytes);
+    parsed.push({ source, url, ...buildSections(blocks) });
+  }
+
+  const building = `${path}.building`;
+  rmSync(building, { force: true });
+  const db = openReferencesDb(building);
+  db.exec('BEGIN');
+  const reports = parsed.map(
+    ({ source, url, sections, dropped }): IngestReport => {
+      if (sections.length === 0) {
+        return { id: source.id, status: 'empty', dropped };
+      }
+      writeReference(db, {
         id: source.id,
         title: source.title,
         edition: source.edition,
         summary: source.summary,
-        url: result.url,
+        url,
         sections,
-      },
-      dropped,
-    });
-  }
-
-  db.exec('BEGIN');
-  try {
-    deleteReferencesExcept(
-      db,
-      results.flatMap((r) => (r.kind === 'parsed' ? [r.record.id] : [])),
-    );
-    const reports = results.map(
-      (result): IngestReport =>
-        result.kind === 'skipped'
-          ? { id: result.id, status: 'skipped', url: result.url }
-          : store(db, result.record, result.dropped),
-    );
-    db.exec('COMMIT');
-    return reports;
-  } catch (e) {
-    db.exec('ROLLBACK');
-    throw e;
-  }
-}
-
-function htmlBlocks(bytes: Uint8Array): Block[] {
-  return htmlToBlocks(new TextDecoder().decode(bytes));
-}
-
-type Parsed =
-  | { kind: 'skipped'; id: string; url: string }
-  | { kind: 'parsed'; record: ReferenceRecord; dropped: string[] };
-
-function store(
-  db: DatabaseSync,
-  record: ReferenceRecord,
-  dropped: string[],
-): IngestReport {
-  if (record.sections.length === 0) {
-    const stored = db
-      .prepare('SELECT 1 FROM documents WHERE id = ?')
-      .get(record.id);
-    return { id: record.id, status: stored ? 'unchanged' : 'missing', dropped };
-  }
-  writeReference(db, record);
-  return {
-    id: record.id,
-    status: 'written',
-    outline: outline(record.sections),
-    dropped,
-  };
+      });
+      return {
+        id: source.id,
+        status: 'written',
+        outline: outline(sections),
+        dropped,
+      };
+    },
+  );
+  db.exec('COMMIT');
+  db.close();
+  renameSync(building, path);
+  return reports;
 }
 
 // Serves a cdc.gov page's content without the site navigation.
@@ -225,6 +177,10 @@ async function fetchDocument(
       };
     }
   }
+}
+
+function htmlBlocks(bytes: Uint8Array): Block[] {
+  return htmlToBlocks(new TextDecoder().decode(bytes));
 }
 
 function outline(

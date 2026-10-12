@@ -29,19 +29,6 @@ describe('htmlToBlocks', () => {
     ]);
   });
 
-  it('treats a heading that only links elsewhere on the page as text', () => {
-    expect(
-      htmlToBlocks(
-        '<h1><a href="#s23">2.3 Missed Dose</a></h1>' +
-          '<h2 id="s23">2.3 Missed Dose</h2><p>Take it the same day.</p>',
-      ),
-    ).toEqual([
-      { kind: 'text', text: '[2.3 Missed Dose](#s23)', page: null },
-      { kind: 'heading', level: 2, text: '2.3 Missed Dose', page: null },
-      { kind: 'text', text: 'Take it the same day.', page: null },
-    ]);
-  });
-
   it('keeps a hash line in a code block as text', () => {
     expect(
       htmlToBlocks('<h1>Real</h1><pre><code># not a heading</code></pre>'),
