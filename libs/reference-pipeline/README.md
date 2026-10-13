@@ -1,9 +1,44 @@
 # reference-pipeline
 
-Builds the reference library the chat agent reads. The pipeline fetches
-published clinical guidance from configured sources. It splits each source
-into the sections its authors wrote and stores them in a SQLite file the API
-serves.
+Builds the clinical reference library for the chat agent. It fetches guidelines,
+splits them into sections, and saves them in a SQLite file.
+
+## Concepts
+
+A **reference** is one published guideline or web page. Each reference is one
+row in `documents`.
+
+A **section** is one chunk of a reference. A guideline is too long to read at
+once, so the agent reads one section at a time. Each section is one row in
+`sections`.
+
+## Splitting a reference
+
+The pipeline splits each reference at its headings. The split is deterministic.
+The same source gives the same sections.
+
+- A heading starts a section. The section holds the text up to the next heading.
+- A lower-level heading starts a subsection. `parent_id` names the section above
+  it.
+- `position` is the reading order.
+- Text before the first heading becomes an "Opening text" section.
+- The pipeline splits a PDF section over 12,000 characters into one subsection
+  per page.
+- The pipeline drops back matter such as reference lists and abbreviation lists.
+- A section id comes from its title. It is unique within its reference.
+
+In HTML, a heading is an `<h1>` to `<h6>` element. In a PDF, a heading is a line
+at least 2pt larger than the body text.
+
+## Reading sections
+
+1. Search reference titles and summaries in `documents_fts`.
+2. List one reference's outline. This is its sections in `position` order.
+3. Search the text of that reference's sections in `sections_fts`.
+4. Read one section by `document_id` and `section_id`.
+
+A citation names the reference's title and url. It also names the section's
+pages or url.
 
 ## Schema
 
@@ -29,92 +64,23 @@ CREATE TABLE sections (
 );
 CREATE VIRTUAL TABLE documents_fts USING fts5(id UNINDEXED, title, summary, content = 'documents', tokenize = 'porter unicode61');
 CREATE VIRTUAL TABLE sections_fts USING fts5(document_id UNINDEXED, section_id UNINDEXED, title, content_md, content = 'sections', tokenize = 'porter unicode61');
--- plus insert, update and delete triggers on documents and sections that keep both indexes current
+-- plus one insert trigger per table that adds each new row to its index
 ```
 
-A **reference** (`documents`) is a catalog entry for one published work, such
-as a guideline, a USPSTF recommendation page or a CDC schedule. It carries the
-title, edition, summary and url a citation names.
+The `_fts` tables are full-text indexes. They hold no text of their own.
 
-A **section** (`sections`) is the text under one heading of a reference,
-nested as the headings nest and numbered in reading order. The pipeline adds a
-section for the text before the first heading ("Opening text"). It also makes
-one section for each page of a PDF section too long to read at once.
+These sections come from the VA-DoD hypertension guideline.
 
-The agent uses the two tables at different moments. It chooses a reference by
-searching titles and summaries, then reads one section at a time. A guideline
-is far too long to read whole. Searching the text of every section of every
-reference would let one long guideline drown out a one-page CDC topic.
-A citation needs both rows, the reference's title and url and the section's
-page or own url. Section ids repeat across references (most CDC pages have a
-"key-points"), so a section is always addressed as reference plus section
-id. The two `_fts` tables are the full-text indexes behind the
-two searches. They store no text of their own, and triggers update them with
-every change to `documents` and `sections`.
+| section_id                                                   | parent_id                                                    | position | title                                                                | page_start | page_end | content_md                                                       |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | -------- | -------------------------------------------------------------------- | ---------- | -------- | ---------------------------------------------------------------- |
+| ix-recommendations                                           | va-dod-clinical-practice-guideline-for-diagnosis-and-managem | 30       | IX. Recommendations                                                  | 26         | 28       | "The evidence-based clinical practice recommendations listed..." |
+| b-treatment-goals-and-general-approaches-to-hypertension-man | ix-recommendations                                           | 37       | B. Treatment Goals and General Approaches to Hypertension Management | 33         | 33       | empty. Its text is split by page below                           |
+| page-34                                                      | b-treatment-goals-and-general-approaches-to-hypertension-man | 39       | Page 34                                                              | 34         | 34       | "cardiovascular causes.(80,81) An additional SR by Matsumoto..." |
 
-The rows below come from the VA-DoD hypertension guideline.
+## Sources
 
-| id                  | title                         | edition | summary                                                                                                                          | url                                                                                                        |
-| ------------------- | ----------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| va-dod-hypertension | VA-DoD Hypertension Guideline | 2026    | High blood pressure in adults. It covers diagnosis, home and office measurement, blood pressure goals, and choice of medications | https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/CD/htn/HTN-CPG_2026-Guideline_final_20260827.pdf |
-
-| section_id                                                   | parent_id                                                    | position | title                                                                | page_start | page_end | url  | content_md                                                       |
-| ------------------------------------------------------------ | ------------------------------------------------------------ | -------- | -------------------------------------------------------------------- | ---------- | -------- | ---- | ---------------------------------------------------------------- |
-| ix-recommendations                                           | va-dod-clinical-practice-guideline-for-diagnosis-and-managem | 30       | IX. Recommendations                                                  | 26         | 28       | null | "The evidence-based clinical practice recommendations listed..." |
-| b-treatment-goals-and-general-approaches-to-hypertension-man | ix-recommendations                                           | 37       | B. Treatment Goals and General Approaches to Hypertension Management | 33         | 33       | null | empty. Its text is split by page below                           |
-| page-34                                                      | b-treatment-goals-and-general-approaches-to-hypertension-man | 39       | Page 34                                                              | 34         | 34       | null | "cardiovascular causes.(80,81) An additional SR by Matsumoto..." |
-
-`parent_id` names a `section_id` in the same reference. A PDF section cites its
-pages. A section's own `url`, when set, is the page it lives on.
-
-## Pipeline
-
-```
-fetch -> adapter (html | pdf) -> blocks (headings + text) -> sections -> SQLite
-```
-
-Each format has its own adapter that produces the same blocks (headings and
-text). Both formats share one section builder, which adds page handling for
-PDFs.
-
-- **HTML**: domino parses the page into a DOM. Each `<h1>` to `<h6>` becomes a
-  heading block, and turndown converts the content between headings to markdown.
-  When the page has exactly one `<main>` element (or, failing that, exactly one
-  `<article>`), the adapter reads only that element. That leaves out site navigation and footers. The adapter drops scripts, styles, `<noscript>`,
-  frames, embedded objects and templates. A link or image whose address is not
-  web, mail or relative (such as `javascript:` or `data:`) keeps only its text
-  or alt text. The adapter escapes text that would open a Markdown link or an
-  HTML tag, such as an encoded `<javascript:alert(1)>` or `<b>`, so it stays
-  text.
-- **CDC media**: CDC's content syndication API serves a page's content without
-  site navigation. The media's metadata gives the cdc.gov page it syndicates,
-  which becomes the reference url every read cites. The content then goes
-  through the HTML adapter. CDC's own attribution block stays in the text.
-  Prefer this over CDC PDFs.
-- **PDF**: pdfjs text is rebuilt into lines and paragraphs. The body font size
-  is the size covering the most characters. Lines at least 2pt larger are
-  headings, larger sizes are higher levels, and the adapter joins a heading
-  wrapped over two lines. The adapter drops lines repeated on more than half the
-  pages (running headers, "Page 3 of 123"). Body text has the same markdown escaping as HTML text. Every block keeps its page number.
-- **Sections**: each heading starts a section holding the text up to the next
-  heading. Deeper headings become its subsections. Text before the first
-  heading becomes an "Opening text" section. A PDF section whose own text is
-  longer than 12,000 characters is split into one subsection per page.
-- **Dropped sections**: References, participant lists, abbreviation lists,
-  literature search strategy, and recommendation categorization appendices
-  (which repeat superseded wording from the previous edition). The run prints
-  the dropped titles for each document, so a reviewer of the config can catch a
-  missed title.
-
-Each run fetches and parses every source, writes a new library next to the old
-one, and then renames it over the old one. A failed fetch stops the run and
-leaves the old library in place. The run reports a source that parsed to no
-sections and leaves it out.
-
-## Config
-
-`sources.json` is an array of entries. This entry is a PDF. An HTML page has
-the same fields with `"type": "html"`.
+`sources.json` lists every reference. Each entry has an `id`, `title`,
+`edition`, `summary` and `type`. The agent picks a reference by its summary.
 
 ```json
 {
@@ -127,21 +93,16 @@ the same fields with `"type": "html"`.
 }
 ```
 
-A CDC syndicated page takes its media id instead of a url. The id is in the
-page's [Media Library](https://tools.cdc.gov/medialibrary/index.aspx) address.
+There are three types.
 
-```json
-{
-  "id": "cdc-adult-schedule-by-age",
-  "title": "CDC Adult Immunization Schedule by Age",
-  "edition": "2025",
-  "summary": "Which vaccines adults 19 and older get at each age",
-  "type": "cdc-media",
-  "mediaId": 266012
-}
-```
-
-`summary` is what the agent chooses from, so write it for that reader.
+- `html` reads a web page from `url`. When the page has one `<main>` or one
+  `<article>`, the pipeline reads only that element. It drops scripts, and
+  unsafe links keep only their text.
+- `cdc-media` reads a CDC page through CDC's syndication API, without site
+  navigation. It takes a `mediaId` instead of a `url`. The id is in the page's
+  [Media Library](https://tools.cdc.gov/medialibrary/index.aspx) address.
+- `pdf` reads a PDF from `url`. The pipeline drops lines that repeat on most
+  pages, such as running headers. Each section keeps its page numbers.
 
 ## Running
 
@@ -149,31 +110,16 @@ page's [Media Library](https://tools.cdc.gov/medialibrary/index.aspx) address.
 npx tsx libs/reference-pipeline/src/cli.ts
 ```
 
-Writes `libs/reference-pipeline/data/references.db` (gitignored) and prints each
-document's outline. Requests to a host wait out the `Crawl-delay` its robots.txt
-sets for all user agents (USPSTF asks for 5 seconds). The fetch abandons an
-attempt after 120 seconds. It retries a server error or rate limit, up to four
-attempts with growing waits.
+The run writes `libs/reference-pipeline/data/references.db` and prints each
+reference's outline. It builds a new file and then replaces the old one. If a
+fetch fails, the old file stays. The run reports a source with no sections and
+leaves it out. Requests to a host wait for the `Crawl-delay` in its robots.txt.
 
 ## Known limits
 
-- Recommendations are not extracted as units with their strength. The VA-DoD
-  guidelines do not set per-recommendation headings in a larger font. Each
-  recommendation chapter is split by page (`page-34`), and a page can start
-  mid-sentence. Recommendation tables come out as flowing text.
-- Large-font cover page lines become sections ("and", "Office of Quality and
-  Patient Safety ..."). A guideline's chapters then sit one level below its
-  cover title in the outline.
-- The "recommendation categorization" title rule also drops the short
-  methodology subsection that explains the categories.
-- HTML sections are never split and carry no anchor, only the page url. A
-  long table such as the USPSTF A and B list is one very long section. Each
-  USPSTF recommendation page is also indexed on its own.
-- The PDF adapter drops a body line that repeats on more than half the pages,
-  differing only in digits. It treats such a line as a running header. On the
-  configured VA-DoD guidelines every dropped line is a running header or page
-  footer.
-- Heading detection by font size assumes headings are larger than body text.
-  A PDF that marks headings only with bold comes out as one "Opening text"
-  section. That section is split into one section per page once it passes
-  12,000 characters.
+- VA-DoD recommendations have no headings of their own. Their chapters are split
+  by page, so a page can start mid-sentence.
+- Large-font cover page lines become sections.
+- HTML sections are never split. A long page table is one long section.
+- A PDF that marks headings with bold instead of size becomes one "Opening text"
+  section, split by page.
