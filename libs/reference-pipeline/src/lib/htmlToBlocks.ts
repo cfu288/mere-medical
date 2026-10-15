@@ -47,6 +47,7 @@ const turndown = createTurndown();
  */
 export function htmlToBlocks(html: string): Block[] {
   const doc = createDocument(html);
+  unwrapLayoutTables(doc);
   const blocks: Block[] = [];
   let run: Node[] = [];
   const flush = () => {
@@ -115,15 +116,6 @@ function createTurndown(): TurndownService {
   });
   service.use(tables);
   service.escape = escapeMarkdown;
-  // A GFM table cell cannot hold a heading or a list. Tables with them are layout.
-  service.addRule('layoutTable', {
-    filter: (node) =>
-      ['TABLE', 'TBODY', 'THEAD', 'TR', 'TD', 'TH'].includes(node.nodeName) &&
-      Boolean(
-        node.closest('table')?.querySelector('h1, h2, h3, h4, h5, h6, ul, ol'),
-      ),
-    replacement: (content) => `\n\n${content}\n\n`,
-  });
   service.addRule('unsafeLink', {
     filter: (node) =>
       node.nodeName === 'A' && !isSafeUrl(node.getAttribute('href') ?? ''),
@@ -137,6 +129,26 @@ function createTurndown(): TurndownService {
   });
   service.remove([...REMOVED]);
   return service;
+}
+
+// A GFM table cell cannot hold a heading or a list. Tables with them are layout.
+function unwrapLayoutTables(doc: Document): void {
+  for (const table of Array.from(doc.querySelectorAll('table'))) {
+    if (!table.querySelector('h1, h2, h3, h4, h5, h6, ul, ol')) {
+      continue;
+    }
+    for (const cell of Array.from(table.querySelectorAll('td, th'))) {
+      if (cell.closest('table') !== table) {
+        continue;
+      }
+      const block = doc.createElement('div');
+      for (const child of Array.from(cell.childNodes)) {
+        block.appendChild(child);
+      }
+      table.parentNode?.insertBefore(block, table);
+    }
+    table.parentNode?.removeChild(table);
+  }
 }
 
 function mainContent(doc: Document): Element {

@@ -74,6 +74,22 @@ describe('htmlToBlocks', () => {
     ]);
   });
 
+  it('unwraps a layout table that also has header cells', () => {
+    expect(
+      htmlToBlocks(
+        '<table><tr><td><h2>Call 911</h2></td><td>Chest pain</td></tr>' +
+          '<tr><th>Call your provider</th><td>Fever</td></tr></table>',
+      ),
+    ).toEqual([
+      { kind: 'heading', level: 2, text: 'Call 911', page: null },
+      {
+        kind: 'text',
+        text: 'Chest pain\n\nCall your provider\n\nFever',
+        page: null,
+      },
+    ]);
+  });
+
   it('converts only the main element when the page has one', () => {
     expect(
       htmlToBlocks(
