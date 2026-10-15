@@ -36,7 +36,7 @@ const turndown = createTurndown();
  *   shows that text as written.
  *
  * @param html `string`.
- * @returns `Block[]`, in reading order, each with a null page.
+ * @returns `Block[]`. The blocks in reading order. Each has a null page.
  *
  * @example
  * htmlToBlocks('<nav>Home</nav><main><h1>Measles</h1><p>See <a href="https://www.cdc.gov/measles">CDC</a>.</p></main>');
