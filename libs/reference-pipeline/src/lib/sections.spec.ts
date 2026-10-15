@@ -1,9 +1,9 @@
-import { buildSections } from './sections';
+import { groupBlocksIntoSections } from './sections';
 
-describe('buildSections', () => {
+describe('groupBlocksIntoSections', () => {
   it('nests deeper headings under the heading above them', () => {
     expect(
-      buildSections([
+      groupBlocksIntoSections([
         { kind: 'heading', level: 1, text: 'Screening', page: null },
         { kind: 'text', text: 'Screen adults.', page: null },
         { kind: 'heading', level: 2, text: 'Hypertension', page: null },
@@ -50,7 +50,7 @@ describe('buildSections', () => {
 
   it('keeps text before the first heading as an opening section', () => {
     expect(
-      buildSections([
+      groupBlocksIntoSections([
         { kind: 'text', text: 'Published by the task force.', page: null },
         { kind: 'heading', level: 2, text: 'Scope', page: null },
         { kind: 'text', text: 'Adults in primary care.', page: null },
@@ -78,7 +78,7 @@ describe('buildSections', () => {
 
   it('locates a pdf section by the pages of its heading and its own text', () => {
     expect(
-      buildSections([
+      groupBlocksIntoSections([
         { kind: 'heading', level: 1, text: 'IX. Recommendations', page: 26 },
         { kind: 'heading', level: 2, text: 'Blood Pressure Goals', page: 31 },
         { kind: 'text', text: 'We recommend a goal of <130 mmHg.', page: 31 },
@@ -108,7 +108,7 @@ describe('buildSections', () => {
 
   it('drops headings with no text of their own or in their subsections', () => {
     expect(
-      buildSections([
+      groupBlocksIntoSections([
         {
           kind: 'heading',
           level: 1,
@@ -127,7 +127,7 @@ describe('buildSections', () => {
 
   it('gives repeated titles distinct ids', () => {
     expect(
-      buildSections([
+      groupBlocksIntoSections([
         { kind: 'heading', level: 1, text: 'Background', page: null },
         { kind: 'text', text: 'First.', page: null },
         { kind: 'heading', level: 1, text: 'Background', page: null },
@@ -138,7 +138,7 @@ describe('buildSections', () => {
 
   it('never gives a title the id a repeated title already took', () => {
     expect(
-      buildSections([
+      groupBlocksIntoSections([
         { kind: 'heading', level: 1, text: 'Dose', page: null },
         { kind: 'text', text: 'First.', page: null },
         { kind: 'heading', level: 1, text: 'Dose', page: null },
@@ -151,7 +151,7 @@ describe('buildSections', () => {
 
   it('drops reference lists, participant lists, abbreviations, search strategy, and categorization appendices with their subsections', () => {
     expect(
-      buildSections([
+      groupBlocksIntoSections([
         { kind: 'heading', level: 1, text: 'Recommendations', page: null },
         { kind: 'text', text: 'We recommend a goal of <130 mmHg.', page: null },
         {
@@ -205,7 +205,7 @@ describe('buildSections', () => {
 
   it('keeps a section whose title only mentions references', () => {
     expect(
-      buildSections([
+      groupBlocksIntoSections([
         {
           kind: 'heading',
           level: 1,
@@ -220,7 +220,7 @@ describe('buildSections', () => {
     const pageTwo = 'a'.repeat(7000);
     const pageThree = 'b'.repeat(7000);
     expect(
-      buildSections([
+      groupBlocksIntoSections([
         { kind: 'heading', level: 1, text: 'Adult Schedule', page: 2 },
         { kind: 'text', text: pageTwo, page: 2 },
         { kind: 'text', text: pageThree, page: 3 },

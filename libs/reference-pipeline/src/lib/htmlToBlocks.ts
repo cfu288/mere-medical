@@ -17,7 +17,7 @@ const REMOVED = [
 ] as const;
 const SAFE_PROTOCOLS = ['http:', 'https:', 'mailto:'];
 
-const turndown = createTurndown();
+const turndown = createMarkdownConverter();
 
 /**
  * Parses an HTML page into heading and text blocks.
@@ -30,7 +30,7 @@ const turndown = createTurndown();
  * - A table that holds headings or lists becomes plain blocks. Other tables
  *   become GFM tables.
  * - It drops scripts, styles, noscript, frames, embedded objects and templates.
- * - A link or image whose address is not safe (see {@link isSafeUrl}) keeps
+ * - A link or image whose address is not safe (see {@link isHttpMailtoOrRelativeUrl}) keeps
  *   only its text or alt text.
  * - It escapes page text that spells a tag or a `<scheme:...>` link. Markdown
  *   shows that text as written.
@@ -49,39 +49,39 @@ export function htmlToBlocks(html: string): Block[] {
   const doc = createDocument(html);
   unwrapLayoutTables(doc);
   const blocks: Block[] = [];
-  let run: Node[] = [];
-  const flush = () => {
+  let bufferedNodes: Node[] = [];
+  const emitBufferedNodesAsText = () => {
     const container = doc.createElement('div');
-    for (const node of run) {
+    for (const node of bufferedNodes) {
       container.appendChild(node.cloneNode(true));
     }
     const text = turndown.turndown(container).trim();
     if (text) {
       blocks.push({ kind: 'text', text, page: null });
     }
-    run = [];
+    bufferedNodes = [];
   };
-  const visit = (node: Node) => {
+  const splitNodeAtHeadings = (node: Node) => {
     if (!isElement(node)) {
-      run.push(node);
+      bufferedNodes.push(node);
     } else if (REMOVED.some((tag) => node.matches(tag))) {
       return;
     } else if (HEADINGS.includes(node.nodeName)) {
-      flush();
+      emitBufferedNodesAsText();
       blocks.push({
         kind: 'heading',
         level: Number(node.nodeName[1]),
-        text: plainText(node),
+        text: collapsedTextOf(node),
         page: null,
       });
     } else if (node.querySelector(HEADINGS.join(', '))) {
-      node.childNodes.forEach(visit);
+      node.childNodes.forEach(splitNodeAtHeadings);
     } else {
-      run.push(node);
+      bufferedNodes.push(node);
     }
   };
-  mainContent(doc).childNodes.forEach(visit);
-  flush();
+  findMainContent(doc).childNodes.forEach(splitNodeAtHeadings);
+  emitBufferedNodesAsText();
   return blocks;
 }
 
@@ -95,11 +95,11 @@ export function htmlToBlocks(html: string): Block[] {
  * addresses. False for any other scheme and for addresses that do not parse.
  *
  * @example
- * isSafeUrl('https://www.cdc.gov'); // true
- * isSafeUrl('/vaccines'); // true
- * isSafeUrl(' JaVaScRiPt:alert(1)'); // false
+ * isHttpMailtoOrRelativeUrl('https://www.cdc.gov'); // true
+ * isHttpMailtoOrRelativeUrl('/vaccines'); // true
+ * isHttpMailtoOrRelativeUrl(' JaVaScRiPt:alert(1)'); // false
  */
-function isSafeUrl(value: string): boolean {
+function isHttpMailtoOrRelativeUrl(value: string): boolean {
   try {
     return SAFE_PROTOCOLS.includes(
       new URL(value, 'https://relative.invalid/').protocol,
@@ -109,7 +109,7 @@ function isSafeUrl(value: string): boolean {
   }
 }
 
-function createTurndown(): TurndownService {
+function createMarkdownConverter(): TurndownService {
   const service = new TurndownService({
     headingStyle: 'atx',
     codeBlockStyle: 'fenced',
@@ -118,12 +118,14 @@ function createTurndown(): TurndownService {
   service.escape = escapeMarkdown;
   service.addRule('unsafeLink', {
     filter: (node) =>
-      node.nodeName === 'A' && !isSafeUrl(node.getAttribute('href') ?? ''),
+      node.nodeName === 'A' &&
+      !isHttpMailtoOrRelativeUrl(node.getAttribute('href') ?? ''),
     replacement: (content) => content,
   });
   service.addRule('unsafeImage', {
     filter: (node) =>
-      node.nodeName === 'IMG' && !isSafeUrl(node.getAttribute('src') ?? ''),
+      node.nodeName === 'IMG' &&
+      !isHttpMailtoOrRelativeUrl(node.getAttribute('src') ?? ''),
     replacement: (_content, node) =>
       service.escape((node as HTMLElement).getAttribute('alt') ?? ''),
   });
@@ -151,18 +153,20 @@ function unwrapLayoutTables(doc: Document): void {
   }
 }
 
-function mainContent(doc: Document): Element {
-  const only = (tag: string) => {
+function findMainContent(doc: Document): Element {
+  const onlyElementMatching = (tag: string) => {
     const found = doc.querySelectorAll(tag);
     return found.length === 1 ? found[0] : null;
   };
-  return only('main') ?? only('article') ?? doc.body;
+  return (
+    onlyElementMatching('main') ?? onlyElementMatching('article') ?? doc.body
+  );
 }
 
 function isElement(node: Node): node is Element {
   return node.nodeType === node.ELEMENT_NODE;
 }
 
-function plainText(element: Element): string {
+function collapsedTextOf(element: Element): string {
   return (element.textContent ?? '').replace(/\s+/g, ' ').trim();
 }

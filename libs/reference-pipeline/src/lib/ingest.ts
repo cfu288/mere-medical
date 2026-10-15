@@ -2,9 +2,9 @@ import { renameSync, rmSync } from 'fs';
 import { z } from 'zod';
 
 import { htmlToBlocks } from './htmlToBlocks';
-import { linesToBlocks, pdfLines } from './pdfBlocks';
+import { pdfLinesToBlocks, readPdfLines } from './pdfBlocks';
 import { openReferencesDb, writeReference } from './referencesDb';
-import { Block, Section, buildSections } from './sections';
+import { Block, Section, groupBlocksIntoSections } from './sections';
 import { Source } from './sources';
 
 /**
@@ -61,7 +61,7 @@ export type IngestReport =
  * configuration order.
  *
  * @example
- * const report = await buildLibrary({
+ * const report = await buildReferenceLibrary({
  *   path: 'libs/reference-pipeline/data/references.db',
  *   sources: parseSources([
  *     {
@@ -73,7 +73,7 @@ export type IngestReport =
  *       summary: 'Screening and prevention',
  *     },
  *   ]),
- *   fetchBytes: createFetchBytes(),
+ *   fetchBytes: createRateLimitedFetch(),
  * });
  * // [
  * //   {
@@ -84,7 +84,7 @@ export type IngestReport =
  * //   },
  * // ]
  */
-export async function buildLibrary({
+export async function buildReferenceLibrary({
   path,
   sources,
   fetchBytes,
@@ -100,8 +100,8 @@ export async function buildLibrary({
     dropped: string[];
   }[] = [];
   for (const source of sources) {
-    const { url, blocks } = await fetchDocument(source, fetchBytes);
-    parsed.push({ source, url, ...buildSections(blocks) });
+    const { url, blocks } = await fetchSourceAsBlocks(source, fetchBytes);
+    parsed.push({ source, url, ...groupBlocksIntoSections(blocks) });
   }
 
   const building = `${path}.building`;
@@ -124,7 +124,7 @@ export async function buildLibrary({
       return {
         id: source.id,
         status: 'written',
-        outline: outline(sections),
+        outline: outlineWithDepth(sections),
         dropped,
       };
     },
@@ -146,7 +146,7 @@ const cdcMediaSchema = z.object({
 
 type Fetched = { url: string; blocks: Block[] };
 
-async function fetchDocument(
+async function fetchSourceAsBlocks(
   source: Source,
   fetchBytes: (url: string) => Promise<Uint8Array>,
 ): Promise<Fetched> {
@@ -154,12 +154,14 @@ async function fetchDocument(
     case 'pdf':
       return {
         url: source.url,
-        blocks: linesToBlocks(await pdfLines(await fetchBytes(source.url))),
+        blocks: pdfLinesToBlocks(
+          await readPdfLines(await fetchBytes(source.url)),
+        ),
       };
     case 'html':
       return {
         url: source.url,
-        blocks: htmlBlocks(await fetchBytes(source.url)),
+        blocks: htmlBytesToBlocks(await fetchBytes(source.url)),
       };
     case 'cdc-media': {
       const metadata = await fetchBytes(
@@ -170,7 +172,7 @@ async function fetchDocument(
       ).results[0].sourceUrl;
       return {
         url,
-        blocks: htmlBlocks(
+        blocks: htmlBytesToBlocks(
           await fetchBytes(`${CDC_MEDIA_API}/${source.mediaId}/content.html`),
         ),
       };
@@ -178,11 +180,11 @@ async function fetchDocument(
   }
 }
 
-function htmlBlocks(bytes: Uint8Array): Block[] {
+function htmlBytesToBlocks(bytes: Uint8Array): Block[] {
   return htmlToBlocks(new TextDecoder().decode(bytes));
 }
 
-function outline(
+function outlineWithDepth(
   sections: Section[],
 ): { depth: number; sectionId: string; title: string; chars: number }[] {
   const depthOf = new Map<string, number>();

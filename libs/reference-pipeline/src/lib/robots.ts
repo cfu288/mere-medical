@@ -10,10 +10,10 @@
  * not a positive number.
  *
  * @example
- * crawlDelaySeconds('User-agent: *\nCrawl-delay: 5\n');
+ * parseCrawlDelaySeconds('User-agent: *\nCrawl-delay: 5\n');
  * // 5
  */
-export function crawlDelaySeconds(robotsTxt: string): number {
+export function parseCrawlDelaySeconds(robotsTxt: string): number {
   let agents: string[] = [];
   let inRules = false;
   for (const raw of robotsTxt.split('\n')) {

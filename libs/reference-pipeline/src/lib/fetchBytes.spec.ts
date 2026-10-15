@@ -1,6 +1,6 @@
-import { createFetchBytes } from './fetchBytes';
+import { createRateLimitedFetch } from './fetchBytes';
 
-describe('createFetchBytes', () => {
+describe('createRateLimitedFetch', () => {
   it('waits out the crawl delay of a host and gives every request a timeout', async () => {
     const fetchImpl = jest
       .fn<Promise<Response>, [string, RequestInit | undefined]>()
@@ -8,7 +8,11 @@ describe('createFetchBytes', () => {
       .mockResolvedValueOnce(new Response('a'))
       .mockResolvedValueOnce(new Response('b'));
     const sleep = jest.fn().mockResolvedValue(undefined);
-    const fetchBytes = createFetchBytes({ fetchImpl, sleep, now: () => 1000 });
+    const fetchBytes = createRateLimitedFetch({
+      fetchImpl,
+      sleep,
+      now: () => 1000,
+    });
 
     expect([
       await fetchBytes('https://example.org/a'),
@@ -31,7 +35,11 @@ describe('createFetchBytes', () => {
       .mockResolvedValueOnce(new Response(null, { status: 503 }))
       .mockResolvedValueOnce(new Response('page'));
     const sleep = jest.fn().mockResolvedValue(undefined);
-    const fetchBytes = createFetchBytes({ fetchImpl, sleep, now: () => 1000 });
+    const fetchBytes = createRateLimitedFetch({
+      fetchImpl,
+      sleep,
+      now: () => 1000,
+    });
 
     expect(await fetchBytes('https://example.com/a')).toEqual(
       new TextEncoder().encode('page'),
@@ -52,7 +60,7 @@ describe('createFetchBytes', () => {
       .fn<Promise<Response>, [string, RequestInit | undefined]>()
       .mockResolvedValueOnce(new Response(null, { status: 404 }))
       .mockResolvedValueOnce(new Response(null, { status: 404 }));
-    const fetchBytes = createFetchBytes({
+    const fetchBytes = createRateLimitedFetch({
       fetchImpl,
       sleep: async () => undefined,
       now: () => 1000,
@@ -69,7 +77,7 @@ describe('createFetchBytes', () => {
       .fn<Promise<Response>, [string, RequestInit | undefined]>()
       .mockResolvedValueOnce(new Response(null, { status: 404 }))
       .mockResolvedValue(new Response(null, { status: 503 }));
-    const fetchBytes = createFetchBytes({
+    const fetchBytes = createRateLimitedFetch({
       fetchImpl,
       sleep: async () => undefined,
       now: () => 1000,

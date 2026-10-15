@@ -58,7 +58,7 @@ type Draft = {
  * A section with pages gives its first and last page as its location.
  *
  * @example
- * buildSections([
+ * groupBlocksIntoSections([
  *   { kind: 'text', text: 'Updated 2026.', page: null },
  *   { kind: 'heading', level: 1, text: 'Goals', page: null },
  *   { kind: 'text', text: 'Below 130.', page: null },
@@ -73,14 +73,16 @@ type Draft = {
  * //   dropped: ['References'],
  * // }
  */
-export function buildSections(blocks: Block[]): {
+export function groupBlocksIntoSections(blocks: Block[]): {
   sections: Section[];
   dropped: string[];
 } {
-  return finish(splitLongPages(drafts(blocks)));
+  const drafts = draftNestedSectionsFromHeadings(blocks);
+  const pdfDraftsSplitByPage = splitLongPdfSectionsByPage(drafts);
+  return toSectionsWithoutBackMatterOrEmpty(pdfDraftsSplitByPage);
 }
 
-function drafts(blocks: Block[]): Draft[] {
+function draftNestedSectionsFromHeadings(blocks: Block[]): Draft[] {
   const all: Draft[] = [];
   const stack: { level: number; draft: Draft }[] = [];
   let current: Draft | null = null;
@@ -110,11 +112,11 @@ function drafts(blocks: Block[]): Draft[] {
   return all;
 }
 
-function splitLongPages(all: Draft[]): Draft[] {
+function splitLongPdfSectionsByPage(all: Draft[]): Draft[] {
   return all.flatMap((draft) => {
     if (
       draft.pages.length === 0 ||
-      bodyText(draft.body).length <= MAX_PDF_SECTION_CHARS
+      joinBlockText(draft.body).length <= MAX_PDF_SECTION_CHARS
     ) {
       return [draft];
     }
@@ -134,13 +136,16 @@ function splitLongPages(all: Draft[]): Draft[] {
   });
 }
 
-function finish(all: Draft[]): { sections: Section[]; dropped: string[] } {
+function toSectionsWithoutBackMatterOrEmpty(all: Draft[]): {
+  sections: Section[];
+  dropped: string[];
+} {
   const droppedDrafts = new Set<Draft>();
   const dropped: string[] = [];
   for (const draft of all) {
     if (draft.parent && droppedDrafts.has(draft.parent)) {
       droppedDrafts.add(draft);
-    } else if (isDroppedTitle(draft.title)) {
+    } else if (isBackMatterTitle(draft.title)) {
       droppedDrafts.add(draft);
       dropped.push(draft.title);
     }
@@ -151,7 +156,10 @@ function finish(all: Draft[]): { sections: Section[]; dropped: string[] } {
     const children = all.filter(
       (other) => other.parent === draft && !droppedDrafts.has(other),
     );
-    if (bodyText(draft.body) === '' && children.every((c) => blank.has(c))) {
+    if (
+      joinBlockText(draft.body) === '' &&
+      children.every((c) => blank.has(c))
+    ) {
       blank.add(draft);
     }
   }
@@ -163,7 +171,7 @@ function finish(all: Draft[]): { sections: Section[]; dropped: string[] } {
     if (droppedDrafts.has(draft) || blank.has(draft)) {
       continue;
     }
-    const base = slug(draft.title);
+    const base = slugifyTitle(draft.title);
     let sectionId = base;
     for (let n = 2; taken.has(sectionId); n++) {
       sectionId = `${base}-${n}`;
@@ -182,17 +190,17 @@ function finish(all: Draft[]): { sections: Section[]; dropped: string[] } {
               end: Math.max(...draft.pages),
             }
           : { kind: 'webpage' },
-      contentMd: bodyText(draft.body),
+      contentMd: joinBlockText(draft.body),
     });
   }
   return { sections, dropped };
 }
 
-function bodyText(body: Block[]): string {
+function joinBlockText(body: Block[]): string {
   return body.map((b) => b.text).join('\n\n');
 }
 
-function isDroppedTitle(title: string): boolean {
+function isBackMatterTitle(title: string): boolean {
   const normalized = title
     .toLowerCase()
     .replace(/^appendix [a-z0-9]+[.:]?\s*/, '')
@@ -200,7 +208,7 @@ function isDroppedTitle(title: string): boolean {
   return DROPPED_TITLES.some((pattern) => pattern.test(normalized));
 }
 
-function slug(title: string): string {
+function slugifyTitle(title: string): string {
   const base = title
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')

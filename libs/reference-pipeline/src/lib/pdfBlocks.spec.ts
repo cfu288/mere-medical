@@ -1,27 +1,29 @@
 import { SPLIT_LINE_PDF } from './__fixtures__/splitLinePdf';
 import { TWO_SIZE_PDF } from './__fixtures__/twoSizePdf';
-import { linesToBlocks, pdfLines } from './pdfBlocks';
+import { pdfLinesToBlocks, readPdfLines } from './pdfBlocks';
 
-describe('pdfLines', () => {
+describe('readPdfLines', () => {
   it('reads each text line with its page, font size, and height on the page', async () => {
-    expect(await pdfLines(new TextEncoder().encode(TWO_SIZE_PDF))).toEqual([
+    expect(await readPdfLines(new TextEncoder().encode(TWO_SIZE_PDF))).toEqual([
       { page: 1, size: 14, y: 720, text: 'I. Introduction' },
       { page: 1, size: 11, y: 700, text: 'Tdap booster every 10 years.' },
     ]);
   });
 
   it('joins text items drawn on one line into one line at the larger size', async () => {
-    expect(await pdfLines(new TextEncoder().encode(SPLIT_LINE_PDF))).toEqual([
+    expect(
+      await readPdfLines(new TextEncoder().encode(SPLIT_LINE_PDF)),
+    ).toEqual([
       { page: 1, size: 14, y: 720, text: 'I. Introduction' },
       { page: 1, size: 11, y: 700, text: 'Tdap booster every 10 years.' },
     ]);
   });
 });
 
-describe('linesToBlocks', () => {
+describe('pdfLinesToBlocks', () => {
   it('escapes markdown and markup in body text and leaves heading text plain', () => {
     expect(
-      linesToBlocks([
+      pdfLinesToBlocks([
         { page: 1, size: 14, y: 700, text: 'Use of *Tdap* [1]' },
         {
           page: 1,
@@ -42,7 +44,7 @@ describe('linesToBlocks', () => {
 
   it('makes lines at least 2pt above the body size headings, larger sizes higher levels', () => {
     expect(
-      linesToBlocks([
+      pdfLinesToBlocks([
         { page: 1, size: 14, y: 700, text: 'I. Introduction' },
         { page: 1, size: 11, y: 680, text: 'This guideline covers adults.' },
         { page: 1, size: 13, y: 650, text: 'A. Scope' },
@@ -58,7 +60,7 @@ describe('linesToBlocks', () => {
 
   it('treats a size only 1pt above the body as body text', () => {
     expect(
-      linesToBlocks([
+      pdfLinesToBlocks([
         { page: 1, size: 12, y: 700, text: 'Table 2. Strength' },
         {
           page: 1,
@@ -75,7 +77,7 @@ describe('linesToBlocks', () => {
 
   it('joins body lines that sit close together into one paragraph', () => {
     expect(
-      linesToBlocks([
+      pdfLinesToBlocks([
         { page: 1, size: 11, y: 700, text: 'We recommend treating to a' },
         { page: 1, size: 11, y: 687, text: 'systolic goal of <130 mmHg.' },
       ]),
@@ -90,7 +92,7 @@ describe('linesToBlocks', () => {
 
   it('starts a new paragraph after a wide vertical gap', () => {
     expect(
-      linesToBlocks([
+      pdfLinesToBlocks([
         { page: 1, size: 11, y: 700, text: 'First paragraph.' },
         { page: 1, size: 11, y: 660, text: 'Second paragraph.' },
       ]),
@@ -102,7 +104,7 @@ describe('linesToBlocks', () => {
 
   it('starts a new paragraph when the next line sits above the previous one', () => {
     expect(
-      linesToBlocks([
+      pdfLinesToBlocks([
         { page: 1, size: 11, y: 600, text: 'End of the left column.' },
         { page: 1, size: 11, y: 650, text: 'Top of the right column.' },
       ]),
@@ -114,7 +116,7 @@ describe('linesToBlocks', () => {
 
   it('starts a new paragraph on a new page', () => {
     expect(
-      linesToBlocks([
+      pdfLinesToBlocks([
         { page: 1, size: 11, y: 80, text: 'End of page one.' },
         { page: 2, size: 11, y: 720, text: 'Start of page two.' },
       ]),
@@ -126,7 +128,7 @@ describe('linesToBlocks', () => {
 
   it('joins a heading wrapped over two lines', () => {
     expect(
-      linesToBlocks([
+      pdfLinesToBlocks([
         { page: 1, size: 14, y: 700, text: 'VII. Approach to Care and the' },
         { page: 1, size: 14, y: 684, text: 'Department of Defense' },
         {
@@ -153,7 +155,7 @@ describe('linesToBlocks', () => {
 
   it('drops lines repeated on more than half the pages, ignoring digits', () => {
     expect(
-      linesToBlocks([
+      pdfLinesToBlocks([
         { page: 1, size: 11, y: 700, text: 'Alpha body.' },
         { page: 1, size: 9, y: 30, text: 'Page 1 of 4' },
         { page: 2, size: 11, y: 700, text: 'Beta body.' },

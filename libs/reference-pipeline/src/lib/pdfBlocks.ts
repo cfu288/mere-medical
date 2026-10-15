@@ -5,7 +5,7 @@ type PdfLine = { page: number; size: number; y: number; text: string };
 
 const HEADING_MIN_EXTRA_PT = 2;
 const PARAGRAPH_GAP_LINE_HEIGHTS = 1.8;
-const FURNITURE_MIN_PAGES = 4;
+const REPEATED_LINE_MIN_PAGES = 4;
 
 /**
  * Reads the text lines of a PDF with pdf.js.
@@ -19,13 +19,13 @@ const FURNITURE_MIN_PAGES = 4;
  *
  * @example
  * // A one-page PDF with a 14 pt heading above an 11 pt line.
- * await pdfLines(readFileSync('guideline.pdf'));
+ * await readPdfLines(readFileSync('guideline.pdf'));
  * // [
  * //   { page: 1, size: 14, y: 720, text: 'I. Introduction' },
  * //   { page: 1, size: 11, y: 700, text: 'Tdap booster every 10 years.' },
  * // ]
  */
-export async function pdfLines(bytes: Uint8Array): Promise<PdfLine[]> {
+export async function readPdfLines(bytes: Uint8Array): Promise<PdfLine[]> {
   // pdf.js asks for its legacy build in Node.
   const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
   const task = pdfjs.getDocument({ data: bytes, verbosity: 0 });
@@ -83,11 +83,11 @@ export async function pdfLines(bytes: Uint8Array): Promise<PdfLine[]> {
  *   heights, a move up the page, or a new page.
  * - It escapes body text as markdown. Heading text stays plain.
  *
- * @param lines `PdfLine[]`. From {@link pdfLines}.
+ * @param lines `PdfLine[]`. From {@link readPdfLines}.
  * @returns `Block[]`. Blocks in reading order, each with its page.
  *
  * @example
- * linesToBlocks([
+ * pdfLinesToBlocks([
  *   { page: 1, size: 14, y: 700, text: 'Recommendations' },
  *   { page: 1, size: 10, y: 680, text: 'We recommend a goal' },
  *   { page: 1, size: 10, y: 668, text: 'below 130 mmHg.' },
@@ -97,9 +97,9 @@ export async function pdfLines(bytes: Uint8Array): Promise<PdfLine[]> {
  * //   { kind: 'text', text: 'We recommend a goal below 130 mmHg.', page: 1 },
  * // ]
  */
-export function linesToBlocks(lines: PdfLine[]): Block[] {
-  const kept = withoutFurniture(lines);
-  const body = bodySize(kept);
+export function pdfLinesToBlocks(lines: PdfLine[]): Block[] {
+  const kept = dropRunningHeadersAndFooters(lines);
+  const body = bodyTextFontSize(kept);
   const headingSizes = [
     ...new Set(
       kept
@@ -138,7 +138,7 @@ export function linesToBlocks(lines: PdfLine[]): Block[] {
   );
 }
 
-function bodySize(lines: PdfLine[]): number {
+function bodyTextFontSize(lines: PdfLine[]): number {
   const charsBySize = new Map<number, number>();
   for (const line of lines) {
     charsBySize.set(
@@ -157,22 +157,23 @@ function bodySize(lines: PdfLine[]): number {
   return best;
 }
 
-function withoutFurniture(lines: PdfLine[]): PdfLine[] {
+function dropRunningHeadersAndFooters(lines: PdfLine[]): PdfLine[] {
   const pageCount = new Set(lines.map((l) => l.page)).size;
-  if (pageCount < FURNITURE_MIN_PAGES) {
+  if (pageCount < REPEATED_LINE_MIN_PAGES) {
     return lines;
   }
   const pagesByKey = new Map<string, Set<number>>();
   for (const line of lines) {
-    const key = furnitureKey(line.text);
+    const key = textIgnoringNumbersAndCase(line.text);
     pagesByKey.set(key, (pagesByKey.get(key) ?? new Set()).add(line.page));
   }
   return lines.filter(
     (line) =>
-      (pagesByKey.get(furnitureKey(line.text))?.size ?? 0) <= pageCount / 2,
+      (pagesByKey.get(textIgnoringNumbersAndCase(line.text))?.size ?? 0) <=
+      pageCount / 2,
   );
 }
 
-function furnitureKey(text: string): string {
+function textIgnoringNumbersAndCase(text: string): string {
   return text.replace(/\d+/g, '#').toLowerCase();
 }

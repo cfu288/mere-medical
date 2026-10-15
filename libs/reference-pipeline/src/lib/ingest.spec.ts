@@ -4,7 +4,7 @@ import { join } from 'path';
 
 import { fakeFetch } from './__fixtures__/fakeFetch';
 import { TWO_SIZE_PDF } from './__fixtures__/twoSizePdf';
-import { buildLibrary } from './ingest';
+import { buildReferenceLibrary } from './ingest';
 import { openReferencesDb } from './referencesDb';
 import { Source } from './sources';
 
@@ -30,10 +30,10 @@ function libraryPath(): string {
   return join(mkdtempSync(join(tmpdir(), 'references-')), 'references.db');
 }
 
-describe('buildLibrary', () => {
+describe('buildReferenceLibrary', () => {
   it('stores an html source with its configured description and its section tree, reporting the outline and dropped sections', async () => {
     const path = libraryPath();
-    const report = await buildLibrary({
+    const report = await buildReferenceLibrary({
       path,
       sources: [USPSTF],
       fetchBytes: fakeFetch({
@@ -84,7 +84,7 @@ describe('buildLibrary', () => {
 
   it('stores a pdf source with page locations', async () => {
     const path = libraryPath();
-    await buildLibrary({
+    await buildReferenceLibrary({
       path,
       sources: [CDC_ADULT],
       fetchBytes: fakeFetch({ 'https://example.com/adult.pdf': TWO_SIZE_PDF }),
@@ -99,7 +99,7 @@ describe('buildLibrary', () => {
 
   it('stores a cdc media source under the cdc page it syndicates', async () => {
     const path = libraryPath();
-    await buildLibrary({
+    await buildReferenceLibrary({
       path,
       sources: [
         {
@@ -140,8 +140,12 @@ describe('buildLibrary', () => {
       'https://example.com/ab': '<h1>Screening</h1><p>Screen adults.</p>',
       'https://example.com/adult': '<h1>Adults</h1><p>Tdap every 10 years.</p>',
     });
-    await buildLibrary({ path, sources: [USPSTF, adultPage], fetchBytes });
-    await buildLibrary({ path, sources: [adultPage], fetchBytes });
+    await buildReferenceLibrary({
+      path,
+      sources: [USPSTF, adultPage],
+      fetchBytes,
+    });
+    await buildReferenceLibrary({ path, sources: [adultPage], fetchBytes });
 
     expect(
       openReferencesDb(path)
@@ -153,7 +157,7 @@ describe('buildLibrary', () => {
   it('reports a source that parses to nothing, with its dropped sections, and stores nothing for it', async () => {
     const path = libraryPath();
 
-    const report = await buildLibrary({
+    const report = await buildReferenceLibrary({
       path,
       sources: [USPSTF],
       fetchBytes: fakeFetch({
@@ -171,7 +175,7 @@ describe('buildLibrary', () => {
 
   it('leaves the previous library as it was when any fetch fails', async () => {
     const path = libraryPath();
-    await buildLibrary({
+    await buildReferenceLibrary({
       path,
       sources: [USPSTF],
       fetchBytes: fakeFetch({
@@ -180,7 +184,7 @@ describe('buildLibrary', () => {
     });
 
     await expect(
-      buildLibrary({
+      buildReferenceLibrary({
         path,
         sources: [USPSTF, CDC_ADULT],
         fetchBytes: fakeFetch({ 'https://example.com/ab': '<h1>Changed</h1>' }),
