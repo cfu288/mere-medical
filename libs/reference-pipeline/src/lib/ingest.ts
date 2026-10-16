@@ -88,7 +88,6 @@ export async function buildReferenceLibrary({
   const building = `${path}.building`;
   rmSync(building, { force: true });
   const db = openReferencesDb(building);
-  db.exec('BEGIN');
   const reports = parsed.map(
     ({ source, url, markdown, sections }): IngestReport => {
       if (sections.every((s) => s.textStart === s.textEnd)) {
@@ -110,7 +109,6 @@ export async function buildReferenceLibrary({
       };
     },
   );
-  db.exec('COMMIT');
   db.close();
   renameSync(building, path);
   return reports;
