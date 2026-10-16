@@ -60,3 +60,4 @@ errorlog*
 
 .epic-proxy-profile
 libs/emr-pipeline/data/
+libs/reference-pipeline/data/

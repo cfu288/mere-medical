@@ -1,0 +1,39 @@
+import { mkdirSync, readFileSync } from 'fs';
+import { dirname, join } from 'path';
+
+import { createRateLimitedFetch } from './lib/fetchBytes';
+import { buildReferenceLibrary } from './lib/ingest';
+import { parseSources } from './lib/sources';
+
+const ROOT = join(__dirname, '..');
+const SOURCES_PATH = join(ROOT, 'sources.json');
+const LIBRARY_PATH = join(ROOT, 'data', 'references.db');
+
+async function main() {
+  const sourcesJson = readFileSync(SOURCES_PATH, 'utf8');
+  const sources = parseSources(JSON.parse(sourcesJson));
+  mkdirSync(dirname(LIBRARY_PATH), { recursive: true });
+  const reports = await buildReferenceLibrary({
+    path: LIBRARY_PATH,
+    sources,
+    fetchBytes: createRateLimitedFetch(),
+  });
+  for (const report of reports) {
+    switch (report.status) {
+      case 'written':
+        console.log(`${report.id}: ${report.sections} sections`);
+        break;
+      case 'empty':
+        console.log(`${report.id}: not added, its source parsed to no text`);
+        break;
+    }
+  }
+  console.log(
+    `\nwrote ${reports.filter((r) => r.status === 'written').length} reference(s) to ${LIBRARY_PATH}`,
+  );
+}
+
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
