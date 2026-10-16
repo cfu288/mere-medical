@@ -21,7 +21,7 @@ describe('blocksToDocument', () => {
           title: 'Screening',
           textStart: 13,
           textEnd: 27,
-          pageCount: 1,
+          partCount: 1,
         },
         {
           sectionId: 'hypertension',
@@ -29,7 +29,7 @@ describe('blocksToDocument', () => {
           title: 'Hypertension',
           textStart: 46,
           textEnd: 69,
-          pageCount: 1,
+          partCount: 1,
         },
         {
           sectionId: 'immunizations',
@@ -37,13 +37,13 @@ describe('blocksToDocument', () => {
           title: 'Immunizations',
           textStart: 88,
           textEnd: 105,
-          pageCount: 1,
+          partCount: 1,
         },
       ],
-      pages: [
-        { sectionId: 'screening', page: 1, text: 'Screen adults.' },
-        { sectionId: 'hypertension', page: 1, text: 'Measure blood pressure.' },
-        { sectionId: 'immunizations', page: 1, text: 'Influenza yearly.' },
+      parts: [
+        { sectionId: 'screening', part: 1, text: 'Screen adults.' },
+        { sectionId: 'hypertension', part: 1, text: 'Measure blood pressure.' },
+        { sectionId: 'immunizations', part: 1, text: 'Influenza yearly.' },
       ],
     });
   });
@@ -63,7 +63,7 @@ describe('blocksToDocument', () => {
           title: 'Dosing',
           textStart: 13,
           textEnd: 13,
-          pageCount: 0,
+          partCount: 0,
         },
         {
           sectionId: 'children',
@@ -71,10 +71,10 @@ describe('blocksToDocument', () => {
           title: 'Children',
           textStart: 30,
           textEnd: 30,
-          pageCount: 0,
+          partCount: 0,
         },
       ],
-      pages: [],
+      parts: [],
     });
   });
 
@@ -95,7 +95,7 @@ describe('blocksToDocument', () => {
           title: 'Opening text',
           textStart: 0,
           textEnd: 28,
-          pageCount: 1,
+          partCount: 1,
         },
         {
           sectionId: 'scope',
@@ -103,16 +103,16 @@ describe('blocksToDocument', () => {
           title: 'Scope',
           textStart: 40,
           textEnd: 63,
-          pageCount: 1,
+          partCount: 1,
         },
       ],
-      pages: [
+      parts: [
         {
           sectionId: 'opening-text',
-          page: 1,
+          part: 1,
           text: 'Published by the task force.',
         },
-        { sectionId: 'scope', page: 1, text: 'Adults in primary care.' },
+        { sectionId: 'scope', part: 1, text: 'Adults in primary care.' },
       ],
     });
   });
@@ -133,7 +133,7 @@ describe('blocksToDocument', () => {
           title: 'Cover',
           textStart: 7,
           textEnd: 7,
-          pageCount: 0,
+          partCount: 0,
         },
         {
           sectionId: 'goals',
@@ -141,10 +141,10 @@ describe('blocksToDocument', () => {
           title: 'Goals',
           textStart: 18,
           textEnd: 38,
-          pageCount: 1,
+          partCount: 1,
         },
       ],
-      pages: [{ sectionId: 'goals', page: 1, text: 'A goal of <130 mmHg.' }],
+      parts: [{ sectionId: 'goals', part: 1, text: 'A goal of <130 mmHg.' }],
     });
   });
 
@@ -167,7 +167,7 @@ describe('blocksToDocument', () => {
           title: 'Dose',
           textStart: 8,
           textEnd: 14,
-          pageCount: 1,
+          partCount: 1,
         },
         {
           sectionId: 'dose-2',
@@ -175,7 +175,7 @@ describe('blocksToDocument', () => {
           title: 'Dose',
           textStart: 24,
           textEnd: 31,
-          pageCount: 1,
+          partCount: 1,
         },
         {
           sectionId: 'dose-2-2',
@@ -183,18 +183,18 @@ describe('blocksToDocument', () => {
           title: 'Dose 2',
           textStart: 43,
           textEnd: 49,
-          pageCount: 1,
+          partCount: 1,
         },
       ],
-      pages: [
-        { sectionId: 'dose', page: 1, text: 'First.' },
-        { sectionId: 'dose-2', page: 1, text: 'Second.' },
-        { sectionId: 'dose-2-2', page: 1, text: 'Third.' },
+      parts: [
+        { sectionId: 'dose', part: 1, text: 'First.' },
+        { sectionId: 'dose-2', part: 1, text: 'Second.' },
+        { sectionId: 'dose-2-2', part: 1, text: 'Third.' },
       ],
     });
   });
 
-  it('splits a long section into pages of at most 10000 characters at paragraph breaks', () => {
+  it('splits a long section into parts of at most 10000 characters at paragraph breaks', () => {
     const first = 'a'.repeat(6000);
     const second = 'b'.repeat(6000);
     expect(
@@ -202,24 +202,24 @@ describe('blocksToDocument', () => {
         { kind: 'heading', level: 1, text: 'Doses' },
         { kind: 'text', text: first },
         { kind: 'text', text: second },
-      ]).pages,
+      ]).parts,
     ).toEqual([
-      { sectionId: 'doses', page: 1, text: first },
-      { sectionId: 'doses', page: 2, text: second },
+      { sectionId: 'doses', part: 1, text: first },
+      { sectionId: 'doses', part: 2, text: second },
     ]);
   });
 
-  it('cuts a paragraph longer than a page at 10000 characters', () => {
+  it('cuts a paragraph longer than a part at 10000 characters', () => {
     const page = 'c'.repeat(10000);
     const rest = 'c'.repeat(500);
     expect(
       blocksToDocument([
         { kind: 'heading', level: 1, text: 'Table' },
         { kind: 'text', text: page + rest },
-      ]).pages,
+      ]).parts,
     ).toEqual([
-      { sectionId: 'table', page: 1, text: page },
-      { sectionId: 'table', page: 2, text: rest },
+      { sectionId: 'table', part: 1, text: page },
+      { sectionId: 'table', part: 2, text: rest },
     ]);
   });
 
@@ -244,10 +244,10 @@ describe('blocksToDocument', () => {
             'B. Treatment Goals and General Approaches to Hypertension Management',
           textStart: 70,
           textEnd: 70,
-          pageCount: 0,
+          partCount: 0,
         },
       ],
-      pages: [],
+      parts: [],
     });
   });
 });

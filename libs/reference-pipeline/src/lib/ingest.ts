@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { htmlToBlocks } from './htmlToBlocks';
 import { pdfToBlocks } from './pdfBlocks';
 import { openReferencesDb, writeReference } from './referencesDb';
-import { Block, Page, Section, blocksToDocument } from './sections';
+import { Block, Part, Section, blocksToDocument } from './sections';
 import { Source } from './sources';
 
 /**
@@ -79,7 +79,7 @@ export async function buildReferenceLibrary({
     url: string;
     markdown: string;
     sections: Section[];
-    pages: Page[];
+    parts: Part[];
   }[] = [];
   for (const source of sources) {
     const { url, blocks } = await fetchSourceAsBlocks(source, fetchBytes);
@@ -90,7 +90,7 @@ export async function buildReferenceLibrary({
   rmSync(building, { force: true });
   const db = openReferencesDb(building);
   const reports = parsed.map(
-    ({ source, url, markdown, sections, pages }): IngestReport => {
+    ({ source, url, markdown, sections, parts }): IngestReport => {
       if (sections.every((s) => s.textStart === s.textEnd)) {
         return { id: source.id, status: 'empty' };
       }
@@ -102,7 +102,7 @@ export async function buildReferenceLibrary({
         url,
         markdown,
         sections,
-        pages,
+        parts,
       });
       return {
         id: source.id,

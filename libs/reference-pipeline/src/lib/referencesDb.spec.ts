@@ -17,10 +17,10 @@ describe('writeReference', () => {
           title: 'Doses',
           textStart: 9,
           textEnd: 19,
-          pageCount: 1,
+          partCount: 1,
         },
       ],
-      pages: [{ sectionId: 'doses', page: 1, text: 'Two doses.' }],
+      parts: [{ sectionId: 'doses', part: 1, text: 'Two doses.' }],
     });
 
     expect(
@@ -38,7 +38,7 @@ describe('writeReference', () => {
         url: 'https://example.com/measles',
         content_md: '# Doses\n\nTwo doses.',
         sections:
-          '[{"sectionId":"doses","parentId":null,"title":"Doses","textStart":9,"textEnd":19,"pageCount":1}]',
+          '[{"sectionId":"doses","parentId":null,"title":"Doses","textStart":9,"textEnd":19,"partCount":1}]',
       },
     ]);
   });
@@ -53,7 +53,7 @@ describe('writeReference', () => {
       url: 'https://example.com/measles',
       markdown: 'Rash and fever.',
       sections: [],
-      pages: [],
+      parts: [],
     });
 
     expect([
@@ -70,7 +70,7 @@ describe('writeReference', () => {
     ]).toEqual([[{ id: 'measles' }], []]);
   });
 
-  it('finds the pages of one reference that mention a word, and only that reference', () => {
+  it('finds the parts of one reference that mention a word, and only that reference', () => {
     const db = openReferencesDb(':memory:');
     writeReference(db, {
       id: 'ckd',
@@ -80,9 +80,9 @@ describe('writeReference', () => {
       url: 'https://example.com/ckd',
       markdown: '# Diet\n\nLimit potassium.',
       sections: [],
-      pages: [
-        { sectionId: 'diet', page: 1, text: 'Limit potassium.' },
-        { sectionId: 'diet', page: 2, text: 'Limit salt.' },
+      parts: [
+        { sectionId: 'diet', part: 1, text: 'Limit potassium.' },
+        { sectionId: 'diet', part: 2, text: 'Limit salt.' },
       ],
     });
     writeReference(db, {
@@ -93,15 +93,15 @@ describe('writeReference', () => {
       url: 'https://example.com/htn',
       markdown: '# Diet\n\nEat potassium.',
       sections: [],
-      pages: [{ sectionId: 'diet', page: 1, text: 'Eat potassium.' }],
+      parts: [{ sectionId: 'diet', part: 1, text: 'Eat potassium.' }],
     });
 
     expect(
       db
         .prepare(
-          "SELECT section_id, page, text FROM pages_fts WHERE pages_fts MATCH 'potassium' AND document_id = 'ckd'",
+          "SELECT section_id, part, text FROM parts_fts WHERE parts_fts MATCH 'potassium' AND document_id = 'ckd'",
         )
         .all(),
-    ).toEqual([{ section_id: 'diet', page: 1, text: 'Limit potassium.' }]);
+    ).toEqual([{ section_id: 'diet', part: 1, text: 'Limit potassium.' }]);
   });
 });

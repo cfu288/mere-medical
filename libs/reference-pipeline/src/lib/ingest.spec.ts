@@ -96,24 +96,24 @@ describe('buildReferenceLibrary', () => {
         content_md:
           '# Page 1\n\nI. Introduction\nTdap booster every 10 years.\nBMI of 30 kg/m2 or more.\n\n# Page 2\n\nRepeat every 10 years.',
         sections:
-          '[{"sectionId":"page-1","parentId":null,"title":"Page 1","textStart":10,"textEnd":79,"pageCount":1},{"sectionId":"page-2","parentId":null,"title":"Page 2","textStart":91,"textEnd":113,"pageCount":1}]',
+          '[{"sectionId":"page-1","parentId":null,"title":"Page 1","textStart":10,"textEnd":79,"partCount":1},{"sectionId":"page-2","parentId":null,"title":"Page 2","textStart":91,"textEnd":113,"partCount":1}]',
       },
     ]);
     expect(
       openReferencesDb(path)
-        .prepare('SELECT document_id, section_id, page, text FROM pages_fts')
+        .prepare('SELECT document_id, section_id, part, text FROM parts_fts')
         .all(),
     ).toEqual([
       {
         document_id: 'cdc-adult-schedule',
         section_id: 'page-1',
-        page: 1,
+        part: 1,
         text: 'I. Introduction\nTdap booster every 10 years.\nBMI of 30 kg/m2 or more.',
       },
       {
         document_id: 'cdc-adult-schedule',
         section_id: 'page-2',
-        page: 1,
+        part: 1,
         text: 'Repeat every 10 years.',
       },
     ]);

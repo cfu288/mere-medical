@@ -13,9 +13,8 @@ heading. A section of a PDF is one page of the PDF. A guideline is too long to
 read at once, so the agent reads one section at a time. The row lists the
 sections, with where each one's text starts and ends in the markdown.
 
-A **page** is up to 10,000 characters of one section's text. It is not a PDF
-page. The agent reads a long section one page at a time. Each page is one row in
-`pages_fts`.
+A **part** is up to 10,000 characters of one section's text. The agent reads a
+long section one part at a time. Each part is one row in `parts_fts`.
 
 ## Converting a reference
 
@@ -28,7 +27,7 @@ page. The agent reads a long section one page at a time. Each page is one row in
 - Text before the first heading becomes an "Opening text" section.
 - A heading with no text of its own is still a section. Its text is empty.
 - A section id comes from its title. It is unique within its reference.
-- Each section's text splits into pages of at most 10,000 characters. A page
+- Each section's text splits into parts of at most 10,000 characters. A part
   ends at the last paragraph break that fits.
 
 The conversion is deterministic. The same source gives the same markdown and
@@ -39,10 +38,10 @@ sections.
 1. Search reference titles and summaries in `documents_fts` to choose a
    reference.
 2. List that reference's sections. This is its outline.
-3. Search that reference's pages in `pages_fts`, filtered by `document_id`. This
-   finds the section and page that mention a term. It never searches other
+3. Search that reference's parts in `parts_fts`, filtered by `document_id`. This
+   finds the section and part that mention a term. It never searches other
    references.
-4. Read one page by `document_id`, `section_id` and `page`.
+4. Read one part by `document_id`, `section_id` and `part`.
 
 A citation names the reference's title and url. For a PDF it also names the
 page, which is the section's title.
@@ -60,12 +59,12 @@ CREATE TABLE documents (
   sections TEXT NOT NULL
 );
 CREATE VIRTUAL TABLE documents_fts USING fts5(id UNINDEXED, title, summary, tokenize = 'porter unicode61');
-CREATE VIRTUAL TABLE pages_fts USING fts5(document_id UNINDEXED, section_id UNINDEXED, page UNINDEXED, text, tokenize = 'porter unicode61');
+CREATE VIRTUAL TABLE parts_fts USING fts5(document_id UNINDEXED, section_id UNINDEXED, part UNINDEXED, text, tokenize = 'porter unicode61');
 ```
 
 `content_md` is the whole reference as markdown. `sections` is a JSON list of
 its sections in reading order. `documents_fts` is a full-text index of titles
-and summaries. `pages_fts` holds each page's text and indexes it. `textStart`
+and summaries. `parts_fts` holds each part's text and indexes it. `textStart`
 and `textEnd` count JavaScript string positions in `content_md`.
 
 This entry of `sections` is page 34 of the VA-DoD hypertension guideline.
@@ -77,11 +76,11 @@ This entry of `sections` is page 34 of the VA-DoD hypertension guideline.
   "title": "Page 34",
   "textStart": 82797,
   "textEnd": 86660,
-  "pageCount": 1
+  "partCount": 1
 }
 ```
 
-`pageCount` is 0 for a section with no text.
+`partCount` is 0 for a section with no text.
 
 ## Sources
 
@@ -126,4 +125,4 @@ reports a source with no text and leaves it out. Requests to a host wait for the
 ## Known limits
 
 - A PDF's outline lists its pages, not its chapters. The agent finds the page it
-  needs by searching that reference's pages.
+  needs by searching that reference's parts.
