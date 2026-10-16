@@ -77,8 +77,8 @@ This entry of `sections` is page 34 of the VA-DoD hypertension guideline.
   "parentId": null,
   "title": "Page 34",
   "pdfPages": { "start": 34, "end": 34 },
-  "textStart": 79233,
-  "textEnd": 82977,
+  "textStart": 82797,
+  "textEnd": 86660,
   "pageCount": 1
 }
 ```
@@ -110,9 +110,8 @@ There are three types.
 - `cdc-media` reads a CDC page's text through CDC's content API, without the
   site's menus. It takes a `mediaId` instead of a `url`. The id is in the page's
   [Media Library](https://tools.cdc.gov/medialibrary/index.aspx) address.
-- `pdf` reads a PDF from `url`. The pipeline drops lines that repeat on most
-  pages, such as a running title or a page number. Each section keeps its page
-  numbers.
+- `pdf` reads a PDF from `url`. Each PDF page becomes a section holding that
+  page's lines.
 
 ## Running
 

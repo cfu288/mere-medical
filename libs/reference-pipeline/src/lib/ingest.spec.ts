@@ -2,7 +2,7 @@ import { existsSync, mkdtempSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
-import { ONE_PAGE_PDF } from './__fixtures__/onePagePdf';
+import { TWO_PAGE_PDF } from './__fixtures__/twoPagePdf';
 import { buildReferenceLibrary } from './ingest';
 import { openReferencesDb } from './referencesDb';
 import { Source } from './sources';
@@ -84,7 +84,7 @@ describe('buildReferenceLibrary', () => {
     await buildReferenceLibrary({
       path,
       sources: [CDC_ADULT],
-      fetchBytes: fakeFetch({ 'https://example.com/adult.pdf': ONE_PAGE_PDF }),
+      fetchBytes: fakeFetch({ 'https://example.com/adult.pdf': TWO_PAGE_PDF }),
     });
 
     expect(
@@ -94,9 +94,9 @@ describe('buildReferenceLibrary', () => {
     ).toEqual([
       {
         content_md:
-          '<!-- page 1 -->\n\n# Page 1\n\nI. Introduction\n\nTdap booster every 10 years.\n\nBMI of 30 kg/m2 or more.',
+          '<!-- page 1 -->\n\n# Page 1\n\nI. Introduction\nTdap booster every 10 years.\nBMI of 30 kg/m2 or more.\n\n<!-- page 2 -->\n\n# Page 2\n\nRepeat every 10 years.',
         sections:
-          '[{"sectionId":"page-1","parentId":null,"title":"Page 1","pdfPages":{"start":1,"end":1},"textStart":27,"textEnd":98,"pageCount":1}]',
+          '[{"sectionId":"page-1","parentId":null,"title":"Page 1","pdfPages":{"start":1,"end":1},"textStart":27,"textEnd":96,"pageCount":1},{"sectionId":"page-2","parentId":null,"title":"Page 2","pdfPages":{"start":2,"end":2},"textStart":125,"textEnd":147,"pageCount":1}]',
       },
     ]);
     expect(
@@ -108,7 +108,13 @@ describe('buildReferenceLibrary', () => {
         document_id: 'cdc-adult-schedule',
         section_id: 'page-1',
         page: 1,
-        text: 'I. Introduction\n\nTdap booster every 10 years.\n\nBMI of 30 kg/m2 or more.',
+        text: 'I. Introduction\nTdap booster every 10 years.\nBMI of 30 kg/m2 or more.',
+      },
+      {
+        document_id: 'cdc-adult-schedule',
+        section_id: 'page-2',
+        page: 1,
+        text: 'Repeat every 10 years.',
       },
     ]);
   });

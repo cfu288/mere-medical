@@ -2,7 +2,7 @@ import { renameSync, rmSync } from 'fs';
 import { z } from 'zod';
 
 import { htmlToBlocks } from './htmlToBlocks';
-import { pdfLinesToBlocks, readPdfLines } from './pdfBlocks';
+import { pdfToBlocks } from './pdfBlocks';
 import { openReferencesDb, writeReference } from './referencesDb';
 import { Block, Page, Section, blocksToDocument } from './sections';
 import { Source } from './sources';
@@ -133,8 +133,8 @@ async function fetchSourceAsBlocks(
 ): Promise<Fetched> {
   switch (source.type) {
     case 'pdf': {
-      const lines = await readPdfLines(await fetchBytes(source.url));
-      return { url: source.url, blocks: pdfLinesToBlocks(lines) };
+      const pdf = await fetchBytes(source.url);
+      return { url: source.url, blocks: await pdfToBlocks(pdf) };
     }
     case 'html':
       return {
