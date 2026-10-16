@@ -1,10 +1,7 @@
-import TurndownService from 'turndown';
-
 import { Block } from './sections';
 
 type PdfLine = { page: number; size: number; y: number; text: string };
 
-const markdown = new TurndownService();
 const HEADING_MIN_EXTRA_FONT_POINTS = 2;
 const SAME_PARAGRAPH_MAX_GAP_IN_FONT_SIZES = 1.8;
 const REPEATED_LINE_CHECK_MIN_PAGES = 4;
@@ -82,7 +79,7 @@ export async function readPdfLines(bytes: Uint8Array): Promise<PdfLine[]> {
  * - Other lines join into a paragraph. A gap of more than 1.8 times the font
  *   size starts a new paragraph. So does a move up the page, a new font size or
  *   a new page. Heading lines of the same size join the same way.
- * - It escapes paragraph text as markdown. Heading text stays plain.
+ * - It keeps the text as written.
  *
  * @param lines `PdfLine[]`. From {@link readPdfLines}.
  * @returns `Block[]`. Blocks in reading order, each with its page.
@@ -125,11 +122,7 @@ export function pdfLinesToBlocks(lines: PdfLine[]): Block[] {
     blocks.push(block);
     previous = { line, block };
   }
-  return blocks.map((block) =>
-    block.kind === 'text'
-      ? { ...block, text: markdown.escape(block.text) }
-      : block,
-  );
+  return blocks;
 }
 
 function continuesBlock(previous: PdfLine, line: PdfLine): boolean {

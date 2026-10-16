@@ -12,7 +12,7 @@ describe('readPdfLines', () => {
 });
 
 describe('pdfLinesToBlocks', () => {
-  it('escapes markdown in paragraph text and leaves heading text plain', () => {
+  it('keeps paragraph and heading text as written', () => {
     expect(
       pdfLinesToBlocks([
         { page: 1, size: 14, y: 700, text: 'Use of *Tdap* [1]' },
@@ -27,7 +27,7 @@ describe('pdfLinesToBlocks', () => {
       { kind: 'heading', level: 1, text: 'Use of *Tdap* [1]', page: 1 },
       {
         kind: 'text',
-        text: 'Give <b>one dose</b> of \\*Tdap\\* \\[1\\] by 3\\_months.',
+        text: 'Give <b>one dose</b> of *Tdap* [1] by 3_months.',
         page: 1,
       },
     ]);
