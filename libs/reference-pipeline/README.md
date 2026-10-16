@@ -33,7 +33,8 @@ sections.
 1. Search reference titles and summaries in `documents_fts`.
 2. List one reference's sections. This is its outline.
 3. Read one section. Its text is `content_md` from `textStart` to `textEnd`. A
-   long section is read in parts.
+   long section is read in parts. The offsets count JavaScript string positions,
+   so slice the text in JavaScript, not with SQLite's `substr`.
 
 A citation names the reference's title and url. It also names the section's
 pages.
@@ -104,13 +105,13 @@ There are three types.
 ## Running
 
 ```
-npx tsx libs/reference-pipeline/src/cli.ts
+npx nx run reference-pipeline:build-library
 ```
 
-The run writes `libs/reference-pipeline/data/references.db` and prints each
-reference's outline. It builds a new file and then replaces the old one. If any
-fetch fails, the run stops with an error and the old file stays. The run reports
-a source with no sections and leaves it out. Requests to a host wait for the
+The run writes `libs/reference-pipeline/data/references.db` and prints how many
+sections each reference has. It builds a new file and then replaces the old one.
+If any fetch fails, the run stops with an error and the old file stays. The run
+reports a source with no text and leaves it out. Requests to a host wait for the
 `Crawl-delay` in its robots.txt.
 
 ## Known limits
