@@ -13,39 +13,36 @@ describe('groupBlocksIntoSections', () => {
         { kind: 'heading', level: 1, text: 'Immunizations', page: null },
         { kind: 'text', text: 'Influenza yearly.', page: null },
       ]),
-    ).toEqual({
-      sections: [
-        {
-          sectionId: 'screening',
-          parentId: null,
-          title: 'Screening',
-          location: { kind: 'webpage' },
-          contentMd: 'Screen adults.',
-        },
-        {
-          sectionId: 'hypertension',
-          parentId: 'screening',
-          title: 'Hypertension',
-          location: { kind: 'webpage' },
-          contentMd: 'Measure blood pressure.',
-        },
-        {
-          sectionId: 'diabetes',
-          parentId: 'screening',
-          title: 'Diabetes',
-          location: { kind: 'webpage' },
-          contentMd: 'Check A1c.',
-        },
-        {
-          sectionId: 'immunizations',
-          parentId: null,
-          title: 'Immunizations',
-          location: { kind: 'webpage' },
-          contentMd: 'Influenza yearly.',
-        },
-      ],
-      dropped: [],
-    });
+    ).toEqual([
+      {
+        sectionId: 'screening',
+        parentId: null,
+        title: 'Screening',
+        location: { kind: 'webpage' },
+        contentMd: 'Screen adults.',
+      },
+      {
+        sectionId: 'hypertension',
+        parentId: 'screening',
+        title: 'Hypertension',
+        location: { kind: 'webpage' },
+        contentMd: 'Measure blood pressure.',
+      },
+      {
+        sectionId: 'diabetes',
+        parentId: 'screening',
+        title: 'Diabetes',
+        location: { kind: 'webpage' },
+        contentMd: 'Check A1c.',
+      },
+      {
+        sectionId: 'immunizations',
+        parentId: null,
+        title: 'Immunizations',
+        location: { kind: 'webpage' },
+        contentMd: 'Influenza yearly.',
+      },
+    ]);
   });
 
   it('keeps text before the first heading as a section titled Opening text', () => {
@@ -55,25 +52,22 @@ describe('groupBlocksIntoSections', () => {
         { kind: 'heading', level: 2, text: 'Scope', page: null },
         { kind: 'text', text: 'Adults in primary care.', page: null },
       ]),
-    ).toEqual({
-      sections: [
-        {
-          sectionId: 'opening-text',
-          parentId: null,
-          title: 'Opening text',
-          location: { kind: 'webpage' },
-          contentMd: 'Published by the task force.',
-        },
-        {
-          sectionId: 'scope',
-          parentId: null,
-          title: 'Scope',
-          location: { kind: 'webpage' },
-          contentMd: 'Adults in primary care.',
-        },
-      ],
-      dropped: [],
-    });
+    ).toEqual([
+      {
+        sectionId: 'opening-text',
+        parentId: null,
+        title: 'Opening text',
+        location: { kind: 'webpage' },
+        contentMd: 'Published by the task force.',
+      },
+      {
+        sectionId: 'scope',
+        parentId: null,
+        title: 'Scope',
+        location: { kind: 'webpage' },
+        contentMd: 'Adults in primary care.',
+      },
+    ]);
   });
 
   it('locates a pdf section by the pages of its heading and its own text', () => {
@@ -84,26 +78,22 @@ describe('groupBlocksIntoSections', () => {
         { kind: 'text', text: 'We recommend a goal of <130 mmHg.', page: 31 },
         { kind: 'text', text: 'Discussion continues.', page: 33 },
       ]),
-    ).toEqual({
-      sections: [
-        {
-          sectionId: 'ix-recommendations',
-          parentId: null,
-          title: 'IX. Recommendations',
-          location: { kind: 'pages', start: 26, end: 26 },
-          contentMd: '',
-        },
-        {
-          sectionId: 'blood-pressure-goals',
-          parentId: 'ix-recommendations',
-          title: 'Blood Pressure Goals',
-          location: { kind: 'pages', start: 31, end: 33 },
-          contentMd:
-            'We recommend a goal of <130 mmHg.\n\nDiscussion continues.',
-        },
-      ],
-      dropped: [],
-    });
+    ).toEqual([
+      {
+        sectionId: 'ix-recommendations',
+        parentId: null,
+        title: 'IX. Recommendations',
+        location: { kind: 'pages', start: 26, end: 26 },
+        contentMd: '',
+      },
+      {
+        sectionId: 'blood-pressure-goals',
+        parentId: 'ix-recommendations',
+        title: 'Blood Pressure Goals',
+        location: { kind: 'pages', start: 31, end: 33 },
+        contentMd: 'We recommend a goal of <130 mmHg.\n\nDiscussion continues.',
+      },
+    ]);
   });
 
   it('drops headings with no text of their own or in their subsections', () => {
@@ -121,8 +111,23 @@ describe('groupBlocksIntoSections', () => {
         { kind: 'heading', level: 1, text: 'Recommendations', page: null },
         { kind: 'heading', level: 2, text: 'Goals', page: null },
         { kind: 'text', text: 'A goal of <130 mmHg.', page: null },
-      ]).sections.map((s) => s.sectionId),
-    ).toEqual(['recommendations', 'goals']);
+      ]),
+    ).toEqual([
+      {
+        sectionId: 'recommendations',
+        parentId: null,
+        title: 'Recommendations',
+        location: { kind: 'webpage' },
+        contentMd: '',
+      },
+      {
+        sectionId: 'goals',
+        parentId: 'recommendations',
+        title: 'Goals',
+        location: { kind: 'webpage' },
+        contentMd: 'A goal of <130 mmHg.',
+      },
+    ]);
   });
 
   it('gives repeated titles distinct ids', () => {
@@ -132,8 +137,23 @@ describe('groupBlocksIntoSections', () => {
         { kind: 'text', text: 'First.', page: null },
         { kind: 'heading', level: 1, text: 'Background', page: null },
         { kind: 'text', text: 'Second.', page: null },
-      ]).sections.map((s) => s.sectionId),
-    ).toEqual(['background', 'background-2']);
+      ]),
+    ).toEqual([
+      {
+        sectionId: 'background',
+        parentId: null,
+        title: 'Background',
+        location: { kind: 'webpage' },
+        contentMd: 'First.',
+      },
+      {
+        sectionId: 'background-2',
+        parentId: null,
+        title: 'Background',
+        location: { kind: 'webpage' },
+        contentMd: 'Second.',
+      },
+    ]);
   });
 
   it('never gives a title the id a repeated title already took', () => {
@@ -145,11 +165,33 @@ describe('groupBlocksIntoSections', () => {
         { kind: 'text', text: 'Second.', page: null },
         { kind: 'heading', level: 1, text: 'Dose 2', page: null },
         { kind: 'text', text: 'Third.', page: null },
-      ]).sections.map((s) => s.sectionId),
-    ).toEqual(['dose', 'dose-2', 'dose-2-2']);
+      ]),
+    ).toEqual([
+      {
+        sectionId: 'dose',
+        parentId: null,
+        title: 'Dose',
+        location: { kind: 'webpage' },
+        contentMd: 'First.',
+      },
+      {
+        sectionId: 'dose-2',
+        parentId: null,
+        title: 'Dose',
+        location: { kind: 'webpage' },
+        contentMd: 'Second.',
+      },
+      {
+        sectionId: 'dose-2-2',
+        parentId: null,
+        title: 'Dose 2',
+        location: { kind: 'webpage' },
+        contentMd: 'Third.',
+      },
+    ]);
   });
 
-  it('drops reference lists, participant lists, abbreviations, search strategy, and categorization appendices with their subsections', () => {
+  it('keeps reference lists and appendices as sections', () => {
     expect(
       groupBlocksIntoSections([
         { kind: 'heading', level: 1, text: 'Recommendations', page: null },
@@ -157,63 +199,36 @@ describe('groupBlocksIntoSections', () => {
         {
           kind: 'heading',
           level: 1,
-          text: 'Appendix C: 2020 Recommendation Categorization',
-          page: null,
-        },
-        { kind: 'heading', level: 2, text: 'Carried Forward', page: null },
-        { kind: 'text', text: 'We suggest a goal of <130 mmHg.', page: null },
-        {
-          kind: 'heading',
-          level: 1,
           text: 'Appendix D: Participant List',
           page: null,
         },
-        {
-          kind: 'heading',
-          level: 1,
-          text: 'Appendix F. Literature Review Search Terms and Strategy',
-          page: null,
-        },
-        {
-          kind: 'heading',
-          level: 1,
-          text: 'Appendix L. Abbreviation List',
-          page: null,
-        },
+        { kind: 'text', text: 'Jane Doe, MD', page: null },
         { kind: 'heading', level: 1, text: 'References', page: null },
         { kind: 'text', text: '1. Smith J. Trial. 2020.', page: null },
       ]),
-    ).toEqual({
-      sections: [
-        {
-          sectionId: 'recommendations',
-          parentId: null,
-          title: 'Recommendations',
-          location: { kind: 'webpage' },
-          contentMd: 'We recommend a goal of <130 mmHg.',
-        },
-      ],
-      dropped: [
-        'Appendix C: 2020 Recommendation Categorization',
-        'Appendix D: Participant List',
-        'Appendix F. Literature Review Search Terms and Strategy',
-        'Appendix L. Abbreviation List',
-        'References',
-      ],
-    });
-  });
-
-  it('keeps a section whose title only mentions references', () => {
-    expect(
-      groupBlocksIntoSections([
-        {
-          kind: 'heading',
-          level: 1,
-          text: 'Patient References and Values',
-          page: null,
-        },
-      ]).dropped,
-    ).toEqual([]);
+    ).toEqual([
+      {
+        sectionId: 'recommendations',
+        parentId: null,
+        title: 'Recommendations',
+        location: { kind: 'webpage' },
+        contentMd: 'We recommend a goal of <130 mmHg.',
+      },
+      {
+        sectionId: 'appendix-d-participant-list',
+        parentId: null,
+        title: 'Appendix D: Participant List',
+        location: { kind: 'webpage' },
+        contentMd: 'Jane Doe, MD',
+      },
+      {
+        sectionId: 'references',
+        parentId: null,
+        title: 'References',
+        location: { kind: 'webpage' },
+        contentMd: '1. Smith J. Trial. 2020.',
+      },
+    ]);
   });
 
   it('splits a pdf section longer than 12000 characters into one subsection per page', () => {
@@ -225,31 +240,28 @@ describe('groupBlocksIntoSections', () => {
         { kind: 'text', text: pageTwo, page: 2 },
         { kind: 'text', text: pageThree, page: 3 },
       ]),
-    ).toEqual({
-      sections: [
-        {
-          sectionId: 'adult-schedule',
-          parentId: null,
-          title: 'Adult Schedule',
-          location: { kind: 'pages', start: 2, end: 2 },
-          contentMd: '',
-        },
-        {
-          sectionId: 'page-2',
-          parentId: 'adult-schedule',
-          title: 'Page 2',
-          location: { kind: 'pages', start: 2, end: 2 },
-          contentMd: pageTwo,
-        },
-        {
-          sectionId: 'page-3',
-          parentId: 'adult-schedule',
-          title: 'Page 3',
-          location: { kind: 'pages', start: 3, end: 3 },
-          contentMd: pageThree,
-        },
-      ],
-      dropped: [],
-    });
+    ).toEqual([
+      {
+        sectionId: 'adult-schedule',
+        parentId: null,
+        title: 'Adult Schedule',
+        location: { kind: 'pages', start: 2, end: 2 },
+        contentMd: '',
+      },
+      {
+        sectionId: 'page-2',
+        parentId: 'adult-schedule',
+        title: 'Page 2',
+        location: { kind: 'pages', start: 2, end: 2 },
+        contentMd: pageTwo,
+      },
+      {
+        sectionId: 'page-3',
+        parentId: 'adult-schedule',
+        title: 'Page 3',
+        location: { kind: 'pages', start: 3, end: 3 },
+        contentMd: pageThree,
+      },
+    ]);
   });
 });

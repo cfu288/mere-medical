@@ -23,15 +23,6 @@ export type Section = {
 const MAX_PDF_SECTION_CHARS = 12000;
 const TEXT_BEFORE_FIRST_HEADING_TITLE = 'Opening text';
 
-// Appendices that hold no clinical guidance, titled as in the VA-DoD guidelines.
-const APPENDIX_TITLES = [
-  /^references$/,
-  /participant list/,
-  /abbreviation/,
-  /search terms and strategy/,
-  /recommendation categorization/,
-];
-
 type SectionInProgress = {
   title: string;
   parent: SectionInProgress | null;
@@ -44,18 +35,13 @@ type SectionInProgress = {
  * headings nest.
  *
  * - Text before the first heading becomes an "Opening text" section.
- * - It drops a section titled as a reference list, participant list,
- *   abbreviations, search strategy or recommendation categorization, with its
- *   subsections.
  * - It drops a section with no text and no subsections with text.
  * - A PDF section over 12,000 characters gets a "Page N" subsection per page.
  * - It makes section ids from titles, unique in the document. A
  *   repeated title gets `-2`, `-3` and so on.
  *
  * @param blocks `Block[]`. A document's blocks in reading order.
- * @returns `{ sections: Section[]; dropped: string[] }`. The sections in
- * reading order, and the titles of the dropped sections in that list.
- * A section with pages gives its first and last page as its location.
+ * @returns `Section[]`. The sections in reading order. A section with pages gives its first and last page as its location.
  *
  * @example
  * groupBlocksIntoSections([
@@ -65,22 +51,17 @@ type SectionInProgress = {
  *   { kind: 'heading', level: 1, text: 'References', page: null },
  *   { kind: 'text', text: '1. Smith.', page: null },
  * ]);
- * // {
- * //   sections: [
+ * // [
  * //     { sectionId: 'opening-text', parentId: null, title: 'Opening text', location: { kind: 'webpage' }, contentMd: 'Updated 2026.' },
  * //     { sectionId: 'goals', parentId: null, title: 'Goals', location: { kind: 'webpage' }, contentMd: 'Below 130.' },
- * //   ],
- * //   dropped: ['References'],
- * // }
+ * //     { sectionId: 'references', parentId: null, title: 'References', location: { kind: 'webpage' }, contentMd: '1. Smith.' },
+ * // ]
  */
-export function groupBlocksIntoSections(blocks: Block[]): {
-  sections: Section[];
-  dropped: string[];
-} {
+export function groupBlocksIntoSections(blocks: Block[]): Section[] {
   const sectionsInProgress = startNestedSectionAtEachHeading(blocks);
   const withLongPdfSectionsSplit =
     splitLongPdfSectionsByPage(sectionsInProgress);
-  return toFinalSectionsWithoutAppendicesOrEmpty(withLongPdfSectionsSplit);
+  return dropEmptySectionsAndAssignIds(withLongPdfSectionsSplit);
 }
 
 function startNestedSectionAtEachHeading(blocks: Block[]): SectionInProgress[] {
@@ -144,26 +125,10 @@ function splitLongPdfSectionsByPage(
   });
 }
 
-function toFinalSectionsWithoutAppendicesOrEmpty(all: SectionInProgress[]): {
-  sections: Section[];
-  dropped: string[];
-} {
-  const droppedSections = new Set<SectionInProgress>();
-  const dropped: string[] = [];
-  for (const section of all) {
-    if (section.parent && droppedSections.has(section.parent)) {
-      droppedSections.add(section);
-    } else if (isAppendixTitle(section.title)) {
-      droppedSections.add(section);
-      dropped.push(section.title);
-    }
-  }
-
+function dropEmptySectionsAndAssignIds(all: SectionInProgress[]): Section[] {
   const blank = new Set<SectionInProgress>();
   for (const section of [...all].reverse()) {
-    const children = all.filter(
-      (other) => other.parent === section && !droppedSections.has(other),
-    );
+    const children = all.filter((other) => other.parent === section);
     if (
       joinBlockText(section.body) === '' &&
       children.every((c) => blank.has(c))
@@ -176,7 +141,7 @@ function toFinalSectionsWithoutAppendicesOrEmpty(all: SectionInProgress[]): {
   const usedIds = new Set<string>();
   const sections: Section[] = [];
   for (const section of all) {
-    if (droppedSections.has(section) || blank.has(section)) {
+    if (blank.has(section)) {
       continue;
     }
     const base = slugifyTitle(section.title);
@@ -201,19 +166,11 @@ function toFinalSectionsWithoutAppendicesOrEmpty(all: SectionInProgress[]): {
       contentMd: joinBlockText(section.body),
     });
   }
-  return { sections, dropped };
+  return sections;
 }
 
 function joinBlockText(body: Block[]): string {
   return body.map((b) => b.text).join('\n\n');
-}
-
-function isAppendixTitle(title: string): boolean {
-  const normalized = title
-    .toLowerCase()
-    .replace(/^appendix [a-z0-9]+[.:]?\s*/, '')
-    .trim();
-  return APPENDIX_TITLES.some((pattern) => pattern.test(normalized));
 }
 
 function slugifyTitle(title: string): string {

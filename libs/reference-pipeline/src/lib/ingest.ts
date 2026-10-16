@@ -16,8 +16,6 @@ import { Source } from './sources';
  * - `outline`: for a written source, every kept section in document order.
  *   Each entry holds the section's nesting depth (0 for a top-level section),
  *   id, title and markdown length in characters.
- * - `dropped`: titles of sections left out by rule, such as reference lists
- *   and appendices. Empty when no rule dropped a section.
  *
  * @example
  * {
@@ -27,7 +25,6 @@ import { Source } from './sources';
  *     { depth: 0, sectionId: 'screening', title: 'Screening', chars: 14 },
  *     { depth: 1, sectionId: 'hypertension', title: 'Hypertension', chars: 23 },
  *   ],
- *   dropped: ['References'],
  * }
  */
 export type IngestReport =
@@ -40,9 +37,8 @@ export type IngestReport =
         title: string;
         chars: number;
       }[];
-      dropped: string[];
     }
-  | { id: string; status: 'empty'; dropped: string[] };
+  | { id: string; status: 'empty' };
 
 /**
  * Builds a new reference library at `path` from the configured `sources`.
@@ -80,7 +76,6 @@ export type IngestReport =
  * //     id: 'uspstf-a-and-b',
  * //     status: 'written',
  * //     outline: [...],
- * //     dropped: ['References'],
  * //   },
  * // ]
  */
@@ -97,38 +92,34 @@ export async function buildReferenceLibrary({
     source: Source;
     url: string;
     sections: Section[];
-    dropped: string[];
   }[] = [];
   for (const source of sources) {
     const { url, blocks } = await fetchSourceAsBlocks(source, fetchBytes);
-    parsed.push({ source, url, ...groupBlocksIntoSections(blocks) });
+    parsed.push({ source, url, sections: groupBlocksIntoSections(blocks) });
   }
 
   const building = `${path}.building`;
   rmSync(building, { force: true });
   const db = openReferencesDb(building);
   db.exec('BEGIN');
-  const reports = parsed.map(
-    ({ source, url, sections, dropped }): IngestReport => {
-      if (sections.length === 0) {
-        return { id: source.id, status: 'empty', dropped };
-      }
-      writeReference(db, {
-        id: source.id,
-        title: source.title,
-        edition: source.edition,
-        summary: source.summary,
-        url,
-        sections,
-      });
-      return {
-        id: source.id,
-        status: 'written',
-        outline: outlineWithDepth(sections),
-        dropped,
-      };
-    },
-  );
+  const reports = parsed.map(({ source, url, sections }): IngestReport => {
+    if (sections.length === 0) {
+      return { id: source.id, status: 'empty' };
+    }
+    writeReference(db, {
+      id: source.id,
+      title: source.title,
+      edition: source.edition,
+      summary: source.summary,
+      url,
+      sections,
+    });
+    return {
+      id: source.id,
+      status: 'written',
+      outline: outlineWithDepth(sections),
+    };
+  });
   db.exec('COMMIT');
   db.close();
   renameSync(building, path);

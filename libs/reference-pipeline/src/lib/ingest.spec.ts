@@ -31,7 +31,7 @@ function libraryPath(): string {
 }
 
 describe('buildReferenceLibrary', () => {
-  it('stores an html source with its configured description and its section tree, reporting the outline and dropped sections', async () => {
+  it('stores an html source with its configured description and its section tree, reporting the outline', async () => {
     const path = libraryPath();
     const report = await buildReferenceLibrary({
       path,
@@ -63,6 +63,7 @@ describe('buildReferenceLibrary', () => {
     ).toEqual([
       { section_id: 'screening', parent_id: null },
       { section_id: 'hypertension', parent_id: 'screening' },
+      { section_id: 'references', parent_id: null },
     ]);
     expect(report).toEqual([
       {
@@ -76,8 +77,8 @@ describe('buildReferenceLibrary', () => {
             title: 'Hypertension',
             chars: 23,
           },
+          { depth: 0, sectionId: 'references', title: 'References', chars: 10 },
         ],
-        dropped: ['References'],
       },
     ]);
   });
@@ -154,20 +155,18 @@ describe('buildReferenceLibrary', () => {
     ).toEqual([{ document_id: 'cdc-adult-schedule', section_id: 'adults' }]);
   });
 
-  it('reports a source that parses to nothing, with its dropped sections, and stores nothing for it', async () => {
+  it('reports a source that parses to no sections and stores nothing for it', async () => {
     const path = libraryPath();
 
     const report = await buildReferenceLibrary({
       path,
       sources: [USPSTF],
       fetchBytes: fakeFetch({
-        'https://example.com/ab': '<h1>References</h1><p>1. Smith 2020.</p>',
+        'https://example.com/ab': '<h1>Screening</h1><script>x()</script>',
       }),
     });
 
-    expect(report).toEqual([
-      { id: 'uspstf-a-and-b', status: 'empty', dropped: ['References'] },
-    ]);
+    expect(report).toEqual([{ id: 'uspstf-a-and-b', status: 'empty' }]);
     expect(
       openReferencesDb(path).prepare('SELECT id FROM documents').all(),
     ).toEqual([]);

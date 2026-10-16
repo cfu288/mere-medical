@@ -31,9 +31,6 @@ async function main() {
         console.log(`\n${report.id}: not added, its source parsed to nothing`);
         break;
     }
-    if (report.dropped.length > 0) {
-      console.log(`  dropped: ${report.dropped.join('; ')}`);
-    }
   }
   console.log(
     `\nwrote ${reports.filter((r) => r.status === 'written').length} reference(s) to ${LIBRARY_PATH}`,

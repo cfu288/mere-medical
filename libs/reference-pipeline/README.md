@@ -24,8 +24,6 @@ The same source gives the same sections.
 - Text before the first heading becomes an "Opening text" section.
 - The pipeline splits a PDF section over 12,000 characters into one subsection
   per page.
-- The pipeline drops appendices with no clinical guidance, such as reference
-  lists and abbreviation lists.
 - A section id comes from its title. It is unique within its reference.
 
 In HTML, a heading is an `<h1>` to `<h6>` element. In a PDF, a heading is a line
