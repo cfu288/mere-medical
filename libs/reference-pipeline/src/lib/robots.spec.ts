@@ -9,6 +9,22 @@ describe('parseCrawlDelaySeconds', () => {
     ).toEqual(5);
   });
 
+  it('reads the delay of a group that lists several user agents, one of them every agent', () => {
+    expect(
+      parseCrawlDelaySeconds(
+        'User-agent: googlebot\nUser-agent: *\nCrawl-delay: 3',
+      ),
+    ).toEqual(3);
+  });
+
+  it('starts a new group at a user agent line that follows a rule', () => {
+    expect(
+      parseCrawlDelaySeconds(
+        'User-agent: *\nDisallow: /admin/\nUser-agent: googlebot\nCrawl-delay: 9',
+      ),
+    ).toEqual(0);
+  });
+
   it('reads keys in any case', () => {
     expect(parseCrawlDelaySeconds('user-agent: *\ncrawl-delay: 2.5')).toEqual(
       2.5,
