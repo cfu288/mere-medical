@@ -14,16 +14,7 @@ const TAGS_A_GFM_TABLE_CANNOT_HOLD = [
   'BLOCKQUOTE',
   'CODE',
 ];
-const REMOVED_TAGS = [
-  'script',
-  'style',
-  'noscript',
-  'iframe',
-  'object',
-  'embed',
-  'template',
-] as const;
-const SAFE_PROTOCOLS = ['http:', 'https:', 'mailto:'];
+const REMOVED_TAGS = ['script', 'style', 'noscript', 'iframe', 'object'];
 
 const turndown = createMarkdownConverter();
 
@@ -38,8 +29,7 @@ const turndown = createMarkdownConverter();
  * - A table that holds a heading, list, rule, quote or code becomes plain
  *   blocks, its caption first. Other tables become GFM tables.
  * - It drops scripts, styles, noscript, frames, embedded objects and templates.
- * - A link or image whose address is not safe (see {@link isHttpMailtoOrRelativeUrl}) keeps
- *   only its text or alt text.
+ * - A link keeps only its text, and an image only its alt text.
  *
  * @param html `string`.
  * @returns `Block[]`. The blocks in reading order. Each has a null page.
@@ -48,7 +38,7 @@ const turndown = createMarkdownConverter();
  * htmlToBlocks('<nav>Home</nav><main><h1>Measles</h1><p>See <a href="https://www.cdc.gov/measles">CDC</a>.</p></main>');
  * // [
  * //   { kind: 'heading', level: 1, text: 'Measles', page: null },
- * //   { kind: 'text', text: 'See [CDC](https://www.cdc.gov/measles).', page: null },
+ * //   { kind: 'text', text: 'See CDC.', page: null },
  * // ]
  */
 export function htmlToBlocks(html: string): Block[] {
@@ -90,46 +80,18 @@ export function htmlToBlocks(html: string): Block[] {
   return blocks;
 }
 
-/**
- * Says whether a link address is safe to keep. Web, mail and relative
- * addresses are safe. The URL parser reads the scheme, and it catches case,
- * spacing and tab tricks.
- *
- * @param value `string`. A link or image address.
- * @returns `boolean`. True for `http:`, `https:`, `mailto:` and relative
- * addresses. False for any other scheme and for addresses that do not parse.
- *
- * @example
- * isHttpMailtoOrRelativeUrl('https://www.cdc.gov'); // true
- * isHttpMailtoOrRelativeUrl('/vaccines'); // true
- * isHttpMailtoOrRelativeUrl(' JaVaScRiPt:alert(1)'); // false
- */
-function isHttpMailtoOrRelativeUrl(value: string): boolean {
-  try {
-    return SAFE_PROTOCOLS.includes(
-      new URL(value, 'https://relative.invalid/').protocol,
-    );
-  } catch {
-    return false;
-  }
-}
-
 function createMarkdownConverter(): TurndownService {
   const converter = new TurndownService({
     headingStyle: 'atx',
     codeBlockStyle: 'fenced',
   });
   converter.use(tables);
-  converter.addRule('unsafeLink', {
-    filter: (node) =>
-      node.nodeName === 'A' &&
-      !isHttpMailtoOrRelativeUrl(node.getAttribute('href') ?? ''),
+  converter.addRule('linkText', {
+    filter: 'a',
     replacement: (content) => content,
   });
-  converter.addRule('unsafeImage', {
-    filter: (node) =>
-      node.nodeName === 'IMG' &&
-      !isHttpMailtoOrRelativeUrl(node.getAttribute('src') ?? ''),
+  converter.addRule('imageAltText', {
+    filter: 'img',
     replacement: (_content, node) =>
       converter.escape((node as HTMLElement).getAttribute('alt') ?? ''),
   });

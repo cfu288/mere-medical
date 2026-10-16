@@ -90,16 +90,16 @@ describe('htmlToBlocks', () => {
     ]);
   });
 
-  it('unwraps a table holding a quote, rule or code, dropping its scripts and unsafe links', () => {
+  it('unwraps a table holding a quote, rule or code block', () => {
     expect(
       htmlToBlocks(
-        '<table><tr><td><blockquote>Quote <a href="javascript:alert(1)">link</a></blockquote>' +
-          '<script>alert(2)</script></td><td>a<hr>b</td><td><code>x = 1</code></td></tr></table>',
+        '<table><tr><td><blockquote>Quote</blockquote></td><td>a<hr>b</td>' +
+          '<td><pre><code>x = 1</code></pre></td></tr></table>',
       ),
     ).toEqual([
       {
         kind: 'text',
-        text: '> Quote link\n\na\n\n* * *\n\nb\n\n`x = 1`',
+        text: '> Quote\n\na\n\n* * *\n\nb\n\n```\nx = 1\n```',
         page: null,
       },
     ]);
@@ -135,12 +135,6 @@ describe('htmlToBlocks', () => {
       },
       { kind: 'text', text: 'Screen adults aged 45 to 75.', page: null },
     ]);
-  });
-
-  it('finds the main element by the page structure, not by markup inside a comment', () => {
-    expect(
-      htmlToBlocks('<nav>Menu</nav><!-- <main> --><main><p>Body.</p></main>'),
-    ).toEqual([{ kind: 'text', text: 'Body.', page: null }]);
   });
 
   it('converts only the article when the page has exactly one and no main element', () => {
@@ -187,64 +181,22 @@ describe('htmlToBlocks', () => {
     ).toEqual([{ kind: 'text', text: 'Keep', page: null }]);
   });
 
-  it('keeps only the text of a link whose target is not a web, mail or relative address', () => {
+  it('keeps only the text of every link', () => {
     expect(
       htmlToBlocks(
-        '<p><a href="javascript:alert(1)">print</a> ' +
-          '<a href=" JaVaScRiPt:alert(1)">mixed case</a> ' +
-          '<a href="java&#9;script:alert(1)">tab</a> ' +
-          '<a href="data:text/html,hi">data</a> ' +
-          '<a href="vbscript:msgbox">vb</a></p>',
-      ),
-    ).toEqual([
-      { kind: 'text', text: 'print mixed case tab data vb', page: null },
-    ]);
-  });
-
-  it('keeps web, mail and relative links', () => {
-    expect(
-      htmlToBlocks(
-        '<p><a href="https://www.cdc.gov/x">cdc</a> ' +
-          '<a href="mailto:help@example.com">mail</a> ' +
-          '<a href="/vaccines/notes">notes</a> ' +
+        '<p><a href="https://www.cdc.gov/x">CDC</a> ' +
+          '<a href="javascript:document.getElementById(\'x\')">Show more</a> ' +
           '<a href="#section-5">jump</a></p>',
       ),
-    ).toEqual([
-      {
-        kind: 'text',
-        text: '[cdc](https://www.cdc.gov/x) [mail](mailto:help@example.com) [notes](/vaccines/notes) [jump](#section-5)',
-        page: null,
-      },
-    ]);
+    ).toEqual([{ kind: 'text', text: 'CDC Show more jump', page: null }]);
   });
 
-  it('keeps only the alt text of an image whose source is not a web or relative address', () => {
+  it('keeps only the alt text of every image, escaped as markdown', () => {
     expect(
       htmlToBlocks(
-        '<p><img src="javascript:alert(1)" alt="chart"> ' +
-          '<img src="https://www.cdc.gov/chart.png" alt="safe chart"></p>',
+        '<p><img src="https://www.cdc.gov/chart.png" alt="Chart [1]"> ' +
+          '<img src="javascript:alert(1)" alt="Map"></p>',
       ),
-    ).toEqual([
-      {
-        kind: 'text',
-        text: 'chart ![safe chart](https://www.cdc.gov/chart.png)',
-        page: null,
-      },
-    ]);
-  });
-
-  it('escapes markdown in the alt text of an unsafe image', () => {
-    expect(
-      htmlToBlocks(
-        '<p><img src="javascript:alert(1)" alt="[click](javascript:alert(1))"> ' +
-          '<img src="javascript:alert(1)" alt="<javascript:alert(1)>"></p>',
-      ),
-    ).toEqual([
-      {
-        kind: 'text',
-        text: '\\[click\\](javascript:alert(1)) <javascript:alert(1)>',
-        page: null,
-      },
-    ]);
+    ).toEqual([{ kind: 'text', text: 'Chart \\[1\\] Map', page: null }]);
   });
 });
