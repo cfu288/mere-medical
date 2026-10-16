@@ -42,6 +42,12 @@ describe('pdfLinesToBlocks', () => {
     ]);
   });
 
+  it('escapes a line holding only hash signs so markdown does not read it as a heading', () => {
+    expect(
+      pdfLinesToBlocks([{ page: 1, size: 11, y: 700, text: '#' }]),
+    ).toEqual([{ kind: 'text', text: '\\#', page: 1 }]);
+  });
+
   it('makes lines at least 2 points above the most common font size headings, larger sizes higher levels', () => {
     expect(
       pdfLinesToBlocks([
