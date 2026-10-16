@@ -7,10 +7,6 @@ export type Block =
   | { kind: 'heading'; level: number; text: string; page: number | null }
   | { kind: 'text'; text: string; page: number | null };
 
-export type Location =
-  | { kind: 'pages'; start: number; end: number }
-  | { kind: 'webpage' };
-
 /**
  * One heading of a stored document and the text under it, up to the next
  * heading. `textStart` and `textEnd` are offsets into the document's markdown.
@@ -20,7 +16,7 @@ export type Section = {
   sectionId: string;
   parentId: string | null;
   title: string;
-  location: Location;
+  pages: { start: number; end: number } | null;
   textStart: number;
   textEnd: number;
 };
@@ -40,8 +36,8 @@ const TEXT_BEFORE_FIRST_HEADING_TITLE = 'Opening text';
  *
  * @param blocks `Block[]`. A document's blocks in reading order.
  * @returns `{ markdown: string; sections: Section[] }`. The sections are in
- * reading order. A section with pages gives its first and last page as its
- * location.
+ * reading order. A PDF section's `pages` are its first and last page. They are
+ * null for a webpage.
  *
  * @example
  * blocksToDocument([
@@ -50,7 +46,7 @@ const TEXT_BEFORE_FIRST_HEADING_TITLE = 'Opening text';
  * ]);
  * // {
  * //   markdown: '# Goals\n\nBelow 130.',
- * //   sections: [{ sectionId: 'goals', parentId: null, title: 'Goals', location: { kind: 'webpage' }, textStart: 9, textEnd: 19 }],
+ * //   sections: [{ sectionId: 'goals', parentId: null, title: 'Goals', pages: null, textStart: 9, textEnd: 19 }],
  * // }
  */
 export function blocksToDocument(blocks: Block[]): {
@@ -70,10 +66,7 @@ export function blocksToDocument(blocks: Block[]): {
       sectionId: uniqueSlug(title, usedIds),
       parentId,
       title,
-      location:
-        page === null
-          ? { kind: 'webpage' }
-          : { kind: 'pages', start: page, end: page },
+      pages: page === null ? null : { start: page, end: page },
       textStart: markdown.length,
       textEnd: markdown.length,
     };
@@ -106,8 +99,8 @@ export function blocksToDocument(blocks: Block[]): {
         section.textStart = markdown.length - block.text.length;
       }
       section.textEnd = markdown.length;
-      if (block.page !== null && section.location.kind === 'pages') {
-        section.location.end = block.page;
+      if (block.page !== null && section.pages) {
+        section.pages.end = block.page;
       }
     }
   }

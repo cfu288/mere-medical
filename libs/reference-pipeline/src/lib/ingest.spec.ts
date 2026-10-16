@@ -88,7 +88,7 @@ describe('buildReferenceLibrary', () => {
     ]);
   });
 
-  it('stores a pdf source with page markers and page locations', async () => {
+  it('stores a pdf source with page markers and the pages of each section', async () => {
     const path = libraryPath();
     await buildReferenceLibrary({
       path,
@@ -105,7 +105,7 @@ describe('buildReferenceLibrary', () => {
         content_md:
           '<!-- page 1 -->\n\n# I. Introduction\n\nTdap booster every 10 years.\n\nBMI of 30 kg/m2 or more.',
         sections:
-          '[{"sectionId":"i-introduction","parentId":null,"title":"I. Introduction","location":{"kind":"pages","start":1,"end":1},"textStart":36,"textEnd":90}]',
+          '[{"sectionId":"i-introduction","parentId":null,"title":"I. Introduction","pages":{"start":1,"end":1},"textStart":36,"textEnd":90}]',
       },
     ]);
   });
