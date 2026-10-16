@@ -179,4 +179,24 @@ describe('pdfLinesToBlocks', () => {
       { kind: 'text', text: '40', page: 4 },
     ]);
   });
+
+  it('drops bare page numbers that rise with the page, even when they start after the first page', () => {
+    expect(
+      pdfLinesToBlocks([
+        { page: 1, size: 11, y: 700, text: 'Alpha body.' },
+        { page: 1, size: 9, y: 30, text: '3' },
+        { page: 2, size: 11, y: 700, text: 'Beta body.' },
+        { page: 2, size: 9, y: 30, text: '4' },
+        { page: 3, size: 11, y: 700, text: 'Gamma body.' },
+        { page: 3, size: 9, y: 30, text: '5' },
+        { page: 4, size: 11, y: 700, text: 'Delta body.' },
+        { page: 4, size: 9, y: 30, text: '6' },
+      ]),
+    ).toEqual([
+      { kind: 'text', text: 'Alpha body.', page: 1 },
+      { kind: 'text', text: 'Beta body.', page: 2 },
+      { kind: 'text', text: 'Gamma body.', page: 3 },
+      { kind: 'text', text: 'Delta body.', page: 4 },
+    ]);
+  });
 });

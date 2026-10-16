@@ -74,7 +74,8 @@ export async function readPdfLines(bytes: Uint8Array): Promise<PdfLine[]> {
  * - In a document of 4 or more pages, it drops a line that repeats on more than
  *   half the pages. Its place on the page does not matter. A running title is
  *   such a line. In a line with words, any number matches any other number.
- *   "Page 3" repeats "Page 4". A line of only digits matches only itself.
+ *   "Page 3" repeats "Page 4". A line of only digits repeats when it is the
+ *   page number plus the same amount on each page, as page numbers are.
  * - A line at least 2 points larger than the most common font size is a
  *   heading. Larger sizes are higher levels.
  * - Other lines join into a paragraph. A gap of more than 1.8 times the font
@@ -161,16 +162,18 @@ function dropLinesRepeatedOnMostPages(lines: PdfLine[]): PdfLine[] {
   }
   const pagesByKey = new Map<string, Set<number>>();
   for (const line of lines) {
-    const key = textIgnoringNumbersAndCase(line.text);
+    const key = repeatedLineKey(line);
     pagesByKey.set(key, (pagesByKey.get(key) ?? new Set()).add(line.page));
   }
   return lines.filter(
     (line) =>
-      (pagesByKey.get(textIgnoringNumbersAndCase(line.text))?.size ?? 0) <=
-      pageCount / 2,
+      (pagesByKey.get(repeatedLineKey(line))?.size ?? 0) <= pageCount / 2,
   );
 }
 
-function textIgnoringNumbersAndCase(text: string): string {
-  return /\p{L}/u.test(text) ? text.replace(/\d+/g, '#').toLowerCase() : text;
+function repeatedLineKey(line: PdfLine): string {
+  if (/^\d+$/.test(line.text)) {
+    return `page number ${Number(line.text) - line.page}`;
+  }
+  return line.text.replace(/\d+/g, '#').toLowerCase();
 }
