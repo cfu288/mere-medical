@@ -1,5 +1,5 @@
 import { mkdirSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { dirname, join } from 'path';
 
 import { createRateLimitedFetch } from './lib/fetchBytes';
 import { buildReferenceLibrary } from './lib/ingest';
@@ -11,7 +11,7 @@ const LIBRARY_PATH = join(ROOT, 'data', 'references.db');
 
 async function main() {
   const sources = parseSources(JSON.parse(readFileSync(SOURCES_PATH, 'utf8')));
-  mkdirSync(join(ROOT, 'data'), { recursive: true });
+  mkdirSync(dirname(LIBRARY_PATH), { recursive: true });
   const reports = await buildReferenceLibrary({
     path: LIBRARY_PATH,
     sources,

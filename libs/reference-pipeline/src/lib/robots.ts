@@ -2,7 +2,7 @@
  * Reads the crawl delay that a robots.txt sets for all user agents.
  *
  * Only a `Crawl-delay` in a group whose `User-agent` lines include `*` counts.
- * The fetch sends Node's default user agent. Only `*` applies to it.
+ * Node's fetch sends the user agent `node`, which only `*` matches here.
  * It ignores comments after `#` and matches keys in any case.
  *
  * @param robotsTxt `string`. The body of a robots.txt file.
@@ -14,7 +14,7 @@
  * // 5
  */
 export function parseCrawlDelaySeconds(robotsTxt: string): number {
-  let groupUserAgents: string[] = [];
+  let groupIsForAll = false;
   let groupHasRules = false;
   for (const raw of robotsTxt.split('\n')) {
     const line = raw.replace(/#.*/, '').trim();
@@ -25,11 +25,11 @@ export function parseCrawlDelaySeconds(robotsTxt: string): number {
     const key = line.slice(0, colon).trim().toLowerCase();
     const value = line.slice(colon + 1).trim();
     if (key === 'user-agent') {
-      groupUserAgents = groupHasRules ? [value] : [...groupUserAgents, value];
+      groupIsForAll = (!groupHasRules && groupIsForAll) || value === '*';
       groupHasRules = false;
     } else {
       groupHasRules = true;
-      if (key === 'crawl-delay' && groupUserAgents.includes('*')) {
+      if (key === 'crawl-delay' && groupIsForAll) {
         const seconds = Number(value);
         return Number.isFinite(seconds) && seconds > 0 ? seconds : 0;
       }
