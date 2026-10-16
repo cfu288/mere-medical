@@ -5,8 +5,8 @@ import { tables } from '@joplin/turndown-plugin-gfm';
 import { escapeMarkdown } from './escapeMarkdown';
 import { Block } from './sections';
 
-const HEADINGS = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
-const REMOVED = [
+const HEADING_TAGS = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
+const REMOVED_TAGS = [
   'script',
   'style',
   'noscript',
@@ -47,7 +47,7 @@ const turndown = createMarkdownConverter();
  */
 export function htmlToBlocks(html: string): Block[] {
   const doc = createDocument(html);
-  unwrapLayoutTables(doc);
+  unwrapTablesHoldingHeadingsOrLists(doc);
   const blocks: Block[] = [];
   let bufferedNodes: Node[] = [];
   const emitBufferedNodesAsText = () => {
@@ -64,9 +64,9 @@ export function htmlToBlocks(html: string): Block[] {
   const splitNodeAtHeadings = (node: Node) => {
     if (!isElement(node)) {
       bufferedNodes.push(node);
-    } else if (REMOVED.some((tag) => node.matches(tag))) {
+    } else if (REMOVED_TAGS.some((tag) => node.matches(tag))) {
       return;
-    } else if (HEADINGS.includes(node.nodeName)) {
+    } else if (HEADING_TAGS.includes(node.nodeName)) {
       emitBufferedNodesAsText();
       blocks.push({
         kind: 'heading',
@@ -74,7 +74,7 @@ export function htmlToBlocks(html: string): Block[] {
         text: collapsedTextOf(node),
         page: null,
       });
-    } else if (node.querySelector(HEADINGS.join(', '))) {
+    } else if (node.querySelector(HEADING_TAGS.join(', '))) {
       node.childNodes.forEach(splitNodeAtHeadings);
     } else {
       bufferedNodes.push(node);
@@ -110,31 +110,31 @@ function isHttpMailtoOrRelativeUrl(value: string): boolean {
 }
 
 function createMarkdownConverter(): TurndownService {
-  const service = new TurndownService({
+  const converter = new TurndownService({
     headingStyle: 'atx',
     codeBlockStyle: 'fenced',
   });
-  service.use(tables);
-  service.escape = escapeMarkdown;
-  service.addRule('unsafeLink', {
+  converter.use(tables);
+  converter.escape = escapeMarkdown;
+  converter.addRule('unsafeLink', {
     filter: (node) =>
       node.nodeName === 'A' &&
       !isHttpMailtoOrRelativeUrl(node.getAttribute('href') ?? ''),
     replacement: (content) => content,
   });
-  service.addRule('unsafeImage', {
+  converter.addRule('unsafeImage', {
     filter: (node) =>
       node.nodeName === 'IMG' &&
       !isHttpMailtoOrRelativeUrl(node.getAttribute('src') ?? ''),
     replacement: (_content, node) =>
-      service.escape((node as HTMLElement).getAttribute('alt') ?? ''),
+      converter.escape((node as HTMLElement).getAttribute('alt') ?? ''),
   });
-  service.remove([...REMOVED]);
-  return service;
+  converter.remove([...REMOVED_TAGS]);
+  return converter;
 }
 
-// A GFM table cell cannot hold a heading or a list. Tables with them are layout.
-function unwrapLayoutTables(doc: Document): void {
+// A GFM table cell cannot hold a heading or a list.
+function unwrapTablesHoldingHeadingsOrLists(doc: Document): void {
   for (const table of Array.from(doc.querySelectorAll('table'))) {
     if (!table.querySelector('h1, h2, h3, h4, h5, h6, ul, ol')) {
       continue;

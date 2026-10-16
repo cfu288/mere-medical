@@ -14,8 +14,8 @@
  * // 5
  */
 export function parseCrawlDelaySeconds(robotsTxt: string): number {
-  let agents: string[] = [];
-  let inRules = false;
+  let groupUserAgents: string[] = [];
+  let groupHasRules = false;
   for (const raw of robotsTxt.split('\n')) {
     const line = raw.replace(/#.*/, '').trim();
     const colon = line.indexOf(':');
@@ -25,11 +25,11 @@ export function parseCrawlDelaySeconds(robotsTxt: string): number {
     const key = line.slice(0, colon).trim().toLowerCase();
     const value = line.slice(colon + 1).trim();
     if (key === 'user-agent') {
-      agents = inRules ? [value] : [...agents, value];
-      inRules = false;
+      groupUserAgents = groupHasRules ? [value] : [...groupUserAgents, value];
+      groupHasRules = false;
     } else {
-      inRules = true;
-      if (key === 'crawl-delay' && agents.includes('*')) {
+      groupHasRules = true;
+      if (key === 'crawl-delay' && groupUserAgents.includes('*')) {
         const seconds = Number(value);
         return Number.isFinite(seconds) && seconds > 0 ? seconds : 0;
       }

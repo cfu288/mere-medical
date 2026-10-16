@@ -48,7 +48,7 @@ describe('groupBlocksIntoSections', () => {
     });
   });
 
-  it('keeps text before the first heading as an opening section', () => {
+  it('keeps text before the first heading as a section titled Opening text', () => {
     expect(
       groupBlocksIntoSections([
         { kind: 'text', text: 'Published by the task force.', page: null },

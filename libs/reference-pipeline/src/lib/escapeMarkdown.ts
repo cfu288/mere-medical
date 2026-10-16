@@ -1,6 +1,6 @@
 import TurndownService from 'turndown';
 
-const MARKUP_START = /<(?=[a-z/!?])/gi;
+const TAG_OR_AUTOLINK_START = /<(?=[a-z/!?])/gi;
 
 /**
  * Escapes text so markdown shows it as written. It applies turndown's own
@@ -15,5 +15,7 @@ const MARKUP_START = /<(?=[a-z/!?])/gi;
  * // 'See \\<b>\\[1\\]\\</b>, aim for <130'
  */
 export function escapeMarkdown(text: string): string {
-  return TurndownService.prototype.escape(text).replace(MARKUP_START, '\\<');
+  return TurndownService.prototype
+    .escape(text)
+    .replace(TAG_OR_AUTOLINK_START, '\\<');
 }

@@ -24,11 +24,12 @@ The same source gives the same sections.
 - Text before the first heading becomes an "Opening text" section.
 - The pipeline splits a PDF section over 12,000 characters into one subsection
   per page.
-- The pipeline drops back matter such as reference lists and abbreviation lists.
+- The pipeline drops appendices with no clinical guidance, such as reference
+  lists and abbreviation lists.
 - A section id comes from its title. It is unique within its reference.
 
 In HTML, a heading is an `<h1>` to `<h6>` element. In a PDF, a heading is a line
-at least 2pt larger than the body text.
+at least 2 points larger than the most common font size.
 
 ## Reading sections
 
@@ -80,7 +81,8 @@ These sections come from the VA-DoD hypertension guideline.
 ## Sources
 
 `sources.json` lists every reference. Each entry has an `id`, `title`,
-`edition`, `summary` and `type`. The agent picks a reference by its summary.
+`edition`, `summary` and `type`. `edition` is the version or date the publisher
+gives. The agent picks a reference by its summary.
 
 ```json
 {
@@ -98,11 +100,12 @@ There are three types.
 - `html` reads a web page from `url`. When the page has one `<main>` or one
   `<article>`, the pipeline reads only that element. It drops scripts, and
   unsafe links keep only their text.
-- `cdc-media` reads a CDC page through CDC's syndication API, without site
-  navigation. It takes a `mediaId` instead of a `url`. The id is in the page's
+- `cdc-media` reads a CDC page's text through CDC's content API, without the
+  site's menus. It takes a `mediaId` instead of a `url`. The id is in the page's
   [Media Library](https://tools.cdc.gov/medialibrary/index.aspx) address.
 - `pdf` reads a PDF from `url`. The pipeline drops lines that repeat on most
-  pages, such as running headers. Each section keeps its page numbers.
+  pages, such as a title at the top of each page. Each section keeps its page
+  numbers.
 
 ## Running
 

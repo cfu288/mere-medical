@@ -53,7 +53,7 @@ describe('htmlToBlocks', () => {
     ]);
   });
 
-  it('unwraps a layout table holding headings or lists into plain blocks', () => {
+  it('unwraps a table holding headings or lists into plain blocks', () => {
     expect(
       htmlToBlocks(
         '<table><tbody><tr>' +
@@ -74,7 +74,7 @@ describe('htmlToBlocks', () => {
     ]);
   });
 
-  it('unwraps a layout table that also has header cells', () => {
+  it('unwraps a table holding a heading that also has header cells', () => {
     expect(
       htmlToBlocks(
         '<table><tr><td><h2>Call 911</h2></td><td>Chest pain</td></tr>' +

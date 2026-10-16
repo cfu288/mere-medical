@@ -1,27 +1,27 @@
 import { z } from 'zod';
 
-const text = z.string().trim().min(1);
+const nonEmptyText = z.string().trim().min(1);
 
-const id = z
+const kebabCaseId = z
   .string()
   .trim()
   .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/);
 
-const common = {
-  id,
-  title: text,
-  edition: text,
-  summary: text,
+const fieldsEverySourceHas = {
+  id: kebabCaseId,
+  title: nonEmptyText,
+  edition: nonEmptyText,
+  summary: nonEmptyText,
 };
 
 const sourceSchema = z.discriminatedUnion('type', [
   z.object({
-    ...common,
+    ...fieldsEverySourceHas,
     type: z.enum(['html', 'pdf']),
     url: z.string().trim().url(),
   }),
   z.object({
-    ...common,
+    ...fieldsEverySourceHas,
     type: z.literal('cdc-media'),
     mediaId: z.coerce.number().int().positive(),
   }),

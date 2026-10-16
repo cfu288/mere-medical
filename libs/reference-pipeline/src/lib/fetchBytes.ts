@@ -6,10 +6,11 @@ const ATTEMPTS = 4;
 const FIRST_RETRY_WAIT_MS = 2000;
 const FETCH_TIMEOUT_MS = 120_000;
 
-type Host = { delayMs: number; lastRequestAt: number };
+type HostTiming = { delayMs: number; lastRequestAt: number };
 
 /**
- * Makes a fetch that is polite to each host it visits and returns the body.
+ * Makes a fetch that waits between requests to each host as its robots.txt
+ * asks, and returns the body.
  *
  * - On the first request to a host it reads that host's robots.txt once. A
  *   `Crawl-delay` for all user agents (`User-agent: *`) sets the wait between
@@ -21,7 +22,7 @@ type Host = { delayMs: number; lastRequestAt: number };
  * - It retries a 429 or 5xx response, or a thrown error, up to 4 attempts in
  *   all. The waits between attempts are 2, 4 and 8 seconds.
  * - Call it one request at a time. Two first requests to a host at once both
- *   read robots.txt and race on the wait.
+ *   read robots.txt and do not wait for each other.
  *
  * @param options Optional. Each field defaults to the real implementation. Only
  * tests pass their own.
@@ -53,14 +54,14 @@ export function createRateLimitedFetch({
   sleep?: (ms: number) => Promise<unknown>;
   now?: () => number;
 } = {}): (url: string) => Promise<Uint8Array> {
-  const hosts = new Map<string, Host>();
+  const hosts = new Map<string, HostTiming>();
   const fetchWithTimeout = (url: string) =>
     fetchImpl(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
 
-  const getHostCrawlDelay = async (origin: string): Promise<Host> => {
-    const known = hosts.get(origin);
-    if (known) {
-      return known;
+  const getHostCrawlDelay = async (origin: string): Promise<HostTiming> => {
+    const cached = hosts.get(origin);
+    if (cached) {
+      return cached;
     }
     const robots = await fetchWithTimeout(`${origin}/robots.txt`).catch(
       () => null,

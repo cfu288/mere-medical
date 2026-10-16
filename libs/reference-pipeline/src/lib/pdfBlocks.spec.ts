@@ -3,14 +3,14 @@ import { TWO_SIZE_PDF } from './__fixtures__/twoSizePdf';
 import { pdfLinesToBlocks, readPdfLines } from './pdfBlocks';
 
 describe('readPdfLines', () => {
-  it('reads each text line with its page, font size, and height on the page', async () => {
+  it('reads each text line with its page, font size, and vertical position on the page', async () => {
     expect(await readPdfLines(new TextEncoder().encode(TWO_SIZE_PDF))).toEqual([
       { page: 1, size: 14, y: 720, text: 'I. Introduction' },
       { page: 1, size: 11, y: 700, text: 'Tdap booster every 10 years.' },
     ]);
   });
 
-  it('joins text items drawn on one line into one line at the larger size', async () => {
+  it('joins pieces of text on one line into one line at the larger size', async () => {
     expect(
       await readPdfLines(new TextEncoder().encode(SPLIT_LINE_PDF)),
     ).toEqual([
@@ -21,7 +21,7 @@ describe('readPdfLines', () => {
 });
 
 describe('pdfLinesToBlocks', () => {
-  it('escapes markdown and markup in body text and leaves heading text plain', () => {
+  it('escapes markdown and markup in paragraph text and leaves heading text plain', () => {
     expect(
       pdfLinesToBlocks([
         { page: 1, size: 14, y: 700, text: 'Use of *Tdap* [1]' },
@@ -42,7 +42,7 @@ describe('pdfLinesToBlocks', () => {
     ]);
   });
 
-  it('makes lines at least 2pt above the body size headings, larger sizes higher levels', () => {
+  it('makes lines at least 2 points above the most common font size headings, larger sizes higher levels', () => {
     expect(
       pdfLinesToBlocks([
         { page: 1, size: 14, y: 700, text: 'I. Introduction' },
@@ -58,7 +58,7 @@ describe('pdfLinesToBlocks', () => {
     ]);
   });
 
-  it('treats a size only 1pt above the body as body text', () => {
+  it('treats a size only 1 point above the most common font size as paragraph text', () => {
     expect(
       pdfLinesToBlocks([
         { page: 1, size: 12, y: 700, text: 'Table 2. Strength' },

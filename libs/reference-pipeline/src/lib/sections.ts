@@ -21,10 +21,10 @@ export type Section = {
 
 // Font-size heading detection can miss PDF headings and leave one huge section.
 const MAX_PDF_SECTION_CHARS = 12000;
-const OPENING_TITLE = 'Opening text';
+const TEXT_BEFORE_FIRST_HEADING_TITLE = 'Opening text';
 
-// Back matter that holds no clinical guidance, titled as in the VA-DoD guidelines.
-const DROPPED_TITLES = [
+// Appendices that hold no clinical guidance, titled as in the VA-DoD guidelines.
+const APPENDIX_TITLES = [
   /^references$/,
   /participant list/,
   /abbreviation/,
@@ -32,9 +32,9 @@ const DROPPED_TITLES = [
   /recommendation categorization/,
 ];
 
-type Draft = {
+type SectionInProgress = {
   title: string;
-  parent: Draft | null;
+  parent: SectionInProgress | null;
   pages: number[];
   body: Block[];
 };
@@ -77,15 +77,16 @@ export function groupBlocksIntoSections(blocks: Block[]): {
   sections: Section[];
   dropped: string[];
 } {
-  const drafts = draftNestedSectionsFromHeadings(blocks);
-  const pdfDraftsSplitByPage = splitLongPdfSectionsByPage(drafts);
-  return toSectionsWithoutBackMatterOrEmpty(pdfDraftsSplitByPage);
+  const sectionsInProgress = startNestedSectionAtEachHeading(blocks);
+  const withLongPdfSectionsSplit =
+    splitLongPdfSectionsByPage(sectionsInProgress);
+  return toFinalSectionsWithoutAppendicesOrEmpty(withLongPdfSectionsSplit);
 }
 
-function draftNestedSectionsFromHeadings(blocks: Block[]): Draft[] {
-  const all: Draft[] = [];
-  const stack: { level: number; draft: Draft }[] = [];
-  let current: Draft | null = null;
+function startNestedSectionAtEachHeading(blocks: Block[]): SectionInProgress[] {
+  const all: SectionInProgress[] = [];
+  const stack: { level: number; section: SectionInProgress }[] = [];
+  let current: SectionInProgress | null = null;
   for (const block of blocks) {
     const pages = block.page === null ? [] : [block.page];
     if (block.kind === 'heading') {
@@ -94,15 +95,20 @@ function draftNestedSectionsFromHeadings(blocks: Block[]): Draft[] {
       }
       current = {
         title: block.text,
-        parent: stack[stack.length - 1]?.draft ?? null,
+        parent: stack[stack.length - 1]?.section ?? null,
         pages,
         body: [],
       };
-      stack.push({ level: block.level, draft: current });
+      stack.push({ level: block.level, section: current });
       all.push(current);
     } else {
       if (!current) {
-        current = { title: OPENING_TITLE, parent: null, pages: [], body: [] };
+        current = {
+          title: TEXT_BEFORE_FIRST_HEADING_TITLE,
+          parent: null,
+          pages: [],
+          body: [],
+        };
         all.push(current);
       }
       current.body.push(block);
@@ -112,85 +118,87 @@ function draftNestedSectionsFromHeadings(blocks: Block[]): Draft[] {
   return all;
 }
 
-function splitLongPdfSectionsByPage(all: Draft[]): Draft[] {
-  return all.flatMap((draft) => {
+function splitLongPdfSectionsByPage(
+  all: SectionInProgress[],
+): SectionInProgress[] {
+  return all.flatMap((section) => {
     if (
-      draft.pages.length === 0 ||
-      joinBlockText(draft.body).length <= MAX_PDF_SECTION_CHARS
+      section.pages.length === 0 ||
+      joinBlockText(section.body).length <= MAX_PDF_SECTION_CHARS
     ) {
-      return [draft];
+      return [section];
     }
-    const pages = [...new Set(draft.body.map((b) => b.page))];
+    const pages = [...new Set(section.body.map((b) => b.page))];
     const children = pages.map((page) => ({
       title: `Page ${page}`,
-      parent: draft,
+      parent: section,
       pages: page === null ? [] : [page],
-      body: draft.body.filter((b) => b.page === page),
+      body: section.body.filter((b) => b.page === page),
     }));
-    const headingPages = draft.pages.filter(
-      (p) => !draft.body.some((b) => b.page === p),
+    const headingPages = section.pages.filter(
+      (p) => !section.body.some((b) => b.page === p),
     );
-    draft.body = [];
-    draft.pages = headingPages.length > 0 ? headingPages : children[0].pages;
-    return [draft, ...children];
+    section.body = [];
+    section.pages = headingPages.length > 0 ? headingPages : children[0].pages;
+    return [section, ...children];
   });
 }
 
-function toSectionsWithoutBackMatterOrEmpty(all: Draft[]): {
+function toFinalSectionsWithoutAppendicesOrEmpty(all: SectionInProgress[]): {
   sections: Section[];
   dropped: string[];
 } {
-  const droppedDrafts = new Set<Draft>();
+  const droppedSections = new Set<SectionInProgress>();
   const dropped: string[] = [];
-  for (const draft of all) {
-    if (draft.parent && droppedDrafts.has(draft.parent)) {
-      droppedDrafts.add(draft);
-    } else if (isBackMatterTitle(draft.title)) {
-      droppedDrafts.add(draft);
-      dropped.push(draft.title);
+  for (const section of all) {
+    if (section.parent && droppedSections.has(section.parent)) {
+      droppedSections.add(section);
+    } else if (isAppendixTitle(section.title)) {
+      droppedSections.add(section);
+      dropped.push(section.title);
     }
   }
 
-  const blank = new Set<Draft>();
-  for (const draft of [...all].reverse()) {
+  const blank = new Set<SectionInProgress>();
+  for (const section of [...all].reverse()) {
     const children = all.filter(
-      (other) => other.parent === draft && !droppedDrafts.has(other),
+      (other) => other.parent === section && !droppedSections.has(other),
     );
     if (
-      joinBlockText(draft.body) === '' &&
+      joinBlockText(section.body) === '' &&
       children.every((c) => blank.has(c))
     ) {
-      blank.add(draft);
+      blank.add(section);
     }
   }
 
-  const ids = new Map<Draft, string>();
-  const taken = new Set<string>();
+  const ids = new Map<SectionInProgress, string>();
+  const usedIds = new Set<string>();
   const sections: Section[] = [];
-  for (const draft of all) {
-    if (droppedDrafts.has(draft) || blank.has(draft)) {
+  for (const section of all) {
+    if (droppedSections.has(section) || blank.has(section)) {
       continue;
     }
-    const base = slugifyTitle(draft.title);
+    const base = slugifyTitle(section.title);
     let sectionId = base;
-    for (let n = 2; taken.has(sectionId); n++) {
+    for (let n = 2; usedIds.has(sectionId); n++) {
       sectionId = `${base}-${n}`;
     }
-    taken.add(sectionId);
-    ids.set(draft, sectionId);
+    usedIds.add(sectionId);
+    ids.set(section, sectionId);
     sections.push({
       sectionId,
-      parentId: draft.parent ? ids.get(draft.parent) ?? null : null,
-      title: draft.title,
+      parentId: section.parent ? ids.get(section.parent) ?? null : null,
+      title: section.title,
       location:
-        draft.pages.length > 0
+        section.pages.length > 0
           ? {
               kind: 'pages',
-              start: Math.min(...draft.pages),
-              end: Math.max(...draft.pages),
+              start: Math.min(...section.pages),
+              end: Math.max(...section.pages),
             }
           : { kind: 'webpage' },
-      contentMd: joinBlockText(draft.body),
+      contentMd: joinBlockText(section.body),
     });
   }
   return { sections, dropped };
@@ -200,12 +208,12 @@ function joinBlockText(body: Block[]): string {
   return body.map((b) => b.text).join('\n\n');
 }
 
-function isBackMatterTitle(title: string): boolean {
+function isAppendixTitle(title: string): boolean {
   const normalized = title
     .toLowerCase()
     .replace(/^appendix [a-z0-9]+[.:]?\s*/, '')
     .trim();
-  return DROPPED_TITLES.some((pattern) => pattern.test(normalized));
+  return APPENDIX_TITLES.some((pattern) => pattern.test(normalized));
 }
 
 function slugifyTitle(title: string): string {

@@ -55,7 +55,7 @@ describe('createRateLimitedFetch', () => {
     ]);
   });
 
-  it('fails on a definite answer like not found without retrying', async () => {
+  it('fails on a 404 without retrying', async () => {
     const fetchImpl = jest
       .fn<Promise<Response>, [string, RequestInit | undefined]>()
       .mockResolvedValueOnce(new Response(null, { status: 404 }))
