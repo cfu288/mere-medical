@@ -31,7 +31,7 @@ const PART_MAX_CHARS = 10000;
  * Writes a document's blocks as one markdown document, and lists its sections,
  * one per heading, nested as the headings nest.
  *
- * - Headings become `#` lines, one `#` per level up to six.
+ * - Headings become `#` lines, one `#` per level.
  * - Text before the first heading becomes an "Opening text" section.
  * - A heading with no text of its own is still a section.
  * - It makes section ids from titles, unique in the document. A repeated title
@@ -88,7 +88,7 @@ export function blocksToDocument(blocks: Block[]): {
       ) {
         openHeadings.pop();
       }
-      append(`${'#'.repeat(Math.min(block.level, 6))} ${block.text}`);
+      append(`${'#'.repeat(block.level)} ${block.text}`);
       const parentId = openHeadings[openHeadings.length - 1]?.sectionId ?? null;
       const section = startSection(block.text, parentId);
       openHeadings.push({ level: block.level, sectionId: section.sectionId });

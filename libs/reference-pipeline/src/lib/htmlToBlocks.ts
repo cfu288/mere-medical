@@ -81,10 +81,7 @@ export function htmlToBlocks(html: string): Block[] {
 }
 
 function createMarkdownConverter(): TurndownService {
-  const converter = new TurndownService({
-    headingStyle: 'atx',
-    codeBlockStyle: 'fenced',
-  });
+  const converter = new TurndownService({ codeBlockStyle: 'fenced' });
   converter.use(tables);
   converter.addRule('linkText', {
     filter: 'a',

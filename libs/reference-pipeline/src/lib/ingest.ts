@@ -91,7 +91,7 @@ export async function buildReferenceLibrary({
   const db = openReferencesDb(building);
   const reports = parsed.map(
     ({ source, url, markdown, sections, parts }): IngestReport => {
-      if (sections.every((s) => s.textStart === s.textEnd)) {
+      if (parts.length === 0) {
         return { id: source.id, status: 'empty' };
       }
       writeReference(db, {
