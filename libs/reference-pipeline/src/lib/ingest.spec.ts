@@ -41,7 +41,7 @@ function libraryPath(): string {
 }
 
 describe('buildReferenceLibrary', () => {
-  it('stores an html source with its configured description, its markdown and its sections, reporting the outline', async () => {
+  it('stores an html source with its configured description, its markdown and its sections, reporting its section count', async () => {
     const path = libraryPath();
     const report = await buildReferenceLibrary({
       path,
@@ -74,16 +74,7 @@ describe('buildReferenceLibrary', () => {
       {
         id: 'uspstf-a-and-b',
         status: 'written',
-        outline: [
-          { depth: 0, sectionId: 'screening', title: 'Screening', chars: 14 },
-          {
-            depth: 1,
-            sectionId: 'hypertension',
-            title: 'Hypertension',
-            chars: 23,
-          },
-          { depth: 0, sectionId: 'references', title: 'References', chars: 10 },
-        ],
+        sections: 3,
       },
     ]);
   });

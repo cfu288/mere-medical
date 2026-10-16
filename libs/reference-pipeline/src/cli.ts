@@ -21,15 +21,10 @@ async function main() {
   for (const report of reports) {
     switch (report.status) {
       case 'written':
-        console.log(`\n${report.id}: ${report.outline.length} sections`);
-        for (const entry of report.outline) {
-          console.log(
-            `${'  '.repeat(entry.depth + 1)}${entry.sectionId} | ${entry.title} | ${entry.chars} chars`,
-          );
-        }
+        console.log(`${report.id}: ${report.sections} sections`);
         break;
       case 'empty':
-        console.log(`\n${report.id}: not added, its source parsed to nothing`);
+        console.log(`${report.id}: not added, its source parsed to no text`);
         break;
     }
   }

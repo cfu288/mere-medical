@@ -13,30 +13,16 @@ import { Source } from './sources';
  * - `id`: the source's configured id.
  * - `status`: `written` when the library holds it, or `empty` when it parsed to
  *   no text and the library holds nothing for it.
- * - `outline`: for a written source, every section in document order. Each
- *   entry holds the section's nesting depth (0 for a top-level section), id,
- *   title and text length in characters.
+ * - `sections`: for a written source, how many sections it has.
  *
  * @example
- * {
- *   id: 'uspstf-a-and-b',
- *   status: 'written',
- *   outline: [
- *     { depth: 0, sectionId: 'screening', title: 'Screening', chars: 14 },
- *     { depth: 1, sectionId: 'hypertension', title: 'Hypertension', chars: 23 },
- *   ],
- * }
+ * { id: 'uspstf-a-and-b', status: 'written', sections: 3 }
  */
 export type IngestReport =
   | {
       id: string;
       status: 'written';
-      outline: {
-        depth: number;
-        sectionId: string;
-        title: string;
-        chars: number;
-      }[];
+      sections: number;
     }
   | { id: string; status: 'empty' };
 
@@ -75,7 +61,7 @@ export type IngestReport =
  * //   {
  * //     id: 'uspstf-a-and-b',
  * //     status: 'written',
- * //     outline: [...],
+ * //     sections: 12,
  * //   },
  * // ]
  */
@@ -120,7 +106,7 @@ export async function buildReferenceLibrary({
       return {
         id: source.id,
         status: 'written',
-        outline: outlineWithDepth(sections),
+        sections: sections.length,
       };
     },
   );
@@ -172,21 +158,4 @@ async function fetchSourceAsBlocks(
 
 function htmlBytesToBlocks(bytes: Uint8Array): Block[] {
   return htmlToBlocks(new TextDecoder().decode(bytes));
-}
-
-function outlineWithDepth(
-  sections: Section[],
-): { depth: number; sectionId: string; title: string; chars: number }[] {
-  const depthOf = new Map<string, number>();
-  return sections.map((section) => {
-    const depth =
-      section.parentId === null ? 0 : (depthOf.get(section.parentId) ?? 0) + 1;
-    depthOf.set(section.sectionId, depth);
-    return {
-      depth,
-      sectionId: section.sectionId,
-      title: section.title,
-      chars: section.textEnd - section.textStart,
-    };
-  });
 }
