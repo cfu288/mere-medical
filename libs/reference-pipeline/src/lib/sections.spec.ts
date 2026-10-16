@@ -22,6 +22,7 @@ describe('blocksToDocument', () => {
           pdfPages: null,
           textStart: 13,
           textEnd: 27,
+          pageCount: 1,
         },
         {
           sectionId: 'hypertension',
@@ -30,6 +31,7 @@ describe('blocksToDocument', () => {
           pdfPages: null,
           textStart: 46,
           textEnd: 69,
+          pageCount: 1,
         },
         {
           sectionId: 'immunizations',
@@ -38,7 +40,13 @@ describe('blocksToDocument', () => {
           pdfPages: null,
           textStart: 88,
           textEnd: 105,
+          pageCount: 1,
         },
+      ],
+      pages: [
+        { sectionId: 'screening', page: 1, text: 'Screen adults.' },
+        { sectionId: 'hypertension', page: 1, text: 'Measure blood pressure.' },
+        { sectionId: 'immunizations', page: 1, text: 'Influenza yearly.' },
       ],
     });
   });
@@ -59,6 +67,7 @@ describe('blocksToDocument', () => {
           pdfPages: null,
           textStart: 13,
           textEnd: 13,
+          pageCount: 0,
         },
         {
           sectionId: 'children',
@@ -67,8 +76,10 @@ describe('blocksToDocument', () => {
           pdfPages: null,
           textStart: 30,
           textEnd: 30,
+          pageCount: 0,
         },
       ],
+      pages: [],
     });
   });
 
@@ -90,6 +101,7 @@ describe('blocksToDocument', () => {
           pdfPages: null,
           textStart: 0,
           textEnd: 28,
+          pageCount: 1,
         },
         {
           sectionId: 'scope',
@@ -98,7 +110,16 @@ describe('blocksToDocument', () => {
           pdfPages: null,
           textStart: 40,
           textEnd: 63,
+          pageCount: 1,
         },
+      ],
+      pages: [
+        {
+          sectionId: 'opening-text',
+          page: 1,
+          text: 'Published by the task force.',
+        },
+        { sectionId: 'scope', page: 1, text: 'Adults in primary care.' },
       ],
     });
   });
@@ -122,6 +143,7 @@ describe('blocksToDocument', () => {
           pdfPages: { start: 26, end: 26 },
           textStart: 39,
           textEnd: 39,
+          pageCount: 0,
         },
         {
           sectionId: 'blood-pressure-goals',
@@ -130,6 +152,14 @@ describe('blocksToDocument', () => {
           pdfPages: { start: 31, end: 33 },
           textStart: 84,
           textEnd: 158,
+          pageCount: 1,
+        },
+      ],
+      pages: [
+        {
+          sectionId: 'blood-pressure-goals',
+          page: 1,
+          text: 'We recommend a goal of <130 mmHg.\n\n<!-- page 33 -->\n\nDiscussion continues.',
         },
       ],
     });
@@ -152,6 +182,7 @@ describe('blocksToDocument', () => {
           pdfPages: null,
           textStart: 7,
           textEnd: 7,
+          pageCount: 0,
         },
         {
           sectionId: 'goals',
@@ -160,8 +191,10 @@ describe('blocksToDocument', () => {
           pdfPages: null,
           textStart: 18,
           textEnd: 38,
+          pageCount: 1,
         },
       ],
+      pages: [{ sectionId: 'goals', page: 1, text: 'A goal of <130 mmHg.' }],
     });
   });
 
@@ -185,6 +218,7 @@ describe('blocksToDocument', () => {
           pdfPages: null,
           textStart: 8,
           textEnd: 14,
+          pageCount: 1,
         },
         {
           sectionId: 'dose-2',
@@ -193,6 +227,7 @@ describe('blocksToDocument', () => {
           pdfPages: null,
           textStart: 24,
           textEnd: 31,
+          pageCount: 1,
         },
         {
           sectionId: 'dose-2-2',
@@ -201,8 +236,43 @@ describe('blocksToDocument', () => {
           pdfPages: null,
           textStart: 43,
           textEnd: 49,
+          pageCount: 1,
         },
       ],
+      pages: [
+        { sectionId: 'dose', page: 1, text: 'First.' },
+        { sectionId: 'dose-2', page: 1, text: 'Second.' },
+        { sectionId: 'dose-2-2', page: 1, text: 'Third.' },
+      ],
     });
+  });
+
+  it('splits a long section into pages of at most 10000 characters at paragraph breaks', () => {
+    const first = 'a'.repeat(6000);
+    const second = 'b'.repeat(6000);
+    expect(
+      blocksToDocument([
+        { kind: 'heading', level: 1, text: 'Doses', page: null },
+        { kind: 'text', text: first, page: null },
+        { kind: 'text', text: second, page: null },
+      ]).pages,
+    ).toEqual([
+      { sectionId: 'doses', page: 1, text: first },
+      { sectionId: 'doses', page: 2, text: second },
+    ]);
+  });
+
+  it('cuts a paragraph longer than a page at 10000 characters', () => {
+    const page = 'c'.repeat(10000);
+    const rest = 'c'.repeat(500);
+    expect(
+      blocksToDocument([
+        { kind: 'heading', level: 1, text: 'Table', page: null },
+        { kind: 'text', text: page + rest, page: null },
+      ]).pages,
+    ).toEqual([
+      { sectionId: 'table', page: 1, text: page },
+      { sectionId: 'table', page: 2, text: rest },
+    ]);
   });
 });

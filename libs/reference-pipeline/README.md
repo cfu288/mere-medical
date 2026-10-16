@@ -13,6 +13,9 @@ next heading. A guideline is too long to read at once, so the agent reads one
 section at a time. The row lists the sections, with where each one's text starts
 and ends in the markdown.
 
+A **page** is up to 10,000 characters of one section's text. The agent reads a
+long section one page at a time. Each page is one row in `pages_fts`.
+
 ## Converting a reference
 
 - In HTML, a heading is an `<h1>` to `<h6>` element. In a PDF, a heading is a
@@ -24,17 +27,21 @@ and ends in the markdown.
 - Text before the first heading becomes an "Opening text" section.
 - A heading with no text of its own is still a section. Its text is empty.
 - A section id comes from its title. It is unique within its reference.
+- Each section's text splits into pages of at most 10,000 characters. A page
+  ends at the last paragraph break that fits.
 
 The conversion is deterministic. The same source gives the same markdown and
 sections.
 
 ## Reading a reference
 
-1. Search reference titles and summaries in `documents_fts`.
-2. List one reference's sections. This is its outline.
-3. Read one section. Its text is `content_md` from `textStart` to `textEnd`. A
-   long section is read in parts. The offsets count JavaScript string positions,
-   so slice the text in JavaScript, not with SQLite's `substr`.
+1. Search reference titles and summaries in `documents_fts` to choose a
+   reference.
+2. List that reference's sections. This is its outline.
+3. Search that reference's pages in `pages_fts`, filtered by `document_id`. This
+   finds the section and page that mention a term. It never searches other
+   references.
+4. Read one page by `document_id`, `section_id` and `page`.
 
 A citation names the reference's title and url. It also names the section's
 pages.
@@ -52,11 +59,13 @@ CREATE TABLE documents (
   sections TEXT NOT NULL
 );
 CREATE VIRTUAL TABLE documents_fts USING fts5(id UNINDEXED, title, summary, tokenize = 'porter unicode61');
+CREATE VIRTUAL TABLE pages_fts USING fts5(document_id UNINDEXED, section_id UNINDEXED, page UNINDEXED, text, tokenize = 'porter unicode61');
 ```
 
 `content_md` is the whole reference as markdown. `sections` is a JSON list of
 its sections in reading order. `documents_fts` is a full-text index of titles
-and summaries.
+and summaries. `pages_fts` holds each page's text and indexes it. `textStart`
+and `textEnd` count JavaScript string positions in `content_md`.
 
 This entry of `sections` comes from the VA-DoD hypertension guideline.
 
@@ -66,12 +75,13 @@ This entry of `sections` comes from the VA-DoD hypertension guideline.
   "parentId": "ix-recommendations",
   "title": "B. Treatment Goals and General Approaches to Hypertension Management",
   "pdfPages": { "start": 33, "end": 41 },
-  "textStart": 78133,
-  "textEnd": 104700
+  "textStart": 78048,
+  "textEnd": 104585,
+  "pageCount": 3
 }
 ```
 
-`pdfPages` is null for a web page.
+`pdfPages` is null for a web page. `pageCount` is 0 for a section with no text.
 
 ## Sources
 

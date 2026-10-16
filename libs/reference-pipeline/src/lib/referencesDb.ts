@@ -1,6 +1,6 @@
 import { DatabaseSync } from 'node:sqlite';
 
-import { Section } from './sections';
+import { Page, Section } from './sections';
 
 export type ReferenceRecord = {
   id: string;
@@ -10,12 +10,17 @@ export type ReferenceRecord = {
   url: string;
   markdown: string;
   sections: Section[];
+  pages: Page[];
 };
 
 /**
- * Opens or creates a reference library. It creates the `documents` table and
- * its full-text search table, `documents_fts`, if they are missing. The search
- * table holds each reference's id, title and summary.
+ * Opens or creates a reference library, creating its tables if they are
+ * missing.
+ *
+ * - `documents` holds each reference, its markdown and its sections as JSON.
+ * - `documents_fts` searches each reference's title and summary.
+ * - `pages_fts` holds the text of each section page and searches it. A reader
+ *   reads a page from it by reference id, section id and page number.
  *
  * @param path `string`. A file path, or `':memory:'` for a library that is
  * not saved.
@@ -42,13 +47,20 @@ export function openReferencesDb(path: string): DatabaseSync {
       summary,
       tokenize = 'porter unicode61'
     );
+    CREATE VIRTUAL TABLE IF NOT EXISTS pages_fts USING fts5(
+      document_id UNINDEXED,
+      section_id UNINDEXED,
+      page UNINDEXED,
+      text,
+      tokenize = 'porter unicode61'
+    );
   `);
   return db;
 }
 
 /**
- * Adds a reference to the library with its markdown, and adds its title and
- * summary to the search table. It stores the sections as JSON.
+ * Adds a reference to the library with its markdown and its sections as JSON. It
+ * also adds the title and summary for search, and the text of each section page.
  *
  * @param db `DatabaseSync`. From {@link openReferencesDb}.
  * @param record `ReferenceRecord`. The reference, its markdown and its sections.
@@ -63,7 +75,8 @@ export function openReferencesDb(path: string): DatabaseSync {
  *   summary: 'Vaccine schedule',
  *   url: 'https://example.com/measles',
  *   markdown: '# Doses\n\nTwo doses.',
- *   sections: [{ sectionId: 'doses', parentId: null, title: 'Doses', pdfPages: null, textStart: 9, textEnd: 19 }],
+ *   sections: [{ sectionId: 'doses', parentId: null, title: 'Doses', pdfPages: null, textStart: 9, textEnd: 19, pageCount: 1 }],
+ *   pages: [{ sectionId: 'doses', page: 1, text: 'Two doses.' }],
  * });
  */
 export function writeReference(db: DatabaseSync, record: ReferenceRecord) {
@@ -81,4 +94,10 @@ export function writeReference(db: DatabaseSync, record: ReferenceRecord) {
   db.prepare(
     'INSERT INTO documents_fts (id, title, summary) VALUES (?, ?, ?)',
   ).run(record.id, record.title, record.summary);
+  const insertPage = db.prepare(
+    'INSERT INTO pages_fts (document_id, section_id, page, text) VALUES (?, ?, ?, ?)',
+  );
+  for (const page of record.pages) {
+    insertPage.run(record.id, page.sectionId, page.page, page.text);
+  }
 }

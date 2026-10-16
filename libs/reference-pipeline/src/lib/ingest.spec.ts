@@ -79,7 +79,7 @@ describe('buildReferenceLibrary', () => {
     ]);
   });
 
-  it('stores a pdf source with page markers and the pages of each section', async () => {
+  it('stores a pdf source with page markers, the pdf pages of each section and its text pages', async () => {
     const path = libraryPath();
     await buildReferenceLibrary({
       path,
@@ -96,7 +96,19 @@ describe('buildReferenceLibrary', () => {
         content_md:
           '<!-- page 1 -->\n\n# I. Introduction\n\nTdap booster every 10 years.\n\nBMI of 30 kg/m2 or more.',
         sections:
-          '[{"sectionId":"i-introduction","parentId":null,"title":"I. Introduction","pdfPages":{"start":1,"end":1},"textStart":36,"textEnd":90}]',
+          '[{"sectionId":"i-introduction","parentId":null,"title":"I. Introduction","pdfPages":{"start":1,"end":1},"textStart":36,"textEnd":90,"pageCount":1}]',
+      },
+    ]);
+    expect(
+      openReferencesDb(path)
+        .prepare('SELECT document_id, section_id, page, text FROM pages_fts')
+        .all(),
+    ).toEqual([
+      {
+        document_id: 'cdc-adult-schedule',
+        section_id: 'i-introduction',
+        page: 1,
+        text: 'Tdap booster every 10 years.\n\nBMI of 30 kg/m2 or more.',
       },
     ]);
   });
