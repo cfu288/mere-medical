@@ -8,18 +8,20 @@ converts each one to markdown, and saves them in a SQLite file.
 A **reference** is one published guideline or web page. Each reference is one
 row in `documents`. The row holds the whole reference as markdown.
 
-A **section** is one heading of a reference and the text under it, up to the
-next heading. A guideline is too long to read at once, so the agent reads one
-section at a time. The row lists the sections, with where each one's text starts
-and ends in the markdown.
+A **section** of a web page is one heading and the text under it, up to the next
+heading. A section of a PDF is one page of the PDF. A guideline is too long to
+read at once, so the agent reads one section at a time. The row lists the
+sections, with where each one's text starts and ends in the markdown.
 
-A **page** is up to 10,000 characters of one section's text. The agent reads a
-long section one page at a time. Each page is one row in `pages_fts`.
+A **page** is up to 10,000 characters of one section's text. It is not a PDF
+page. The agent reads a long section one page at a time. Each page is one row in
+`pages_fts`.
 
 ## Converting a reference
 
-- In HTML, a heading is an `<h1>` to `<h6>` element. In a PDF, a heading is a
-  line at least 2 points larger than the most common font size.
+- In HTML, a heading is an `<h1>` to `<h6>` element.
+- Most PDFs have no heading markup. Each PDF page becomes a section titled "Page
+  N".
 - Each heading becomes a `#` line in the markdown, one `#` per level.
 - Each new PDF page starts with a `<!-- page N -->` line.
 - A lower-level heading starts a subsection. `parentId` names the section above
@@ -67,17 +69,17 @@ its sections in reading order. `documents_fts` is a full-text index of titles
 and summaries. `pages_fts` holds each page's text and indexes it. `textStart`
 and `textEnd` count JavaScript string positions in `content_md`.
 
-This entry of `sections` comes from the VA-DoD hypertension guideline.
+This entry of `sections` is page 34 of the VA-DoD hypertension guideline.
 
 ```json
 {
-  "sectionId": "b-treatment-goals-and-general-approaches-to-hypertension-man",
-  "parentId": "ix-recommendations",
-  "title": "B. Treatment Goals and General Approaches to Hypertension Management",
-  "pdfPages": { "start": 33, "end": 41 },
-  "textStart": 78048,
-  "textEnd": 104585,
-  "pageCount": 3
+  "sectionId": "page-34",
+  "parentId": null,
+  "title": "Page 34",
+  "pdfPages": { "start": 34, "end": 34 },
+  "textStart": 79233,
+  "textEnd": 82977,
+  "pageCount": 1
 }
 ```
 
@@ -126,8 +128,5 @@ reports a source with no text and leaves it out. Requests to a host wait for the
 
 ## Known limits
 
-- VA-DoD recommendations have no headings of their own. Each chapter is one long
-  section.
-- Large-font cover page lines become sections.
-- A PDF that marks headings with bold instead of size becomes one "Opening text"
-  section.
+- A PDF's outline lists its pages, not its chapters. The agent finds the page it
+  needs by searching that reference's pages.

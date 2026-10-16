@@ -94,9 +94,9 @@ describe('buildReferenceLibrary', () => {
     ).toEqual([
       {
         content_md:
-          '<!-- page 1 -->\n\n# I. Introduction\n\nTdap booster every 10 years.\n\nBMI of 30 kg/m2 or more.',
+          '<!-- page 1 -->\n\n# Page 1\n\nI. Introduction\n\nTdap booster every 10 years.\n\nBMI of 30 kg/m2 or more.',
         sections:
-          '[{"sectionId":"i-introduction","parentId":null,"title":"I. Introduction","pdfPages":{"start":1,"end":1},"textStart":36,"textEnd":90,"pageCount":1}]',
+          '[{"sectionId":"page-1","parentId":null,"title":"Page 1","pdfPages":{"start":1,"end":1},"textStart":27,"textEnd":98,"pageCount":1}]',
       },
     ]);
     expect(
@@ -106,9 +106,9 @@ describe('buildReferenceLibrary', () => {
     ).toEqual([
       {
         document_id: 'cdc-adult-schedule',
-        section_id: 'i-introduction',
+        section_id: 'page-1',
         page: 1,
-        text: 'Tdap booster every 10 years.\n\nBMI of 30 kg/m2 or more.',
+        text: 'I. Introduction\n\nTdap booster every 10 years.\n\nBMI of 30 kg/m2 or more.',
       },
     ]);
   });
