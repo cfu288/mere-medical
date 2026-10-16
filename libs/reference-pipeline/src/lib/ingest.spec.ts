@@ -2,11 +2,21 @@ import { existsSync, mkdtempSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
-import { fakeFetch } from './__fixtures__/fakeFetch';
-import { TWO_SIZE_PDF } from './__fixtures__/twoSizePdf';
+import { ONE_PAGE_PDF } from './__fixtures__/onePagePdf';
 import { buildReferenceLibrary } from './ingest';
 import { openReferencesDb } from './referencesDb';
 import { Source } from './sources';
+
+/** Serves each url its listed body and fails on any url not listed. */
+function fakeFetch(bodies: Record<string, string>) {
+  return async (url: string): Promise<Uint8Array> => {
+    const body = bodies[url];
+    if (body === undefined) {
+      throw new Error(`no fake body for ${url}`);
+    }
+    return new TextEncoder().encode(body);
+  };
+}
 
 const USPSTF: Source = {
   id: 'uspstf-a-and-b',
@@ -83,7 +93,7 @@ describe('buildReferenceLibrary', () => {
     await buildReferenceLibrary({
       path,
       sources: [CDC_ADULT],
-      fetchBytes: fakeFetch({ 'https://example.com/adult.pdf': TWO_SIZE_PDF }),
+      fetchBytes: fakeFetch({ 'https://example.com/adult.pdf': ONE_PAGE_PDF }),
     });
 
     expect(
@@ -93,9 +103,9 @@ describe('buildReferenceLibrary', () => {
     ).toEqual([
       {
         content_md:
-          '<!-- page 1 -->\n\n# I. Introduction\n\nTdap booster every 10 years.',
+          '<!-- page 1 -->\n\n# I. Introduction\n\nTdap booster every 10 years.\n\nBMI of 30 kg/m2 or more.',
         sections:
-          '[{"sectionId":"i-introduction","parentId":null,"title":"I. Introduction","location":{"kind":"pages","start":1,"end":1},"textStart":36,"textEnd":64}]',
+          '[{"sectionId":"i-introduction","parentId":null,"title":"I. Introduction","location":{"kind":"pages","start":1,"end":1},"textStart":36,"textEnd":90}]',
       },
     ]);
   });

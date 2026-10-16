@@ -1,21 +1,12 @@
-import { SPLIT_LINE_PDF } from './__fixtures__/splitLinePdf';
-import { TWO_SIZE_PDF } from './__fixtures__/twoSizePdf';
+import { ONE_PAGE_PDF } from './__fixtures__/onePagePdf';
 import { pdfLinesToBlocks, readPdfLines } from './pdfBlocks';
 
 describe('readPdfLines', () => {
-  it('reads each text line with its page, font size, and vertical position on the page', async () => {
-    expect(await readPdfLines(new TextEncoder().encode(TWO_SIZE_PDF))).toEqual([
+  it('reads each line with its page, font size and position, joining pieces of a line at the larger size and keeping a raised superscript on its line', async () => {
+    expect(await readPdfLines(new TextEncoder().encode(ONE_PAGE_PDF))).toEqual([
       { page: 1, size: 14, y: 720, text: 'I. Introduction' },
       { page: 1, size: 11, y: 700, text: 'Tdap booster every 10 years.' },
-    ]);
-  });
-
-  it('joins pieces of text on one line into one line at the larger size', async () => {
-    expect(
-      await readPdfLines(new TextEncoder().encode(SPLIT_LINE_PDF)),
-    ).toEqual([
-      { page: 1, size: 14, y: 720, text: 'I. Introduction' },
-      { page: 1, size: 11, y: 700, text: 'Tdap booster every 10 years.' },
+      { page: 1, size: 11, y: 680, text: 'BMI of 30 kg/m2 or more.' },
     ]);
   });
 });

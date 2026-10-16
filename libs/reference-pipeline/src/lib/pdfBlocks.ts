@@ -12,8 +12,9 @@ const REPEATED_LINE_CHECK_MIN_PAGES = 4;
 /**
  * Reads the text lines of a PDF with pdf.js.
  *
- * It joins pieces of text at the same vertical position into one line, at the
- * largest of their font sizes. It collapses whitespace and skips empty lines.
+ * It joins pieces of text into one line until pdf.js marks the end of the line,
+ * at the largest of their font sizes. A raised superscript stays on its line.
+ * It collapses whitespace and skips empty lines.
  *
  * @param bytes `Uint8Array`. The PDF file.
  * @returns `Promise<PdfLine[]>`. Each line's page (from 1), font size, vertical
@@ -43,9 +44,6 @@ export async function readPdfLines(bytes: Uint8Array): Promise<PdfLine[]> {
           continue;
         }
         const y = Math.round(item.transform[5]);
-        if (lineInProgress && Math.abs(lineInProgress.y - y) > 1) {
-          lineInProgress = null;
-        }
         if (item.str) {
           const size = Math.round(item.height * 10) / 10;
           if (lineInProgress) {
