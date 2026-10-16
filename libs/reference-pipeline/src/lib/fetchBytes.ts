@@ -22,8 +22,7 @@ type HostTiming = { delayMs: number; lastRequestAt: number };
  * - It retries a 429 or 5xx response, a failed request or a body that fails to
  *   arrive, up to 4 attempts in all. The waits between attempts are 2, 4 and 8
  *   seconds, or the crawl delay when it is longer.
- * - Call it one request at a time. Two first requests to a host at once both
- *   read robots.txt and do not wait for each other.
+ * - Requests that start together share one read of a host's robots.txt.
  *
  * @param options Optional. Each field defaults to the real implementation. Only
  * tests pass their own.
@@ -51,24 +50,27 @@ export function createRateLimitedFetch({
   sleep?: (ms: number) => Promise<unknown>;
   now?: () => number;
 } = {}): (url: string) => Promise<Uint8Array> {
-  const hosts = new Map<string, HostTiming>();
+  const hosts = new Map<string, Promise<HostTiming>>();
   const fetchWithTimeout = (url: string) =>
     fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
 
-  const getHostTiming = async (origin: string): Promise<HostTiming> => {
+  const readHostTiming = async (origin: string): Promise<HostTiming> => {
+    const robotsTxt = await fetchWithTimeout(`${origin}/robots.txt`)
+      .then((response) => (response.ok ? response.text() : ''))
+      .catch(() => '');
+    return {
+      delayMs: parseCrawlDelaySeconds(robotsTxt) * 1000,
+      lastRequestAt: now(),
+    };
+  };
+  const getHostTiming = (origin: string): Promise<HostTiming> => {
     const cached = hosts.get(origin);
     if (cached) {
       return cached;
     }
-    const robotsTxt = await fetchWithTimeout(`${origin}/robots.txt`)
-      .then((response) => (response.ok ? response.text() : ''))
-      .catch(() => '');
-    const host = {
-      delayMs: parseCrawlDelaySeconds(robotsTxt) * 1000,
-      lastRequestAt: now(),
-    };
-    hosts.set(origin, host);
-    return host;
+    const timing = readHostTiming(origin);
+    hosts.set(origin, timing);
+    return timing;
   };
 
   return async (url) => {

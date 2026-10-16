@@ -137,4 +137,25 @@ describe('createRateLimitedFetch', () => {
     );
     expect(fetchImpl).toHaveBeenCalledTimes(5);
   });
+
+  it('reads robots.txt once when two first requests to a host start together', async () => {
+    const fetchImpl = jest
+      .fn<Promise<Response>, [string, RequestInit | undefined]>()
+      .mockImplementation(async (url) => new Response(url));
+    globalThis.fetch = fetchImpl as unknown as typeof fetch;
+    const fetchBytes = createRateLimitedFetch({
+      sleep: async () => undefined,
+      now: () => 1000,
+    });
+
+    await Promise.all([
+      fetchBytes('https://example.org/a'),
+      fetchBytes('https://example.org/b'),
+    ]);
+    expect(fetchImpl.mock.calls).toEqual([
+      ['https://example.org/robots.txt', { signal: expect.any(AbortSignal) }],
+      ['https://example.org/a', { signal: expect.any(AbortSignal) }],
+      ['https://example.org/b', { signal: expect.any(AbortSignal) }],
+    ]);
+  });
 });
