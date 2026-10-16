@@ -4,7 +4,7 @@ import { Block } from './sections';
 type PdfLine = { page: number; size: number; y: number; text: string };
 
 const HEADING_MIN_EXTRA_FONT_POINTS = 2;
-const SAME_PARAGRAPH_MAX_GAP_IN_LINE_HEIGHTS = 1.8;
+const SAME_PARAGRAPH_MAX_GAP_IN_FONT_SIZES = 1.8;
 const REPEATED_LINE_CHECK_MIN_PAGES = 4;
 
 /**
@@ -35,28 +35,27 @@ export async function readPdfLines(bytes: Uint8Array): Promise<PdfLine[]> {
     for (let page = 1; page <= doc.numPages; page++) {
       const content = await (await doc.getPage(page)).getTextContent();
       const pageLines: PdfLine[] = [];
-      let open = false;
+      let lineInProgress: PdfLine | null = null;
       for (const item of content.items) {
         if (!('str' in item)) {
           continue;
         }
         const y = Math.round(item.transform[5]);
-        const last = pageLines[pageLines.length - 1];
-        if (open && last && Math.abs(last.y - y) > 1) {
-          open = false;
+        if (lineInProgress && Math.abs(lineInProgress.y - y) > 1) {
+          lineInProgress = null;
         }
         if (item.str) {
           const size = Math.round(item.height * 10) / 10;
-          if (open && last) {
-            last.size = Math.max(last.size, size);
-            last.text += item.str;
+          if (lineInProgress) {
+            lineInProgress.size = Math.max(lineInProgress.size, size);
+            lineInProgress.text += item.str;
           } else {
-            pageLines.push({ page, size, y, text: item.str });
-            open = true;
+            lineInProgress = { page, size, y, text: item.str };
+            pageLines.push(lineInProgress);
           }
         }
         if (item.hasEOL) {
-          open = false;
+          lineInProgress = null;
         }
       }
       for (const line of pageLines) {
@@ -76,12 +75,13 @@ export async function readPdfLines(bytes: Uint8Array): Promise<PdfLine[]> {
  * Turns PDF lines into heading and text blocks.
  *
  * - In a document of 4 or more pages, it drops a line that repeats on more than
- *   half the pages. A title or page number at the top of each page is such a
- *   line.
+ *   half the pages. Its place on the page does not matter. A running title or a
+ *   page number is such a line.
  * - A line at least 2 points larger than the most common font size is a
  *   heading. Larger sizes are higher levels.
- * - Other lines join into a paragraph until a gap of more than 1.8 line
- *   heights, a move up the page, or a new page.
+ * - Other lines join into a paragraph. A gap of more than 1.8 times the font
+ *   size starts a new paragraph. So does a move up the page, a new font size or
+ *   a new page. Heading lines of the same size join the same way.
  * - It escapes paragraph text as markdown. Heading text stays plain.
  *
  * @param lines `PdfLine[]`. From {@link readPdfLines}.
@@ -110,32 +110,34 @@ export function pdfLinesToBlocks(lines: PdfLine[]): Block[] {
   ].sort((a, b) => b - a);
 
   const blocks: Block[] = [];
-  let previous: PdfLine | null = null;
+  let previous: { line: PdfLine; block: Block } | null = null;
   for (const line of linesWithoutRepeats) {
-    const level = headingSizes.indexOf(line.size) + 1;
-    const isHeading = level > 0;
-    const last = blocks[blocks.length - 1];
-    // A line above the previous one starts a new column or text box.
-    const continues =
-      previous !== null &&
-      last !== undefined &&
-      previous.page === line.page &&
-      previous.size === line.size &&
-      previous.y >= line.y &&
-      previous.y - line.y <= line.size * SAME_PARAGRAPH_MAX_GAP_IN_LINE_HEIGHTS;
-    if (continues && isHeading === (last.kind === 'heading')) {
-      last.text = `${last.text} ${line.text}`;
-    } else if (isHeading) {
-      blocks.push({ kind: 'heading', level, text: line.text, page: line.page });
-    } else {
-      blocks.push({ kind: 'text', text: line.text, page: line.page });
+    if (previous && continuesBlock(previous.line, line)) {
+      previous.block.text = `${previous.block.text} ${line.text}`;
+      previous = { line, block: previous.block };
+      continue;
     }
-    previous = line;
+    const level = headingSizes.indexOf(line.size) + 1;
+    const block: Block =
+      level > 0
+        ? { kind: 'heading', level, text: line.text, page: line.page }
+        : { kind: 'text', text: line.text, page: line.page };
+    blocks.push(block);
+    previous = { line, block };
   }
   return blocks.map((block) =>
     block.kind === 'text'
       ? { ...block, text: escapeMarkdown(block.text) }
       : block,
+  );
+}
+
+function continuesBlock(previous: PdfLine, line: PdfLine): boolean {
+  return (
+    previous.page === line.page &&
+    previous.size === line.size &&
+    previous.y >= line.y &&
+    previous.y - line.y <= line.size * SAME_PARAGRAPH_MAX_GAP_IN_FONT_SIZES
   );
 }
 
