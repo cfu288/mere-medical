@@ -1,8 +1,10 @@
-import { escapeMarkdown } from './escapeMarkdown';
+import TurndownService from 'turndown';
+
 import { Block } from './sections';
 
 type PdfLine = { page: number; size: number; y: number; text: string };
 
+const markdown = new TurndownService();
 const HEADING_MIN_EXTRA_FONT_POINTS = 2;
 const SAME_PARAGRAPH_MAX_GAP_IN_FONT_SIZES = 1.8;
 const REPEATED_LINE_CHECK_MIN_PAGES = 4;
@@ -127,7 +129,7 @@ export function pdfLinesToBlocks(lines: PdfLine[]): Block[] {
   }
   return blocks.map((block) =>
     block.kind === 'text'
-      ? { ...block, text: escapeMarkdown(block.text) }
+      ? { ...block, text: markdown.escape(block.text) }
       : block,
   );
 }

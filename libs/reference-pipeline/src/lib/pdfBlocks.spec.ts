@@ -21,7 +21,7 @@ describe('readPdfLines', () => {
 });
 
 describe('pdfLinesToBlocks', () => {
-  it('escapes markdown and markup in paragraph text and leaves heading text plain', () => {
+  it('escapes markdown in paragraph text and leaves heading text plain', () => {
     expect(
       pdfLinesToBlocks([
         { page: 1, size: 14, y: 700, text: 'Use of *Tdap* [1]' },
@@ -36,16 +36,10 @@ describe('pdfLinesToBlocks', () => {
       { kind: 'heading', level: 1, text: 'Use of *Tdap* [1]', page: 1 },
       {
         kind: 'text',
-        text: 'Give \\<b>one dose\\</b> of \\*Tdap\\* \\[1\\] by 3\\_months.',
+        text: 'Give <b>one dose</b> of \\*Tdap\\* \\[1\\] by 3\\_months.',
         page: 1,
       },
     ]);
-  });
-
-  it('escapes a line holding only hash signs so markdown does not read it as a heading', () => {
-    expect(
-      pdfLinesToBlocks([{ page: 1, size: 11, y: 700, text: '#' }]),
-    ).toEqual([{ kind: 'text', text: '\\#', page: 1 }]);
   });
 
   it('makes lines at least 2 points above the most common font size headings, larger sizes higher levels', () => {

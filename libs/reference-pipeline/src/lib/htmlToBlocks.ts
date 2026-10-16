@@ -2,7 +2,6 @@ import { createDocument } from '@mixmark-io/domino';
 import TurndownService from 'turndown';
 import { tables } from '@joplin/turndown-plugin-gfm';
 
-import { escapeMarkdown } from './escapeMarkdown';
 import { Block } from './sections';
 
 const HEADING_TAGS = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
@@ -41,8 +40,6 @@ const turndown = createMarkdownConverter();
  * - It drops scripts, styles, noscript, frames, embedded objects and templates.
  * - A link or image whose address is not safe (see {@link isHttpMailtoOrRelativeUrl}) keeps
  *   only its text or alt text.
- * - It escapes page text that spells a tag or a `<scheme:...>` link. Markdown
- *   shows that text as written.
  *
  * @param html `string`.
  * @returns `Block[]`. The blocks in reading order. Each has a null page.
@@ -123,7 +120,6 @@ function createMarkdownConverter(): TurndownService {
     codeBlockStyle: 'fenced',
   });
   converter.use(tables);
-  converter.escape = escapeMarkdown;
   converter.addRule('unsafeLink', {
     filter: (node) =>
       node.nodeName === 'A' &&

@@ -43,26 +43,6 @@ describe('blocksToDocument', () => {
     });
   });
 
-  it('escapes heading text in the markdown and keeps the section title plain', () => {
-    expect(
-      blocksToDocument([
-        { kind: 'heading', level: 1, text: '1. Use of *Tdap*', page: null },
-      ]),
-    ).toEqual({
-      markdown: '# 1\\. Use of \\*Tdap\\*',
-      sections: [
-        {
-          sectionId: '1-use-of-tdap',
-          parentId: null,
-          title: '1. Use of *Tdap*',
-          location: { kind: 'webpage' },
-          textStart: 21,
-          textEnd: 21,
-        },
-      ],
-    });
-  });
-
   it('prints a heading deeper than level 6 with six hash signs and keeps it nested', () => {
     expect(
       blocksToDocument([

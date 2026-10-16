@@ -1,5 +1,3 @@
-import { escapeMarkdown } from './escapeMarkdown';
-
 /**
  * One heading or run of text from a parsed document. A heading's text is plain.
  * A text block's text is markdown. `page` is the PDF page the block is on. It is
@@ -43,8 +41,7 @@ type SectionInProgress = {
  * Writes a document's blocks as one markdown document, and lists its sections,
  * one per heading, nested as the headings nest.
  *
- * - Headings become `#` lines, one `#` per level up to six, with their text
- *   escaped. The section title keeps the plain text.
+ * - Headings become `#` lines, one `#` per level up to six.
  * - Each new PDF page starts with a `<!-- page N -->` line.
  * - Text before the first heading becomes an "Opening text" section.
  * - A heading with no text of its own is still a section.
@@ -104,9 +101,7 @@ export function blocksToDocument(blocks: Block[]): {
       ) {
         openHeadings.pop();
       }
-      append(
-        `${'#'.repeat(Math.min(block.level, 6))} ${escapeMarkdown(block.text)}`,
-      );
+      append(`${'#'.repeat(Math.min(block.level, 6))} ${block.text}`);
       const parent = openHeadings[openHeadings.length - 1]?.section ?? null;
       const section = startSection(block.text, parent?.sectionId ?? null);
       openHeadings.push({ level: block.level, section });

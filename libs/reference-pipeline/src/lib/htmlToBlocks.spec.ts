@@ -233,7 +233,7 @@ describe('htmlToBlocks', () => {
     ]);
   });
 
-  it('keeps the alt text of an unsafe image as text, never as a markdown link or autolink', () => {
+  it('escapes markdown in the alt text of an unsafe image', () => {
     expect(
       htmlToBlocks(
         '<p><img src="javascript:alert(1)" alt="[click](javascript:alert(1))"> ' +
@@ -242,21 +242,7 @@ describe('htmlToBlocks', () => {
     ).toEqual([
       {
         kind: 'text',
-        text: '\\[click\\](javascript:alert(1)) \\<javascript:alert(1)>',
-        page: null,
-      },
-    ]);
-  });
-
-  it('keeps page text that spells a link or tag as text, leaving a less-than sign before a number alone', () => {
-    expect(
-      htmlToBlocks(
-        '<p>See &lt;javascript:alert(1)&gt; and &lt;b&gt;bold&lt;/b&gt;; aim for SBP &lt;130 mmHg</p>',
-      ),
-    ).toEqual([
-      {
-        kind: 'text',
-        text: 'See \\<javascript:alert(1)> and \\<b>bold\\</b>; aim for SBP <130 mmHg',
+        text: '\\[click\\](javascript:alert(1)) <javascript:alert(1)>',
         page: null,
       },
     ]);
