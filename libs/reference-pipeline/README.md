@@ -66,7 +66,9 @@ CREATE VIRTUAL TABLE sections_fts USING fts5(document_id UNINDEXED, section_id U
 -- plus one insert trigger per table that adds each new row to its index
 ```
 
-The `_fts` tables are full-text indexes. They hold no text of their own.
+`content_md` is a section's text as markdown. `page_start` and `page_end` are
+its PDF pages, and are null for a web page. The `_fts` tables are full-text
+indexes. They hold no text of their own.
 
 These sections come from the VA-DoD hypertension guideline.
 
@@ -96,13 +98,13 @@ gives. The agent picks a reference by its summary.
 There are three types.
 
 - `html` reads a web page from `url`. When the page has one `<main>` or one
-  `<article>`, the pipeline reads only that element. It drops scripts, and
-  unsafe links keep only their text.
+  `<article>`, the pipeline reads only that element. It drops scripts. A link
+  that is not http, https, mailto or relative keeps only its text.
 - `cdc-media` reads a CDC page's text through CDC's content API, without the
   site's menus. It takes a `mediaId` instead of a `url`. The id is in the page's
   [Media Library](https://tools.cdc.gov/medialibrary/index.aspx) address.
 - `pdf` reads a PDF from `url`. The pipeline drops lines that repeat on most
-  pages, such as a title at the top of each page. Each section keeps its page
+  pages, such as a running title or a page number. Each section keeps its page
   numbers.
 
 ## Running
@@ -112,9 +114,10 @@ npx tsx libs/reference-pipeline/src/cli.ts
 ```
 
 The run writes `libs/reference-pipeline/data/references.db` and prints each
-reference's outline. It builds a new file and then replaces the old one. If a
-fetch fails, the old file stays. The run reports a source with no sections and
-leaves it out. Requests to a host wait for the `Crawl-delay` in its robots.txt.
+reference's outline. It builds a new file and then replaces the old one. If any
+fetch fails, the run stops with an error and the old file stays. The run reports
+a source with no sections and leaves it out. Requests to a host wait for the
+`Crawl-delay` in its robots.txt.
 
 ## Known limits
 

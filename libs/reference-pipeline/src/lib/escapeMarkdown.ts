@@ -8,7 +8,8 @@ const TAG_OR_AUTOLINK_START = /<(?=[a-z/!?])/gi;
  * tag or a `<scheme:...>` link.
  *
  * @param text `string`. Plain text.
- * @returns `string`. Markdown that renders as `text`.
+ * @returns `string`. Markdown that renders as `text`, except that text spelling
+ * an HTML entity, such as `&amp;`, renders as the character.
  *
  * @example
  * escapeMarkdown('See <b>[1]</b>, aim for <130');
