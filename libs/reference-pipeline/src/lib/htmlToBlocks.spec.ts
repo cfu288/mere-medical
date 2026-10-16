@@ -90,6 +90,21 @@ describe('htmlToBlocks', () => {
     ]);
   });
 
+  it('unwraps a table holding a quote, rule or code, dropping its scripts and unsafe links', () => {
+    expect(
+      htmlToBlocks(
+        '<table><tr><td><blockquote>Quote <a href="javascript:alert(1)">link</a></blockquote>' +
+          '<script>alert(2)</script></td><td>a<hr>b</td><td><code>x = 1</code></td></tr></table>',
+      ),
+    ).toEqual([
+      {
+        kind: 'text',
+        text: '> Quote link\n\na\n\n* * *\n\nb\n\n`x = 1`',
+        page: null,
+      },
+    ]);
+  });
+
   it('converts only the main element when the page has one', () => {
     expect(
       htmlToBlocks(

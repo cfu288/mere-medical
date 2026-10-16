@@ -6,6 +6,15 @@ import { escapeMarkdown } from './escapeMarkdown';
 import { Block } from './sections';
 
 const HEADING_TAGS = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
+// The GFM table plugin outputs a table holding any of these as raw HTML.
+const TAGS_A_GFM_TABLE_CANNOT_HOLD = [
+  ...HEADING_TAGS,
+  'UL',
+  'OL',
+  'HR',
+  'BLOCKQUOTE',
+  'CODE',
+];
 const REMOVED_TAGS = [
   'script',
   'style',
@@ -27,8 +36,8 @@ const turndown = createMarkdownConverter();
  * - Each `<h1>` to `<h6>`, at any depth, becomes a heading block with its
  *   text.
  * - The content between headings becomes one markdown text block.
- * - A table that holds headings or lists becomes plain blocks. Other tables
- *   become GFM tables.
+ * - A table that holds a heading, list, rule, quote or code becomes plain
+ *   blocks. Other tables become GFM tables.
  * - It drops scripts, styles, noscript, frames, embedded objects and templates.
  * - A link or image whose address is not safe (see {@link isHttpMailtoOrRelativeUrl}) keeps
  *   only its text or alt text.
@@ -47,7 +56,7 @@ const turndown = createMarkdownConverter();
  */
 export function htmlToBlocks(html: string): Block[] {
   const doc = createDocument(html);
-  unwrapTablesHoldingHeadingsOrLists(doc);
+  unwrapTablesMarkdownCannotHold(doc);
   const blocks: Block[] = [];
   let bufferedNodes: Node[] = [];
   const emitBufferedNodesAsText = () => {
@@ -133,10 +142,9 @@ function createMarkdownConverter(): TurndownService {
   return converter;
 }
 
-// A GFM table cell cannot hold a heading or a list.
-function unwrapTablesHoldingHeadingsOrLists(doc: Document): void {
+function unwrapTablesMarkdownCannotHold(doc: Document): void {
   for (const table of Array.from(doc.querySelectorAll('table'))) {
-    if (!table.querySelector('h1, h2, h3, h4, h5, h6, ul, ol')) {
+    if (!table.querySelector(TAGS_A_GFM_TABLE_CANNOT_HOLD.join(', '))) {
       continue;
     }
     for (const cell of Array.from(table.querySelectorAll('td, th'))) {
