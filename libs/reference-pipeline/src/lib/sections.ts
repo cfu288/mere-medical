@@ -37,8 +37,8 @@ const PART_MAX_CHARS = 10000;
  * - It makes section ids from titles, unique in the document. A repeated title
  *   gets `-2`, `-3` and so on.
  * - It splits each section's text into parts of at most 10,000 characters. A
- *   part ends at the last paragraph break that fits. A longer paragraph is cut
- *   at 10,000 characters.
+ *   part ends at a paragraph break, line break or space (see
+ *   {@link splitIntoParts}).
  *
  * @param blocks `Block[]`. A document's blocks in reading order.
  * @returns `{ markdown: string; sections: Section[]; parts: Part[] }`. The
@@ -116,18 +116,36 @@ export function blocksToDocument(blocks: Block[]): {
   return { markdown, sections, parts };
 }
 
-function splitIntoParts(text: string): string[] {
+/**
+ * Splits text into parts of at most 10,000 characters. A part ends at the last
+ * paragraph break that fits, or else the last line break, or else the last
+ * space. Text with none of these is cut at 10,000 characters. The break itself
+ * belongs to no part.
+ *
+ * @param text `string`. One section's text.
+ * @returns `string[]`. The parts in order. Empty for empty text.
+ *
+ * @example
+ * splitIntoParts('Two doses.\n\nGive at 12 months.');
+ * // ['Two doses.\n\nGive at 12 months.']
+ */
+export function splitIntoParts(text: string): string[] {
   const parts: string[] = [];
   let start = 0;
   while (start < text.length) {
     let end = Math.min(start + PART_MAX_CHARS, text.length);
-    const paragraphBreak = text.lastIndexOf('\n\n', end);
-    if (end < text.length && paragraphBreak > start) {
-      end = paragraphBreak;
+    if (end < text.length) {
+      for (const separator of ['\n\n', '\n', ' ']) {
+        const at = text.lastIndexOf(separator, end);
+        if (at > start) {
+          end = at;
+          break;
+        }
+      }
     }
     parts.push(text.slice(start, end));
     start = end;
-    while (text[start] === '\n') {
+    while (/\s/.test(text.charAt(start))) {
       start++;
     }
   }

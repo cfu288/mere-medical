@@ -1,4 +1,4 @@
-import { blocksToDocument } from './sections';
+import { blocksToDocument, splitIntoParts } from './sections';
 
 describe('blocksToDocument', () => {
   it('writes one markdown document and nests deeper headings under the heading above them', () => {
@@ -194,35 +194,6 @@ describe('blocksToDocument', () => {
     });
   });
 
-  it('splits a long section into parts of at most 10000 characters at paragraph breaks', () => {
-    const first = 'a'.repeat(6000);
-    const second = 'b'.repeat(6000);
-    expect(
-      blocksToDocument([
-        { kind: 'heading', level: 1, text: 'Doses' },
-        { kind: 'text', text: first },
-        { kind: 'text', text: second },
-      ]).parts,
-    ).toEqual([
-      { sectionId: 'doses', part: 1, text: first },
-      { sectionId: 'doses', part: 2, text: second },
-    ]);
-  });
-
-  it('cuts a paragraph longer than a part at 10000 characters', () => {
-    const page = 'c'.repeat(10000);
-    const rest = 'c'.repeat(500);
-    expect(
-      blocksToDocument([
-        { kind: 'heading', level: 1, text: 'Table' },
-        { kind: 'text', text: page + rest },
-      ]).parts,
-    ).toEqual([
-      { sectionId: 'table', part: 1, text: page },
-      { sectionId: 'table', part: 2, text: rest },
-    ]);
-  });
-
   it('cuts a section id made from a long title to 60 characters', () => {
     expect(
       blocksToDocument([
@@ -249,5 +220,28 @@ describe('blocksToDocument', () => {
       ],
       parts: [],
     });
+  });
+});
+
+describe('splitIntoParts', () => {
+  const first = 'a'.repeat(6000);
+  const second = 'b'.repeat(6000);
+
+  it('ends a part at the last paragraph break that fits', () => {
+    expect(splitIntoParts(first + '\n\n' + second)).toEqual([first, second]);
+  });
+
+  it('ends a part at the last line break when no paragraph break fits', () => {
+    expect(splitIntoParts(first + '\n' + second)).toEqual([first, second]);
+  });
+
+  it('ends a part at the last space when no line break fits', () => {
+    expect(splitIntoParts(first + ' ' + second)).toEqual([first, second]);
+  });
+
+  it('cuts text with no break at 10000 characters', () => {
+    const full = 'c'.repeat(10000);
+    const rest = 'c'.repeat(500);
+    expect(splitIntoParts(full + rest)).toEqual([full, rest]);
   });
 });

@@ -28,7 +28,7 @@ long section one part at a time. Each part is one row in `parts_fts`.
 - A heading with no text of its own is still a section. Its text is empty.
 - A section id comes from its title. It is unique within its reference.
 - Each section's text splits into parts of at most 10,000 characters. A part
-  ends at the last paragraph break that fits.
+  ends at the last paragraph break, line break or space that fits.
 
 The conversion is deterministic. The same source gives the same markdown and
 sections.
