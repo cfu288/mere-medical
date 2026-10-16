@@ -19,8 +19,9 @@ type HostTiming = { delayMs: number; lastRequestAt: number };
  * - Each request waits until the host's delay passes after its last request,
  *   robots.txt included.
  * - It abandons a request after 120 seconds.
- * - It retries a 429 or 5xx response, or a thrown error, up to 4 attempts in
- *   all. The waits between attempts are 2, 4 and 8 seconds.
+ * - It retries a 429 or 5xx response, a failed request or a body that fails to
+ *   arrive, up to 4 attempts in all. The waits between attempts are 2, 4 and 8
+ *   seconds, or the crawl delay when it is longer.
  * - Call it one request at a time. Two first requests to a host at once both
  *   read robots.txt and do not wait for each other.
  *
@@ -58,32 +59,35 @@ export function createRateLimitedFetch({
   const fetchWithTimeout = (url: string) =>
     fetchImpl(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
 
-  const getHostCrawlDelay = async (origin: string): Promise<HostTiming> => {
+  const getHostTiming = async (origin: string): Promise<HostTiming> => {
     const cached = hosts.get(origin);
     if (cached) {
       return cached;
     }
-    const robots = await fetchWithTimeout(`${origin}/robots.txt`).catch(
-      () => null,
-    );
-    const delay = robots?.ok ? parseCrawlDelaySeconds(await robots.text()) : 0;
-    const host = { delayMs: delay * 1000, lastRequestAt: now() };
+    const robotsTxt = await fetchWithTimeout(`${origin}/robots.txt`)
+      .then((response) => (response.ok ? response.text() : ''))
+      .catch(() => '');
+    const host = {
+      delayMs: parseCrawlDelaySeconds(robotsTxt) * 1000,
+      lastRequestAt: now(),
+    };
     hosts.set(origin, host);
     return host;
   };
 
   return async (url) => {
-    const host = await getHostCrawlDelay(new URL(url).origin);
+    const host = await getHostTiming(new URL(url).origin);
     let failure = '';
     for (let n = 1; n <= ATTEMPTS; n++) {
-      if (n > 1) {
-        await sleep(FIRST_RETRY_WAIT_MS * 2 ** (n - 2));
-      }
-      await sleep(Math.max(0, host.lastRequestAt + host.delayMs - now()));
+      const retryWait = n > 1 ? FIRST_RETRY_WAIT_MS * 2 ** (n - 2) : 0;
+      const crawlWait = host.lastRequestAt + host.delayMs - now();
+      await sleep(Math.max(0, retryWait, crawlWait));
       host.lastRequestAt = now();
       let response: Response;
+      let body: ArrayBuffer;
       try {
         response = await fetchWithTimeout(url);
+        body = await response.arrayBuffer();
       } catch (e) {
         failure = e instanceof Error ? e.message : String(e);
         continue;
@@ -95,7 +99,7 @@ export function createRateLimitedFetch({
       if (!response.ok) {
         throw new Error(`GET ${url} returned ${response.status}`);
       }
-      return new Uint8Array(await response.arrayBuffer());
+      return new Uint8Array(body);
     }
     throw new Error(`GET ${url} failed after ${ATTEMPTS} attempts: ${failure}`);
   };

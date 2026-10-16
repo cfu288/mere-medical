@@ -44,15 +44,58 @@ describe('createRateLimitedFetch', () => {
     expect(await fetchBytes('https://example.com/a')).toEqual(
       new TextEncoder().encode('page'),
     );
-    expect(sleep.mock.calls).toEqual([
-      [0],
-      [2000],
-      [0],
-      [4000],
-      [0],
-      [8000],
-      [0],
-    ]);
+    expect(sleep.mock.calls).toEqual([[0], [2000], [4000], [8000]]);
+  });
+
+  it('retries a response whose body fails to arrive', async () => {
+    const fetchImpl = jest
+      .fn<Promise<Response>, [string, RequestInit | undefined]>()
+      .mockResolvedValueOnce(new Response(null, { status: 404 }))
+      .mockResolvedValueOnce(
+        new Response(
+          new ReadableStream({
+            start(controller) {
+              controller.error(new TypeError('terminated'));
+            },
+          }),
+        ),
+      )
+      .mockResolvedValueOnce(new Response('page'));
+    const fetchBytes = createRateLimitedFetch({
+      fetchImpl,
+      sleep: async () => undefined,
+      now: () => 1000,
+    });
+
+    expect(await fetchBytes('https://example.com/a')).toEqual(
+      new TextEncoder().encode('page'),
+    );
+  });
+
+  it('treats a robots.txt whose body fails to arrive as no crawl delay', async () => {
+    const fetchImpl = jest
+      .fn<Promise<Response>, [string, RequestInit | undefined]>()
+      .mockResolvedValueOnce(
+        new Response(
+          new ReadableStream({
+            start(controller) {
+              controller.error(new TypeError('terminated'));
+            },
+          }),
+        ),
+      )
+      .mockResolvedValueOnce(new Response('page'));
+    const sleep = jest.fn().mockResolvedValue(undefined);
+    const fetchBytes = createRateLimitedFetch({
+      fetchImpl,
+      sleep,
+      now: () => 1000,
+    });
+
+    expect(await fetchBytes('https://example.com/a')).toEqual(
+      new TextEncoder().encode('page'),
+    );
+    expect(sleep.mock.calls).toEqual([[0]]);
   });
 
   it('fails on a 404 without retrying', async () => {
