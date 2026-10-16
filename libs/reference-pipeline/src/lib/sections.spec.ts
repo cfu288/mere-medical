@@ -275,4 +275,34 @@ describe('blocksToDocument', () => {
       { sectionId: 'table', page: 2, text: rest },
     ]);
   });
+
+  it('cuts a section id made from a long title to 60 characters', () => {
+    expect(
+      blocksToDocument([
+        {
+          kind: 'heading',
+          level: 1,
+          text: 'B. Treatment Goals and General Approaches to Hypertension Management',
+          page: null,
+        },
+      ]),
+    ).toEqual({
+      markdown:
+        '# B. Treatment Goals and General Approaches to Hypertension Management',
+      sections: [
+        {
+          sectionId:
+            'b-treatment-goals-and-general-approaches-to-hypertension-man',
+          parentId: null,
+          title:
+            'B. Treatment Goals and General Approaches to Hypertension Management',
+          pdfPages: null,
+          textStart: 70,
+          textEnd: 70,
+          pageCount: 0,
+        },
+      ],
+      pages: [],
+    });
+  });
 });
