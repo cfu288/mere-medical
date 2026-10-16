@@ -56,6 +56,7 @@ const turndown = createMarkdownConverter();
  */
 export function htmlToBlocks(html: string): Block[] {
   const doc = createDocument(html);
+  removeElementsWithoutReadableText(doc);
   unwrapTablesMarkdownCannotHold(doc);
   const blocks: Block[] = [];
   let bufferedNodes: Node[] = [];
@@ -73,8 +74,6 @@ export function htmlToBlocks(html: string): Block[] {
   const splitNodeAtHeadings = (node: Node) => {
     if (!isElement(node)) {
       bufferedNodes.push(node);
-    } else if (REMOVED_TAGS.some((tag) => node.matches(tag))) {
-      return;
     } else if (HEADING_TAGS.includes(node.nodeName)) {
       emitBufferedNodesAsText();
       blocks.push({
@@ -138,8 +137,15 @@ function createMarkdownConverter(): TurndownService {
     replacement: (_content, node) =>
       converter.escape((node as HTMLElement).getAttribute('alt') ?? ''),
   });
-  converter.remove([...REMOVED_TAGS]);
   return converter;
+}
+
+function removeElementsWithoutReadableText(doc: Document): void {
+  for (const element of Array.from(
+    doc.querySelectorAll(REMOVED_TAGS.join(', ')),
+  )) {
+    element.parentNode?.removeChild(element);
+  }
 }
 
 function unwrapTablesMarkdownCannotHold(doc: Document): void {
