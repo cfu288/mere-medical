@@ -5,14 +5,14 @@ import { tables } from '@joplin/turndown-plugin-gfm';
 import { Block } from './sections';
 
 const HEADING_TAGS = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
-// The GFM table plugin outputs a table holding any of these as raw HTML.
+// A GFM table cell cannot hold these.
 const TAGS_A_GFM_TABLE_CANNOT_HOLD = [
   ...HEADING_TAGS,
   'UL',
   'OL',
   'HR',
   'BLOCKQUOTE',
-  'CODE',
+  'PRE',
 ];
 const REMOVED_TAGS = ['script', 'style', 'noscript', 'iframe', 'object'];
 
@@ -26,9 +26,9 @@ const turndown = createMarkdownConverter();
  * - Each `<h1>` to `<h6>`, at any depth, becomes a heading block with its
  *   text.
  * - The content between headings becomes one markdown text block.
- * - A table that holds a heading, list, rule, quote or code becomes plain
+ * - A table that holds a heading, list, rule, quote or code block becomes plain
  *   blocks, its caption first. Other tables become GFM tables.
- * - It drops scripts, styles, noscript, frames, embedded objects and templates.
+ * - It drops scripts, styles, noscript fallbacks, frames and objects.
  * - A link keeps only its text, and an image only its alt text.
  *
  * @param html `string`.

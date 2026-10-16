@@ -105,6 +105,21 @@ describe('htmlToBlocks', () => {
     ]);
   });
 
+  it('keeps a data table with inline code as a gfm table', () => {
+    expect(
+      htmlToBlocks(
+        '<table><thead><tr><th>Vaccine</th><th>Dose</th></tr></thead>' +
+          '<tbody><tr><td>Tdap</td><td><code>0.5 mL</code></td></tr></tbody></table>',
+      ),
+    ).toEqual([
+      {
+        kind: 'text',
+        text: '| Vaccine | Dose |\n| --- | --- |\n| Tdap | `0.5 mL` |',
+        page: null,
+      },
+    ]);
+  });
+
   it('keeps the caption of an unwrapped table before its cells', () => {
     expect(
       htmlToBlocks(
