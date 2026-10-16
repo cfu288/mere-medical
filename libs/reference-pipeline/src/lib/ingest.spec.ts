@@ -31,7 +31,7 @@ function libraryPath(): string {
 }
 
 describe('buildReferenceLibrary', () => {
-  it('stores an html source with its configured description and its section tree, reporting the outline', async () => {
+  it('stores an html source with its configured description, its markdown and its sections, reporting the outline', async () => {
     const path = libraryPath();
     const report = await buildReferenceLibrary({
       path,
@@ -45,7 +45,9 @@ describe('buildReferenceLibrary', () => {
 
     expect(
       db
-        .prepare('SELECT id, title, edition, summary, url FROM documents')
+        .prepare(
+          'SELECT id, title, edition, summary, url, content_md FROM documents',
+        )
         .all(),
     ).toEqual([
       {
@@ -54,16 +56,9 @@ describe('buildReferenceLibrary', () => {
         edition: 'Updated continuously',
         summary: 'Screening and prevention',
         url: 'https://example.com/ab',
+        content_md:
+          '# Screening\n\nScreen adults.\n\n## Hypertension\n\nMeasure blood pressure.\n\n# References\n\n1\\. Smith.',
       },
-    ]);
-    expect(
-      db
-        .prepare('SELECT section_id, parent_id FROM sections ORDER BY position')
-        .all(),
-    ).toEqual([
-      { section_id: 'screening', parent_id: null },
-      { section_id: 'hypertension', parent_id: 'screening' },
-      { section_id: 'references', parent_id: null },
     ]);
     expect(report).toEqual([
       {
@@ -83,7 +78,7 @@ describe('buildReferenceLibrary', () => {
     ]);
   });
 
-  it('stores a pdf source with page locations', async () => {
+  it('stores a pdf source with page markers and page locations', async () => {
     const path = libraryPath();
     await buildReferenceLibrary({
       path,
@@ -93,9 +88,16 @@ describe('buildReferenceLibrary', () => {
 
     expect(
       openReferencesDb(path)
-        .prepare('SELECT section_id, page_start, page_end FROM sections')
+        .prepare('SELECT content_md, sections FROM documents')
         .all(),
-    ).toEqual([{ section_id: 'i-introduction', page_start: 1, page_end: 1 }]);
+    ).toEqual([
+      {
+        content_md:
+          '<!-- page 1 -->\n\n# I. Introduction\n\nTdap booster every 10 years.',
+        sections:
+          '[{"sectionId":"i-introduction","parentId":null,"title":"I. Introduction","location":{"kind":"pages","start":1,"end":1},"textStart":36,"textEnd":64}]',
+      },
+    ]);
   });
 
   it('stores a cdc media source under the cdc page it syndicates', async () => {
@@ -149,13 +151,11 @@ describe('buildReferenceLibrary', () => {
     await buildReferenceLibrary({ path, sources: [adultPage], fetchBytes });
 
     expect(
-      openReferencesDb(path)
-        .prepare('SELECT document_id, section_id FROM sections')
-        .all(),
-    ).toEqual([{ document_id: 'cdc-adult-schedule', section_id: 'adults' }]);
+      openReferencesDb(path).prepare('SELECT id FROM documents').all(),
+    ).toEqual([{ id: 'cdc-adult-schedule' }]);
   });
 
-  it('reports a source that parses to no sections and stores nothing for it', async () => {
+  it('reports a source that parses to no text and stores nothing for it', async () => {
     const path = libraryPath();
 
     const report = await buildReferenceLibrary({
@@ -191,8 +191,8 @@ describe('buildReferenceLibrary', () => {
     ).rejects.toThrow('no fake body for https://example.com/adult.pdf');
 
     expect([
-      openReferencesDb(path).prepare('SELECT section_id FROM sections').all(),
+      openReferencesDb(path).prepare('SELECT content_md FROM documents').all(),
       existsSync(`${path}.building`),
-    ]).toEqual([[{ section_id: 'screening' }], false]);
+    ]).toEqual([[{ content_md: '# Screening\n\nScreen adults.' }], false]);
   });
 });

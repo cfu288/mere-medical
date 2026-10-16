@@ -8,16 +8,17 @@ export type ReferenceRecord = {
   edition: string;
   summary: string;
   url: string;
+  markdown: string;
   sections: Section[];
 };
 
 /**
- * Opens or creates a reference library. It creates the `documents` and
- * `sections` tables and their two full-text search tables if they are missing.
+ * Opens or creates a reference library. It creates the `documents` table and
+ * its full-text search table if they are missing.
  *
- * The search tables hold no text of their own. They index `documents` and
- * `sections`, and insert triggers add each new row to them. The pipeline writes
- * a library once and never edits it.
+ * The search table indexes each reference's title and summary and holds no text
+ * of its own. An insert trigger adds each new row to it. The pipeline writes a
+ * library once and never edits it.
  *
  * @param path `string`. A file path, or `':memory:'` for a library that is
  * not saved.
@@ -34,27 +35,9 @@ export function openReferencesDb(path: string): DatabaseSync {
       title      TEXT NOT NULL,
       edition    TEXT NOT NULL,
       summary    TEXT NOT NULL,
-      url        TEXT NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS sections (
-      document_id TEXT NOT NULL,
-      section_id  TEXT NOT NULL,
-      parent_id   TEXT,
-      position    INTEGER NOT NULL,
-      title       TEXT NOT NULL,
-      page_start  INTEGER,
-      page_end    INTEGER,
-      content_md  TEXT NOT NULL,
-      url         TEXT,
-      PRIMARY KEY (document_id, section_id)
-    );
-    CREATE VIRTUAL TABLE IF NOT EXISTS sections_fts USING fts5(
-      document_id UNINDEXED,
-      section_id UNINDEXED,
-      title,
-      content_md,
-      content = 'sections',
-      tokenize = 'porter unicode61'
+      url        TEXT NOT NULL,
+      content_md TEXT NOT NULL,
+      sections   TEXT NOT NULL
     );
     CREATE VIRTUAL TABLE IF NOT EXISTS documents_fts USING fts5(
       id UNINDEXED,
@@ -63,10 +46,6 @@ export function openReferencesDb(path: string): DatabaseSync {
       content = 'documents',
       tokenize = 'porter unicode61'
     );
-    CREATE TRIGGER IF NOT EXISTS sections_insert AFTER INSERT ON sections BEGIN
-      INSERT INTO sections_fts (rowid, document_id, section_id, title, content_md)
-        VALUES (new.rowid, new.document_id, new.section_id, new.title, new.content_md);
-    END;
     CREATE TRIGGER IF NOT EXISTS documents_insert AFTER INSERT ON documents BEGIN
       INSERT INTO documents_fts (rowid, id, title, summary)
         VALUES (new.rowid, new.id, new.title, new.summary);
@@ -76,17 +55,13 @@ export function openReferencesDb(path: string): DatabaseSync {
 }
 
 /**
- * Adds a reference and its sections to the library. Sections keep their order
- * in `record.sections` as their position.
- *
- * Call it inside a transaction. A failed write leaves the rows it wrote before
- * the failure.
+ * Adds a reference to the library with its markdown. It stores the sections as
+ * JSON.
  *
  * @param db `DatabaseSync`. From {@link openReferencesDb}.
- * @param record `ReferenceRecord`. The reference and its sections.
+ * @param record `ReferenceRecord`. The reference, its markdown and its sections.
  * @returns `void`.
- * @throws `Error` when the library already holds the reference, or two of the
- * record's sections share an id.
+ * @throws `Error` when the library already holds the reference.
  *
  * @example
  * writeReference(db, {
@@ -95,37 +70,20 @@ export function openReferencesDb(path: string): DatabaseSync {
  *   edition: '2026',
  *   summary: 'Vaccine schedule',
  *   url: 'https://example.com/measles',
- *   sections: [
- *     { sectionId: 'doses', parentId: null, title: 'Doses', location: { kind: 'webpage' }, contentMd: 'Two doses.' },
- *   ],
+ *   markdown: '# Doses\n\nTwo doses.',
+ *   sections: [{ sectionId: 'doses', parentId: null, title: 'Doses', location: { kind: 'webpage' }, textStart: 9, textEnd: 19 }],
  * });
- * db.prepare('SELECT document_id, section_id, title, content_md FROM sections').all();
- * // [{ document_id: 'measles', section_id: 'doses', title: 'Doses', content_md: 'Two doses.' }]
  */
 export function writeReference(db: DatabaseSync, record: ReferenceRecord) {
   db.prepare(
-    'INSERT INTO documents (id, title, edition, summary, url) VALUES (?, ?, ?, ?, ?)',
-  ).run(record.id, record.title, record.edition, record.summary, record.url);
-  const insertSection = db.prepare(
-    `INSERT INTO sections
-       (document_id, section_id, parent_id, position, title, page_start, page_end, content_md, url)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    'INSERT INTO documents (id, title, edition, summary, url, content_md, sections) VALUES (?, ?, ?, ?, ?, ?, ?)',
+  ).run(
+    record.id,
+    record.title,
+    record.edition,
+    record.summary,
+    record.url,
+    record.markdown,
+    JSON.stringify(record.sections),
   );
-  record.sections.forEach((section, position) => {
-    const pages =
-      section.location.kind === 'pages'
-        ? [section.location.start, section.location.end]
-        : [null, null];
-    insertSection.run(
-      record.id,
-      section.sectionId,
-      section.parentId,
-      position,
-      section.title,
-      pages[0],
-      pages[1],
-      section.contentMd,
-      section.location.kind === 'webpage' ? section.location.url ?? null : null,
-    );
-  });
 }

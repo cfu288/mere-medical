@@ -1,3 +1,5 @@
+import { escapeMarkdown } from './escapeMarkdown';
+
 /**
  * One heading or run of text from a parsed document. A heading's text is plain.
  * A text block's text is markdown. `page` is the PDF page the block is on. It is
@@ -9,151 +11,124 @@ export type Block =
 
 export type Location =
   | { kind: 'pages'; start: number; end: number }
-  | { kind: 'webpage'; url?: string };
+  | { kind: 'webpage' };
 
+/**
+ * One heading of a stored document and the text under it, up to the next
+ * heading. `textStart` and `textEnd` are offsets into the document's markdown.
+ * They are equal when the heading has no text of its own.
+ */
 export type Section = {
   sectionId: string;
   parentId: string | null;
   title: string;
   location: Location;
-  contentMd: string;
+  textStart: number;
+  textEnd: number;
 };
 
-// Font-size heading detection can miss PDF headings and leave one huge section.
-const MAX_PDF_SECTION_CHARS = 12000;
 const TEXT_BEFORE_FIRST_HEADING_TITLE = 'Opening text';
 
 type SectionInProgress = {
+  sectionId: string;
+  parentId: string | null;
   title: string;
-  parent: SectionInProgress | null;
   pages: number[];
-  body: Block[];
+  textStart: number;
+  textEnd: number;
+  hasText: boolean;
 };
 
 /**
- * Groups a document's blocks into sections, one per heading, nested as the
- * headings nest.
+ * Writes a document's blocks as one markdown document, and lists its sections,
+ * one per heading, nested as the headings nest.
  *
+ * - Headings become `#` lines, one `#` per level, with their text escaped. The
+ *   section title keeps the plain text.
+ * - Each new PDF page starts with a `<!-- page N -->` line.
  * - Text before the first heading becomes an "Opening text" section.
- * - It drops a section with no text and no subsections with text.
- * - A PDF section over 12,000 characters gets a "Page N" subsection per page.
- * - It makes section ids from titles, unique in the document. A
- *   repeated title gets `-2`, `-3` and so on.
+ * - A heading with no text of its own is still a section.
+ * - It makes section ids from titles, unique in the document. A repeated title
+ *   gets `-2`, `-3` and so on.
  *
  * @param blocks `Block[]`. A document's blocks in reading order.
- * @returns `Section[]`. The sections in reading order. A section with pages gives its first and last page as its location.
+ * @returns `{ markdown: string; sections: Section[] }`. The sections are in
+ * reading order. A section with pages gives its first and last page as its
+ * location.
  *
  * @example
- * groupBlocksIntoSections([
- *   { kind: 'text', text: 'Updated 2026.', page: null },
+ * blocksToDocument([
  *   { kind: 'heading', level: 1, text: 'Goals', page: null },
  *   { kind: 'text', text: 'Below 130.', page: null },
- *   { kind: 'heading', level: 1, text: 'References', page: null },
- *   { kind: 'text', text: '1. Smith.', page: null },
  * ]);
- * // [
- * //     { sectionId: 'opening-text', parentId: null, title: 'Opening text', location: { kind: 'webpage' }, contentMd: 'Updated 2026.' },
- * //     { sectionId: 'goals', parentId: null, title: 'Goals', location: { kind: 'webpage' }, contentMd: 'Below 130.' },
- * //     { sectionId: 'references', parentId: null, title: 'References', location: { kind: 'webpage' }, contentMd: '1. Smith.' },
- * // ]
+ * // {
+ * //   markdown: '# Goals\n\nBelow 130.',
+ * //   sections: [{ sectionId: 'goals', parentId: null, title: 'Goals', location: { kind: 'webpage' }, textStart: 9, textEnd: 19 }],
+ * // }
  */
-export function groupBlocksIntoSections(blocks: Block[]): Section[] {
-  const sectionsInProgress = startNestedSectionAtEachHeading(blocks);
-  const withLongPdfSectionsSplit =
-    splitLongPdfSectionsByPage(sectionsInProgress);
-  return dropEmptySectionsAndAssignIds(withLongPdfSectionsSplit);
-}
-
-function startNestedSectionAtEachHeading(blocks: Block[]): SectionInProgress[] {
-  const all: SectionInProgress[] = [];
-  const stack: { level: number; section: SectionInProgress }[] = [];
-  let current: SectionInProgress | null = null;
-  for (const block of blocks) {
-    const pages = block.page === null ? [] : [block.page];
-    if (block.kind === 'heading') {
-      while (stack.length > 0 && stack[stack.length - 1].level >= block.level) {
-        stack.pop();
-      }
-      current = {
-        title: block.text,
-        parent: stack[stack.length - 1]?.section ?? null,
-        pages,
-        body: [],
-      };
-      stack.push({ level: block.level, section: current });
-      all.push(current);
-    } else {
-      if (!current) {
-        current = {
-          title: TEXT_BEFORE_FIRST_HEADING_TITLE,
-          parent: null,
-          pages: [],
-          body: [],
-        };
-        all.push(current);
-      }
-      current.body.push(block);
-      current.pages.push(...pages);
-    }
-  }
-  return all;
-}
-
-function splitLongPdfSectionsByPage(
-  all: SectionInProgress[],
-): SectionInProgress[] {
-  return all.flatMap((section) => {
-    if (
-      section.pages.length === 0 ||
-      joinBlockText(section.body).length <= MAX_PDF_SECTION_CHARS
-    ) {
-      return [section];
-    }
-    const pages = [...new Set(section.body.map((b) => b.page))];
-    const children = pages.map((page) => ({
-      title: `Page ${page}`,
-      parent: section,
-      pages: page === null ? [] : [page],
-      body: section.body.filter((b) => b.page === page),
-    }));
-    const headingPages = section.pages.filter(
-      (p) => !section.body.some((b) => b.page === p),
-    );
-    section.body = [];
-    section.pages = headingPages.length > 0 ? headingPages : children[0].pages;
-    return [section, ...children];
-  });
-}
-
-function dropEmptySectionsAndAssignIds(all: SectionInProgress[]): Section[] {
-  const blank = new Set<SectionInProgress>();
-  for (const section of [...all].reverse()) {
-    const children = all.filter((other) => other.parent === section);
-    if (
-      joinBlockText(section.body) === '' &&
-      children.every((c) => blank.has(c))
-    ) {
-      blank.add(section);
-    }
-  }
-
-  const ids = new Map<SectionInProgress, string>();
+export function blocksToDocument(blocks: Block[]): {
+  markdown: string;
+  sections: Section[];
+} {
+  let markdown = '';
+  const append = (text: string) => {
+    markdown = markdown === '' ? text : `${markdown}\n\n${text}`;
+  };
+  const sections: SectionInProgress[] = [];
+  const openHeadings: { level: number; section: SectionInProgress }[] = [];
   const usedIds = new Set<string>();
-  const sections: Section[] = [];
-  for (const section of all) {
-    if (blank.has(section)) {
-      continue;
+  let page: number | null = null;
+  const startSection = (title: string, parentId: string | null) => {
+    const section: SectionInProgress = {
+      sectionId: uniqueSlug(title, usedIds),
+      parentId,
+      title,
+      pages: page === null ? [] : [page],
+      textStart: markdown.length,
+      textEnd: markdown.length,
+      hasText: false,
+    };
+    sections.push(section);
+    return section;
+  };
+
+  for (const block of blocks) {
+    if (block.page !== null && block.page !== page) {
+      page = block.page;
+      append(`<!-- page ${page} -->`);
     }
-    const base = slugifyTitle(section.title);
-    let sectionId = base;
-    for (let n = 2; usedIds.has(sectionId); n++) {
-      sectionId = `${base}-${n}`;
+    if (block.kind === 'heading') {
+      while (
+        openHeadings.length > 0 &&
+        openHeadings[openHeadings.length - 1].level >= block.level
+      ) {
+        openHeadings.pop();
+      }
+      append(`${'#'.repeat(block.level)} ${escapeMarkdown(block.text)}`);
+      const parent = openHeadings[openHeadings.length - 1]?.section ?? null;
+      const section = startSection(block.text, parent?.sectionId ?? null);
+      openHeadings.push({ level: block.level, section });
+    } else {
+      const section =
+        sections[sections.length - 1] ??
+        startSection(TEXT_BEFORE_FIRST_HEADING_TITLE, null);
+      append(block.text);
+      if (!section.hasText) {
+        section.textStart = markdown.length - block.text.length;
+        section.hasText = true;
+      }
+      section.textEnd = markdown.length;
+      if (block.page !== null) {
+        section.pages.push(block.page);
+      }
     }
-    usedIds.add(sectionId);
-    ids.set(section, sectionId);
-    sections.push({
-      sectionId,
-      parentId: section.parent ? ids.get(section.parent) ?? null : null,
+  }
+
+  return {
+    markdown,
+    sections: sections.map((section) => ({
+      sectionId: section.sectionId,
+      parentId: section.parentId,
       title: section.title,
       location:
         section.pages.length > 0
@@ -163,14 +138,20 @@ function dropEmptySectionsAndAssignIds(all: SectionInProgress[]): Section[] {
               end: Math.max(...section.pages),
             }
           : { kind: 'webpage' },
-      contentMd: joinBlockText(section.body),
-    });
-  }
-  return sections;
+      textStart: section.textStart,
+      textEnd: section.textEnd,
+    })),
+  };
 }
 
-function joinBlockText(body: Block[]): string {
-  return body.map((b) => b.text).join('\n\n');
+function uniqueSlug(title: string, usedIds: Set<string>): string {
+  const base = slugifyTitle(title);
+  let sectionId = base;
+  for (let n = 2; usedIds.has(sectionId); n++) {
+    sectionId = `${base}-${n}`;
+  }
+  usedIds.add(sectionId);
+  return sectionId;
 }
 
 function slugifyTitle(title: string): string {

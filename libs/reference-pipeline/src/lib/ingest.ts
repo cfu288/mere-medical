@@ -4,18 +4,18 @@ import { z } from 'zod';
 import { htmlToBlocks } from './htmlToBlocks';
 import { pdfLinesToBlocks, readPdfLines } from './pdfBlocks';
 import { openReferencesDb, writeReference } from './referencesDb';
-import { Block, Section, groupBlocksIntoSections } from './sections';
+import { Block, Section, blocksToDocument } from './sections';
 import { Source } from './sources';
 
 /**
  * What happened to one configured source, for the CLI to print.
  *
  * - `id`: the source's configured id.
- * - `status`: `written` when the library holds its sections, or `empty` when it
- *   parsed to no sections and the library holds nothing for it.
- * - `outline`: for a written source, every kept section in document order.
- *   Each entry holds the section's nesting depth (0 for a top-level section),
- *   id, title and markdown length in characters.
+ * - `status`: `written` when the library holds it, or `empty` when it parsed to
+ *   no text and the library holds nothing for it.
+ * - `outline`: for a written source, every section in document order. Each
+ *   entry holds the section's nesting depth (0 for a top-level section), id,
+ *   title and text length in characters.
  *
  * @example
  * {
@@ -47,7 +47,7 @@ export type IngestReport =
  * response rejects the promise and leaves any library at `path` as it was. It
  * then writes the library to `<path>.building` and renames it over `path`. A
  * reader of `path` sees the old library or the new one, never a partial one. It
- * reports a source that parsed to no sections as `empty` and does not store it.
+ * reports a source that parsed to no text as `empty` and does not store it.
  *
  * @param args.path `string`. Where the library file goes.
  * @param args.sources `Source[]`. Parsed configuration, from `parseSources`.
@@ -91,35 +91,39 @@ export async function buildReferenceLibrary({
   const parsed: {
     source: Source;
     url: string;
+    markdown: string;
     sections: Section[];
   }[] = [];
   for (const source of sources) {
     const { url, blocks } = await fetchSourceAsBlocks(source, fetchBytes);
-    parsed.push({ source, url, sections: groupBlocksIntoSections(blocks) });
+    parsed.push({ source, url, ...blocksToDocument(blocks) });
   }
 
   const building = `${path}.building`;
   rmSync(building, { force: true });
   const db = openReferencesDb(building);
   db.exec('BEGIN');
-  const reports = parsed.map(({ source, url, sections }): IngestReport => {
-    if (sections.length === 0) {
-      return { id: source.id, status: 'empty' };
-    }
-    writeReference(db, {
-      id: source.id,
-      title: source.title,
-      edition: source.edition,
-      summary: source.summary,
-      url,
-      sections,
-    });
-    return {
-      id: source.id,
-      status: 'written',
-      outline: outlineWithDepth(sections),
-    };
-  });
+  const reports = parsed.map(
+    ({ source, url, markdown, sections }): IngestReport => {
+      if (sections.every((s) => s.textStart === s.textEnd)) {
+        return { id: source.id, status: 'empty' };
+      }
+      writeReference(db, {
+        id: source.id,
+        title: source.title,
+        edition: source.edition,
+        summary: source.summary,
+        url,
+        markdown,
+        sections,
+      });
+      return {
+        id: source.id,
+        status: 'written',
+        outline: outlineWithDepth(sections),
+      };
+    },
+  );
   db.exec('COMMIT');
   db.close();
   renameSync(building, path);
@@ -187,7 +191,7 @@ function outlineWithDepth(
       depth,
       sectionId: section.sectionId,
       title: section.title,
-      chars: section.contentMd.length,
+      chars: section.textEnd - section.textStart,
     };
   });
 }

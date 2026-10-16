@@ -1,43 +1,42 @@
 # reference-pipeline
 
 Builds the clinical reference library for the chat agent. It fetches guidelines,
-splits them into sections, and saves them in a SQLite file.
+converts each one to markdown, and saves them in a SQLite file.
 
 ## Concepts
 
 A **reference** is one published guideline or web page. Each reference is one
-row in `documents`.
+row in `documents`. The row holds the whole reference as markdown.
 
-A **section** is one chunk of a reference. A guideline is too long to read at
-once, so the agent reads one section at a time. Each section is one row in
-`sections`.
+A **section** is one heading of a reference and the text under it, up to the
+next heading. A guideline is too long to read at once, so the agent reads one
+section at a time. The row lists the sections, with where each one's text starts
+and ends in the markdown.
 
-## Splitting a reference
+## Converting a reference
 
-The pipeline splits each reference at its headings. The split is deterministic.
-The same source gives the same sections.
-
-- A heading starts a section. The section holds the text up to the next heading.
-- A lower-level heading starts a subsection. `parent_id` names the section above
+- In HTML, a heading is an `<h1>` to `<h6>` element. In a PDF, a heading is a
+  line at least 2 points larger than the most common font size.
+- Each heading becomes a `#` line in the markdown, one `#` per level.
+- Each new PDF page starts with a `<!-- page N -->` line.
+- A lower-level heading starts a subsection. `parentId` names the section above
   it.
-- `position` is the reading order.
 - Text before the first heading becomes an "Opening text" section.
-- The pipeline splits a PDF section over 12,000 characters into one subsection
-  per page.
+- A heading with no text of its own is still a section. Its text is empty.
 - A section id comes from its title. It is unique within its reference.
 
-In HTML, a heading is an `<h1>` to `<h6>` element. In a PDF, a heading is a line
-at least 2 points larger than the most common font size.
+The conversion is deterministic. The same source gives the same markdown and
+sections.
 
-## Reading sections
+## Reading a reference
 
 1. Search reference titles and summaries in `documents_fts`.
-2. List one reference's outline. This is its sections in `position` order.
-3. Search the text of that reference's sections in `sections_fts`.
-4. Read one section by `document_id` and `section_id`.
+2. List one reference's sections. This is its outline.
+3. Read one section. Its text is `content_md` from `textStart` to `textEnd`. A
+   long section is read in parts.
 
 A citation names the reference's title and url. It also names the section's
-pages or url.
+pages.
 
 ## Schema
 
@@ -47,36 +46,32 @@ CREATE TABLE documents (
   title TEXT NOT NULL,
   edition TEXT NOT NULL,
   summary TEXT NOT NULL,
-  url TEXT NOT NULL
-);
-CREATE TABLE sections (
-  document_id TEXT NOT NULL,
-  section_id TEXT NOT NULL,
-  parent_id TEXT,
-  position INTEGER NOT NULL,
-  title TEXT NOT NULL,
-  page_start INTEGER,
-  page_end INTEGER,
+  url TEXT NOT NULL,
   content_md TEXT NOT NULL,
-  url TEXT,
-  PRIMARY KEY (document_id, section_id)
+  sections TEXT NOT NULL
 );
 CREATE VIRTUAL TABLE documents_fts USING fts5(id UNINDEXED, title, summary, content = 'documents', tokenize = 'porter unicode61');
-CREATE VIRTUAL TABLE sections_fts USING fts5(document_id UNINDEXED, section_id UNINDEXED, title, content_md, content = 'sections', tokenize = 'porter unicode61');
--- plus one insert trigger per table that adds each new row to its index
+-- plus an insert trigger that adds each new row to documents_fts
 ```
 
-`content_md` is a section's text as markdown. `page_start` and `page_end` are
-its PDF pages, and are null for a web page. The `_fts` tables are full-text
-indexes. They hold no text of their own.
+`content_md` is the whole reference as markdown. `sections` is a JSON list of
+its sections in reading order. `documents_fts` is a full-text index of titles
+and summaries. It holds no text of its own.
 
-These sections come from the VA-DoD hypertension guideline.
+This entry of `sections` comes from the VA-DoD hypertension guideline.
 
-| section_id                                                   | parent_id                                                    | position | title                                                                | page_start | page_end | content_md                                                       |
-| ------------------------------------------------------------ | ------------------------------------------------------------ | -------- | -------------------------------------------------------------------- | ---------- | -------- | ---------------------------------------------------------------- |
-| ix-recommendations                                           | va-dod-clinical-practice-guideline-for-diagnosis-and-managem | 30       | IX. Recommendations                                                  | 26         | 28       | "The evidence-based clinical practice recommendations listed..." |
-| b-treatment-goals-and-general-approaches-to-hypertension-man | ix-recommendations                                           | 37       | B. Treatment Goals and General Approaches to Hypertension Management | 33         | 33       | empty. Its text is split by page below                           |
-| page-34                                                      | b-treatment-goals-and-general-approaches-to-hypertension-man | 39       | Page 34                                                              | 34         | 34       | "cardiovascular causes.(80,81) An additional SR by Matsumoto..." |
+```json
+{
+  "sectionId": "b-treatment-goals-and-general-approaches-to-hypertension-man",
+  "parentId": "ix-recommendations",
+  "title": "B. Treatment Goals and General Approaches to Hypertension Management",
+  "location": { "kind": "pages", "start": 33, "end": 41 },
+  "textStart": 78133,
+  "textEnd": 104700
+}
+```
+
+`location` is `{ "kind": "webpage" }` for a web page.
 
 ## Sources
 
@@ -121,9 +116,8 @@ a source with no sections and leaves it out. Requests to a host wait for the
 
 ## Known limits
 
-- VA-DoD recommendations have no headings of their own. Their chapters are split
-  by page, so a page can start mid-sentence.
+- VA-DoD recommendations have no headings of their own. Each chapter is one long
+  section.
 - Large-font cover page lines become sections.
-- HTML sections are never split. A long page table is one long section.
 - A PDF that marks headings with bold instead of size becomes one "Opening text"
-  section, split by page.
+  section.
