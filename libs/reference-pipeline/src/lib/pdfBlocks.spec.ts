@@ -144,7 +144,7 @@ describe('pdfLinesToBlocks', () => {
     ]);
   });
 
-  it('drops lines repeated on more than half the pages, ignoring digits', () => {
+  it('drops lines repeated on more than half the pages, ignoring the digits in lines with words', () => {
     expect(
       pdfLinesToBlocks([
         { page: 1, size: 11, y: 700, text: 'Alpha body.' },
@@ -161,6 +161,22 @@ describe('pdfLinesToBlocks', () => {
       { kind: 'text', text: 'Beta body.', page: 2 },
       { kind: 'text', text: 'Gamma body.', page: 3 },
       { kind: 'text', text: 'Delta body.', page: 4 },
+    ]);
+  });
+
+  it('keeps lines of bare numbers that differ from page to page', () => {
+    expect(
+      pdfLinesToBlocks([
+        { page: 1, size: 11, y: 700, text: '10' },
+        { page: 2, size: 11, y: 700, text: '25' },
+        { page: 3, size: 11, y: 700, text: '5' },
+        { page: 4, size: 11, y: 700, text: '40' },
+      ]),
+    ).toEqual([
+      { kind: 'text', text: '10', page: 1 },
+      { kind: 'text', text: '25', page: 2 },
+      { kind: 'text', text: '5', page: 3 },
+      { kind: 'text', text: '40', page: 4 },
     ]);
   });
 });

@@ -72,8 +72,9 @@ export async function readPdfLines(bytes: Uint8Array): Promise<PdfLine[]> {
  * Turns PDF lines into heading and text blocks.
  *
  * - In a document of 4 or more pages, it drops a line that repeats on more than
- *   half the pages. Its place on the page does not matter. A running title or a
- *   page number is such a line.
+ *   half the pages. Its place on the page does not matter. A running title is
+ *   such a line. In a line with words, any number matches any other number.
+ *   "Page 3" repeats "Page 4". A line of only digits matches only itself.
  * - A line at least 2 points larger than the most common font size is a
  *   heading. Larger sizes are higher levels.
  * - Other lines join into a paragraph. A gap of more than 1.8 times the font
@@ -171,5 +172,5 @@ function dropLinesRepeatedOnMostPages(lines: PdfLine[]): PdfLine[] {
 }
 
 function textIgnoringNumbersAndCase(text: string): string {
-  return text.replace(/\d+/g, '#').toLowerCase();
+  return /\p{L}/u.test(text) ? text.replace(/\d+/g, '#').toLowerCase() : text;
 }
