@@ -1,6 +1,12 @@
 import { createRateLimitedFetch } from './fetchBytes';
 
 describe('createRateLimitedFetch', () => {
+  const realFetch = globalThis.fetch;
+
+  afterEach(() => {
+    globalThis.fetch = realFetch;
+  });
+
   it('waits out the crawl delay of a host and gives every request a timeout', async () => {
     const fetchImpl = jest
       .fn<Promise<Response>, [string, RequestInit | undefined]>()
@@ -8,8 +14,8 @@ describe('createRateLimitedFetch', () => {
       .mockResolvedValueOnce(new Response('a'))
       .mockResolvedValueOnce(new Response('b'));
     const sleep = jest.fn().mockResolvedValue(undefined);
+    globalThis.fetch = fetchImpl as unknown as typeof fetch;
     const fetchBytes = createRateLimitedFetch({
-      fetchImpl,
       sleep,
       now: () => 1000,
     });
@@ -35,8 +41,8 @@ describe('createRateLimitedFetch', () => {
       .mockResolvedValueOnce(new Response(null, { status: 503 }))
       .mockResolvedValueOnce(new Response('page'));
     const sleep = jest.fn().mockResolvedValue(undefined);
+    globalThis.fetch = fetchImpl as unknown as typeof fetch;
     const fetchBytes = createRateLimitedFetch({
-      fetchImpl,
       sleep,
       now: () => 1000,
     });
@@ -61,8 +67,8 @@ describe('createRateLimitedFetch', () => {
         ),
       )
       .mockResolvedValueOnce(new Response('page'));
+    globalThis.fetch = fetchImpl as unknown as typeof fetch;
     const fetchBytes = createRateLimitedFetch({
-      fetchImpl,
       sleep: async () => undefined,
       now: () => 1000,
     });
@@ -86,8 +92,8 @@ describe('createRateLimitedFetch', () => {
       )
       .mockResolvedValueOnce(new Response('page'));
     const sleep = jest.fn().mockResolvedValue(undefined);
+    globalThis.fetch = fetchImpl as unknown as typeof fetch;
     const fetchBytes = createRateLimitedFetch({
-      fetchImpl,
       sleep,
       now: () => 1000,
     });
@@ -103,8 +109,8 @@ describe('createRateLimitedFetch', () => {
       .fn<Promise<Response>, [string, RequestInit | undefined]>()
       .mockResolvedValueOnce(new Response(null, { status: 404 }))
       .mockResolvedValueOnce(new Response(null, { status: 404 }));
+    globalThis.fetch = fetchImpl as unknown as typeof fetch;
     const fetchBytes = createRateLimitedFetch({
-      fetchImpl,
       sleep: async () => undefined,
       now: () => 1000,
     });
@@ -120,8 +126,8 @@ describe('createRateLimitedFetch', () => {
       .fn<Promise<Response>, [string, RequestInit | undefined]>()
       .mockResolvedValueOnce(new Response(null, { status: 404 }))
       .mockResolvedValue(new Response(null, { status: 503 }));
+    globalThis.fetch = fetchImpl as unknown as typeof fetch;
     const fetchBytes = createRateLimitedFetch({
-      fetchImpl,
       sleep: async () => undefined,
       now: () => 1000,
     });

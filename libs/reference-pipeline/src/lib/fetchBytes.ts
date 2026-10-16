@@ -27,8 +27,6 @@ type HostTiming = { delayMs: number; lastRequestAt: number };
  *
  * @param options Optional. Each field defaults to the real implementation. Only
  * tests pass their own.
- * @param options.fetchImpl `(url: string, init?: RequestInit) => Promise<Response>`.
- * Defaults to the global `fetch`.
  * @param options.sleep `(ms: number) => Promise<unknown>`. Defaults to
  * `setTimeout` from `timers/promises`.
  * @param options.now `() => number`, the time in milliseconds. Defaults to
@@ -47,17 +45,15 @@ type HostTiming = { delayMs: number; lastRequestAt: number };
  * await fetchBytes('https://example.org/b'); // waits 5 s after the first request
  */
 export function createRateLimitedFetch({
-  fetchImpl = fetch,
   sleep = setTimeout,
   now = Date.now,
 }: {
-  fetchImpl?: (url: string, init?: RequestInit) => Promise<Response>;
   sleep?: (ms: number) => Promise<unknown>;
   now?: () => number;
 } = {}): (url: string) => Promise<Uint8Array> {
   const hosts = new Map<string, HostTiming>();
   const fetchWithTimeout = (url: string) =>
-    fetchImpl(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+    fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
 
   const getHostTiming = async (origin: string): Promise<HostTiming> => {
     const cached = hosts.get(origin);
@@ -84,10 +80,10 @@ export function createRateLimitedFetch({
       await sleep(Math.max(0, retryWait, crawlWait));
       host.lastRequestAt = now();
       let response: Response;
-      let body: ArrayBuffer;
+      let body: Uint8Array;
       try {
         response = await fetchWithTimeout(url);
-        body = await response.arrayBuffer();
+        body = await response.bytes();
       } catch (e) {
         failure = e instanceof Error ? e.message : String(e);
         continue;
@@ -99,7 +95,7 @@ export function createRateLimitedFetch({
       if (!response.ok) {
         throw new Error(`GET ${url} returned ${response.status}`);
       }
-      return new Uint8Array(body);
+      return body;
     }
     throw new Error(`GET ${url} failed after ${ATTEMPTS} attempts: ${failure}`);
   };
