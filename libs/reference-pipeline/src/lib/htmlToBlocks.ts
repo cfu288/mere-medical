@@ -14,7 +14,7 @@ const TAGS_A_GFM_TABLE_CANNOT_HOLD = [
   'BLOCKQUOTE',
   'PRE',
 ];
-const REMOVED_TAGS = ['script', 'style', 'noscript', 'iframe', 'object'];
+const REMOVED_TAGS = ['script', 'style', 'noscript', 'iframe', 'object', 'nav'];
 
 const turndown = createMarkdownConverter();
 
@@ -28,7 +28,8 @@ const turndown = createMarkdownConverter();
  * - The content between headings becomes one markdown text block.
  * - A table that holds a heading, list, rule, quote or code block becomes plain
  *   blocks, its caption first. Other tables become GFM tables.
- * - It drops scripts, styles, noscript fallbacks, frames and objects.
+ * - It drops scripts, styles, noscript fallbacks, frames, objects and `<nav>`
+ *   navigation.
  * - A link keeps only its text, and an image only its alt text.
  *
  * @param html `string`.

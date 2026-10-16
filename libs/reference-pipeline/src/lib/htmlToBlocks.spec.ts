@@ -134,6 +134,18 @@ describe('htmlToBlocks', () => {
     ]);
   });
 
+  it('drops site navigation from a page with no main or article element', () => {
+    expect(
+      htmlToBlocks(
+        '<nav><ul><li>About</li><li>Guidelines</li></ul></nav>' +
+          '<h2>CKD Evaluation</h2><p>Check eGFR yearly.</p>',
+      ),
+    ).toEqual([
+      { kind: 'heading', level: 2, text: 'CKD Evaluation', page: null },
+      { kind: 'text', text: 'Check eGFR yearly.', page: null },
+    ]);
+  });
+
   it('converts only the main element when the page has one', () => {
     expect(
       htmlToBlocks(
