@@ -63,6 +63,35 @@ describe('blocksToDocument', () => {
     });
   });
 
+  it('prints a heading deeper than level 6 with six hash signs and keeps it nested', () => {
+    expect(
+      blocksToDocument([
+        { kind: 'heading', level: 6, text: 'Dosing', page: null },
+        { kind: 'heading', level: 7, text: 'Children', page: null },
+      ]),
+    ).toEqual({
+      markdown: '###### Dosing\n\n###### Children',
+      sections: [
+        {
+          sectionId: 'dosing',
+          parentId: null,
+          title: 'Dosing',
+          location: { kind: 'webpage' },
+          textStart: 13,
+          textEnd: 13,
+        },
+        {
+          sectionId: 'children',
+          parentId: 'dosing',
+          title: 'Children',
+          location: { kind: 'webpage' },
+          textStart: 30,
+          textEnd: 30,
+        },
+      ],
+    });
+  });
+
   it('keeps text before the first heading as a section titled Opening text', () => {
     expect(
       blocksToDocument([
