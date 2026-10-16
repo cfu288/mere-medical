@@ -50,13 +50,12 @@ CREATE TABLE documents (
   content_md TEXT NOT NULL,
   sections TEXT NOT NULL
 );
-CREATE VIRTUAL TABLE documents_fts USING fts5(id UNINDEXED, title, summary, content = 'documents', tokenize = 'porter unicode61');
--- plus an insert trigger that adds each new row to documents_fts
+CREATE VIRTUAL TABLE documents_fts USING fts5(id UNINDEXED, title, summary, tokenize = 'porter unicode61');
 ```
 
 `content_md` is the whole reference as markdown. `sections` is a JSON list of
 its sections in reading order. `documents_fts` is a full-text index of titles
-and summaries. It holds no text of its own.
+and summaries.
 
 This entry of `sections` comes from the VA-DoD hypertension guideline.
 

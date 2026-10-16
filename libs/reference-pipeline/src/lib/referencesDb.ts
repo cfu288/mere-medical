@@ -14,11 +14,8 @@ export type ReferenceRecord = {
 
 /**
  * Opens or creates a reference library. It creates the `documents` table and
- * its full-text search table if they are missing.
- *
- * The search table indexes each reference's title and summary and holds no text
- * of its own. An insert trigger adds each new row to it. The pipeline writes a
- * library once and never edits it.
+ * its full-text search table, `documents_fts`, if they are missing. The search
+ * table holds each reference's id, title and summary.
  *
  * @param path `string`. A file path, or `':memory:'` for a library that is
  * not saved.
@@ -43,20 +40,15 @@ export function openReferencesDb(path: string): DatabaseSync {
       id UNINDEXED,
       title,
       summary,
-      content = 'documents',
       tokenize = 'porter unicode61'
     );
-    CREATE TRIGGER IF NOT EXISTS documents_insert AFTER INSERT ON documents BEGIN
-      INSERT INTO documents_fts (rowid, id, title, summary)
-        VALUES (new.rowid, new.id, new.title, new.summary);
-    END;
   `);
   return db;
 }
 
 /**
- * Adds a reference to the library with its markdown. It stores the sections as
- * JSON.
+ * Adds a reference to the library with its markdown, and adds its title and
+ * summary to the search table. It stores the sections as JSON.
  *
  * @param db `DatabaseSync`. From {@link openReferencesDb}.
  * @param record `ReferenceRecord`. The reference, its markdown and its sections.
@@ -86,4 +78,7 @@ export function writeReference(db: DatabaseSync, record: ReferenceRecord) {
     record.markdown,
     JSON.stringify(record.sections),
   );
+  db.prepare(
+    'INSERT INTO documents_fts (id, title, summary) VALUES (?, ?, ?)',
+  ).run(record.id, record.title, record.summary);
 }
