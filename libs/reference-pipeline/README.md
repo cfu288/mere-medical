@@ -19,8 +19,8 @@ long section one part at a time. Each part is one row in `parts_fts`.
 ## Converting a reference
 
 - In HTML, a heading is an `<h1>` to `<h6>` element.
-- Most PDFs have no heading markup. Each PDF page becomes a section titled "Page
-  N".
+- Each PDF page becomes a section titled "Page N". A PDF's own headings and
+  bookmarks are optional, and they differ from publisher to publisher.
 - Each heading becomes a `#` line in the markdown, one `#` per level.
 - A lower-level heading starts a subsection. `parentId` names the section above
   it.
@@ -74,8 +74,8 @@ This entry of `sections` is page 34 of the VA-DoD hypertension guideline.
   "sectionId": "page-34",
   "parentId": null,
   "title": "Page 34",
-  "textStart": 82797,
-  "textEnd": 86660,
+  "textStart": 82194,
+  "textEnd": 86057,
   "partCount": 1
 }
 ```
@@ -102,8 +102,8 @@ gives. The agent picks a reference by its summary.
 There are three types.
 
 - `html` reads a web page from `url`. When the page has one `<main>` or one
-  `<article>`, the pipeline reads only that element. It drops scripts. A link
-  that is not http, https, mailto or relative keeps only its text.
+  `<article>`, the pipeline reads only that element. It drops scripts and
+  `<nav>` menus. Every link keeps only its text, and every image its alt text.
 - `cdc-media` reads a CDC page's text through CDC's content API, without the
   site's menus. It takes a `mediaId` instead of a `url`. The id is in the page's
   [Media Library](https://tools.cdc.gov/medialibrary/index.aspx) address.
@@ -124,5 +124,7 @@ reports a source with no text and leaves it out. Requests to a host wait for the
 
 ## Known limits
 
-- A PDF's outline lists its pages, not its chapters. The agent finds the page it
-  needs by searching that reference's parts.
+- A web page with no `<main>` and no single `<article>` keeps its header and
+  footer text, such as links outside `<nav>` and newsletter forms.
+- When a source answers with a bot check, the pipeline stores the check page's
+  text.

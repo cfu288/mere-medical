@@ -182,7 +182,7 @@ describe('htmlToBlocks', () => {
     ]);
   });
 
-  it('drops scripts however they are typed or nested, styles, noscript fallbacks, frames, embedded objects and templates', () => {
+  it('drops scripts however they are typed or nested, styles, noscript fallbacks, frames and objects, and outputs nothing for embeds and templates', () => {
     expect(
       htmlToBlocks(
         '<main><p>Keep</p><script>alert(1)</script><style>p{}</style>' +

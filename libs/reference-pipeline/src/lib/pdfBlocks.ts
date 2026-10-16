@@ -3,8 +3,7 @@ import { Block } from './sections';
 /**
  * Reads a PDF with pdf.js and turns it into blocks, one section per page.
  *
- * - Each page starts with a heading titled "Page N". Most PDFs have no heading
- *   markup.
+ * - Each page starts with a heading titled "Page N".
  * - The page's text follows as one block, one line per line that pdf.js
  *   reports. A raised superscript stays on its line.
  * - It collapses the spaces in each line and skips empty lines. A page with no
