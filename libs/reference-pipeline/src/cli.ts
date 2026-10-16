@@ -10,7 +10,8 @@ const SOURCES_PATH = join(ROOT, 'sources.json');
 const LIBRARY_PATH = join(ROOT, 'data', 'references.db');
 
 async function main() {
-  const sources = parseSources(JSON.parse(readFileSync(SOURCES_PATH, 'utf8')));
+  const sourcesJson = readFileSync(SOURCES_PATH, 'utf8');
+  const sources = parseSources(JSON.parse(sourcesJson));
   mkdirSync(dirname(LIBRARY_PATH), { recursive: true });
   const reports = await buildReferenceLibrary({
     path: LIBRARY_PATH,

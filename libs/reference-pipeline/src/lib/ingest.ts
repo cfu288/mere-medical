@@ -146,13 +146,10 @@ async function fetchSourceAsBlocks(
   fetchBytes: (url: string) => Promise<Uint8Array>,
 ): Promise<Fetched> {
   switch (source.type) {
-    case 'pdf':
-      return {
-        url: source.url,
-        blocks: pdfLinesToBlocks(
-          await readPdfLines(await fetchBytes(source.url)),
-        ),
-      };
+    case 'pdf': {
+      const lines = await readPdfLines(await fetchBytes(source.url));
+      return { url: source.url, blocks: pdfLinesToBlocks(lines) };
+    }
     case 'html':
       return {
         url: source.url,
@@ -162,15 +159,13 @@ async function fetchSourceAsBlocks(
       const metadata = await fetchBytes(
         `${CDC_MEDIA_API}/${source.mediaId}.json`,
       );
-      const url = cdcMediaSchema.parse(
-        JSON.parse(new TextDecoder().decode(metadata)),
-      ).results[0].sourceUrl;
-      return {
-        url,
-        blocks: htmlBytesToBlocks(
-          await fetchBytes(`${CDC_MEDIA_API}/${source.mediaId}/content.html`),
-        ),
-      };
+      const metadataJson = new TextDecoder().decode(metadata);
+      const url = cdcMediaSchema.parse(JSON.parse(metadataJson)).results[0]
+        .sourceUrl;
+      const page = await fetchBytes(
+        `${CDC_MEDIA_API}/${source.mediaId}/content.html`,
+      );
+      return { url, blocks: htmlBytesToBlocks(page) };
     }
   }
 }

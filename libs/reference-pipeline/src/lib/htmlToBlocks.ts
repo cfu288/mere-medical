@@ -141,9 +141,8 @@ function createMarkdownConverter(): TurndownService {
 }
 
 function removeElementsWithoutReadableText(doc: Document): void {
-  for (const element of Array.from(
-    doc.querySelectorAll(REMOVED_TAGS.join(', ')),
-  )) {
+  const removed = doc.querySelectorAll(REMOVED_TAGS.join(', '));
+  for (const element of Array.from(removed)) {
     element.parentNode?.removeChild(element);
   }
 }
