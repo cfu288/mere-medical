@@ -63,7 +63,7 @@ export function openReferencesDb(path: string): DatabaseSync {
  *   summary: 'Vaccine schedule',
  *   url: 'https://example.com/measles',
  *   markdown: '# Doses\n\nTwo doses.',
- *   sections: [{ sectionId: 'doses', parentId: null, title: 'Doses', pages: null, textStart: 9, textEnd: 19 }],
+ *   sections: [{ sectionId: 'doses', parentId: null, title: 'Doses', pdfPages: null, textStart: 9, textEnd: 19 }],
  * });
  */
 export function writeReference(db: DatabaseSync, record: ReferenceRecord) {

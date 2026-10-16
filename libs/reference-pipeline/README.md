@@ -65,13 +65,13 @@ This entry of `sections` comes from the VA-DoD hypertension guideline.
   "sectionId": "b-treatment-goals-and-general-approaches-to-hypertension-man",
   "parentId": "ix-recommendations",
   "title": "B. Treatment Goals and General Approaches to Hypertension Management",
-  "pages": { "start": 33, "end": 41 },
+  "pdfPages": { "start": 33, "end": 41 },
   "textStart": 78133,
   "textEnd": 104700
 }
 ```
 
-`pages` is null for a web page.
+`pdfPages` is null for a web page.
 
 ## Sources
 

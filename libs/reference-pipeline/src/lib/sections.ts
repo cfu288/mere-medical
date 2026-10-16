@@ -16,7 +16,7 @@ export type Section = {
   sectionId: string;
   parentId: string | null;
   title: string;
-  pages: { start: number; end: number } | null;
+  pdfPages: { start: number; end: number } | null;
   textStart: number;
   textEnd: number;
 };
@@ -36,7 +36,7 @@ const TEXT_BEFORE_FIRST_HEADING_TITLE = 'Opening text';
  *
  * @param blocks `Block[]`. A document's blocks in reading order.
  * @returns `{ markdown: string; sections: Section[] }`. The sections are in
- * reading order. A PDF section's `pages` are its first and last page. They are
+ * reading order. A PDF section's `pdfPages` are its first and last page. They are
  * null for a webpage.
  *
  * @example
@@ -46,7 +46,7 @@ const TEXT_BEFORE_FIRST_HEADING_TITLE = 'Opening text';
  * ]);
  * // {
  * //   markdown: '# Goals\n\nBelow 130.',
- * //   sections: [{ sectionId: 'goals', parentId: null, title: 'Goals', pages: null, textStart: 9, textEnd: 19 }],
+ * //   sections: [{ sectionId: 'goals', parentId: null, title: 'Goals', pdfPages: null, textStart: 9, textEnd: 19 }],
  * // }
  */
 export function blocksToDocument(blocks: Block[]): {
@@ -66,7 +66,7 @@ export function blocksToDocument(blocks: Block[]): {
       sectionId: uniqueSlug(title, usedIds),
       parentId,
       title,
-      pages: page === null ? null : { start: page, end: page },
+      pdfPages: page === null ? null : { start: page, end: page },
       textStart: markdown.length,
       textEnd: markdown.length,
     };
@@ -99,8 +99,8 @@ export function blocksToDocument(blocks: Block[]): {
         section.textStart = markdown.length - block.text.length;
       }
       section.textEnd = markdown.length;
-      if (block.page !== null && section.pages) {
-        section.pages.end = block.page;
+      if (block.page !== null && section.pdfPages) {
+        section.pdfPages.end = block.page;
       }
     }
   }

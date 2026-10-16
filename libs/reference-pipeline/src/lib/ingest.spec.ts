@@ -96,7 +96,7 @@ describe('buildReferenceLibrary', () => {
         content_md:
           '<!-- page 1 -->\n\n# I. Introduction\n\nTdap booster every 10 years.\n\nBMI of 30 kg/m2 or more.',
         sections:
-          '[{"sectionId":"i-introduction","parentId":null,"title":"I. Introduction","pages":{"start":1,"end":1},"textStart":36,"textEnd":90}]',
+          '[{"sectionId":"i-introduction","parentId":null,"title":"I. Introduction","pdfPages":{"start":1,"end":1},"textStart":36,"textEnd":90}]',
       },
     ]);
   });
