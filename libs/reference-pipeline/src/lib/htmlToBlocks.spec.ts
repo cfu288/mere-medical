@@ -105,6 +105,20 @@ describe('htmlToBlocks', () => {
     ]);
   });
 
+  it('keeps the caption of an unwrapped table before its cells', () => {
+    expect(
+      htmlToBlocks(
+        '<table><caption>Adults 18 and older</caption><tr><td><ul><li>Screen yearly</li></ul></td></tr></table>',
+      ),
+    ).toEqual([
+      {
+        kind: 'text',
+        text: 'Adults 18 and older\n\n*   Screen yearly',
+        page: null,
+      },
+    ]);
+  });
+
   it('converts only the main element when the page has one', () => {
     expect(
       htmlToBlocks(

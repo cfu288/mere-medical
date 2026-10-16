@@ -37,7 +37,7 @@ const turndown = createMarkdownConverter();
  *   text.
  * - The content between headings becomes one markdown text block.
  * - A table that holds a heading, list, rule, quote or code becomes plain
- *   blocks. Other tables become GFM tables.
+ *   blocks, its caption first. Other tables become GFM tables.
  * - It drops scripts, styles, noscript, frames, embedded objects and templates.
  * - A link or image whose address is not safe (see {@link isHttpMailtoOrRelativeUrl}) keeps
  *   only its text or alt text.
@@ -153,12 +153,12 @@ function unwrapTablesMarkdownCannotHold(doc: Document): void {
     if (!table.querySelector(TAGS_A_GFM_TABLE_CANNOT_HOLD.join(', '))) {
       continue;
     }
-    for (const cell of Array.from(table.querySelectorAll('td, th'))) {
-      if (cell.closest('table') !== table) {
+    for (const part of Array.from(table.querySelectorAll('caption, td, th'))) {
+      if (part.closest('table') !== table) {
         continue;
       }
       const block = doc.createElement('div');
-      for (const child of Array.from(cell.childNodes)) {
+      for (const child of Array.from(part.childNodes)) {
         block.appendChild(child);
       }
       table.parentNode?.insertBefore(block, table);
