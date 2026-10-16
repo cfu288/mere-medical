@@ -1,11 +1,10 @@
 /**
  * One heading or run of text from a parsed document. A heading's text is plain.
  * A text block's text is markdown from a webpage or plain text from a PDF.
- * `page` is the PDF page the block is on. It is null for a webpage.
  */
 export type Block =
-  | { kind: 'heading'; level: number; text: string; page: number | null }
-  | { kind: 'text'; text: string; page: number | null };
+  | { kind: 'heading'; level: number; text: string }
+  | { kind: 'text'; text: string };
 
 /**
  * One heading of a stored document and the text under it, up to the next
@@ -17,7 +16,6 @@ export type Section = {
   sectionId: string;
   parentId: string | null;
   title: string;
-  pdfPages: { start: number; end: number } | null;
   textStart: number;
   textEnd: number;
   pageCount: number;
@@ -34,7 +32,6 @@ const PAGE_MAX_CHARS = 10000;
  * one per heading, nested as the headings nest.
  *
  * - Headings become `#` lines, one `#` per level up to six.
- * - Each new PDF page starts with a `<!-- page N -->` line.
  * - Text before the first heading becomes an "Opening text" section.
  * - A heading with no text of its own is still a section.
  * - It makes section ids from titles, unique in the document. A repeated title
@@ -45,17 +42,16 @@ const PAGE_MAX_CHARS = 10000;
  *
  * @param blocks `Block[]`. A document's blocks in reading order.
  * @returns `{ markdown: string; sections: Section[]; pages: Page[] }`. The
- * sections and pages are in reading order. A PDF section's `pdfPages` are its first and last page. They are
- * null for a webpage.
+ * sections and pages are in reading order.
  *
  * @example
  * blocksToDocument([
- *   { kind: 'heading', level: 1, text: 'Goals', page: null },
- *   { kind: 'text', text: 'Below 130.', page: null },
+ *   { kind: 'heading', level: 1, text: 'Goals' },
+ *   { kind: 'text', text: 'Below 130.' },
  * ]);
  * // {
  * //   markdown: '# Goals\n\nBelow 130.',
- * //   sections: [{ sectionId: 'goals', parentId: null, title: 'Goals', pdfPages: null, textStart: 9, textEnd: 19, pageCount: 1 }],
+ * //   sections: [{ sectionId: 'goals', parentId: null, title: 'Goals', textStart: 9, textEnd: 19, pageCount: 1 }],
  * //   pages: [{ sectionId: 'goals', page: 1, text: 'Below 130.' }],
  * // }
  */
@@ -71,13 +67,11 @@ export function blocksToDocument(blocks: Block[]): {
   const sections: Section[] = [];
   const openHeadings: { level: number; sectionId: string }[] = [];
   const usedIds = new Set<string>();
-  let page: number | null = null;
   const startSection = (title: string, parentId: string | null): Section => {
     const section: Section = {
       sectionId: uniqueSlug(title, usedIds),
       parentId,
       title,
-      pdfPages: page === null ? null : { start: page, end: page },
       textStart: markdown.length,
       textEnd: markdown.length,
       pageCount: 0,
@@ -87,10 +81,6 @@ export function blocksToDocument(blocks: Block[]): {
   };
 
   for (const block of blocks) {
-    if (block.page !== null && block.page !== page) {
-      page = block.page;
-      append(`<!-- page ${page} -->`);
-    }
     if (block.kind === 'heading') {
       while (
         openHeadings.length > 0 &&
@@ -111,9 +101,6 @@ export function blocksToDocument(blocks: Block[]): {
         section.textStart = markdown.length - block.text.length;
       }
       section.textEnd = markdown.length;
-      if (block.page !== null && section.pdfPages) {
-        section.pdfPages.end = block.page;
-      }
     }
   }
   const pages: Page[] = [];

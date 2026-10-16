@@ -79,7 +79,7 @@ describe('buildReferenceLibrary', () => {
     ]);
   });
 
-  it('stores a pdf source with page markers, the pdf pages of each section and its text pages', async () => {
+  it('stores a pdf source with one section per pdf page', async () => {
     const path = libraryPath();
     await buildReferenceLibrary({
       path,
@@ -94,9 +94,9 @@ describe('buildReferenceLibrary', () => {
     ).toEqual([
       {
         content_md:
-          '<!-- page 1 -->\n\n# Page 1\n\nI. Introduction\nTdap booster every 10 years.\nBMI of 30 kg/m2 or more.\n\n<!-- page 2 -->\n\n# Page 2\n\nRepeat every 10 years.',
+          '# Page 1\n\nI. Introduction\nTdap booster every 10 years.\nBMI of 30 kg/m2 or more.\n\n# Page 2\n\nRepeat every 10 years.',
         sections:
-          '[{"sectionId":"page-1","parentId":null,"title":"Page 1","pdfPages":{"start":1,"end":1},"textStart":27,"textEnd":96,"pageCount":1},{"sectionId":"page-2","parentId":null,"title":"Page 2","pdfPages":{"start":2,"end":2},"textStart":125,"textEnd":147,"pageCount":1}]',
+          '[{"sectionId":"page-1","parentId":null,"title":"Page 1","textStart":10,"textEnd":79,"pageCount":1},{"sectionId":"page-2","parentId":null,"title":"Page 2","textStart":91,"textEnd":113,"pageCount":1}]',
       },
     ]);
     expect(

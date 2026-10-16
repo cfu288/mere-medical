@@ -11,13 +11,13 @@ import { Block } from './sections';
  *   text gets only its heading.
  *
  * @param bytes `Uint8Array`. The PDF file.
- * @returns `Promise<Block[]>`. The blocks in reading order, each with its page.
+ * @returns `Promise<Block[]>`. The blocks in reading order.
  *
  * @example
  * await pdfToBlocks(readFileSync('guideline.pdf'));
  * // [
- * //   { kind: 'heading', level: 1, text: 'Page 1', page: 1 },
- * //   { kind: 'text', text: 'I. Introduction\nTdap booster every 10 years.', page: 1 },
+ * //   { kind: 'heading', level: 1, text: 'Page 1' },
+ * //   { kind: 'text', text: 'I. Introduction\nTdap booster every 10 years.' },
  * // ]
  */
 export async function pdfToBlocks(bytes: Uint8Array): Promise<Block[]> {
@@ -39,9 +39,9 @@ export async function pdfToBlocks(bytes: Uint8Array): Promise<Block[]> {
         .split('\n')
         .map((line) => line.replace(/\s+/g, ' ').trim())
         .filter((line) => line !== '');
-      blocks.push({ kind: 'heading', level: 1, text: `Page ${page}`, page });
+      blocks.push({ kind: 'heading', level: 1, text: `Page ${page}` });
       if (lines.length > 0) {
-        blocks.push({ kind: 'text', text: lines.join('\n'), page });
+        blocks.push({ kind: 'text', text: lines.join('\n') });
       }
     }
     return blocks;

@@ -15,7 +15,6 @@ describe('writeReference', () => {
           sectionId: 'doses',
           parentId: null,
           title: 'Doses',
-          pdfPages: null,
           textStart: 9,
           textEnd: 19,
           pageCount: 1,
@@ -39,7 +38,7 @@ describe('writeReference', () => {
         url: 'https://example.com/measles',
         content_md: '# Doses\n\nTwo doses.',
         sections:
-          '[{"sectionId":"doses","parentId":null,"title":"Doses","pdfPages":null,"textStart":9,"textEnd":19,"pageCount":1}]',
+          '[{"sectionId":"doses","parentId":null,"title":"Doses","textStart":9,"textEnd":19,"pageCount":1}]',
       },
     ]);
   });

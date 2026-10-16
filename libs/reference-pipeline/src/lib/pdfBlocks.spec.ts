@@ -4,14 +4,13 @@ import { pdfToBlocks } from './pdfBlocks';
 describe('pdfToBlocks', () => {
   it('starts each page with a heading titled with its page number, followed by its lines as pdf.js reads them', async () => {
     expect(await pdfToBlocks(new TextEncoder().encode(TWO_PAGE_PDF))).toEqual([
-      { kind: 'heading', level: 1, text: 'Page 1', page: 1 },
+      { kind: 'heading', level: 1, text: 'Page 1' },
       {
         kind: 'text',
         text: 'I. Introduction\nTdap booster every 10 years.\nBMI of 30 kg/m2 or more.',
-        page: 1,
       },
-      { kind: 'heading', level: 1, text: 'Page 2', page: 2 },
-      { kind: 'text', text: 'Repeat every 10 years.', page: 2 },
+      { kind: 'heading', level: 1, text: 'Page 2' },
+      { kind: 'text', text: 'Repeat every 10 years.' },
     ]);
   });
 });

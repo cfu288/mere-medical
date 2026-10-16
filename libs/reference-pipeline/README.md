@@ -23,7 +23,6 @@ page. The agent reads a long section one page at a time. Each page is one row in
 - Most PDFs have no heading markup. Each PDF page becomes a section titled "Page
   N".
 - Each heading becomes a `#` line in the markdown, one `#` per level.
-- Each new PDF page starts with a `<!-- page N -->` line.
 - A lower-level heading starts a subsection. `parentId` names the section above
   it.
 - Text before the first heading becomes an "Opening text" section.
@@ -45,8 +44,8 @@ sections.
    references.
 4. Read one page by `document_id`, `section_id` and `page`.
 
-A citation names the reference's title and url. It also names the section's
-pages.
+A citation names the reference's title and url. For a PDF it also names the
+page, which is the section's title.
 
 ## Schema
 
@@ -76,14 +75,13 @@ This entry of `sections` is page 34 of the VA-DoD hypertension guideline.
   "sectionId": "page-34",
   "parentId": null,
   "title": "Page 34",
-  "pdfPages": { "start": 34, "end": 34 },
   "textStart": 82797,
   "textEnd": 86660,
   "pageCount": 1
 }
 ```
 
-`pdfPages` is null for a web page. `pageCount` is 0 for a section with no text.
+`pageCount` is 0 for a section with no text.
 
 ## Sources
 

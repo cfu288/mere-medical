@@ -33,13 +33,13 @@ const turndown = createMarkdownConverter();
  * - A link keeps only its text, and an image only its alt text.
  *
  * @param html `string`.
- * @returns `Block[]`. The blocks in reading order. Each has a null page.
+ * @returns `Block[]`. The blocks in reading order.
  *
  * @example
  * htmlToBlocks('<nav>Home</nav><main><h1>Measles</h1><p>See <a href="https://www.cdc.gov/measles">CDC</a>.</p></main>');
  * // [
- * //   { kind: 'heading', level: 1, text: 'Measles', page: null },
- * //   { kind: 'text', text: 'See CDC.', page: null },
+ * //   { kind: 'heading', level: 1, text: 'Measles' },
+ * //   { kind: 'text', text: 'See CDC.' },
  * // ]
  */
 export function htmlToBlocks(html: string): Block[] {
@@ -55,7 +55,7 @@ export function htmlToBlocks(html: string): Block[] {
     }
     const text = turndown.turndown(container).trim();
     if (text) {
-      blocks.push({ kind: 'text', text, page: null });
+      blocks.push({ kind: 'text', text });
     }
     bufferedNodes = [];
   };
@@ -68,7 +68,6 @@ export function htmlToBlocks(html: string): Block[] {
         kind: 'heading',
         level: Number(node.nodeName[1]),
         text: collapsedTextOf(node),
-        page: null,
       });
     } else if (node.querySelector(HEADING_TAGS.join(', '))) {
       node.childNodes.forEach(splitNodeAtHeadings);

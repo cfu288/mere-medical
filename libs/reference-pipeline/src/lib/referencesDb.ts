@@ -75,7 +75,7 @@ export function openReferencesDb(path: string): DatabaseSync {
  *   summary: 'Vaccine schedule',
  *   url: 'https://example.com/measles',
  *   markdown: '# Doses\n\nTwo doses.',
- *   sections: [{ sectionId: 'doses', parentId: null, title: 'Doses', pdfPages: null, textStart: 9, textEnd: 19, pageCount: 1 }],
+ *   sections: [{ sectionId: 'doses', parentId: null, title: 'Doses', textStart: 9, textEnd: 19, pageCount: 1 }],
  *   pages: [{ sectionId: 'doses', page: 1, text: 'Two doses.' }],
  * });
  */

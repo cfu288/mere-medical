@@ -9,14 +9,13 @@ describe('htmlToBlocks', () => {
           '<h2>\n  Hypertension\n</h2><p>Measure blood pressure.</p><p>Repeat yearly.</p></section></div>',
       ),
     ).toEqual([
-      { kind: 'text', text: 'Updated 2026.', page: null },
-      { kind: 'heading', level: 1, text: 'Screening', page: null },
-      { kind: 'text', text: 'Screen all adults.', page: null },
-      { kind: 'heading', level: 2, text: 'Hypertension', page: null },
+      { kind: 'text', text: 'Updated 2026.' },
+      { kind: 'heading', level: 1, text: 'Screening' },
+      { kind: 'text', text: 'Screen all adults.' },
+      { kind: 'heading', level: 2, text: 'Hypertension' },
       {
         kind: 'text',
         text: 'Measure blood pressure.\n\nRepeat yearly.',
-        page: null,
       },
     ]);
   });
@@ -24,17 +23,15 @@ describe('htmlToBlocks', () => {
   it('keeps the link text of a heading and drops its target', () => {
     expect(
       htmlToBlocks('<h2><a href="/uspstf/htn">Hypertension in Adults</a></h2>'),
-    ).toEqual([
-      { kind: 'heading', level: 2, text: 'Hypertension in Adults', page: null },
-    ]);
+    ).toEqual([{ kind: 'heading', level: 2, text: 'Hypertension in Adults' }]);
   });
 
   it('keeps a hash line in a code block as text', () => {
     expect(
       htmlToBlocks('<h1>Real</h1><pre><code># not a heading</code></pre>'),
     ).toEqual([
-      { kind: 'heading', level: 1, text: 'Real', page: null },
-      { kind: 'text', text: '```\n# not a heading\n```', page: null },
+      { kind: 'heading', level: 1, text: 'Real' },
+      { kind: 'text', text: '```\n# not a heading\n```' },
     ]);
   });
 
@@ -48,7 +45,6 @@ describe('htmlToBlocks', () => {
       {
         kind: 'text',
         text: '| Topic | Grade |\n| --- | --- |\n| Hypertension screening | A   |',
-        page: null,
       },
     ]);
   });
@@ -63,13 +59,12 @@ describe('htmlToBlocks', () => {
           '<table><tbody><tr><td><ol><li>Weigh</li></ol></td><td>Daily</td></tr></tbody></table>',
       ),
     ).toEqual([
-      { kind: 'heading', level: 1, text: 'HIGHLIGHTS', page: null },
-      { kind: 'text', text: '*   Bleeding risk', page: null },
-      { kind: 'heading', level: 2, text: 'DOSAGE', page: null },
+      { kind: 'heading', level: 1, text: 'HIGHLIGHTS' },
+      { kind: 'text', text: '*   Bleeding risk' },
+      { kind: 'heading', level: 2, text: 'DOSAGE' },
       {
         kind: 'text',
         text: '5 mg twice daily\n\n1.  Weigh\n\nDaily',
-        page: null,
       },
     ]);
   });
@@ -81,11 +76,10 @@ describe('htmlToBlocks', () => {
           '<tr><th>Call your provider</th><td>Fever</td></tr></table>',
       ),
     ).toEqual([
-      { kind: 'heading', level: 2, text: 'Call 911', page: null },
+      { kind: 'heading', level: 2, text: 'Call 911' },
       {
         kind: 'text',
         text: 'Chest pain\n\nCall your provider\n\nFever',
-        page: null,
       },
     ]);
   });
@@ -100,7 +94,6 @@ describe('htmlToBlocks', () => {
       {
         kind: 'text',
         text: '> Quote\n\na\n\n* * *\n\nb\n\n```\nx = 1\n```',
-        page: null,
       },
     ]);
   });
@@ -115,7 +108,6 @@ describe('htmlToBlocks', () => {
       {
         kind: 'text',
         text: '| Vaccine | Dose |\n| --- | --- |\n| Tdap | `0.5 mL` |',
-        page: null,
       },
     ]);
   });
@@ -129,7 +121,6 @@ describe('htmlToBlocks', () => {
       {
         kind: 'text',
         text: 'Adults 18 and older\n\n*   Screen yearly',
-        page: null,
       },
     ]);
   });
@@ -141,8 +132,8 @@ describe('htmlToBlocks', () => {
           '<h2>CKD Evaluation</h2><p>Check eGFR yearly.</p>',
       ),
     ).toEqual([
-      { kind: 'heading', level: 2, text: 'CKD Evaluation', page: null },
-      { kind: 'text', text: 'Check eGFR yearly.', page: null },
+      { kind: 'heading', level: 2, text: 'CKD Evaluation' },
+      { kind: 'text', text: 'Check eGFR yearly.' },
     ]);
   });
 
@@ -158,9 +149,8 @@ describe('htmlToBlocks', () => {
         kind: 'heading',
         level: 1,
         text: 'Colorectal Cancer: Screening',
-        page: null,
       },
-      { kind: 'text', text: 'Screen adults aged 45 to 75.', page: null },
+      { kind: 'text', text: 'Screen adults aged 45 to 75.' },
     ]);
   });
 
@@ -176,9 +166,8 @@ describe('htmlToBlocks', () => {
         kind: 'heading',
         level: 2,
         text: 'Starting and Stopping Ages',
-        page: null,
       },
-      { kind: 'text', text: 'Start at 45.', page: null },
+      { kind: 'text', text: 'Start at 45.' },
     ]);
   });
 
@@ -188,8 +177,8 @@ describe('htmlToBlocks', () => {
         '<h1>News</h1><article><p>First story.</p></article><article><p>Second story.</p></article>',
       ),
     ).toEqual([
-      { kind: 'heading', level: 1, text: 'News', page: null },
-      { kind: 'text', text: 'First story.\n\nSecond story.', page: null },
+      { kind: 'heading', level: 1, text: 'News' },
+      { kind: 'text', text: 'First story.\n\nSecond story.' },
     ]);
   });
 
@@ -205,7 +194,7 @@ describe('htmlToBlocks', () => {
           '<object data="x.swf">object</object><embed src="x.swf">' +
           '<template><h2>hidden</h2></template></main>',
       ),
-    ).toEqual([{ kind: 'text', text: 'Keep', page: null }]);
+    ).toEqual([{ kind: 'text', text: 'Keep' }]);
   });
 
   it('keeps only the text of every link', () => {
@@ -215,7 +204,7 @@ describe('htmlToBlocks', () => {
           '<a href="javascript:document.getElementById(\'x\')">Show more</a> ' +
           '<a href="#section-5">jump</a></p>',
       ),
-    ).toEqual([{ kind: 'text', text: 'CDC Show more jump', page: null }]);
+    ).toEqual([{ kind: 'text', text: 'CDC Show more jump' }]);
   });
 
   it('keeps only the alt text of every image, escaped as markdown', () => {
@@ -224,6 +213,6 @@ describe('htmlToBlocks', () => {
         '<p><img src="https://www.cdc.gov/chart.png" alt="Chart [1]"> ' +
           '<img src="javascript:alert(1)" alt="Map"></p>',
       ),
-    ).toEqual([{ kind: 'text', text: 'Chart \\[1\\] Map', page: null }]);
+    ).toEqual([{ kind: 'text', text: 'Chart \\[1\\] Map' }]);
   });
 });
