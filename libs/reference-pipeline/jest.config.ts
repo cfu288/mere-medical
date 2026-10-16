@@ -13,6 +13,6 @@ module.exports = {
     ],
   },
   transformIgnorePatterns: ['node_modules/(?!pdfjs-dist)'],
-  moduleFileExtensions: ['ts', 'js', 'mjs', 'html'],
+  moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/libs/reference-pipeline',
 };

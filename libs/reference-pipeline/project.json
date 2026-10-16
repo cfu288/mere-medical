@@ -5,11 +5,25 @@
   "projectType": "library",
   "tags": [],
   "targets": {
-    "lint": { "executor": "@nx/eslint:lint" },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/libs/reference-pipeline"],
-      "options": { "jestConfig": "libs/reference-pipeline/jest.config.ts" }
+      "options": {
+        "jestConfig": "libs/reference-pipeline/jest.config.ts"
+      }
+    },
+    "build-library": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node -r ts-node/register/transpile-only libs/reference-pipeline/src/cli.ts",
+        "cwd": "{workspaceRoot}",
+        "env": {
+          "TS_NODE_PROJECT": "libs/reference-pipeline/tsconfig.spec.json"
+        }
+      }
     }
   }
 }
