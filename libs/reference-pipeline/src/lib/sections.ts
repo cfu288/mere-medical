@@ -27,16 +27,6 @@ export type Section = {
 
 const TEXT_BEFORE_FIRST_HEADING_TITLE = 'Opening text';
 
-type SectionInProgress = {
-  sectionId: string;
-  parentId: string | null;
-  title: string;
-  pages: number[];
-  textStart: number;
-  textEnd: number;
-  hasText: boolean;
-};
-
 /**
  * Writes a document's blocks as one markdown document, and lists its sections,
  * one per heading, nested as the headings nest.
@@ -71,19 +61,21 @@ export function blocksToDocument(blocks: Block[]): {
   const append = (text: string) => {
     markdown = markdown === '' ? text : `${markdown}\n\n${text}`;
   };
-  const sections: SectionInProgress[] = [];
-  const openHeadings: { level: number; section: SectionInProgress }[] = [];
+  const sections: Section[] = [];
+  const openHeadings: { level: number; sectionId: string }[] = [];
   const usedIds = new Set<string>();
   let page: number | null = null;
-  const startSection = (title: string, parentId: string | null) => {
-    const section: SectionInProgress = {
+  const startSection = (title: string, parentId: string | null): Section => {
+    const section: Section = {
       sectionId: uniqueSlug(title, usedIds),
       parentId,
       title,
-      pages: page === null ? [] : [page],
+      location:
+        page === null
+          ? { kind: 'webpage' }
+          : { kind: 'pages', start: page, end: page },
       textStart: markdown.length,
       textEnd: markdown.length,
-      hasText: false,
     };
     sections.push(section);
     return section;
@@ -102,43 +94,24 @@ export function blocksToDocument(blocks: Block[]): {
         openHeadings.pop();
       }
       append(`${'#'.repeat(Math.min(block.level, 6))} ${block.text}`);
-      const parent = openHeadings[openHeadings.length - 1]?.section ?? null;
-      const section = startSection(block.text, parent?.sectionId ?? null);
-      openHeadings.push({ level: block.level, section });
+      const parentId = openHeadings[openHeadings.length - 1]?.sectionId ?? null;
+      const section = startSection(block.text, parentId);
+      openHeadings.push({ level: block.level, sectionId: section.sectionId });
     } else {
       const section =
         sections[sections.length - 1] ??
         startSection(TEXT_BEFORE_FIRST_HEADING_TITLE, null);
       append(block.text);
-      if (!section.hasText) {
+      if (section.textStart === section.textEnd) {
         section.textStart = markdown.length - block.text.length;
-        section.hasText = true;
       }
       section.textEnd = markdown.length;
-      if (block.page !== null) {
-        section.pages.push(block.page);
+      if (block.page !== null && section.location.kind === 'pages') {
+        section.location.end = block.page;
       }
     }
   }
-
-  return {
-    markdown,
-    sections: sections.map((section) => ({
-      sectionId: section.sectionId,
-      parentId: section.parentId,
-      title: section.title,
-      location:
-        section.pages.length > 0
-          ? {
-              kind: 'pages',
-              start: Math.min(...section.pages),
-              end: Math.max(...section.pages),
-            }
-          : { kind: 'webpage' },
-      textStart: section.textStart,
-      textEnd: section.textEnd,
-    })),
-  };
+  return { markdown, sections };
 }
 
 function uniqueSlug(title: string, usedIds: Set<string>): string {
