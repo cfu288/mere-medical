@@ -44,37 +44,20 @@ const turndown = createMarkdownConverter();
  */
 export function htmlToBlocks(html: string): Block[] {
   const doc = parseReadableDocument(html);
+  const nodes = Array.from(findMainContent(doc).childNodes).flatMap(
+    nodesSplitAtHeadings,
+  );
   const blocks: Block[] = [];
-  let bufferedNodes: Node[] = [];
-  const emitBufferedNodesAsText = () => {
-    const container = doc.createElement('div');
-    for (const node of bufferedNodes) {
-      container.appendChild(node.cloneNode(true));
-    }
-    const text = turndown.turndown(container).trim();
-    if (text) {
-      blocks.push({ kind: 'text', text });
-    }
-    bufferedNodes = [];
-  };
-  const splitNodeAtHeadings = (node: Node) => {
-    if (!isElement(node)) {
-      bufferedNodes.push(node);
-    } else if (HEADING_TAGS.includes(node.nodeName)) {
-      emitBufferedNodesAsText();
-      blocks.push({
-        kind: 'heading',
-        level: Number(node.nodeName[1]),
-        text: collapsedTextOf(node),
-      });
-    } else if (node.querySelector(HEADING_TAGS.join(', '))) {
-      node.childNodes.forEach(splitNodeAtHeadings);
+  let textNodes: Node[] = [];
+  for (const node of nodes) {
+    if (isHeading(node)) {
+      blocks.push(...nodesToTextBlock(doc, textNodes), headingToBlock(node));
+      textNodes = [];
     } else {
-      bufferedNodes.push(node);
+      textNodes.push(node);
     }
-  };
-  findMainContent(doc).childNodes.forEach(splitNodeAtHeadings);
-  emitBufferedNodesAsText();
+  }
+  blocks.push(...nodesToTextBlock(doc, textNodes));
   return blocks;
 }
 
@@ -127,17 +110,52 @@ function unwrapTablesMarkdownCannotHold(doc: Document): void {
 }
 
 function findMainContent(doc: Document): Element {
-  const onlyElementMatching = (tag: string) => {
-    const found = doc.querySelectorAll(tag);
-    return found.length === 1 ? found[0] : null;
-  };
   return (
-    onlyElementMatching('main') ?? onlyElementMatching('article') ?? doc.body
+    onlyElementMatching(doc, 'main') ??
+    onlyElementMatching(doc, 'article') ??
+    doc.body
   );
+}
+
+function onlyElementMatching(doc: Document, tag: string): Element | null {
+  const found = doc.querySelectorAll(tag);
+  return found.length === 1 ? found[0] : null;
+}
+
+function nodesSplitAtHeadings(node: Node): Node[] {
+  if (
+    isElement(node) &&
+    !isHeading(node) &&
+    node.querySelector(HEADING_TAGS.join(', '))
+  ) {
+    return Array.from(node.childNodes).flatMap(nodesSplitAtHeadings);
+  }
+  return [node];
+}
+
+function nodesToTextBlock(doc: Document, nodes: Node[]): Block[] {
+  const container = doc.createElement('div');
+  for (const node of nodes) {
+    container.appendChild(node.cloneNode(true));
+  }
+  const text = turndown.turndown(container).trim();
+  return text ? [{ kind: 'text', text }] : [];
+}
+
+function headingToBlock(heading: Element): Block {
+  return {
+    kind: 'heading',
+    level: Number(heading.nodeName[1]),
+    text: collapsedTextOf(heading),
+  };
 }
 
 function isElement(node: Node): node is Element {
   return node.nodeType === node.ELEMENT_NODE;
+}
+
+function isHeading(node: Node): node is HTMLHeadingElement {
+  return isElement(node) && HEADING_TAGS.includes(node.nodeName);
 }
 
 function collapsedTextOf(element: Element): string {
