@@ -43,9 +43,7 @@ const turndown = createMarkdownConverter();
  * // ]
  */
 export function htmlToBlocks(html: string): Block[] {
-  const doc = createDocument(html);
-  removeElementsWithoutReadableText(doc);
-  unwrapTablesMarkdownCannotHold(doc);
+  const doc = parseReadableDocument(html);
   const blocks: Block[] = [];
   let bufferedNodes: Node[] = [];
   const emitBufferedNodesAsText = () => {
@@ -93,6 +91,13 @@ function createMarkdownConverter(): TurndownService {
       converter.escape((node as HTMLElement).getAttribute('alt') ?? ''),
   });
   return converter;
+}
+
+function parseReadableDocument(html: string): Document {
+  const doc = createDocument(html);
+  removeElementsWithoutReadableText(doc);
+  unwrapTablesMarkdownCannotHold(doc);
+  return doc;
 }
 
 function removeElementsWithoutReadableText(doc: Document): void {
