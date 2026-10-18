@@ -9,25 +9,24 @@ const FETCH_TIMEOUT_MS = 120_000;
 type HostTiming = { delayMs: number; lastRequestAt: number };
 
 /**
- * Makes the fetch that `buildReferenceLibrary` uses for every request. The CLI
- * makes one for each run.
+ * Returns the fetch function that `buildReferenceLibrary` uses for every
+ * request. The CLI creates one for each run.
  *
- * On the first request to a host it reads the host's robots.txt. It then waits
- * the `Crawl-delay` set for `User-agent: *` between requests to that host. A
- * missing or unreadable robots.txt means no wait. It does not read `Disallow`.
- * The pipeline fetches only the configured urls.
+ * Before its first request to a host, it reads that host's robots.txt. It then
+ * waits the `Crawl-delay` given for `User-agent: *` between requests to the
+ * host. A missing or unreadable robots.txt sets no delay. It does not read
+ * `Disallow` rules.
  *
- * The wait applies only to requests made one after another. Requests made at
- * the same time do not wait for each other. `buildReferenceLibrary` makes one
- * request at a time.
+ * It does not space out requests made at the same time, but
+ * `buildReferenceLibrary` only makes one at a time.
  *
- * @param options Optional. Only tests pass their own `sleep` and `now`.
+ * @param options Optional. Tests use it to replace `sleep` and `now`.
  * @returns `(url: string) => Promise<Uint8Array>`. Resolves with the body of a
  * 2xx response.
- * @throws `Error` "GET <url> returned <status>" for any other status below 500
- * except 429, such as 404, with no retry.
  * @throws `Error` "GET <url> failed after 4 attempts: <last failure>" when
  * every attempt returns a 429 or 5xx or throws.
+ * @throws `Error` "GET <url> returned <status>" right away for any other failed
+ * status, such as 404.
  *
  * @example
  * // https://example.org/robots.txt has "User-agent: *" and "Crawl-delay: 5".

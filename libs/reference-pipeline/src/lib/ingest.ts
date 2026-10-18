@@ -8,9 +8,9 @@ import { Block, Part, Section, blocksToDocument } from './sections';
 import { Source } from './sources';
 
 /**
- * What happened to one configured source. The CLI prints one line for each.
+ * What happened to one source in sources.json. The CLI prints one line for each.
  *
- * `empty` means the source has no text outside its headings. The library leaves
+ * `empty` means the source has no text besides its headings. The library leaves
  * it out.
  *
  * @example
@@ -25,25 +25,27 @@ export type IngestReport =
   | { id: string; status: 'empty' };
 
 /**
- * Builds a reference library from the configured sources. The CLI calls it.
+ * Builds the reference library from the sources in sources.json. This is the
+ * function the CLI runs.
  *
- * First it fetches and converts every source.
+ * It first fetches and converts every source.
  *
  * 1. `fetchBytes` fetches the source. A `cdc-media` source goes through
  *    `fetchCdcMediaPage`.
  * 2. `htmlToBlocks` or `pdfToBlocks` turns the page into blocks.
  * 3. `blocksToDocument` turns the blocks into markdown, sections and parts.
  *
- * Then `writeReference` stores each one. A failed fetch rejects the promise
- * before `writeReference` runs, and the library at `path` stays as it was. A
- * reader of `path` sees the old library or the new one, never a partial one.
+ * Then `writeReference` stores each source that has text besides its headings.
+ * If any step throws, the promise rejects and the library at `path` stays as it
+ * was. A reader of `path` sees either the old library or the new one, never a
+ * partial one.
  *
  * @param args.path `string`. Where the library file goes.
  * @param args.sources `Source[]`. From `parseSources`.
  * @param args.fetchBytes `(url: string) => Promise<Uint8Array>`. From
  * `createRateLimitedFetch`. It throws when it cannot fetch a body.
  * @returns `Promise<IngestReport[]>`. One {@link IngestReport} per source, in
- * configuration order.
+ * the same order as `sources`.
  *
  * @example
  * const report = await buildReferenceLibrary({

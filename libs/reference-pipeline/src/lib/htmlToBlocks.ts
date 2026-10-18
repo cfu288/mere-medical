@@ -18,11 +18,12 @@ const REMOVED_TAGS = ['script', 'style', 'noscript', 'iframe', 'object', 'nav'];
 const turndown = createMarkdownConverter();
 
 /**
- * Turns a web page into blocks for `blocksToDocument`. `buildReferenceLibrary`
- * uses it for `html` and `cdc-media` sources.
+ * Turns the web page of an `html` or `cdc-media` source into blocks for
+ * `blocksToDocument`.
  *
- * It keeps the page's headings and text, and drops the site around them. The
- * README section "Sources" lists what it drops.
+ * It reads only the page's `<main>` if it has exactly one, or else its
+ * `<article>` if it has exactly one. The README section "Sources" lists the
+ * rest of the rules.
  *
  * @param html `string`. The page's html.
  * @returns `Block[]`. The blocks in reading order.

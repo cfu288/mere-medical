@@ -1,5 +1,5 @@
 /**
- * One heading or run of text from a parsed page. `htmlToBlocks` and
+ * One heading or piece of text from a parsed page. `htmlToBlocks` and
  * `pdfToBlocks` both return blocks, and `blocksToDocument` groups them into
  * sections. The library stores the sections, not the blocks. The README section
  * "Concepts" compares them.
@@ -12,36 +12,26 @@ export type Block =
 
 /**
  * One heading block and the text blocks after it, up to the next heading. Text
- * before the first heading forms an "Opening text" section. Each PDF page gets a
- * "Page N" heading.
+ * before the first heading forms an "Opening text" section.
  *
- * The `sections` column holds a reference's sections in reading order, and the
- * chat agent lists them as the reference's outline. `textStart` and `textEnd`
- * locate a section's text in `content_md`.
+ * The `sections` column holds a reference's sections in reading order.
+ * `content_md.slice(textStart, textEnd)` is a section's text, which leaves out
+ * its heading line and any subsections.
  */
 export type Section = {
-  /**
-   * Made from the title, unique in the reference. The chat agent asks for a section
-   * by it.
-   */
+  /** Made from the title, such as `blood-pressure-goals`. Unique in the reference. */
   sectionId: string;
-  /** The `sectionId` of the heading this one sits under, or null at the top. */
+  /** The parent section's `sectionId`, or null for a top-level section. */
   parentId: string | null;
   /** The heading's text, or "Opening text" for text before the first heading. */
   title: string;
-  /** Where the section's text starts in `content_md`, as a JavaScript string index. */
   textStart: number;
-  /**
-   * Where the section's text ends in `content_md`. Equal to `textStart` when the
-   * heading has no text of its own.
-   */
+  /** Equal to `textStart` when the heading has no text of its own. */
   textEnd: number;
 };
 
 /**
- * Up to 10,000 characters of one section's text, stored as a `parts_fts` row.
- * The chat agent searches parts to find where a term appears in a reference. It
- * reads a long section one part at a time.
+ * Up to 10,000 characters of one section's text, stored as one `parts_fts` row.
  */
 export type Part = {
   sectionId: string;
@@ -54,12 +44,11 @@ const TEXT_BEFORE_FIRST_HEADING_TITLE = 'Opening text';
 const PART_MAX_CHARS = 10000;
 
 /**
- * Turns a source's blocks into what `writeReference` stores.
- * `buildReferenceLibrary` calls it once per source.
+ * Builds a reference's markdown, sections and parts from its blocks, once for
+ * each source that `buildReferenceLibrary` fetches.
  *
- * It writes the blocks as one markdown document. Each heading becomes a section,
- * nested as the headings nest. `splitIntoParts` splits each section's text into
- * parts. The README section "Converting a reference" lists the rules.
+ * Each heading starts a section, and `parentId` follows how the headings nest.
+ * The README section "Converting a reference" lists the rules.
  *
  * @param blocks `Block[]`. A source's blocks in reading order.
  * @returns `{ markdown: string; sections: Section[]; parts: Part[] }`. The
@@ -136,12 +125,12 @@ export function blocksToDocument(blocks: Block[]): {
 }
 
 /**
- * Splits one section's text into parts of at most 10,000 characters.
- * `blocksToDocument` calls it.
+ * Splits one section's text into parts of at most 10,000 characters, for
+ * `blocksToDocument`.
  *
- * A part ends at the last paragraph break that fits, or else the last line break,
- * or else the last space. Text with none of these is cut at 10,000 characters.
- * The whitespace at a break, and any after it, belongs to no part.
+ * A part ends at the last paragraph break that fits, or failing that the last
+ * line break, then the last space. With none of these, it ends at 10,000
+ * characters. Parts leave out the whitespace where they split.
  *
  * @param text `string`. One section's text.
  * @returns `string[]`. The parts in order. Empty for empty text.

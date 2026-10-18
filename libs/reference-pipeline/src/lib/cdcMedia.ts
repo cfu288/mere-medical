@@ -9,17 +9,17 @@ const cdcMediaSchema = z.object({
 });
 
 /**
- * Fetches a CDC page through CDC's content API. `buildReferenceLibrary` uses it
- * for each `cdc-media` source.
+ * Fetches the page for a `cdc-media` source through CDC's content API.
  *
- * The API gives the page's text without the cdc.gov menus. It also gives the
- * page's cdc.gov address, which the library stores as the reference's url.
+ * The API returns the page's text without the cdc.gov menus. Its metadata also
+ * gives the page's cdc.gov address, which the library stores as the
+ * reference's url.
  *
  * @param mediaId `number`. The page's id in the CDC Media Library.
  * @param fetchBytes `(url: string) => Promise<Uint8Array>`. From
  * `createRateLimitedFetch`.
- * @returns `Promise<{ url: string; html: string }>`. The cdc.gov address, and
- * the page's html for `htmlToBlocks`.
+ * @returns `Promise<{ url: string; html: string }>`. The page's cdc.gov address
+ * and its html.
  *
  * @example
  * await fetchCdcMediaPage(133745, createRateLimitedFetch());

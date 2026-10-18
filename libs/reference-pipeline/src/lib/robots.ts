@@ -1,9 +1,9 @@
 /**
- * Reads the crawl delay from a robots.txt. `createRateLimitedFetch` uses it to
- * space its requests to a host.
+ * Reads the crawl delay from a robots.txt. `createRateLimitedFetch` waits that
+ * long between requests to the host.
  *
- * Only a `Crawl-delay` in a group for `User-agent: *` counts. Node's fetch sends
- * the user agent `node`, and the pipeline treats only `*` as a match for it.
+ * It reads only the `Crawl-delay` under `User-agent: *`, and ignores groups for
+ * named crawlers.
  *
  * @param robotsTxt `string`. The body of a robots.txt file.
  * @returns `number`. The delay in seconds, or 0 when there is none or it is

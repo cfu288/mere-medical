@@ -1,12 +1,11 @@
 import { Block } from './sections';
 
 /**
- * Turns a PDF into blocks for `blocksToDocument`. `buildReferenceLibrary` uses
- * it for each `pdf` source.
+ * Turns the PDF of a `pdf` source into blocks for `blocksToDocument`.
  *
- * Each page becomes a "Page N" heading followed by the page's lines. So each page
- * is one section, and a citation can name its page. PDFs mark their headings in
- * different ways, and pages are the one division every PDF has.
+ * Each page becomes a "Page N" heading followed by the page's lines. This
+ * makes each page one section, and a citation can name its page. PDFs mark
+ * their headings in many different ways, but every PDF has pages.
  *
  * @param bytes `Uint8Array`. The PDF file.
  * @returns `Promise<Block[]>`. The blocks in reading order.

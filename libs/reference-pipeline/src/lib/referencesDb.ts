@@ -3,19 +3,18 @@ import { DatabaseSync } from 'node:sqlite';
 import { Part, Section } from './sections';
 
 /**
- * One reference as `writeReference` stores it. Each field except `parts` fills
- * one column of the reference's `documents` row. Each part becomes its own
- * `parts_fts` row. `id`, `title` and `summary` also go to `documents_fts` for
- * search.
+ * One reference as `writeReference` stores it. `id`, `title`, `edition` and
+ * `summary` come from sources.json.
+ *
+ * Each field except `parts` fills one column of the reference's `documents`
+ * row. Each part becomes its own `parts_fts` row. `id`, `title` and `summary`
+ * also go to `documents_fts` for search.
  */
 export type ReferenceRecord = {
-  /** The source's configured id. */
   id: string;
-  /** The configured title. */
   title: string;
-  /** The configured version or date of the publisher's edition. */
+  /** The version or date of the publisher's edition. */
   edition: string;
-  /** The configured description of what the reference covers. */
   summary: string;
   /** The page or PDF the text came from. For `cdc-media`, the cdc.gov page. */
   url: string;
@@ -24,23 +23,18 @@ export type ReferenceRecord = {
   /** The sections in reading order, stored as JSON in the `sections` column. */
   sections: Section[];
   /**
-   * Each part is a `parts_fts` row, with the record's `id` as its `document_id`
-   * and its `sectionId` as `section_id`.
+   * Each part becomes a `parts_fts` row. The row's `document_id` is the
+   * record's `id`, and its other columns come from the part.
    */
   parts: Part[];
 };
 
 /**
  * Opens a reference library, creating its tables when they are missing.
- * `buildReferenceLibrary` uses it to write a new library, and the chat agent uses
- * it to open a built one.
+ * `buildReferenceLibrary` uses it to write a new library, and the API server
+ * opens a built one for the chat agent.
  *
- * - `documents` holds one row per reference, with its whole text in `content_md`.
- * - `documents_fts` searches titles and summaries, to choose a reference.
- * - `parts_fts` holds each section's text in parts. The chat agent searches it
- *   within one reference, and reads a long section one part at a time.
- *
- * {@link ReferenceRecord} describes each column.
+ * {@link ReferenceRecord} shows what goes into each table.
  *
  * @param path `string`. A file path, or `':memory:'` for an empty library that is
  * not saved.
@@ -80,7 +74,7 @@ export function openReferencesDb(path: string): DatabaseSync {
 
 /**
  * Stores one reference in all three tables. `buildReferenceLibrary` calls it
- * for each source that has text.
+ * for each source that has text besides its headings.
  *
  * @param db `DatabaseSync`. From {@link openReferencesDb}.
  * @param record `ReferenceRecord`.
