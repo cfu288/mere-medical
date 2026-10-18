@@ -3,9 +3,10 @@ import { DatabaseSync } from 'node:sqlite';
 import { Part, Section } from './sections';
 
 /**
- * One reference as `writeReference` stores it. All fields but `parts` are
- * columns of a `documents` row. `id`, `title` and `summary` are also copied to
- * `documents_fts` for search.
+ * One reference as `writeReference` stores it. Each field except `parts` fills
+ * one column of the reference's `documents` row. Each part becomes its own
+ * `parts_fts` row. `id`, `title` and `summary` also go to `documents_fts` for
+ * search.
  */
 export type ReferenceRecord = {
   /** The source's configured id. */

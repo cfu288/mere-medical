@@ -26,10 +26,16 @@ The chat agent reads the file. It never fetches a source itself.
 A **reference** is one published guideline or web page. Each reference is one
 row in `documents`. The row holds the whole reference as markdown.
 
-A **section** of a web page is one heading and the text under it, up to the next
-heading. A section of a PDF is one page of the PDF. A guideline is too long to
-read at once, so the agent reads one section at a time. The row's `sections`
-column gives where each section's text starts and ends in `content_md`.
+A **block** is one heading or one run of text, in reading order. `htmlToBlocks`
+and `pdfToBlocks` turn a source into a list of blocks. Web pages and PDFs then
+reach `blocksToDocument` in the same form. The library does not store blocks.
+
+A **section** is one heading block and the text blocks after it, up to the next
+heading. `blocksToDocument` makes the sections from the blocks and nests them as
+the headings nest. `pdfToBlocks` starts each PDF page with a "Page N" heading,
+so each page is one section. A guideline is too long to read at once, so the
+agent reads one section at a time. The row's `sections` column gives where each
+section's text starts and ends in `content_md`.
 
 A **part** is up to 10,000 characters of one section's text. Each part is one
 row in `parts_fts`. A search inside a reference matches parts, so a match points

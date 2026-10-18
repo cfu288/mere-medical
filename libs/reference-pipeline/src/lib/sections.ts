@@ -1,7 +1,8 @@
 /**
  * One heading or run of text from a parsed page. `htmlToBlocks` and
- * `pdfToBlocks` both return blocks, and `blocksToDocument` then handles web pages
- * and PDFs the same way. The library does not store blocks.
+ * `pdfToBlocks` both return blocks, and `blocksToDocument` groups them into
+ * sections. The library stores the sections, not the blocks. The README section
+ * "Concepts" compares them.
  *
  * A text block holds markdown from a web page or plain text from a PDF.
  */
@@ -10,7 +11,7 @@ export type Block =
   | { kind: 'text'; text: string };
 
 /**
- * One heading of a reference and its own text, up to the next heading. Text
+ * One heading block and the text blocks after it, up to the next heading. Text
  * before the first heading forms an "Opening text" section. Each PDF page gets a
  * "Page N" heading.
  *
