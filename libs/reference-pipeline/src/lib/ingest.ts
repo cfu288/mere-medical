@@ -1,6 +1,6 @@
 import { renameSync, rmSync } from 'fs';
-import { z } from 'zod';
 
+import { fetchCdcMediaPage } from './cdcMedia';
 import { htmlToBlocks } from './htmlToBlocks';
 import { pdfToBlocks } from './pdfBlocks';
 import { openReferencesDb, writeReference } from './referencesDb';
@@ -116,15 +116,6 @@ export async function buildReferenceLibrary({
   return reports;
 }
 
-// Serves a cdc.gov page's content without the site navigation.
-const CDC_MEDIA_API = 'https://tools.cdc.gov/api/v2/resources/media';
-
-const cdcMediaSchema = z.object({
-  results: z
-    .tuple([z.object({ sourceUrl: z.string().url() })])
-    .rest(z.unknown()),
-});
-
 type Fetched = { url: string; blocks: Block[] };
 
 async function fetchSourceAsBlocks(
@@ -142,16 +133,8 @@ async function fetchSourceAsBlocks(
         blocks: htmlBytesToBlocks(await fetchBytes(source.url)),
       };
     case 'cdc-media': {
-      const metadata = await fetchBytes(
-        `${CDC_MEDIA_API}/${source.mediaId}.json`,
-      );
-      const metadataJson = new TextDecoder().decode(metadata);
-      const url = cdcMediaSchema.parse(JSON.parse(metadataJson)).results[0]
-        .sourceUrl;
-      const page = await fetchBytes(
-        `${CDC_MEDIA_API}/${source.mediaId}/content.html`,
-      );
-      return { url, blocks: htmlBytesToBlocks(page) };
+      const { url, html } = await fetchCdcMediaPage(source.mediaId, fetchBytes);
+      return { url, blocks: htmlToBlocks(html) };
     }
   }
 }
