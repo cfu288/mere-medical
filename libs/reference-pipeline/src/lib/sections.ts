@@ -9,8 +9,7 @@ export type Block =
 /**
  * One heading of a stored document and the text under it, up to the next
  * heading. `textStart` and `textEnd` are offsets into the document's markdown.
- * They are equal when the heading has no text of its own. `partCount` is the
- * number of parts its text splits into, and 0 when it has no text.
+ * They are equal when the heading has no text of its own.
  */
 export type Section = {
   sectionId: string;
@@ -18,7 +17,6 @@ export type Section = {
   title: string;
   textStart: number;
   textEnd: number;
-  partCount: number;
 };
 
 /** One part of a section's text, numbered from 1 within the section. */
@@ -51,7 +49,7 @@ const PART_MAX_CHARS = 10000;
  * ]);
  * // {
  * //   markdown: '# Goals\n\nBelow 130.',
- * //   sections: [{ sectionId: 'goals', parentId: null, title: 'Goals', textStart: 9, textEnd: 19, partCount: 1 }],
+ * //   sections: [{ sectionId: 'goals', parentId: null, title: 'Goals', textStart: 9, textEnd: 19 }],
  * //   parts: [{ sectionId: 'goals', part: 1, text: 'Below 130.' }],
  * // }
  */
@@ -74,7 +72,6 @@ export function blocksToDocument(blocks: Block[]): {
       title,
       textStart: markdown.length,
       textEnd: markdown.length,
-      partCount: 0,
     };
     sections.push(section);
     return section;
@@ -108,7 +105,6 @@ export function blocksToDocument(blocks: Block[]): {
     const texts = splitIntoParts(
       markdown.slice(section.textStart, section.textEnd),
     );
-    section.partCount = texts.length;
     texts.forEach((text, index) =>
       parts.push({ sectionId: section.sectionId, part: index + 1, text }),
     );

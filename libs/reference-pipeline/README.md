@@ -75,12 +75,9 @@ This entry of `sections` is page 34 of the VA-DoD hypertension guideline.
   "parentId": null,
   "title": "Page 34",
   "textStart": 82194,
-  "textEnd": 86057,
-  "partCount": 1
+  "textEnd": 86057
 }
 ```
-
-`partCount` is 0 for a section with no text.
 
 ## Sources
 

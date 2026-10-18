@@ -21,7 +21,6 @@ describe('blocksToDocument', () => {
           title: 'Screening',
           textStart: 13,
           textEnd: 27,
-          partCount: 1,
         },
         {
           sectionId: 'hypertension',
@@ -29,7 +28,6 @@ describe('blocksToDocument', () => {
           title: 'Hypertension',
           textStart: 46,
           textEnd: 69,
-          partCount: 1,
         },
         {
           sectionId: 'immunizations',
@@ -37,7 +35,6 @@ describe('blocksToDocument', () => {
           title: 'Immunizations',
           textStart: 88,
           textEnd: 105,
-          partCount: 1,
         },
       ],
       parts: [
@@ -65,7 +62,6 @@ describe('blocksToDocument', () => {
           title: 'Opening text',
           textStart: 0,
           textEnd: 28,
-          partCount: 1,
         },
         {
           sectionId: 'scope',
@@ -73,7 +69,6 @@ describe('blocksToDocument', () => {
           title: 'Scope',
           textStart: 40,
           textEnd: 63,
-          partCount: 1,
         },
       ],
       parts: [
@@ -103,7 +98,6 @@ describe('blocksToDocument', () => {
           title: 'Cover',
           textStart: 7,
           textEnd: 7,
-          partCount: 0,
         },
         {
           sectionId: 'goals',
@@ -111,7 +105,6 @@ describe('blocksToDocument', () => {
           title: 'Goals',
           textStart: 18,
           textEnd: 38,
-          partCount: 1,
         },
       ],
       parts: [{ sectionId: 'goals', part: 1, text: 'A goal of <130 mmHg.' }],
@@ -137,7 +130,6 @@ describe('blocksToDocument', () => {
           title: 'Dose',
           textStart: 8,
           textEnd: 14,
-          partCount: 1,
         },
         {
           sectionId: 'dose-2',
@@ -145,7 +137,6 @@ describe('blocksToDocument', () => {
           title: 'Dose',
           textStart: 24,
           textEnd: 31,
-          partCount: 1,
         },
         {
           sectionId: 'dose-2-2',
@@ -153,7 +144,6 @@ describe('blocksToDocument', () => {
           title: 'Dose 2',
           textStart: 43,
           textEnd: 49,
-          partCount: 1,
         },
       ],
       parts: [
@@ -185,7 +175,6 @@ describe('blocksToDocument', () => {
             'B. Treatment Goals and General Approaches to Hypertension Management',
           textStart: 70,
           textEnd: 70,
-          partCount: 0,
         },
       ],
       parts: [],
