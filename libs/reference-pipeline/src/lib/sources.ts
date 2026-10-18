@@ -27,6 +27,15 @@ const sourceSchema = z.discriminatedUnion('type', [
   }),
 ]);
 
+/**
+ * One entry of sources.json, naming one reference to fetch.
+ *
+ * `title`, `edition` and `summary` describe the reference, and the library
+ * stores them trimmed. The chat agent chooses a reference by its title and
+ * summary. An `html` or `pdf` source gives a `url`. For a cdc.gov page, use
+ * `cdc-media` with its `mediaId`. CDC's content API then gives the page's text
+ * without the site menus.
+ */
 export type Source = z.infer<typeof sourceSchema>;
 
 const sourcesSchema = z
@@ -37,14 +46,13 @@ const sourcesSchema = z
   );
 
 /**
- * Parses the source configuration, such as the contents of sources.json.
+ * Parses sources.json into sources. The CLI calls it and passes the result to
+ * `buildReferenceLibrary`.
  *
- * It trims text fields and turns a string `mediaId` into a number. Ids are
- * lowercase words joined by hyphens and must be unique.
+ * It trims text fields and accepts a `mediaId` written as a string.
  *
  * @param raw `unknown`. The parsed JSON.
- * @returns `Source[]`. Each source is `html` or `pdf` with a `url`, or
- * `cdc-media` with a `mediaId`.
+ * @returns `Source[]`.
  * @throws `ZodError` when a source is malformed or two sources share an id.
  *
  * @example

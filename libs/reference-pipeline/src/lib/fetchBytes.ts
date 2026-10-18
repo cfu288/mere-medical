@@ -9,27 +9,19 @@ const FETCH_TIMEOUT_MS = 120_000;
 type HostTiming = { delayMs: number; lastRequestAt: number };
 
 /**
- * Makes a fetch that waits between requests to each host as its robots.txt
- * asks, and returns the body.
+ * Makes the fetch that `buildReferenceLibrary` uses for every request. The CLI
+ * makes one for each run.
  *
- * - On the first request to a host it reads that host's robots.txt once. A
- *   `Crawl-delay` for all user agents (`User-agent: *`) sets the wait between
- *   requests to that host. A missing or unreadable robots.txt means no wait.
- *   It reads only `Crawl-delay`, not `Disallow`.
- * - Each request waits until the host's delay passes after its last request,
- *   robots.txt included.
- * - It abandons a request after 120 seconds.
- * - It retries a 429 or 5xx response, a failed request or a body that fails to
- *   arrive, up to 4 attempts in all. The waits between attempts are 2, 4 and 8
- *   seconds, or the crawl delay when it is longer.
- * - Requests that start together share one read of a host's robots.txt.
+ * On the first request to a host it reads the host's robots.txt. It then waits
+ * the `Crawl-delay` set for `User-agent: *` between requests to that host. A
+ * missing or unreadable robots.txt means no wait. It does not read `Disallow`.
+ * The pipeline fetches only the configured urls.
  *
- * @param options Optional. Each field defaults to the real implementation. Only
- * tests pass their own.
- * @param options.sleep `(ms: number) => Promise<unknown>`. Defaults to
- * `setTimeout` from `timers/promises`.
- * @param options.now `() => number`, the time in milliseconds. Defaults to
- * `Date.now`.
+ * The wait applies only to requests made one after another. Requests made at
+ * the same time do not wait for each other. `buildReferenceLibrary` makes one
+ * request at a time.
+ *
+ * @param options Optional. Only tests pass their own `sleep` and `now`.
  * @returns `(url: string) => Promise<Uint8Array>`. Resolves with the body of a
  * 2xx response.
  * @throws `Error` "GET <url> returned <status>" for any other status below 500

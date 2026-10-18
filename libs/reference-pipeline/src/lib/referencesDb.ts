@@ -3,8 +3,8 @@ import { DatabaseSync } from 'node:sqlite';
 import { Part, Section } from './sections';
 
 /**
- * One reference as the library stores it. All fields but `parts` are columns
- * of a `documents` row. `id`, `title` and `summary` are also copied to
+ * One reference as `writeReference` stores it. All fields but `parts` are
+ * columns of a `documents` row. `id`, `title` and `summary` are also copied to
  * `documents_fts` for search.
  */
 export type ReferenceRecord = {
@@ -22,24 +22,28 @@ export type ReferenceRecord = {
   markdown: string;
   /** The sections in reading order, stored as JSON in the `sections` column. */
   sections: Section[];
-  /** Each part is a `parts_fts` row, with `id` as its `document_id` and its `sectionId` as `section_id`. */
+  /**
+   * Each part is a `parts_fts` row, with the record's `id` as its `document_id`
+   * and its `sectionId` as `section_id`.
+   */
   parts: Part[];
 };
 
 /**
- * Opens or creates a reference library, creating its tables if they are
- * missing.
+ * Opens a reference library, creating its tables when they are missing.
+ * `buildReferenceLibrary` uses it to write a new library, and the chat agent uses
+ * it to open a built one.
  *
- * - `documents` holds each reference, its markdown and its sections as JSON.
- * - `documents_fts` searches each reference's title and summary.
- * - `parts_fts` holds the text of each part of a section and searches it. A
- *   reader reads a part from it by reference id, section id and part number.
+ * - `documents` holds one row per reference, with its whole text in `content_md`.
+ * - `documents_fts` searches titles and summaries, to choose a reference.
+ * - `parts_fts` holds each section's text in parts. The chat agent searches it
+ *   within one reference, and reads a long section one part at a time.
  *
  * {@link ReferenceRecord} describes each column.
  *
- * @param path `string`. A file path, or `':memory:'` for a library that is
+ * @param path `string`. A file path, or `':memory:'` for an empty library that is
  * not saved.
- * @returns `DatabaseSync`. The open library. The caller closes it.
+ * @returns `DatabaseSync`. The caller closes it.
  *
  * @example
  * const db = openReferencesDb('libs/reference-pipeline/data/references.db');
@@ -74,13 +78,13 @@ export function openReferencesDb(path: string): DatabaseSync {
 }
 
 /**
- * Adds a reference to the library with its markdown and its sections as JSON. It
- * also adds the title and summary for search, and the text of each part of each section.
+ * Stores one reference in all three tables. `buildReferenceLibrary` calls it
+ * for each source that has text.
  *
  * @param db `DatabaseSync`. From {@link openReferencesDb}.
- * @param record `ReferenceRecord`. The reference, its markdown and its sections.
+ * @param record `ReferenceRecord`.
  * @returns `void`.
- * @throws `Error` when the library already holds the reference.
+ * @throws `Error` when the library already holds a reference with this id.
  *
  * @example
  * writeReference(db, {

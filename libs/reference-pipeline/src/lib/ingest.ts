@@ -8,15 +8,13 @@ import { Block, Part, Section, blocksToDocument } from './sections';
 import { Source } from './sources';
 
 /**
- * What happened to one configured source, for the CLI to print.
+ * What happened to one configured source. The CLI prints one line for each.
  *
- * - `id`: the source's configured id.
- * - `status`: `written` when the library holds it, or `empty` when it parsed to
- *   no text and the library holds nothing for it.
- * - `sections`: for a written source, how many sections it has.
+ * `empty` means the source has no text outside its headings. The library leaves
+ * it out.
  *
  * @example
- * { id: 'uspstf-a-and-b', status: 'written', sections: 3 }
+ * { id: 'uspstf-a-and-b', status: 'written', sections: 12 }
  */
 export type IngestReport =
   | {
@@ -27,18 +25,23 @@ export type IngestReport =
   | { id: string; status: 'empty' };
 
 /**
- * Builds a new reference library at `path` from the configured `sources`.
+ * Builds a reference library from the configured sources. The CLI calls it.
  *
- * It fetches and parses every source first. A failed fetch or a malformed
- * response rejects the promise and leaves any library at `path` as it was. It
- * then writes the library to `<path>.building` and renames it over `path`. A
- * reader of `path` sees the old library or the new one, never a partial one. It
- * reports a source that parsed to no text as `empty` and does not store it.
+ * First it fetches and converts every source.
+ *
+ * 1. `fetchBytes` fetches the source. A `cdc-media` source goes through
+ *    `fetchCdcMediaPage`.
+ * 2. `htmlToBlocks` or `pdfToBlocks` turns the page into blocks.
+ * 3. `blocksToDocument` turns the blocks into markdown, sections and parts.
+ *
+ * Then `writeReference` stores each one. A failed fetch rejects the promise
+ * before `writeReference` runs, and the library at `path` stays as it was. A
+ * reader of `path` sees the old library or the new one, never a partial one.
  *
  * @param args.path `string`. Where the library file goes.
- * @param args.sources `Source[]`. Parsed configuration, from `parseSources`.
- * @param args.fetchBytes `(url: string) => Promise<Uint8Array>`. Returns the
- * body at a url, and throws when it cannot.
+ * @param args.sources `Source[]`. From `parseSources`.
+ * @param args.fetchBytes `(url: string) => Promise<Uint8Array>`. From
+ * `createRateLimitedFetch`. It throws when it cannot fetch a body.
  * @returns `Promise<IngestReport[]>`. One {@link IngestReport} per source, in
  * configuration order.
  *

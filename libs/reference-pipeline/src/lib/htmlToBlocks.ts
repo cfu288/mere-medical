@@ -5,7 +5,6 @@ import { tables } from '@joplin/turndown-plugin-gfm';
 import { Block } from './sections';
 
 const HEADING_TAGS = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
-// A GFM table cell cannot hold these.
 const TAGS_A_GFM_TABLE_CANNOT_HOLD = [
   ...HEADING_TAGS,
   'UL',
@@ -19,20 +18,13 @@ const REMOVED_TAGS = ['script', 'style', 'noscript', 'iframe', 'object', 'nav'];
 const turndown = createMarkdownConverter();
 
 /**
- * Parses an HTML page into heading and text blocks.
+ * Turns a web page into blocks for `blocksToDocument`. `buildReferenceLibrary`
+ * uses it for `html` and `cdc-media` sources.
  *
- * - It reads only the page's one `<main>`, or else its one `<article>`, or
- *   else the whole body.
- * - Each `<h1>` to `<h6>`, at any depth, becomes a heading block with its
- *   text.
- * - The content between headings becomes one markdown text block.
- * - A table that holds a heading, list, rule, quote or code block becomes plain
- *   blocks, its caption first. Other tables become GFM tables.
- * - It drops scripts, styles, noscript fallbacks, frames, objects and `<nav>`
- *   navigation.
- * - A link keeps only its text, and an image only its alt text.
+ * It keeps the page's headings and text, and drops the site around them. The
+ * README section "Sources" lists what it drops.
  *
- * @param html `string`.
+ * @param html `string`. The page's html.
  * @returns `Block[]`. The blocks in reading order.
  *
  * @example

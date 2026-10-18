@@ -1,6 +1,5 @@
 import { z } from 'zod';
 
-// Serves a cdc.gov page's content without the site navigation.
 const CDC_MEDIA_API = 'https://tools.cdc.gov/api/v2/resources/media';
 
 const cdcMediaSchema = z.object({
@@ -10,14 +9,17 @@ const cdcMediaSchema = z.object({
 });
 
 /**
- * Fetches a CDC page's content through CDC's content API.
+ * Fetches a CDC page through CDC's content API. `buildReferenceLibrary` uses it
+ * for each `cdc-media` source.
+ *
+ * The API gives the page's text without the cdc.gov menus. It also gives the
+ * page's cdc.gov address, which the library stores as the reference's url.
  *
  * @param mediaId `number`. The page's id in the CDC Media Library.
- * @param fetchBytes `(url: string) => Promise<Uint8Array>`. Returns the body
- * at a url, and throws when it cannot.
- * @returns `Promise<{ url: string; html: string }>`. The cdc.gov address of the
- * page and its content as html.
- * @throws `ZodError` when the API's description of the page has no address.
+ * @param fetchBytes `(url: string) => Promise<Uint8Array>`. From
+ * `createRateLimitedFetch`.
+ * @returns `Promise<{ url: string; html: string }>`. The cdc.gov address, and
+ * the page's html for `htmlToBlocks`.
  *
  * @example
  * await fetchCdcMediaPage(133745, createRateLimitedFetch());

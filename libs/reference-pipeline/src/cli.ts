@@ -9,6 +9,10 @@ const ROOT = join(__dirname, '..');
 const SOURCES_PATH = join(ROOT, 'sources.json');
 const LIBRARY_PATH = join(ROOT, 'data', 'references.db');
 
+/**
+ * Builds `libs/reference-pipeline/data/references.db` from `sources.json` and
+ * prints one line per source. `npx nx run reference-pipeline:build-library` runs this file.
+ */
 async function main() {
   const sourcesJson = readFileSync(SOURCES_PATH, 'utf8');
   const sources = parseSources(JSON.parse(sourcesJson));

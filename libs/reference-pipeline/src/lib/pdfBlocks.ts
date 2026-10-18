@@ -1,13 +1,12 @@
 import { Block } from './sections';
 
 /**
- * Reads a PDF with pdf.js and turns it into blocks, one section per page.
+ * Turns a PDF into blocks for `blocksToDocument`. `buildReferenceLibrary` uses
+ * it for each `pdf` source.
  *
- * - Each page starts with a heading titled "Page N".
- * - The page's text follows as one block, one line per line that pdf.js
- *   reports. A raised superscript stays on its line.
- * - It collapses the spaces in each line and skips empty lines. A page with no
- *   text gets only its heading.
+ * Each page becomes a "Page N" heading followed by the page's lines. So each page
+ * is one section, and a citation can name its page. PDFs mark their headings in
+ * different ways, and pages are the one division every PDF has.
  *
  * @param bytes `Uint8Array`. The PDF file.
  * @returns `Promise<Block[]>`. The blocks in reading order.
