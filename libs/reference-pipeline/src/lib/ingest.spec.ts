@@ -36,13 +36,15 @@ const CDC_ADULT: Source = {
   type: 'pdf',
 };
 
-function libraryPath(): string {
-  return join(mkdtempSync(join(tmpdir(), 'references-')), 'references.db');
+function newLibraryPath(): string {
+  const folderNamePrefix = join(tmpdir(), 'references-');
+  const newEmptyFolder = mkdtempSync(folderNamePrefix);
+  return join(newEmptyFolder, 'references.db');
 }
 
 describe('buildReferenceLibrary', () => {
   it('stores an html source with its configured description, its markdown and its sections, reporting its section count', async () => {
-    const path = libraryPath();
+    const path = newLibraryPath();
     const report = await buildReferenceLibrary({
       path,
       sources: [USPSTF],
@@ -80,7 +82,7 @@ describe('buildReferenceLibrary', () => {
   });
 
   it('stores a pdf source with one section per pdf page', async () => {
-    const path = libraryPath();
+    const path = newLibraryPath();
     await buildReferenceLibrary({
       path,
       sources: [CDC_ADULT],
@@ -120,7 +122,7 @@ describe('buildReferenceLibrary', () => {
   });
 
   it('stores a cdc media source under the cdc page it syndicates', async () => {
-    const path = libraryPath();
+    const path = newLibraryPath();
     await buildReferenceLibrary({
       path,
       sources: [
@@ -152,7 +154,7 @@ describe('buildReferenceLibrary', () => {
   });
 
   it('replaces the previous library with one holding only the configured sources', async () => {
-    const path = libraryPath();
+    const path = newLibraryPath();
     const adultPage: Source = {
       ...CDC_ADULT,
       type: 'html',
@@ -175,7 +177,7 @@ describe('buildReferenceLibrary', () => {
   });
 
   it('reports a source that parses to no text and stores nothing for it', async () => {
-    const path = libraryPath();
+    const path = newLibraryPath();
 
     const report = await buildReferenceLibrary({
       path,
@@ -192,7 +194,7 @@ describe('buildReferenceLibrary', () => {
   });
 
   it('leaves the previous library as it was when any fetch fails', async () => {
-    const path = libraryPath();
+    const path = newLibraryPath();
     await buildReferenceLibrary({
       path,
       sources: [USPSTF],
@@ -201,13 +203,14 @@ describe('buildReferenceLibrary', () => {
       }),
     });
 
-    await expect(
-      buildReferenceLibrary({
-        path,
-        sources: [USPSTF, CDC_ADULT],
-        fetchBytes: fakeFetch({ 'https://example.com/ab': '<h1>Changed</h1>' }),
-      }),
-    ).rejects.toThrow('no fake body for https://example.com/adult.pdf');
+    const buildWithAFailedFetch = buildReferenceLibrary({
+      path,
+      sources: [USPSTF, CDC_ADULT],
+      fetchBytes: fakeFetch({ 'https://example.com/ab': '<h1>Changed</h1>' }),
+    });
+    await expect(buildWithAFailedFetch).rejects.toThrow(
+      'no fake body for https://example.com/adult.pdf',
+    );
 
     expect([
       openReferencesDb(path).prepare('SELECT content_md FROM documents').all(),

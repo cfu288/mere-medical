@@ -4,7 +4,8 @@ import { pdfToBlocks } from './pdfBlocks';
 
 describe('pdfToBlocks', () => {
   it('starts each page with a heading titled with its page number, followed by its lines as pdf.js reads them', async () => {
-    expect(await pdfToBlocks(new TextEncoder().encode(TWO_PAGE_PDF))).toEqual([
+    const twoPagePdf = new TextEncoder().encode(TWO_PAGE_PDF);
+    expect(await pdfToBlocks(twoPagePdf)).toEqual([
       { kind: 'heading', level: 1, text: 'Page 1' },
       {
         kind: 'text',
@@ -16,8 +17,9 @@ describe('pdfToBlocks', () => {
   });
 
   it('gives a page with no text only its heading', async () => {
-    expect(await pdfToBlocks(new TextEncoder().encode(BLANK_PAGE_PDF))).toEqual(
-      [{ kind: 'heading', level: 1, text: 'Page 1' }],
-    );
+    const blankPagePdf = new TextEncoder().encode(BLANK_PAGE_PDF);
+    expect(await pdfToBlocks(blankPagePdf)).toEqual([
+      { kind: 'heading', level: 1, text: 'Page 1' },
+    ]);
   });
 });
