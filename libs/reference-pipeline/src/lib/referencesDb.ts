@@ -2,14 +2,27 @@ import { DatabaseSync } from 'node:sqlite';
 
 import { Part, Section } from './sections';
 
+/**
+ * One reference as the library stores it. All fields but `parts` are columns
+ * of a `documents` row. `id`, `title` and `summary` are also copied to
+ * `documents_fts` for search.
+ */
 export type ReferenceRecord = {
+  /** The source's configured id. */
   id: string;
+  /** The configured title. */
   title: string;
+  /** The configured version or date of the publisher's edition. */
   edition: string;
+  /** The configured description of what the reference covers. */
   summary: string;
+  /** The page or PDF the text came from. For `cdc-media`, the cdc.gov page. */
   url: string;
+  /** The whole reference as markdown, stored in the `content_md` column. */
   markdown: string;
+  /** The sections in reading order, stored as JSON in the `sections` column. */
   sections: Section[];
+  /** Each part is a `parts_fts` row, with `id` as its `document_id` and its `sectionId` as `section_id`. */
   parts: Part[];
 };
 
@@ -21,6 +34,8 @@ export type ReferenceRecord = {
  * - `documents_fts` searches each reference's title and summary.
  * - `parts_fts` holds the text of each part of a section and searches it. A
  *   reader reads a part from it by reference id, section id and part number.
+ *
+ * {@link ReferenceRecord} describes each column.
  *
  * @param path `string`. A file path, or `':memory:'` for a library that is
  * not saved.

@@ -12,15 +12,27 @@ export type Block =
  * They are equal when the heading has no text of its own.
  */
 export type Section = {
+  /** Made from the title, unique in the document. */
   sectionId: string;
+  /** The `sectionId` of the heading this one sits under, or null at the top. */
   parentId: string | null;
+  /** The heading's text, or "Opening text" for text before the first heading. */
   title: string;
+  /** Where the section's text starts in the markdown, as a JavaScript string index. */
   textStart: number;
+  /** Where the section's text ends in the markdown, as a JavaScript string index. */
   textEnd: number;
 };
 
 /** One part of a section's text, numbered from 1 within the section. */
-export type Part = { sectionId: string; part: number; text: string };
+export type Part = {
+  /** The section the part belongs to. */
+  sectionId: string;
+  /** The part's number, from 1 within the section. */
+  part: number;
+  /** At most 10,000 characters of the section's text. */
+  text: string;
+};
 
 const TEXT_BEFORE_FIRST_HEADING_TITLE = 'Opening text';
 const PART_MAX_CHARS = 10000;
