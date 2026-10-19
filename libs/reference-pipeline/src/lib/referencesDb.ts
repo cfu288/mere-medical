@@ -7,8 +7,7 @@ import { Part, Section } from './sections';
  * `summary` come from sources.json.
  *
  * Each field except `parts` fills one column of the reference's `documents`
- * row. Each part becomes its own `parts_fts` row. `id`, `title` and `summary`
- * also go to `documents_fts` for search.
+ * row. `id`, `title` and `summary` also go to `documents_fts` for search.
  */
 export type ReferenceRecord = {
   id: string;

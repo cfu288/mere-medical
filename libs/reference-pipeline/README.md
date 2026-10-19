@@ -1,6 +1,6 @@
 # reference-pipeline
 
-This library builds the clinical reference library that the chat agent uses to
+This code builds the clinical reference library that the chat agent uses to
 answer questions. It fetches the guidelines listed in `sources.json`, converts
 each one to markdown, and saves them all in one SQLite file. The chat agent only
 reads that file and never fetches a source itself.
@@ -12,11 +12,11 @@ takes these steps.
 
 1. The CLI reads `sources.json`, and `parseSources` checks each entry.
 2. `buildReferenceLibrary` then works through the sources one at a time.
-   1. It fetches the page or PDF with the function that `createRateLimitedFetch`
-      returns, which waits between requests to the same host. For a `cdc-media`
-      source, `fetchCdcMediaPage` uses that same function to call CDC's content
-      API.
-   2. `htmlToBlocks` or `pdfToBlocks` turns the page into a flat list of
+   1. It fetches the page or PDF. Every request goes through one fetch function
+      from `createRateLimitedFetch`. That function waits between requests to the
+      same host. For a `cdc-media` source, `fetchCdcMediaPage` calls CDC's
+      content API.
+   2. `htmlToBlocks` or `pdfToBlocks` turns the page or PDF into a flat list of
       headings and text, called blocks.
    3. `blocksToDocument` turns the blocks into one markdown document, a list of
       its sections, and the parts of each section.
@@ -34,12 +34,10 @@ pages and PDFs into the same kind of list. Then `blocksToDocument` uses the same
 code for both formats. The library does not store blocks.
 
 A **section** is a heading plus the text under it, up to the next heading.
-`blocksToDocument` builds the sections from the blocks. `pdfToBlocks` adds a
-"Page N" heading at the start of each PDF page, so each page becomes one
-section. A full guideline is too long for the agent to read at once, which is
-why it works through a reference by section. The row's `sections` column records
-where each section's text starts and ends in `content_md`, not counting the
-heading line.
+`blocksToDocument` builds the sections from the blocks. A full guideline is too
+long for the agent to read at once, so it reads one section at a time. The row's
+`sections` column records where each section's text starts and ends in
+`content_md`, not counting the heading line.
 
 A **part** is up to 10,000 characters of one section's text, stored as one row
 in `parts_fts`. A search within a reference matches parts, so a match points to
@@ -50,7 +48,7 @@ section one part at a time.
 
 - In HTML, a heading is an `<h1>` to `<h6>` element.
 - Each PDF page becomes a section titled "Page N". A PDF's own headings stay as
-  plain text. Publishers mark headings in PDFs in many ways.
+  plain text. Not every PDF marks its headings, but every PDF has pages.
 - Each heading becomes a `#` line in the markdown, with one `#` per level.
 - A heading nested under another, such as an `<h3>` after an `<h2>`, starts a
   subsection. Its `parentId` names the section it sits in.
@@ -67,7 +65,7 @@ markdown and sections.
 
 ## Reading a reference
 
-The chat agent reads a reference in four steps.
+The tables let the chat agent read a reference in four steps.
 
 1. It searches titles and summaries in `documents_fts` to choose a reference.
 2. It lists that reference's sections, which act as its outline.
@@ -75,8 +73,8 @@ The chat agent reads a reference in four steps.
    to find the parts that mention a term.
 4. It reads one part by its `document_id`, `section_id` and part number.
 
-A citation names the reference's title and url. For a PDF it also names the
-page, which is the section's title.
+A citation can name the reference's title and url. For a PDF, the section's
+title gives the page.
 
 ## Schema
 
@@ -143,8 +141,7 @@ There are three types.
   out the site's menus. It takes a `mediaId` instead of a `url`. You can find
   the id in the page's [Media
   Library](https://tools.cdc.gov/medialibrary/index.aspx) address.
-- `pdf` fetches a PDF from `url`. Each page becomes a section holding that
-  page's lines.
+- `pdf` fetches a PDF from `url`.
 
 ## Running
 

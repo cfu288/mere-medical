@@ -10,8 +10,8 @@ import { Source } from './sources';
 /**
  * What happened to one source in sources.json. The CLI prints one line for each.
  *
- * `empty` means the source has no text besides its headings. The library leaves
- * it out.
+ * `empty` means the source has no text besides its headings.
+ * `buildReferenceLibrary` does not store it.
  *
  * @example
  * { id: 'uspstf-a-and-b', status: 'written', sections: 12 }
@@ -32,7 +32,7 @@ export type IngestReport =
  *
  * 1. `fetchBytes` fetches the source. A `cdc-media` source goes through
  *    `fetchCdcMediaPage`.
- * 2. `htmlToBlocks` or `pdfToBlocks` turns the page into blocks.
+ * 2. `htmlToBlocks` or `pdfToBlocks` turns the page or PDF into blocks.
  * 3. `blocksToDocument` turns the blocks into markdown, sections and parts.
  *
  * Then `writeReference` stores each source that has text besides its headings.
