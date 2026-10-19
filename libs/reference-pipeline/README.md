@@ -29,10 +29,9 @@ A **reference** is one published guideline or web page. Each reference is one
 row in `documents`, and that row holds the whole reference as markdown.
 
 A **block** is one heading or one piece of text, such as a paragraph of a web
-page or the lines of one PDF page. Web pages and PDFs are very different
-formats, so we first reduce each one to a list of blocks with `htmlToBlocks` or
-`pdfToBlocks`. This means `blocksToDocument` can handle both in the same way.
-Blocks are only an intermediate step, and the library never stores them.
+page or the lines of one PDF page. `htmlToBlocks` and `pdfToBlocks` turn web
+pages and PDFs into the same kind of list. Then `blocksToDocument` uses the same
+code for both formats. The library does not store blocks.
 
 A **section** is a heading plus the text under it, up to the next heading.
 `blocksToDocument` builds the sections from the blocks. `pdfToBlocks` adds a
@@ -51,7 +50,7 @@ section one part at a time.
 
 - In HTML, a heading is an `<h1>` to `<h6>` element.
 - Each PDF page becomes a section titled "Page N". A PDF's own headings stay as
-  plain text, since publishers mark them in too many different ways.
+  plain text. Publishers mark headings in PDFs in many ways.
 - Each heading becomes a `#` line in the markdown, with one `#` per level.
 - A heading nested under another, such as an `<h3>` after an `<h2>`, starts a
   subsection. Its `parentId` names the section it sits in.
@@ -59,9 +58,9 @@ section one part at a time.
 - A heading with no text of its own is still a section, with empty text.
 - A section id comes from its title and is unique within its reference.
 - Each section's text splits into parts of at most 10,000 characters. A part
-  ends at the last paragraph break that fits, or failing that the last line
-  break, then the last space. With no break at all, the part ends at 10,000
-  characters.
+  ends at the last paragraph break that fits. If there is no paragraph break, it
+  ends at the last line break. If there is no line break, it ends at the last
+  space. If there is no space, the part ends at 10,000 characters.
 
 The conversion is deterministic, so the same fetched page always gives the same
 markdown and sections.
@@ -116,8 +115,8 @@ This entry of `sections` is page 34 of the VA-DoD hypertension guideline.
 
 `sources.json` lists every reference. Each entry has an `id`, `title`,
 `edition`, `summary` and `type`, plus either a `url` or a `mediaId` depending on
-the type. `edition` is the version or date the publisher gives. Note that the
-agent chooses a reference by its title and summary, so these should say what the
+the type. `edition` is the version or date the publisher gives. The agent
+chooses a reference by its title and summary, so these must say what the
 reference covers.
 
 ```json
@@ -133,13 +132,13 @@ reference covers.
 
 There are three types.
 
-- `html` fetches a web page from `url`. The pipeline reads only the page's
-  `<main>` if it has exactly one, or else its `<article>` if it has exactly one.
-  It drops scripts, styles, noscript fallbacks, frames, objects and `<nav>`
-  menus. Links keep only their text, and images keep only their alt text. A
-  markdown table cannot hold headings, lists, horizontal rules, block quotes or
-  code blocks. A table with any of these in its cells loses its table layout but
-  keeps the cells' content.
+- `html` fetches a web page from `url`. If the page has exactly one `<main>`,
+  the pipeline reads only that. If not, and the page has exactly one
+  `<article>`, it reads only that. It drops scripts, styles, noscript fallbacks,
+  frames, objects and `<nav>` menus. Links keep only their text, and images keep
+  only their alt text. A markdown table cannot hold headings, lists, horizontal
+  rules, block quotes or code blocks. A table with any of these in its cells
+  loses its table layout but keeps the cells' content.
 - `cdc-media` fetches a CDC page's text through CDC's content API, which leaves
   out the site's menus. It takes a `mediaId` instead of a `url`. You can find
   the id in the page's [Media

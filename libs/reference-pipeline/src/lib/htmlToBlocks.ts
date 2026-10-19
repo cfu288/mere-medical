@@ -21,9 +21,9 @@ const turndown = createMarkdownConverter();
  * Turns the web page of an `html` or `cdc-media` source into blocks for
  * `blocksToDocument`.
  *
- * It reads only the page's `<main>` if it has exactly one, or else its
- * `<article>` if it has exactly one. The README section "Sources" lists the
- * rest of the rules.
+ * If the page has exactly one `<main>`, it reads only that. If not, and the
+ * page has exactly one `<article>`, it reads only that. The README section
+ * "Sources" lists the rest of the rules.
  *
  * @param html `string`. The page's html.
  * @returns `Block[]`. The blocks in reading order.
