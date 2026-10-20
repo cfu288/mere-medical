@@ -31,7 +31,7 @@ const sourceSchema = z.discriminatedUnion('type', [
  * A reference to fetch, as listed in sources.json.
  *
  * An `html` or `pdf` source gives a `url`. A `cdc-media` source gives a CDC
- * Media Library id instead, and `fetchCdcMediaPage` fetches the page from it.
+ * Media Library id instead. `fetchCdcMediaPage` uses that id to fetch the page.
  */
 export type Source = z.infer<typeof sourceSchema>;
 

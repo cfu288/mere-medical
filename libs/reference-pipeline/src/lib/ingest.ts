@@ -30,8 +30,8 @@ export type IngestReport =
  *
  * It first fetches and converts every source.
  *
- * 1. `fetchBytes` fetches the source. A `cdc-media` source goes through
- *    `fetchCdcMediaPage`.
+ * 1. `fetchBytes` fetches the source. For a `cdc-media` source,
+ *    `fetchCdcMediaPage` calls `fetchBytes`.
  * 2. `htmlToBlocks` or `pdfToBlocks` turns the page or PDF into blocks.
  * 3. `blocksToDocument` turns the blocks into markdown, sections and parts.
  *

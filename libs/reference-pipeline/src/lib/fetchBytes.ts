@@ -17,8 +17,8 @@ type HostTiming = { delayMs: number; lastRequestAt: number };
  * host. A missing or unreadable robots.txt sets no delay. It does not read
  * `Disallow` rules.
  *
- * It does not space out requests made at the same time, but
- * `buildReferenceLibrary` only makes one at a time.
+ * It does not delay requests made at the same time. `buildReferenceLibrary`
+ * makes only one request at a time.
  *
  * @param options Optional. Tests use it to replace `sleep` and `now`.
  * @returns `(url: string) => Promise<Uint8Array>`. Resolves with the body of a

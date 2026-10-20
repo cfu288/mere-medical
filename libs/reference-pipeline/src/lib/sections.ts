@@ -15,8 +15,8 @@ export type Block =
  * before the first heading forms an "Opening text" section.
  *
  * The `sections` column holds a reference's sections in reading order.
- * `content_md.slice(textStart, textEnd)` is a section's text, which leaves out
- * its heading line and any subsections.
+ * `content_md.slice(textStart, textEnd)` is a section's text, which omits its
+ * heading line and any subsections.
  */
 export type Section = {
   /** Made from the title, such as `blood-pressure-goals`. Unique in the reference. */
@@ -131,7 +131,7 @@ export function blocksToDocument(blocks: Block[]): {
  * A part ends at the last paragraph break that fits. If there is no paragraph
  * break, it ends at the last line break. If there is no line break, it ends at
  * the last space. If there is no space, it ends at 10,000 characters. Parts
- * leave out the whitespace where they split.
+ * omit the whitespace where they split.
  *
  * @param text `string`. One section's text.
  * @returns `string[]`. The parts in order. Empty for empty text.

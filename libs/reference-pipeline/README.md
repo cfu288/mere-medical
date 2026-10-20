@@ -11,11 +11,12 @@ Running `npx nx run reference-pipeline:build-library` starts `src/cli.ts`, which
 takes these steps.
 
 1. The CLI reads `sources.json`, and `parseSources` checks each entry.
-2. `buildReferenceLibrary` then works through the sources one at a time.
-   1. It fetches the page or PDF. Every request goes through one fetch function
-      from `createRateLimitedFetch`. That function waits between requests to the
-      same host. For a `cdc-media` source, `fetchCdcMediaPage` calls CDC's
-      content API.
+2. `buildReferenceLibrary` then takes these steps for each source, one at a
+   time.
+   1. It fetches the page or PDF. Every request uses one fetch function from
+      `createRateLimitedFetch`. That function waits between requests to the same
+      host. For a `cdc-media` source, `fetchCdcMediaPage` calls CDC's content
+      API.
    2. `htmlToBlocks` or `pdfToBlocks` turns the page or PDF into a flat list of
       headings and text, called blocks.
    3. `blocksToDocument` turns the blocks into one markdown document, a list of
@@ -137,10 +138,10 @@ There are three types.
   only their alt text. A markdown table cannot hold headings, lists, horizontal
   rules, block quotes or code blocks. A table with any of these in its cells
   loses its table layout but keeps the cells' content.
-- `cdc-media` fetches a CDC page's text through CDC's content API, which leaves
-  out the site's menus. It takes a `mediaId` instead of a `url`. You can find
-  the id in the page's [Media
-  Library](https://tools.cdc.gov/medialibrary/index.aspx) address.
+- `cdc-media` fetches a CDC page's text through CDC's content API, which omits
+  the site's menus. It takes a `mediaId` instead of a `url`. You can find the id
+  in the page's [Media Library](https://tools.cdc.gov/medialibrary/index.aspx)
+  address.
 - `pdf` fetches a PDF from `url`.
 
 ## Running
@@ -150,9 +151,9 @@ npx nx run reference-pipeline:build-library
 ```
 
 The run writes `libs/reference-pipeline/data/references.db` and prints one line
-per source, with either its section count or a note that the run left it out.
-The run leaves out a source with no text besides its headings. The last line
-gives the number of references written.
+per source, with either its section count or a note that the run skipped it. The
+run skips a source with no text besides its headings. The last line gives the
+number of references written.
 
 The run builds a new file and only replaces the old one after writing every
 reference. If any step fails, the run stops with an error and the old file stays
@@ -162,5 +163,5 @@ as it was.
 
 - A web page with no single `<main>` and no single `<article>` keeps its header
   and footer text, such as links outside `<nav>` and newsletter forms.
-- When a source answers with a bot check, the pipeline stores the text of the
-  check page.
+- When a source answers with a bot check page and a 2xx status, the pipeline
+  stores the text of that page.

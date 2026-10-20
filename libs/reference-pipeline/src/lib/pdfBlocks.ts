@@ -18,7 +18,7 @@ import { Block } from './sections';
  * // ]
  */
 export async function pdfToBlocks(bytes: Uint8Array): Promise<Block[]> {
-  // pdf.js asks for its legacy build in Node.
+  // pdf.js needs its legacy build in Node.
   const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
   const pdfLoadingTask = pdfjs.getDocument({ data: bytes, verbosity: 0 });
   try {
