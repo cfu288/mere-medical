@@ -1,4 +1,4 @@
-FROM node:26.8-bookworm@sha256:e7bc1a4cd2419953c91f9a6f7bb6efb3737773093fb4ded0b1c77a0a5831fac4 AS build-stage
+FROM node:26.11-bookworm@sha256:f1233c415b41ffcf237c717b3dea92e9d4ea006e0e4c71edcb790605d74f5404 AS build-stage
 
 WORKDIR /app
 COPY package*.json /app/
