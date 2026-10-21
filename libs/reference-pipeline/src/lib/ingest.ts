@@ -29,14 +29,13 @@ export type IngestReport =
  * function the CLI runs.
  *
  * It fetches and converts every source before it writes any of them. If any
- * step throws, the promise rejects and the library at `path` stays as it was. A
- * reader of `path` sees either the old library or the new one, never a partial
- * one.
+ * step throws, the promise rejects and `path` keeps the old library. A reader
+ * of `path` never sees a partial library.
  *
  * @param args.path `string`. Where the library file goes.
  * @param args.sources `Source[]`. From `parseSources`.
  * @param args.fetchBytes `(url: string) => Promise<Uint8Array>`. From
- * `createRateLimitedFetch`. It throws when it cannot fetch a body.
+ * `createRateLimitedFetch`.
  * @returns `Promise<IngestReport[]>`. One {@link IngestReport} per source, in
  * the same order as `sources`.
  *

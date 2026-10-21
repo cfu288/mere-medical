@@ -20,7 +20,10 @@ export type ReferenceRecord = {
   /** The whole reference as markdown, stored in the `content_md` column. */
   markdown: string;
   sections: Section[];
-  /** In each part's `parts_fts` row, `document_id` is the record's `id`. */
+  /**
+   * In each part's `parts_fts` row, `document_id` is the record's `id` and
+   * `section_id` is the part's `sectionId`.
+   */
   parts: Part[];
 };
 
@@ -68,8 +71,9 @@ export function openReferencesDb(path: string): DatabaseSync {
 }
 
 /**
- * Stores one reference in all three tables. `buildReferenceLibrary` calls it
- * for each source that has text besides its headings.
+ * Writes one reference's `documents` row, its `documents_fts` row and its
+ * `parts_fts` rows. `buildReferenceLibrary` calls it for each source that is
+ * not `empty`.
  *
  * @param db `DatabaseSync`. From {@link openReferencesDb}.
  * @param record `ReferenceRecord`.

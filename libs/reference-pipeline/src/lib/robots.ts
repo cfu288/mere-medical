@@ -1,6 +1,6 @@
 /**
- * Reads the crawl delay from a robots.txt. `createRateLimitedFetch` waits that
- * long between requests to the host.
+ * Reads the crawl delay from a robots.txt. `createRateLimitedFetch` uses it to
+ * set the wait between requests.
  *
  * It reads only the `Crawl-delay` under `User-agent: *`, and ignores groups for
  * named crawlers.

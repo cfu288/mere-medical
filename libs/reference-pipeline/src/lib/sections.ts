@@ -146,10 +146,10 @@ export function blocksToDocument(blocks: Block[]): {
 }
 
 /**
- * Splits one section's text into parts of at most 10,000 characters, for
- * `blocksToDocument`.
+ * Splits one section's text into parts, for `blocksToDocument`.
  *
- * A part ends at the last paragraph break that fits. If there is no paragraph
+ * Text of 10,000 characters or fewer stays one part. A longer text's part ends
+ * at the last paragraph break that fits. If there is no paragraph
  * break, it ends at the last line break. If there is no line break, it ends at
  * the last space. If there is no space, it ends at 10,000 characters. Parts
  * omit the whitespace where they split.

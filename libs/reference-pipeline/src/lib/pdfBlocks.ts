@@ -4,8 +4,8 @@ import { Block } from './sections';
  * Turns the PDF of a `pdf` source into blocks for `blocksToDocument`.
  *
  * Each page becomes a "Page N" heading followed by the page's lines. This
- * makes each page one section, and a citation can name its page. Not every
- * PDF marks its headings, but every PDF has pages.
+ * makes each page one section, and the agent can name the page a fact came
+ * from. Not every PDF marks its headings, but every PDF has pages.
  *
  * @param bytes `Uint8Array`. The PDF file.
  * @returns `Promise<Block[]>`. The blocks in reading order.

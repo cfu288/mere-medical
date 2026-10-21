@@ -31,12 +31,13 @@ const sourceSchema = z.discriminatedUnion('type', [
  * A reference to fetch, as listed in sources.json.
  *
  * `edition` is the version or date the publisher gives. The chat agent chooses
- * a reference by its `title` and `summary`, and these must say what the
- * reference covers.
+ * a reference by its `title` and `summary`. They must say what the reference
+ * covers.
  *
  * An `html` or `pdf` source gives a `url`. A `cdc-media` source gives a CDC
  * Media Library id instead. `fetchCdcMediaPage` uses that id to fetch the page.
- * The id is in the page's address at https://tools.cdc.gov/medialibrary.
+ * To find the id, open the page in the CDC Media Library at
+ * https://tools.cdc.gov/medialibrary. The id is in the page's address.
  */
 export type Source = z.infer<typeof sourceSchema>;
 
