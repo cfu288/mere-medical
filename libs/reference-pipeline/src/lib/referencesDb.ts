@@ -13,19 +13,14 @@ import { Part, Section } from './sections';
 export type ReferenceRecord = {
   id: string;
   title: string;
-  /** The version or date of the publisher's edition. */
   edition: string;
   summary: string;
   /** The page or PDF the text came from. For `cdc-media`, the cdc.gov page. */
   url: string;
   /** The whole reference as markdown, stored in the `content_md` column. */
   markdown: string;
-  /** The sections in reading order, stored as JSON in the `sections` column. */
   sections: Section[];
-  /**
-   * Each part becomes a `parts_fts` row. The row's `document_id` is the
-   * record's `id`, and its other columns come from the part.
-   */
+  /** In each part's `parts_fts` row, `document_id` is the record's `id`. */
   parts: Part[];
 };
 
@@ -34,14 +29,7 @@ export type ReferenceRecord = {
  * `buildReferenceLibrary` uses it to write a new library, and the API server
  * opens a built one for the chat agent.
  *
- * {@link ReferenceRecord} shows what goes into each table. The chat agent reads
- * a library in four steps.
- *
- * 1. It searches titles and summaries in `documents_fts` to choose a reference.
- * 2. It lists that reference's sections, which act as its outline.
- * 3. It searches that reference's parts in `parts_fts`, filtered by
- *    `document_id`, to find the parts that mention a term.
- * 4. It reads one part by its `document_id`, `section_id` and part number.
+ * {@link ReferenceRecord} shows what goes into each table.
  *
  * @param path `string`. A file path, or `':memory:'` for an empty library that is
  * not saved.

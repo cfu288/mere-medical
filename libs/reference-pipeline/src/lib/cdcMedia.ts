@@ -12,8 +12,7 @@ const cdcMediaSchema = z.object({
  * Fetches the page for a `cdc-media` source through CDC's content API.
  *
  * The API returns the page's text without the cdc.gov menus. The response also
- * gives the page's cdc.gov address. The library stores that address as the
- * reference's url.
+ * gives the page's cdc.gov address.
  *
  * @param mediaId `number`. The page's id in the CDC Media Library.
  * @param fetchBytes `(url: string) => Promise<Uint8Array>`. From

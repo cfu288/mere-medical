@@ -22,7 +22,7 @@ export type Block =
  *
  * - Each heading starts a section. A heading nested under another, such as an
  *   `<h3>` after an `<h2>`, starts a subsection.
- * - Text before the first heading forms an "Opening text" section.
+ * - Text before the first heading forms its own section.
  * - A heading with no text of its own is still a section, with empty text.
  *
  * The library stores a reference's sections in reading order, as JSON in the

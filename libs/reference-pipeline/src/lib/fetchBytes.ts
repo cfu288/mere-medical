@@ -12,17 +12,17 @@ type HostTiming = { delayMs: number; lastRequestAt: number };
  * Returns the fetch function that `buildReferenceLibrary` uses for every
  * request. The CLI creates one for each run.
  *
- * Before its first request to a host, it reads that host's robots.txt. It then
- * waits the `Crawl-delay` given for `User-agent: *` between requests to the
- * host. A missing or unreadable robots.txt sets no delay. It does not read
- * `Disallow` rules.
+ * Before its first request to an origin, such as `https://www.cdc.gov`, it
+ * reads that origin's robots.txt. It then waits the crawl delay between the
+ * starts of requests to that origin. A missing or unreadable robots.txt sets no delay. It
+ * does not read `Disallow` rules.
  *
  * It does not delay requests made at the same time. `buildReferenceLibrary`
  * makes only one request at a time.
  *
  * @param options Optional. Tests use it to replace `sleep` and `now`.
  * @returns `(url: string) => Promise<Uint8Array>`. Resolves with the body of a
- * 2xx response. A bot check page with a 2xx status becomes the source's text.
+ * 2xx response. It does not detect bot check pages.
  * @throws `Error` "GET <url> failed after 4 attempts: <last failure>" when
  * every attempt returns a 429 or 5xx or throws.
  * @throws `Error` "GET <url> returned <status>" right away for any other failed
@@ -32,7 +32,7 @@ type HostTiming = { delayMs: number; lastRequestAt: number };
  * // https://example.org/robots.txt has "User-agent: *" and "Crawl-delay: 5".
  * const fetchBytes = createRateLimitedFetch();
  * await fetchBytes('https://example.org/a'); // waits 5 s after reading robots.txt
- * await fetchBytes('https://example.org/b'); // waits 5 s after the first request
+ * await fetchBytes('https://example.org/b'); // starts 5 s after the first request started
  */
 export function createRateLimitedFetch({
   sleep = setTimeout,

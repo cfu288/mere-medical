@@ -2,7 +2,7 @@
 
 This code builds the clinical reference library that the chat agent uses to
 answer questions. It fetches the guidelines listed in `sources.json`, converts
-each one to markdown, and saves them all in one SQLite file. The chat agent only
+each one to markdown, and saves the results in one SQLite file. The chat agent only
 reads that file and never fetches a source itself.
 
 ## How it works
@@ -26,8 +26,15 @@ which writes `data/references.db`.
       a heading and its text. A `Part` is a piece of a section that the agent
       searches and reads.
 3. `writeReference` ([referencesDb.ts](src/lib/referencesDb.ts)) stores each
-   reference in the SQLite file. `openReferencesDb` in that file lists the
-   tables and how the chat agent reads them.
+   reference in the SQLite file.
 
-The docblock of each function and type says what it does, why it exists and
-where the library stores it.
+The chat agent reads the library in four steps.
+
+1. It searches titles and summaries in `documents_fts` to choose a reference.
+2. It lists that reference's sections, which act as its outline.
+3. It searches that reference's parts in `parts_fts`, filtered by
+   `document_id`, to find the parts that mention a term.
+4. It reads one part by its `document_id`, `section_id` and part number.
+
+The docblock of each exported function and type says what it does, why it
+exists and where the library stores it.

@@ -28,17 +28,10 @@ export type IngestReport =
  * Builds the reference library from the sources in sources.json. This is the
  * function the CLI runs.
  *
- * It first fetches and converts every source.
- *
- * 1. `fetchBytes` fetches the source. For a `cdc-media` source,
- *    `fetchCdcMediaPage` calls `fetchBytes`.
- * 2. `htmlToBlocks` or `pdfToBlocks` turns the page or PDF into blocks.
- * 3. `blocksToDocument` turns the blocks into markdown, sections and parts.
- *
- * Then `writeReference` stores each source that has text besides its headings.
- * If any step throws, the promise rejects and the library at `path` stays as it
- * was. A reader of `path` sees either the old library or the new one, never a
- * partial one.
+ * It fetches and converts every source before it writes any of them. If any
+ * step throws, the promise rejects and the library at `path` stays as it was. A
+ * reader of `path` sees either the old library or the new one, never a partial
+ * one.
  *
  * @param args.path `string`. Where the library file goes.
  * @param args.sources `Source[]`. From `parseSources`.
