@@ -1,4 +1,79 @@
-import { openReferencesDb, writeReference } from './referencesDb';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import {
+  openReferencesDb,
+  openReferencesDbReadOnly,
+  writeReference,
+} from './referencesDb';
+
+function newLibraryPath(): string {
+  return join(mkdtempSync(join(tmpdir(), 'references-')), 'references.db');
+}
+
+describe('openReferencesDb', () => {
+  it('stamps the library with schema version 1', () => {
+    const db = openReferencesDb(':memory:');
+
+    expect(db.prepare('PRAGMA user_version').get()).toEqual({
+      user_version: 1,
+    });
+  });
+});
+
+describe('openReferencesDbReadOnly', () => {
+  it('reads a built library and refuses to write to it', () => {
+    const path = newLibraryPath();
+    const built = openReferencesDb(path);
+    writeReference(built, {
+      id: 'measles',
+      title: 'Measles',
+      edition: '2026',
+      summary: 'Vaccine schedule',
+      url: 'https://example.com/measles',
+      markdown: 'Two doses.',
+      sections: [],
+      chunks: [],
+    });
+    built.close();
+    const db = openReferencesDbReadOnly(path);
+
+    expect(db.prepare('SELECT id FROM documents').all()).toEqual([
+      { id: 'measles' },
+    ]);
+    expect(() => db.exec("DELETE FROM documents WHERE id = 'measles'")).toThrow(
+      'attempt to write a readonly database',
+    );
+  });
+
+  it('throws when no file is at the path', () => {
+    expect(() => openReferencesDbReadOnly('/no/such/references.db')).toThrow(
+      'No reference library file at /no/such/references.db',
+    );
+  });
+
+  it('throws when the path is a folder', () => {
+    expect(() => openReferencesDbReadOnly('/')).toThrow(
+      'No reference library file at /',
+    );
+  });
+
+  it('throws when the file has another schema version', () => {
+    const path = newLibraryPath();
+    writeFileSync(path, '');
+
+    expect(() => openReferencesDbReadOnly(path)).toThrow(
+      'has schema version 0, expected 1',
+    );
+  });
+
+  it('throws when the library holds no references', () => {
+    const path = newLibraryPath();
+    openReferencesDb(path).close();
+
+    expect(() => openReferencesDbReadOnly(path)).toThrow('holds no references');
+  });
+});
 
 describe('writeReference', () => {
   it('stores the reference with its markdown and its sections', () => {

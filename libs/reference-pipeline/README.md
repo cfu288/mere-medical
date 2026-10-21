@@ -27,10 +27,15 @@ which writes `data/references.db`.
 3. `writeReference` ([referencesDb.ts](src/lib/referencesDb.ts)) stores each
    reference in the SQLite file.
 
-The chat agent reads the library in four steps.
+The chat agent reads the library through the API server's
+[`ReferenceController`](../../apps/api/src/app/reference/reference.controller.ts),
+which calls the functions in [query.ts](src/lib/query.ts). It takes four steps.
 
-1. It searches titles and summaries in `documents_fts` to choose a reference.
-2. It lists that reference's sections.
-3. It searches that reference's chunks in `chunks_fts`, filtered by
-   `document_id`, to find the chunks that mention a term.
-4. It reads one chunk by its `document_id`, `section_id` and chunk number.
+1. `searchReferences` searches titles and summaries to choose a reference.
+2. `getOutline` lists that reference's sections.
+3. `findInReference` finds that reference's chunks that mention a term.
+4. `readChunk` reads one chunk of a section.
+
+The API server serves these routes only when `REFERENCE_DB_PATH` names a
+library file. `parseReferenceLibraryConfig` reads that setting. When the file is
+not a valid library, the API server does not start.

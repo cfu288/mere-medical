@@ -10,6 +10,8 @@ import { VeradigmModule } from './veradigm/veradigm.module';
 import { AthenaModule } from './athena/athena.module';
 import { NextGenModule } from './nextgen/nextgen.module';
 import { TenantModule } from './tenant/tenant.module';
+import { ReferenceModule } from './reference/reference.module';
+import { parseReferenceLibraryConfig } from './reference/reference.config';
 import { ConfigModule } from './config/config.module';
 import { describeRequirement, EnableRequirement } from '@mere/shared';
 import { serverVendorConfig } from './vendor-config.server';
@@ -55,6 +57,11 @@ if (vendors.healow.status === 'production') {
   );
 }
 
+const referenceLibrary = parseReferenceLibraryConfig(process.env);
+if (referenceLibrary.status === 'disabled') {
+  Logger.warn('Reference library disabled: set REFERENCE_DB_PATH to enable.');
+}
+
 const imports: ModuleMetadata['imports'] = [
   StaticModule,
   LoginProxyModule,
@@ -87,6 +94,10 @@ if (vendors.healow.status !== 'disabled') {
 
 if (vendors.athena.status !== 'disabled') {
   imports.push(AthenaModule);
+}
+
+if (referenceLibrary.status === 'enabled') {
+  imports.push(ReferenceModule.register(referenceLibrary.path));
 }
 
 if (vendors.nextgen.status === 'production') {
