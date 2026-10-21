@@ -7,157 +7,27 @@ reads that file and never fetches a source itself.
 
 ## How it works
 
-Running `npx nx run reference-pipeline:build-library` starts `src/cli.ts`, which
-takes these steps.
+`npx nx run reference-pipeline:build-library` runs [`src/cli.ts`](src/cli.ts),
+which writes `data/references.db`.
 
-1. The CLI reads `sources.json`, and `parseSources` checks each entry.
-2. `buildReferenceLibrary` then takes these steps for each source, one at a
-   time.
-   1. It fetches the page or PDF. Every request uses one fetch function from
-      `createRateLimitedFetch`. That function waits between requests to the same
-      host. For a `cdc-media` source, `fetchCdcMediaPage` calls CDC's content
-      API.
-   2. `htmlToBlocks` or `pdfToBlocks` turns the page or PDF into a flat list of
-      headings and text, called blocks.
-   3. `blocksToDocument` turns the blocks into one markdown document, a list of
-      its sections, and the parts of each section.
-3. After converting every source, `buildReferenceLibrary` stores each one that
-   has text besides its headings in the SQLite file with `writeReference`.
+1. `parseSources` ([sources.ts](src/lib/sources.ts)) checks each entry of
+   `sources.json`. `Source` in that file says how to write an entry.
+2. `buildReferenceLibrary` ([ingest.ts](src/lib/ingest.ts)) takes these steps
+   for each source, one at a time.
+   1. `createRateLimitedFetch` ([fetchBytes.ts](src/lib/fetchBytes.ts)) gives
+      the fetch function for every request. For a `cdc-media` source,
+      `fetchCdcMediaPage` ([cdcMedia.ts](src/lib/cdcMedia.ts)) calls CDC's
+      content API.
+   2. `htmlToBlocks` ([htmlToBlocks.ts](src/lib/htmlToBlocks.ts)) or
+      `pdfToBlocks` ([pdfBlocks.ts](src/lib/pdfBlocks.ts)) turns the page or
+      PDF into a list of blocks. A `Block` is one heading or one piece of text.
+   3. `blocksToDocument` ([sections.ts](src/lib/sections.ts)) turns the blocks
+      into one markdown document, its sections and their parts. A `Section` is
+      a heading and its text. A `Part` is a piece of a section that the agent
+      searches and reads.
+3. `writeReference` ([referencesDb.ts](src/lib/referencesDb.ts)) stores each
+   reference in the SQLite file. `openReferencesDb` in that file lists the
+   tables and how the chat agent reads them.
 
-## Concepts
-
-The pipeline uses four units. The library stores references, sections and
-parts. Blocks exist only while the pipeline converts a source.
-
-| Unit      | What it is                                                                                        | Why it exists                                                                                                      | Where the library stores it                                                                                                                                  |
-| --------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Reference | One published guideline or web page.                                                              | The agent chooses one reference to answer a question.                                                              | One row in `documents`. `content_md` holds the whole reference as markdown.                                                                                  |
-| Block     | One heading or one piece of text, such as a paragraph of a web page or the lines of one PDF page. | `htmlToBlocks` and `pdfToBlocks` give the same kind of list, so one function builds the sections for both formats. | Nowhere.                                                                                                                                                     |
-| Section   | A heading and the text under it, up to the next heading.                                          | The list of sections is the reference's outline. The agent uses it to choose what to read.                         | The `sections` column of the reference's row, as JSON. Each entry gives the section's id, parent, title, and where its text starts and ends in `content_md`. |
-| Part      | Up to 10,000 characters of one section's text.                                                    | A section can be too long to read at once. The agent searches and reads parts, not whole sections.                 | One row in `parts_fts`, which holds the text and indexes it for search.                                                                                      |
-
-A reference has one or more sections. A section has zero or more parts, and a
-part never continues into the next section.
-
-## Converting a reference
-
-- In HTML, a heading is an `<h1>` to `<h6>` element.
-- `pdfToBlocks` starts each PDF page with a "Page N" heading, so each page
-  becomes a section. A PDF's own headings stay as plain text. Not every PDF
-  marks its headings, but every PDF has pages.
-- Each heading becomes a `#` line in the markdown, with one `#` per level.
-- A heading nested under another, such as an `<h3>` after an `<h2>`, starts a
-  subsection. Its `parentId` names the section it sits in.
-- Text before the first heading becomes an "Opening text" section.
-- A heading with no text of its own is still a section, with empty text.
-- A section id comes from its title and is unique within its reference.
-- Each section's text splits into parts of at most 10,000 characters. A part
-  ends at the last paragraph break that fits. If there is no paragraph break, it
-  ends at the last line break. If there is no line break, it ends at the last
-  space. If there is no space, the part ends at 10,000 characters.
-
-The conversion is deterministic, so the same fetched page always gives the same
-markdown and sections.
-
-## Reading a reference
-
-The tables let the chat agent read a reference in four steps.
-
-1. It searches titles and summaries in `documents_fts` to choose a reference.
-2. It lists that reference's sections, which act as its outline.
-3. It searches that reference's parts in `parts_fts`, filtered by `document_id`,
-   to find the parts that mention a term.
-4. It reads one part by its `document_id`, `section_id` and part number.
-
-A citation can name the reference's title and url. For a PDF, the section's
-title gives the page.
-
-## Schema
-
-```sql
-CREATE TABLE documents (
-  id TEXT PRIMARY KEY,
-  title TEXT NOT NULL,
-  edition TEXT NOT NULL,
-  summary TEXT NOT NULL,
-  url TEXT NOT NULL,
-  content_md TEXT NOT NULL,
-  sections TEXT NOT NULL
-);
-CREATE VIRTUAL TABLE documents_fts USING fts5(id UNINDEXED, title, summary, tokenize = 'porter unicode61');
-CREATE VIRTUAL TABLE parts_fts USING fts5(document_id UNINDEXED, section_id UNINDEXED, part UNINDEXED, text, tokenize = 'porter unicode61');
-```
-
-`content_md` holds the whole reference as markdown, and `sections` is a JSON
-list of its sections in reading order. `textStart` and `textEnd` are JavaScript
-string indexes into `content_md`, and the text between them omits the heading
-line. `documents_fts` indexes titles and summaries for search, and `parts_fts`
-holds and indexes the text of each part.
-
-This entry of `sections` is page 34 of the VA-DoD hypertension guideline.
-
-```json
-{
-  "sectionId": "page-34",
-  "parentId": null,
-  "title": "Page 34",
-  "textStart": 82194,
-  "textEnd": 86057
-}
-```
-
-## Sources
-
-`sources.json` lists every reference. Each entry has an `id`, `title`,
-`edition`, `summary` and `type`, plus either a `url` or a `mediaId` depending on
-the type. `edition` is the version or date the publisher gives. The agent
-chooses a reference by its title and summary, so these must say what the
-reference covers.
-
-```json
-{
-  "id": "va-dod-hypertension",
-  "title": "VA-DoD Hypertension Guideline",
-  "edition": "2026",
-  "summary": "High blood pressure in adults. It covers diagnosis, home and office measurement, blood pressure goals, and choice of medications",
-  "url": "https://www.healthquality.va.gov/.../HTN-CPG_2026-Guideline_final_20260827.pdf",
-  "type": "pdf"
-}
-```
-
-There are three types.
-
-- `html` fetches a web page from `url`. If the page has exactly one `<main>`,
-  the pipeline reads only that. If not, and the page has exactly one
-  `<article>`, it reads only that. It drops scripts, styles, noscript fallbacks,
-  frames, objects and `<nav>` menus. Links keep only their text, and images keep
-  only their alt text. A markdown table cannot hold headings, lists, horizontal
-  rules, block quotes or code blocks. A table with any of these in its cells
-  loses its table layout but keeps the cells' content.
-- `cdc-media` fetches a CDC page's text through CDC's content API, which omits
-  the site's menus. It takes a `mediaId` instead of a `url`. You can find the id
-  in the page's [Media Library](https://tools.cdc.gov/medialibrary/index.aspx)
-  address.
-- `pdf` fetches a PDF from `url`.
-
-## Running
-
-```
-npx nx run reference-pipeline:build-library
-```
-
-The run writes `libs/reference-pipeline/data/references.db` and prints one line
-per source, with either its section count or a note that the run skipped it. The
-run skips a source with no text besides its headings. The last line gives the
-number of references written.
-
-The run builds a new file and only replaces the old one after writing every
-reference. If any step fails, the run stops with an error and the old file stays
-as it was.
-
-## Known limits
-
-- A web page with no single `<main>` and no single `<article>` keeps its header
-  and footer text, such as links outside `<nav>` and newsletter forms.
-- When a source answers with a bot check page and a 2xx status, the pipeline
-  stores the text of that page.
+The docblock of each function and type says what it does, why it exists and
+where the library stores it.

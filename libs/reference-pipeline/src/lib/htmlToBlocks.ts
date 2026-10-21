@@ -22,8 +22,17 @@ const turndown = createMarkdownConverter();
  * `blocksToDocument`.
  *
  * If the page has exactly one `<main>`, it reads only that. If not, and the
- * page has exactly one `<article>`, it reads only that. The README section
- * "Sources" lists the rest of the rules.
+ * page has exactly one `<article>`, it reads only that. A heading is an `<h1>`
+ * to `<h6>` element.
+ *
+ * It drops scripts, styles, noscript fallbacks, frames, objects and `<nav>`
+ * menus. Links keep only their text, and images keep only their alt text. A
+ * markdown table cannot hold headings, lists, horizontal rules, block quotes or
+ * code blocks. A table with any of these in its cells loses its table layout
+ * but keeps the cells' content.
+ *
+ * A page with no single `<main>` and no single `<article>` keeps its header and
+ * footer text, such as links outside `<nav>` and newsletter forms.
  *
  * @param html `string`. The page's html.
  * @returns `Block[]`. The blocks in reading order.

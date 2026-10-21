@@ -1,8 +1,11 @@
 /**
- * One heading or piece of text from a parsed page. `htmlToBlocks` and
- * `pdfToBlocks` both return blocks, and `blocksToDocument` groups them into
- * sections. The library stores the sections, not the blocks. The README section
- * "Concepts" compares them.
+ * One heading or one piece of text, such as a paragraph of a web page or the
+ * lines of one PDF page. `htmlToBlocks` and `pdfToBlocks` both return a list of
+ * blocks. With one list type for both formats, `blocksToDocument` builds the
+ * sections of web pages and PDFs with the same code.
+ *
+ * The library does not store blocks. They exist only while
+ * `buildReferenceLibrary` converts a source.
  *
  * A text block holds markdown from a web page or plain text from a PDF.
  */
@@ -11,10 +14,20 @@ export type Block =
   | { kind: 'text'; text: string };
 
 /**
- * One heading block and the text blocks after it, up to the next heading. Text
- * before the first heading forms an "Opening text" section.
+ * A heading and the text under it, up to the next heading. The list of a
+ * reference's sections is its outline. The chat agent reads the outline to
+ * choose what to read.
  *
- * The `sections` column holds a reference's sections in reading order.
+ * `blocksToDocument` makes the sections with these rules.
+ *
+ * - Each heading starts a section. A heading nested under another, such as an
+ *   `<h3>` after an `<h2>`, starts a subsection.
+ * - Text before the first heading forms an "Opening text" section.
+ * - A heading with no text of its own is still a section, with empty text.
+ *
+ * The library stores a reference's sections in reading order, as JSON in the
+ * `sections` column of its `documents` row. `textStart` and `textEnd` are
+ * JavaScript string indexes into `content_md`.
  * `content_md.slice(textStart, textEnd)` is a section's text, which omits its
  * heading line and any subsections.
  */
@@ -31,7 +44,14 @@ export type Section = {
 };
 
 /**
- * Up to 10,000 characters of one section's text, stored as one `parts_fts` row.
+ * Up to 10,000 characters of one section's text. A section can be too long to
+ * read at once. The chat agent searches and reads parts, not whole sections.
+ *
+ * A section has zero or more parts, and a part never continues into the next
+ * section. `splitIntoParts` says where a part ends.
+ *
+ * The library stores each part as one `parts_fts` row, which holds the text and
+ * indexes it for search.
  */
 export type Part = {
   sectionId: string;
@@ -47,8 +67,9 @@ const PART_MAX_CHARS = 10000;
  * Builds a reference's markdown, sections and parts from its blocks, once for
  * each source that `buildReferenceLibrary` fetches.
  *
- * Each heading starts a section, and `parentId` follows how the headings nest.
- * The README section "Converting a reference" lists the rules.
+ * Each heading becomes a `#` line in the markdown, with one `#` per level.
+ * {@link Section} lists how headings become sections. The same blocks always
+ * give the same markdown, sections and parts.
  *
  * @param blocks `Block[]`. A source's blocks in reading order.
  * @returns `{ markdown: string; sections: Section[]; parts: Part[] }`. The

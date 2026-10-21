@@ -22,7 +22,7 @@ type HostTiming = { delayMs: number; lastRequestAt: number };
  *
  * @param options Optional. Tests use it to replace `sleep` and `now`.
  * @returns `(url: string) => Promise<Uint8Array>`. Resolves with the body of a
- * 2xx response.
+ * 2xx response. A bot check page with a 2xx status becomes the source's text.
  * @throws `Error` "GET <url> failed after 4 attempts: <last failure>" when
  * every attempt returns a 429 or 5xx or throws.
  * @throws `Error` "GET <url> returned <status>" right away for any other failed

@@ -3,8 +3,9 @@ import { DatabaseSync } from 'node:sqlite';
 import { Part, Section } from './sections';
 
 /**
- * One reference as `writeReference` stores it. `id`, `title`, `edition` and
- * `summary` come from sources.json.
+ * One reference, which is one published guideline or web page, as
+ * `writeReference` stores it. The chat agent chooses one reference to answer a
+ * question. `id`, `title`, `edition` and `summary` come from sources.json.
  *
  * Each field except `parts` fills one column of the reference's `documents`
  * row. `id`, `title` and `summary` also go to `documents_fts` for search.
@@ -33,7 +34,14 @@ export type ReferenceRecord = {
  * `buildReferenceLibrary` uses it to write a new library, and the API server
  * opens a built one for the chat agent.
  *
- * {@link ReferenceRecord} shows what goes into each table.
+ * {@link ReferenceRecord} shows what goes into each table. The chat agent reads
+ * a library in four steps.
+ *
+ * 1. It searches titles and summaries in `documents_fts` to choose a reference.
+ * 2. It lists that reference's sections, which act as its outline.
+ * 3. It searches that reference's parts in `parts_fts`, filtered by
+ *    `document_id`, to find the parts that mention a term.
+ * 4. It reads one part by its `document_id`, `section_id` and part number.
  *
  * @param path `string`. A file path, or `':memory:'` for an empty library that is
  * not saved.
