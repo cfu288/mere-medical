@@ -108,7 +108,7 @@ export function writeReference(db: DatabaseSync, record: ReferenceRecord) {
     'INSERT INTO documents_fts (id, title, summary) VALUES (?, ?, ?)',
   ).run(record.id, record.title, record.summary);
   const insertChunk = db.prepare(
-    'INSERT INTO chunks_fts (document_id, section_id, chunk, text) VALUES (?, ?, ?, ?)',
+    'INSERT INTO chunks_fts (document_id, section_id, chunk, text) VALUES (?, ?, CAST(? AS INTEGER), ?)',
   );
   for (const chunk of record.chunks) {
     insertChunk.run(record.id, chunk.sectionId, chunk.chunk, chunk.text);

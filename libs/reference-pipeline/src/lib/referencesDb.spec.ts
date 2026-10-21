@@ -103,4 +103,22 @@ describe('writeReference', () => {
         .all(),
     ).toEqual([{ section_id: 'diet', chunk: 1, text: 'Limit potassium.' }]);
   });
+
+  it('stores each chunk number as an integer', () => {
+    const db = openReferencesDb(':memory:');
+    writeReference(db, {
+      id: 'ckd',
+      title: 'CKD',
+      edition: '2025',
+      summary: 'Kidney disease',
+      url: 'https://example.com/ckd',
+      markdown: '# Diet\n\nLimit potassium.',
+      sections: [],
+      chunks: [{ sectionId: 'diet', chunk: 1, text: 'Limit potassium.' }],
+    });
+
+    expect(
+      db.prepare('SELECT typeof(chunk) AS type FROM chunks_fts').all(),
+    ).toEqual([{ type: 'integer' }]);
+  });
 });
