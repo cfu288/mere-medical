@@ -26,30 +26,25 @@ takes these steps.
 
 ## Concepts
 
-A **reference** is one published guideline or web page. Each reference is one
-row in `documents`, and that row holds the whole reference as markdown.
+The pipeline uses four units. The library stores references, sections and
+parts. Blocks exist only while the pipeline converts a source.
 
-A **block** is one heading or one piece of text, such as a paragraph of a web
-page or the lines of one PDF page. `htmlToBlocks` and `pdfToBlocks` turn web
-pages and PDFs into the same kind of list. Then `blocksToDocument` uses the same
-code for both formats. The library does not store blocks.
+| Unit      | What it is                                                                                        | Why it exists                                                                                                      | Where the library stores it                                                                                                                                  |
+| --------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Reference | One published guideline or web page.                                                              | The agent chooses one reference to answer a question.                                                              | One row in `documents`. `content_md` holds the whole reference as markdown.                                                                                  |
+| Block     | One heading or one piece of text, such as a paragraph of a web page or the lines of one PDF page. | `htmlToBlocks` and `pdfToBlocks` give the same kind of list, so one function builds the sections for both formats. | Nowhere.                                                                                                                                                     |
+| Section   | A heading and the text under it, up to the next heading.                                          | The list of sections is the reference's outline. The agent uses it to choose what to read.                         | The `sections` column of the reference's row, as JSON. Each entry gives the section's id, parent, title, and where its text starts and ends in `content_md`. |
+| Part      | Up to 10,000 characters of one section's text.                                                    | A section can be too long to read at once. The agent searches and reads parts, not whole sections.                 | One row in `parts_fts`, which holds the text and indexes it for search.                                                                                      |
 
-A **section** is a heading plus the text under it, up to the next heading.
-`blocksToDocument` builds the sections from the blocks. A full guideline is too
-long for the agent to read at once, so it reads one section at a time. The row's
-`sections` column records where each section's text starts and ends in
-`content_md`, not counting the heading line.
-
-A **part** is up to 10,000 characters of one section's text, stored as one row
-in `parts_fts`. A search within a reference matches parts, so a match points to
-a short piece of text rather than a whole section. The agent also reads a long
-section one part at a time.
+A reference has one or more sections. A section has zero or more parts, and a
+part never continues into the next section.
 
 ## Converting a reference
 
 - In HTML, a heading is an `<h1>` to `<h6>` element.
-- Each PDF page becomes a section titled "Page N". A PDF's own headings stay as
-  plain text. Not every PDF marks its headings, but every PDF has pages.
+- `pdfToBlocks` starts each PDF page with a "Page N" heading, so each page
+  becomes a section. A PDF's own headings stay as plain text. Not every PDF
+  marks its headings, but every PDF has pages.
 - Each heading becomes a `#` line in the markdown, with one `#` per level.
 - A heading nested under another, such as an `<h3>` after an `<h2>`, starts a
   subsection. Its `parentId` names the section it sits in.
@@ -95,8 +90,9 @@ CREATE VIRTUAL TABLE parts_fts USING fts5(document_id UNINDEXED, section_id UNIN
 
 `content_md` holds the whole reference as markdown, and `sections` is a JSON
 list of its sections in reading order. `textStart` and `textEnd` are JavaScript
-string indexes into `content_md`. `documents_fts` indexes titles and summaries
-for search, and `parts_fts` holds and indexes the text of each part.
+string indexes into `content_md`, and the text between them omits the heading
+line. `documents_fts` indexes titles and summaries for search, and `parts_fts`
+holds and indexes the text of each part.
 
 This entry of `sections` is page 34 of the VA-DoD hypertension guideline.
 
