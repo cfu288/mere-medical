@@ -154,6 +154,19 @@ describe('htmlToBlocks', () => {
     ]);
   });
 
+  it('converts only the element with role main when the page has no main element', () => {
+    expect(
+      htmlToBlocks(
+        '<div class="menu"><h4>Recommendations</h4><h4>News</h4></div>' +
+          '<div role="main"><h1>A &amp; B Recommendations</h1><p>Screen adults for hypertension.</p></div>' +
+          '<div class="menu"><h4>Recommendations</h4><h4>News</h4></div>',
+      ),
+    ).toEqual([
+      { kind: 'heading', level: 1, text: 'A & B Recommendations' },
+      { kind: 'text', text: 'Screen adults for hypertension.' },
+    ]);
+  });
+
   it('converts only the article when the page has exactly one and no main element', () => {
     expect(
       htmlToBlocks(
