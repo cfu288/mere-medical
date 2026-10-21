@@ -21,9 +21,10 @@ const turndown = createMarkdownConverter();
  * Turns the web page of an `html` or `cdc-media` source into blocks for
  * `blocksToDocument`.
  *
- * If the page has exactly one `<main>` or `role="main"` element, it reads only
- * that. If not, and the page has exactly one `<article>`, it reads only that.
- * A heading is an `<h1>` to `<h6>` element.
+ * If the page has exactly one `<main>`, it reads only that. If not, and the
+ * page has exactly one element with `role="main"`, it reads only that. If not,
+ * and the page has exactly one `<article>`, it reads only that. A heading is an
+ * `<h1>` to `<h6>` element.
  *
  * It drops scripts, styles, noscript fallbacks, frames, objects and `<nav>`
  * menus. Links keep only their text. Images outside headings keep only their
@@ -114,7 +115,8 @@ function unwrapTablesMarkdownCannotHold(doc: Document): void {
 
 function findMainContent(doc: Document): Element {
   return (
-    onlyElementMatching(doc, 'main, [role="main"]') ??
+    onlyElementMatching(doc, 'main') ??
+    onlyElementMatching(doc, '[role="main"]') ??
     onlyElementMatching(doc, 'article') ??
     doc.body
   );
