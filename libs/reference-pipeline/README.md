@@ -23,7 +23,7 @@ which writes `data/references.db`.
       `pdfToBlocks` ([pdfBlocks.ts](src/lib/pdfBlocks.ts)) turns the page or
       PDF into a list of blocks.
    3. `blocksToDocument` ([sections.ts](src/lib/sections.ts)) turns the blocks
-      into one markdown document, its sections and their parts.
+      into one markdown document, its sections and their chunks.
 3. `writeReference` ([referencesDb.ts](src/lib/referencesDb.ts)) stores each
    reference in the SQLite file.
 
@@ -31,6 +31,6 @@ The chat agent reads the library in four steps.
 
 1. It searches titles and summaries in `documents_fts` to choose a reference.
 2. It lists that reference's sections.
-3. It searches that reference's parts in `parts_fts`, filtered by
-   `document_id`, to find the parts that mention a term.
-4. It reads one part by its `document_id`, `section_id` and part number.
+3. It searches that reference's chunks in `chunks_fts`, filtered by
+   `document_id`, to find the chunks that mention a term.
+4. It reads one chunk by its `document_id`, `section_id` and chunk number.

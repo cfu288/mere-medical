@@ -1,4 +1,4 @@
-import { blocksToDocument, splitIntoParts } from './sections';
+import { blocksToDocument, splitIntoChunks } from './sections';
 
 describe('blocksToDocument', () => {
   it('writes one markdown document and nests deeper headings under the heading above them', () => {
@@ -37,10 +37,14 @@ describe('blocksToDocument', () => {
           textEnd: 105,
         },
       ],
-      parts: [
-        { sectionId: 'screening', part: 1, text: 'Screen adults.' },
-        { sectionId: 'hypertension', part: 1, text: 'Measure blood pressure.' },
-        { sectionId: 'immunizations', part: 1, text: 'Influenza yearly.' },
+      chunks: [
+        { sectionId: 'screening', chunk: 1, text: 'Screen adults.' },
+        {
+          sectionId: 'hypertension',
+          chunk: 1,
+          text: 'Measure blood pressure.',
+        },
+        { sectionId: 'immunizations', chunk: 1, text: 'Influenza yearly.' },
       ],
     });
   });
@@ -71,13 +75,13 @@ describe('blocksToDocument', () => {
           textEnd: 63,
         },
       ],
-      parts: [
+      chunks: [
         {
           sectionId: 'opening-text',
-          part: 1,
+          chunk: 1,
           text: 'Published by the task force.',
         },
-        { sectionId: 'scope', part: 1, text: 'Adults in primary care.' },
+        { sectionId: 'scope', chunk: 1, text: 'Adults in primary care.' },
       ],
     });
   });
@@ -107,7 +111,7 @@ describe('blocksToDocument', () => {
           textEnd: 38,
         },
       ],
-      parts: [{ sectionId: 'goals', part: 1, text: 'A goal of <130 mmHg.' }],
+      chunks: [{ sectionId: 'goals', chunk: 1, text: 'A goal of <130 mmHg.' }],
     });
   });
 
@@ -146,10 +150,10 @@ describe('blocksToDocument', () => {
           textEnd: 49,
         },
       ],
-      parts: [
-        { sectionId: 'dose', part: 1, text: 'First.' },
-        { sectionId: 'dose-2', part: 1, text: 'Second.' },
-        { sectionId: 'dose-2-2', part: 1, text: 'Third.' },
+      chunks: [
+        { sectionId: 'dose', chunk: 1, text: 'First.' },
+        { sectionId: 'dose-2', chunk: 1, text: 'Second.' },
+        { sectionId: 'dose-2-2', chunk: 1, text: 'Third.' },
       ],
     });
   });
@@ -177,30 +181,30 @@ describe('blocksToDocument', () => {
           textEnd: 70,
         },
       ],
-      parts: [],
+      chunks: [],
     });
   });
 });
 
-describe('splitIntoParts', () => {
+describe('splitIntoChunks', () => {
   const first = 'a'.repeat(6000);
   const second = 'b'.repeat(6000);
 
-  it('ends a part at the last paragraph break that fits', () => {
-    expect(splitIntoParts(first + '\n\n' + second)).toEqual([first, second]);
+  it('ends a chunk at the last paragraph break that fits', () => {
+    expect(splitIntoChunks(first + '\n\n' + second)).toEqual([first, second]);
   });
 
-  it('ends a part at the last line break when no paragraph break fits', () => {
-    expect(splitIntoParts(first + '\n' + second)).toEqual([first, second]);
+  it('ends a chunk at the last line break when no paragraph break fits', () => {
+    expect(splitIntoChunks(first + '\n' + second)).toEqual([first, second]);
   });
 
-  it('ends a part at the last space when no line break fits', () => {
-    expect(splitIntoParts(first + ' ' + second)).toEqual([first, second]);
+  it('ends a chunk at the last space when no line break fits', () => {
+    expect(splitIntoChunks(first + ' ' + second)).toEqual([first, second]);
   });
 
   it('cuts text with no break at 10000 characters', () => {
     const full = 'c'.repeat(10000);
     const rest = 'c'.repeat(500);
-    expect(splitIntoParts(full + rest)).toEqual([full, rest]);
+    expect(splitIntoChunks(full + rest)).toEqual([full, rest]);
   });
 });

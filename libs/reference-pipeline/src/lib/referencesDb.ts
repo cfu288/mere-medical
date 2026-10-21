@@ -1,13 +1,13 @@
 import { DatabaseSync } from 'node:sqlite';
 
-import { Part, Section } from './sections';
+import { Chunk, Section } from './sections';
 
 /**
  * One reference, which is one published guideline or web page, as
  * `writeReference` stores it. The chat agent chooses one reference to answer a
  * question. `id`, `title`, `edition` and `summary` come from sources.json.
  *
- * Each field except `parts` fills one column of the reference's `documents`
+ * Each field except `chunks` fills one column of the reference's `documents`
  * row. `id`, `title` and `summary` also go to `documents_fts` for search.
  */
 export type ReferenceRecord = {
@@ -21,10 +21,10 @@ export type ReferenceRecord = {
   markdown: string;
   sections: Section[];
   /**
-   * In each part's `parts_fts` row, `document_id` is the record's `id` and
-   * `section_id` is the part's `sectionId`.
+   * In each chunk's `chunks_fts` row, `document_id` is the record's `id` and
+   * `section_id` is the chunk's `sectionId`.
    */
-  parts: Part[];
+  chunks: Chunk[];
 };
 
 /**
@@ -59,10 +59,10 @@ export function openReferencesDb(path: string): DatabaseSync {
       summary,
       tokenize = 'porter unicode61'
     );
-    CREATE VIRTUAL TABLE IF NOT EXISTS parts_fts USING fts5(
+    CREATE VIRTUAL TABLE IF NOT EXISTS chunks_fts USING fts5(
       document_id UNINDEXED,
       section_id UNINDEXED,
-      part UNINDEXED,
+      chunk UNINDEXED,
       text,
       tokenize = 'porter unicode61'
     );
@@ -72,7 +72,7 @@ export function openReferencesDb(path: string): DatabaseSync {
 
 /**
  * Writes one reference's `documents` row, its `documents_fts` row and its
- * `parts_fts` rows. `buildReferenceLibrary` calls it for each source that is
+ * `chunks_fts` rows. `buildReferenceLibrary` calls it for each source that is
  * not `empty`.
  *
  * @param db `DatabaseSync`. From {@link openReferencesDb}.
@@ -89,7 +89,7 @@ export function openReferencesDb(path: string): DatabaseSync {
  *   url: 'https://example.com/measles',
  *   markdown: '# Doses\n\nTwo doses.',
  *   sections: [{ sectionId: 'doses', parentId: null, title: 'Doses', textStart: 9, textEnd: 19 }],
- *   parts: [{ sectionId: 'doses', part: 1, text: 'Two doses.' }],
+ *   chunks: [{ sectionId: 'doses', chunk: 1, text: 'Two doses.' }],
  * });
  */
 export function writeReference(db: DatabaseSync, record: ReferenceRecord) {
@@ -107,10 +107,10 @@ export function writeReference(db: DatabaseSync, record: ReferenceRecord) {
   db.prepare(
     'INSERT INTO documents_fts (id, title, summary) VALUES (?, ?, ?)',
   ).run(record.id, record.title, record.summary);
-  const insertPart = db.prepare(
-    'INSERT INTO parts_fts (document_id, section_id, part, text) VALUES (?, ?, ?, ?)',
+  const insertChunk = db.prepare(
+    'INSERT INTO chunks_fts (document_id, section_id, chunk, text) VALUES (?, ?, ?, ?)',
   );
-  for (const part of record.parts) {
-    insertPart.run(record.id, part.sectionId, part.part, part.text);
+  for (const chunk of record.chunks) {
+    insertChunk.run(record.id, chunk.sectionId, chunk.chunk, chunk.text);
   }
 }

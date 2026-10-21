@@ -103,19 +103,19 @@ describe('buildReferenceLibrary', () => {
     ]);
     expect(
       openReferencesDb(path)
-        .prepare('SELECT document_id, section_id, part, text FROM parts_fts')
+        .prepare('SELECT document_id, section_id, chunk, text FROM chunks_fts')
         .all(),
     ).toEqual([
       {
         document_id: 'cdc-adult-schedule',
         section_id: 'page-1',
-        part: 1,
+        chunk: 1,
         text: 'I. Introduction\nTdap booster every 10 years.\nBMI of 30 kg/m2 or more.',
       },
       {
         document_id: 'cdc-adult-schedule',
         section_id: 'page-2',
-        part: 1,
+        chunk: 1,
         text: 'Repeat every 10 years.',
       },
     ]);

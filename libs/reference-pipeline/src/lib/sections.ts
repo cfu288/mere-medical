@@ -45,35 +45,35 @@ export type Section = {
 
 /**
  * Up to 10,000 characters of one section's text. A section can be too long to
- * read at once. The chat agent searches and reads parts, not whole sections.
+ * read at once. The chat agent searches and reads chunks, not whole sections.
  *
- * A section has zero or more parts, and a part never continues into the next
- * section. `splitIntoParts` says where a part ends.
+ * A section has zero or more chunks, and a chunk never continues into the next
+ * section. `splitIntoChunks` says where a chunk ends.
  *
- * The library stores each part as one `parts_fts` row, which holds the text and
- * indexes it for search.
+ * The library stores each chunk as one `chunks_fts` row, which holds the text
+ * and indexes it for search.
  */
-export type Part = {
+export type Chunk = {
   sectionId: string;
   /** Numbered from 1 within the section. */
-  part: number;
+  chunk: number;
   text: string;
 };
 
 const TEXT_BEFORE_FIRST_HEADING_TITLE = 'Opening text';
-const PART_MAX_CHARS = 10000;
+const CHUNK_MAX_CHARS = 10000;
 
 /**
- * Builds a reference's markdown, sections and parts from its blocks, once for
+ * Builds a reference's markdown, sections and chunks from its blocks, once for
  * each source that `buildReferenceLibrary` fetches.
  *
  * Each heading becomes a `#` line in the markdown, with one `#` per level.
  * {@link Section} lists how headings become sections. The same blocks always
- * give the same markdown, sections and parts.
+ * give the same markdown, sections and chunks.
  *
  * @param blocks `Block[]`. A source's blocks in reading order.
- * @returns `{ markdown: string; sections: Section[]; parts: Part[] }`. The
- * sections and parts are in reading order.
+ * @returns `{ markdown: string; sections: Section[]; chunks: Chunk[] }`. The
+ * sections and chunks are in reading order.
  *
  * @example
  * blocksToDocument([
@@ -83,13 +83,13 @@ const PART_MAX_CHARS = 10000;
  * // {
  * //   markdown: '# Goals\n\nBelow 130.',
  * //   sections: [{ sectionId: 'goals', parentId: null, title: 'Goals', textStart: 9, textEnd: 19 }],
- * //   parts: [{ sectionId: 'goals', part: 1, text: 'Below 130.' }],
+ * //   chunks: [{ sectionId: 'goals', chunk: 1, text: 'Below 130.' }],
  * // }
  */
 export function blocksToDocument(blocks: Block[]): {
   markdown: string;
   sections: Section[];
-  parts: Part[];
+  chunks: Chunk[];
 } {
   let markdown = '';
   const append = (text: string) => {
@@ -133,39 +133,39 @@ export function blocksToDocument(blocks: Block[]): {
       section.textEnd = markdown.length;
     }
   }
-  const parts: Part[] = [];
+  const chunks: Chunk[] = [];
   for (const section of sections) {
-    const texts = splitIntoParts(
+    const texts = splitIntoChunks(
       markdown.slice(section.textStart, section.textEnd),
     );
     texts.forEach((text, index) =>
-      parts.push({ sectionId: section.sectionId, part: index + 1, text }),
+      chunks.push({ sectionId: section.sectionId, chunk: index + 1, text }),
     );
   }
-  return { markdown, sections, parts };
+  return { markdown, sections, chunks };
 }
 
 /**
- * Splits one section's text into parts, for `blocksToDocument`.
+ * Splits one section's text into chunks, for `blocksToDocument`.
  *
- * Text of 10,000 characters or fewer stays one part. A longer text's part ends
- * at the last paragraph break that fits. If there is no paragraph
- * break, it ends at the last line break. If there is no line break, it ends at
- * the last space. If there is no space, it ends at 10,000 characters. Parts
- * omit the whitespace where they split.
+ * Text of 10,000 characters or fewer stays one chunk. A longer text's chunk
+ * ends at the last paragraph break that fits. If there is no paragraph break,
+ * it ends at the last line break. If there is no line break, it ends at the
+ * last space. If there is no space, it ends at 10,000 characters. Chunks omit
+ * the whitespace where they split.
  *
  * @param text `string`. One section's text.
- * @returns `string[]`. The parts in order. Empty for empty text.
+ * @returns `string[]`. The chunks in order. Empty for empty text.
  *
  * @example
- * splitIntoParts('Two doses.\n\nGive at 12 months.');
+ * splitIntoChunks('Two doses.\n\nGive at 12 months.');
  * // ['Two doses.\n\nGive at 12 months.']
  */
-export function splitIntoParts(text: string): string[] {
-  const parts: string[] = [];
+export function splitIntoChunks(text: string): string[] {
+  const chunks: string[] = [];
   let start = 0;
   while (start < text.length) {
-    let end = Math.min(start + PART_MAX_CHARS, text.length);
+    let end = Math.min(start + CHUNK_MAX_CHARS, text.length);
     if (end < text.length) {
       for (const separator of ['\n\n', '\n', ' ']) {
         const at = text.lastIndexOf(separator, end);
@@ -175,13 +175,13 @@ export function splitIntoParts(text: string): string[] {
         }
       }
     }
-    parts.push(text.slice(start, end));
+    chunks.push(text.slice(start, end));
     start = end;
     while (/\s/.test(text.charAt(start))) {
       start++;
     }
   }
-  return parts;
+  return chunks;
 }
 
 function uniqueSlug(title: string, usedIds: Set<string>): string {

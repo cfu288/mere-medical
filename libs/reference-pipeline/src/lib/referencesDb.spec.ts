@@ -19,7 +19,7 @@ describe('writeReference', () => {
           textEnd: 19,
         },
       ],
-      parts: [{ sectionId: 'doses', part: 1, text: 'Two doses.' }],
+      chunks: [{ sectionId: 'doses', chunk: 1, text: 'Two doses.' }],
     });
 
     expect(
@@ -52,7 +52,7 @@ describe('writeReference', () => {
       url: 'https://example.com/measles',
       markdown: 'Rash and fever.',
       sections: [],
-      parts: [],
+      chunks: [],
     });
 
     expect([
@@ -69,7 +69,7 @@ describe('writeReference', () => {
     ]).toEqual([[{ id: 'measles' }], []]);
   });
 
-  it('finds the parts of one reference that mention a word, and only that reference', () => {
+  it('finds the chunks of one reference that mention a word, and only that reference', () => {
     const db = openReferencesDb(':memory:');
     writeReference(db, {
       id: 'ckd',
@@ -79,9 +79,9 @@ describe('writeReference', () => {
       url: 'https://example.com/ckd',
       markdown: '# Diet\n\nLimit potassium.',
       sections: [],
-      parts: [
-        { sectionId: 'diet', part: 1, text: 'Limit potassium.' },
-        { sectionId: 'diet', part: 2, text: 'Limit salt.' },
+      chunks: [
+        { sectionId: 'diet', chunk: 1, text: 'Limit potassium.' },
+        { sectionId: 'diet', chunk: 2, text: 'Limit salt.' },
       ],
     });
     writeReference(db, {
@@ -92,15 +92,15 @@ describe('writeReference', () => {
       url: 'https://example.com/htn',
       markdown: '# Diet\n\nEat potassium.',
       sections: [],
-      parts: [{ sectionId: 'diet', part: 1, text: 'Eat potassium.' }],
+      chunks: [{ sectionId: 'diet', chunk: 1, text: 'Eat potassium.' }],
     });
 
     expect(
       db
         .prepare(
-          "SELECT section_id, part, text FROM parts_fts WHERE parts_fts MATCH 'potassium' AND document_id = 'ckd'",
+          "SELECT section_id, chunk, text FROM chunks_fts WHERE chunks_fts MATCH 'potassium' AND document_id = 'ckd'",
         )
         .all(),
-    ).toEqual([{ section_id: 'diet', part: 1, text: 'Limit potassium.' }]);
+    ).toEqual([{ section_id: 'diet', chunk: 1, text: 'Limit potassium.' }]);
   });
 });

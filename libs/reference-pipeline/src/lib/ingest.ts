@@ -4,7 +4,7 @@ import { fetchCdcMediaPage } from './cdcMedia';
 import { htmlToBlocks } from './htmlToBlocks';
 import { pdfToBlocks } from './pdfBlocks';
 import { openReferencesDb, writeReference } from './referencesDb';
-import { Block, Part, Section, blocksToDocument } from './sections';
+import { Block, Chunk, Section, blocksToDocument } from './sections';
 import { Source } from './sources';
 
 /**
@@ -76,7 +76,7 @@ export async function buildReferenceLibrary({
     url: string;
     markdown: string;
     sections: Section[];
-    parts: Part[];
+    chunks: Chunk[];
   }[] = [];
   for (const source of sources) {
     const { url, blocks } = await fetchSourceAsBlocks(source, fetchBytes);
@@ -87,8 +87,8 @@ export async function buildReferenceLibrary({
   rmSync(building, { force: true });
   const db = openReferencesDb(building);
   const reports = parsed.map(
-    ({ source, url, markdown, sections, parts }): IngestReport => {
-      if (parts.length === 0) {
+    ({ source, url, markdown, sections, chunks }): IngestReport => {
+      if (chunks.length === 0) {
         return { id: source.id, status: 'empty' };
       }
       writeReference(db, {
@@ -99,7 +99,7 @@ export async function buildReferenceLibrary({
         url,
         markdown,
         sections,
-        parts,
+        chunks,
       });
       return {
         id: source.id,
