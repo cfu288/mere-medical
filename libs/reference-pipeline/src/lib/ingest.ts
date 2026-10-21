@@ -8,7 +8,7 @@ import { Block, Part, Section, blocksToDocument } from './sections';
 import { Source } from './sources';
 
 /**
- * What happened to one source in sources.json. The CLI prints one line for each.
+ * What happened to one source in sources.json.
  *
  * `empty` means the source has no text besides its headings.
  * `buildReferenceLibrary` does not store it.

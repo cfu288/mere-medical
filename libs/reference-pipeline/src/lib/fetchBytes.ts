@@ -17,7 +17,7 @@ type HostTiming = { delayMs: number; lastRequestAt: number };
  * starts of requests to that origin. A missing or unreadable robots.txt sets no
  * delay. It does not read `Disallow` rules.
  *
- * Calls made at the same time wait together and then start together.
+ * Calls made at the same time to one origin do not wait for each other.
  * `buildReferenceLibrary` makes only one request at a time.
  *
  * @param options Optional. Tests use it to replace `sleep` and `now`.

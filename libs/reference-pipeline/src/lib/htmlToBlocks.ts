@@ -26,10 +26,11 @@ const turndown = createMarkdownConverter();
  * to `<h6>` element.
  *
  * It drops scripts, styles, noscript fallbacks, frames, objects and `<nav>`
- * menus. Links keep only their text, and images keep only their alt text. A
- * markdown table cannot hold headings, lists, horizontal rules, block quotes or
- * code blocks. A table with any of these in its cells loses its table layout
- * but keeps the cells' content.
+ * menus. Links keep only their text. Images outside headings keep only their
+ * alt text, and images inside headings are dropped. A markdown table cannot
+ * hold headings, lists, horizontal rules, block quotes or code blocks. A table
+ * with any of these in its cells loses its table layout but keeps the cells'
+ * content.
  *
  * A page with no single `<main>` and no single `<article>` keeps its header and
  * footer text, such as links outside `<nav>` and newsletter forms.
