@@ -1,6 +1,9 @@
+import { statSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 
 import { Chunk, Section } from './sections';
+
+const SCHEMA_VERSION = 1;
 
 /**
  * One reference, which is one published guideline or web page, as
@@ -28,9 +31,9 @@ export type ReferenceRecord = {
 };
 
 /**
- * Opens a reference library, creating its tables when they are missing.
- * `buildReferenceLibrary` uses it to write a new library, and the API server
- * opens a built one for the chat agent.
+ * Opens a reference library, creating its tables when they are missing, and
+ * stamps it with the schema version that {@link openReferencesDbReadOnly}
+ * accepts. `buildReferenceLibrary` uses it to write a new library.
  *
  * {@link ReferenceRecord} shows what goes into each table.
  *
@@ -43,6 +46,7 @@ export type ReferenceRecord = {
  */
 export function openReferencesDb(path: string): DatabaseSync {
   const db = new DatabaseSync(path);
+  // TODO: store chunks in an indexed table; chunk reads scan all of chunks_fts.
   db.exec(`
     CREATE TABLE IF NOT EXISTS documents (
       id         TEXT PRIMARY KEY,
@@ -66,7 +70,44 @@ export function openReferencesDb(path: string): DatabaseSync {
       text,
       tokenize = 'porter unicode61'
     );
+    PRAGMA user_version = ${SCHEMA_VERSION};
   `);
+  return db;
+}
+
+/**
+ * Opens a built reference library read-only. The API server calls it at
+ * startup. A bad library file stops the server from starting.
+ *
+ * @param path `string`. The library file.
+ * @returns `DatabaseSync`. The caller closes it.
+ * @throws `Error` when no file is at `path`, the file has another schema
+ * version than {@link openReferencesDb} writes, or it holds no references.
+ *
+ * @example
+ * const db = openReferencesDbReadOnly('libs/reference-pipeline/data/references.db');
+ */
+export function openReferencesDbReadOnly(path: string): DatabaseSync {
+  if (!statSync(path, { throwIfNoEntry: false })?.isFile()) {
+    throw new Error(`No reference library file at ${path}`);
+  }
+  const db = new DatabaseSync(path, { readOnly: true });
+  const { user_version } = db.prepare('PRAGMA user_version').get() as {
+    user_version: number;
+  };
+  if (user_version !== SCHEMA_VERSION) {
+    db.close();
+    throw new Error(
+      `${path} has schema version ${user_version}, expected ${SCHEMA_VERSION}`,
+    );
+  }
+  const { n } = db.prepare('SELECT COUNT(*) AS n FROM documents').get() as {
+    n: number;
+  };
+  if (n === 0) {
+    db.close();
+    throw new Error(`${path} holds no references`);
+  }
   return db;
 }
 
