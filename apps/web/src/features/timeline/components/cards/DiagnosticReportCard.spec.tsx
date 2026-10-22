@@ -84,7 +84,7 @@ describe('getRelatedDocuments', () => {
       conn: { location: 'https://onpatient.com' } as ConnectionDocument,
     });
 
-    expect(docs.map((doc) => doc.metadata?.id)).toEqual(['Observation/obs-1']);
+    expect(docs).toEqual([observation('Observation/obs-1')]);
   });
 
   it('ignores an observation another connection stores under the same relative id', async () => {
@@ -100,7 +100,7 @@ describe('getRelatedDocuments', () => {
       conn: { location: 'https://onpatient.com' } as ConnectionDocument,
     });
 
-    expect(docs.map((doc) => doc.connection_record_id)).toEqual(['conn-a']);
+    expect(docs).toEqual([observation('Observation/obs-1', 'conn-a')]);
   });
 
   it('finds an observation stored under the absolute id a relative reference resolves to', async () => {
@@ -119,8 +119,10 @@ describe('getRelatedDocuments', () => {
       } as ConnectionDocument,
     });
 
-    expect(docs.map((doc) => doc.metadata?.id)).toEqual([
-      'https://mepic.example.org/fhir/api/FHIR/R4/Observation/obs-1',
+    expect(docs).toEqual([
+      observation(
+        'https://mepic.example.org/fhir/api/FHIR/R4/Observation/obs-1',
+      ),
     ]);
   });
 });

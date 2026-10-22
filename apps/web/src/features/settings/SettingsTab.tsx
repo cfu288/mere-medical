@@ -18,6 +18,17 @@ import { UserSwitchModal } from './components/UserSwitchModal';
 import { UserSwitchDrawer } from './components/UserSwitchDrawer';
 import { AddUserModal } from './components/AddUserModal';
 
+/**
+ * Reads the user's patient records, newest first. The user card shows the
+ * name and details from them.
+ *
+ * @param db `RxDatabase<DatabaseCollections>`.
+ * @param user_id `string`. The user who owns the records.
+ * @returns `Promise<ClinicalDocument<BundleEntry<Patient>>[]>`.
+ *
+ * @example
+ * const patients = await fetchPatientRecords(db, user.id);
+ */
 export async function fetchPatientRecords(
   db: RxDatabase<DatabaseCollections>,
   user_id: string,
