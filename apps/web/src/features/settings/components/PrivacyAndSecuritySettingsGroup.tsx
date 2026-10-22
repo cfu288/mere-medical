@@ -1,5 +1,4 @@
 import { Switch } from '@headlessui/react';
-import uuid4 from '../../../shared/utils/UUIDUtils';
 import {
   getInternalLokiStorage,
   getStorageAdapter,
@@ -7,10 +6,8 @@ import {
   initUnencrypedRxDb,
   useRxDb,
 } from '../../../app/providers/RxDbProvider';
-import {
-  useRawUserPreferences,
-  useUserPreferences,
-} from '../../../app/providers/UserPreferencesProvider';
+import { useUserPreferences } from '../../../app/providers/UserPreferencesProvider';
+import { updateUserPreferences } from '../../../repositories/UserPreferencesRepository';
 import { useUser } from '../../../app/providers/UserProvider';
 import { useCallback, useRef, useState } from 'react';
 import { classNames } from '../../../shared/utils/StyleUtils';
@@ -27,14 +24,13 @@ export function PrivacyAndSecuritySettingsGroup() {
   const db = useRxDb(),
     user = useUser(),
     userPreferences = useUserPreferences(),
-    rawUserPreferences = useRawUserPreferences(),
     ref = useRef<HTMLDivElement | null>(null),
     localConfig = useLocalConfig(),
     [showPasswordPrompModal, setShowPasswordPromptModal] = useState(false),
     [showDecryptConfirmModal, setShowDecryptConfirmModal] = useState(false);
   const updateLocalConfig = useUpdateLocalConfig();
 
-  if (userPreferences !== undefined && rawUserPreferences !== undefined) {
+  if (userPreferences !== undefined) {
     return (
       <>
         <h1 className="py-6 text-xl font-extrabold">Privacy and Security</h1>
@@ -119,19 +115,9 @@ export function PrivacyAndSecuritySettingsGroup() {
                   <Switch
                     checked={userPreferences.use_proxy}
                     onChange={() => {
-                      if (rawUserPreferences) {
-                        rawUserPreferences.update({
-                          $set: {
-                            use_proxy: !userPreferences.use_proxy,
-                          },
-                        });
-                      } else {
-                        db.user_preferences.insert({
-                          id: uuid4(),
-                          user_id: user?.id,
-                          use_proxy: false,
-                        });
-                      }
+                      updateUserPreferences(db, user.id, {
+                        use_proxy: !userPreferences.use_proxy,
+                      });
                     }}
                     className={classNames(
                       userPreferences.use_proxy

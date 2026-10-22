@@ -1,5 +1,4 @@
 import { useRxDb } from '../../app/providers/RxDbProvider';
-import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import { GenericBanner } from '../../shared/components/GenericBanner';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import {
@@ -8,12 +7,10 @@ import {
   CarePlan,
   Condition,
   DiagnosticReport,
-  FhirResource,
   Immunization,
   MedicationStatement,
   Observation,
 } from 'fhir/r2';
-import { RxDatabase, RxDocument } from 'rxdb';
 import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { MedicationsListCard } from './components/MedicationsListCard';
 import { SkeletonListCard } from './components/SkeletonListCard';
@@ -42,150 +39,12 @@ import {
 import { EyeIcon } from '@heroicons/react/24/outline';
 import { EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useLocalConfig } from '../../app/providers/LocalConfigProvider';
-
-function fetchMedications(
-  db: RxDatabase<DatabaseCollections>,
-  user_id: string,
-) {
-  return db.clinical_documents
-    .find({
-      selector: {
-        user_id: user_id,
-        'data_record.resource_type': {
-          $in: ['medicationstatement', 'medicationrequest'],
-        },
-        'metadata.date': { $nin: [null, undefined, ''] },
-      },
-      sort: [{ 'metadata.date': 'desc' }],
-    })
-    .exec()
-    .then((list) => {
-      const lst = list as unknown as RxDocument<
-        ClinicalDocument<BundleEntry<FhirResource>>
-      >[];
-      return lst;
-    });
-}
-
-function fetchCarePlan(db: RxDatabase<DatabaseCollections>, user_id: string) {
-  return db.clinical_documents
-    .find({
-      selector: {
-        user_id: user_id,
-        'data_record.resource_type': 'careplan',
-      },
-    })
-    .exec()
-    .then((list) => {
-      const lst = list as unknown as RxDocument<
-        ClinicalDocument<BundleEntry<FhirResource>>
-      >[];
-      return lst;
-    });
-}
-
-function fetchConditions(db: RxDatabase<DatabaseCollections>, user_id: string) {
-  return db.clinical_documents
-    .find({
-      selector: {
-        user_id: user_id,
-        'data_record.resource_type': 'condition',
-        'metadata.date': { $nin: [null, undefined, ''] },
-      },
-      sort: [{ 'metadata.date': 'desc' }],
-    })
-    .exec()
-    .then((list) => {
-      const lst = list as unknown as RxDocument<
-        ClinicalDocument<BundleEntry<FhirResource>>
-      >[];
-
-      return lst;
-    });
-}
-
-function fetchImmunizations(
-  db: RxDatabase<DatabaseCollections>,
-  user_id: string,
-) {
-  return db.clinical_documents
-    .find({
-      selector: {
-        user_id: user_id,
-        'data_record.resource_type': 'immunization',
-        'metadata.date': { $nin: [null, undefined, ''] },
-      },
-      sort: [{ 'metadata.date': 'desc' }],
-    })
-    .exec()
-    .then((list) => {
-      const lst = list as unknown as RxDocument<
-        ClinicalDocument<BundleEntry<FhirResource>>
-      >[];
-
-      return lst;
-    });
-}
-
-function fetchAllergy(db: RxDatabase<DatabaseCollections>, user_id: string) {
-  return db.clinical_documents
-    .find({
-      selector: {
-        user_id: user_id,
-        'data_record.resource_type': 'allergyintolerance',
-        'metadata.date': { $nin: [null, undefined, ''] },
-      },
-      sort: [{ 'metadata.date': 'desc' }],
-    })
-    .exec()
-    .then((list) => {
-      const lst = list as unknown as RxDocument<
-        ClinicalDocument<BundleEntry<FhirResource>>
-      >[];
-
-      return lst;
-    });
-}
-
-async function fetchSummaryPagePreferences(
-  db: RxDatabase<DatabaseCollections>,
-  user_id: string,
-) {
-  return db.summary_page_preferences
-    .findOne({
-      selector: {
-        user_id: user_id,
-      },
-    })
-    .exec();
-}
-
-async function fetchPinned(
-  db: RxDatabase<DatabaseCollections>,
-  user_id: string,
-) {
-  const pinnedIds = await db.summary_page_preferences
-    .findOne({
-      selector: {
-        user_id: user_id,
-      },
-    })
-    .exec();
-
-  if (pinnedIds === null) {
-    return [];
-  }
-
-  const pinnedIdsList = pinnedIds.pinned_labs || [];
-
-  return db.clinical_documents.findByIds(pinnedIdsList).then((map) => {
-    const lst = [...map.values()] as RxDocument<
-      ClinicalDocument<BundleEntry<FhirResource>>
-    >[];
-
-    return lst;
-  });
-}
+import {
+  findDatedRecordsByType,
+  findRecordsByIds,
+  findRecordsByType,
+} from '../../repositories/ClinicalDocumentRepository';
+import { findSummaryPagePreferences } from '../../repositories/SummaryPagePreferencesRepository';
 
 enum ActionTypes {
   IDLE,
@@ -348,52 +207,34 @@ function useSummaryData(): [SummaryState, React.Dispatch<SummaryActions>] {
     if (data.status === ActionTypes.IDLE) {
       reducer({ type: ActionTypes.PENDING });
       Promise.all([
-        fetchMedications(db, user.id).then((data) =>
-          data.map(
-            (item) =>
-              item.toMutableJSON() as ClinicalDocument<
-                BundleEntry<MedicationStatement>
-              >,
-          ),
+        findDatedRecordsByType(db, user.id, [
+          'medicationstatement',
+          'medicationrequest',
+        ]) as Promise<ClinicalDocument<BundleEntry<MedicationStatement>>[]>,
+        findDatedRecordsByType(db, user.id, ['condition']) as Promise<
+          ClinicalDocument<BundleEntry<Condition>>[]
+        >,
+        findDatedRecordsByType(db, user.id, ['immunization']) as Promise<
+          ClinicalDocument<BundleEntry<Immunization>>[]
+        >,
+        findRecordsByType(db, user.id, ['careplan']) as Promise<
+          ClinicalDocument<BundleEntry<CarePlan>>[]
+        >,
+        findDatedRecordsByType(db, user.id, ['allergyintolerance']) as Promise<
+          ClinicalDocument<BundleEntry<AllergyIntolerance>>[]
+        >,
+        findSummaryPagePreferences(db, user.id).then(
+          (preferences) =>
+            findRecordsByIds(
+              db,
+              user.id,
+              preferences?.pinned_labs || [],
+            ) as Promise<
+              ClinicalDocument<BundleEntry<DiagnosticReport | Observation>>[]
+            >,
         ),
-        fetchConditions(db, user.id).then((data) =>
-          data.map(
-            (item) =>
-              item.toMutableJSON() as ClinicalDocument<BundleEntry<Condition>>,
-          ),
-        ),
-        fetchImmunizations(db, user.id).then((data) =>
-          data.map(
-            (item) =>
-              item.toMutableJSON() as ClinicalDocument<
-                BundleEntry<Immunization>
-              >,
-          ),
-        ),
-        fetchCarePlan(db, user.id).then((data) =>
-          data.map(
-            (item) =>
-              item.toMutableJSON() as ClinicalDocument<BundleEntry<CarePlan>>,
-          ),
-        ),
-        fetchAllergy(db, user.id).then((data) =>
-          data.map(
-            (item) =>
-              item.toMutableJSON() as ClinicalDocument<
-                BundleEntry<AllergyIntolerance>
-              >,
-          ),
-        ),
-        fetchPinned(db, user.id).then((data) =>
-          data.map(
-            (item) =>
-              item.toMutableJSON() as ClinicalDocument<
-                BundleEntry<DiagnosticReport | Observation>
-              >,
-          ),
-        ),
-        fetchSummaryPagePreferences(db, user.id).then((preferences) => {
-          const savedCards = preferences?.toMutableJSON().cards;
+        findSummaryPagePreferences(db, user.id).then((preferences) => {
+          const savedCards = preferences?.cards;
           // Saved preferences may include card types that no longer exist
           return savedCards
             ? savedCards.filter((card) => card.type in CardTypeToDisplayMap)
@@ -434,6 +275,7 @@ function SummaryTab() {
     () => cards!.sort((a, b) => a.order - b.order),
     [cards],
   );
+  // TODO: save card order and visibility to the summary page preferences, which a reload resets
   const onDragEnd: OnDragEndResponder = useCallback(
     (result) => {
       // the only one that is required

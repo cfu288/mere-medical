@@ -1,4 +1,5 @@
 {
+  // TODO: fix the type errors in the specs, which jest misses because it does not type check
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",

@@ -16,16 +16,12 @@ type UserManagement = {
 };
 
 const UserContext = React.createContext<UserDocument | undefined>(undefined);
-const RawUserContext = React.createContext<RxDocument<UserDocument> | null>(
-  null,
-);
 const AllUsersContext = React.createContext<RxDocument<UserDocument>[]>([]);
 const UserManagementContext = React.createContext<UserManagement | null>(null);
 
 export function UserProvider(props: UserProviderProps) {
   const userRepo = useUserRepository();
   const [user, setUser] = useState<UserDocument | undefined>(undefined);
-  const [rawUser, setRawUser] = useState<RxDocument<UserDocument> | null>(null);
   const [allUsers, setAllUsers] = useState<RxDocument<UserDocument>[]>([]);
 
   useEffect(() => {
@@ -38,7 +34,6 @@ export function UserProvider(props: UserProviderProps) {
       userSub = userRepo.watchSelectedUser().subscribe((item) => {
         if (item) {
           setUser(item.user);
-          setRawUser(item.rawUser);
         }
       });
 
@@ -75,13 +70,11 @@ export function UserProvider(props: UserProviderProps) {
   if (user) {
     return (
       <UserContext.Provider value={user}>
-        <RawUserContext.Provider value={rawUser}>
-          <AllUsersContext.Provider value={allUsers}>
-            <UserManagementContext.Provider value={userManagement}>
-              {props.children}
-            </UserManagementContext.Provider>
-          </AllUsersContext.Provider>
-        </RawUserContext.Provider>
+        <AllUsersContext.Provider value={allUsers}>
+          <UserManagementContext.Provider value={userManagement}>
+            {props.children}
+          </UserManagementContext.Provider>
+        </AllUsersContext.Provider>
       </UserContext.Provider>
     );
   }
@@ -97,14 +90,6 @@ export function useUser() {
   if (context === undefined) {
     throw new Error('useUser must be used within a UserProvider');
   }
-  return context;
-}
-
-/**
- * Gets the raw user document from the context, modifiable
- */
-export function useRxUserDocument() {
-  const context = useContext(RawUserContext);
   return context;
 }
 

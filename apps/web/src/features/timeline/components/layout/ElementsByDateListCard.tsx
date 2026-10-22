@@ -103,7 +103,7 @@ function DocumentListItem({
       | undefined
     >(undefined),
     attachmentUrl = item.data_record.raw.resource?.content?.[0].attachment.url,
-    attachment = useClinicalDoc(attachmentUrl),
+    attachment = useClinicalDoc(item.connection_record_id, attachmentUrl),
     [hasLoadedDocument, setHasLoadedDocument] = useState(false);
   const ref = useRef<HTMLLIElement>(null);
   const entry = useIntersectionObserver(ref, {});
@@ -112,10 +112,10 @@ function DocumentListItem({
   useEffect(() => {
     if (isVisible) {
       if (
-        attachment?.get('data_record.content_type') === 'application/xml' &&
-        checkIfXmlIsCCDA(attachment.get('data_record.raw'))
+        attachment?.data_record.content_type === 'application/xml' &&
+        checkIfXmlIsCCDA(attachment.data_record.raw as string)
       ) {
-        const parsedDoc = parseCCDA(attachment.get('data_record.raw'), true);
+        const parsedDoc = parseCCDA(attachment.data_record.raw as string, true);
         setHasLoadedDocument(true);
         setCCDA(parsedDoc);
       } else {

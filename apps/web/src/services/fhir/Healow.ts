@@ -42,7 +42,10 @@ import {
 import { Routes } from '../../Routes';
 import { R4 } from '.';
 import { AppConfig } from '../../app/providers/AppConfigProvider';
-import { createConnection } from '../../repositories/ConnectionRepository';
+import {
+  createConnection,
+  updateConnection,
+} from '../../repositories/ConnectionRepository';
 import { findUserById } from '../../repositories/UserRepository';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
 import uuid4 from '../../shared/utils/UUIDUtils';
@@ -544,10 +547,7 @@ export async function saveConnectionToDb({
             updateData['refresh_token'] = tokens.refreshToken;
           }
 
-          doc
-            .update({
-              $set: updateData,
-            })
+          updateConnection(db, user.id, doc.id, updateData)
             .then(() => {
               resolve(true);
             })

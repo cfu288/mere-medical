@@ -152,8 +152,8 @@ async function syncFHIRResource<T extends FhirResource>(
 }
 
 export const sync: VendorSync<VAConnectionDocument> = {
-  refreshToken: ({ config, connection }) =>
-    refreshVAConnectionTokenIfNeeded(config, connection),
+  refreshToken: ({ config, connection, db }) =>
+    refreshVAConnectionTokenIfNeeded(config, db, connection),
   syncAllRecords: ({ fhirBaseUrl: baseUrl, document: cd, db }) => {
     const patient = cd.patient;
     return Promise.allSettled([
@@ -279,10 +279,12 @@ export async function saveConnectionToDb({
 /**
  * For a connection document, if the access token is expired, refresh it and save it to the db
  * @param config App configuration containing VA_CLIENT_ID
+ * @param db the database that stores the connection
  * @param connectionDocument the connection document to refresh the access token for
  */
 export async function refreshVAConnectionTokenIfNeeded(
   config: AppConfig,
+  db: RxDatabase<DatabaseCollections>,
   connectionDocument: RxDocument<AnyConnectionDocument>,
 ) {
   const nowInSeconds = Math.floor(Date.now() / 1000);
@@ -321,12 +323,15 @@ export async function refreshVAConnectionTokenIfNeeded(
 
   const newTokens = await vaClient.refresh(currentTokens, oauthConfig);
 
-  await connectionDocument.update({
-    $set: {
+  await updateConnection(
+    db,
+    connectionDocument.get('user_id'),
+    connectionDocument.get('id'),
+    {
       access_token: newTokens.accessToken,
       expires_at: newTokens.expiresAt,
       scope: newTokens.scope || scope,
       last_sync_was_error: false,
     },
-  });
+  );
 }

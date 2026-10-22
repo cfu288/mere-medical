@@ -28,6 +28,31 @@
     {
       "files": ["playwright/**/*.{ts,js,tsx,jsx}"],
       "rules": {}
+    },
+    {
+      "files": ["src/**/*.{ts,tsx,js,jsx}"],
+      "excludedFiles": [
+        "src/repositories/**",
+        "src/test-utils/**",
+        "**/*.spec.*"
+      ],
+      "rules": {
+        "no-restricted-syntax": [
+          "error",
+          {
+            "selector": "MemberExpression[computed=false][property.name=/^(clinical_documents|connection_documents|user_documents|user_preferences|summary_page_preferences|instance_config)$/]",
+            "message": "Read and write collections through a function in src/repositories."
+          },
+          {
+            "selector": "MemberExpression[computed=true][property.value=/^(clinical_documents|connection_documents|user_documents|user_preferences|summary_page_preferences|instance_config)$/]",
+            "message": "Read and write collections through a function in src/repositories."
+          },
+          {
+            "selector": "ObjectPattern > Property[key.name=/^(clinical_documents|connection_documents|user_documents|user_preferences|summary_page_preferences|instance_config)$/]",
+            "message": "Read and write collections through a function in src/repositories."
+          }
+        ]
+      }
     }
   ]
 }

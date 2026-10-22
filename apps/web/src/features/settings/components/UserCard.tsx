@@ -24,8 +24,7 @@ export function UserCard() {
     [openEditUserModal, setOpenEditUserModal] = useState(false);
 
   useEffect(() => {
-    fetchPatientRecords(db, user.id).then((data) => {
-      const res = data.map((item) => item.toMutableJSON());
+    fetchPatientRecords(db, user.id).then((res) => {
       const firstName = parseGivenName(
           res.filter((i) => parseGivenName(i) !== undefined)?.[0],
         ),

@@ -5,7 +5,6 @@ import { DatabaseCollections } from './DatabaseCollections';
 import {
   UserProvider,
   useUser,
-  useRxUserDocument,
   useAllUsers,
   useUserManagement,
 } from './UserProvider';
@@ -19,6 +18,7 @@ import {
   createMultipleTestUsers,
 } from '../../test-utils/userTestData';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
+import { useUserRepository } from '../../repositories';
 
 describe('UserProvider', () => {
   let db: RxDatabase<DatabaseCollections>;
@@ -125,38 +125,6 @@ describe('UserProvider', () => {
       await waitFor(() => {
         expect(getByTestId('name').textContent).toBe('John Doe');
         expect(getByTestId('email').textContent).toBe('john@example.com');
-      });
-    });
-
-    it('provides RxDocument through useRxUserDocument hook', async () => {
-      const testUser = createTestUser({ is_selected_user: true });
-      await db.user_documents.insert(testUser);
-
-      const TestComponent = () => {
-        const rawUser = useRxUserDocument();
-        return (
-          <div>
-            <span data-testid="has-rxdoc">{String(rawUser !== null)}</span>
-            {rawUser && (
-              <span data-testid="can-update">
-                {String(typeof rawUser.update === 'function')}
-              </span>
-            )}
-          </div>
-        );
-      };
-
-      const { getByTestId } = render(
-        <TestProviders db={db}>
-          <UserProvider>
-            <TestComponent />
-          </UserProvider>
-        </TestProviders>,
-      );
-
-      await waitFor(() => {
-        expect(getByTestId('has-rxdoc').textContent).toBe('true');
-        expect(getByTestId('can-update').textContent).toBe('true');
       });
     });
 
@@ -328,7 +296,7 @@ describe('UserProvider', () => {
 
       const TestComponent = () => {
         const user = useUser();
-        const rawUser = useRxUserDocument();
+        const userRepository = useUserRepository();
 
         return (
           <div>
@@ -336,11 +304,9 @@ describe('UserProvider', () => {
             <button
               data-testid="update-button"
               onClick={async () => {
-                if (rawUser) {
-                  await rawUser.update({
-                    $set: { first_name: 'Updated' },
-                  });
-                }
+                await userRepository?.update(testUser.id, {
+                  first_name: 'Updated',
+                });
               }}
             >
               Update Name
