@@ -9,6 +9,9 @@ import { findAttachment } from '../../repositories/ClinicalDocumentRepository';
  * @param connectionId The connection the document came from
  * @param id This is the metadata.id of the clinical document - usually the full url
  * @returns The clinical document
+ *
+ * @example
+ * const attachment = useClinicalDoc(note.connection_record_id, 'https://fhir.example.org/Binary/1');
  */
 export function useClinicalDoc(connectionId: string, id?: string) {
   const db = useRxDb(),
