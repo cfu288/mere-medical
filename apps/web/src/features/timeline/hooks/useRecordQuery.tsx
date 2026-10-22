@@ -9,7 +9,7 @@ import { DatabaseCollections } from '../../../app/providers/DatabaseCollections'
 import { ClinicalDocument } from '../../../models/clinical-document/ClinicalDocument.type';
 import { QueryStatus, RecordsByDate } from '../types';
 import { fetchRecords, PAGE_SIZE } from '../TimelineTab';
-import { findTimelineRecords } from '../../../repositories/ClinicalDocumentRepository';
+import { findTimelineDocuments } from '../../../repositories/ClinicalDocumentRepository';
 
 export const GROUPED_VIEW_BATCH_SIZE = 250;
 
@@ -19,10 +19,10 @@ export async function fetchRawRecords(
   offset: number,
   limit: number,
 ): Promise<ClinicalDocument<BundleEntry<FhirResource>>[]> {
-  return (await findTimelineRecords(db, user_id, {
+  return findTimelineDocuments<BundleEntry<FhirResource>>(db, user_id, {
     skip: offset,
     limit,
-  })) as ClinicalDocument<BundleEntry<FhirResource>>[];
+  });
 }
 
 export function getRecordDateKey(
