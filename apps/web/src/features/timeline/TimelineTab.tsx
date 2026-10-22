@@ -30,7 +30,7 @@ import { TimelineYearHeader } from './components/layout/TimelineYearHeader';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { TimelineMonthDayHeader } from './components/layout/TimelineMonthDayHeader';
 import { useRecordQuery } from './hooks/useRecordQuery';
-import { findTimelineRecords } from '../../repositories/ClinicalDocumentRepository';
+import { findTimelineDocuments } from '../../repositories/ClinicalDocumentRepository';
 import { QueryStatus } from './types';
 
 export { QueryStatus };
@@ -273,11 +273,15 @@ export async function fetchRecords(
   query?: string,
   page?: number,
 ): Promise<Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>> {
-  const list = (await findTimelineRecords(db, user_id, {
-    skip: page ? page * PAGE_SIZE : 0,
-    limit: PAGE_SIZE,
-    search: query,
-  })) as ClinicalDocument<BundleEntry<FhirResource>>[];
+  const list = await findTimelineDocuments<BundleEntry<FhirResource>>(
+    db,
+    user_id,
+    {
+      skip: page ? page * PAGE_SIZE : 0,
+      limit: PAGE_SIZE,
+      search: query,
+    },
+  );
 
   const groupedRecords: Record<
     string,

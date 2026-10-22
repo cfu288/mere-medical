@@ -4,7 +4,7 @@ import { RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../../../app/providers/DatabaseCollections';
 import { ClinicalDocument } from '../../../models/clinical-document/ClinicalDocument.type';
 import { UserDocument } from '../../../models/user-document/UserDocument.type';
-import { findRecordsByLoincCodes } from '../../../repositories/ClinicalDocumentRepository';
+import { findDocumentsByLoincCodes } from '../../../repositories/ClinicalDocumentRepository';
 import { groupIdenticalLabRecords } from '../../../shared/utils/labResults';
 
 /** Every result sharing a LOINC code, oldest first, one document per identical result. */
@@ -17,10 +17,10 @@ export async function getRelatedLoincLabs({
   db: RxDatabase<DatabaseCollections>;
   user: UserDocument;
 }): Promise<ClinicalDocument<BundleEntry<Observation>>[]> {
-  const docs = (await findRecordsByLoincCodes(
+  const docs = await findDocumentsByLoincCodes<BundleEntry<Observation>>(
     db,
     user.id,
     loinc,
-  )) as ClinicalDocument<BundleEntry<Observation>>[];
+  );
   return groupIdenticalLabRecords(docs).map((group) => group[0]);
 }

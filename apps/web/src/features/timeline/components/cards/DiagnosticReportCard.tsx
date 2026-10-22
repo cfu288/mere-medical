@@ -22,7 +22,7 @@ import { TimelineCardCategoryTitle } from '../TimelineCardCategoryTitle';
 import { TimelineCardSubtitile } from '../TimelineCardSubtitile';
 import { TimelineCardTitle } from '../TimelineCardTitle';
 import { observationIdCandidates } from '../../../../shared/utils/fhirReferenceResolver';
-import { findRecordsByMetadataIds } from '../../../../repositories/ClinicalDocumentRepository';
+import { findDocumentsByMetadataIds } from '../../../../repositories/ClinicalDocumentRepository';
 
 /**
  * Function that encapsulates the logic of the useRelatedDocuments Hook.
@@ -56,7 +56,7 @@ export async function getRelatedDocuments({
     listToQuery.push(...candidateIds);
   }
 
-  const docs = await findRecordsByMetadataIds(
+  const docs = await findDocumentsByMetadataIds<BundleEntry<Observation>>(
     db,
     user.id,
     item.connection_record_id,

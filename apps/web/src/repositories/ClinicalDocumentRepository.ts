@@ -98,16 +98,16 @@ const TIMELINE_EXCLUDED_TYPES: ClinicalDocumentResourceType[] = [
  * @param page `{ skip: number; limit: number; search?: string }`. `search`
  * matches anywhere in the display name, ignoring case. Blank search text reads
  * as no search.
- * @returns `Promise<ClinicalDocument[]>`.
+ * @returns `Promise<ClinicalDocument<T>[]>`. `T` is the record type the caller reads.
  *
  * @example
- * const firstPage = await findTimelineRecords(db, user.id, { skip: 0, limit: 50, search: 'glucose' });
+ * const firstPage = await findTimelineDocuments(db, user.id, { skip: 0, limit: 50, search: 'glucose' });
  */
-export async function findTimelineRecords(
+export async function findTimelineDocuments<T>(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
   page: { skip: number; limit: number; search?: string },
-): Promise<ClinicalDocument[]> {
+): Promise<ClinicalDocument<T>[]> {
   const search = page.search?.trim();
   const selector: MangoQuerySelector<ClinicalDocument> = {
     user_id: userId,
@@ -127,7 +127,9 @@ export async function findTimelineRecords(
     .skip(page.skip)
     .limit(page.limit)
     .exec();
-  return docs.map((doc) => doc.toMutableJSON() as ClinicalDocument);
+  return docs.map(
+    (doc) => doc.toMutableJSON() as unknown as ClinicalDocument<T>,
+  );
 }
 
 /**
@@ -137,16 +139,16 @@ export async function findTimelineRecords(
  * @param db `RxDatabase<DatabaseCollections>`.
  * @param userId `string`.
  * @param loincCodes `string[]`. No codes returns no records.
- * @returns `Promise<ClinicalDocument[]>`.
+ * @returns `Promise<ClinicalDocument<T>[]>`. `T` is the record type the caller reads.
  *
  * @example
- * const glucoseResults = await findRecordsByLoincCodes(db, user.id, ['2345-7']);
+ * const glucoseResults = await findDocumentsByLoincCodes(db, user.id, ['2345-7']);
  */
-export async function findRecordsByLoincCodes(
+export async function findDocumentsByLoincCodes<T>(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
   loincCodes: string[],
-): Promise<ClinicalDocument[]> {
+): Promise<ClinicalDocument<T>[]> {
   if (loincCodes.length === 0) {
     return [];
   }
@@ -158,7 +160,9 @@ export async function findRecordsByLoincCodes(
       },
     })
     .exec();
-  return docs.map((doc) => doc.toMutableJSON() as ClinicalDocument);
+  return docs.map(
+    (doc) => doc.toMutableJSON() as unknown as ClinicalDocument<T>,
+  );
 }
 
 /**
@@ -169,17 +173,17 @@ export async function findRecordsByLoincCodes(
  * @param userId `string`.
  * @param connectionId `string`. The connection the records came from.
  * @param metadataIds `string[]`.
- * @returns `Promise<ClinicalDocument[]>`.
+ * @returns `Promise<ClinicalDocument<T>[]>`. `T` is the record type the caller reads.
  *
  * @example
- * const results = await findRecordsByMetadataIds(db, user.id, report.connection_record_id, ['https://fhir.example.org/Observation/1']);
+ * const results = await findDocumentsByMetadataIds(db, user.id, report.connection_record_id, ['https://fhir.example.org/Observation/1']);
  */
-export async function findRecordsByMetadataIds(
+export async function findDocumentsByMetadataIds<T>(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
   connectionId: string,
   metadataIds: string[],
-): Promise<ClinicalDocument[]> {
+): Promise<ClinicalDocument<T>[]> {
   const docs = await db.clinical_documents
     .find({
       selector: {
@@ -189,7 +193,9 @@ export async function findRecordsByMetadataIds(
       },
     })
     .exec();
-  return docs.map((doc) => doc.toMutableJSON() as ClinicalDocument);
+  return docs.map(
+    (doc) => doc.toMutableJSON() as unknown as ClinicalDocument<T>,
+  );
 }
 
 /**
@@ -199,16 +205,16 @@ export async function findRecordsByMetadataIds(
  * @param db `RxDatabase<DatabaseCollections>`.
  * @param userId `string`.
  * @param resourceTypes `ClinicalDocumentResourceType[]`.
- * @returns `Promise<ClinicalDocument[]>`.
+ * @returns `Promise<ClinicalDocument<T>[]>`. `T` is the record type the caller reads.
  *
  * @example
- * const medications = await findDatedRecordsByType(db, user.id, ['medicationstatement', 'medicationrequest']);
+ * const medications = await findDatedDocumentsByResourceTypes(db, user.id, ['medicationstatement', 'medicationrequest']);
  */
-export async function findDatedRecordsByType(
+export async function findDatedDocumentsByResourceTypes<T>(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
   resourceTypes: ClinicalDocumentResourceType[],
-): Promise<ClinicalDocument[]> {
+): Promise<ClinicalDocument<T>[]> {
   const docs = await db.clinical_documents
     .find({
       selector: {
@@ -219,7 +225,9 @@ export async function findDatedRecordsByType(
       sort: [{ 'metadata.date': 'desc' }],
     })
     .exec();
-  return docs.map((doc) => doc.toMutableJSON() as ClinicalDocument);
+  return docs.map(
+    (doc) => doc.toMutableJSON() as unknown as ClinicalDocument<T>,
+  );
 }
 
 /**
@@ -230,16 +238,16 @@ export async function findDatedRecordsByType(
  * @param db `RxDatabase<DatabaseCollections>`.
  * @param userId `string`.
  * @param resourceTypes `ClinicalDocumentResourceType[]`.
- * @returns `Promise<ClinicalDocument[]>`.
+ * @returns `Promise<ClinicalDocument<T>[]>`. `T` is the record type the caller reads.
  *
  * @example
- * const patients = await findRecordsByType(db, user.id, ['patient']);
+ * const patients = await findAllDocumentsByResourceTypes(db, user.id, ['patient']);
  */
-export async function findRecordsByType(
+export async function findAllDocumentsByResourceTypes<T>(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
   resourceTypes: ClinicalDocumentResourceType[],
-): Promise<ClinicalDocument[]> {
+): Promise<ClinicalDocument<T>[]> {
   const docs = await db.clinical_documents
     .find({
       selector: {
@@ -249,7 +257,9 @@ export async function findRecordsByType(
       sort: [{ 'metadata.date': 'desc' }],
     })
     .exec();
-  return docs.map((doc) => doc.toMutableJSON() as ClinicalDocument);
+  return docs.map(
+    (doc) => doc.toMutableJSON() as unknown as ClinicalDocument<T>,
+  );
 }
 
 /**
@@ -260,21 +270,21 @@ export async function findRecordsByType(
  * @param db `RxDatabase<DatabaseCollections>`.
  * @param userId `string`.
  * @param ids `string[]`. Stored record ids.
- * @returns `Promise<ClinicalDocument[]>`.
+ * @returns `Promise<ClinicalDocument<T>[]>`. `T` is the record type the caller reads.
  *
  * @example
- * const pinned = await findRecordsByIds(db, user.id, preferences.pinned_labs);
+ * const pinned = await findDocumentsByIds(db, user.id, preferences.pinned_labs);
  */
-export async function findRecordsByIds(
+export async function findDocumentsByIds<T>(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
   ids: string[],
-): Promise<ClinicalDocument[]> {
+): Promise<ClinicalDocument<T>[]> {
   const found = await db.clinical_documents.findByIds(ids);
   return ids.flatMap((id) => {
     const doc = found.get(id);
     return doc && doc.user_id === userId
-      ? [doc.toMutableJSON() as ClinicalDocument]
+      ? [doc.toMutableJSON() as unknown as ClinicalDocument<T>]
       : [];
   });
 }

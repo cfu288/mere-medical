@@ -12,7 +12,7 @@ import { PrivacyAndSecuritySettingsGroup } from './components/PrivacyAndSecurity
 import { UserCard } from './components/UserCard';
 import { UserDataSettingsGroup } from './components/UserDataSettingsGroup';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
-import { findRecordsByType } from '../../repositories/ClinicalDocumentRepository';
+import { findAllDocumentsByResourceTypes } from '../../repositories/ClinicalDocumentRepository';
 import { ExperimentalSettingsGroup } from './components/ExperimentalSettingsGroup';
 import { UserSwitchModal } from './components/UserSwitchModal';
 import { UserSwitchDrawer } from './components/UserSwitchDrawer';
@@ -22,9 +22,9 @@ export async function fetchPatientRecords(
   db: RxDatabase<DatabaseCollections>,
   user_id: string,
 ) {
-  return (await findRecordsByType(db, user_id, [
+  return findAllDocumentsByResourceTypes<BundleEntry<Patient>>(db, user_id, [
     'patient',
-  ])) as ClinicalDocument<BundleEntry<Patient>>[];
+  ]);
 }
 
 export function parseGivenName(

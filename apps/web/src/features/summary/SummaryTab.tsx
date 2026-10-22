@@ -40,9 +40,9 @@ import { EyeIcon } from '@heroicons/react/24/outline';
 import { EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useLocalConfig } from '../../app/providers/LocalConfigProvider';
 import {
-  findDatedRecordsByType,
-  findRecordsByIds,
-  findRecordsByType,
+  findDatedDocumentsByResourceTypes,
+  findDocumentsByIds,
+  findAllDocumentsByResourceTypes,
 } from '../../repositories/ClinicalDocumentRepository';
 import { findSummaryPagePreferences } from '../../repositories/SummaryPagePreferencesRepository';
 
@@ -207,31 +207,33 @@ function useSummaryData(): [SummaryState, React.Dispatch<SummaryActions>] {
     if (data.status === ActionTypes.IDLE) {
       reducer({ type: ActionTypes.PENDING });
       Promise.all([
-        findDatedRecordsByType(db, user.id, [
-          'medicationstatement',
-          'medicationrequest',
-        ]) as Promise<ClinicalDocument<BundleEntry<MedicationStatement>>[]>,
-        findDatedRecordsByType(db, user.id, ['condition']) as Promise<
-          ClinicalDocument<BundleEntry<Condition>>[]
-        >,
-        findDatedRecordsByType(db, user.id, ['immunization']) as Promise<
-          ClinicalDocument<BundleEntry<Immunization>>[]
-        >,
-        findRecordsByType(db, user.id, ['careplan']) as Promise<
-          ClinicalDocument<BundleEntry<CarePlan>>[]
-        >,
-        findDatedRecordsByType(db, user.id, ['allergyintolerance']) as Promise<
-          ClinicalDocument<BundleEntry<AllergyIntolerance>>[]
-        >,
-        findSummaryPagePreferences(db, user.id).then(
-          (preferences) =>
-            findRecordsByIds(
-              db,
-              user.id,
-              preferences?.pinned_labs || [],
-            ) as Promise<
-              ClinicalDocument<BundleEntry<DiagnosticReport | Observation>>[]
-            >,
+        findDatedDocumentsByResourceTypes<BundleEntry<MedicationStatement>>(
+          db,
+          user.id,
+          ['medicationstatement', 'medicationrequest'],
+        ),
+        findDatedDocumentsByResourceTypes<BundleEntry<Condition>>(db, user.id, [
+          'condition',
+        ]),
+        findDatedDocumentsByResourceTypes<BundleEntry<Immunization>>(
+          db,
+          user.id,
+          ['immunization'],
+        ),
+        findAllDocumentsByResourceTypes<BundleEntry<CarePlan>>(db, user.id, [
+          'careplan',
+        ]),
+        findDatedDocumentsByResourceTypes<BundleEntry<AllergyIntolerance>>(
+          db,
+          user.id,
+          ['allergyintolerance'],
+        ),
+        findSummaryPagePreferences(db, user.id).then((preferences) =>
+          findDocumentsByIds<BundleEntry<DiagnosticReport | Observation>>(
+            db,
+            user.id,
+            preferences?.pinned_labs || [],
+          ),
         ),
         findSummaryPagePreferences(db, user.id).then((preferences) => {
           const savedCards = preferences?.cards;

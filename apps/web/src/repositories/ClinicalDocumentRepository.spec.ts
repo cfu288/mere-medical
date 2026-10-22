@@ -10,12 +10,12 @@ import {
 } from '../test-utils/createTestDatabase';
 import {
   findAttachment,
-  findDatedRecordsByType,
-  findRecordsByIds,
-  findRecordsByLoincCodes,
-  findRecordsByMetadataIds,
-  findRecordsByType,
-  findTimelineRecords,
+  findDatedDocumentsByResourceTypes,
+  findDocumentsByIds,
+  findDocumentsByLoincCodes,
+  findDocumentsByMetadataIds,
+  findAllDocumentsByResourceTypes,
+  findTimelineDocuments,
 } from './ClinicalDocumentRepository';
 
 function clinicalDoc({
@@ -66,7 +66,7 @@ describe('ClinicalDocumentRepository', () => {
     await cleanupTestDatabase(db);
   });
 
-  describe('findTimelineRecords', () => {
+  describe('findTimelineDocuments', () => {
     const newest = clinicalDoc({
       metadataId: 'cond-1',
       type: 'condition',
@@ -89,7 +89,7 @@ describe('ClinicalDocumentRepository', () => {
     it('returns the user dated records newest first', async () => {
       await db.clinical_documents.bulkInsert([oldest, newest, middle]);
 
-      const result = await findTimelineRecords(db, 'user-a', {
+      const result = await findTimelineDocuments(db, 'user-a', {
         skip: 0,
         limit: 10,
       });
@@ -122,7 +122,7 @@ describe('ClinicalDocumentRepository', () => {
         }),
       ]);
 
-      const result = await findTimelineRecords(db, 'user-a', {
+      const result = await findTimelineDocuments(db, 'user-a', {
         skip: 0,
         limit: 10,
       });
@@ -136,7 +136,7 @@ describe('ClinicalDocumentRepository', () => {
         clinicalDoc({ metadataId: 'cond-2', type: 'condition', date: '' }),
       ]);
 
-      const result = await findTimelineRecords(db, 'user-a', {
+      const result = await findTimelineDocuments(db, 'user-a', {
         skip: 0,
         limit: 10,
       });
@@ -155,7 +155,7 @@ describe('ClinicalDocumentRepository', () => {
         }),
       ]);
 
-      const result = await findTimelineRecords(db, 'user-a', {
+      const result = await findTimelineDocuments(db, 'user-a', {
         skip: 0,
         limit: 10,
       });
@@ -166,7 +166,7 @@ describe('ClinicalDocumentRepository', () => {
     it('returns the page after the skipped records', async () => {
       await db.clinical_documents.bulkInsert([oldest, newest, middle]);
 
-      const result = await findTimelineRecords(db, 'user-a', {
+      const result = await findTimelineDocuments(db, 'user-a', {
         skip: 1,
         limit: 1,
       });
@@ -177,7 +177,7 @@ describe('ClinicalDocumentRepository', () => {
     it('matches the search text anywhere in the name, ignoring case', async () => {
       await db.clinical_documents.bulkInsert([oldest, newest, middle]);
 
-      const result = await findTimelineRecords(db, 'user-a', {
+      const result = await findTimelineDocuments(db, 'user-a', {
         skip: 0,
         limit: 10,
         search: 'asTHma',
@@ -195,7 +195,7 @@ describe('ClinicalDocumentRepository', () => {
       });
       await db.clinical_documents.bulkInsert([middle, hba1c]);
 
-      const result = await findTimelineRecords(db, 'user-a', {
+      const result = await findTimelineDocuments(db, 'user-a', {
         skip: 0,
         limit: 10,
         search: '(%)',
@@ -207,7 +207,7 @@ describe('ClinicalDocumentRepository', () => {
     it('reads blank search text as no search', async () => {
       await db.clinical_documents.bulkInsert([oldest, newest, middle]);
 
-      const result = await findTimelineRecords(db, 'user-a', {
+      const result = await findTimelineDocuments(db, 'user-a', {
         skip: 0,
         limit: 10,
         search: '   ',
@@ -217,7 +217,7 @@ describe('ClinicalDocumentRepository', () => {
     });
   });
 
-  describe('findRecordsByLoincCodes', () => {
+  describe('findDocumentsByLoincCodes', () => {
     it('returns the user records that carry any of the codes', async () => {
       const glucose = clinicalDoc({
         metadataId: 'obs-1',
@@ -249,7 +249,7 @@ describe('ClinicalDocumentRepository', () => {
         }),
       ]);
 
-      const result = await findRecordsByLoincCodes(db, 'user-a', [
+      const result = await findDocumentsByLoincCodes(db, 'user-a', [
         '2345-7',
         '4548-4',
       ]);
@@ -266,13 +266,13 @@ describe('ClinicalDocumentRepository', () => {
         }),
       );
 
-      const result = await findRecordsByLoincCodes(db, 'user-a', []);
+      const result = await findDocumentsByLoincCodes(db, 'user-a', []);
 
       expect(result).toEqual([]);
     });
   });
 
-  describe('findRecordsByMetadataIds', () => {
+  describe('findDocumentsByMetadataIds', () => {
     it('returns the user records of one connection with any of the ids', async () => {
       const glucose = clinicalDoc({
         metadataId: 'https://fhir.example.org/Observation/1',
@@ -296,16 +296,34 @@ describe('ClinicalDocumentRepository', () => {
         }),
       ]);
 
-      const result = await findRecordsByMetadataIds(db, 'user-a', 'conn-1', [
+      const result = await findDocumentsByMetadataIds(db, 'user-a', 'conn-1', [
         'Observation/1',
         'https://fhir.example.org/Observation/1',
       ]);
 
       expect(result).toEqual([glucose]);
     });
+
+    it('returns nothing for no ids', async () => {
+      await db.clinical_documents.insert(
+        clinicalDoc({
+          metadataId: 'https://fhir.example.org/Observation/1',
+          type: 'observation',
+        }),
+      );
+
+      const result = await findDocumentsByMetadataIds(
+        db,
+        'user-a',
+        'conn-1',
+        [],
+      );
+
+      expect(result).toEqual([]);
+    });
   });
 
-  describe('findDatedRecordsByType', () => {
+  describe('findDatedDocumentsByResourceTypes', () => {
     it('returns the user dated records of the given types newest first', async () => {
       const statement = clinicalDoc({
         metadataId: 'med-1',
@@ -338,7 +356,7 @@ describe('ClinicalDocumentRepository', () => {
         }),
       ]);
 
-      const result = await findDatedRecordsByType(db, 'user-a', [
+      const result = await findDatedDocumentsByResourceTypes(db, 'user-a', [
         'medicationstatement',
         'medicationrequest',
       ]);
@@ -347,7 +365,7 @@ describe('ClinicalDocumentRepository', () => {
     });
   });
 
-  describe('findRecordsByType', () => {
+  describe('findAllDocumentsByResourceTypes', () => {
     it('returns the user records of the given types newest first, dated or not', async () => {
       const older = clinicalDoc({
         metadataId: 'plan-1',
@@ -381,13 +399,15 @@ describe('ClinicalDocumentRepository', () => {
         }),
       ]);
 
-      const result = await findRecordsByType(db, 'user-a', ['careplan']);
+      const result = await findAllDocumentsByResourceTypes(db, 'user-a', [
+        'careplan',
+      ]);
 
       expect(result).toEqual([newer, older, undated]);
     });
   });
 
-  describe('findRecordsByIds', () => {
+  describe('findDocumentsByIds', () => {
     it('returns the user records in the order of the ids', async () => {
       const first = clinicalDoc({ metadataId: 'obs-1', type: 'observation' });
       const second = clinicalDoc({ metadataId: 'obs-2', type: 'observation' });
@@ -401,7 +421,7 @@ describe('ClinicalDocumentRepository', () => {
         }),
       ]);
 
-      const result = await findRecordsByIds(db, 'user-a', [
+      const result = await findDocumentsByIds(db, 'user-a', [
         'conn-1|user-a|obs-2',
         'conn-1|user-b|obs-3',
         'conn-1|user-a|missing',
@@ -416,7 +436,7 @@ describe('ClinicalDocumentRepository', () => {
         clinicalDoc({ metadataId: 'obs-1', type: 'observation' }),
       );
 
-      const result = await findRecordsByIds(db, 'user-a', []);
+      const result = await findDocumentsByIds(db, 'user-a', []);
 
       expect(result).toEqual([]);
     });
