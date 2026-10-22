@@ -218,7 +218,7 @@ export async function updateConnection(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
   connectionId: string,
-  updates: Partial<ConnectionDocument>,
+  updates: Partial<AnyConnectionDocument>,
 ): Promise<void> {
   const doc = await db.connection_documents
     .findOne({

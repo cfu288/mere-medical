@@ -12,7 +12,6 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { RxDocument } from 'rxdb';
 
 import BillboardJS, { IChart } from '@billboard.js/react';
 import { Disclosure } from '@headlessui/react';
@@ -20,8 +19,8 @@ import { ChartBarIcon, TableCellsIcon } from '@heroicons/react/24/outline';
 
 import { ClinicalDocument } from '../../../models/clinical-document/ClinicalDocument.type';
 import { safeFormatDate } from '../../../shared/utils/dateFormatters';
-import uuid4 from '../../../shared/utils/UUIDUtils';
 import { useSummaryPagePreferences } from '../../summary/hooks/useSummaryPagePreferences';
+import { setPinnedLabs } from '../../../repositories/SummaryPagePreferencesRepository';
 import { useRxDb } from '../../../app/providers/RxDbProvider';
 import { graphableLabs, sparklineValues, unplotted } from '../utils/labTrend';
 import { getRelatedLoincLabs } from '../utils/relatedLabs';
@@ -44,7 +43,7 @@ import {
 function SparklineGraphSvg({
   relatedLabs,
 }: {
-  relatedLabs: RxDocument<ClinicalDocument<BundleEntry<Observation>>>[];
+  relatedLabs: ClinicalDocument<BundleEntry<Observation>>[];
 }) {
   const values = useMemo(() => sparklineValues(relatedLabs), [relatedLabs]);
   const sparklineSvg = useMemo(() => {
@@ -326,7 +325,7 @@ function HistoricalRelatedLabsChart({
   relatedLabs,
   item,
 }: {
-  relatedLabs: RxDocument<ClinicalDocument<BundleEntry<Observation>>>[];
+  relatedLabs: ClinicalDocument<BundleEntry<Observation>>[];
   item: ClinicalDocument<BundleEntry<Observation>>;
 }) {
   const chartComponent = useRef<IChart>(),
@@ -508,35 +507,10 @@ function useLabPinning(
     const updatedList = pinnedSet.has(item.id!)
       ? [...pinnedSet].filter((id) => id !== item.id)
       : [...pinnedSet, item.id];
-    if (summaryPagePreferencesDoc) {
-      summaryPagePreferencesDoc
-        .update({
-          $set: {
-            pinned_labs: updatedList,
-          },
-        })
-        .then(() => {
-          setIsPinned(!isPinned);
-        });
-    } else {
-      db.summary_page_preferences
-        .insert({
-          id: uuid4(),
-          user_id: user.id,
-          pinned_labs: updatedList as string[],
-        })
-        .then(() => {
-          setIsPinned(!isPinned);
-        });
-    }
-  }, [
-    pinnedSet,
-    item.id,
-    summaryPagePreferencesDoc,
-    isPinned,
-    db.summary_page_preferences,
-    user.id,
-  ]);
+    setPinnedLabs(db, user.id, updatedList as string[]).then(() => {
+      setIsPinned(!isPinned);
+    });
+  }, [pinnedSet, item.id, isPinned, db, user.id]);
 
   useEffect(() => {
     // Update pinned status in current component when preferences doc changes
@@ -550,7 +524,7 @@ export function useRelatedLoincLabs(loinc: string[]) {
   const db = useRxDb(),
     user = useUser(),
     [relatedLabs, setRelatedLabs] = useState<
-      RxDocument<ClinicalDocument<BundleEntry<Observation>>>[]
+      ClinicalDocument<BundleEntry<Observation>>[]
     >([]);
 
   useEffect(() => {

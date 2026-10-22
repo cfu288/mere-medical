@@ -2,15 +2,17 @@ import React, {
   PropsWithChildren,
   useContext,
   useEffect,
-  useRef,
   useState,
 } from 'react';
-import { RxDatabase, RxDocument } from 'rxdb';
-import { Subscription } from 'rxjs';
+import { from } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import uuid4 from '../../shared/utils/UUIDUtils';
 import { UserPreferencesDocument } from '../../models/user-preferences/UserPreferences.type';
+import {
+  createUserPreferencesIfNone,
+  watchUserPreferences,
+} from '../../repositories/UserPreferencesRepository';
 import { useRxDb } from './RxDbProvider';
-import { DatabaseCollections } from './DatabaseCollections';
 import { useUser } from './UserProvider';
 
 // Takes a user id and returns a default user preferences document
@@ -21,102 +23,28 @@ function createDefaultPreferences(
 }
 
 /**
- * Take the whole RxDocument and return a parsed version with defaults
+ * Take the stored preferences and return a parsed version with defaults
  * @param item
  * @returns
  */
-export function getUserPreferencesFromRxDocument(
-  item: RxDocument<UserPreferencesDocument> | undefined,
+function getUserPreferencesWithDefaults(
+  item: UserPreferencesDocument | null,
   user_id: string,
 ) {
   return {
     ...createDefaultPreferences(user_id),
-    ...item?.toMutableJSON(),
+    ...item,
   } as UserPreferencesDocument;
 }
 
-/**
- * Creates a user preferences document if none exists
- * @param db
- * @param user_id
- * @returns A promise that resolves to true if a new document was created, false if not
- */
-function createUserPreferencesIfNone(
-  db: RxDatabase<DatabaseCollections>,
-  user_id: string,
-): Promise<boolean> {
-  return new Promise((resolve, reject) => {
-    db.user_preferences
-      .findOne({
-        selector: {
-          user_id: user_id,
-        },
-      })
-      .exec()
-      .then((item) => {
-        if (item) {
-          resolve(false);
-        } else {
-          db.user_preferences
-            .insert(createDefaultPreferences(user_id))
-            .then(() => resolve(true))
-            .catch(() => reject(false));
-        }
-      })
-      .catch(() => {
-        reject(false);
-      });
-  });
-}
-
-/**
- * Fetches the user preferences document and calls a callback whenever the document is updated. Returns a Subscription object that can be used to unsubscribe
- * @param db
- * @param user
- * @param handleChange Callback that takes the updated user preferences and updates the state
- * @returns Subscription object that can be used to unsubscribe
- */
-function fetchUserPreferences(
-  db: RxDatabase<DatabaseCollections>,
-  user_id: string,
-  handleChange: (item: UserPreferencesContextType | undefined) => void,
-): Subscription {
-  return db.user_preferences
-    .findOne({
-      selector: {
-        user_id: user_id,
-      },
-    })
-    .$.subscribe((item) => {
-      console.debug('UserPreferencesProvider: ', item?.toMutableJSON());
-      handleChange({
-        userPreferences: getUserPreferencesFromRxDocument(
-          item as unknown as RxDocument<UserPreferencesDocument>,
-          user_id,
-        ),
-        rawUserPreferences:
-          item as unknown as RxDocument<UserPreferencesDocument>,
-      });
-    });
-}
-
 type UserPreferencesProviderProps = PropsWithChildren<unknown>;
-
-type UserPreferencesContextType = {
-  userPreferences?: UserPreferencesDocument;
-  rawUserPreferences?: RxDocument<UserPreferencesDocument>;
-};
 
 const UserPreferencesContext = React.createContext<
   UserPreferencesDocument | undefined
 >(undefined);
 
-const RawUserPreferencesContext = React.createContext<
-  RxDocument<UserPreferencesDocument> | undefined
->(undefined);
-
 /**
- * To all descendents, expose the parsed user preferences (with defaults) and the the raw RxDocument for update ability
+ * To all descendents, expose the parsed user preferences (with defaults)
  * @param props
  * @returns
  */
@@ -125,34 +53,21 @@ export function UserPreferencesProvider(props: UserPreferencesProviderProps) {
     user = useUser(),
     [upContext, setUpContext] = useState<UserPreferencesDocument | undefined>(
       undefined,
-    ),
-    [rupContext, setRupContext] = useState<
-      RxDocument<UserPreferencesDocument> | undefined
-    >(),
-    hasRun = useRef(false);
+    );
 
   useEffect(() => {
-    let sub: Subscription | undefined;
-
-    if (!hasRun.current) {
-      hasRun.current = true;
-      createUserPreferencesIfNone(db, user.id).then(() => {
-        sub = fetchUserPreferences(db, user.id, (item) => {
-          setUpContext(item?.userPreferences);
-          setRupContext(item?.rawUserPreferences);
-        });
+    const sub = from(createUserPreferencesIfNone(db, user.id))
+      .pipe(switchMap(() => watchUserPreferences(db, user.id)))
+      .subscribe((item) => {
+        console.debug('UserPreferencesProvider: ', item);
+        setUpContext(getUserPreferencesWithDefaults(item, user.id));
       });
-    }
-    return () => {
-      sub?.unsubscribe();
-    };
+    return () => sub.unsubscribe();
   }, [db, user.id]);
 
   return (
     <UserPreferencesContext.Provider value={upContext}>
-      <RawUserPreferencesContext.Provider value={rupContext}>
-        {props.children}
-      </RawUserPreferencesContext.Provider>
+      {props.children}
     </UserPreferencesContext.Provider>
   );
 }
@@ -163,16 +78,5 @@ export function UserPreferencesProvider(props: UserPreferencesProviderProps) {
  */
 export function useUserPreferences(): UserPreferencesDocument | undefined {
   const context = useContext(UserPreferencesContext);
-  return context;
-}
-
-/**
- * A react hook to get the raw RxDocument for the user preferences. Use this to update the document
- * @returns The raw RxDocument for the user preferences. Use this to update the document
- */
-export function useRawUserPreferences():
-  | RxDocument<UserPreferencesDocument>
-  | undefined {
-  const context = useContext(RawUserPreferencesContext);
   return context;
 }
