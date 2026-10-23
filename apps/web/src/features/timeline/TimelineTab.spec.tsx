@@ -19,6 +19,37 @@ describe('fetchRecords', () => {
     await cleanupTestDatabase(db);
   });
 
+  it('groups the user records by day, newest day first', async () => {
+    const glucose = createTestClinicalDocument({
+      id: 'conn-a|user-1|obs-1',
+      connection_record_id: 'conn-a',
+      user_id: 'user-1',
+      metadata: {
+        id: 'obs-1',
+        date: '2022-01-13T12:00:00-05:00',
+        display_name: 'GLUCOSE',
+      },
+    });
+    const sodium = createTestClinicalDocument({
+      id: 'conn-a|user-1|obs-2',
+      connection_record_id: 'conn-a',
+      user_id: 'user-1',
+      metadata: {
+        id: 'obs-2',
+        date: '2022-01-14T12:00:00-05:00',
+        display_name: 'SODIUM',
+      },
+    });
+    await db.clinical_documents.bulkInsert([glucose, sodium]);
+
+    const records = await fetchRecords(db, 'user-1');
+
+    expect(records).toEqual({
+      '2022-01-14': [sodium],
+      '2022-01-13': [glucose],
+    });
+  });
+
   it('matches a search containing regex punctuation literally', async () => {
     await db.clinical_documents.insert(
       createTestClinicalDocument({
