@@ -53,33 +53,38 @@ export function watchSummaryPagePreferences(
 }
 
 /**
- * Saves the record ids a user pinned to the summary page, creating the
- * user's settings when there are none. The pin button on a lab result calls
- * it.
+ * Pins a record to the user's summary page, or unpins it when it is already
+ * pinned. It reads the saved list, so a pin never drops the other pins. It
+ * creates the user's settings when there are none. The pin button on a lab
+ * result calls it.
  *
  * @param db `RxDatabase<DatabaseCollections>`.
  * @param userId `string`.
- * @param pinnedLabs `string[]`. Stored record ids, replacing the saved list.
+ * @param recordId `string`. The stored id of the record.
  * @returns `Promise<void>`.
  *
  * @example
- * await setPinnedLabs(db, user.id, [...pinned, result.id]);
+ * await togglePinnedLab(db, user.id, result.id);
  */
-export async function setPinnedLabs(
+export async function togglePinnedLab(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
-  pinnedLabs: string[],
+  recordId: string,
 ): Promise<void> {
   const doc = await db.summary_page_preferences
     .findOne({ selector: { user_id: userId } })
     .exec();
-  if (doc) {
-    await doc.update({ $set: { pinned_labs: pinnedLabs } });
-  } else {
+  if (!doc) {
     await db.summary_page_preferences.insert({
       id: uuid4(),
       user_id: userId,
-      pinned_labs: pinnedLabs,
+      pinned_labs: [recordId],
     });
+    return;
   }
+  const pinned = doc.pinned_labs || [];
+  const updated = pinned.includes(recordId)
+    ? pinned.filter((id) => id !== recordId)
+    : [...pinned, recordId];
+  await doc.update({ $set: { pinned_labs: updated } });
 }
