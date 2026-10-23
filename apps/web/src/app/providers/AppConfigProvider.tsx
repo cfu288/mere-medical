@@ -9,6 +9,10 @@ import {
 } from 'react';
 import { useRxDb } from './RxDbProvider';
 import { useNotificationDispatch } from './NotificationProvider';
+import {
+  findInstanceConfig,
+  saveInstanceConfig,
+} from '../../repositories/InstanceConfigRepository';
 
 export interface AppConfig {
   ONPATIENT_CLIENT_ID?: string;
@@ -42,8 +46,6 @@ type AppConfigAction =
   | { type: 'LOAD_FRESH'; config: AppConfig }
   | { type: 'LOAD_COMPLETE' }
   | { type: 'LOAD_ERROR' };
-
-const INSTANCE_CONFIG_ID = 'instance_config';
 
 const emptyConfig: AppConfig = {};
 
@@ -105,11 +107,7 @@ export function AppConfigProvider({
   const saveConfigToDb = useCallback(
     async (configData: AppConfig) => {
       try {
-        await db.instance_config.upsert({
-          id: INSTANCE_CONFIG_ID,
-          ...configData,
-          updated_at: Date.now(),
-        });
+        await saveInstanceConfig(db, configData);
       } catch (error) {
         console.warn('Error saving config to RxDB:', error);
       }
@@ -119,11 +117,8 @@ export function AppConfigProvider({
 
   const loadCachedConfig = useCallback(async (): Promise<AppConfig | null> => {
     try {
-      const cached = await db.instance_config
-        .findOne(INSTANCE_CONFIG_ID)
-        .exec();
-      if (cached) {
-        const doc = cached.toJSON();
+      const doc = await findInstanceConfig(db);
+      if (doc) {
         return {
           ONPATIENT_CLIENT_ID: doc.ONPATIENT_CLIENT_ID,
           EPIC_CLIENT_ID: doc.EPIC_CLIENT_ID,

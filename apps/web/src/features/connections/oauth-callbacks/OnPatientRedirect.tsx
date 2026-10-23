@@ -17,7 +17,10 @@ import { AppPage } from '../../../shared/components/AppPage';
 import { GenericBanner } from '../../../shared/components/GenericBanner';
 import { useUser } from '../../../app/providers/UserProvider';
 import { getConnectionCardByUrl } from '../../../services/fhir/getConnectionCardByUrl';
-import { createConnection } from '../../../repositories/ConnectionRepository';
+import {
+  createConnection,
+  updateConnection,
+} from '../../../repositories/ConnectionRepository';
 
 async function fetchTokensFromServer(
   sessionId: string,
@@ -76,13 +79,11 @@ const OnPatientRedirect: React.FC = () => {
           );
 
           if (doc) {
-            await doc.update({
-              $set: {
-                access_token: tokens.accessToken,
-                refresh_token: tokens.refreshToken,
-                expires_at: tokens.expiresAt,
-                last_sync_was_error: false,
-              },
+            await updateConnection(db, user.id, doc.id, {
+              access_token: tokens.accessToken,
+              refresh_token: tokens.refreshToken,
+              expires_at: tokens.expiresAt,
+              last_sync_was_error: false,
             });
           } else {
             const dbentry: Omit<

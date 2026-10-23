@@ -1,7 +1,7 @@
 import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
 import { formatTime } from '../../../../shared/utils/dateFormatters';
 import { memo, useEffect, useRef, useState } from 'react';
-import { RxDatabase, RxDocument } from 'rxdb';
+import { RxDatabase } from 'rxdb';
 
 import { ClinicalDocument } from '../../../../models/clinical-document/ClinicalDocument.type';
 import { ConnectionDocument } from '../../../../models/connection-document/ConnectionDocument.type';
@@ -22,6 +22,7 @@ import { TimelineCardCategoryTitle } from '../TimelineCardCategoryTitle';
 import { TimelineCardSubtitile } from '../TimelineCardSubtitile';
 import { TimelineCardTitle } from '../TimelineCardTitle';
 import { observationIdCandidates } from '../../../../shared/utils/fhirReferenceResolver';
+import { findDocumentsByMetadataIds } from '../../../../repositories/ClinicalDocumentRepository';
 
 /**
  * Function that encapsulates the logic of the useRelatedDocuments Hook.
@@ -30,7 +31,7 @@ import { observationIdCandidates } from '../../../../shared/utils/fhirReferenceR
  * @param {UserDocument} params.user - The user document.
  * @param {ClinicalDocument<BundleEntry<DiagnosticReport>>} params.item - The clinical document item.
  * @param {ConnectionDocument} [params.conn] - The connection document, if available.
- * @returns {Promise<[RxDocument<ClinicalDocument<BundleEntry<Observation>>>[], boolean]>} A promise that resolves to a tuple containing related observations and whether or not there is an abnormal value in the set.
+ * @returns {Promise<[ClinicalDocument<BundleEntry<Observation>>[], boolean]>} A promise that resolves to a tuple containing related observations and whether or not there is an abnormal value in the set.
  */
 export async function getRelatedDocuments({
   db,
@@ -42,9 +43,7 @@ export async function getRelatedDocuments({
   user: UserDocument;
   item: ClinicalDocument<BundleEntry<DiagnosticReport>>;
   conn?: ConnectionDocument;
-}): Promise<
-  [RxDocument<ClinicalDocument<BundleEntry<Observation>>>[], boolean]
-> {
+}): Promise<[ClinicalDocument<BundleEntry<Observation>>[], boolean]> {
   const listToQuery: string[] = [];
   const isDrResult = item.data_record.raw.resource?.result;
   if (isDrResult) {
@@ -57,16 +56,14 @@ export async function getRelatedDocuments({
     listToQuery.push(...candidateIds);
   }
 
-  const docs = await db.clinical_documents
-    .find({
-      selector: {
-        user_id: user.id,
-        connection_record_id: item.connection_record_id,
-        'metadata.id': { $in: listToQuery },
-      },
-    })
-    .exec();
+  const docs = await findDocumentsByMetadataIds<BundleEntry<Observation>>(
+    db,
+    user.id,
+    item.connection_record_id,
+    listToQuery,
+  );
 
+  // TODO: return 0 for equal codes so results with the same code keep their order
   const sorted = docs.sort((a, b) =>
     (a.metadata?.loinc_coding?.[0] || '') <
     (b.metadata?.loinc_coding?.[0] || '')
@@ -75,16 +72,12 @@ export async function getRelatedDocuments({
   );
 
   const abnormalLabs = (
-    sorted as unknown as RxDocument<
-      ClinicalDocument<BundleEntry<Observation>>
-    >[]
+    sorted as ClinicalDocument<BundleEntry<Observation>>[]
   ).filter((i) => isOutOfRangeResult(i));
   const isAbnormalResult = abnormalLabs.length > 0;
 
   return [
-    sorted as unknown as RxDocument<
-      ClinicalDocument<BundleEntry<Observation>>
-    >[],
+    sorted as ClinicalDocument<BundleEntry<Observation>>[],
     isAbnormalResult,
   ];
 }
@@ -103,15 +96,15 @@ export function useRelatedDocuments({
   item: ClinicalDocument<BundleEntry<DiagnosticReport>>;
   conn?: ConnectionDocument;
 }): [
-  RxDocument<ClinicalDocument<BundleEntry<Observation>>>[],
+  ClinicalDocument<BundleEntry<Observation>>[],
   boolean,
   'loading' | 'idle' | 'success',
 ] {
   const db = useRxDb(),
     user = useUser(),
-    [docs, setDocs] = useState<
-      RxDocument<ClinicalDocument<BundleEntry<Observation>>>[]
-    >([]),
+    [docs, setDocs] = useState<ClinicalDocument<BundleEntry<Observation>>[]>(
+      [],
+    ),
     [isAbnormalResult, setIsAbnormalResult] = useState(false),
     [status, setStatus] = useState<'loading' | 'idle' | 'success'>('idle');
 

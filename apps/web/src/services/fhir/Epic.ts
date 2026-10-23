@@ -20,7 +20,10 @@ import {
 import { Routes } from '../../Routes';
 import { DSTU2, R4 } from '.';
 import { AppConfig } from '../../app/providers/AppConfigProvider';
-import { createConnection } from '../../repositories/ConnectionRepository';
+import {
+  createConnection,
+  updateConnection,
+} from '../../repositories/ConnectionRepository';
 import uuid4 from '../../shared/utils/UUIDUtils';
 import { signJwt } from '@mere/crypto/browser';
 import type { JsonWebKeySet } from '@mere/crypto';
@@ -788,24 +791,21 @@ export async function saveConnectionToDb({
         // If we already have a connection card for this tenant, update it
         try {
           const nowInSeconds = Math.floor(Date.now() / 1000);
-          currentDoc
-            .update({
-              $set: {
-                client_id:
-                  (res as EpicAuthResponseWithClientId)?.client_id ||
-                  currentDoc.client_id,
-                location: epicUrl,
-                auth_uri: epicAuthUrl,
-                token_uri: epicTokenUrl,
-                access_token: res.access_token,
-                expires_at: nowInSeconds + res.expires_in,
-                scope: res.scope,
-                patient: res.patient,
-                tenant_id: tenantId,
-                fhir_version: fhirVersion,
-                last_sync_was_error: false,
-              },
-            })
+          updateConnection(db, user.id, currentDoc.id, {
+            client_id:
+              (res as EpicAuthResponseWithClientId)?.client_id ||
+              currentDoc.client_id,
+            location: epicUrl,
+            auth_uri: epicAuthUrl,
+            token_uri: epicTokenUrl,
+            access_token: res.access_token,
+            expires_at: nowInSeconds + res.expires_in,
+            scope: res.scope,
+            patient: res.patient,
+            tenant_id: tenantId,
+            fhir_version: fhirVersion,
+            last_sync_was_error: false,
+          })
             .then(() => {
               console.log('Updated connection card');
               resolve(true);

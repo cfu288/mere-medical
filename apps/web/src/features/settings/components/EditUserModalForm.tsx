@@ -3,12 +3,12 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import ReactCrop, { convertToPixelCrop, PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import { useRxUserDocument } from '../../../app/providers/UserProvider';
+import { useUser } from '../../../app/providers/UserProvider';
+import { useUserRepository } from '../../../repositories';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { RxDocument } from 'rxdb';
 import { UserDocument } from '../../../models/user-document/UserDocument.type';
 import { Modal } from '../../../shared/components/Modal';
 import { ModalHeader } from '../../../shared/components/ModalHeader';
@@ -72,35 +72,31 @@ export function parseDefaultValues(defaultValues?: NewUserFormFields) {
 
 /**
  * Updates the current user with the following data
- * @param rawUserDocument user document to update
+ * @param updateUser repository function that saves changes to the user
  * @param data data to update the user document with
  */
 const updateUserInDb = async (
-  rawUserDocument: RxDocument<UserDocument>,
+  updateUser: (updates: Partial<UserDocument>) => Promise<void>,
   data: NewUserFormFields,
 ) => {
-  await rawUserDocument.update({
-    $set: {
-      birthday: (data.birthday as Date)?.toISOString(),
-      email: data.email,
-      first_name: data.firstName,
-      gender: data.gender,
-      is_default_user: false,
-      is_selected_user: true,
-      last_name: data.lastName,
-    },
+  await updateUser({
+    birthday: (data.birthday as Date)?.toISOString(),
+    email: data.email,
+    first_name: data.firstName,
+    gender: data.gender,
+    // TODO: saving the form should not change is_default_user or is_selected_user
+    is_default_user: false,
+    is_selected_user: true,
+    last_name: data.lastName,
   });
   const pp = getFileFromFileList(data.profilePhoto);
   if (pp) {
-    const secondUpdate = await rawUserDocument.update({
-      $set: {
-        profile_picture: {
-          content_type: 'image/png',
-          data: pp as string,
-        },
+    await updateUser({
+      profile_picture: {
+        content_type: 'image/png',
+        data: pp as string,
       },
     });
-    return secondUpdate;
   }
 };
 
@@ -259,7 +255,8 @@ export function EditUserForm({
   toggleModal: () => void;
 }) {
   const notificationDispatch = useNotificationDispatch();
-  const rawUser = useRxUserDocument();
+  const user = useUser();
+  const userRepository = useUserRepository();
   const {
     register,
     handleSubmit,
@@ -274,9 +271,9 @@ export function EditUserForm({
   const pp = getFileFromFileList(watch('profilePhoto') || undefined);
   const ppUrl = useObjectUrl(pp);
   const submitUser: SubmitHandler<NewUserFormFields> = (data) => {
-    if (rawUser) {
+    if (userRepository) {
       // Apply crop to image here before saving
-      updateUserInDb(rawUser, data)
+      updateUserInDb((updates) => userRepository.update(user.id, updates), data)
         .then(() => {
           notificationDispatch({
             type: 'set_notification',

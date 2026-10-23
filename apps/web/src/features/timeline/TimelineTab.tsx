@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { MangoQuerySelector, RxDatabase, RxDocument } from 'rxdb';
+import { RxDatabase } from 'rxdb';
 
 import { Transition } from '@headlessui/react';
 import { ArrowUpIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
@@ -30,6 +30,7 @@ import { TimelineYearHeader } from './components/layout/TimelineYearHeader';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { TimelineMonthDayHeader } from './components/layout/TimelineMonthDayHeader';
 import { useRecordQuery } from './hooks/useRecordQuery';
+import { findTimelineDocuments } from '../../repositories/ClinicalDocumentRepository';
 import { QueryStatus } from './types';
 
 export { QueryStatus };
@@ -272,74 +273,35 @@ export async function fetchRecords(
   query?: string,
   page?: number,
 ): Promise<Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>> {
-  const parsedQuery = query?.trim() === '' ? undefined : query;
-  let selector: MangoQuerySelector<ClinicalDocument<unknown>> = {
-    user_id: user_id,
-    'data_record.resource_type': {
-      $nin: [
-        'patient',
-        // 'observation', - Not all labs are part of a diagnostic report, and will be missed if we exclude this
-        'careplan',
-        'documentreference_attachment',
-        'provenance',
-      ],
+  const list = await findTimelineDocuments<BundleEntry<FhirResource>>(
+    db,
+    user_id,
+    {
+      skip: page ? page * PAGE_SIZE : 0,
+      limit: PAGE_SIZE,
+      search: query,
     },
-    'metadata.date': { $nin: [null, undefined, ''] },
-  };
-  if (parsedQuery) {
-    selector['data_record.resource_type']['$nin'] = [
-      'patient',
-      'careplan',
-      'documentreference_attachment',
-      'provenance',
-    ];
-    selector = {
-      ...selector,
-      'metadata.display_name': {
-        $regex: parsedQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-        $options: 'si',
-      },
-    };
-  }
-  const gr = db.clinical_documents
-    .find({
-      selector,
-      sort: [{ 'metadata.date': 'desc' }],
-    })
-    .skip(page ? page * PAGE_SIZE : 0)
-    .limit(PAGE_SIZE)
-    .exec()
-    .then((list) => {
-      const lst = list as unknown as RxDocument<
-        ClinicalDocument<BundleEntry<FhirResource>>
-      >[];
+  );
 
-      const groupedRecords: Record<
-        string,
-        ClinicalDocument<BundleEntry<FhirResource>>[]
-      > = {};
+  const groupedRecords: Record<
+    string,
+    ClinicalDocument<BundleEntry<FhirResource>>[]
+  > = {};
 
-      lst.forEach((item) => {
-        if (item.get('metadata')?.date === undefined) {
-          console.warn('Date is undefined for object:', item.toJSON());
-        } else {
-          const date = item.get('metadata')?.date
-            ? format(parseISO(item.get('metadata')?.date), 'yyyy-MM-dd')
-            : '-1';
-          if (groupedRecords[date]) {
-            groupedRecords[date].push(
-              item.toMutableJSON() as ClinicalDocument<
-                BundleEntry<FhirResource>
-              >,
-            );
-          } else {
-            groupedRecords[date] = [item.toMutableJSON()];
-          }
-        }
-      });
+  list.forEach((item) => {
+    if (item.metadata?.date === undefined) {
+      console.warn('Date is undefined for object:', item);
+    } else {
+      const date = item.metadata?.date
+        ? format(parseISO(item.metadata?.date), 'yyyy-MM-dd')
+        : '-1';
+      if (groupedRecords[date]) {
+        groupedRecords[date].push(item);
+      } else {
+        groupedRecords[date] = [item];
+      }
+    }
+  });
 
-      return groupedRecords;
-    });
-
-  return gr;
+  return groupedRecords;
 }

@@ -86,8 +86,8 @@ describe('getRelatedLoincLabs', () => {
 
     expect(
       related.map((doc) => [
-        doc.get('metadata.date'),
-        doc.get('data_record.raw.resource.valueQuantity.value'),
+        doc.metadata?.date,
+        doc.data_record.raw.resource?.valueQuantity?.value,
       ]),
     ).toEqual([
       ['2023-03-14T16:48:00Z', 16],
