@@ -20,7 +20,7 @@ import { ChartBarIcon, TableCellsIcon } from '@heroicons/react/24/outline';
 import { ClinicalDocument } from '../../../models/clinical-document/ClinicalDocument.type';
 import { safeFormatDate } from '../../../shared/utils/dateFormatters';
 import { useSummaryPagePreferences } from '../../summary/hooks/useSummaryPagePreferences';
-import { setPinnedLabs } from '../../../repositories/SummaryPagePreferencesRepository';
+import { togglePinnedLab } from '../../../repositories/SummaryPagePreferencesRepository';
 import { useRxDb } from '../../../app/providers/RxDbProvider';
 import { graphableLabs, sparklineValues, unplotted } from '../utils/labTrend';
 import { getRelatedLoincLabs } from '../utils/relatedLabs';
@@ -503,14 +503,10 @@ function useLabPinning(
   );
   const [isPinned, setIsPinned] = useState<boolean>(pinnedSet.has(item.id!));
   const handleTogglePin = useCallback(() => {
-    // if pinned_labs contains id, remove it, otherwise add it
-    const updatedList = pinnedSet.has(item.id!)
-      ? [...pinnedSet].filter((id) => id !== item.id)
-      : [...pinnedSet, item.id];
-    setPinnedLabs(db, user.id, updatedList as string[]).then(() => {
+    togglePinnedLab(db, user.id, item.id).then(() => {
       setIsPinned(!isPinned);
     });
-  }, [pinnedSet, item.id, isPinned, db, user.id]);
+  }, [item.id, isPinned, db, user.id]);
 
   useEffect(() => {
     // Update pinned status in current component when preferences doc changes

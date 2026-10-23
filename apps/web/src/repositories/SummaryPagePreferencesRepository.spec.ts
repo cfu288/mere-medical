@@ -8,7 +8,7 @@ import {
 } from '../test-utils/createTestDatabase';
 import {
   findSummaryPagePreferences,
-  setPinnedLabs,
+  togglePinnedLab,
   watchSummaryPagePreferences,
 } from './SummaryPagePreferencesRepository';
 
@@ -83,7 +83,7 @@ describe('SummaryPagePreferencesRepository', () => {
         watchSummaryPagePreferences(db, 'user-a').pipe(skip(1)),
       );
 
-      await setPinnedLabs(db, 'user-a', []);
+      await togglePinnedLab(db, 'user-a', 'lab-1');
 
       expect(await next).toEqual({
         id: 'prefs-a',
@@ -93,8 +93,8 @@ describe('SummaryPagePreferencesRepository', () => {
     });
   });
 
-  describe('setPinnedLabs', () => {
-    it('replaces the pinned labs of the user', async () => {
+  describe('togglePinnedLab', () => {
+    it('adds the record to the pinned labs of the user', async () => {
       await db.summary_page_preferences.insert({
         id: 'prefs-a',
         user_id: 'user-a',
@@ -102,7 +102,7 @@ describe('SummaryPagePreferencesRepository', () => {
         cards: [{ type: 'pinned', order: 0, is_visible: true }],
       });
 
-      await setPinnedLabs(db, 'user-a', ['lab-1', 'lab-2']);
+      await togglePinnedLab(db, 'user-a', 'lab-2');
 
       expect(await findSummaryPagePreferences(db, 'user-a')).toEqual({
         id: 'prefs-a',
@@ -112,23 +112,39 @@ describe('SummaryPagePreferencesRepository', () => {
       });
     });
 
-    it('leaves the preferences of other users unchanged', async () => {
-      await db.summary_page_preferences.bulkInsert([
-        { id: 'prefs-a', user_id: 'user-a', pinned_labs: ['lab-1'] },
-        { id: 'prefs-b', user_id: 'user-b', pinned_labs: ['lab-2'] },
-      ]);
+    it('removes a pinned record from the pinned labs of the user', async () => {
+      await db.summary_page_preferences.insert({
+        id: 'prefs-a',
+        user_id: 'user-a',
+        pinned_labs: ['lab-1', 'lab-2'],
+      });
 
-      await setPinnedLabs(db, 'user-a', []);
+      await togglePinnedLab(db, 'user-a', 'lab-1');
 
-      expect(await findSummaryPagePreferences(db, 'user-b')).toEqual({
-        id: 'prefs-b',
-        user_id: 'user-b',
+      expect(await findSummaryPagePreferences(db, 'user-a')).toEqual({
+        id: 'prefs-a',
+        user_id: 'user-a',
         pinned_labs: ['lab-2'],
       });
     });
 
-    it('creates preferences holding the pinned labs when the user has none', async () => {
-      await setPinnedLabs(db, 'user-a', ['lab-1']);
+    it('leaves the preferences of other users unchanged', async () => {
+      await db.summary_page_preferences.bulkInsert([
+        { id: 'prefs-a', user_id: 'user-a', pinned_labs: ['lab-1'] },
+        { id: 'prefs-b', user_id: 'user-b', pinned_labs: ['lab-1'] },
+      ]);
+
+      await togglePinnedLab(db, 'user-a', 'lab-1');
+
+      expect(await findSummaryPagePreferences(db, 'user-b')).toEqual({
+        id: 'prefs-b',
+        user_id: 'user-b',
+        pinned_labs: ['lab-1'],
+      });
+    });
+
+    it('creates preferences holding the record when the user has none', async () => {
+      await togglePinnedLab(db, 'user-a', 'lab-1');
 
       expect(await findSummaryPagePreferences(db, 'user-a')).toEqual({
         id: expect.any(String),
