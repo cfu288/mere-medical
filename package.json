@@ -99,7 +99,7 @@
     "babel-plugin-transform-import-meta": "^2.3.3",
     "billboard.js": "^3.10.3",
     "console-feed": "^3.8.0",
-    "core-js": "^3.6.5",
+    "core-js": "^3.51.0",
     "css-loader": "^7.1.2",
     "date-fns": "^2.29.1",
     "dompurify": "^3.0.8",
