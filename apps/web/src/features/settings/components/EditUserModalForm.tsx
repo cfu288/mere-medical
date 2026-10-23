@@ -56,6 +56,7 @@ export const validSchema = z
   })
   .passthrough();
 
+// TODO: a FHIR birthDate such as 1990-01-02 shows as the day before west of UTC
 export function parseDefaultValues(defaultValues?: NewUserFormFields) {
   const bd =
     defaultValues?.birthday &&
