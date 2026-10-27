@@ -740,6 +740,7 @@ export function TenantSelectModal({
                             key={item.id}
                             id={item.id}
                             name={item.name}
+                            managingOrganization={item.managingOrganization}
                             baseUrl={item.url}
                             tokenUrl={item.token}
                             authUrl={item.authorize}
