@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { useRxDb } from '../../app/providers/RxDbProvider';
 import * as userRepo from '../UserRepository';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
-import { RxDocument } from 'rxdb';
 
 export const useUserRepository = () => {
   const db = useRxDb();

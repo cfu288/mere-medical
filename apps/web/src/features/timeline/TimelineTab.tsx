@@ -42,14 +42,14 @@ export function TimelineTab() {
     hasNoRecords = query === '' && (!data || Object.entries(data).length === 0),
     scrollContainer = useRef<HTMLDivElement>(null),
     scrollToTop = useScrollToTop(scrollContainer),
+    [scrollY, setScrollY] = useState(0),
     onScroll: UIEventHandler<HTMLDivElement> = useDebounceCallback((e) => {
       if (e) {
         setScrollY(
           onScrollGetYPosition(e.target ? e.target : (e as any).srcElement),
         );
       }
-    }, 100),
-    [scrollY, setScrollY] = useState(0);
+    }, 100);
 
   const yearMap = useMemo(() => {
     const newYearMap = new Map<

@@ -1,10 +1,7 @@
 import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 import { PropsWithChildren } from 'react';
 import { RxDocument, RxDatabase } from 'rxdb';
-import {
-  ConnectionDocument,
-  AnyConnectionDocument,
-} from '../../models/connection-document/ConnectionDocument.type';
+import { AnyConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
 import {
   contextAfterRefresh,
   resolveSyncContext,
@@ -19,7 +16,7 @@ import * as VA from '../../services/fhir/VA';
 import * as Healow from '../../services/fhir/Healow';
 import * as Athena from '../../services/fhir/Athena';
 import * as NextGen from '../../services/fhir/NextGen';
-import { SyncContext, VendorSync } from '../../services/fhir/sync';
+import { SyncContext } from '../../services/fhir/sync';
 import { from, Subject } from 'rxjs';
 import { useNotificationDispatch } from '../../app/providers/NotificationProvider';
 import { differenceInDays, parseISO } from 'date-fns';
@@ -232,7 +229,7 @@ function HandleInitalSync({ children }: PropsWithChildren) {
     currentSyncJobLength,
   ]);
 
-  return <>{children}</>;
+  return children;
 }
 
 function startSyncConnection(
@@ -386,7 +383,7 @@ function OnHandleUnsubscribeJobs({ children }: PropsWithChildren) {
     });
   }, [notifyDispatch, syncD, syncJobs]);
 
-  return <>{children}</>;
+  return children;
 }
 
 /**

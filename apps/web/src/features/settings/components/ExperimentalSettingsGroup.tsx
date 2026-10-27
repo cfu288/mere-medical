@@ -164,12 +164,18 @@ export function ExperimentalSettingsGroup() {
                   <div className="pb-4">
                     <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
                       <p className="text-sm text-amber-700">
-                        <b>⚠️ Privacy Notice</b>: By using OpenAI, you will be
-                        sending your medical information to OpenAI's servers for
-                        processing. This is an experimental option and not
-                        recommended for sensitive medical data. OpenAI API keys
-                        are stored as plaintext. We recommend using Ollama to
-                        keep all data processing local.
+                        <b>
+                          <span role="img" aria-label="Warning">
+                            ⚠️
+                          </span>{' '}
+                          Privacy Notice
+                        </b>
+                        : By using OpenAI, you will be sending your medical
+                        information to OpenAI's servers for processing. This is
+                        an experimental option and not recommended for sensitive
+                        medical data. OpenAI API keys are stored as plaintext.
+                        We recommend using Ollama to keep all data processing
+                        local.
                       </p>
                     </div>
                   </div>

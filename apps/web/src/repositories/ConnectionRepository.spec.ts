@@ -10,7 +10,6 @@ import {
   createCernerConnection,
   createMultipleTestConnections,
   createExpiredConnection,
-  createConnectionWithTimestamps,
 } from '../test-utils/connectionTestData';
 import * as connectionRepo from './ConnectionRepository';
 import { firstValueFrom } from 'rxjs';

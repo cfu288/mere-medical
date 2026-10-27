@@ -3,8 +3,7 @@ import { ChevronRightIcon } from '@heroicons/react/20/solid';
 import DOMPurify from 'dompurify';
 import parse from 'html-react-parser';
 import { useMemo } from 'react';
-import { LOINC_CODE_SYSTEM } from '../ShowDocumentReferenceAttachmentExpandable';
-import { getMatchingSections, parseDateString } from './parseCCDA';
+import { getMatchingSections } from './parseCCDA';
 
 export function parseCCDAAssesmentSection(
   sections: HTMLCollectionOf<HTMLElement>,

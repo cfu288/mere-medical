@@ -26,10 +26,7 @@ import { ConnectionCard } from './components/ConnectionCard';
 import { EMRVendor, TenantSelectModal } from './components/TenantSelectModal';
 import { GenericBanner } from '../../shared/components/GenericBanner';
 import { useConnectionCards } from './hooks/useConnectionCards';
-import {
-  AnyConnectionDocument,
-  ConnectionDocument,
-} from '../../models/connection-document/ConnectionDocument.type';
+import { AnyConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
 import { AppConfig, useConfig } from '../../app/providers/AppConfigProvider';
 import { CernerLocalStorageKeys } from '../../services/fhir/Cerner';
 import {

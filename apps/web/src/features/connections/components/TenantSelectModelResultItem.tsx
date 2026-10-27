@@ -55,8 +55,17 @@ export function TenantSelectModelResultItem({
   );
 }
 
-export function SkeletonTenantSelectModalResultItem() {
-  const randomTailwindWidth = Math.floor(Math.random() * 100) + 1;
+const SKELETON_WIDTHS = Array.from(
+  { length: 11 },
+  () => Math.floor(Math.random() * 100) + 1,
+);
+
+export function SkeletonTenantSelectModalResultItem({
+  index,
+}: {
+  index: number;
+}) {
+  const randomTailwindWidth = SKELETON_WIDTHS[index % SKELETON_WIDTHS.length];
 
   return (
     <div className="mb-2 flex cursor-default select-none rounded-xl p-3">

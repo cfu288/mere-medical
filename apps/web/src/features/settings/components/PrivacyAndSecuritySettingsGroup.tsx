@@ -32,7 +32,6 @@ export function PrivacyAndSecuritySettingsGroup() {
     localConfig = useLocalConfig(),
     [showPasswordPrompModal, setShowPasswordPromptModal] = useState(false),
     [showDecryptConfirmModal, setShowDecryptConfirmModal] = useState(false);
-  const updateLocalConfig = useUpdateLocalConfig();
 
   if (userPreferences !== undefined && rawUserPreferences !== undefined) {
     return (

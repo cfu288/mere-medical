@@ -41,7 +41,6 @@ import {
 } from 'react-beautiful-dnd';
 import { EyeIcon } from '@heroicons/react/24/outline';
 import { EyeSlashIcon } from '@heroicons/react/24/outline';
-import { useLocalConfig } from '../../app/providers/LocalConfigProvider';
 
 function fetchMedications(
   db: RxDatabase<DatabaseCollections>,

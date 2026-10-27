@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react';
 import { RxDocument } from 'rxdb';
-import {
-  AnyConnectionDocument,
-  ConnectionDocument,
-} from '../../../models/connection-document/ConnectionDocument.type';
+import { AnyConnectionDocument } from '../../../models/connection-document/ConnectionDocument.type';
 import { useUser } from '../../../app/providers/UserProvider';
 import { useConnectionRepository } from '../../../repositories/hooks/useConnectionRepository';
 

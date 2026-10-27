@@ -34,7 +34,7 @@ export function parseCCDAVitalsSection(
     }
   > = {};
   for (const components of sectionComponents) {
-    for (const [index, component] of [...components].entries()) {
+    for (const component of [...components]) {
       const codeId = component
         ?.getElementsByTagName('code')[0]
         .getAttribute('code');

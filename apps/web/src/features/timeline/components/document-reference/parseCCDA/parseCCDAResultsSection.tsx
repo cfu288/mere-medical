@@ -1,6 +1,5 @@
 import uuid4 from '../../../../../shared/utils/UUIDUtils';
 import { ResultComponentSection } from '../ResultComponentSection';
-import { LOINC_CODE_SYSTEM } from '../ShowDocumentReferenceAttachmentExpandable';
 import { getMatchingSections } from './parseCCDA';
 
 export function parseCCDAResultsSection(
@@ -48,9 +47,6 @@ export function parseCCDAResultsSection(
         const codeId = component
           ?.getElementsByTagName('code')[0]
           ?.getAttribute('code');
-        const codeSystem = component
-          ?.getElementsByTagName('code')[0]
-          ?.getAttribute('codeSystem');
         const codeDisplayName =
           component
             ?.getElementsByTagName('code')[0]
