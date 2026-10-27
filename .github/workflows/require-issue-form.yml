@@ -1,0 +1,35 @@
+name: Require issue form
+
+# Issue forms are only enforced by the web UI. Issues opened through the API or
+# CLI skip them, so close anything that does not carry a form heading.
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  check:
+    if: github.event.issue.author_association != 'OWNER'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issue = context.payload.issue;
+            if ((issue.body ?? '').includes('### Description')) return;
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: issue.number,
+              body: `@${issue.user.login} this was closed because it was not opened through an issue form. Please use https://github.com/${owner}/${repo}/issues/new/choose.`,
+            });
+            await github.rest.issues.update({
+              owner,
+              repo,
+              issue_number: issue.number,
+              state: 'closed',
+              state_reason: 'not_planned',
+            });
