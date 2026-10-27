@@ -6,10 +6,7 @@ import {
   type OnPatientTokenSet,
 } from '@mere/fhir-oauth';
 import uuid4 from '../../../shared/utils/UUIDUtils';
-import {
-  ConnectionDocument,
-  CreateOnPatientConnectionDocument,
-} from '../../../models/connection-document/ConnectionDocument.type';
+import { CreateOnPatientConnectionDocument } from '../../../models/connection-document/ConnectionDocument.type';
 import { useRxDb } from '../../../app/providers/RxDbProvider';
 import { Routes } from '../../../Routes';
 import { useNotificationDispatch } from '../../../app/providers/NotificationProvider';

@@ -259,7 +259,7 @@ export function createHealowClientConfidential(
       return buildTokenResult(tokens, tenantId);
     },
 
-    async refresh(tokens, _config) {
+    async refresh(tokens) {
       if (!tokens.refreshToken) {
         throw createOAuthError('refresh_not_supported', 'No refresh token available');
       }

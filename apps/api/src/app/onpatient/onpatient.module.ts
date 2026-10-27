@@ -1,4 +1,4 @@
-import { DynamicModule, Logger, Module } from '@nestjs/common';
+import { DynamicModule, Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { OnPatientController } from './onpatient.controller';
 import { OnPatientService, OnPatientServiceConfig } from './onpatient.service';

@@ -150,7 +150,7 @@ export function createNextGenClientConfidential(
       return buildTokenResult(tokens, patientId);
     },
 
-    async refresh(tokens, _config) {
+    async refresh(tokens) {
       if (!tokens.refreshToken) {
         throw createOAuthError(
           'refresh_not_supported',

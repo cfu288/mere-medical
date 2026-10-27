@@ -63,7 +63,6 @@ import { ProcedureCard } from '../cards/ProcedureCard';
 import { SpecimenCard } from '../cards/SpecimenCard';
 import { DeviceCard } from '../cards/DeviceCard';
 import { TimelineCardCategoryTitle } from '../TimelineCardCategoryTitle';
-import { TimelineCardTitle } from '../TimelineCardTitle';
 import { useClinicalDoc } from '../../../../shared/hooks/useClinicalDoc';
 import { CCDAStructureDefinitionKeys2_1 } from '../document-reference/CCDAStructureDefinitionKeys2_1';
 import useIntersectionObserver from '../../../../shared/hooks/useIntersectionObserver';

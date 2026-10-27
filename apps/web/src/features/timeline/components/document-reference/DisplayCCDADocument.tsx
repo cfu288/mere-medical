@@ -296,22 +296,19 @@ export function DisplayCCDADocument({
           content={(ccda.ENCOUNTER_DIAGNOSIS as string) || ''}
         />
       )}
-      {ccda?.ENCOUNTERS_SECTION && (
-        <>
-          {typeof ccda.ENCOUNTERS_SECTION === 'string' ||
-          ccda.ENCOUNTERS_SECTION instanceof String ? (
-            <DisplayCCDARawSection
-              title="Encounters"
-              content={(ccda.ENCOUNTERS_SECTION as string) || ''}
-            />
-          ) : (
-            <DisplayCCDAElementSection
-              title="Encounters"
-              content={(ccda.ENCOUNTERS_SECTION as JSX.Element) || ''}
-            />
-          )}
-        </>
-      )}
+      {ccda?.ENCOUNTERS_SECTION &&
+        (typeof ccda.ENCOUNTERS_SECTION === 'string' ||
+        ccda.ENCOUNTERS_SECTION instanceof String ? (
+          <DisplayCCDARawSection
+            title="Encounters"
+            content={(ccda.ENCOUNTERS_SECTION as string) || ''}
+          />
+        ) : (
+          <DisplayCCDAElementSection
+            title="Encounters"
+            content={(ccda.ENCOUNTERS_SECTION as JSX.Element) || ''}
+          />
+        ))}
     </>
   );
 }

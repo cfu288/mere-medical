@@ -1,7 +1,6 @@
 /* eslint-disable react/jsx-no-useless-fragment */
 import { Disclosure } from '@headlessui/react';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
-import { title } from 'process';
 import {
   LOINC_CODE_SYSTEM,
   SNOMED_CT_CODE_SYSTEM,
@@ -305,12 +304,6 @@ function getComponentsFromEntry(
   });
 
   return componentsFromEntry;
-}
-
-function getChildOfElementByTagName(element: Element, tagName: string) {
-  const children = [...element.children];
-  const childMatchesTag = children.filter((child) => child.tagName === tagName);
-  return childMatchesTag;
 }
 
 export function parseCCDACareTeamSection(

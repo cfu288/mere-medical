@@ -3,7 +3,6 @@ import { Bundle, BundleEntry, FhirResource } from 'fhir/r2';
 import { RxDocument, RxDatabase } from 'rxdb';
 import {
   AnyConnectionDocument,
-  ConnectionDocument,
   CreateVAConnectionDocument,
   VAConnectionDocument,
 } from '../../models/connection-document/ConnectionDocument.type';

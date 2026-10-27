@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import {
   useUser,
-  useAllUsers,
   useUserManagement,
 } from '../../../app/providers/UserProvider';
 import { useNotificationDispatch } from '../../../app/providers/NotificationProvider';
@@ -10,7 +9,6 @@ import { RxDocument } from 'rxdb';
 
 export function useUserSwitchLogic(onClose: () => void) {
   const currentUser = useUser();
-  const allUsers = useAllUsers();
   const { switchUser } = useUserManagement();
   const notificationDispatch = useNotificationDispatch();
 

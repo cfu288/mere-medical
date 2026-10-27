@@ -18,7 +18,6 @@ import {
   createTestUser,
   createMultipleTestUsers,
 } from '../../test-utils/userTestData';
-import { UserDocument } from '../../models/user-document/UserDocument.type';
 
 describe('UserProvider', () => {
   let db: RxDatabase<DatabaseCollections>;

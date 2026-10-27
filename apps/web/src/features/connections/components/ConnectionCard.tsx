@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   AnyConnectionDocument,
-  ConnectionDocument,
   ConnectionSources,
 } from '../../../models/connection-document/ConnectionDocument.type';
 import { resolveSyncContext } from '../../../services/fhir/sync/resolveSyncContext';

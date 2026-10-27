@@ -13,7 +13,6 @@ import { RxDocument, RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import {
   AnyConnectionDocument,
-  ConnectionDocument,
   CreateEpicConnectionDocument,
   EpicConnectionDocument,
 } from '../../models/connection-document/ConnectionDocument.type';

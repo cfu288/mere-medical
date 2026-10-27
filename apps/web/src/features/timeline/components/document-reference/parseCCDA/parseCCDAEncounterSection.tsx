@@ -1,7 +1,6 @@
 /* eslint-disable react/jsx-no-useless-fragment */
 import { Disclosure } from '@headlessui/react';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
-import { title } from 'process';
 import {
   LOINC_CODE_SYSTEM,
   SNOMED_CT_CODE_SYSTEM,

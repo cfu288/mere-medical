@@ -9,7 +9,6 @@ import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import {
   AnyConnectionDocument,
   CernerConnectionDocument,
-  ConnectionDocument,
 } from '../../models/connection-document/ConnectionDocument.type';
 import { DSTU2, R4 } from '.';
 import { findUserById } from '../../repositories/UserRepository';

@@ -1,12 +1,3 @@
-// In TS, interfaces are "open" and can be extended
-interface Date {
-  /**
-   * Give a more precise return type to the method `toISOString()`:
-   * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString
-   */
-  toISOString(): TDateISO;
-}
-
 /**
  * Represent a string like `2021-01-08T14:42:34.678Z` (format: ISO 8601).
  *

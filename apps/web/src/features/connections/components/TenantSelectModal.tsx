@@ -668,17 +668,9 @@ export function TenantSelectModal({
                   static
                   className="max-h-full scroll-py-3 overflow-y-scroll p-3 sm:max-h-96"
                 >
-                  <SkeletonTenantSelectModalResultItem />
-                  <SkeletonTenantSelectModalResultItem />
-                  <SkeletonTenantSelectModalResultItem />
-                  <SkeletonTenantSelectModalResultItem />
-                  <SkeletonTenantSelectModalResultItem />
-                  <SkeletonTenantSelectModalResultItem />
-                  <SkeletonTenantSelectModalResultItem />
-                  <SkeletonTenantSelectModalResultItem />
-                  <SkeletonTenantSelectModalResultItem />
-                  <SkeletonTenantSelectModalResultItem />
-                  <SkeletonTenantSelectModalResultItem />
+                  {Array.from({ length: 11 }, (_, i) => (
+                    <SkeletonTenantSelectModalResultItem key={i} index={i} />
+                  ))}
                 </Combobox.Options>
               </Combobox>
             ) : (

@@ -1,4 +1,4 @@
-import React, { Fragment, memo } from 'react';
+import React, { memo } from 'react';
 import { SkeletonTimelineCard } from './SkeletonTimelineCard';
 import { SkeletonTimelineYearHeader } from './SkeletonTimelineYearHeader';
 import { SkeletonSearchBar } from './SkeletonSearchBar';

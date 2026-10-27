@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { TutorialAction } from '../TutorialOverlay';
 import { TutorialContentScreen } from './TutorialContentScreen';
 import install from '../../../assets/img/install.png';
