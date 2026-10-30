@@ -71,15 +71,10 @@ export async function getRelatedDocuments({
       : -1,
   );
 
-  const abnormalLabs = (
-    sorted as ClinicalDocument<BundleEntry<Observation>>[]
-  ).filter((i) => isOutOfRangeResult(i));
+  const abnormalLabs = sorted.filter((i) => isOutOfRangeResult(i));
   const isAbnormalResult = abnormalLabs.length > 0;
 
-  return [
-    sorted as ClinicalDocument<BundleEntry<Observation>>[],
-    isAbnormalResult,
-  ];
+  return [sorted, isAbnormalResult];
 }
 
 /**
