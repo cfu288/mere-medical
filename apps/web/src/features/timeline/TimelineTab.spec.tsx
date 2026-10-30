@@ -44,10 +44,10 @@ describe('fetchRecords', () => {
 
     const records = await fetchRecords(db, 'user-1');
 
-    expect(records).toEqual({
-      '2022-01-14': [sodium],
-      '2022-01-13': [glucose],
-    });
+    expect(Object.entries(records)).toEqual([
+      ['2022-01-14', [sodium]],
+      ['2022-01-13', [glucose]],
+    ]);
   });
 
   it('matches a search containing regex punctuation literally', async () => {

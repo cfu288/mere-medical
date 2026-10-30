@@ -215,6 +215,18 @@ describe('ClinicalDocumentRepository', () => {
 
       expect(result).toEqual([newest, middle, oldest]);
     });
+
+    it('ignores spaces around the search text', async () => {
+      await db.clinical_documents.bulkInsert([oldest, newest, middle]);
+
+      const result = await findTimelineDocuments(db, 'user-a', {
+        skip: 0,
+        limit: 10,
+        search: '  asthma ',
+      });
+
+      expect(result).toEqual([newest, oldest]);
+    });
   });
 
   describe('findDocumentsByLoincCodes', () => {
