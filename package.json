@@ -133,7 +133,7 @@
     "react-dom": "18.3.1",
     "react-hook-form": "^7.85.0",
     "react-image-crop": "^10.1.8",
-    "react-markdown": "^9.0.1",
+    "react-markdown": "^10.1.0",
     "react-refresh": "^0.10.0",
     "react-router": "6.30.3",
     "react-router-dom": "6.30.3",
