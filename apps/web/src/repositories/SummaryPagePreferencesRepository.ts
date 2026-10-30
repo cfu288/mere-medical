@@ -54,9 +54,9 @@ export function watchSummaryPagePreferences(
 
 /**
  * Pins a record to the user's summary page, or unpins it when it is already
- * pinned. It reads the saved list, so a pin never drops the other pins. It
- * creates the user's settings when there are none. The pin button on a lab
- * result calls it.
+ * pinned. It changes only that record in the saved list. It creates the
+ * user's settings when there are none. The pin button on a lab result calls
+ * it.
  *
  * @param db `RxDatabase<DatabaseCollections>`.
  * @param userId `string`.
