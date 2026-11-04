@@ -5,6 +5,7 @@ import { DatabaseCollections } from '../app/providers/DatabaseCollections';
 import {
   cleanupTestDatabase,
   createTestDatabase,
+  storedDocuments,
 } from '../test-utils/createTestDatabase';
 import {
   findSummaryPagePreferences,
@@ -147,9 +148,39 @@ describe('SummaryPagePreferencesRepository', () => {
       await togglePinnedLab(db, 'user-a', 'lab-1');
 
       expect(await findSummaryPagePreferences(db, 'user-a')).toEqual({
-        id: expect.any(String),
+        id: 'user-a',
         user_id: 'user-a',
         pinned_labs: ['lab-1'],
+      });
+    });
+
+    it('keeps both records when a user with no preferences pins two at once', async () => {
+      await Promise.all([
+        togglePinnedLab(db, 'user-a', 'lab-1'),
+        togglePinnedLab(db, 'user-a', 'lab-2'),
+      ]);
+
+      expect(await storedDocuments(db.summary_page_preferences)).toEqual([
+        { id: 'user-a', user_id: 'user-a', pinned_labs: ['lab-1', 'lab-2'] },
+      ]);
+    });
+
+    it('keeps both records when a user pins two at once', async () => {
+      await db.summary_page_preferences.insert({
+        id: 'prefs-a',
+        user_id: 'user-a',
+        pinned_labs: [],
+      });
+
+      await Promise.all([
+        togglePinnedLab(db, 'user-a', 'lab-1'),
+        togglePinnedLab(db, 'user-a', 'lab-2'),
+      ]);
+
+      expect(await findSummaryPagePreferences(db, 'user-a')).toEqual({
+        id: 'prefs-a',
+        user_id: 'user-a',
+        pinned_labs: ['lab-1', 'lab-2'],
       });
     });
   });

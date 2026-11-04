@@ -1,4 +1,4 @@
-import { addRxPlugin, createRxDatabase, RxDatabase } from 'rxdb';
+import { addRxPlugin, createRxDatabase, RxCollection, RxDatabase } from 'rxdb';
 import { RxDBUpdatePlugin } from 'rxdb/plugins/update';
 import { RxDBMigrationPlugin } from 'rxdb/plugins/migration';
 import { RxDBJsonDumpPlugin } from 'rxdb/plugins/json-dump';
@@ -60,4 +60,21 @@ export async function cleanupTestDatabase(
   db: RxDatabase<DatabaseCollections>,
 ): Promise<void> {
   await db.destroy();
+}
+
+/**
+ * Reads every document stored in a collection as plain records, so a spec
+ * can compare all of them to a literal list.
+ *
+ * @param collection `RxCollection<T>`.
+ * @returns `Promise<T[]>`.
+ *
+ * @example
+ * expect(await storedDocuments(db.user_preferences)).toEqual([{ id: 'user-a', user_id: 'user-a', use_proxy: false }]);
+ */
+export async function storedDocuments<T>(
+  collection: RxCollection<T>,
+): Promise<T[]> {
+  const docs = await collection.find().exec();
+  return docs.map((doc) => doc.toMutableJSON() as T);
 }

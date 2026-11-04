@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DatabaseCollections } from '../app/providers/DatabaseCollections';
 import { SummaryPagePreferences } from '../models/summary-page-preferences/SummaryPagePreferences.type';
-import uuid4 from '../shared/utils/UUIDUtils';
+import { insertOrFindById } from './insertOrFindById';
 
 /**
  * Reads the summary page settings of a user, which hold the pinned labs and
@@ -71,21 +71,23 @@ export async function togglePinnedLab(
   userId: string,
   recordId: string,
 ): Promise<void> {
-  // TODO: two calls at once can both find nothing and insert two documents for one user
-  const doc = await db.summary_page_preferences
+  const stored = await db.summary_page_preferences
     .findOne({ selector: { user_id: userId } })
     .exec();
-  if (!doc) {
-    await db.summary_page_preferences.insert({
-      id: uuid4(),
-      user_id: userId,
-      pinned_labs: [recordId],
-    });
-    return;
-  }
-  const pinned = doc.pinned_labs || [];
-  const updated = pinned.includes(recordId)
-    ? pinned.filter((id) => id !== recordId)
-    : [...pinned, recordId];
-  await doc.update({ $set: { pinned_labs: updated } });
+  const doc =
+    stored ??
+    (
+      await insertOrFindById(db.summary_page_preferences, {
+        id: userId,
+        user_id: userId,
+        pinned_labs: [],
+      })
+    ).doc;
+  await doc.atomicUpdate((data) => {
+    const pinned = data.pinned_labs || [];
+    const updated = pinned.includes(recordId)
+      ? pinned.filter((id) => id !== recordId)
+      : [...pinned, recordId];
+    return { ...data, pinned_labs: updated };
+  });
 }

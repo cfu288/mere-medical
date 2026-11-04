@@ -3,21 +3,22 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DatabaseCollections } from '../app/providers/DatabaseCollections';
 import { UserPreferencesDocument } from '../models/user-preferences/UserPreferences.type';
-import uuid4 from '../shared/utils/UUIDUtils';
+import { insertOrFindById } from './insertOrFindById';
 
 /**
  * The preferences a user starts with, before they change any setting.
  *
  * @param userId `string`.
- * @returns `UserPreferencesDocument`. A new id, the user, and proxy sync off.
+ * @returns `UserPreferencesDocument`. The user id as the id, the user, and
+ * proxy sync off.
  *
  * @example
- * const preferences = defaultUserPreferences(user.id); // { id: '<new uuid>', user_id: user.id, use_proxy: false }
+ * const preferences = defaultUserPreferences(user.id); // { id: user.id, user_id: user.id, use_proxy: false }
  */
 export function defaultUserPreferences(
   userId: string,
 ): UserPreferencesDocument {
-  return { id: uuid4(), user_id: userId, use_proxy: false };
+  return { id: userId, user_id: userId, use_proxy: false };
 }
 
 /**
@@ -35,15 +36,17 @@ export async function createUserPreferencesIfNone(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
 ): Promise<boolean> {
-  // TODO: two calls at once can both find nothing and insert two documents for one user
-  const doc = await db.user_preferences
+  const stored = await db.user_preferences
     .findOne({ selector: { user_id: userId } })
     .exec();
-  if (doc) {
+  if (stored) {
     return false;
   }
-  await db.user_preferences.insert(defaultUserPreferences(userId));
-  return true;
+  const { inserted } = await insertOrFindById(
+    db.user_preferences,
+    defaultUserPreferences(userId),
+  );
+  return inserted;
 }
 
 /**
@@ -87,16 +90,16 @@ export async function updateUserPreferences(
   userId: string,
   updates: Omit<Partial<UserPreferencesDocument>, 'id' | 'user_id'>,
 ): Promise<void> {
-  // TODO: two calls at once can both find nothing and insert two documents for one user
-  const doc = await db.user_preferences
+  const stored = await db.user_preferences
     .findOne({ selector: { user_id: userId } })
     .exec();
-  if (doc) {
-    await doc.update({ $set: updates });
-  } else {
-    await db.user_preferences.insert({
-      ...defaultUserPreferences(userId),
-      ...updates,
-    });
-  }
+  const doc =
+    stored ??
+    (
+      await insertOrFindById(
+        db.user_preferences,
+        defaultUserPreferences(userId),
+      )
+    ).doc;
+  await doc.atomicPatch(updates);
 }

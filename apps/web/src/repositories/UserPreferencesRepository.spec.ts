@@ -5,6 +5,7 @@ import { DatabaseCollections } from '../app/providers/DatabaseCollections';
 import {
   cleanupTestDatabase,
   createTestDatabase,
+  storedDocuments,
 } from '../test-utils/createTestDatabase';
 import {
   createUserPreferencesIfNone,
@@ -29,7 +30,7 @@ describe('UserPreferencesRepository', () => {
 
       expect(created).toBe(true);
       expect(await firstValueFrom(watchUserPreferences(db, 'user-a'))).toEqual({
-        id: expect.any(String),
+        id: 'user-a',
         user_id: 'user-a',
         use_proxy: false,
       });
@@ -50,6 +51,18 @@ describe('UserPreferencesRepository', () => {
         user_id: 'user-a',
         use_proxy: true,
       });
+    });
+
+    it('creates one set of preferences when called twice at once', async () => {
+      const created = await Promise.all([
+        createUserPreferencesIfNone(db, 'user-a'),
+        createUserPreferencesIfNone(db, 'user-a'),
+      ]);
+
+      expect(created).toEqual([true, false]);
+      expect(await storedDocuments(db.user_preferences)).toEqual([
+        { id: 'user-a', user_id: 'user-a', use_proxy: false },
+      ]);
     });
   });
 
@@ -147,10 +160,32 @@ describe('UserPreferencesRepository', () => {
       await updateUserPreferences(db, 'user-a', { use_proxy: true });
 
       expect(await firstValueFrom(watchUserPreferences(db, 'user-a'))).toEqual({
-        id: expect.any(String),
+        id: 'user-a',
         user_id: 'user-a',
         use_proxy: true,
       });
+    });
+
+    it('creates one set of preferences when called twice at once', async () => {
+      await Promise.all([
+        updateUserPreferences(db, 'user-a', { use_proxy: true }),
+        updateUserPreferences(db, 'user-a', { use_proxy: true }),
+      ]);
+
+      expect(await storedDocuments(db.user_preferences)).toEqual([
+        { id: 'user-a', user_id: 'user-a', use_proxy: true },
+      ]);
+    });
+
+    it('keeps the change when the default preferences are created at the same time', async () => {
+      await Promise.all([
+        createUserPreferencesIfNone(db, 'user-a'),
+        updateUserPreferences(db, 'user-a', { use_proxy: true }),
+      ]);
+
+      expect(await storedDocuments(db.user_preferences)).toEqual([
+        { id: 'user-a', user_id: 'user-a', use_proxy: true },
+      ]);
     });
   });
 });
