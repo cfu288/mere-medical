@@ -85,7 +85,6 @@ const updateUserInDb = async (
     email: data.email,
     first_name: data.firstName,
     gender: data.gender,
-    // TODO: saving the form should not change is_default_user or is_selected_user
     is_default_user: false,
     is_selected_user: true,
     last_name: data.lastName,
