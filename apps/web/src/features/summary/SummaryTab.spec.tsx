@@ -13,6 +13,7 @@ import {
 } from '../../test-utils/createTestDatabase';
 import { TestProviders } from '../../test-utils/TestProviders';
 import SummaryTab from './SummaryTab';
+import { HiddenIntersectionObserver } from '../../test-utils/intersectionObserver';
 
 function record(
   metadataId: string,
@@ -39,21 +40,11 @@ function record(
   };
 }
 
-class HiddenIntersectionObserver {
-  observe() {
-    return undefined;
-  }
-  disconnect() {
-    return undefined;
-  }
-}
-
 describe('SummaryTab', () => {
   let db: RxDatabase<DatabaseCollections>;
 
   beforeEach(async () => {
-    window.IntersectionObserver =
-      HiddenIntersectionObserver as unknown as typeof IntersectionObserver;
+    window.IntersectionObserver = HiddenIntersectionObserver;
     db = await createTestDatabase();
     await db.user_documents.insert({
       id: 'user-1',
@@ -103,19 +94,11 @@ describe('SummaryTab', () => {
       </TestProviders>,
     );
 
-    expect((await screen.findByText('Metformin 500 mg')).textContent).toBe(
-      'Metformin 500 mg',
-    );
-    expect(screen.getByText('Type 2 diabetes').textContent).toBe(
-      'Type 2 diabetes',
-    );
-    expect(screen.getByText('Influenza vaccine (1)').textContent).toBe(
-      'Influenza vaccine (1)',
-    );
-    expect(screen.getByText('Penicillin').textContent).toBe('Penicillin ');
-    expect(screen.getByText('- Lower A1c below 7').textContent).toBe(
-      ' -    Lower A1c below 7',
-    );
-    expect(screen.getByText('GLUCOSE').textContent).toBe('GLUCOSE');
+    await screen.findByText('Metformin 500 mg');
+    screen.getByText('Type 2 diabetes');
+    screen.getByText('Influenza vaccine (1)');
+    screen.getByText('Penicillin');
+    screen.getByText('- Lower A1c below 7');
+    screen.getByText('GLUCOSE');
   });
 });

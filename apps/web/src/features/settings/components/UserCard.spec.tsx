@@ -10,22 +10,13 @@ import {
 } from '../../../test-utils/createTestDatabase';
 import { TestProviders } from '../../../test-utils/TestProviders';
 import { UserCard } from './UserCard';
-
-class HiddenIntersectionObserver {
-  observe() {
-    return undefined;
-  }
-  disconnect() {
-    return undefined;
-  }
-}
+import { HiddenIntersectionObserver } from '../../../test-utils/intersectionObserver';
 
 describe('UserCard', () => {
   let db: RxDatabase<DatabaseCollections>;
 
   beforeEach(async () => {
-    window.IntersectionObserver =
-      HiddenIntersectionObserver as unknown as typeof IntersectionObserver;
+    window.IntersectionObserver = HiddenIntersectionObserver;
     db = await createTestDatabase();
     await db.user_documents.insert({
       id: 'user-1',

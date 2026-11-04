@@ -10,25 +10,13 @@ import {
 } from '../../../../test-utils/createTestDatabase';
 import { TestProviders } from '../../../../test-utils/TestProviders';
 import { ElementsByDateListCard } from './ElementsByDateListCard';
-
-class VisibleIntersectionObserver {
-  constructor(
-    private callback: (entries: { isIntersecting: boolean }[]) => void,
-  ) {}
-  observe() {
-    this.callback([{ isIntersecting: true }]);
-  }
-  disconnect() {
-    return undefined;
-  }
-}
+import { VisibleIntersectionObserver } from '../../../../test-utils/intersectionObserver';
 
 describe('ElementsByDateListCard', () => {
   let db: RxDatabase<DatabaseCollections>;
 
   beforeEach(async () => {
-    window.IntersectionObserver =
-      VisibleIntersectionObserver as unknown as typeof IntersectionObserver;
+    window.IntersectionObserver = VisibleIntersectionObserver;
     db = await createTestDatabase();
     await db.user_documents.insert({
       id: 'user-1',
