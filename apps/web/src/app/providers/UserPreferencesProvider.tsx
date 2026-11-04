@@ -44,22 +44,27 @@ const UserPreferencesContext = React.createContext<
 export function UserPreferencesProvider(props: UserPreferencesProviderProps) {
   const db = useRxDb(),
     user = useUser(),
-    [upContext, setUpContext] = useState<UserPreferencesDocument | undefined>(
-      undefined,
-    );
+    [stored, setStored] = useState<
+      { userId: string; preferences: UserPreferencesDocument } | undefined
+    >(undefined);
 
   useEffect(() => {
     const sub = from(createUserPreferencesIfNone(db, user.id))
       .pipe(switchMap(() => watchUserPreferences(db, user.id)))
       .subscribe((item) => {
         console.debug('UserPreferencesProvider: ', item);
-        setUpContext(getUserPreferencesWithDefaults(item, user.id));
+        setStored({
+          userId: user.id,
+          preferences: getUserPreferencesWithDefaults(item, user.id),
+        });
       });
     return () => sub.unsubscribe();
   }, [db, user.id]);
 
   return (
-    <UserPreferencesContext.Provider value={upContext}>
+    <UserPreferencesContext.Provider
+      value={stored?.userId === user.id ? stored.preferences : undefined}
+    >
       {props.children}
     </UserPreferencesContext.Provider>
   );

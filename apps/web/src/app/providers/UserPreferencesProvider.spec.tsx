@@ -1,7 +1,7 @@
 import { act, render, waitFor } from '@testing-library/react';
 import { RxDatabase } from 'rxdb';
 import { DatabaseCollections } from './DatabaseCollections';
-import { UserProvider } from './UserProvider';
+import { UserProvider, useUser } from './UserProvider';
 import {
   UserPreferencesProvider,
   useUserPreferences,
@@ -18,6 +18,15 @@ import { updateUserPreferences } from '../../repositories/UserPreferencesReposit
 function ProxySetting() {
   const preferences = useUserPreferences();
   return <span data-testid="use-proxy">{String(preferences?.use_proxy)}</span>;
+}
+
+const renders: string[] = [];
+
+function RecordedProxySetting() {
+  const user = useUser();
+  const preferences = useUserPreferences();
+  renders.push(`${user.id}: ${String(preferences?.use_proxy)}`);
+  return null;
 }
 
 describe('UserPreferencesProvider', () => {
@@ -72,6 +81,33 @@ describe('UserPreferencesProvider', () => {
     await waitFor(() => {
       expect(getByTestId('use-proxy').textContent).toBe('false');
     });
+  });
+
+  it('never gives the new user the preferences of the previous user', async () => {
+    renders.length = 0;
+    const { getByTestId } = render(
+      <TestProviders db={db}>
+        <UserProvider>
+          <UserPreferencesProvider>
+            <ProxySetting />
+            <RecordedProxySetting />
+          </UserPreferencesProvider>
+        </UserProvider>
+      </TestProviders>,
+    );
+    await waitFor(() => {
+      expect(getByTestId('use-proxy').textContent).toBe('true');
+    });
+
+    await act(async () => {
+      await switchUser(db, 'user-b');
+    });
+    await waitFor(() => {
+      expect(getByTestId('use-proxy').textContent).toBe('false');
+    });
+
+    expect(renders).toContain('user-b: false');
+    expect(renders).not.toContain('user-b: true');
   });
 
   it('provides changes made after a user switch', async () => {
