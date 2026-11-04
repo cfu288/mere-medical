@@ -48,8 +48,12 @@ export const SkeletonTimelineMonthDayHeader = memo(
           <div className="relative flex flex-col">
             <div className="h-0 mt-0 bg-transparent">
               <div className="animate-pulse px-3 bg-gray-50 dark:bg-gray-800 border-2 md:border-4 border-gray-200 dark:border-gray-700 rounded-full aspect-square flex flex-col justify-center">
-                <p className="text-sm text-gray-50 text-center">Jan</p>
-                <p className="text-sm text-gray-50 text-center">1</p>
+                <p className="text-sm text-gray-50 dark:text-gray-800 text-center">
+                  Jan
+                </p>
+                <p className="text-sm text-gray-50 dark:text-gray-800 text-center">
+                  1
+                </p>
               </div>
             </div>
           </div>

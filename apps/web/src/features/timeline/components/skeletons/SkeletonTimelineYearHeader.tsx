@@ -6,7 +6,7 @@ export function SkeletonTimelineYearHeader() {
       <div className="flex flex-row py-1">
         <div className="relative flex flex-col">
           <div className="h-0 mt-0 bg-transparent">
-            <p className="px-2 w-16 truncate text-nowrap text-xl font-black bg-gray-700 border-2 border-gray-700 rounded-md text-center text-gray-700 dark:text-gray-300 animate-pulse">
+            <p className="px-2 w-16 truncate text-nowrap text-xl font-black bg-gray-700 border-2 border-gray-700 rounded-md text-center text-gray-700 animate-pulse">
               Date
             </p>
           </div>

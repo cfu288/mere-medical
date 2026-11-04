@@ -68,7 +68,7 @@ export function UserCard() {
         <div className="mx-auto mt-2 flex max-w-sm flex-col px-4 sm:px-6 lg:px-8">
           <li
             key={user.email || user.id}
-            className="flex-colrounded-lg relative col-span-1 flex border bg-white dark:bg-gray-900 text-center"
+            className="relative col-span-1 flex flex-col rounded-lg border bg-white dark:bg-gray-900 text-center"
           >
             <button
               className="absolute top-4 right-4 flex justify-center text-gray-700 dark:text-gray-300"

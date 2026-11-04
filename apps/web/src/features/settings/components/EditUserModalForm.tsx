@@ -231,7 +231,7 @@ export function ProfileImageModal({
             }}
           />
           <button
-            className='className="focus:ring-primary-500 focus:ring-offset-2" rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-4 py-2 text-sm font-medium text-gray-800 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 focus:outline-none focus:ring-2'
+            className="focus:ring-primary-500 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-4 py-2 text-sm font-medium text-gray-800 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2"
             onClick={() => uploadRef.current?.click()}
             type="button"
           >
@@ -476,7 +476,7 @@ export function EditUserForm({
                       e.preventDefault();
                       setTogglePhotoModal((x) => !x);
                     }}
-                    className="file:focus:ring-primary-500 file:text-medium block w-full flex-1 py-2 text-sm text-gray-800 dark:text-gray-200 file:ml-5 file:mr-4 file:rounded-md file:border file:border-gray-300 dark:file:border-gray-600 file:bg-white dark:file:bg-gray-900  file:px-3 file:py-2 file:text-gray-800 dark:file:text-gray-200 hover:file:bg-gray-100 dark:hover:file:bg-gray-800 focus:outline-none file:focus:outline-none file:focus:ring-2 file:focus:ring-offset-2"
+                    className="focus-visible:ring-primary-500 block w-full flex-1 rounded-md py-2 text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus-visible:ring-2"
                   >
                     Upload photo
                   </button>

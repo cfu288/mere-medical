@@ -38,7 +38,7 @@ describe('AppearanceSettingsGroup', () => {
     ).toBe('true');
   });
 
-  it('saves a dark theme and draws the page dark', async () => {
+  it('saves a dark theme and sets the dark class', async () => {
     renderSettings();
     fireEvent.click(await screen.findByRole('radio', { name: 'Dark' }));
 
@@ -49,7 +49,7 @@ describe('AppearanceSettingsGroup', () => {
     expect(isDark()).toBe(true);
   });
 
-  it('saves a light theme and draws the page light', async () => {
+  it('saves a light theme and removes the dark class', async () => {
     localStorage.setItem('config', JSON.stringify({ theme: 'dark' }));
     renderSettings();
     fireEvent.click(await screen.findByRole('radio', { name: 'Light' }));

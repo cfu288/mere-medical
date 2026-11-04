@@ -24,9 +24,12 @@ describe('resolveTheme', () => {
     ['system', true, 'dark'],
     [undefined, true, 'dark'],
     ['blue', false, 'light'],
-  ])('draws %p with a dark system=%p in %s', (preference, dark, expected) => {
-    expect(resolveTheme(preference, dark)).toBe(expected);
-  });
+  ])(
+    'resolves %p with a dark system=%p to %s',
+    (preference, dark, expected) => {
+      expect(resolveTheme(preference, dark)).toBe(expected);
+    },
+  );
 });
 
 describe('applyTheme', () => {
@@ -75,7 +78,7 @@ describe('the theme-init script in index.html', () => {
     ['system', true],
     ['blue', true],
   ])(
-    'draws a saved theme of %p with a dark system=%p the same way resolveTheme does',
+    'applies a saved theme of %p with a dark system=%p the same way resolveTheme does',
     (theme, dark) => {
       mockColorScheme(dark);
       if (theme !== undefined) {
