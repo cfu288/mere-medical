@@ -2,8 +2,9 @@ import { RxCollection, RxDocument } from 'rxdb';
 
 /**
  * Inserts a document, or returns the stored one when a document with its id
- * already exists. Two calls at once with the same id store one document. The
- * preference repositories create a user's preferences with it.
+ * already exists. If two calls are made at the same time with the same id,
+ * only one document is stored. The preference repositories create a user's
+ * preferences with it.
  *
  * @param collection `RxCollection<T>`. A collection whose primary key is `id`.
  * @param document `T & { id: string }`. The document to insert.

@@ -63,8 +63,7 @@ export async function cleanupTestDatabase(
 }
 
 /**
- * Reads every document stored in a collection as plain records, so a spec
- * can compare all of them to a literal list.
+ * Reads every document stored in a collection as plain records.
  *
  * @param collection `RxCollection<T>`.
  * @returns `Promise<T[]>`.
