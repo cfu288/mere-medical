@@ -68,8 +68,8 @@ describe('ClinicalDocumentRepository', () => {
 
   describe('findTimelineDocuments', () => {
     const newest = clinicalDoc({
-      metadataId: 'cond-1',
-      type: 'condition',
+      metadataId: 'proc-1',
+      type: 'procedure',
       date: '2024-03-01T00:00:00.000Z',
       name: 'Asthma',
     });
@@ -80,8 +80,8 @@ describe('ClinicalDocumentRepository', () => {
       name: 'Glucose',
     });
     const oldest = clinicalDoc({
-      metadataId: 'proc-1',
-      type: 'procedure',
+      metadataId: 'cond-1',
+      type: 'condition',
       date: '2024-01-01T00:00:00.000Z',
       name: 'Asthma education',
     });
@@ -148,8 +148,8 @@ describe('ClinicalDocumentRepository', () => {
       await db.clinical_documents.bulkInsert([
         newest,
         clinicalDoc({
-          metadataId: 'cond-1',
-          type: 'condition',
+          metadataId: 'proc-1',
+          type: 'procedure',
           date: '2024-03-01T00:00:00.000Z',
           userId: 'user-b',
         }),
