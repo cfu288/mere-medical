@@ -96,6 +96,22 @@ describe('UserPreferencesRepository', () => {
   });
 
   describe('updateUserPreferences', () => {
+    it('takes no change to the id or the user id', () => {
+      const idChange: Parameters<typeof updateUserPreferences>[2] = {
+        // @ts-expect-error the id cannot change
+        id: 'prefs-b',
+      };
+      const userIdChange: Parameters<typeof updateUserPreferences>[2] = {
+        // @ts-expect-error the user id cannot change
+        user_id: 'user-b',
+      };
+
+      expect([idChange, userIdChange]).toEqual([
+        { id: 'prefs-b' },
+        { user_id: 'user-b' },
+      ]);
+    });
+
     it('changes the given fields of the user preferences', async () => {
       await db.user_preferences.insert({
         id: 'prefs-a',

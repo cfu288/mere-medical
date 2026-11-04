@@ -77,7 +77,7 @@ export function parseDefaultValues(defaultValues?: NewUserFormFields) {
  * @param data data to update the user document with
  */
 const updateUserInDb = async (
-  updateUser: (updates: Partial<UserDocument>) => Promise<void>,
+  updateUser: (updates: Omit<Partial<UserDocument>, 'id'>) => Promise<void>,
   data: NewUserFormFields,
 ) => {
   await updateUser({

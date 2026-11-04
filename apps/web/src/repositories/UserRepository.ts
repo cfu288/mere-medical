@@ -102,7 +102,7 @@ export async function createDefaultUserIfNone(
 export async function updateUser(
   db: RxDatabase<DatabaseCollections>,
   id: string,
-  updates: Partial<UserDocument>,
+  updates: Omit<Partial<UserDocument>, 'id'>,
 ): Promise<void> {
   const doc = await db.user_documents.findOne({ selector: { id } }).exec();
 

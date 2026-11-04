@@ -20,7 +20,7 @@ export const useUserRepository = () => {
       create: (userData: Partial<UserDocument>) =>
         userRepo.createUser(db, userData),
       createDefaultUserIfNone: () => userRepo.createDefaultUserIfNone(db),
-      update: (id: string, updates: Partial<UserDocument>) =>
+      update: (id: string, updates: Omit<Partial<UserDocument>, 'id'>) =>
         userRepo.updateUser(db, id, updates),
       switchUser: (toUserId: string) => userRepo.switchUser(db, toUserId),
       delete: (id: string) => userRepo.deleteUser(db, id),

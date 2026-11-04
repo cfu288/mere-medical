@@ -76,7 +76,7 @@ export function watchUserPreferences(
  *
  * @param db `RxDatabase<DatabaseCollections>`.
  * @param userId `string`.
- * @param updates `Partial<UserPreferencesDocument>`. The fields to change.
+ * @param updates `Omit<Partial<UserPreferencesDocument>, 'id' | 'user_id'>`. The fields to change.
  * @returns `Promise<void>`.
  *
  * @example
@@ -85,7 +85,7 @@ export function watchUserPreferences(
 export async function updateUserPreferences(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
-  updates: Partial<UserPreferencesDocument>,
+  updates: Omit<Partial<UserPreferencesDocument>, 'id' | 'user_id'>,
 ): Promise<void> {
   // TODO: two calls at once can both find nothing and insert two documents for one user
   const doc = await db.user_preferences

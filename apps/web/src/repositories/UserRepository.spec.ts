@@ -220,6 +220,15 @@ describe('userRepository', () => {
     });
 
     describe('updateUser', () => {
+      it('takes no change to the id', () => {
+        const idChange: Parameters<typeof userRepo.updateUser>[2] = {
+          // @ts-expect-error the id cannot change
+          id: 'user-2',
+        };
+
+        expect(idChange).toEqual({ id: 'user-2' });
+      });
+
       it('updates existing user', async () => {
         const user = createTestUser({ first_name: 'Original' });
         await db.user_documents.insert(user);
