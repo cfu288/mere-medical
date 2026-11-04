@@ -33,9 +33,12 @@ export function PrivacyAndSecuritySettingsGroup() {
     return (
       <>
         <h1 className="py-6 text-xl font-extrabold">Privacy and Security</h1>
-        <div className="divide-y divide-gray-200" ref={ref}>
+        <div
+          className="divide-y divide-gray-200 dark:divide-gray-700"
+          ref={ref}
+        >
           <div className="px-4 sm:px-6">
-            <ul className="mt-2 divide-y divide-gray-200">
+            <ul className="mt-2 divide-y divide-gray-200 dark:divide-gray-700">
               <Switch.Group
                 id="encrypt_database"
                 as="li"
@@ -45,12 +48,12 @@ export function PrivacyAndSecuritySettingsGroup() {
                   <div className="flex flex-col">
                     <Switch.Label
                       as="h2"
-                      className="text-primary-800 text-lg leading-6 "
+                      className="text-primary-800 dark:text-primary-200 text-lg leading-6 "
                       passive
                     >
                       Enable encrypted storage with password protection
                     </Switch.Label>
-                    <Switch.Description className="pt-2 text-sm text-gray-800">
+                    <Switch.Description className="pt-2 text-sm text-gray-800 dark:text-gray-200">
                       Enable password protection of your medical records. Will
                       require you to provide a password before accessing any
                       medical records.
@@ -69,7 +72,7 @@ export function PrivacyAndSecuritySettingsGroup() {
                     className={classNames(
                       localConfig.use_encrypted_database
                         ? 'bg-primary-500'
-                        : 'bg-gray-200',
+                        : 'bg-gray-200 dark:bg-gray-700',
                       'focus:ring-primary-500 relative ml-4 inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2',
                     )}
                   >
@@ -94,18 +97,18 @@ export function PrivacyAndSecuritySettingsGroup() {
                   <div className="flex flex-col">
                     <Switch.Label
                       as="h2"
-                      className="text-primary-800 text-lg leading-6"
+                      className="text-primary-800 dark:text-primary-200 text-lg leading-6"
                       passive
                     >
                       Use proxy to sync data
                     </Switch.Label>
-                    <Switch.Description className="pt-2 text-sm text-gray-800">
+                    <Switch.Description className="pt-2 text-sm text-gray-800 dark:text-gray-200">
                       Some patient portals cannot communicate directly with
                       Mere. This option enables a seperate proxy service to
                       handle login and sync for Mere. Disabling this setting
                       will increase privacy but can break some connections.
                     </Switch.Description>
-                    <Switch.Description className="pt-2 text-sm text-gray-800">
+                    <Switch.Description className="pt-2 text-sm text-gray-800 dark:text-gray-200">
                       You should only enable this if you trust the organization
                       hosting the app, as the proxy will be able to access all
                       your health data.
@@ -121,7 +124,7 @@ export function PrivacyAndSecuritySettingsGroup() {
                     className={classNames(
                       userPreferences.use_proxy
                         ? 'bg-primary-500'
-                        : 'bg-gray-200',
+                        : 'bg-gray-200 dark:bg-gray-700',
                       'focus:ring-primary-500 relative ml-4 inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2',
                     )}
                   >
@@ -254,14 +257,14 @@ function PasswordPromptModal({
         <button
           type="button"
           disabled={isProcessing}
-          className="focus:ring-primary-500 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-gray-300"
+          className="focus:ring-primary-500 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-4 py-2 text-sm font-medium text-gray-800 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-gray-300 dark:disabled:bg-gray-600"
           onClick={() => setToggleModal(false)}
         >
           Cancel
         </button>
         <button
           type="button"
-          className=" bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 ml-4 inline-flex justify-center rounded-md border border-transparent px-4 py-2 align-middle text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-gray-300 disabled:text-gray-800"
+          className=" bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 ml-4 inline-flex justify-center rounded-md border border-transparent px-4 py-2 align-middle text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:text-gray-800 dark:disabled:text-gray-200"
           disabled={isProcessing}
           onClick={async () => {
             setIsProcessing(true);
@@ -379,7 +382,7 @@ function DatabasePasswordModal({
           <div className="w-full">
             <label
               htmlFor="password"
-              className="text-primary-900 block text-sm font-medium leading-6"
+              className="text-primary-900 dark:text-primary-200 block text-sm font-medium leading-6"
             >
               Password
             </label>
@@ -393,7 +396,7 @@ function DatabasePasswordModal({
               onChange={(e) => {
                 setPassword(e.target.value);
               }}
-              className="focus:ring-primary-600 text-primary-900 block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-700 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6"
+              className="focus:ring-primary-600 text-primary-900 dark:text-primary-200 block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-700 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6"
             />
           </div>
         </div>
@@ -401,7 +404,7 @@ function DatabasePasswordModal({
           <button
             type="button"
             disabled={isSettingPassword}
-            className="focus:ring-primary-500 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-gray-300 disabled:text-gray-800"
+            className="focus:ring-primary-500 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-4 py-2 text-sm font-medium text-gray-800 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:text-gray-800 dark:disabled:text-gray-200"
             onClick={() => setToggleModal(false)}
           >
             Cancel
@@ -409,7 +412,7 @@ function DatabasePasswordModal({
           <button
             type="submit"
             disabled={isSettingPassword}
-            className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 ml-4 inline-flex justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-gray-300 disabled:text-gray-800"
+            className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 ml-4 inline-flex justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:text-gray-800 dark:disabled:text-gray-200"
           >
             <p className={`${isSettingPassword ? 'mr-2' : ''}`}>Set Password</p>
             {isSettingPassword && <ButtonLoadingSpinner />}

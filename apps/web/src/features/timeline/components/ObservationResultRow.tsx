@@ -48,7 +48,11 @@ function SparklineGraphSvg({
   const values = useMemo(() => sparklineValues(relatedLabs), [relatedLabs]);
   const sparklineSvg = useMemo(() => {
     return relatedLabs.length > 1 ? (
-      <svg viewBox="0 0 10 22" className="h-6 w-6" preserveAspectRatio="none">
+      <svg
+        viewBox="0 0 10 22"
+        className="h-6 w-6 text-black dark:text-gray-100"
+        preserveAspectRatio="none"
+      >
         <title>Sparkline - click to open graph</title>
         <path
           d={
@@ -59,7 +63,7 @@ function SparklineGraphSvg({
             ).line
           }
           strokeWidth="1.5"
-          stroke="black"
+          stroke="currentColor"
           strokeLinecap="round"
           strokeLinejoin="round"
           fill="transparent"
@@ -119,12 +123,12 @@ export function ObservationResultRow({
           {({ open }) => (
             <>
               <div
-                className={`mx-4 grid grid-cols-6 gap-2 gap-y-2 border-solid border-gray-100 py-2 ${
+                className={`mx-4 grid grid-cols-6 gap-2 gap-y-2 border-solid border-gray-100 dark:border-gray-800 py-2 ${
                   hideBottomDivider ? '' : 'border-b-2'
                 }`}
               >
                 {/* Lab Row Name */}
-                <div className="col-span-3 self-center text-xs font-semibold text-gray-600">
+                <div className="col-span-3 self-center text-xs font-semibold text-gray-600 dark:text-gray-400">
                   <p>{item.metadata?.display_name}</p>
                   <p className="font-light">
                     {getReferenceRangeString(item)
@@ -136,7 +140,8 @@ export function ObservationResultRow({
                 <div className={`col-span-2 flex flex-col self-center`}>
                   <span
                     className={`text-sm ${
-                      isOutOfRangeResult(item) && 'text-red-700'
+                      isOutOfRangeResult(item) &&
+                      'text-red-700 dark:text-red-400'
                     }`}
                   >
                     {getValueQuantityString(item) ||
@@ -149,7 +154,7 @@ export function ObservationResultRow({
                     </span>
                   </span>
                   <p
-                    className={`text-xs font-light ${isOutOfRangeResult(item) ? 'text-red-700' : 'text-primary-700'}`}
+                    className={`text-xs font-light ${isOutOfRangeResult(item) ? 'text-red-700 dark:text-red-400' : 'text-primary-700 dark:text-primary-300'}`}
                   >
                     {getValueQuantityString(item) ||
                     getValueRangeString(item) ||
@@ -163,7 +168,7 @@ export function ObservationResultRow({
                 <div className="flex-rows col-span-1 flex items-end justify-end align-middle">
                   {relatedLabs.length > 0 &&
                     getValueQuantity(item) !== undefined && (
-                      <Disclosure.Button className="text-primary-900 rounded bg-[#E2F5FA] p-1 duration-150 active:scale-90  active:bg-slate-50">
+                      <Disclosure.Button className="text-primary-900 dark:text-primary-200 rounded bg-[#E2F5FA] dark:bg-primary-900 p-1 duration-150 active:scale-90  active:bg-slate-50 dark:active:bg-gray-700">
                         {open ? (
                           <>{closeXSvg}</>
                         ) : (
@@ -173,7 +178,7 @@ export function ObservationResultRow({
                     )}
                   {/* Pin icon button */}
                   <button
-                    className="text-primary-900 rounded  p-1 duration-150 active:scale-90 active:bg-slate-50"
+                    className="text-primary-900 dark:text-primary-200 rounded  p-1 duration-150 active:scale-90 active:bg-slate-50 dark:active:bg-gray-700"
                     onClick={handleTogglePin}
                   >
                     {!isPinned ? (
@@ -208,7 +213,7 @@ export function ObservationResultRow({
                 {/* Comment string (if exists) */}
                 {getComments(item) ? (
                   <div
-                    className={`col-span-2 col-start-4 flex self-center text-xs text-gray-800`}
+                    className={`col-span-2 col-start-4 flex self-center text-xs text-gray-800 dark:text-gray-200`}
                   >
                     {getComments(item)}
                   </div>
@@ -216,11 +221,11 @@ export function ObservationResultRow({
               </div>
               {/* Previous results and graph */}
               {relatedLabs.length > 0 && (
-                <Disclosure.Panel className="relative border-b-4 border-solid border-gray-100">
+                <Disclosure.Panel className="relative border-b-4 border-solid border-gray-100 dark:border-gray-800">
                   {/* Toggle select between graph view and list view */}
 
                   <button
-                    className="text-primary-900 absolute top-0 right-0 m-2 mr-4 rounded bg-[#E2F5FA] p-1 duration-150 active:scale-90 active:bg-gray-100"
+                    className="text-primary-900 dark:text-primary-200 absolute top-0 right-0 m-2 mr-4 rounded bg-[#E2F5FA] dark:bg-primary-900 p-1 duration-150 active:scale-90 active:bg-gray-100 dark:active:bg-gray-700"
                     onClick={() =>
                       setView((v) => {
                         return v === 'GRAPH' ? 'LIST' : 'GRAPH';
@@ -237,11 +242,11 @@ export function ObservationResultRow({
                     <div className="m-4 grid grid-cols-6 gap-2 gap-y-2 py-2">
                       {relatedLabs.map((rl) => (
                         <Fragment key={`rl-${rl.id}`}>
-                          <div className="col-span-3 self-center pl-4 text-xs font-bold text-gray-600">
+                          <div className="col-span-3 self-center pl-4 text-xs font-bold text-gray-600 dark:text-gray-400">
                             <p className="">
                               {safeFormatDate(rl.metadata?.date, 'MM/dd/yyyy')}
                             </p>
-                            <p className="text-xs font-light text-gray-600">
+                            <p className="text-xs font-light text-gray-600 dark:text-gray-400">
                               {getReferenceRangeString(rl)
                                 ? `Range: ${getReferenceRangeString(rl)}`
                                 : ''}
@@ -249,7 +254,8 @@ export function ObservationResultRow({
                           </div>
                           <div
                             className={`col-span-2 flex flex-col self-center text-sm ${
-                              isOutOfRangeResult(rl) && 'text-red-700'
+                              isOutOfRangeResult(rl) &&
+                              'text-red-700 dark:text-red-400'
                             }`}
                           >
                             <p>
@@ -260,7 +266,7 @@ export function ObservationResultRow({
                               {getValueUnit(rl)}
                             </p>
                             <p
-                              className={`text-xs font-light ${isOutOfRangeResult(rl) ? 'text-red-700' : 'text-primary-700'}`}
+                              className={`text-xs font-light ${isOutOfRangeResult(rl) ? 'text-red-700 dark:text-red-400' : 'text-primary-700 dark:text-primary-300'}`}
                             >
                               {getInterpretationText(rl) ||
                                 (getValueString(rl) && `${getValueString(rl)}`)}
@@ -285,7 +291,7 @@ export function ObservationResultRow({
                         <p> This data cannot be graphed</p>
                       )}
                       {leftOut.length > 0 && (
-                        <p className="px-2 pb-2 text-xs text-gray-500">
+                        <p className="px-2 pb-2 text-xs text-gray-500 dark:text-gray-400">
                           Not plotted:{' '}
                           {leftOut
                             .map((u) => `${u.count} in ${u.unit}`)
@@ -302,8 +308,8 @@ export function ObservationResultRow({
       ) : (
         <div>
           {
-            <div className="mx-4 grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-100 py-2">
-              <div className="col-span-3 self-center text-xs font-semibold text-gray-600">
+            <div className="mx-4 grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-100 dark:border-gray-800 py-2">
+              <div className="col-span-3 self-center text-xs font-semibold text-gray-600 dark:text-gray-400">
                 Data missing reason
               </div>
               <div className="col-span-2 flex self-center text-sm ">

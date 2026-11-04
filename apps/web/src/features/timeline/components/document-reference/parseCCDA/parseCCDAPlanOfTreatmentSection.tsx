@@ -452,26 +452,26 @@ export function DisplayCCDAPlanOfTreatmentSection({
     <Disclosure defaultOpen>
       {({ open }) => (
         <>
-          <Disclosure.Button className="mb-1 w-full rounded-md bg-gray-50 p-1 font-bold">
+          <Disclosure.Button className="mb-1 w-full rounded-md bg-gray-50 dark:bg-gray-800 p-1 font-bold">
             <div className="flex w-full items-center justify-between text-left">
               {data.code?.codeDisplayName || data.title}
               <ChevronRightIcon
-                className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 ${
+                className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 dark:active:bg-gray-700 ${
                   open ? 'rotate-90 transform' : ''
                 }`}
               />
             </div>
           </Disclosure.Button>
-          <Disclosure.Panel className="m-1 text-sm text-gray-900">
-            <div className="bg-gray-50 border-gray-200 overflow-hidden rounded-lg border">
+          <Disclosure.Panel className="m-1 text-sm text-gray-900 dark:text-gray-100">
+            <div className="bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 overflow-hidden rounded-lg border">
               {data.department && (
-                <div className="border-t border-gray-200">
+                <div className="border-t border-gray-200 dark:border-gray-700">
                   <dl>
-                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                      <dt className="text-sm font-medium text-gray-500">
+                    <div className="bg-gray-50 dark:bg-gray-800 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
                         Department:
                       </dt>
-                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                      <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2">
                         {data.department}
                       </dd>
                     </div>
@@ -479,13 +479,13 @@ export function DisplayCCDAPlanOfTreatmentSection({
                 </div>
               )}
               {data.effectiveTime && (
-                <div className="border-t border-gray-200">
+                <div className="border-t border-gray-200 dark:border-gray-700">
                   <dl>
-                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                      <dt className="text-sm font-medium text-gray-500">
+                    <div className="bg-gray-50 dark:bg-gray-800 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
                         Effective Time:
                       </dt>
-                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                      <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2">
                         {parseDateString(data.effectiveTime)}
                       </dd>
                     </div>
@@ -493,13 +493,13 @@ export function DisplayCCDAPlanOfTreatmentSection({
                 </div>
               )}
               {(data.effectiveTimeLow || data.effectiveTimeHigh) && (
-                <div className="border-t border-gray-200">
+                <div className="border-t border-gray-200 dark:border-gray-700">
                   <dl>
-                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                      <dt className="text-sm font-medium text-gray-500">
+                    <div className="bg-gray-50 dark:bg-gray-800 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
                         Effective Time Range:
                       </dt>
-                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                      <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2">
                         <dl className="flex">
                           {data.effectiveTimeLow && (
                             <>
@@ -522,14 +522,14 @@ export function DisplayCCDAPlanOfTreatmentSection({
                 </div>
               )}
               {data.performer && data.performer.length > 0 && (
-                <div className="border-t border-gray-200">
+                <div className="border-t border-gray-200 dark:border-gray-700">
                   <dl>
-                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                      <dt className="text-sm font-medium text-gray-500">
+                    <div className="bg-gray-50 dark:bg-gray-800 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
                         Performers:
                       </dt>
-                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        <ul className="border border-gray-200 rounded-md divide-y divide-gray-200">
+                      <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2">
+                        <ul className="border border-gray-200 dark:border-gray-700 rounded-md divide-y divide-gray-200 dark:divide-gray-700">
                           {data.performer.map((performer, index) => (
                             <li
                               key={index}
@@ -558,7 +558,7 @@ export function DisplayCCDAPlanOfTreatmentSection({
                                             <a
                                               key={contactIndex}
                                               href={`${contact.value}`}
-                                              className="text-indigo-600 hover:text-indigo-900"
+                                              className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300"
                                             >
                                               {contact.value}
                                             </a>
@@ -577,14 +577,14 @@ export function DisplayCCDAPlanOfTreatmentSection({
                 </div>
               )}
               {data.author && data.author.length > 0 && (
-                <div className="border-t border-gray-200">
+                <div className="border-t border-gray-200 dark:border-gray-700">
                   <dl>
-                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                      <dt className="text-sm font-medium text-gray-500">
+                    <div className="bg-gray-50 dark:bg-gray-800 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
                         Authors:
                       </dt>
-                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        <ul className="border border-gray-200 rounded-md divide-y divide-gray-200">
+                      <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2">
+                        <ul className="border border-gray-200 dark:border-gray-700 rounded-md divide-y divide-gray-200 dark:divide-gray-700">
                           {data.author.map((author, index) => (
                             <li
                               key={index}
@@ -630,7 +630,7 @@ export function DisplayCCDAPlanOfTreatmentSection({
                                         <a
                                           key={contactIndex}
                                           href={`${contact.value}`}
-                                          className="text-indigo-600 hover:text-indigo-900"
+                                          className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300"
                                         >
                                           {contact.value}
                                         </a>
@@ -647,14 +647,14 @@ export function DisplayCCDAPlanOfTreatmentSection({
                 </div>
               )}
               {data.participant && data.participant.length > 0 && (
-                <div className="border-t border-gray-200">
+                <div className="border-t border-gray-200 dark:border-gray-700">
                   <dl>
-                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                      <dt className="text-sm font-medium text-gray-500">
+                    <div className="bg-gray-50 dark:bg-gray-800 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
                         Participants:
                       </dt>
-                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        <ul className="border border-gray-200 rounded-md divide-y divide-gray-200">
+                      <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2">
+                        <ul className="border border-gray-200 dark:border-gray-700 rounded-md divide-y divide-gray-200 dark:divide-gray-700">
                           {data.participant.map((participant, index) => (
                             <li
                               key={index}
@@ -701,7 +701,7 @@ export function DisplayCCDAPlanOfTreatmentSection({
                                         <a
                                           key={contactIndex}
                                           href={`${contact.value}`}
-                                          className="text-indigo-600 hover:text-indigo-900"
+                                          className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300"
                                         >
                                           {contact.value}
                                         </a>
@@ -718,15 +718,15 @@ export function DisplayCCDAPlanOfTreatmentSection({
                 </div>
               )}
               {data.planOfTreatment && (
-                <div className="border-t border-gray-200">
+                <div className="border-t border-gray-200 dark:border-gray-700">
                   <dl>
-                    <div className="bg-gray-50 px-4 py-5">
+                    <div className="bg-gray-50 dark:bg-gray-800 px-4 py-5">
                       {/* sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"> */}
-                      <dt className="text-sm font-medium text-gray-500 mb-2">
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
                         Plan Of Treatment:
                       </dt>
-                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        <ul className="border border-gray-200 rounded-md divide-y divide-gray-200">
+                      <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2">
+                        <ul className="border border-gray-200 dark:border-gray-700 rounded-md divide-y divide-gray-200 dark:divide-gray-700">
                           {data.planOfTreatment.value && (
                             <div className="p-2 flex flex-col items-center justify-between text-sm overflow-x-scroll [&_table]:table-auto [&_tr]:border-b ">
                               {data.planOfTreatment.value}

@@ -132,15 +132,17 @@ export function ShowDocumentResultsExpandable({
           <div
             className={`${
               expanded ? '' : 'hidden'
-            } rounded-lg border border-solid border-gray-200`}
+            } rounded-lg border border-solid border-gray-200 dark:border-gray-700`}
           >
             {!hasLoadedDocument && (
-              <p className="text-md p-4 text-gray-900">Loading...</p>
+              <p className="text-md p-4 text-gray-900 dark:text-gray-100">
+                Loading...
+              </p>
             )}
 
             {/* Display CCDA Document */}
             {ccda && (
-              <div className="text-md whitespace-wrap overflow-x-scroll p-4 text-gray-900">
+              <div className="text-md whitespace-wrap overflow-x-scroll p-4 text-gray-900 dark:text-gray-100">
                 <DisplayCCDADocument ccda={ccda} />
               </div>
             )}
@@ -158,12 +160,14 @@ export function ShowDocumentResultsExpandable({
 
             {/* Display HTML Document */}
             {html && (
-              <div className="prose prose-sm overflow-x-auto p-4">{html}</div>
+              <div className="prose prose-sm dark:prose-invert overflow-x-auto p-4">
+                {html}
+              </div>
             )}
 
             {/* Error message when document can't be displayed */}
             {hasLoadedDocument && !ccda && !pdfUrl && !html && (
-              <p className="text-md p-4 text-gray-900">
+              <p className="text-md p-4 text-gray-900 dark:text-gray-100">
                 Sorry, looks like we were unable to get the linked document
               </p>
             )}

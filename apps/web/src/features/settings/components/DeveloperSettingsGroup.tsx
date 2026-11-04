@@ -13,11 +13,19 @@ import {
 function channelStatus(channel: VendorChannel) {
   switch (channel.status) {
     case 'production':
-      return <span className="text-green-600">Production</span>;
+      return (
+        <span className="text-green-600 dark:text-green-400">Production</span>
+      );
     case 'sandbox-only':
-      return <span className="text-yellow-600">Sandbox only</span>;
+      return (
+        <span className="text-yellow-600 dark:text-yellow-400">
+          Sandbox only
+        </span>
+      );
     case 'disabled':
-      return <span className="text-red-500">Not configured</span>;
+      return (
+        <span className="text-red-500 dark:text-red-400">Not configured</span>
+      );
   }
 }
 
@@ -89,10 +97,10 @@ export function DeveloperSettingsGroup() {
     <>
       <div className="py-6 text-xl font-extrabold">Developer Settings</div>
       <div className="pb-2 text-lg font-bold">Build Settings</div>
-      <div className="mb-4 rounded border border-gray-200 bg-gray-50 p-4">
+      <div className="mb-4 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-200">
+            <tr className="border-b border-gray-200 dark:border-gray-700">
               <th className="pb-2 text-left font-medium">Variable</th>
               <th className="pb-2 text-left font-medium">Value</th>
             </tr>
@@ -101,10 +109,10 @@ export function DeveloperSettingsGroup() {
             {buildVars.map((v) => (
               <tr
                 key={v.name}
-                className="border-b border-gray-100 last:border-0"
+                className="border-b border-gray-100 dark:border-gray-800 last:border-0"
               >
                 <td className="py-2 font-mono text-xs">{v.name}</td>
-                <td className="py-2 font-mono text-xs text-gray-600">
+                <td className="py-2 font-mono text-xs text-gray-600 dark:text-gray-400">
                   {v.value}
                 </td>
               </tr>
@@ -113,10 +121,10 @@ export function DeveloperSettingsGroup() {
         </table>
       </div>
       <div className="pb-2 text-lg font-bold">Environment Variables</div>
-      <div className="mb-4 rounded border border-gray-200 bg-gray-50 p-4">
+      <div className="mb-4 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-200">
+            <tr className="border-b border-gray-200 dark:border-gray-700">
               <th className="pb-2 text-left font-medium">Variable</th>
               <th className="pb-2 text-left font-medium">Status</th>
               <th className="pb-2 text-left font-medium">Value</th>
@@ -126,17 +134,19 @@ export function DeveloperSettingsGroup() {
             {envVars.map((env) => (
               <tr
                 key={env.name}
-                className="border-b border-gray-100 last:border-0"
+                className="border-b border-gray-100 dark:border-gray-800 last:border-0"
               >
                 <td className="py-2 font-mono text-xs">{env.name}</td>
                 <td className="py-2">
                   {env.configured ? (
-                    <span className="text-green-600">✓</span>
+                    <span className="text-green-600 dark:text-green-400">
+                      ✓
+                    </span>
                   ) : (
-                    <span className="text-red-500">✗</span>
+                    <span className="text-red-500 dark:text-red-400">✗</span>
                   )}
                 </td>
-                <td className="py-2 font-mono text-xs text-gray-600">
+                <td className="py-2 font-mono text-xs text-gray-600 dark:text-gray-400">
                   {env.display}
                 </td>
               </tr>
@@ -145,10 +155,10 @@ export function DeveloperSettingsGroup() {
         </table>
       </div>
       <div className="pb-2 text-lg font-bold">Provider Status</div>
-      <div className="mb-4 rounded border border-gray-200 bg-gray-50 p-4">
+      <div className="mb-4 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-200">
+            <tr className="border-b border-gray-200 dark:border-gray-700">
               <th className="pb-2 text-left font-medium">Provider</th>
               <th className="pb-2 text-left font-medium">Status</th>
               <th className="pb-2 text-left font-medium">Details</th>
@@ -158,11 +168,11 @@ export function DeveloperSettingsGroup() {
             {providerEntries.map((entry) => (
               <tr
                 key={entry.label}
-                className="border-b border-gray-100 last:border-0"
+                className="border-b border-gray-100 dark:border-gray-800 last:border-0"
               >
                 <td className="py-2 text-xs">{entry.label}</td>
                 <td className="py-2 text-xs">{channelStatus(entry.channel)}</td>
-                <td className="py-2 font-mono text-xs text-gray-600">
+                <td className="py-2 font-mono text-xs text-gray-600 dark:text-gray-400">
                   {channelDetail(entry.channel)}
                   {entry.note ? ` — ${entry.note}` : ''}
                 </td>

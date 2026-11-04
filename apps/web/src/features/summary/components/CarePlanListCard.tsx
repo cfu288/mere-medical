@@ -25,7 +25,7 @@ export function CarePlanListCard({
               <div className="flex w-full items-center justify-between py-6 text-xl font-extrabold">
                 Care Plan
                 <ChevronDownIcon
-                  className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 ${
+                  className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 dark:active:bg-gray-700 ${
                     open ? 'rotate-180 transform' : ''
                   }`}
                 />
@@ -51,7 +51,7 @@ export function CarePlanListCard({
                               (item) => (
                                 <p
                                   key={item.id}
-                                  className="text-sm font-bold text-gray-900 md:text-base"
+                                  className="text-sm font-bold text-gray-900 dark:text-gray-100 md:text-base"
                                 >
                                   {item.display}
                                 </p>
@@ -62,7 +62,7 @@ export function CarePlanListCard({
                                 (item) => (
                                   <li
                                     key={item.id}
-                                    className="pl-4 text-base text-gray-600"
+                                    className="pl-4 text-base text-gray-600 dark:text-gray-400"
                                   >
                                     {' -    '}
                                     {item.display}

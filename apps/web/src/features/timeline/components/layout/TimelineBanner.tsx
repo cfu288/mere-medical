@@ -12,7 +12,7 @@ export function TimelineBanner({
       <div className="h-6 sm:h-4 w-full" />
       <div className="flex flex-row items-stretch">
         <div className="flex h-full items-center justify-center pl-2 pr-4">
-          <div className="h-12 w-12 rounded-full border-2 border-solid border-white bg-gray-100 md:hidden">
+          <div className="h-12 w-12 rounded-full border-2 border-solid border-white bg-gray-100 dark:bg-gray-800 md:hidden">
             {image ? (
               <img
                 alt="profile"
@@ -21,7 +21,7 @@ export function TimelineBanner({
               ></img>
             ) : (
               <svg
-                className="h-full w-full rounded-full text-gray-800"
+                className="h-full w-full rounded-full text-gray-800 dark:text-gray-200"
                 fill="currentColor"
                 viewBox="0 0 24 24"
               >

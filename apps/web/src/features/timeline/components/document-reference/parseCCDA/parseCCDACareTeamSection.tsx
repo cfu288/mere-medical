@@ -381,26 +381,26 @@ export function DisplayCCDACareTeamSection({
     <Disclosure defaultOpen>
       {({ open }) => (
         <>
-          <Disclosure.Button className="mb-1 w-full rounded-md bg-gray-50 p-1 font-bold">
+          <Disclosure.Button className="mb-1 w-full rounded-md bg-gray-50 dark:bg-gray-800 p-1 font-bold">
             <div className="flex w-full items-center justify-between text-left">
               {data.code?.codeDisplayName || data.title}
               <ChevronRightIcon
-                className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 ${
+                className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 dark:active:bg-gray-700 ${
                   open ? 'rotate-90 transform' : ''
                 }`}
               />
             </div>
           </Disclosure.Button>
-          <Disclosure.Panel className="m-1 text-sm text-gray-900">
-            <div className="bg-gray-50 border-gray-200 overflow-hidden rounded-lg border">
+          <Disclosure.Panel className="m-1 text-sm text-gray-900 dark:text-gray-100">
+            <div className="bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 overflow-hidden rounded-lg border">
               {data.effectiveTime && (
-                <div className="border-t border-gray-200">
+                <div className="border-t border-gray-200 dark:border-gray-700">
                   <dl>
-                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                      <dt className="text-sm font-medium text-gray-500">
+                    <div className="bg-gray-50 dark:bg-gray-800 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
                         Effective Time:
                       </dt>
-                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                      <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2">
                         {parseDateString(data.effectiveTime)}
                       </dd>
                     </div>
@@ -408,13 +408,13 @@ export function DisplayCCDACareTeamSection({
                 </div>
               )}
               {(data.effectiveTimeLow || data.effectiveTimeHigh) && (
-                <div className="border-t border-gray-200">
+                <div className="border-t border-gray-200 dark:border-gray-700">
                   <dl>
-                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                      <dt className="text-sm font-medium text-gray-500">
+                    <div className="bg-gray-50 dark:bg-gray-800 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
                         Effective Time Range:
                       </dt>
-                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                      <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2">
                         <dl className="flex">
                           {data.effectiveTimeLow && (
                             <>
@@ -437,14 +437,14 @@ export function DisplayCCDACareTeamSection({
                 </div>
               )}
               {data.author && data.author.length > 0 && (
-                <div className="border-t border-gray-200">
+                <div className="border-t border-gray-200 dark:border-gray-700">
                   <dl>
-                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                      <dt className="text-sm font-medium text-gray-500">
+                    <div className="bg-gray-50 dark:bg-gray-800 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
                         Authors:
                       </dt>
-                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        <ul className="border border-gray-200 rounded-md divide-y divide-gray-200">
+                      <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2">
+                        <ul className="border border-gray-200 dark:border-gray-700 rounded-md divide-y divide-gray-200 dark:divide-gray-700">
                           {data.author.map((author, index) => (
                             <li
                               key={index}
@@ -490,7 +490,7 @@ export function DisplayCCDACareTeamSection({
                                         <a
                                           key={contactIndex}
                                           href={`${contact.value}`}
-                                          className="text-indigo-600 hover:text-indigo-900"
+                                          className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300"
                                         >
                                           {contact.value}
                                         </a>
@@ -511,15 +511,15 @@ export function DisplayCCDACareTeamSection({
                   (participant) =>
                     participant.participantRole?.playingEntity?.name,
                 ) && (
-                  <div className="border-t border-gray-200">
+                  <div className="border-t border-gray-200 dark:border-gray-700">
                     <dl>
-                      <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                        <dt className="text-sm font-medium text-gray-500">
+                      <div className="bg-gray-50 dark:bg-gray-800 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
                           Participants:
                         </dt>
 
-                        <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                          <ul className="border border-gray-200 rounded-md divide-y divide-gray-200">
+                        <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2">
+                          <ul className="border border-gray-200 dark:border-gray-700 rounded-md divide-y divide-gray-200 dark:divide-gray-700">
                             {data.participant.map((participant, index) => (
                               <li
                                 key={index}
@@ -566,7 +566,7 @@ export function DisplayCCDACareTeamSection({
                                           <a
                                             key={contactIndex}
                                             href={`${contact.value}`}
-                                            className="text-indigo-600 hover:text-indigo-900"
+                                            className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300"
                                           >
                                             {contact.value}
                                           </a>
@@ -583,14 +583,14 @@ export function DisplayCCDACareTeamSection({
                   </div>
                 )}
               {data.performers && data.performers.length > 0 && (
-                <div className="border-t border-gray-200">
+                <div className="border-t border-gray-200 dark:border-gray-700">
                   <dl>
-                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-1 sm:gap-4 sm:px-6">
-                      <dt className="text-sm font-medium text-gray-500">
+                    <div className="bg-gray-50 dark:bg-gray-800 px-4 py-5 sm:grid sm:grid-cols-1 sm:gap-4 sm:px-6">
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
                         Care Team:
                       </dt>
-                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-1">
-                        <ul className="border border-gray-200 rounded-md divide-y divide-gray-200">
+                      <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-1">
+                        <ul className="border border-gray-200 dark:border-gray-700 rounded-md divide-y divide-gray-200 dark:divide-gray-700">
                           {data.performers.map((team, index) => (
                             <li
                               key={index}
@@ -614,7 +614,7 @@ export function DisplayCCDACareTeamSection({
                                     <a
                                       key={contactIndex}
                                       href={`${contact.value}`}
-                                      className="text-indigo-600 hover:text-indigo-900"
+                                      className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300"
                                     >
                                       {contact.value}
                                     </a>

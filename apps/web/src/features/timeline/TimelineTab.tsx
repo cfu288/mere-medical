@@ -83,7 +83,7 @@ export function TimelineTab() {
             ([year, dateMap], yearIndex, yearElements) => (
               <div key={year} className="relative">
                 {/* Vertical line */}
-                <div className="absolute left-8 top-4 h-[calc(100%-12px)] w-[2px] md:w-1 bg-gray-200 z-0 rounded-full" />
+                <div className="absolute left-8 top-4 h-[calc(100%-12px)] w-[2px] md:w-1 bg-gray-200 dark:bg-gray-700 z-0 rounded-full" />
                 <TimelineYearHeader
                   key={`${year}${yearIndex}`}
                   year={year}
@@ -172,15 +172,15 @@ export function TimelineTab() {
                 <SearchBar query={query} setQuery={setQuery} status={status} />
                 {listItems}
                 {(Object.keys(data || {}) || []).length === 0 ? (
-                  <main className="grid min-h-full place-items-center bg-white px-6 py-24 sm:py-32 lg:px-8">
+                  <main className="grid min-h-full place-items-center bg-white dark:bg-gray-900 px-6 py-24 sm:py-32 lg:px-8">
                     <div className="text-center">
-                      <p className="text-base font-semibold text-primary-600">
+                      <p className="text-base font-semibold text-primary-600 dark:text-primary-300">
                         <MagnifyingGlassIcon className="h-12 w-12 mx-auto" />
                       </p>
-                      <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">
+                      <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-5xl">
                         No matching records
                       </h1>
-                      <p className="mt-6 text-lg leading-7 text-gray-700">{`No records found with query: ${query}`}</p>
+                      <p className="mt-6 text-lg leading-7 text-gray-700 dark:text-gray-300">{`No records found with query: ${query}`}</p>
                     </div>
                   </main>
                 ) : null}
@@ -224,7 +224,7 @@ function LoadMoreButton({
     <button
       ref={ref}
       disabled={status === QueryStatus.LOADING_MORE}
-      className="border-1 hover:bg-primary-700 mt-6 w-full rounded border border-gray-300 px-4 py-2 font-bold hover:text-white disabled:bg-gray-100 disabled:text-gray-600"
+      className="border-1 hover:bg-primary-700 mt-6 w-full rounded border border-gray-300 dark:border-gray-600 px-4 py-2 font-bold hover:text-white disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-600 dark:disabled:text-gray-400"
       onClick={loadNextPage}
     >
       {status === QueryStatus.LOADING_MORE

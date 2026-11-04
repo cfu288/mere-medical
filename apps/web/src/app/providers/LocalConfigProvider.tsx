@@ -10,10 +10,15 @@ import {
   AI_DEFAULTS,
   DEFAULT_AI_PROVIDER,
 } from '../../features/ai-chat/constants/defaults';
+import {
+  DEFAULT_THEME_PREFERENCE,
+  ThemePreference,
+} from '../../shared/utils/theme';
 
 interface LocalConfig {
   use_encrypted_database: boolean;
   developer_mode_enabled?: boolean;
+  theme?: ThemePreference;
   experimental_features_enabled?: boolean;
   experimental__use_openai_rag?: boolean;
   experimental__openai_api_key?: string;
@@ -25,6 +30,7 @@ interface LocalConfig {
 const defaultLocalConfig: LocalConfig = {
   use_encrypted_database: false,
   developer_mode_enabled: false,
+  theme: DEFAULT_THEME_PREFERENCE,
   experimental_features_enabled: false,
   experimental__use_openai_rag: false,
   experimental__openai_api_key: '',

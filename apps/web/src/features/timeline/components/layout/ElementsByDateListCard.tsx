@@ -134,11 +134,14 @@ function DocumentListItem({
 
   return (
     <>
-      <li className="text-xs font-medium md:text-sm text-gray-900" ref={ref}>
+      <li
+        className="text-xs font-medium md:text-sm text-gray-900 dark:text-gray-100"
+        ref={ref}
+      >
         {item.metadata?.display_name}
       </li>
       {hasLoadedDocument && hasTextData ? (
-        <p className="w-full min-w-full shadow-inner bg-gray-50 rounded-md my-2 max-h-48 overflow-y-auto overflow-x-auto p-2 sm:prose prose-sm prose-neutral [&_table]:table-auto [&_tr]:border-b [&_caption]:text-center">
+        <p className="w-full min-w-full shadow-inner bg-gray-50 dark:bg-gray-800 rounded-md my-2 max-h-48 overflow-y-auto overflow-x-auto p-2 sm:prose prose-sm dark:prose-invert prose-neutral [&_table]:table-auto [&_tr]:border-b [&_caption]:text-center">
           {sanitizedData}
         </p>
       ) : null}
@@ -156,7 +159,10 @@ function DispayDocumentReferencesOrAttachmentTimelineItem(props: {
   ];
   return (
     <div className="mb-2 ml-2">
-      <TimelineCardCategoryTitle title={'Documents'} color="text-teal-600" />
+      <TimelineCardCategoryTitle
+        title={'Documents'}
+        color="text-teal-600 dark:text-teal-400"
+      />
       <ul className="list-disc list-inside">
         {docsToDisplay.slice(0, 5).map((item) => (
           <DocumentListItem
@@ -164,7 +170,7 @@ function DispayDocumentReferencesOrAttachmentTimelineItem(props: {
             item={item as ClinicalDocument<BundleEntry<DocumentReference>>}
           />
         ))}
-        <p className="text-xs font-medium md:text-sm text-gray-900">
+        <p className="text-xs font-medium md:text-sm text-gray-900 dark:text-gray-100">
           {docsToDisplay.length > 5
             ? `... and ${docsToDisplay.length - 5} more`
             : null}
@@ -548,7 +554,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
     <CardBase>
       <div className="min-w-0 flex-1 flex-col">
         <div
-          className={`text-lg font-bold flex flex-row items-center align-middle sm:text-2xl sm:mb-1 text-primary-600`}
+          className={`text-lg font-bold flex flex-row items-center align-middle sm:text-2xl sm:mb-1 text-primary-600 dark:text-primary-300`}
         >
           {title}
         </div>
@@ -556,8 +562,8 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
           <div className="flex flex-col">
             {connectionDocs.map((conn) =>
               conn?.get('name') ? (
-                <p className="mr-1 flex flex-row align-center items-center text-gray-900 text-sm md:text-base">
-                  <MapPinIcon className="mr-1 h-4 sm:h-5 w-auto inline-block text-primary-700" />
+                <p className="mr-1 flex flex-row align-center items-center text-gray-900 dark:text-gray-100 text-sm md:text-base">
+                  <MapPinIcon className="mr-1 h-4 sm:h-5 w-auto inline-block text-primary-700 dark:text-primary-300" />
                   {conn?.get('name')}
                 </p>
               ) : null,
@@ -566,8 +572,8 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
           <div className="flex flex-col">
             {uniqueAuthors.length > 0 &&
               uniqueAuthors.map((author) => (
-                <p className="mr-1 flex flex-row align-center items-center text-gray-900 text-sm md:text-base">
-                  <UserIcon className="mr-1 h-4 sm:h-5 w-auto inline-block text-primary-700" />
+                <p className="mr-1 flex flex-row align-center items-center text-gray-900 dark:text-gray-100 text-sm md:text-base">
+                  <UserIcon className="mr-1 h-4 sm:h-5 w-auto inline-block text-primary-700 dark:text-primary-300" />
                   {author}
                 </p>
               ))}
@@ -578,20 +584,20 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
             className="absolute inset-0 flex items-center"
             aria-hidden="true"
           >
-            <div className="w-full border-t border-gray-300" />
+            <div className="w-full border-t border-gray-300 dark:border-gray-600" />
           </div>
         </div>
         {encounters.length > 0 && (
           <div className="mb-2 ml-2">
             <TimelineCardCategoryTitle
               title={'Encounters'}
-              color="text-red-500"
+              color="text-red-500 dark:text-red-400"
             />
             <ul className="list-disc list-inside">
               {encounters.map((item) => (
                 <li
                   key={item.id}
-                  className="text-xs font-medium md:text-sm text-gray-900"
+                  className="text-xs font-medium md:text-sm text-gray-900 dark:text-gray-100"
                 >
                   <p className="capitalize inline-block">{`${getEncounterClass(item)} -`}</p>
                   <p className="inline-block ml-1">
@@ -613,12 +619,12 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
           <div className="mb-2 ml-2">
             <TimelineCardCategoryTitle
               title={'Procedures'}
-              color="text-blue-600"
+              color="text-blue-600 dark:text-blue-400"
             />
             <ul className="list-disc list-inside">
               {procedures.map((item) => (
                 <li
-                  className="text-xs font-medium md:text-sm text-gray-900"
+                  className="text-xs font-medium md:text-sm text-gray-900 dark:text-gray-100"
                   key={item.id}
                 >
                   {item.metadata?.display_name}
@@ -631,12 +637,12 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
           <div className="mb-2 ml-2">
             <TimelineCardCategoryTitle
               title={'Lab Panels'}
-              color="text-blue-600"
+              color="text-blue-600 dark:text-blue-400"
             />
             <ul className="list-disc list-inside">
               {diagnosticReports.slice(0, 5).map((item) => (
                 <li
-                  className="text-xs font-medium md:text-sm text-gray-900"
+                  className="text-xs font-medium md:text-sm text-gray-900 dark:text-gray-100"
                   key={item.id}
                 >
                   {item.metadata?.display_name
@@ -644,7 +650,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
                     .replace(/- final/gi, '')}
                 </li>
               ))}
-              <p className="text-xs font-medium md:text-sm text-gray-900">
+              <p className="text-xs font-medium md:text-sm text-gray-900 dark:text-gray-100">
                 {diagnosticReports.length > 5
                   ? `... and ${diagnosticReports.length - 5} more`
                   : null}
@@ -654,11 +660,14 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
         )}
         {observations.length > 0 && (
           <div className="mb-2 ml-2">
-            <TimelineCardCategoryTitle title={'Labs'} color="text-sky-600" />
+            <TimelineCardCategoryTitle
+              title={'Labs'}
+              color="text-sky-600 dark:text-sky-400"
+            />
             <ul className="list-disc list-inside">
               {observations.slice(0, 5).map((item) => (
                 <li
-                  className="text-xs font-medium md:text-sm text-gray-900"
+                  className="text-xs font-medium md:text-sm text-gray-900 dark:text-gray-100"
                   key={item.id}
                 >
                   {item.metadata?.display_name
@@ -666,7 +675,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
                     .replace(/- final/gi, '')}
                 </li>
               ))}
-              <p className="text-xs font-medium md:text-sm text-gray-900">
+              <p className="text-xs font-medium md:text-sm text-gray-900 dark:text-gray-100">
                 {observations.length > 5
                   ? `... and ${observations.length - 5} more`
                   : null}
@@ -678,13 +687,13 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
           <div className="mb-2 ml-2">
             <TimelineCardCategoryTitle
               title={'Immunizations'}
-              color="text-purple-600"
+              color="text-purple-600 dark:text-purple-400"
             />
             <ul className="list-disc list-inside">
               {immunizations.map((item) => (
                 <li
                   key={item.id}
-                  className="text-xs font-medium md:text-sm text-gray-900"
+                  className="text-xs font-medium md:text-sm text-gray-900 dark:text-gray-100"
                 >
                   {item.metadata?.display_name}
                 </li>
@@ -696,12 +705,12 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
           <div className="mb-2 ml-2">
             <TimelineCardCategoryTitle
               title={'Conditions'}
-              color="text-green-600"
+              color="text-green-600 dark:text-green-400"
             />
             <ul className="list-disc list-inside">
               {conditions.map((item) => (
                 <li
-                  className="text-xs font-medium md:text-sm text-gray-900"
+                  className="text-xs font-medium md:text-sm text-gray-900 dark:text-gray-100"
                   key={item.id}
                 >
                   {item.metadata?.display_name}
@@ -716,12 +725,12 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
           <div className="mb-2 ml-2">
             <TimelineCardCategoryTitle
               title={'Medications'}
-              color="text-fuchsia-600"
+              color="text-fuchsia-600 dark:text-fuchsia-400"
             />
             <ul className="list-disc list-inside">
               {medicationStatements.map((item) => (
                 <li
-                  className="text-xs font-medium md:text-sm text-gray-900"
+                  className="text-xs font-medium md:text-sm text-gray-900 dark:text-gray-100"
                   key={item.id}
                 >
                   {item.metadata?.display_name}
@@ -729,7 +738,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
               ))}
               {medicationRequests.map((item) => (
                 <li
-                  className="text-xs font-medium md:text-sm text-gray-900"
+                  className="text-xs font-medium md:text-sm text-gray-900 dark:text-gray-100"
                   key={item.id}
                 >
                   {item.metadata?.display_name}
@@ -737,7 +746,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
               ))}
               {medicationOrders.map((item) => (
                 <li
-                  className="text-xs font-medium md:text-sm text-gray-900"
+                  className="text-xs font-medium md:text-sm text-gray-900 dark:text-gray-100"
                   key={item.id}
                 >
                   {getMedicationOrderDisplayName(item)}
@@ -750,12 +759,12 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
           <div className="mb-2 ml-2">
             <TimelineCardCategoryTitle
               title={'Coverage'}
-              color="text-amber-600"
+              color="text-amber-600 dark:text-amber-400"
             />
             <ul className="list-disc list-inside">
               {coverages.map((item) => (
                 <li
-                  className="text-xs font-medium md:text-sm text-gray-900"
+                  className="text-xs font-medium md:text-sm text-gray-900 dark:text-gray-100"
                   key={item.id}
                 >
                   {item.metadata?.display_name}
@@ -768,12 +777,12 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
           <div className="mb-2 ml-2">
             <TimelineCardCategoryTitle
               title={'Devices'}
-              color="text-teal-600"
+              color="text-teal-600 dark:text-teal-400"
             />
             <ul className="list-disc list-inside">
               {devices.map((item) => (
                 <li
-                  className="text-xs font-medium md:text-sm text-gray-900"
+                  className="text-xs font-medium md:text-sm text-gray-900 dark:text-gray-100"
                   key={item.id}
                 >
                   {item.metadata?.display_name}
@@ -786,12 +795,12 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
           <div className="mb-2 ml-2">
             <TimelineCardCategoryTitle
               title={'Care Plans'}
-              color="text-indigo-600"
+              color="text-indigo-600 dark:text-indigo-400"
             />
             <ul className="list-disc list-inside">
               {carePlans.map((item) => (
                 <li
-                  className="text-xs font-medium md:text-sm text-gray-900"
+                  className="text-xs font-medium md:text-sm text-gray-900 dark:text-gray-100"
                   key={item.id}
                 >
                   {item.metadata?.display_name}
@@ -804,12 +813,12 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
           <div className="mb-2 ml-2">
             <TimelineCardCategoryTitle
               title={'Care Teams'}
-              color="text-cyan-600"
+              color="text-cyan-600 dark:text-cyan-400"
             />
             <ul className="list-disc list-inside">
               {careTeams.map((item) => (
                 <li
-                  className="text-xs font-medium md:text-sm text-gray-900"
+                  className="text-xs font-medium md:text-sm text-gray-900 dark:text-gray-100"
                   key={item.id}
                 >
                   {item.metadata?.display_name}
@@ -822,12 +831,12 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
           <div className="mb-2 ml-2">
             <TimelineCardCategoryTitle
               title={'Goals'}
-              color="text-emerald-600"
+              color="text-emerald-600 dark:text-emerald-400"
             />
             <ul className="list-disc list-inside">
               {goals.map((item) => (
                 <li
-                  className="text-xs font-medium md:text-sm text-gray-900"
+                  className="text-xs font-medium md:text-sm text-gray-900 dark:text-gray-100"
                   key={item.id}
                 >
                   {item.metadata?.display_name}
@@ -840,12 +849,12 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
           <div className="mb-2 ml-2">
             <TimelineCardCategoryTitle
               title={'Appointments'}
-              color="text-violet-600"
+              color="text-violet-600 dark:text-violet-400"
             />
             <ul className="list-disc list-inside">
               {appointments.map((item) => (
                 <li
-                  className="text-xs font-medium md:text-sm text-gray-900"
+                  className="text-xs font-medium md:text-sm text-gray-900 dark:text-gray-100"
                   key={item.id}
                 >
                   {item.metadata?.display_name}
@@ -858,12 +867,12 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
           <div className="mb-2 ml-2">
             <TimelineCardCategoryTitle
               title={'Specimens'}
-              color="text-orange-600"
+              color="text-orange-600 dark:text-orange-400"
             />
             <ul className="list-disc list-inside">
               {specimens.map((item) => (
                 <li
-                  className="text-xs font-medium md:text-sm text-gray-900"
+                  className="text-xs font-medium md:text-sm text-gray-900 dark:text-gray-100"
                   key={item.id}
                 >
                   {item.metadata?.display_name}
@@ -876,12 +885,12 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
           <div className="mb-2 ml-2">
             <TimelineCardCategoryTitle
               title={'Allergies'}
-              color="text-red-600"
+              color="text-red-600 dark:text-red-400"
             />
             <ul className="list-disc list-inside">
               {allergyIntolerances.map((item) => (
                 <li
-                  className="text-xs font-medium md:text-sm text-gray-900"
+                  className="text-xs font-medium md:text-sm text-gray-900 dark:text-gray-100"
                   key={item.id}
                 >
                   {getAllergyIntoleranceDisplayName(item)}
@@ -895,18 +904,18 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
             className="absolute inset-0 flex items-center"
             aria-hidden="true"
           >
-            <div className="w-full border-t border-gray-300" />
+            <div className="w-full border-t border-gray-300 dark:border-gray-600" />
           </div>
           <div className="relative flex justify-center">
             <button
               type="button"
-              className="inline-flex items-center gap-x-1.5 rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+              className="inline-flex items-center gap-x-1.5 rounded-full bg-white dark:bg-gray-900 px-3 py-1.5 text-sm font-semibold text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
               onClick={() => setExpanded(!expanded)}
             >
               {expanded ? 'View Less' : 'View More'}
 
               <ChevronDownIcon
-                className={`-ml-1 -mr-0.5 h-5 w-5 text-gray-400 duration-150 active:scale-95 active:bg-slate-50 ${expanded ? 'rotate-180 transform' : ''}`}
+                className={`-ml-1 -mr-0.5 h-5 w-5 text-gray-400 duration-150 active:scale-95 active:bg-slate-50 dark:active:bg-gray-700 ${expanded ? 'rotate-180 transform' : ''}`}
                 aria-hidden="true"
               />
             </button>

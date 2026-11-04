@@ -13,6 +13,7 @@ import { DeveloperLogsProvider } from '../app/providers/DeveloperLogsProvider';
 import { LocalConfigProvider } from '../app/providers/LocalConfigProvider';
 import { NotificationProvider } from '../app/providers/NotificationProvider';
 import { RxDbProvider } from '../app/providers/RxDbProvider';
+import { ThemeController } from '../app/providers/ThemeController';
 import { SyncJobProvider } from '../features/sync/SyncJobProvider';
 import { TutorialConfigProvider } from '../features/tutorial/TutorialConfigProvider';
 import { UpdateAppChecker } from '../app/providers/UpdateAppChecker';
@@ -41,6 +42,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <LocalConfigProvider>
+        <ThemeController />
         <DeveloperLogsProvider>
           <TutorialConfigProvider>
             {IS_DEMO !== 'enabled' && <TutorialOverlay />}

@@ -61,14 +61,14 @@ export function UserSwitchDrawer({
                 leaveTo="translate-y-full"
               >
                 <Dialog.Panel className="pointer-events-auto w-full max-h-[85vh] overflow-y-auto">
-                  <div className="flex h-full flex-col bg-white shadow-xl rounded-t-2xl">
+                  <div className="flex h-full flex-col bg-white dark:bg-gray-900 shadow-xl rounded-t-2xl">
                     <div className="flex items-center justify-between px-4 py-6 sm:px-6">
-                      <Dialog.Title className="text-lg font-medium text-gray-900">
+                      <Dialog.Title className="text-lg font-medium text-gray-900 dark:text-gray-100">
                         Switch user
                       </Dialog.Title>
                       <button
                         type="button"
-                        className="rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                        className="rounded-md text-gray-400 hover:text-gray-500 dark:hover:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
                         onClick={onClose}
                       >
                         <span className="sr-only">Close panel</span>
@@ -94,7 +94,7 @@ export function UserSwitchDrawer({
 
                         <button
                           onClick={onAddNewUser}
-                          className="w-full flex items-center justify-center space-x-2 rounded-lg border-2 border-dashed border-gray-300 px-3 py-3 text-gray-600 hover:border-gray-400 hover:text-gray-700 transition-colors"
+                          className="w-full flex items-center justify-center space-x-2 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 px-3 py-3 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
                         >
                           <PlusIcon className="h-5 w-5" />
                           <span className="text-sm font-medium">
@@ -104,7 +104,7 @@ export function UserSwitchDrawer({
                       </div>
                     </div>
 
-                    <div className="border-t border-gray-200 px-4 py-4 sm:px-6">
+                    <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-4 sm:px-6">
                       <button
                         onClick={handleSwitchClick}
                         disabled={

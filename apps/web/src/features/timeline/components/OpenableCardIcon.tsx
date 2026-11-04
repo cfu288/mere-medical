@@ -1,7 +1,7 @@
 export function OpenableCardIcon() {
   return (
     <div className="relative py-2 pr-1">
-      <div className="relative flex justify-center text-gray-700">
+      <div className="relative flex justify-center text-gray-700 dark:text-gray-300">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"

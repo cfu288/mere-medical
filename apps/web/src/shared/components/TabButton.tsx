@@ -26,8 +26,10 @@ export function TabButton({
     >
       <>
         <p
-          className={`font-xs h-5 w-5 text-base md:mr-4 md:h-8 md:w-8 md:text-white ${
-            location === route ? 'text-primary font-bold' : 'text-slate-800'
+          className={`font-xs h-5 w-5 text-base md:mr-4 md:h-8 md:w-8 md:text-white md:dark:text-white ${
+            location === route
+              ? 'text-primary dark:text-primary-300 font-bold'
+              : 'text-slate-800 dark:text-gray-200'
           }`}
         >
           {icon}
@@ -35,15 +37,19 @@ export function TabButton({
         {smallTitle ? (
           <>
             <p
-              className={`hidden md:block pt-1 text-[11px] md:pt-0 md:text-base md:text-white ${
-                location === route ? 'text-primary font-bold' : 'text-slate-800'
+              className={`hidden md:block pt-1 text-[11px] md:pt-0 md:text-base md:text-white md:dark:text-white ${
+                location === route
+                  ? 'text-primary dark:text-primary-300 font-bold'
+                  : 'text-slate-800 dark:text-gray-200'
               }`}
             >
               {title}
             </p>
             <p
-              className={`${!smallTitle ? '' : 'md:hidden'} pt-1 text-[11px] md:pt-0 md:text-base md:text-white ${
-                location === route ? 'text-primary font-bold' : 'text-slate-800'
+              className={`${!smallTitle ? '' : 'md:hidden'} pt-1 text-[11px] md:pt-0 md:text-base md:text-white md:dark:text-white ${
+                location === route
+                  ? 'text-primary dark:text-primary-300 font-bold'
+                  : 'text-slate-800 dark:text-gray-200'
               }`}
             >
               {smallTitle}
@@ -51,8 +57,10 @@ export function TabButton({
           </>
         ) : (
           <p
-            className={`pt-1 text-[11px] md:pt-0 md:text-base md:text-white ${
-              location === route ? 'text-primary font-bold' : 'text-slate-800'
+            className={`pt-1 text-[11px] md:pt-0 md:text-base md:text-white md:dark:text-white ${
+              location === route
+                ? 'text-primary dark:text-primary-300 font-bold'
+                : 'text-slate-800 dark:text-gray-200'
             }`}
           >
             {title}

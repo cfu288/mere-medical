@@ -36,14 +36,14 @@ export function ShowCareTeamDetailsExpandable({
           setClose={toggleOpen}
         />
         <div className="max-h-full scroll-py-3 p-3">
-          <div className="rounded-lg border border-solid border-gray-200 p-4">
+          <div className="rounded-lg border border-solid border-gray-200 dark:border-gray-700 p-4">
             <div className="space-y-4">
               {careTeam?.status && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Status
                   </div>
-                  <div className="col-span-2 text-sm text-gray-900 capitalize">
+                  <div className="col-span-2 text-sm text-gray-900 dark:text-gray-100 capitalize">
                     {careTeam.status}
                   </div>
                 </div>
@@ -51,12 +51,15 @@ export function ShowCareTeamDetailsExpandable({
 
               {careTeam?.category && careTeam.category.length > 0 && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Category
                   </div>
                   <div className="col-span-2 space-y-1">
                     {careTeam.category.map((cat, index) => (
-                      <div key={index} className="text-sm text-gray-900">
+                      <div
+                        key={index}
+                        className="text-sm text-gray-900 dark:text-gray-100"
+                      >
                         {cat.text || cat.coding?.[0]?.display || 'N/A'}
                       </div>
                     ))}
@@ -66,14 +69,14 @@ export function ShowCareTeamDetailsExpandable({
 
               {careTeam?.participant && careTeam.participant.length > 0 && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Participants
                   </div>
                   <div className="col-span-2 space-y-2">
                     {careTeam.participant.map((participant, index) => (
                       <div
                         key={index}
-                        className="text-sm text-gray-900 border-l-2 border-cyan-300 pl-2"
+                        className="text-sm text-gray-900 dark:text-gray-100 border-l-2 border-cyan-300 dark:border-cyan-700 pl-2"
                       >
                         <div className="font-medium">
                           {participant.member?.display ||
@@ -81,7 +84,7 @@ export function ShowCareTeamDetailsExpandable({
                             `Participant ${index + 1}`}
                         </div>
                         {participant.role && participant.role.length > 0 && (
-                          <div className="text-gray-600">
+                          <div className="text-gray-600 dark:text-gray-400">
                             Role:{' '}
                             {participant.role
                               .map((r) => r.text || r.coding?.[0]?.display)
@@ -90,7 +93,7 @@ export function ShowCareTeamDetailsExpandable({
                           </div>
                         )}
                         {participant.period && (
-                          <div className="text-gray-500 text-xs">
+                          <div className="text-gray-500 dark:text-gray-400 text-xs">
                             {formatFullDate(participant.period.start)}
                             {participant.period.end &&
                               ` - ${formatFullDate(participant.period.end)}`}
@@ -104,12 +107,15 @@ export function ShowCareTeamDetailsExpandable({
 
               {careTeam?.reasonCode && careTeam.reasonCode.length > 0 && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Reason
                   </div>
                   <div className="col-span-2 space-y-1">
                     {careTeam.reasonCode.map((reason, index) => (
-                      <div key={index} className="text-sm text-gray-900">
+                      <div
+                        key={index}
+                        className="text-sm text-gray-900 dark:text-gray-100"
+                      >
                         {reason.text || reason.coding?.[0]?.display || 'N/A'}
                       </div>
                     ))}
@@ -120,12 +126,15 @@ export function ShowCareTeamDetailsExpandable({
               {careTeam?.managingOrganization &&
                 careTeam.managingOrganization.length > 0 && (
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm font-semibold text-gray-700">
+                    <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                       Organization
                     </div>
                     <div className="col-span-2 space-y-1">
                       {careTeam.managingOrganization.map((org, index) => (
-                        <div key={index} className="text-sm text-gray-900">
+                        <div
+                          key={index}
+                          className="text-sm text-gray-900 dark:text-gray-100"
+                        >
                           {org.display || org.reference || 'N/A'}
                         </div>
                       ))}

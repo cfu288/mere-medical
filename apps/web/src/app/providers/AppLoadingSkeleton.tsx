@@ -38,7 +38,7 @@ export function AppLoadingSkeleton({ ready }: { ready?: boolean }) {
           </Transition>
         </AppPage>
       </div>
-      <div className="flex-0 md:bg-primary-800 absolute bottom-0 left-0 z-20 w-full bg-slate-50 md:relative md:bottom-auto md:top-0 md:h-full md:w-auto">
+      <div className="flex-0 md:bg-primary-800 md:dark:bg-primary-800 absolute bottom-0 left-0 z-20 w-full bg-slate-50 dark:bg-gray-900 md:relative md:bottom-auto md:top-0 md:h-full md:w-auto">
         <div className="pb-safe md:pb-0 mx-auto flex w-full max-w-3xl justify-around md:h-full md:w-64 md:flex-col md:justify-start">
           <img
             src={logo}
@@ -55,8 +55,10 @@ export function AppLoadingSkeleton({ ready }: { ready?: boolean }) {
               }`}
             >
               <div
-                className={`font-xs h-5 w-5 text-base md:mr-4 md:h-8 md:w-8 md:text-white ${
-                  i === 0 ? 'text-primary font-bold' : 'text-slate-800'
+                className={`font-xs h-5 w-5 text-base md:mr-4 md:h-8 md:w-8 md:text-white md:dark:text-white ${
+                  i === 0
+                    ? 'text-primary dark:text-primary-300 font-bold'
+                    : 'text-slate-800 dark:text-gray-200'
                 }`}
               >
                 <div className="flex animate-pulse flex-row items-center">
@@ -64,8 +66,10 @@ export function AppLoadingSkeleton({ ready }: { ready?: boolean }) {
                 </div>
               </div>
               <div
-                className={`pt-1 text-[11px] text-white md:pt-0 md:text-base md:text-white ${
-                  i === 0 ? 'text-primary font-bold' : 'text-slate-800'
+                className={`pt-1 text-[11px] text-white md:pt-0 md:text-base md:text-white md:dark:text-white ${
+                  i === 0
+                    ? 'text-primary dark:text-primary-300 font-bold'
+                    : 'text-slate-800 dark:text-gray-200'
                 }`}
               >
                 <div className="flex h-4 animate-pulse flex-row items-center">
@@ -78,9 +82,9 @@ export function AppLoadingSkeleton({ ready }: { ready?: boolean }) {
           <div className="border-primary-700 hidden flex-shrink-0 border-t p-4 md:block">
             <div className="group block flex-shrink-0">
               <div className="flex items-center">
-                <div className="inline-block h-10 w-10 rounded-full border-2 border-white bg-slate-100">
+                <div className="inline-block h-10 w-10 rounded-full border-2 border-white bg-slate-100 dark:bg-gray-900">
                   <svg
-                    className="h-full w-full rounded-full text-gray-800"
+                    className="h-full w-full rounded-full text-gray-800 dark:text-gray-200"
                     fill="currentColor"
                     viewBox="0 0 24 24"
                   >

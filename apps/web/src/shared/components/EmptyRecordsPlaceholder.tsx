@@ -4,12 +4,12 @@ import { Routes } from '../../Routes';
 
 export function EmptyRecordsPlaceholder() {
   return (
-    <div className="relative flex h-full w-full flex-col justify-center bg-gray-100 p-10 align-middle">
+    <div className="relative flex h-full w-full flex-col justify-center bg-gray-100 dark:bg-gray-800 p-10 align-middle">
       <div>
-        <h1 className="text-primary-700 text-4xl font-bold">
+        <h1 className="text-primary-700 dark:text-primary-300 text-4xl font-bold">
           Link your medical records
         </h1>
-        <p className="mt-2 max-w-96 text-xl text-gray-800">
+        <p className="mt-2 max-w-96 text-xl text-gray-800 dark:text-gray-200">
           Get started by connecting to a patient portal
         </p>
         <div className="mt-8">

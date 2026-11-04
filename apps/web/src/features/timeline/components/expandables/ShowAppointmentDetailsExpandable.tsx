@@ -34,14 +34,14 @@ export function ShowAppointmentDetailsExpandable({
           setClose={toggleOpen}
         />
         <div className="max-h-full scroll-py-3 p-3">
-          <div className="rounded-lg border border-solid border-gray-200 p-4">
+          <div className="rounded-lg border border-solid border-gray-200 dark:border-gray-700 p-4">
             <div className="space-y-4">
               {appointment?.status && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Status
                   </div>
-                  <div className="col-span-2 text-sm text-gray-900 capitalize">
+                  <div className="col-span-2 text-sm text-gray-900 dark:text-gray-100 capitalize">
                     {appointment.status}
                   </div>
                 </div>
@@ -49,10 +49,10 @@ export function ShowAppointmentDetailsExpandable({
 
               {appointment?.appointmentType?.text && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Type
                   </div>
-                  <div className="col-span-2 text-sm text-gray-900">
+                  <div className="col-span-2 text-sm text-gray-900 dark:text-gray-100">
                     {appointment.appointmentType.text ||
                       appointment.appointmentType.coding?.[0]?.display}
                   </div>
@@ -62,12 +62,15 @@ export function ShowAppointmentDetailsExpandable({
               {appointment?.serviceType &&
                 appointment.serviceType.length > 0 && (
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm font-semibold text-gray-700">
+                    <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                       Service
                     </div>
                     <div className="col-span-2 space-y-1">
                       {appointment.serviceType.map((service, index) => (
-                        <div key={index} className="text-sm text-gray-900">
+                        <div
+                          key={index}
+                          className="text-sm text-gray-900 dark:text-gray-100"
+                        >
                           {service.text ||
                             service.coding?.[0]?.display ||
                             'N/A'}
@@ -79,10 +82,10 @@ export function ShowAppointmentDetailsExpandable({
 
               {appointment?.description && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Description
                   </div>
-                  <div className="col-span-2 text-sm text-gray-900">
+                  <div className="col-span-2 text-sm text-gray-900 dark:text-gray-100">
                     {appointment.description}
                   </div>
                 </div>
@@ -90,10 +93,10 @@ export function ShowAppointmentDetailsExpandable({
 
               {appointment?.start && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Start
                   </div>
-                  <div className="col-span-2 text-sm text-gray-900">
+                  <div className="col-span-2 text-sm text-gray-900 dark:text-gray-100">
                     {formatFullDateWithTime(appointment.start)}
                   </div>
                 </div>
@@ -101,8 +104,10 @@ export function ShowAppointmentDetailsExpandable({
 
               {appointment?.end && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">End</div>
-                  <div className="col-span-2 text-sm text-gray-900">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    End
+                  </div>
+                  <div className="col-span-2 text-sm text-gray-900 dark:text-gray-100">
                     {formatFullDateWithTime(appointment.end)}
                   </div>
                 </div>
@@ -110,10 +115,10 @@ export function ShowAppointmentDetailsExpandable({
 
               {appointment?.minutesDuration && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Duration
                   </div>
-                  <div className="col-span-2 text-sm text-gray-900">
+                  <div className="col-span-2 text-sm text-gray-900 dark:text-gray-100">
                     {appointment.minutesDuration} minutes
                   </div>
                 </div>
@@ -122,14 +127,14 @@ export function ShowAppointmentDetailsExpandable({
               {appointment?.participant &&
                 appointment.participant.length > 0 && (
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm font-semibold text-gray-700">
+                    <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                       Participants
                     </div>
                     <div className="col-span-2 space-y-2">
                       {appointment.participant.map((participant, index) => (
                         <div
                           key={index}
-                          className="text-sm text-gray-900 border-l-2 border-violet-300 pl-2"
+                          className="text-sm text-gray-900 dark:text-gray-100 border-l-2 border-violet-300 dark:border-violet-700 pl-2"
                         >
                           <div className="font-medium">
                             {participant.actor?.display ||
@@ -137,7 +142,7 @@ export function ShowAppointmentDetailsExpandable({
                               `Participant ${index + 1}`}
                           </div>
                           {participant.type && participant.type.length > 0 && (
-                            <div className="text-gray-600">
+                            <div className="text-gray-600 dark:text-gray-400">
                               {participant.type
                                 .map((t) => t.text || t.coding?.[0]?.display)
                                 .filter(Boolean)
@@ -145,7 +150,7 @@ export function ShowAppointmentDetailsExpandable({
                             </div>
                           )}
                           {participant.status && (
-                            <div className="text-gray-500 text-xs capitalize">
+                            <div className="text-gray-500 dark:text-gray-400 text-xs capitalize">
                               {participant.status}
                             </div>
                           )}
@@ -157,12 +162,15 @@ export function ShowAppointmentDetailsExpandable({
 
               {appointment?.reasonCode && appointment.reasonCode.length > 0 && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Reason
                   </div>
                   <div className="col-span-2 space-y-1">
                     {appointment.reasonCode.map((reason, index) => (
-                      <div key={index} className="text-sm text-gray-900">
+                      <div
+                        key={index}
+                        className="text-sm text-gray-900 dark:text-gray-100"
+                      >
                         {reason.text || reason.coding?.[0]?.display || 'N/A'}
                       </div>
                     ))}
@@ -172,10 +180,10 @@ export function ShowAppointmentDetailsExpandable({
 
               {appointment?.comment && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Comment
                   </div>
-                  <div className="col-span-2 text-sm text-gray-900">
+                  <div className="col-span-2 text-sm text-gray-900 dark:text-gray-100">
                     {appointment.comment}
                   </div>
                 </div>
@@ -183,10 +191,10 @@ export function ShowAppointmentDetailsExpandable({
 
               {appointment?.patientInstruction && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Instructions
                   </div>
-                  <div className="col-span-2 text-sm text-gray-900">
+                  <div className="col-span-2 text-sm text-gray-900 dark:text-gray-100">
                     {appointment.patientInstruction}
                   </div>
                 </div>

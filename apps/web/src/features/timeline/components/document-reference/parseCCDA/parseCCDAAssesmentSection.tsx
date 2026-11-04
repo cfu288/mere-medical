@@ -52,18 +52,18 @@ export function DisplayCCDAAssesmentSection({
     <Disclosure defaultOpen>
       {({ open }) => (
         <>
-          <Disclosure.Button className="mb-1 w-full rounded-md bg-gray-50 p-1 font-bold">
+          <Disclosure.Button className="mb-1 w-full rounded-md bg-gray-50 dark:bg-gray-800 p-1 font-bold">
             <div className="flex w-full items-center justify-between text-left">
               {data.title}
               <ChevronRightIcon
-                className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 ${
+                className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 dark:active:bg-gray-700 ${
                   open ? 'rotate-90 transform' : ''
                 }`}
               />
             </div>
           </Disclosure.Button>
-          <Disclosure.Panel className="m-1 text-sm text-gray-800">
-            <div className="sm:prose prose-sm max-w-none [&_table]:table-auto [&_tr]:border-b [&_caption]:text-center">
+          <Disclosure.Panel className="m-1 text-sm text-gray-800 dark:text-gray-200">
+            <div className="sm:prose prose-sm dark:prose-invert max-w-none [&_table]:table-auto [&_tr]:border-b [&_caption]:text-center">
               {sanitizedContent}
             </div>
           </Disclosure.Panel>

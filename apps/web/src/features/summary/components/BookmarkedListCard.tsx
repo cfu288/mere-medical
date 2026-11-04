@@ -20,7 +20,7 @@ export function BookmarkedListCard({
               <div className="flex w-full items-center justify-between py-6 text-xl font-extrabold">
                 Bookmarked Labs
                 <ChevronDownIcon
-                  className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 ${
+                  className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 dark:active:bg-gray-700 ${
                     open ? 'rotate-180 transform ' : ''
                   }`}
                 />
@@ -39,7 +39,7 @@ export function BookmarkedListCard({
                   <div className="min-w-0 flex-1">
                     {items.length > 0 ? (
                       <>
-                        <div className="grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-200 p-2 px-4 text-gray-800">
+                        <div className="grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-200 dark:border-gray-700 p-2 px-4 text-gray-800 dark:text-gray-200">
                           <div className="col-span-3 text-sm font-semibold">
                             Name
                           </div>
@@ -57,10 +57,10 @@ export function BookmarkedListCard({
                       </>
                     ) : (
                       <div className="mx-4 flex flex-col py-6">
-                        <div className="self-center font-semibold text-gray-700">
+                        <div className="self-center font-semibold text-gray-700 dark:text-gray-300">
                           Bookmark some labs to see them here
                         </div>
-                        <p className="self-center text-gray-600">
+                        <p className="self-center text-gray-600 dark:text-gray-400">
                           Bookmarking labs will allow you to quickly access them
                           here. You can bookmark labs from the timeline by
                           selecting the{' '}

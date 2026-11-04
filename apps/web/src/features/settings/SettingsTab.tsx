@@ -7,6 +7,7 @@ import { AppPage } from '../../shared/components/AppPage';
 import { GenericBanner } from '../../shared/components/GenericBanner';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import { AboutMereSettingsGroup } from './components/AboutMereSettingsGroup';
+import { AppearanceSettingsGroup } from './components/AppearanceSettingsGroup';
 import { DeveloperSettingsGroup } from './components/DeveloperSettingsGroup';
 import { PrivacyAndSecuritySettingsGroup } from './components/PrivacyAndSecuritySettingsGroup';
 import { UserCard } from './components/UserCard';
@@ -110,7 +111,7 @@ const SettingsTab: React.FC = () => {
           <div className="text-xl font-extrabold">About Me</div>
           <button
             onClick={() => setShowUserSwitcher(true)}
-            className="text-primary-600 hover:text-primary-700 text-sm font-medium px-3 py-1 rounded-md hover:bg-primary-50 transition-colors"
+            className="text-primary-600 dark:text-primary-300 hover:text-primary-700 dark:hover:text-primary-200 text-sm font-medium px-3 py-1 rounded-md hover:bg-primary-50 dark:hover:bg-primary-900 transition-colors"
           >
             Switch User
           </button>
@@ -118,6 +119,7 @@ const SettingsTab: React.FC = () => {
       </div>
       <UserCard />
       <div className="mx-auto flex max-w-4xl flex-col gap-x-4 px-4 pb-20 pt-2 sm:px-6 sm:pb-6 lg:px-8">
+        <AppearanceSettingsGroup />
         <PrivacyAndSecuritySettingsGroup />
         <UserDataSettingsGroup />
         <AboutMereSettingsGroup />

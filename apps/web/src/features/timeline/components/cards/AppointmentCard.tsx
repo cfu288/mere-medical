@@ -30,17 +30,17 @@ export const AppointmentCard = memo(function AppointmentCard({
           <div className="items-top flex justify-between">
             <TimelineCardCategoryTitle
               title="Appointment"
-              color="text-violet-600"
+              color="text-violet-600 dark:text-violet-400"
             />
             <OpenableCardIcon />
           </div>
 
           <TimelineCardTitle>{item.metadata?.display_name}</TimelineCardTitle>
-          <p className="truncate text-xs font-medium text-gray-800 md:text-sm">
+          <p className="truncate text-xs font-medium text-gray-800 dark:text-gray-200 md:text-sm">
             {formatDateAndTime(item.metadata?.date)}
           </p>
           {conn?.get('name') ? (
-            <p className="truncate text-xs font-medium text-gray-700 md:text-sm">
+            <p className="truncate text-xs font-medium text-gray-700 dark:text-gray-300 md:text-sm">
               {conn?.get('name')}
             </p>
           ) : (
