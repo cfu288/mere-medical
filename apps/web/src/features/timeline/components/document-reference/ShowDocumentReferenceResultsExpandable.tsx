@@ -33,6 +33,7 @@ export function ShowDocumentResultsExpandable({
     // Url-fetched attachments are stored under their url, inline
     // Attachment.data content under `{DocumentReference metadata.id}/attachment`
     attachment = useClinicalDoc(
+      item.connection_record_id,
       attachmentUrl ||
         (item.metadata?.id ? `${item.metadata.id}/attachment` : undefined),
     ),
@@ -51,22 +52,18 @@ export function ShowDocumentResultsExpandable({
         );
         setHasLoadedDocument(true);
       } else if (
-        attachment
-          .get('data_record.content_type')
-          ?.includes('application/xml') &&
-        checkIfXmlIsCCDA(attachment.get('data_record.raw'))
+        attachment.data_record.content_type?.includes('application/xml') &&
+        checkIfXmlIsCCDA(attachment.data_record.raw as string)
       ) {
-        const parsedDoc = parseCCDA(attachment.get('data_record.raw'));
+        const parsedDoc = parseCCDA(attachment.data_record.raw as string);
         setHasLoadedDocument(true);
         setCCDA(parsedDoc);
       } else if (
-        attachment
-          .get('data_record.content_type')
-          ?.includes('application/pdf') &&
-        typeof attachment.get('data_record.raw') === 'string'
+        attachment.data_record.content_type?.includes('application/pdf') &&
+        typeof attachment.data_record.raw === 'string'
       ) {
         try {
-          const base64 = attachment.get('data_record.raw');
+          const base64 = attachment.data_record.raw;
           const byteCharacters = atob(base64);
           const byteNumbers = new Array(byteCharacters.length);
           for (let i = 0; i < byteCharacters.length; i++) {
@@ -85,21 +82,21 @@ export function ShowDocumentResultsExpandable({
           setHasLoadedDocument(true);
         }
       } else if (
-        attachment.get('data_record.content_type')?.includes('text/html') &&
-        typeof attachment.get('data_record.raw') === 'string'
+        attachment.data_record.content_type?.includes('text/html') &&
+        typeof attachment.data_record.raw === 'string'
       ) {
         const sanitizedData = parse(
-          DOMPurify.sanitize(attachment.get('data_record.raw')),
+          DOMPurify.sanitize(attachment.data_record.raw),
         );
         setHtml(sanitizedData);
         setHasLoadedDocument(true);
       } else if (
-        attachment.get('data_record.content_type')?.includes('text/plain') &&
-        typeof attachment.get('data_record.raw') === 'string'
+        attachment.data_record.content_type?.includes('text/plain') &&
+        typeof attachment.data_record.raw === 'string'
       ) {
         setHtml(
           <pre className="whitespace-pre-wrap">
-            {attachment.get('data_record.raw')}
+            {attachment.data_record.raw}
           </pre>,
         );
         setHasLoadedDocument(true);
@@ -107,10 +104,10 @@ export function ShowDocumentResultsExpandable({
         console.error(
           '[ShowDocumentResultsExpandable] Attachment exists but cannot be displayed:',
           {
-            contentType: attachment.get('data_record.content_type'),
-            hasRaw: !!attachment.get('data_record.raw'),
-            rawType: typeof attachment.get('data_record.raw'),
-            rawValue: attachment.get('data_record.raw'),
+            contentType: attachment.data_record.content_type,
+            hasRaw: !!attachment.data_record.raw,
+            rawType: typeof attachment.data_record.raw,
+            rawValue: attachment.data_record.raw,
           },
         );
         setHasLoadedDocument(true);

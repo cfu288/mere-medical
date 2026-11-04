@@ -42,36 +42,9 @@ export async function userExists(
   return users.length > 0;
 }
 
-export async function findSelectedUserWithDoc(
-  db: RxDatabase<DatabaseCollections>,
-): Promise<{
-  user: UserDocument;
-  rawUser: RxDocument<UserDocument> | null;
-}> {
-  const rawUser = await db.user_documents
-    .findOne({ selector: { is_selected_user: true } })
-    .exec();
-
-  return {
-    user: rawUser
-      ? ({ ...defaultUser, ...rawUser.toMutableJSON() } as UserDocument)
-      : defaultUser,
-    rawUser: rawUser as RxDocument<UserDocument> | null,
-  };
-}
-
-export async function findAllUsersWithDocs(
-  db: RxDatabase<DatabaseCollections>,
-): Promise<RxDocument<UserDocument>[]> {
-  return db.user_documents.find().exec();
-}
-
 export function watchSelectedUser(
   db: RxDatabase<DatabaseCollections>,
-): Observable<{
-  user: UserDocument;
-  rawUser: RxDocument<UserDocument> | null;
-}> {
+): Observable<{ user: UserDocument }> {
   return db.user_documents
     .findOne({ selector: { is_selected_user: true } })
     .$.pipe(
@@ -80,7 +53,6 @@ export function watchSelectedUser(
           ...defaultUser,
           ...item?.toMutableJSON(),
         } as UserDocument,
-        rawUser: item as RxDocument<UserDocument> | null,
       })),
     );
 }
@@ -130,7 +102,7 @@ export async function createDefaultUserIfNone(
 export async function updateUser(
   db: RxDatabase<DatabaseCollections>,
   id: string,
-  updates: Partial<UserDocument>,
+  updates: Omit<Partial<UserDocument>, 'id'>,
 ): Promise<void> {
   const doc = await db.user_documents.findOne({ selector: { id } }).exec();
 

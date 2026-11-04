@@ -99,47 +99,6 @@ describe('userRepository', () => {
         expect(result).toBe(false);
       });
     });
-
-    describe('findSelectedUserWithDoc', () => {
-      it('returns both user object and RxDocument', async () => {
-        const selectedUser = createSelectedTestUser({ first_name: 'Test' });
-        await db.user_documents.insert(selectedUser);
-
-        const result = await userRepo.findSelectedUserWithDoc(db);
-
-        expect(result.user).toBeTruthy();
-        expect(result.user.first_name).toBe('Test');
-        expect(result.rawUser).toBeTruthy();
-        expect(typeof result.rawUser?.update).toBe('function');
-      });
-
-      it('returns default user when no selected user exists', async () => {
-        const result = await userRepo.findSelectedUserWithDoc(db);
-
-        expect(result.user).toBeTruthy();
-        expect(result.user.is_default_user).toBe(true);
-        expect(result.user.is_selected_user).toBe(true);
-        expect(result.rawUser).toBeNull();
-      });
-    });
-
-    describe('findAllUsersWithDocs', () => {
-      it('returns RxDocuments for all users', async () => {
-        const users = createMultipleTestUsers(2);
-        for (const user of users) {
-          await db.user_documents.insert(user);
-        }
-
-        const result = await userRepo.findAllUsersWithDocs(db);
-
-        expect(result).toHaveLength(2);
-        result.forEach((doc) => {
-          expect(typeof doc.update).toBe('function');
-        });
-        const firstNames = result.map((d) => d.get('first_name')).sort();
-        expect(firstNames).toEqual(['Test1', 'Test2']);
-      });
-    });
   });
 
   describe('reactive functions', () => {
@@ -261,6 +220,15 @@ describe('userRepository', () => {
     });
 
     describe('updateUser', () => {
+      it('takes no change to the id', () => {
+        const idChange: Parameters<typeof userRepo.updateUser>[2] = {
+          // @ts-expect-error the id cannot change
+          id: 'user-2',
+        };
+
+        expect(idChange).toEqual({ id: 'user-2' });
+      });
+
       it('updates existing user', async () => {
         const user = createTestUser({ first_name: 'Original' });
         await db.user_documents.insert(user);

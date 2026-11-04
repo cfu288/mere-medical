@@ -2,13 +2,14 @@ import { useCallback, useEffect, useReducer, useRef } from 'react';
 import { format, parseISO } from 'date-fns';
 import { useDebounceCallback } from '@react-hook/debounce';
 import { BundleEntry, FhirResource } from 'fhir/r2';
-import { MangoQuerySelector, RxDatabase } from 'rxdb';
+import { RxDatabase } from 'rxdb';
 import { useRxDb } from '../../../app/providers/RxDbProvider';
 import { useUser } from '../../../app/providers/UserProvider';
 import { DatabaseCollections } from '../../../app/providers/DatabaseCollections';
 import { ClinicalDocument } from '../../../models/clinical-document/ClinicalDocument.type';
 import { QueryStatus, RecordsByDate } from '../types';
 import { fetchRecords, PAGE_SIZE } from '../TimelineTab';
+import { findTimelineDocuments } from '../../../repositories/ClinicalDocumentRepository';
 
 export const GROUPED_VIEW_BATCH_SIZE = 250;
 
@@ -18,31 +19,10 @@ export async function fetchRawRecords(
   offset: number,
   limit: number,
 ): Promise<ClinicalDocument<BundleEntry<FhirResource>>[]> {
-  const selector: MangoQuerySelector<ClinicalDocument<unknown>> = {
-    user_id: user_id,
-    'data_record.resource_type': {
-      $nin: [
-        'patient',
-        'careplan',
-        'documentreference_attachment',
-        'provenance',
-      ],
-    },
-    'metadata.date': { $nin: [null, undefined, ''] },
-  };
-
-  const docs = await db.clinical_documents
-    .find({
-      selector,
-      sort: [{ 'metadata.date': 'desc' }],
-    })
-    .skip(offset)
-    .limit(limit)
-    .exec();
-
-  return docs.map(
-    (doc) => doc.toMutableJSON() as ClinicalDocument<BundleEntry<FhirResource>>,
-  );
+  return findTimelineDocuments<BundleEntry<FhirResource>>(db, user_id, {
+    skip: offset,
+    limit,
+  });
 }
 
 export function getRecordDateKey(

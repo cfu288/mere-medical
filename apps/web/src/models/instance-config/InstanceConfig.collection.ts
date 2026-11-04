@@ -10,9 +10,8 @@ export const instanceConfigSchemaTyped = toTypedRxJsonSchema(
   instanceConfigSchemaLiteral,
 );
 
-type InstanceConfigDocumentType = ExtractDocumentTypeFromTypedRxJsonSchema<
-  typeof instanceConfigSchemaTyped
->;
+export type InstanceConfigDocumentType =
+  ExtractDocumentTypeFromTypedRxJsonSchema<typeof instanceConfigSchemaTyped>;
 
 export const InstanceConfigDocumentSchema: RxJsonSchema<InstanceConfigDocumentType> =
   instanceConfigSchemaLiteral;

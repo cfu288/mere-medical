@@ -38,7 +38,7 @@ export const useConnectionRepository = () => {
       update: (
         userId: string,
         connectionId: string,
-        updates: Partial<ConnectionDocument>,
+        updates: Partial<AnyConnectionDocument>,
       ) => connectionRepo.updateConnection(db, userId, connectionId, updates),
       updateToken: (
         userId: string,

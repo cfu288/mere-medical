@@ -14,15 +14,13 @@ export const useUserRepository = () => {
       findSelectedUser: () => userRepo.findSelectedUser(db),
       findAll: () => userRepo.findAllUsers(db),
       exists: () => userRepo.userExists(db),
-      findSelectedUserWithDoc: () => userRepo.findSelectedUserWithDoc(db),
-      findAllUsersWithDocs: () => userRepo.findAllUsersWithDocs(db),
       watchSelectedUser: () => userRepo.watchSelectedUser(db),
       watchAllUsers: () => userRepo.watchAllUsers(db),
       watchAllUsersWithDocs: () => userRepo.watchAllUsersWithDocs(db),
       create: (userData: Partial<UserDocument>) =>
         userRepo.createUser(db, userData),
       createDefaultUserIfNone: () => userRepo.createDefaultUserIfNone(db),
-      update: (id: string, updates: Partial<UserDocument>) =>
+      update: (id: string, updates: Omit<Partial<UserDocument>, 'id'>) =>
         userRepo.updateUser(db, id, updates),
       switchUser: (toUserId: string) => userRepo.switchUser(db, toUserId),
       delete: (id: string) => userRepo.deleteUser(db, id),

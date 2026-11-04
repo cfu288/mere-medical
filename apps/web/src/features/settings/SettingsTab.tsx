@@ -1,7 +1,7 @@
 import { BundleEntry, Patient } from 'fhir/r2';
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { RxDatabase, RxDocument } from 'rxdb';
+import { RxDatabase } from 'rxdb';
 
 import { AppPage } from '../../shared/components/AppPage';
 import { GenericBanner } from '../../shared/components/GenericBanner';
@@ -12,30 +12,30 @@ import { PrivacyAndSecuritySettingsGroup } from './components/PrivacyAndSecurity
 import { UserCard } from './components/UserCard';
 import { UserDataSettingsGroup } from './components/UserDataSettingsGroup';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
+import { findAllDocumentsByResourceTypes } from '../../repositories/ClinicalDocumentRepository';
 import { ExperimentalSettingsGroup } from './components/ExperimentalSettingsGroup';
 import { UserSwitchModal } from './components/UserSwitchModal';
 import { UserSwitchDrawer } from './components/UserSwitchDrawer';
 import { AddUserModal } from './components/AddUserModal';
 
-export function fetchPatientRecords(
+/**
+ * Reads the user's patient records, newest first. The user card shows the
+ * name and details from them.
+ *
+ * @param db `RxDatabase<DatabaseCollections>`.
+ * @param user_id `string`. The user who owns the records.
+ * @returns `Promise<ClinicalDocument<BundleEntry<Patient>>[]>`.
+ *
+ * @example
+ * const patients = await fetchPatientRecords(db, user.id);
+ */
+export async function fetchPatientRecords(
   db: RxDatabase<DatabaseCollections>,
   user_id: string,
 ) {
-  return db.clinical_documents
-    .find({
-      selector: {
-        'data_record.resource_type': `patient`,
-        user_id: user_id,
-      },
-      sort: [{ 'metadata.date': 'desc' }],
-    })
-    .exec()
-    .then((list) => {
-      const lst = list as unknown as RxDocument<
-        ClinicalDocument<BundleEntry<Patient>>
-      >[];
-      return lst;
-    });
+  return findAllDocumentsByResourceTypes<BundleEntry<Patient>>(db, user_id, [
+    'patient',
+  ]);
 }
 
 export function parseGivenName(
