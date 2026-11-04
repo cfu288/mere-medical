@@ -14,8 +14,6 @@ export const useUserRepository = () => {
       findSelectedUser: () => userRepo.findSelectedUser(db),
       findAll: () => userRepo.findAllUsers(db),
       exists: () => userRepo.userExists(db),
-      findSelectedUserWithDoc: () => userRepo.findSelectedUserWithDoc(db),
-      findAllUsersWithDocs: () => userRepo.findAllUsersWithDocs(db),
       watchSelectedUser: () => userRepo.watchSelectedUser(db),
       watchAllUsers: () => userRepo.watchAllUsers(db),
       watchAllUsersWithDocs: () => userRepo.watchAllUsersWithDocs(db),
