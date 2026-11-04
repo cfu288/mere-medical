@@ -1,10 +1,16 @@
-import { MangoQuerySelector, RxDatabase } from 'rxdb';
+import { MangoQuerySelector, RxDatabase, RxDocument } from 'rxdb';
 import { DatabaseCollections } from '../app/providers/DatabaseCollections';
 import {
   ClinicalDocument,
   ClinicalDocumentResourceType,
   CreateClinicalDocument,
 } from '../models/clinical-document/ClinicalDocument.type';
+
+function toPlainRecord<T>(
+  doc: RxDocument<ClinicalDocument>,
+): ClinicalDocument<T> {
+  return doc.toMutableJSON() as unknown as ClinicalDocument<T>;
+}
 
 export async function deleteDocumentsByConnectionId(
   db: RxDatabase<DatabaseCollections>,
@@ -55,9 +61,7 @@ export async function findDocumentsByResourceType<T>(
     })
     .exec();
 
-  return docs.map(
-    (doc) => doc.toMutableJSON() as unknown as ClinicalDocument<T>,
-  );
+  return docs.map((doc) => toPlainRecord<T>(doc));
 }
 
 export async function documentExistsByMetadataId(
@@ -127,9 +131,7 @@ export async function findTimelineDocuments<T>(
     .skip(page.skip)
     .limit(page.limit)
     .exec();
-  return docs.map(
-    (doc) => doc.toMutableJSON() as unknown as ClinicalDocument<T>,
-  );
+  return docs.map((doc) => toPlainRecord<T>(doc));
 }
 
 /**
@@ -160,9 +162,7 @@ export async function findDocumentsByLoincCodes<T>(
       },
     })
     .exec();
-  return docs.map(
-    (doc) => doc.toMutableJSON() as unknown as ClinicalDocument<T>,
-  );
+  return docs.map((doc) => toPlainRecord<T>(doc));
 }
 
 /**
@@ -193,9 +193,7 @@ export async function findDocumentsByMetadataIds<T>(
       },
     })
     .exec();
-  return docs.map(
-    (doc) => doc.toMutableJSON() as unknown as ClinicalDocument<T>,
-  );
+  return docs.map((doc) => toPlainRecord<T>(doc));
 }
 
 /**
@@ -225,9 +223,7 @@ export async function findDatedDocumentsByResourceTypes<T>(
       sort: [{ 'metadata.date': 'desc' }],
     })
     .exec();
-  return docs.map(
-    (doc) => doc.toMutableJSON() as unknown as ClinicalDocument<T>,
-  );
+  return docs.map((doc) => toPlainRecord<T>(doc));
 }
 
 /**
@@ -257,9 +253,7 @@ export async function findAllDocumentsByResourceTypes<T>(
       sort: [{ 'metadata.date': 'desc' }],
     })
     .exec();
-  return docs.map(
-    (doc) => doc.toMutableJSON() as unknown as ClinicalDocument<T>,
-  );
+  return docs.map((doc) => toPlainRecord<T>(doc));
 }
 
 /**
@@ -283,9 +277,7 @@ export async function findDocumentsByIds<T>(
   const found = await db.clinical_documents.findByIds(ids);
   return ids.flatMap((id) => {
     const doc = found.get(id);
-    return doc && doc.user_id === userId
-      ? [doc.toMutableJSON() as unknown as ClinicalDocument<T>]
-      : [];
+    return doc && doc.user_id === userId ? [toPlainRecord<T>(doc)] : [];
   });
 }
 

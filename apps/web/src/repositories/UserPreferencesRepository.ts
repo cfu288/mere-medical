@@ -6,6 +6,21 @@ import { UserPreferencesDocument } from '../models/user-preferences/UserPreferen
 import uuid4 from '../shared/utils/UUIDUtils';
 
 /**
+ * The preferences a user starts with, before they change any setting.
+ *
+ * @param userId `string`.
+ * @returns `UserPreferencesDocument`. A new id, the user, and proxy sync off.
+ *
+ * @example
+ * const preferences = defaultUserPreferences(user.id); // { id: '<new uuid>', user_id: user.id, use_proxy: false }
+ */
+export function defaultUserPreferences(
+  userId: string,
+): UserPreferencesDocument {
+  return { id: uuid4(), user_id: userId, use_proxy: false };
+}
+
+/**
  * Creates default preferences for a user who has none. The preferences
  * provider calls it before it reads the preferences.
  *
@@ -26,11 +41,7 @@ export async function createUserPreferencesIfNone(
   if (doc) {
     return false;
   }
-  await db.user_preferences.insert({
-    id: uuid4(),
-    user_id: userId,
-    use_proxy: false,
-  });
+  await db.user_preferences.insert(defaultUserPreferences(userId));
   return true;
 }
 
@@ -82,9 +93,7 @@ export async function updateUserPreferences(
     await doc.update({ $set: updates });
   } else {
     await db.user_preferences.insert({
-      id: uuid4(),
-      user_id: userId,
-      use_proxy: false,
+      ...defaultUserPreferences(userId),
       ...updates,
     });
   }

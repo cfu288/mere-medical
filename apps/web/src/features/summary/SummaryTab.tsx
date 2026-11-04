@@ -227,22 +227,21 @@ function useSummaryData(): [SummaryState, React.Dispatch<SummaryActions>] {
           user.id,
           ['allergyintolerance'],
         ),
-        findSummaryPagePreferences(db, user.id).then((preferences) =>
-          findDocumentsByIds<BundleEntry<DiagnosticReport | Observation>>(
-            db,
-            user.id,
-            preferences?.pinned_labs || [],
-          ),
-        ),
         findSummaryPagePreferences(db, user.id).then((preferences) => {
           const savedCards = preferences?.cards;
           // Saved preferences may include card types that no longer exist
-          return savedCards
+          const cards = savedCards
             ? savedCards.filter((card) => card.type in CardTypeToDisplayMap)
             : DEFAULT_CARD_ORDER;
+          return findDocumentsByIds<
+            BundleEntry<DiagnosticReport | Observation>
+          >(db, user.id, preferences?.pinned_labs || []).then((pinned) => ({
+            pinned,
+            cards,
+          }));
         }),
       ])
-        .then(([meds, cond, imm, careplan, allergy, pinned, cards]) => {
+        .then(([meds, cond, imm, careplan, allergy, { pinned, cards }]) => {
           reducer({
             type: ActionTypes.COMPLETED,
             data: {

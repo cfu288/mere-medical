@@ -6,21 +6,14 @@ import React, {
 } from 'react';
 import { from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import uuid4 from '../../shared/utils/UUIDUtils';
 import { UserPreferencesDocument } from '../../models/user-preferences/UserPreferences.type';
 import {
   createUserPreferencesIfNone,
+  defaultUserPreferences,
   watchUserPreferences,
 } from '../../repositories/UserPreferencesRepository';
 import { useRxDb } from './RxDbProvider';
 import { useUser } from './UserProvider';
-
-// Takes a user id and returns a default user preferences document
-function createDefaultPreferences(
-  user_id: string,
-): Partial<UserPreferencesDocument> {
-  return { use_proxy: false, user_id, id: uuid4() };
-}
 
 /**
  * Take the stored preferences and return a parsed version with defaults
@@ -32,7 +25,7 @@ function getUserPreferencesWithDefaults(
   user_id: string,
 ) {
   return {
-    ...createDefaultPreferences(user_id),
+    ...defaultUserPreferences(user_id),
     ...item,
   } as UserPreferencesDocument;
 }
