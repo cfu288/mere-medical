@@ -71,6 +71,7 @@ export async function togglePinnedLab(
   userId: string,
   recordId: string,
 ): Promise<void> {
+  // TODO: two calls at once can both find nothing and insert two documents for one user
   const doc = await db.summary_page_preferences
     .findOne({ selector: { user_id: userId } })
     .exec();

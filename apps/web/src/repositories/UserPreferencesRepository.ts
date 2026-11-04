@@ -35,6 +35,7 @@ export async function createUserPreferencesIfNone(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
 ): Promise<boolean> {
+  // TODO: two calls at once can both find nothing and insert two documents for one user
   const doc = await db.user_preferences
     .findOne({ selector: { user_id: userId } })
     .exec();
@@ -86,6 +87,7 @@ export async function updateUserPreferences(
   userId: string,
   updates: Partial<UserPreferencesDocument>,
 ): Promise<void> {
+  // TODO: two calls at once can both find nothing and insert two documents for one user
   const doc = await db.user_preferences
     .findOne({ selector: { user_id: userId } })
     .exec();
