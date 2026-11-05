@@ -1,4 +1,10 @@
-import React, { useCallback, useContext, useEffect, useMemo } from 'react';
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react';
 import { PropsWithChildren } from 'react';
 import { RxDocument, RxDatabase } from 'rxdb';
 import { AnyConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
@@ -17,7 +23,7 @@ import * as Healow from '../../services/fhir/Healow';
 import * as Athena from '../../services/fhir/Athena';
 import * as NextGen from '../../services/fhir/NextGen';
 import { SyncContext } from '../../services/fhir/sync';
-import { from, Subject } from 'rxjs';
+import { from, ReplaySubject, Subject } from 'rxjs';
 import { useNotificationDispatch } from '../../app/providers/NotificationProvider';
 import { differenceInDays, parseISO } from 'date-fns';
 import {
@@ -115,53 +121,92 @@ type Action =
 
 type Dispatch = (action: Action) => void;
 
-const syncJobReducer: (
-  state: Record<string, Subject<PromiseSettledResult<unknown>[]>>,
-  action: Action,
-) => Record<string, Subject<PromiseSettledResult<unknown>[]>> = (
-  state: Record<string, Subject<PromiseSettledResult<unknown>[]>>,
-  action: Action,
-) => {
+type JobResults = PromiseSettledResult<unknown>[];
+type JobState = Record<string, Subject<JobResults>>;
+type StateAction =
+  | { type: 'add_job'; id: string; subject: Subject<JobResults> }
+  | { type: 'remove_job'; id: string };
+
+const SyncJobPauseContext = React.createContext<
+  (() => Promise<() => void>) | undefined
+>(undefined);
+
+function syncJobReducer(state: JobState, action: StateAction): JobState {
   switch (action.type) {
-    case 'add_job': {
-      const subject = new Subject<PromiseSettledResult<unknown>[]>();
-      const observable = from(fetchMedicalRecords(action.ctx));
-      observable.subscribe(subject);
-      return {
-        ...state,
-        [action.id]: subject,
-      };
-    }
+    case 'add_job':
+      return { ...state, [action.id]: action.subject };
     case 'remove_job': {
-      const nState = { ...state };
-      delete nState[action.id];
-      return nState;
-    }
-    default: {
-      throw new Error(`Unhandled action type: ${action}`);
+      const next = { ...state };
+      delete next[action.id];
+      return next;
     }
   }
-};
+}
 
 /**
- * A provider that handles sync jobs that manages syncing medical records for connections
- * Also provides a dispatch function to add/remove sync jobs
+ * Owns sync admission and the full lifetime of each job, including token and
+ * connection timestamp writes. Removing a UI entry does not cancel a request.
  */
 export function SyncJobProvider(props: SyncJobProviderProps) {
-  const [state, dispatch] = React.useReducer(
-    syncJobReducer,
-    {} as Record<string, Subject<PromiseSettledResult<unknown>[]>>,
+  const [state, updateState] = React.useReducer(syncJobReducer, {});
+  const paused = useRef(false);
+  const active = useRef(new Map<string, Promise<JobResults>>());
+  const pending = useRef(
+    new Map<string, Extract<Action, { type: 'add_job' }>>(),
   );
+
+  const dispatch = useCallback((action: Action) => {
+    if (action.type === 'remove_job') {
+      updateState(action);
+      return;
+    }
+    if (paused.current) {
+      pending.current.set(action.id, action);
+      return;
+    }
+    if (active.current.has(action.id)) return;
+    const job = fetchMedicalRecords(action.ctx);
+    active.current.set(action.id, job);
+    const finished = () => {
+      active.current.delete(action.id);
+    };
+    void job.then(finished, finished);
+    // A fast job may finish before the notification effect subscribes.
+    const subject = new ReplaySubject<JobResults>(1);
+    updateState({ type: 'add_job', id: action.id, subject });
+    from(job).subscribe(subject);
+  }, []);
+
+  const pause = useCallback(async () => {
+    // Close admission synchronously, before taking the drain snapshot.
+    paused.current = true;
+    await Promise.allSettled(active.current.values());
+    return () => {
+      paused.current = false;
+      const queued = [...pending.current.values()];
+      pending.current.clear();
+      queued.forEach(dispatch);
+    };
+  }, [dispatch]);
 
   return (
     <SyncJobContext.Provider value={state}>
       <SyncJobDispatchContext.Provider value={dispatch}>
-        <OnHandleUnsubscribeJobs>
-          <HandleInitalSync>{props.children}</HandleInitalSync>
-        </OnHandleUnsubscribeJobs>
+        <SyncJobPauseContext.Provider value={pause}>
+          <OnHandleUnsubscribeJobs>
+            <HandleInitalSync>{props.children}</HandleInitalSync>
+          </OnHandleUnsubscribeJobs>
+        </SyncJobPauseContext.Provider>
       </SyncJobDispatchContext.Provider>
     </SyncJobContext.Provider>
   );
+}
+
+/** Pause new jobs and drain running jobs; resume only while the source is valid. */
+export function usePauseSyncJobs() {
+  const pause = useContext(SyncJobPauseContext);
+  if (!pause) throw new Error('SyncJobProvider is required');
+  return pause;
 }
 
 /**
@@ -327,7 +372,7 @@ function OnHandleUnsubscribeJobs({ children }: PropsWithChildren) {
     syncJobs = Object.entries(sync);
 
   useEffect(() => {
-    syncJobs.forEach(([id, j]) => {
+    const subscriptions = syncJobs.map(([id, j]) =>
       j.subscribe({
         next(res) {
           const successRes = res.filter((i) => i.status === 'fulfilled');
@@ -379,8 +424,10 @@ function OnHandleUnsubscribeJobs({ children }: PropsWithChildren) {
             syncD({ type: 'remove_job', id });
           }
         },
-      });
-    });
+      }),
+    );
+    return () =>
+      subscriptions.forEach((subscription) => subscription.unsubscribe());
   }, [notifyDispatch, syncD, syncJobs]);
 
   return children;
