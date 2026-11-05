@@ -1,3 +1,4 @@
+import { waitForAll } from './sync/waitForAll';
 /**
  * Functions related to authenticating against the Cerner patient portal and syncing data
  */
@@ -519,7 +520,7 @@ async function syncDocumentReferences(
       }
     }
   });
-  return await Promise.all(cdsmap);
+  return await waitForAll(cdsmap);
 }
 
 /**

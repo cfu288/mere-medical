@@ -12,6 +12,9 @@ import {
 } from '../../../app/providers/LocalConfigProvider';
 import { PrivacyAndSecuritySettingsGroup } from './PrivacyAndSecuritySettingsGroup';
 
+jest.mock('../../sync/SyncJobProvider', () => ({
+  usePauseSyncJobs: () => async () => () => undefined,
+}));
 jest.mock('../../../app/providers/RxDbProvider');
 jest.mock('../../../app/providers/LocalConfigProvider');
 jest.mock('../../../app/providers/UserProvider', () => ({

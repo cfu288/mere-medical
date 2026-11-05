@@ -1,3 +1,4 @@
+import { waitForAll } from './sync/waitForAll';
 /**
  * Professional 20.1 SANDBOX FollowMyHealth
  * Patient Access
@@ -348,7 +349,7 @@ async function syncDocumentReferences(
       }
     }
   });
-  return await Promise.all(cdsmap);
+  return await waitForAll(cdsmap);
 }
 
 async function fetchAttachmentData(

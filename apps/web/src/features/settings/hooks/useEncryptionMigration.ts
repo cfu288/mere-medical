@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { RxDatabase, RxStorageBulkWriteResponse } from 'rxdb';
 import { CryptedIndexedDBAdapter } from 'sylviejs/storage-adapter/crypted-indexeddb-adapter';
+import { usePauseSyncJobs } from '../../sync/SyncJobProvider';
 import { DatabaseCollections } from '../../../app/providers/DatabaseCollections';
 import { useUpdateLocalConfig } from '../../../app/providers/LocalConfigProvider';
 import {
@@ -43,6 +44,7 @@ async function removeDatabase(
 
 export function useEncryptionMigration(onSuccess: () => void) {
   const db = useRxDb();
+  const pauseSyncJobs = usePauseSyncJobs();
   const updateLocalConfig = useUpdateLocalConfig();
   const running = useRef(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -57,8 +59,10 @@ export function useEncryptionMigration(onSuccess: () => void) {
       setError('');
       const encrypted = password !== undefined;
       let target: RxDatabase<DatabaseCollections> | undefined;
+      let resumeSyncJobs: (() => void) | undefined;
 
       try {
+        resumeSyncJobs = await pauseSyncJobs();
         if (!encrypted) await saveEncryptedDatabase(db);
         const dump = await db.exportJSON();
         // RxDB's bulk writer cannot import an empty collection.
@@ -89,6 +93,7 @@ export function useEncryptionMigration(onSuccess: () => void) {
             cleanupFailed = true;
           }
         }
+        resumeSyncJobs?.();
         setError(
           'Unable to change encryption. Your original database is still selected. ' +
             (cleanupFailed
@@ -105,6 +110,7 @@ export function useEncryptionMigration(onSuccess: () => void) {
         // Commit the mode before deleting anything from the source. A cleanup
         // failure must keep the verified target selected, never roll back to a
         // source that may already have been partially removed.
+        // Keep sync paused through reload: queued jobs still hold the source.
         await removeDatabase(db, !encrypted);
         onSuccess();
         setTimeout(() => window.location.reload(), 0);
@@ -118,7 +124,7 @@ export function useEncryptionMigration(onSuccess: () => void) {
         setIsProcessing(false);
       }
     },
-    [db, needsReload, onSuccess, updateLocalConfig],
+    [db, needsReload, onSuccess, pauseSyncJobs, updateLocalConfig],
   );
 
   return { migrate, isProcessing, error, needsReload };
