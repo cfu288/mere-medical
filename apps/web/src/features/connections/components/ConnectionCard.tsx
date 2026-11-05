@@ -155,17 +155,17 @@ export function ConnectionCard({
   return (
     <li
       key={item.id}
-      className="col-span-1 mb-8 divide-y divide-gray-200 rounded-lg bg-white shadow"
+      className="col-span-1 mb-8 divide-y divide-gray-200 dark:divide-gray-700 rounded-lg bg-white dark:bg-gray-900 shadow"
     >
       <div className="flex w-full items-center justify-between space-x-6 p-6">
         <img
-          className="h-10 w-10 flex-shrink-0 rounded-full bg-gray-300"
+          className="h-10 w-10 flex-shrink-0 rounded-full bg-gray-300 dark:bg-gray-600"
           src={getImage(item.get('source'))}
           alt={`${item.get('source')} logo`}
         />
         <div className="flex-1 truncate">
           <div className="flex items-center space-x-3">
-            <h3 className="truncate text-sm font-semibold  text-gray-900">
+            <h3 className="truncate text-sm font-semibold  text-gray-900 dark:text-gray-100">
               {item.get('source') === 'epic'
                 ? `MyChart - ${item.get('name')}`
                 : item.get('source') === 'cerner'
@@ -180,7 +180,7 @@ export function ConnectionCard({
             </h3>
           </div>
           {item.get('last_sync_was_error') ? (
-            <div className="mt-1 flex flex-row items-center truncate align-middle text-sm font-medium text-red-500">
+            <div className="mt-1 flex flex-row items-center truncate align-middle text-sm font-medium text-red-500 dark:text-red-400">
               <AbnormalResultIcon />
               <p className="pl-1">
                 {formatErrorLastAttemptTimestampText(
@@ -189,7 +189,7 @@ export function ConnectionCard({
               </p>
             </div>
           ) : (
-            <p className="mt-1 truncate text-sm font-medium text-gray-800">
+            <p className="mt-1 truncate text-sm font-medium text-gray-800 dark:text-gray-200">
               {syncing
                 ? `Syncing now${showPeriodText}`
                 : `Connected ${
@@ -202,15 +202,15 @@ export function ConnectionCard({
         </div>
       </div>
       <div>
-        <div className="-mt-px flex divide-x divide-gray-200">
+        <div className="-mt-px flex divide-x divide-gray-200 dark:divide-gray-700">
           <button
             disabled={deleting}
             className={`flex w-0 flex-1 ${
-              deleting ? 'disabled:bg-slate-50' : ''
+              deleting ? 'disabled:bg-slate-50 dark:disabled:bg-gray-800' : ''
             }`}
             onClick={() => setShowModal(true)}
           >
-            <div className="relative -mr-px inline-flex h-full w-0 flex-1 items-center justify-center rounded-bl-lg border border-transparent px-1 py-4 text-sm font-medium text-gray-800 hover:text-gray-800">
+            <div className="relative -mr-px inline-flex h-full w-0 flex-1 items-center justify-center rounded-bl-lg border border-transparent px-1 py-4 text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-gray-800 dark:hover:text-gray-200">
               Disconnect Source
               {deleting ? (
                 <span className="ml-3">
@@ -221,10 +221,10 @@ export function ConnectionCard({
           </button>
           <button
             disabled={syncing}
-            className="-ml-px flex w-0 flex-1 divide-x divide-gray-800 disabled:bg-slate-50"
+            className="-ml-px flex w-0 flex-1 divide-x divide-gray-800 disabled:bg-slate-50 dark:disabled:bg-gray-800"
             onClick={handleFetchData}
           >
-            <div className="relative inline-flex h-full w-0 flex-1 items-center justify-center rounded-br-lg border border-transparent py-4 text-sm font-medium text-gray-800 hover:text-gray-800">
+            <div className="relative inline-flex h-full w-0 flex-1 items-center justify-center rounded-br-lg border border-transparent py-4 text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-gray-800 dark:hover:text-gray-200">
               Sync
               <span className="ml-3">
                 {syncing ? <ButtonLoadingSpinner /> : null}
@@ -234,7 +234,7 @@ export function ConnectionCard({
           {item.get('last_sync_was_error') ? (
             <button
               disabled={syncing}
-              className="-ml-px flex flex-initial divide-x divide-gray-800 px-4 disabled:bg-slate-50"
+              className="-ml-px flex flex-initial divide-x divide-gray-800 px-4 disabled:bg-slate-50 dark:disabled:bg-gray-800"
               onClick={async () => {
                 if (!isConfigValid(config)) {
                   notifyDispatch({
@@ -258,7 +258,7 @@ export function ConnectionCard({
                 }
               }}
             >
-              <div className="relative inline-flex h-full flex-initial items-center justify-center rounded-br-lg border border-transparent py-4 text-sm font-bold text-red-500 hover:text-gray-800">
+              <div className="relative inline-flex h-full flex-initial items-center justify-center rounded-br-lg border border-transparent py-4 text-sm font-bold text-red-500 dark:text-red-400 hover:text-gray-800 dark:hover:text-gray-200">
                 Fix
               </div>
             </button>
@@ -280,14 +280,14 @@ export function ConnectionCard({
         <div className="m-4 flex justify-end">
           <button
             type="button"
-            className="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50"
+            className="inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-4 py-2 text-sm font-medium text-gray-800 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800"
             onClick={() => setShowModal(false)}
           >
             Cancel
           </button>
           <button
             type="button"
-            className="ml-3 inline-flex justify-center rounded-md border border-red-300 bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-600"
+            className="ml-3 inline-flex justify-center rounded-md border border-red-300 dark:border-red-700 bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-600"
             onClick={() => {
               removeDocument(item);
               setShowModal(false);

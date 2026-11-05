@@ -31,7 +31,7 @@ export const CarePlanCard = memo(function CarePlanCard({
           <div className="items-top flex justify-between">
             <TimelineCardCategoryTitle
               title="Care Plan"
-              color="text-indigo-600"
+              color="text-indigo-600 dark:text-indigo-400"
             />
             <OpenableCardIcon />
           </div>
@@ -39,16 +39,16 @@ export const CarePlanCard = memo(function CarePlanCard({
           <TimelineCardTitle>
             {item.metadata?.display_name || carePlan?.title}
           </TimelineCardTitle>
-          <p className="truncate text-xs font-medium text-gray-800 md:text-sm">
+          <p className="truncate text-xs font-medium text-gray-800 dark:text-gray-200 md:text-sm">
             {formatTime(item.metadata?.date)}
           </p>
           {carePlan?.status && (
-            <p className="truncate text-xs font-medium text-gray-600 md:text-sm capitalize">
+            <p className="truncate text-xs font-medium text-gray-600 dark:text-gray-400 md:text-sm capitalize">
               {carePlan.status}
             </p>
           )}
           {conn?.get('name') ? (
-            <p className="truncate text-xs font-medium text-gray-700 md:text-sm">
+            <p className="truncate text-xs font-medium text-gray-700 dark:text-gray-300 md:text-sm">
               {conn?.get('name')}
             </p>
           ) : (

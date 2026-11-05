@@ -382,7 +382,7 @@ function SummaryTab() {
                   <div
                     {...provided.droppableProps}
                     ref={provided.innerRef}
-                    className="border inset bg-gray-50 rounded-md p-2 py-6"
+                    className="border inset bg-gray-50 dark:bg-gray-800 rounded-md p-2 py-6"
                   >
                     {sortedCards.map((card, index) => (
                       <Draggable
@@ -395,7 +395,7 @@ function SummaryTab() {
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
-                            className={`flex justify-between overflow-hidden bg-white px-4 py-4 my-2 shadow sm:rounded-md sm:px-6 ${snapshot.isDragging ? 'border border-primary-400' : ''}`}
+                            className={`flex justify-between overflow-hidden bg-white dark:bg-gray-900 px-4 py-4 my-2 shadow sm:rounded-md sm:px-6 ${snapshot.isDragging ? 'border border-primary-400' : ''}`}
                           >
                             <div className="flex justify-center align-middle items-center h-full">
                               {CardTypeToDisplayMap[card.type]}
@@ -414,9 +414,9 @@ function SummaryTab() {
                                 }}
                               >
                                 {card.is_visible ? (
-                                  <EyeIcon className="h-auto w-4 text-primary-800" />
+                                  <EyeIcon className="h-auto w-4 text-primary-800 dark:text-primary-200" />
                                 ) : (
-                                  <EyeSlashIcon className="h-auto w-4 text-gray-600" />
+                                  <EyeSlashIcon className="h-auto w-4 text-gray-600 dark:text-gray-400" />
                                 )}
                               </button>
                               <p className="h-full text-center align-middle text-xl">
@@ -436,7 +436,7 @@ function SummaryTab() {
         </div>
       </Modal>
       <button
-        className="w-full flex transition hover:scale-105 active:scale-95 text-gray-800 font-bold py-4 px-4 rounded-full align-baseline justify-center items-center"
+        className="w-full flex transition hover:scale-105 active:scale-95 text-gray-800 dark:text-gray-200 font-bold py-4 px-4 rounded-full align-baseline justify-center items-center"
         onClick={() => {
           setShowEditModal(true);
         }}

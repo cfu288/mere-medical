@@ -65,7 +65,7 @@ export function ExperimentalSettingsGroup() {
   return (
     <>
       <h1 className="py-6 text-xl font-extrabold">Experimental</h1>
-      <div className="divide-y divide-gray-200">
+      <div className="divide-y divide-gray-200 dark:divide-gray-700">
         <div className="px-4 sm:px-6">
           <ul className="mt-2 ">
             <Switch.Group
@@ -77,12 +77,12 @@ export function ExperimentalSettingsGroup() {
                 <div className="flex flex-col">
                   <Switch.Label
                     as="h2"
-                    className="text-primary-800 text-lg leading-6"
+                    className="text-primary-800 dark:text-primary-200 text-lg leading-6"
                     passive
                   >
                     Enable Mere Assistant
                   </Switch.Label>
-                  <Switch.Description className="pt-2 text-sm text-gray-800">
+                  <Switch.Description className="pt-2 text-sm text-gray-800 dark:text-gray-200">
                     Enable Mere to use AI models. Choose between OpenAI or
                     Ollama (local) instance.
                   </Switch.Description>
@@ -98,7 +98,7 @@ export function ExperimentalSettingsGroup() {
                   className={classNames(
                     experimental__use_openai_rag
                       ? 'bg-primary-500'
-                      : 'bg-gray-200',
+                      : 'bg-gray-200 dark:bg-gray-700',
                     'focus:ring-primary-500 relative ml-4 inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2',
                   )}
                 >
@@ -117,7 +117,7 @@ export function ExperimentalSettingsGroup() {
 
             {experimental__use_openai_rag && (
               <div className="pb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   AI Provider
                 </label>
                 <div className="flex space-x-4">
@@ -162,8 +162,8 @@ export function ExperimentalSettingsGroup() {
                 <>
                   {/* Privacy Warning for OpenAI */}
                   <div className="pb-4">
-                    <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
-                      <p className="text-sm text-amber-700">
+                    <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-md p-3">
+                      <p className="text-sm text-amber-700 dark:text-amber-300">
                         <b>
                           <span role="img" aria-label="Warning">
                             ⚠️
@@ -183,7 +183,7 @@ export function ExperimentalSettingsGroup() {
                   <form className="w-full flex">
                     <input
                       type="password"
-                      className="bg-gray-50 rounded-md p-2 w-full border-none focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent active:ring-2 active:ring-primary-600"
+                      className="bg-gray-50 dark:bg-gray-800 rounded-md p-2 w-full border-none focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent active:ring-2 active:ring-primary-600"
                       placeholder="OpenAI API Key"
                       defaultValue={experimental__openai_api_key || ''}
                       value={openApiKey}
@@ -217,13 +217,13 @@ export function ExperimentalSettingsGroup() {
               experimental__ai_provider === 'ollama' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Ollama Endpoint
                     </label>
                     <div className="flex">
                       <input
                         type="text"
-                        className="bg-gray-50 rounded-md p-2 flex-1 border-none focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+                        className="bg-gray-50 dark:bg-gray-800 rounded-md p-2 flex-1 border-none focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                         placeholder="https://ollama.mari.casa"
                         value={ollamaEndpoint}
                         onChange={(e) => setOllamaEndpoint(e.target.value)}
@@ -272,11 +272,11 @@ export function ExperimentalSettingsGroup() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Chat Model
                     </label>
                     <select
-                      className="bg-gray-50 rounded-md p-2 w-full border-none focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+                      className="bg-gray-50 dark:bg-gray-800 rounded-md p-2 w-full border-none focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                       value={ollamaModel}
                       onChange={(e) => setOllamaModel(e.target.value)}
                     >
@@ -286,7 +286,7 @@ export function ExperimentalSettingsGroup() {
                         </option>
                       ))}
                     </select>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       Select the Ollama chat model to use
                     </p>
                   </div>

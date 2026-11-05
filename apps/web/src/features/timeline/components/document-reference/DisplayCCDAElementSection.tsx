@@ -12,7 +12,7 @@ export function DisplayCCDAElementSection({
     <Disclosure>
       {({ open }) => (
         <>
-          <Disclosure.Button className="mb-2 w-full rounded-md bg-gray-100 p-2 font-bold transition-colors hover:bg-gray-200">
+          <Disclosure.Button className="mb-2 w-full rounded-md bg-gray-100 dark:bg-gray-800 p-2 font-bold transition-colors hover:bg-gray-200 dark:hover:bg-gray-700">
             <div className="flex w-full items-center justify-between">
               <span className="flex items-center gap-2">{title}</span>
               <ChevronRightIcon
@@ -20,7 +20,7 @@ export function DisplayCCDAElementSection({
               />
             </div>
           </Disclosure.Button>
-          <Disclosure.Panel className="m-4 overflow-x-auto text-sm text-gray-800">
+          <Disclosure.Panel className="m-4 overflow-x-auto text-sm text-gray-800 dark:text-gray-200">
             {content}
           </Disclosure.Panel>
         </>

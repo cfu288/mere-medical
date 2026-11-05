@@ -81,14 +81,14 @@ export function ShowEncounterDetailsExpandable({
           setClose={toggleOpen}
         />
         <div className="max-h-full scroll-py-3 p-3">
-          <div className="rounded-lg border border-solid border-gray-200 p-4">
+          <div className="rounded-lg border border-solid border-gray-200 dark:border-gray-700 p-4">
             <div className="space-y-4">
               {encounter?.status && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Status
                   </div>
-                  <div className="col-span-2 text-sm text-gray-900 capitalize">
+                  <div className="col-span-2 text-sm text-gray-900 dark:text-gray-100 capitalize">
                     {encounter.status}
                   </div>
                 </div>
@@ -96,10 +96,10 @@ export function ShowEncounterDetailsExpandable({
 
               {getEncounterClassDisplay() && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Class
                   </div>
-                  <div className="col-span-2 text-sm text-gray-900 capitalize">
+                  <div className="col-span-2 text-sm text-gray-900 dark:text-gray-100 capitalize">
                     {getEncounterClassDisplay()}
                   </div>
                 </div>
@@ -107,12 +107,15 @@ export function ShowEncounterDetailsExpandable({
 
               {encounter?.type && encounter.type.length > 0 && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Type
                   </div>
                   <div className="col-span-2 space-y-1">
                     {encounter.type.map((type, index) => (
-                      <div key={index} className="text-sm text-gray-900">
+                      <div
+                        key={index}
+                        className="text-sm text-gray-900 dark:text-gray-100"
+                      >
                         {type.text || type.coding?.[0]?.display || 'N/A'}
                       </div>
                     ))}
@@ -122,10 +125,10 @@ export function ShowEncounterDetailsExpandable({
 
               {encounter?.priority?.text && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Priority
                   </div>
-                  <div className="col-span-2 text-sm text-gray-900">
+                  <div className="col-span-2 text-sm text-gray-900 dark:text-gray-100">
                     {encounter.priority.text}
                   </div>
                 </div>
@@ -133,10 +136,10 @@ export function ShowEncounterDetailsExpandable({
 
               {getEncounterPatient(item) && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Patient
                   </div>
-                  <div className="col-span-2 text-sm text-gray-900">
+                  <div className="col-span-2 text-sm text-gray-900 dark:text-gray-100">
                     {getEncounterPatient(item)}
                   </div>
                 </div>
@@ -144,17 +147,20 @@ export function ShowEncounterDetailsExpandable({
 
               {uniqueParticipants.length > 0 && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Participants
                   </div>
                   <div className="col-span-2 space-y-1">
                     {uniqueParticipants.map((p, index) => (
-                      <div key={index} className="text-sm text-gray-900">
+                      <div
+                        key={index}
+                        className="text-sm text-gray-900 dark:text-gray-100"
+                      >
                         {p.individual?.display ||
                           p.individual?.reference ||
                           'Unknown'}
                         {p.type && p.type.length > 0 && (
-                          <span className="text-gray-600">
+                          <span className="text-gray-600 dark:text-gray-400">
                             {' '}
                             ({p.type[0].text || p.type[0].coding?.[0]?.display})
                           </span>
@@ -167,10 +173,10 @@ export function ShowEncounterDetailsExpandable({
 
               {encounter?.period && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Time Period
                   </div>
-                  <div className="col-span-2 text-sm text-gray-900">
+                  <div className="col-span-2 text-sm text-gray-900 dark:text-gray-100">
                     {formatFullDateWithTime(encounter.period.start)}
                     {encounter.period.end && (
                       <>
@@ -184,10 +190,10 @@ export function ShowEncounterDetailsExpandable({
 
               {encounter?.length?.value !== undefined && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Length
                   </div>
-                  <div className="col-span-2 text-sm text-gray-900">
+                  <div className="col-span-2 text-sm text-gray-900 dark:text-gray-100">
                     {encounter.length.value}{' '}
                     {encounter.length.unit || 'minutes'}
                   </div>
@@ -196,12 +202,15 @@ export function ShowEncounterDetailsExpandable({
 
               {getReasonCodes().length > 0 && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Reason
                   </div>
                   <div className="col-span-2 space-y-1">
                     {getReasonCodes().map((reason, index) => (
-                      <div key={index} className="text-sm text-gray-900">
+                      <div
+                        key={index}
+                        className="text-sm text-gray-900 dark:text-gray-100"
+                      >
                         {reason}
                       </div>
                     ))}
@@ -211,12 +220,15 @@ export function ShowEncounterDetailsExpandable({
 
               {getEncounterIndication(item).length > 0 && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Indication
                   </div>
                   <div className="col-span-2 space-y-1">
                     {getEncounterIndication(item).map((indication, index) => (
-                      <div key={index} className="text-sm text-gray-900">
+                      <div
+                        key={index}
+                        className="text-sm text-gray-900 dark:text-gray-100"
+                      >
                         {indication.display || indication.reference || 'N/A'}
                       </div>
                     ))}
@@ -226,10 +238,10 @@ export function ShowEncounterDetailsExpandable({
 
               {encounter?.hospitalization && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Hospitalization
                   </div>
-                  <div className="col-span-2 space-y-1 text-sm text-gray-900">
+                  <div className="col-span-2 space-y-1 text-sm text-gray-900 dark:text-gray-100">
                     {encounter.hospitalization.admitSource?.text && (
                       <div>
                         <span className="font-medium">Admit Source: </span>
@@ -250,17 +262,23 @@ export function ShowEncounterDetailsExpandable({
 
               {encounter?.location && encounter.location.length > 0 && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Location(s)
                   </div>
                   <div className="col-span-2 space-y-1">
                     {encounter.location.map((loc, index) => (
-                      <div key={index} className="text-sm text-gray-900">
+                      <div
+                        key={index}
+                        className="text-sm text-gray-900 dark:text-gray-100"
+                      >
                         {loc.location?.display ||
                           loc.location?.reference ||
                           'N/A'}
                         {loc.status && (
-                          <span className="text-gray-600"> ({loc.status})</span>
+                          <span className="text-gray-600 dark:text-gray-400">
+                            {' '}
+                            ({loc.status})
+                          </span>
                         )}
                       </div>
                     ))}
@@ -270,10 +288,10 @@ export function ShowEncounterDetailsExpandable({
 
               {encounter?.serviceProvider?.display && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Service Provider
                   </div>
-                  <div className="col-span-2 text-sm text-gray-900">
+                  <div className="col-span-2 text-sm text-gray-900 dark:text-gray-100">
                     {encounter.serviceProvider.display}
                   </div>
                 </div>

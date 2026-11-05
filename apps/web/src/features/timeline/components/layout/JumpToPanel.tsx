@@ -33,8 +33,8 @@ export function JumpToPanel({
   }, [items]);
 
   return (
-    <div className="sticky top-0 hidden h-full min-h-full w-0 flex-col overflow-y-scroll border-gray-200 bg-gray-50 text-slate-800 lg:flex lg:w-auto lg:border-r-2">
-      <p className="sticky top-0 mr-2 h-10 whitespace-nowrap bg-gray-50 p-2 font-bold">
+    <div className="sticky top-0 hidden h-full min-h-full w-0 flex-col overflow-y-scroll border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-slate-800 dark:text-gray-200 lg:flex lg:w-auto lg:border-r-2">
+      <p className="sticky top-0 mr-2 h-10 whitespace-nowrap bg-gray-50 dark:bg-gray-800 p-2 font-bold">
         Jump To
       </p>
       {isLoading ? (
@@ -45,7 +45,7 @@ export function JumpToPanel({
             list.map(([key], index, elements) => (
               <Fragment key={key}>
                 {index === 0 ? (
-                  <li className="sticky top-10 bg-gray-50 p-1 pl-2">
+                  <li className="sticky top-10 bg-gray-50 dark:bg-gray-800 p-1 pl-2">
                     {parseYear(key)}
                   </li>
                 ) : null}
@@ -60,7 +60,7 @@ export function JumpToPanel({
             <>
               {status !== undefined &&
                 status !== QueryStatus.COMPLETE_HIDE_LOAD_MORE && (
-                  <li className="sticky top-10 bg-gray-50 p-1 pl-2">
+                  <li className="sticky top-10 bg-gray-50 dark:bg-gray-800 p-1 pl-2">
                     <button
                       onClick={() => loadMore()}
                       className="text-xs font-thin hover:underline"
@@ -89,7 +89,7 @@ function YearHeaderUnmemo({
     // eslint-disable-next-line react/jsx-no-useless-fragment
     <>
       {nextYear && parseYear(nextYear) !== parseYear(currentYear) ? (
-        <li className="sticky top-10 bg-gray-50 p-1 pl-2">
+        <li className="sticky top-10 bg-gray-50 dark:bg-gray-800 p-1 pl-2">
           {parseYear(nextYear)}
         </li>
       ) : null}
@@ -118,7 +118,7 @@ function SkeletonUnmemo() {
       {[...Array(50)].map((_, index) => (
         <li key={index}>
           <div className="flex h-4 animate-pulse flex-row items-center pt-5 ">
-            <div className="ml-4 h-3 w-12 rounded-md bg-gray-100 p-1 "></div>
+            <div className="ml-4 h-3 w-12 rounded-md bg-gray-100 dark:bg-gray-800 p-1 "></div>
           </div>
         </li>
       ))}

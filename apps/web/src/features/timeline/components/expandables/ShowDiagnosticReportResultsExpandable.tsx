@@ -49,17 +49,17 @@ export function ShowDiagnosticReportResultsExpandable({
             <div
               className={`${
                 expanded ? '' : 'hidden'
-              } rounded-lg border border-solid border-gray-200`}
+              } rounded-lg border border-solid border-gray-200 dark:border-gray-700`}
             >
-              <div className="grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-200 p-2 px-4 text-gray-800">
+              <div className="grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-200 dark:border-gray-700 p-2 px-4 text-gray-800 dark:text-gray-200">
                 <div className="col-span-3 text-sm font-semibold">Name</div>
                 <div className="col-span-2 text-sm font-semibold">Value</div>
               </div>
-              <div className="mx-4 grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-100 py-2">
-                <div className="col-span-3 self-center text-xs font-semibold text-gray-600">
+              <div className="mx-4 grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-100 dark:border-gray-800 py-2">
+                <div className="col-span-3 self-center text-xs font-semibold text-gray-600 dark:text-gray-400">
                   Loading data
                 </div>
-                <div className="col-span-3 self-center text-xs font-semibold text-gray-600">
+                <div className="col-span-3 self-center text-xs font-semibold text-gray-600 dark:text-gray-400">
                   <ButtonLoadingSpinner height="h-3" width="w-3" />
                 </div>
               </div>
@@ -72,9 +72,9 @@ export function ShowDiagnosticReportResultsExpandable({
                 <div
                   className={`${
                     expanded ? '' : 'hidden'
-                  } rounded-lg border border-solid border-gray-200`}
+                  } rounded-lg border border-solid border-gray-200 dark:border-gray-700`}
                 >
-                  <div className="grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-200 p-2 px-4 text-gray-800">
+                  <div className="grid grid-cols-6 gap-2 gap-y-2 border-b-2 border-solid border-gray-200 dark:border-gray-700 p-2 px-4 text-gray-800 dark:text-gray-200">
                     <div className="col-span-3 text-sm font-semibold">Name</div>
                     <div className="col-span-2 text-sm font-semibold">
                       Value
@@ -89,8 +89,8 @@ export function ShowDiagnosticReportResultsExpandable({
                 </div>
               </div>
             ) : (
-              <div className="mx-4 flex flex-col border-b-2 border-solid border-gray-100 py-2">
-                <div className="self-center font-semibold text-gray-600">
+              <div className="mx-4 flex flex-col border-b-2 border-solid border-gray-100 dark:border-gray-800 py-2">
+                <div className="self-center font-semibold text-gray-600 dark:text-gray-400">
                   No data available for this report
                 </div>
               </div>

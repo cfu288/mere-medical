@@ -16,40 +16,40 @@ export function ResultComponentSection({
     <Disclosure>
       {({ open }) => (
         <>
-          <Disclosure.Button className="mb-1 w-full rounded-md bg-gray-50 p-1 font-bold">
+          <Disclosure.Button className="mb-1 w-full rounded-md bg-gray-50 dark:bg-gray-800 p-1 font-bold">
             <div className="flex w-full items-center justify-between text-left">
               {matchingSectionsDisplayName}
               <ChevronRightIcon
-                className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 ${
+                className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 dark:active:bg-gray-700 ${
                   open ? 'rotate-90 transform' : ''
                 }`}
               />
             </div>
           </Disclosure.Button>
-          <Disclosure.Panel className="m-1 text-sm text-gray-800">
-            <table className="min-w-full divide-y divide-gray-300">
+          <Disclosure.Panel className="m-1 text-sm text-gray-800 dark:text-gray-200">
+            <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-600">
               <thead>
                 <tr>
                   <th
                     scope="col"
-                    className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0"
+                    className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 sm:pl-0"
                   >
                     Title
                   </th>
                   <th
                     scope="col"
-                    className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0"
+                    className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 sm:pl-0"
                   >
                     Value
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {Object.values(data).map((v) => (
                   <tr key={v.value + v.title}>
-                    <td className="break-word py-1 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
+                    <td className="break-word py-1 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-gray-100 sm:pl-0">
                       {v.title}
-                      <p className="col-span-3 self-center text-xs font-light text-gray-600">
+                      <p className="col-span-3 self-center text-xs font-light text-gray-600 dark:text-gray-400">
                         {v.referenceRangeLow && v.referenceRangeHigh
                           ? `Range: ${v.referenceRangeLow}${v.unit || ''} - ${
                               v.referenceRangeHigh
@@ -60,8 +60,8 @@ export function ResultComponentSection({
                       </p>
                     </td>
                     <td
-                      className={`break-word px-3 py-1 text-sm text-gray-900 ${
-                        v.isOutOfRange ? 'text-red-700' : ''
+                      className={`break-word px-3 py-1 text-sm text-gray-900 dark:text-gray-100 ${
+                        v.isOutOfRange ? 'text-red-700 dark:text-red-400' : ''
                       }`}
                     >
                       {v.value}
@@ -71,7 +71,7 @@ export function ResultComponentSection({
                 ))}
               </tbody>
             </table>
-            <p className="mt-2 mb-4 text-sm font-semibold italic text-gray-900">
+            <p className="mt-2 mb-4 text-sm font-semibold italic text-gray-900 dark:text-gray-100">
               {uniqueDates.size > 0 &&
                 `Results taken at ${[...uniqueDates]
                   .filter((d): d is string => Boolean(d))

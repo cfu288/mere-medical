@@ -38,8 +38,8 @@ export function TenantSelectModelResultItem({
         classNames(
           'mb-2 flex cursor-pointer select-none items-center rounded-xl p-3 ring-inset',
           active
-            ? 'ring-primary-700 bg-gray-100 ring-2'
-            : 'bg-white ring-1 ring-gray-200',
+            ? 'ring-primary-700 bg-gray-100 dark:bg-gray-800 ring-2'
+            : 'bg-white dark:bg-gray-900 ring-1 ring-gray-200 dark:ring-gray-700',
         )
       }
     >
@@ -49,7 +49,9 @@ export function TenantSelectModelResultItem({
             <p
               className={classNames(
                 'text-sm font-medium',
-                active ? 'text-gray-900' : 'text-gray-800',
+                active
+                  ? 'text-gray-900 dark:text-gray-100'
+                  : 'text-gray-800 dark:text-gray-200',
               )}
             >
               {name}
@@ -57,7 +59,9 @@ export function TenantSelectModelResultItem({
             <p
               className={classNames(
                 'min-h-4 text-xs',
-                active ? 'text-gray-600' : 'text-gray-500',
+                active
+                  ? 'text-gray-600 dark:text-gray-400'
+                  : 'text-gray-500 dark:text-gray-400',
               )}
             >
               {managingOrganization}
@@ -66,7 +70,9 @@ export function TenantSelectModelResultItem({
           <ChevronRightIcon
             className={classNames(
               'ml-3 h-5 w-5 flex-none',
-              active ? 'text-gray-900' : 'text-gray-500',
+              active
+                ? 'text-gray-900 dark:text-gray-100'
+                : 'text-gray-500 dark:text-gray-400',
             )}
             aria-hidden="true"
           />
@@ -89,13 +95,13 @@ export function SkeletonTenantSelectModalResultItem({
   const randomTailwindWidth = SKELETON_WIDTHS[index % SKELETON_WIDTHS.length];
 
   return (
-    <div className="mb-2 flex select-none items-center rounded-xl bg-white p-3 ring-1 ring-inset ring-gray-200">
+    <div className="mb-2 flex select-none items-center rounded-xl bg-white dark:bg-gray-900 p-3 ring-1 ring-inset ring-gray-200 dark:ring-gray-700">
       <div className="ml-4 flex-auto">
         <div
-          className="h-5 animate-pulse rounded bg-gray-200"
+          className="h-5 animate-pulse rounded bg-gray-200 dark:bg-gray-700"
           style={{ width: `${randomTailwindWidth}%` }}
         ></div>
-        <div className="h-4 w-1/3 animate-pulse rounded bg-gray-100"></div>
+        <div className="h-4 w-1/3 animate-pulse rounded bg-gray-100 dark:bg-gray-800"></div>
       </div>
     </div>
   );

@@ -105,7 +105,7 @@ export function AddUserModal({
     <>
       <Modal open={open} setOpen={onClose}>
         <form
-          className="flex h-full flex-col divide-y divide-gray-200 rounded-lg bg-white shadow-xl"
+          className="flex h-full flex-col divide-y divide-gray-200 dark:divide-gray-700 rounded-lg bg-white dark:bg-gray-900 shadow-xl"
           onSubmit={handleSubmit(submitNewUser)}
         >
           <div className="h-0 flex-1 overflow-y-auto rounded-lg">
@@ -133,10 +133,10 @@ export function AddUserModal({
             </div>
             {/* User form fields */}
             <div className="m-2 mb-6 space-y-6 p-4 sm:space-y-5">
-              <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-gray-200 sm:pt-5">
+              <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-gray-200 sm:dark:border-gray-700 sm:pt-5">
                 <label
                   htmlFor="first-name"
-                  className="block text-sm font-medium text-gray-800 sm:mt-px sm:pt-2"
+                  className="block text-sm font-medium text-gray-800 dark:text-gray-200 sm:mt-px sm:pt-2"
                 >
                   First name
                 </label>
@@ -145,21 +145,21 @@ export function AddUserModal({
                     type="text"
                     id="first-name"
                     autoComplete="given-name"
-                    className="focus:border-primary-500 focus:ring-primary-500 block w-full max-w-lg rounded-md border-gray-300 shadow-sm sm:max-w-xs sm:text-sm"
+                    className="focus:border-primary-500 focus:ring-primary-500 block w-full max-w-lg rounded-md border-gray-300 dark:border-gray-600 shadow-sm sm:max-w-xs sm:text-sm"
                     {...register('firstName')}
                     aria-invalid={!!errors.firstName}
                   />
                   {errors.firstName && (
-                    <p className="text-sm text-red-500 sm:max-w-xs">
+                    <p className="text-sm text-red-500 dark:text-red-400 sm:max-w-xs">
                       {errors.firstName.message}
                     </p>
                   )}
                 </div>
               </div>
-              <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
+              <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:dark:border-gray-700 sm:pt-5">
                 <label
                   htmlFor="lastName"
-                  className="block text-sm font-medium text-gray-800 sm:mt-px sm:pt-2"
+                  className="block text-sm font-medium text-gray-800 dark:text-gray-200 sm:mt-px sm:pt-2"
                 >
                   Last name
                 </label>
@@ -168,21 +168,21 @@ export function AddUserModal({
                     type="text"
                     id="last-name"
                     autoComplete="family-name"
-                    className="focus:border-primary-500 focus:ring-primary-500 block w-full max-w-lg rounded-md border-gray-300 shadow-sm sm:max-w-xs sm:text-sm"
+                    className="focus:border-primary-500 focus:ring-primary-500 block w-full max-w-lg rounded-md border-gray-300 dark:border-gray-600 shadow-sm sm:max-w-xs sm:text-sm"
                     {...register('lastName')}
                     aria-invalid={!!errors.lastName}
                   />
                   {errors.lastName && (
-                    <p className="text-sm text-red-500 sm:max-w-xs">
+                    <p className="text-sm text-red-500 dark:text-red-400 sm:max-w-xs">
                       {errors.lastName.message}
                     </p>
                   )}
                 </div>
               </div>
-              <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
+              <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:dark:border-gray-700 sm:pt-5">
                 <label
                   htmlFor="email"
-                  className="block text-sm font-medium text-gray-800 sm:mt-px sm:pt-2"
+                  className="block text-sm font-medium text-gray-800 dark:text-gray-200 sm:mt-px sm:pt-2"
                 >
                   Email address
                 </label>
@@ -191,21 +191,21 @@ export function AddUserModal({
                     id="email"
                     type="text"
                     autoComplete="email"
-                    className="focus:border-primary-500 focus:ring-primary-500 block w-full max-w-lg rounded-md border-gray-300 shadow-sm sm:max-w-xs sm:text-sm"
+                    className="focus:border-primary-500 focus:ring-primary-500 block w-full max-w-lg rounded-md border-gray-300 dark:border-gray-600 shadow-sm sm:max-w-xs sm:text-sm"
                     {...register('email')}
                     aria-invalid={!!errors.email}
                   />
                   {errors.email && (
-                    <p className="text-sm text-red-500 sm:max-w-xs">
+                    <p className="text-sm text-red-500 dark:text-red-400 sm:max-w-xs">
                       {errors.email.message}
                     </p>
                   )}
                 </div>
               </div>
-              <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
+              <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:dark:border-gray-700 sm:pt-5">
                 <label
                   htmlFor="date-of-birth"
-                  className="block text-sm font-medium text-gray-800 sm:mt-px sm:pt-2"
+                  className="block text-sm font-medium text-gray-800 dark:text-gray-200 sm:mt-px sm:pt-2"
                 >
                   Date of Birth
                 </label>
@@ -214,21 +214,21 @@ export function AddUserModal({
                     id="date-of-birth"
                     type="date"
                     autoComplete="bday"
-                    className="focus:border-primary-500 focus:ring-primary-500 block w-full max-w-lg rounded-md border-gray-300 shadow-sm sm:max-w-xs sm:text-sm"
+                    className="focus:border-primary-500 focus:ring-primary-500 block w-full max-w-lg rounded-md border-gray-300 dark:border-gray-600 shadow-sm sm:max-w-xs sm:text-sm"
                     {...register('birthday')}
                     aria-invalid={!!errors.birthday}
                   />
                   {errors.birthday && (
-                    <p className="text-sm text-red-500 sm:max-w-xs">
+                    <p className="text-sm text-red-500 dark:text-red-400 sm:max-w-xs">
                       {errors.birthday.message}
                     </p>
                   )}
                 </div>
               </div>
-              <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
+              <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:dark:border-gray-700 sm:pt-5">
                 <label
                   htmlFor="gender"
-                  className="block text-sm font-medium text-gray-800 sm:mt-px sm:pt-2"
+                  className="block text-sm font-medium text-gray-800 dark:text-gray-200 sm:mt-px sm:pt-2"
                 >
                   Gender
                 </label>
@@ -237,30 +237,30 @@ export function AddUserModal({
                     type="text"
                     id="gender"
                     autoComplete="gender"
-                    className="focus:border-primary-500 focus:ring-primary-500 block w-full max-w-lg rounded-md border-gray-300 shadow-sm sm:max-w-xs sm:text-sm"
+                    className="focus:border-primary-500 focus:ring-primary-500 block w-full max-w-lg rounded-md border-gray-300 dark:border-gray-600 shadow-sm sm:max-w-xs sm:text-sm"
                     {...register('gender')}
                     aria-invalid={!!errors.gender}
                   />
                   {errors.gender && (
-                    <p className="text-sm text-red-500 sm:max-w-xs">
+                    <p className="text-sm text-red-500 dark:text-red-400 sm:max-w-xs">
                       {errors.gender.message}
                     </p>
                   )}
                 </div>
               </div>
-              <div className="sm:grid sm:grid-cols-3 sm:items-center sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
+              <div className="sm:grid sm:grid-cols-3 sm:items-center sm:gap-4 sm:border-t sm:border-gray-200 sm:dark:border-gray-700 sm:pt-5">
                 <label
                   htmlFor="photo"
-                  className="block text-sm font-medium text-gray-800"
+                  className="block text-sm font-medium text-gray-800 dark:text-gray-200"
                 >
                   Photo
                 </label>
                 <div className="mt-1 sm:col-span-2 sm:mt-0">
                   <div className="flex items-center justify-between">
-                    <span className="flex-0 h-12 w-12 overflow-hidden rounded-full bg-gray-100">
+                    <span className="flex-0 h-12 w-12 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
                       {!pp ? (
                         <svg
-                          className="h-full w-full text-gray-300"
+                          className="h-full w-full text-gray-300 dark:text-gray-600"
                           fill="currentColor"
                           viewBox="0 0 24 24"
                         >
@@ -268,7 +268,7 @@ export function AddUserModal({
                         </svg>
                       ) : (
                         <img
-                          className="h-full w-full text-gray-300"
+                          className="h-full w-full text-gray-300 dark:text-gray-600"
                           src={profilePhotoUrl}
                           alt="profile"
                         ></img>
@@ -280,7 +280,7 @@ export function AddUserModal({
                         e.preventDefault();
                         setTogglePhotoModal((x) => !x);
                       }}
-                      className="file:focus:ring-primary-500 file:text-medium block w-full flex-1 py-2 text-sm text-gray-800 file:ml-5 file:mr-4 file:rounded-md file:border file:border-gray-300 file:bg-white  file:px-3 file:py-2 file:text-gray-800 hover:file:bg-gray-100 focus:outline-none file:focus:outline-none file:focus:ring-2 file:focus:ring-offset-2"
+                      className="file:focus:ring-primary-500 file:text-medium block w-full flex-1 py-2 text-sm text-gray-800 dark:text-gray-200 file:ml-5 file:mr-4 file:rounded-md file:border file:border-gray-300 dark:file:border-gray-600 file:bg-white dark:file:bg-gray-900  file:px-3 file:py-2 file:text-gray-800 dark:file:text-gray-200 hover:file:bg-gray-100 dark:hover:file:bg-gray-800 focus:outline-none file:focus:outline-none file:focus:ring-2 file:focus:ring-offset-2"
                     >
                       Upload photo
                     </button>
@@ -292,7 +292,7 @@ export function AddUserModal({
           <div className="flex flex-shrink-0 justify-end px-4 py-4">
             <button
               type="button"
-              className="focus:ring-primary-500 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2"
+              className="focus:ring-primary-500 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-4 py-2 text-sm font-medium text-gray-800 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2"
               onClick={onClose}
             >
               Cancel

@@ -76,30 +76,30 @@ export function parseCCDAVitalsSection(
 
   return (
     <>
-      <table className="min-w-full table-auto divide-y divide-gray-300 sm:table-auto">
+      <table className="min-w-full table-auto divide-y divide-gray-300 dark:divide-gray-600 sm:table-auto">
         <thead>
           <tr>
             <th
               scope="col"
-              className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:w-auto sm:pl-0"
+              className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 sm:w-auto sm:pl-0"
             >
               Title
             </th>
             <th
               scope="col"
-              className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0"
+              className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 sm:pl-0"
             >
               Value
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-200">
+        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
           {Object.values(extractedVital).map((v) => (
             <tr key={v.value}>
-              <td className="break-word py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
+              <td className="break-word py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-gray-100 sm:pl-0">
                 {v.title}
               </td>
-              <td className="break-word px-3 py-4 text-sm text-gray-900">
+              <td className="break-word px-3 py-4 text-sm text-gray-900 dark:text-gray-100">
                 {v.value}
                 {v.unit}
               </td>
@@ -107,7 +107,7 @@ export function parseCCDAVitalsSection(
           ))}
         </tbody>
       </table>
-      <p className="mt-2 mb-4 text-sm font-semibold italic text-gray-900">
+      <p className="mt-2 mb-4 text-sm font-semibold italic text-gray-900 dark:text-gray-100">
         Vitals taken at{' '}
         {[...uniqueDates]
           .filter((d): d is string => Boolean(d))

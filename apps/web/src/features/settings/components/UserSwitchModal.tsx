@@ -52,7 +52,7 @@ export function UserSwitchModal({
 
         <button
           onClick={onAddNewUser}
-          className="w-full flex items-center justify-center space-x-2 rounded-lg border-2 border-dashed border-gray-300 px-3 py-3 text-gray-600 hover:border-gray-400 hover:text-gray-700 transition-colors"
+          className="w-full flex items-center justify-center space-x-2 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 px-3 py-3 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
         >
           <PlusIcon className="h-5 w-5" />
           <span className="text-sm font-medium">Add New User</span>
@@ -101,12 +101,12 @@ export function UserSwitchModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md">
-                <div className="bg-white px-4 pb-4 pt-5 sm:p-6">
+              <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-900 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md">
+                <div className="bg-white dark:bg-gray-900 px-4 pb-4 pt-5 sm:p-6">
                   <div className="absolute right-0 top-0 pr-4 pt-4">
                     <button
                       type="button"
-                      className="rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                      className="rounded-md text-gray-400 hover:text-gray-500 dark:hover:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
                       onClick={onClose}
                     >
                       <span className="sr-only">Close</span>
@@ -116,7 +116,7 @@ export function UserSwitchModal({
                   <div>
                     <Dialog.Title
                       as="h3"
-                      className="text-lg font-medium leading-6 text-gray-900 mb-4"
+                      className="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100 mb-4"
                     >
                       Switch user
                     </Dialog.Title>

@@ -16,8 +16,8 @@ export function UserListItem({ user, isSelected, onClick }: UserListItemProps) {
       onClick={onClick}
       className={`w-full flex items-center space-x-3 rounded-lg px-3 py-3 transition-colors ${
         isSelected
-          ? 'bg-primary-50 border-2 border-primary-500'
-          : 'bg-white border-2 border-gray-200 hover:bg-gray-50'
+          ? 'bg-primary-50 dark:bg-primary-950 border-2 border-primary-500'
+          : 'bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
       }`}
     >
       <div className="flex-shrink-0">
@@ -29,7 +29,7 @@ export function UserListItem({ user, isSelected, onClick }: UserListItemProps) {
               alt={getUserDisplayName(user)}
             />
           ) : (
-            <div className="h-full w-full bg-gray-200">
+            <div className="h-full w-full bg-gray-200 dark:bg-gray-700">
               <svg
                 className="h-full w-full text-gray-400"
                 fill="currentColor"
@@ -42,11 +42,13 @@ export function UserListItem({ user, isSelected, onClick }: UserListItemProps) {
         </div>
       </div>
       <div className="flex-1 text-left">
-        <p className="text-sm font-medium text-gray-900">
+        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
           {getUserDisplayName(user)}
         </p>
         {user.get('email') && (
-          <p className="text-sm text-gray-500">{user.get('email')}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {user.get('email')}
+          </p>
         )}
       </div>
       {isSelected ? (
@@ -54,7 +56,7 @@ export function UserListItem({ user, isSelected, onClick }: UserListItemProps) {
           <div className="h-3 w-3 rounded-full bg-primary-600" />
         </div>
       ) : (
-        <div className="h-6 w-6 rounded-full border-2 border-gray-300" />
+        <div className="h-6 w-6 rounded-full border-2 border-gray-300 dark:border-gray-600" />
       )}
     </button>
   );

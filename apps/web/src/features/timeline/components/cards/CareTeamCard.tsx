@@ -33,7 +33,7 @@ export const CareTeamCard = memo(function CareTeamCard({
           <div className="items-top flex justify-between">
             <TimelineCardCategoryTitle
               title="Care Team"
-              color="text-cyan-600"
+              color="text-cyan-600 dark:text-cyan-400"
             />
             <OpenableCardIcon />
           </div>
@@ -41,16 +41,16 @@ export const CareTeamCard = memo(function CareTeamCard({
           <TimelineCardTitle>
             {item.metadata?.display_name || careTeam?.name}
           </TimelineCardTitle>
-          <p className="truncate text-xs font-medium text-gray-800 md:text-sm">
+          <p className="truncate text-xs font-medium text-gray-800 dark:text-gray-200 md:text-sm">
             {formatTime(item.metadata?.date)}
           </p>
           {participantCount > 0 && (
-            <p className="truncate text-xs font-medium text-gray-600 md:text-sm">
+            <p className="truncate text-xs font-medium text-gray-600 dark:text-gray-400 md:text-sm">
               {participantCount} participant{participantCount !== 1 ? 's' : ''}
             </p>
           )}
           {conn?.get('name') ? (
-            <p className="truncate text-xs font-medium text-gray-700 md:text-sm">
+            <p className="truncate text-xs font-medium text-gray-700 dark:text-gray-300 md:text-sm">
               {conn?.get('name')}
             </p>
           ) : (

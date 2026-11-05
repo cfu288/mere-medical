@@ -23,14 +23,17 @@ export const AllergyIntoleranceCard = memo(function AllergyIntoleranceCard({
   return (
     <CardBase>
       <div className="min-w-0 flex-1">
-        <TimelineCardCategoryTitle title="Allergy" color="text-red-600" />
+        <TimelineCardCategoryTitle
+          title="Allergy"
+          color="text-red-600 dark:text-red-400"
+        />
 
         <TimelineCardTitle>{displayName}</TimelineCardTitle>
-        <p className="truncate text-xs font-medium text-gray-800 md:text-sm">
+        <p className="truncate text-xs font-medium text-gray-800 dark:text-gray-200 md:text-sm">
           {formatTime(item.metadata?.date)}
         </p>
         {conn?.get('name') ? (
-          <p className="truncate text-xs font-medium text-gray-700 md:text-sm">
+          <p className="truncate text-xs font-medium text-gray-700 dark:text-gray-300 md:text-sm">
             {conn?.get('name')}
           </p>
         ) : (

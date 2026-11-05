@@ -20,7 +20,7 @@ export function ConditionsListCard({
               <div className="flex w-full items-center justify-between py-6 text-xl font-extrabold">
                 Conditions
                 <ChevronDownIcon
-                  className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 ${
+                  className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 dark:active:bg-gray-700 ${
                     open ? 'rotate-180 transform' : ''
                   }`}
                 />
@@ -39,10 +39,10 @@ export function ConditionsListCard({
                   <div className="min-w-0 flex-1">
                     {items.map((item) => (
                       <div className="py-2" key={item.id}>
-                        <p className="text-sm font-bold text-gray-900 md:text-base">
+                        <p className="text-sm font-bold text-gray-900 dark:text-gray-100 md:text-base">
                           {item.metadata?.display_name}
                         </p>
-                        <p className="truncate text-xs font-medium text-gray-800 md:text-sm">
+                        <p className="truncate text-xs font-medium text-gray-800 dark:text-gray-200 md:text-sm">
                           {item.metadata?.date
                             ? format(parseISO(item.metadata.date), 'MM/dd/yyyy')
                             : ''}

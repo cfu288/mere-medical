@@ -21,11 +21,11 @@ export const ImmunizationCard = memo(function ImmunizationCard({
       <div className="min-w-0 flex-1">
         <TimelineCardCategoryTitle
           title="Immunization"
-          color="text-purple-600"
+          color="text-purple-600 dark:text-purple-400"
         />
 
         <TimelineCardTitle>{item.metadata?.display_name}</TimelineCardTitle>
-        <p className="truncate text-xs font-medium text-gray-800 md:text-sm">
+        <p className="truncate text-xs font-medium text-gray-800 dark:text-gray-200 md:text-sm">
           {formatTime(item.metadata?.date)}
         </p>
         {conn?.get('name') ? (

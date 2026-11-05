@@ -34,12 +34,12 @@ export function ShowObservationResultsExpandable({
     <div key={item.id}>
       <div className="relative py-2">
         <div className="absolute inset-0 flex items-center" aria-hidden="true">
-          <div className="w-full border-t border-gray-300" />
+          <div className="w-full border-t border-gray-300 dark:border-gray-600" />
         </div>
         <div className="relative flex justify-center">
           <button
             type="button"
-            className="focus:ring-primary-500 inline-flex items-center rounded-full border border-gray-300 bg-white px-4 py-1.5 text-sm font-medium leading-5 text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2"
+            className="focus:ring-primary-500 inline-flex items-center rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-4 py-1.5 text-sm font-medium leading-5 text-gray-800 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2"
             onClick={() => {
               setExpanded((x) => !x);
             }}
@@ -52,7 +52,7 @@ export function ShowObservationResultsExpandable({
         {list?.map((list_item) => (
           <div
             key={list_item.id || list_item.fullUrl}
-            className="flex flex-row gap-2 text-sm text-gray-600"
+            className="flex flex-row gap-2 text-sm text-gray-600 dark:text-gray-400"
           >
             {!(list_item.resource as Observation)?.dataAbsentReason && (
               <>

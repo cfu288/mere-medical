@@ -362,8 +362,8 @@ export function RxDbProvider(props: RxDbProviderProps) {
                   />
                 </div>
                 <div className="sm:max-w-[480px] mx-4 mt-10 sm:mx-auto sm:w-full">
-                  <div className="rounded-md bg-white px-6 pb-10 pt-2 shadow-md sm:mx-4">
-                    <h2 className="my-6 text-center text-xl font-semibold text-gray-800">
+                  <div className="rounded-md bg-white dark:bg-gray-900 px-6 pb-10 pt-2 shadow-md sm:mx-4">
+                    <h2 className="my-6 text-center text-xl font-semibold text-gray-800 dark:text-gray-200">
                       Enter your encryption password
                     </h2>
                     <form
@@ -376,7 +376,7 @@ export function RxDbProvider(props: RxDbProviderProps) {
                       <div>
                         <label
                           htmlFor="password"
-                          className="hidden text-sm font-medium leading-6 text-gray-900"
+                          className="hidden text-sm font-medium leading-6 text-gray-900 dark:text-gray-100"
                         >
                           Password
                         </label>
@@ -393,7 +393,7 @@ export function RxDbProvider(props: RxDbProviderProps) {
                               setPassword(e.target.value);
                               initialized === 'ERROR' && setInitialized('IDLE');
                             }}
-                            className={`focus:ring-primary-600 block w-full rounded-md border-0 bg-gray-100 py-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-700 focus:ring-2 focus:ring-inset ${
+                            className={`focus:ring-primary-600 block w-full rounded-md border-0 bg-gray-100 dark:bg-gray-800 py-3 text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-700 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-inset ${
                               password === '' ? 'italic' : ''
                             }`}
                           />
@@ -409,7 +409,9 @@ export function RxDbProvider(props: RxDbProviderProps) {
                       </div>
                       {/* error message */}
                       {initialized === 'ERROR' && (
-                        <div className="text-center text-red-500">{error}</div>
+                        <div className="text-center text-red-500 dark:text-red-400">
+                          {error}
+                        </div>
                       )}
                     </form>
                   </div>

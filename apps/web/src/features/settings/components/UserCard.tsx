@@ -68,10 +68,10 @@ export function UserCard() {
         <div className="mx-auto mt-2 flex max-w-sm flex-col px-4 sm:px-6 lg:px-8">
           <li
             key={user.email || user.id}
-            className="flex-colrounded-lg relative col-span-1 flex border bg-white text-center"
+            className="relative col-span-1 flex flex-col rounded-lg border bg-white dark:bg-gray-900 text-center"
           >
             <button
-              className="absolute top-4 right-4 flex justify-center text-gray-700"
+              className="absolute top-4 right-4 flex justify-center text-gray-700 dark:text-gray-300"
               aria-label="Edit profile"
               onClick={() => {
                 setOpenEditUserModal(true);
@@ -83,7 +83,7 @@ export function UserCard() {
               {user?.profile_picture?.data ? (
                 <div className="mx-auto h-32 w-32 flex-shrink-0 rounded-full border border-black">
                   <img
-                    className="h-full w-full rounded-full text-gray-300"
+                    className="h-full w-full rounded-full text-gray-300 dark:text-gray-600"
                     src={user.profile_picture.data}
                     alt="profile"
                   ></img>
@@ -91,7 +91,7 @@ export function UserCard() {
               ) : (
                 <div className="mx-auto h-32 w-32 flex-shrink-0 rounded-full border border-black">
                   <svg
-                    className="h-full w-full rounded-full text-gray-300"
+                    className="h-full w-full rounded-full text-gray-300 dark:text-gray-600"
                     fill="currentColor"
                     viewBox="0 0 24 24"
                   >
@@ -99,22 +99,22 @@ export function UserCard() {
                   </svg>
                 </div>
               )}
-              <h2 className="text-md mt-6 text-start font-medium text-gray-600">
+              <h2 className="text-md mt-6 text-start font-medium text-gray-600 dark:text-gray-400">
                 Name
               </h2>
-              <p className="text-md mt-2 text-start font-medium text-gray-900">
+              <p className="text-md mt-2 text-start font-medium text-gray-900 dark:text-gray-100">
                 {user.first_name} {user.last_name}
               </p>
-              <h2 className="text-md mt-6 text-start font-medium text-gray-600">
+              <h2 className="text-md mt-6 text-start font-medium text-gray-600 dark:text-gray-400">
                 Birthday
               </h2>
-              <p className="text-md mt-2 text-start font-medium text-gray-900">
+              <p className="text-md mt-2 text-start font-medium text-gray-900 dark:text-gray-100">
                 {user.birthday && format(new Date(user.birthday), 'MM/dd/yyyy')}
               </p>
-              <h2 className="text-md mt-6 text-start font-medium text-gray-600">
+              <h2 className="text-md mt-6 text-start font-medium text-gray-600 dark:text-gray-400">
                 Email
               </h2>
-              <p className="text-md mt-2 text-start font-medium text-gray-900">
+              <p className="text-md mt-2 text-start font-medium text-gray-900 dark:text-gray-100">
                 {user.email}
               </p>
             </div>

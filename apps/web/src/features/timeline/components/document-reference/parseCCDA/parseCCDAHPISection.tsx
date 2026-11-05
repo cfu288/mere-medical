@@ -78,24 +78,24 @@ export function parseCCDAHPISection(
       <Disclosure defaultOpen>
         {({ open }) => (
           <>
-            <Disclosure.Button className="mb-1 w-full rounded-md bg-gray-50 p-1 font-bold">
+            <Disclosure.Button className="mb-1 w-full rounded-md bg-gray-50 dark:bg-gray-800 p-1 font-bold">
               <div className="flex w-full items-center justify-between text-left">
                 {extractedNote?.title || ''}{' '}
                 {extractedNote?.author ? `- ${extractedNote?.author}` : ''}
                 <ChevronRightIcon
-                  className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 ${
+                  className={`h-8 w-8 rounded duration-150 active:scale-95 active:bg-slate-50 dark:active:bg-gray-700 ${
                     open ? 'rotate-90 transform' : ''
                   }`}
                 />
               </div>
             </Disclosure.Button>
-            <Disclosure.Panel className="m-1 text-sm text-gray-800">
-              <div className="text-md whitespace-wrap max-h-screen overflow-y-scroll p-2 sm:prose prose-sm w-full min-w-full">
+            <Disclosure.Panel className="m-1 text-sm text-gray-800 dark:text-gray-200">
+              <div className="text-md whitespace-wrap max-h-screen overflow-y-scroll p-2 sm:prose prose-sm dark:prose-invert w-full min-w-full">
                 {parse(DOMPurify.sanitize(extractedNote?.text || 'No note'))}
               </div>
               {/* horizonal divider */}
               <hr className="my-4" />
-              <p className="mt-2 mb-4 text-sm font-semibold italic text-gray-900">
+              <p className="mt-2 mb-4 text-sm font-semibold italic text-gray-900 dark:text-gray-100">
                 Note taken at {parseDateString(extractedNote?.datetime || '')}{' '}
                 by {extractedNote?.author || ''}
               </p>
@@ -103,10 +103,10 @@ export function parseCCDAHPISection(
                 (elem) => elem !== null && elem !== undefined,
               ) && (
                 <>
-                  <p className="mt-2 text-sm italic text-gray-900">
+                  <p className="mt-2 text-sm italic text-gray-900 dark:text-gray-100">
                     {extractedNote?.address?.streetAddressLine || ''}
                   </p>
-                  <p className="m mb-2 text-sm italic text-gray-900">
+                  <p className="m mb-2 text-sm italic text-gray-900 dark:text-gray-100">
                     {extractedNote?.address?.city || ''},{' '}
                     {extractedNote?.address?.state || ''}{' '}
                     {extractedNote?.address?.postalCode || ''}

@@ -19,7 +19,7 @@ export function DisplayCCDARawSection({
     <Disclosure>
       {({ open }) => (
         <>
-          <Disclosure.Button className="mb-2 w-full rounded-md bg-gray-100 p-2 font-bold transition-colors hover:bg-gray-200">
+          <Disclosure.Button className="mb-2 w-full rounded-md bg-gray-100 dark:bg-gray-800 p-2 font-bold transition-colors hover:bg-gray-200 dark:hover:bg-gray-700">
             <div className="flex w-full items-center justify-between">
               <span className="flex items-center gap-2">{title}</span>
               <ChevronRightIcon
@@ -27,8 +27,8 @@ export function DisplayCCDARawSection({
               />
             </div>
           </Disclosure.Button>
-          <Disclosure.Panel className="m-4 text-sm text-gray-800 ">
-            <p className="p-2 sm:prose prose-sm overflow-x-auto [&_table]:table-auto [&_tr]:border-b [&_caption]:text-center">
+          <Disclosure.Panel className="m-4 text-sm text-gray-800 dark:text-gray-200 ">
+            <p className="p-2 sm:prose prose-sm dark:prose-invert overflow-x-auto [&_table]:table-auto [&_tr]:border-b [&_caption]:text-center">
               {sanitizedData}
             </p>
           </Disclosure.Panel>

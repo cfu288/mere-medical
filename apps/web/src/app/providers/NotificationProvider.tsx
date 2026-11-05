@@ -92,7 +92,7 @@ function NotificationRenderer(
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <div className="pointer-events-auto w-full max-w-sm overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+            <div className="pointer-events-auto w-full max-w-sm overflow-hidden rounded-lg bg-white dark:bg-gray-900 shadow-lg ring-1 ring-black dark:ring-white ring-opacity-5">
               <div className="p-4">
                 <div className="flex items-start">
                   <div className="flex-shrink-0">
@@ -117,7 +117,7 @@ function NotificationRenderer(
                   </div>
                   <div className="ml-3 w-0 flex-1 pt-0.5">
                     {props.data.message && (
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                         {props.data.message}
                       </p>
                     )}
@@ -125,7 +125,7 @@ function NotificationRenderer(
                   <div className="ml-4 flex flex-shrink-0">
                     <button
                       type="button"
-                      className="focus:ring-primary-700 inline-flex rounded-md bg-white text-gray-700 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                      className="focus:ring-primary-700 inline-flex rounded-md bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
                       onClick={() => {
                         dispatch({ type: 'hide_notification' });
                       }}

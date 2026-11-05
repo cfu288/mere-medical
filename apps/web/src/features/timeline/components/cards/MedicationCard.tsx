@@ -20,15 +20,15 @@ export const MedicationCard = memo(function MedicationCard({
       <div className="min-w-0 flex-1">
         <TimelineCardCategoryTitle
           title="Medication"
-          color="text-fuchsia-600"
+          color="text-fuchsia-600 dark:text-fuchsia-400"
         />
 
         <TimelineCardTitle>{item.metadata?.display_name}</TimelineCardTitle>
-        <p className="truncate text-xs font-medium text-gray-800 md:text-sm">
+        <p className="truncate text-xs font-medium text-gray-800 dark:text-gray-200 md:text-sm">
           {formatTime(item.metadata?.date)}
         </p>
         {conn?.get('name') ? (
-          <p className="truncate text-xs font-medium text-gray-700 md:text-sm">
+          <p className="truncate text-xs font-medium text-gray-700 dark:text-gray-300 md:text-sm">
             {conn?.get('name')}
           </p>
         ) : (

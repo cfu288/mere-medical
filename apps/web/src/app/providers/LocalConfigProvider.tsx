@@ -10,10 +10,15 @@ import {
   AI_DEFAULTS,
   DEFAULT_AI_PROVIDER,
 } from '../../features/ai-chat/constants/defaults';
+import {
+  DEFAULT_THEME_PREFERENCE,
+  ThemePreference,
+} from '../../shared/utils/theme';
 
 interface LocalConfig {
   use_encrypted_database: boolean;
   developer_mode_enabled?: boolean;
+  theme?: ThemePreference;
   experimental_features_enabled?: boolean;
   experimental__use_openai_rag?: boolean;
   experimental__openai_api_key?: string;
@@ -25,6 +30,7 @@ interface LocalConfig {
 const defaultLocalConfig: LocalConfig = {
   use_encrypted_database: false,
   developer_mode_enabled: false,
+  theme: DEFAULT_THEME_PREFERENCE,
   experimental_features_enabled: false,
   experimental__use_openai_rag: false,
   experimental__openai_api_key: '',
@@ -34,9 +40,10 @@ const defaultLocalConfig: LocalConfig = {
 };
 
 function getLocalConfig(): LocalConfig {
+  // Outside the try: a storage error is not a bad config, see LocalConfigProvider.
+  const raw = localStorage.getItem('config');
+  if (!raw) return defaultLocalConfig;
   try {
-    const raw = localStorage.getItem('config');
-    if (!raw) return defaultLocalConfig;
     const parsed = JSON.parse(raw) as Partial<LocalConfig>;
     return { ...defaultLocalConfig, ...parsed };
   } catch {
@@ -53,21 +60,16 @@ const UpdateLocalConfigContext = React.createContext<
   (config: Partial<LocalConfig>) => void
 >(() => undefined);
 
-/**
- * Helper function that allows you to get a value from the local config
- * Does not update when the config changes
- * @param key
- * @returns
- */
-export const getLocalConfigValue = (key: keyof LocalConfig) => {
-  const config = getLocalConfig();
-  return config[key];
-};
-
 export function LocalConfigProvider(props: LocalConfigProviderProps) {
   const [config, setConfig] = useState<LocalConfig | undefined>(undefined),
     hasRun = useRef(false);
 
+  // DO NOT catch storage errors here or in getLocalConfig and fall back to the
+  // defaults. use_encrypted_database picks which database opens, and callers
+  // such as the encryption toggle reload the page right after saving it: a
+  // read that silently returns the defaults opens the unencrypted database, and
+  // a save that silently fails reloads into the old mode. Mere keeps records in
+  // IndexedDB, so it cannot run without site storage anyway.
   const updateLocalConfig = useCallback((config: Partial<LocalConfig>) => {
     const currentConfig = getLocalConfig();
     const newConfig = { ...currentConfig, ...config };

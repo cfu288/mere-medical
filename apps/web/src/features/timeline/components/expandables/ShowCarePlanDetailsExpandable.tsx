@@ -36,14 +36,14 @@ export function ShowCarePlanDetailsExpandable({
           setClose={toggleOpen}
         />
         <div className="max-h-full scroll-py-3 p-3">
-          <div className="rounded-lg border border-solid border-gray-200 p-4">
+          <div className="rounded-lg border border-solid border-gray-200 dark:border-gray-700 p-4">
             <div className="space-y-4">
               {carePlan?.status && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Status
                   </div>
-                  <div className="col-span-2 text-sm text-gray-900 capitalize">
+                  <div className="col-span-2 text-sm text-gray-900 dark:text-gray-100 capitalize">
                     {carePlan.status}
                   </div>
                 </div>
@@ -51,10 +51,10 @@ export function ShowCarePlanDetailsExpandable({
 
               {carePlan?.intent && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Intent
                   </div>
-                  <div className="col-span-2 text-sm text-gray-900 capitalize">
+                  <div className="col-span-2 text-sm text-gray-900 dark:text-gray-100 capitalize">
                     {carePlan.intent}
                   </div>
                 </div>
@@ -62,10 +62,10 @@ export function ShowCarePlanDetailsExpandable({
 
               {carePlan?.title && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Title
                   </div>
-                  <div className="col-span-2 text-sm text-gray-900">
+                  <div className="col-span-2 text-sm text-gray-900 dark:text-gray-100">
                     {carePlan.title}
                   </div>
                 </div>
@@ -73,10 +73,10 @@ export function ShowCarePlanDetailsExpandable({
 
               {carePlan?.description && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Description
                   </div>
-                  <div className="col-span-2 text-sm text-gray-900">
+                  <div className="col-span-2 text-sm text-gray-900 dark:text-gray-100">
                     {carePlan.description}
                   </div>
                 </div>
@@ -84,12 +84,15 @@ export function ShowCarePlanDetailsExpandable({
 
               {carePlan?.category && carePlan.category.length > 0 && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Category
                   </div>
                   <div className="col-span-2 space-y-1">
                     {carePlan.category.map((cat, index) => (
-                      <div key={index} className="text-sm text-gray-900">
+                      <div
+                        key={index}
+                        className="text-sm text-gray-900 dark:text-gray-100"
+                      >
                         {cat.text || cat.coding?.[0]?.display || 'N/A'}
                       </div>
                     ))}
@@ -99,21 +102,21 @@ export function ShowCarePlanDetailsExpandable({
 
               {carePlan?.activity && carePlan.activity.length > 0 && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Activities
                   </div>
                   <div className="col-span-2 space-y-2">
                     {carePlan.activity.map((activity, index) => (
                       <div
                         key={index}
-                        className="text-sm text-gray-900 border-l-2 border-indigo-300 pl-2"
+                        className="text-sm text-gray-900 dark:text-gray-100 border-l-2 border-indigo-300 dark:border-indigo-700 pl-2"
                       >
                         {activity.detail?.description ||
                           activity.detail?.code?.text ||
                           activity.detail?.code?.coding?.[0]?.display ||
                           `Activity ${index + 1}`}
                         {activity.detail?.status && (
-                          <span className="ml-2 text-gray-500 capitalize">
+                          <span className="ml-2 text-gray-500 dark:text-gray-400 capitalize">
                             ({activity.detail.status})
                           </span>
                         )}
@@ -125,12 +128,15 @@ export function ShowCarePlanDetailsExpandable({
 
               {carePlan?.goal && carePlan.goal.length > 0 && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Goals
                   </div>
                   <div className="col-span-2 space-y-1">
                     {carePlan.goal.map((goal, index) => (
-                      <div key={index} className="text-sm text-gray-900">
+                      <div
+                        key={index}
+                        className="text-sm text-gray-900 dark:text-gray-100"
+                      >
                         {goal.display || goal.reference || `Goal ${index + 1}`}
                       </div>
                     ))}
@@ -140,10 +146,10 @@ export function ShowCarePlanDetailsExpandable({
 
               {carePlan?.author?.display && (
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Author
                   </div>
-                  <div className="col-span-2 text-sm text-gray-900">
+                  <div className="col-span-2 text-sm text-gray-900 dark:text-gray-100">
                     {carePlan.author.display}
                   </div>
                 </div>

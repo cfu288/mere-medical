@@ -501,7 +501,7 @@ export function TenantSelectModal({
                 {mainSources.map((file) => (
                   <li key={file.title} className="relative">
                     <div
-                      className={`aspect-h-7 aspect-w-10 focus-within:ring-primary-500 group block w-full overflow-hidden rounded-lg transition-all focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 ${
+                      className={`aspect-h-7 aspect-w-10 focus-within:ring-primary-500 group block w-full overflow-hidden rounded-lg transition-all focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 dark:focus-within:ring-offset-gray-900 ${
                         file.enabled
                           ? 'bg-primary-700 hover:bg-primary-600 cursor-pointer'
                           : 'bg-gray-400 cursor-not-allowed'
@@ -538,19 +538,19 @@ export function TenantSelectModal({
                         <span className="sr-only">{`Select ${file.title}`}</span>
                       </button>
                     </div>
-                    <p className="pointer-events-none mt-2 block truncate text-sm font-medium text-gray-900">
+                    <p className="pointer-events-none mt-2 block truncate text-sm font-medium text-gray-900 dark:text-gray-100">
                       {file.title}
                     </p>
                     {!file.enabled ? (
                       file.reason.kind === 'message' ? (
-                        <p className="block text-sm font-medium text-gray-500">
+                        <p className="block text-sm font-medium text-gray-500 dark:text-gray-400">
                           {file.reason.text}
                         </p>
                       ) : (
-                        <p className="pointer-events-auto relative z-10 block text-sm font-medium text-gray-700">
+                        <p className="pointer-events-auto relative z-10 block text-sm font-medium text-gray-700 dark:text-gray-300">
                           To enable, go to{' '}
                           <Link
-                            className="text-primary hover:text-primary-500 w-full text-center underline"
+                            className="text-primary dark:text-primary-300 hover:text-primary-500 dark:hover:text-primary-200 w-full text-center underline"
                             to={`${Routes.Settings}#use_proxy`}
                             onClick={(e) => e.stopPropagation()}
                           >
@@ -561,7 +561,7 @@ export function TenantSelectModal({
                       )
                     ) : (
                       file.alt && (
-                        <p className="pointer-events-none block text-sm font-medium text-gray-700">
+                        <p className="pointer-events-none block text-sm font-medium text-gray-700 dark:text-gray-300">
                           {file.alt}
                         </p>
                       )
@@ -572,7 +572,7 @@ export function TenantSelectModal({
               <Disclosure as="div" className="w-full">
                 {({ open }) => (
                   <>
-                    <Disclosure.Button className="flex w-full items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">
+                    <Disclosure.Button className="flex w-full items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
                       <span>Legacy Connections</span>
                       <svg
                         className={`h-4 w-4 ${open ? 'rotate-180' : ''}`}
@@ -593,7 +593,7 @@ export function TenantSelectModal({
                         {legacySources.map((file) => (
                           <li key={file.title} className="relative">
                             <div
-                              className={`aspect-h-7 aspect-w-10 focus-within:ring-primary-500 group block w-full overflow-hidden rounded-lg transition-all focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 ${
+                              className={`aspect-h-7 aspect-w-10 focus-within:ring-primary-500 group block w-full overflow-hidden rounded-lg transition-all focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 dark:focus-within:ring-offset-gray-900 ${
                                 file.enabled
                                   ? 'bg-primary-700 hover:bg-primary-600 cursor-pointer'
                                   : 'bg-gray-400 cursor-not-allowed'
@@ -630,17 +630,17 @@ export function TenantSelectModal({
                                 <span className="sr-only">{`Select ${file.title}`}</span>
                               </button>
                             </div>
-                            <p className="pointer-events-none mt-2 block truncate text-sm font-medium text-gray-900">
+                            <p className="pointer-events-none mt-2 block truncate text-sm font-medium text-gray-900 dark:text-gray-100">
                               {file.title}
                             </p>
                             {!file.enabled
                               ? file.reason.kind === 'message' && (
-                                  <p className="block text-sm font-medium text-gray-500">
+                                  <p className="block text-sm font-medium text-gray-500 dark:text-gray-400">
                                     {file.reason.text}
                                   </p>
                                 )
                               : file.alt && (
-                                  <p className="pointer-events-none block text-sm font-medium text-gray-700">
+                                  <p className="pointer-events-none block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     {file.alt}
                                   </p>
                                 )}
@@ -705,12 +705,12 @@ export function TenantSelectModal({
                 >
                   <div className="relative px-4">
                     <MagnifyingGlassIcon
-                      className="pointer-events-none absolute left-8 top-3.5 h-5 w-5 text-gray-700"
+                      className="pointer-events-none absolute left-8 top-3.5 h-5 w-5 text-gray-700 dark:text-gray-300"
                       aria-hidden="true"
                     />
                     <Combobox.Input
                       title="tenant-search-bar"
-                      className="focus:ring-primary-700 h-12 w-full divide-y-2 rounded-xl border-0 bg-gray-100 bg-transparent pl-11 pr-4 text-gray-800 placeholder-gray-400 hover:border-gray-200 focus:ring-2 sm:text-sm"
+                      className="focus:ring-primary-700 h-12 w-full divide-y-2 rounded-xl border-0 bg-gray-100 dark:bg-gray-800 bg-transparent pl-11 pr-4 text-gray-800 dark:text-gray-200 placeholder-gray-400 hover:border-gray-200 dark:hover:border-gray-700 focus:ring-2 sm:text-sm"
                       placeholder="Search for your health system"
                       onChange={(event) =>
                         dispatch({
@@ -749,12 +749,12 @@ export function TenantSelectModal({
                         <ExclamationCircleIcon
                           type="outline"
                           name="exclamation-circle"
-                          className="mx-auto h-6 w-6 text-gray-700"
+                          className="mx-auto h-6 w-6 text-gray-700 dark:text-gray-300"
                         />
-                        <p className="mt-4 font-semibold text-gray-900">
+                        <p className="mt-4 font-semibold text-gray-900 dark:text-gray-100">
                           No results found
                         </p>
-                        <p className="mt-2 text-gray-800">
+                        <p className="mt-2 text-gray-800 dark:text-gray-200">
                           No health system found for this search term. Please
                           try again.
                         </p>

@@ -4,6 +4,66 @@
 
 /* You can add global styles to this file, and also import other style files */
 
+/* Dark theme: the `dark` class on <html> is set by the theme-init script in
+   index.html and by ThemeController. */
+@layer base {
+  /* One step darker than the cards (bg-white, dark:bg-gray-900), which have
+     only a shadow to set them apart and shadows do not show on a dark page. */
+  .dark body {
+    @apply bg-gray-950 text-gray-100;
+  }
+
+  /* A bare `border` takes Tailwind's light default color, and focus rings
+     (`ring-offset-2`) draw a white gap unless the offset color is set. Explicit
+     border and ring-offset utilities still win: they come later. */
+  .dark *,
+  .dark ::before,
+  .dark ::after {
+    @apply border-gray-700 ring-offset-gray-900;
+  }
+
+  /* @tailwindcss/forms draws inputs on white. */
+  .dark
+    :where(
+      input:not([type='checkbox']):not([type='radio']):not([type='range']),
+      select,
+      textarea
+    ) {
+    @apply border-gray-600 bg-gray-800 text-gray-100 placeholder:text-gray-400;
+  }
+
+  .dark :where([type='checkbox'], [type='radio']) {
+    @apply border-gray-500 bg-gray-800;
+  }
+}
+
+/* billboard.js draws axes, grid lines and tooltips for a light page. */
+.dark .bb text,
+.dark .bb-legend-item text {
+  fill: theme('colors.gray.300');
+}
+
+.dark .bb path.domain,
+.dark .bb-axis line {
+  stroke: theme('colors.gray.500');
+}
+
+.dark .bb-grid line {
+  stroke: theme('colors.gray.700');
+}
+
+.dark .bb-tooltip {
+  @apply border-gray-600 bg-gray-800 text-gray-100;
+}
+
+.dark .bb-tooltip th {
+  @apply bg-gray-700 text-gray-100;
+}
+
+.dark .bb-tooltip td {
+  @apply border-gray-700 bg-gray-800;
+}
+
 @font-face {
   font-family: 'Source Sans';
   src: url('./assets/fonts/SourceSans3-VariableFont_wght.ttf')
@@ -20,10 +80,8 @@
   font-weight: 100 900;
 }
 
-.mobile-full-height {
-  @apply: h-full max-w-full;
-}
-
+/* Every browser matches one of the three blocks below, so .mobile-full-height
+   needs no unconditional height. */
 @supports (height: 100cqh) {
   .mobile-full-height {
     height: 100cqh;

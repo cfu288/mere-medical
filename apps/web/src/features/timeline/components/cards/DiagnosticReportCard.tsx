@@ -162,7 +162,7 @@ function DiagnosticReportCardUnmemo({
                   {isAbnormalResult && <AbnormalResultIcon />}
                 </>
               }
-              color="text-blue-600"
+              color="text-blue-600 dark:text-blue-400"
             />
             <OpenableCardIcon />
           </div>
