@@ -1,23 +1,14 @@
 import { Switch } from '@headlessui/react';
-import {
-  getInternalLokiStorage,
-  getStorageAdapter,
-  initEncryptedRxDb,
-  initUnencrypedRxDb,
-  useRxDb,
-} from '../../../app/providers/RxDbProvider';
+import { useRxDb } from '../../../app/providers/RxDbProvider';
 import { useUserPreferences } from '../../../app/providers/UserPreferencesProvider';
 import { updateUserPreferences } from '../../../repositories/UserPreferencesRepository';
 import { useUser } from '../../../app/providers/UserProvider';
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { classNames } from '../../../shared/utils/StyleUtils';
-import {
-  useLocalConfig,
-  useUpdateLocalConfig,
-} from '../../../app/providers/LocalConfigProvider';
+import { useLocalConfig } from '../../../app/providers/LocalConfigProvider';
 import { Modal } from '../../../shared/components/Modal';
 import { ModalHeader } from '../../../shared/components/ModalHeader';
-import { CryptedIndexedDBAdapter } from 'sylviejs/storage-adapter/crypted-indexeddb-adapter';
+import { useEncryptionMigration } from '../hooks/useEncryptionMigration';
 import { ButtonLoadingSpinner } from '../../connections/components/ButtonLoadingSpinner';
 
 export function PrivacyAndSecuritySettingsGroup() {
@@ -168,109 +159,35 @@ function PasswordPromptModal({
   toggleModal: boolean;
   setToggleModal: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  const updateLocalConfig = useUpdateLocalConfig();
-  const db = useRxDb();
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  const migrateFromEncryptedToUnencrypted = useCallback(async () => {
-    // Migrate current RxDB encrypted database to unencrypted database, as seen in RxDBProvider.tsx
-    // Export current database
-    try {
-      console.debug(
-        'PrivacyAndSecuritySettingsGroup: Migrating from encrypted to unencrypted database',
-      );
-      const internalStorageAdapter = (await getStorageAdapter(
-        db,
-      )) as CryptedIndexedDBAdapter;
-      const internalDb = await getInternalLokiStorage(db);
-
-      console.debug(
-        'PrivacyAndSecuritySettingsGroup: Forcing final write of Loki memory to idb',
-      );
-      // Force final write of Loki memory to idb
-      await new Promise<void>((resolve, reject) =>
-        internalDb.saveDatabase((res) => {
-          if (res?.success === true) {
-            resolve();
-          } else if (res) {
-            reject(res);
-            console.error("'PrivacyAndSecuritySettingsGroup: " + res);
-          } else {
-            resolve();
-          }
-        }),
-      );
-
-      console.debug(
-        'PrivacyAndSecuritySettingsGroup: Exporting current database',
-      );
-      const json = await db.exportJSON();
-
-      for (const collectionName in json.collections) {
-        if (json.collections[collectionName].docs.length === 0) {
-          delete json.collections[collectionName];
-        }
-      }
-
-      console.debug(
-        'PrivacyAndSecuritySettingsGroup: Creating new unencrypted database',
-      );
-      // Create new unencrypted database
-      const newDb = await initUnencrypedRxDb();
-
-      console.debug(
-        'PrivacyAndSecuritySettingsGroup: Importing data into new unencrypted database',
-      );
-      // Import data into new database
-      await newDb.importJSON(json);
-      // Update local config to use unencrypted database
-
-      console.debug(
-        'PrivacyAndSecuritySettingsGroup: Deleting old encrypted database',
-      );
-      await db.remove();
-      // We need to fully delete the underlying encrypted loki storage adapter, or we will have issues with re-encrypting the database later
-      await (
-        internalStorageAdapter as CryptedIndexedDBAdapter
-      ).deleteDatabaseAsync('mere_db.db');
-
-      updateLocalConfig({
-        use_encrypted_database: false,
-      });
-
-      setToggleModal(false);
-
-      setTimeout(() => window.location.reload(), 0);
-    } catch (e) {
-      console.error(e);
-    }
-  }, [db, setToggleModal, updateLocalConfig]);
+  const { migrate, isProcessing, error, needsReload } = useEncryptionMigration(
+    () => setToggleModal(false),
+  );
+  const close = () => {
+    if (!isProcessing && !needsReload) setToggleModal(false);
+  };
 
   return (
-    <Modal open={toggleModal} setOpen={() => setToggleModal(false)}>
+    <Modal open={toggleModal} setOpen={close}>
       <ModalHeader
         title="Remove password and decrypt data"
         subtitle="Are you sure you want to remove your password? This will decrypt your medical records and you will no longer be prompted to provide a password before seeing your medical records."
-        setClose={isProcessing ? undefined : () => setToggleModal(false)}
+        setClose={isProcessing || needsReload ? undefined : close}
       />
+      <MigrationError error={error} needsReload={needsReload} />
       <div className="flex flex-shrink-0 justify-end px-4 py-4">
         <button
           type="button"
-          disabled={isProcessing}
+          disabled={isProcessing || needsReload}
           className="focus:ring-primary-500 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-4 py-2 text-sm font-medium text-gray-800 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-gray-300 dark:disabled:bg-gray-600"
-          onClick={() => setToggleModal(false)}
+          onClick={close}
         >
           Cancel
         </button>
         <button
           type="button"
           className=" bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 ml-4 inline-flex justify-center rounded-md border border-transparent px-4 py-2 align-middle text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:text-gray-800 dark:disabled:text-gray-200"
-          disabled={isProcessing}
-          onClick={async () => {
-            setIsProcessing(true);
-            await migrateFromEncryptedToUnencrypted();
-            setIsProcessing(false);
-          }}
+          disabled={isProcessing || needsReload}
+          onClick={() => migrate()}
         >
           <p className={`${isProcessing ? 'mr-2' : ''}`}>Remove Password</p>
           {isProcessing && <ButtonLoadingSpinner />}
@@ -291,90 +208,25 @@ function DatabasePasswordModal({
   setToggleModal: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const [password, setPassword] = useState('');
-  const [isSettingPassword, setIsSettingPassword] = useState(false);
-  const updateLocalConfig = useUpdateLocalConfig();
-  const db = useRxDb();
-
-  const submitPassword = useCallback(
-    async (password: string) => {
-      setIsSettingPassword(true);
-      // Migrate current RxDB Dexie database to encrypted database, as seen in RxDBProvider.tsx
-      // Export current database
-      const json = await db.exportJSON();
-
-      // // if a collection is empty, delete it. Empty collections throw on import in RxDB
-      for (const collectionName in json.collections) {
-        if (json.collections[collectionName].docs.length === 0) {
-          delete json.collections[collectionName];
-        }
-      }
-
-      try {
-        // // Create new encrypted database
-        console.debug(
-          'PrivacyAndSecuritySettingsGroup: Creating new encrypted database',
-        );
-        const newEnryptedDb = await initEncryptedRxDb(password);
-
-        console.debug(
-          'PrivacyAndSecuritySettingsGroup: Importing data into new encrypted database',
-        );
-        await newEnryptedDb.importJSON(json);
-        console.debug(
-          'PrivacyAndSecuritySettingsGroup: Saving new encrypted database to idb',
-        );
-        const internalDb = await getInternalLokiStorage(newEnryptedDb);
-
-        console.debug(
-          'PrivacyAndSecuritySettingsGroup: Forcing final write of Loki memory to idb',
-        );
-
-        // Force final write of Loki memory to idb after import
-        await new Promise<void>((resolve, reject) =>
-          internalDb.saveDatabase((res) => {
-            console.debug('PrivacyAndSecuritySettingsGroup: Saving: ' + res);
-            if (res?.success === true) {
-              resolve();
-            } else if (res) {
-              reject(res);
-              console.error("'PrivacyAndSecuritySettingsGroup: " + res);
-            } else {
-              resolve();
-            }
-          }),
-        );
-
-        console.debug('PrivacyAndSecuritySettingsGroup: Completed migration');
-      } catch (e) {
-        console.error(e);
-      }
-
-      // // Import data into new database
-
-      // Update local config to use encrypted database
-      updateLocalConfig({
-        use_encrypted_database: true,
-      });
-
-      setIsSettingPassword(true);
-
-      setToggleModal(false);
-      setTimeout(() => window.location.reload(), 0);
-    },
-    [db, setToggleModal, updateLocalConfig],
+  const { migrate, isProcessing, error, needsReload } = useEncryptionMigration(
+    () => setToggleModal(false),
   );
+  const close = () => {
+    if (!isProcessing && !needsReload) setToggleModal(false);
+  };
 
   return (
-    <Modal open={toggleModal} setOpen={() => setToggleModal(false)}>
+    <Modal open={toggleModal} setOpen={close}>
       <ModalHeader
         title="Set encryption password"
         subtitle="Set a password to encrypt your medical records with. Note that forgetting your password will prevent you from accessing your data permanently."
-        setClose={() => setToggleModal(false)}
+        setClose={isProcessing || needsReload ? undefined : close}
       />
+      <MigrationError error={error} needsReload={needsReload} />
       <form
         onSubmit={async (e) => {
           e.preventDefault();
-          await submitPassword(password);
+          await migrate(password);
         }}
         className="w-full"
       >
@@ -392,6 +244,7 @@ function DatabasePasswordModal({
               type="password"
               autoComplete="current-password"
               required
+              disabled={isProcessing || needsReload}
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
@@ -403,22 +256,46 @@ function DatabasePasswordModal({
         <div className="flex flex-shrink-0 justify-end px-4 py-4">
           <button
             type="button"
-            disabled={isSettingPassword}
+            disabled={isProcessing || needsReload}
             className="focus:ring-primary-500 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-4 py-2 text-sm font-medium text-gray-800 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:text-gray-800 dark:disabled:text-gray-200"
-            onClick={() => setToggleModal(false)}
+            onClick={close}
           >
             Cancel
           </button>
           <button
             type="submit"
-            disabled={isSettingPassword}
+            disabled={isProcessing || needsReload}
             className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 ml-4 inline-flex justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:text-gray-800 dark:disabled:text-gray-200"
           >
-            <p className={`${isSettingPassword ? 'mr-2' : ''}`}>Set Password</p>
-            {isSettingPassword && <ButtonLoadingSpinner />}
+            <p className={`${isProcessing ? 'mr-2' : ''}`}>Set Password</p>
+            {isProcessing && <ButtonLoadingSpinner />}
           </button>
         </div>
       </form>
     </Modal>
+  );
+}
+
+function MigrationError({
+  error,
+  needsReload,
+}: {
+  error: string;
+  needsReload: boolean;
+}) {
+  if (!error) return null;
+  return (
+    <div role="alert" className="px-4 py-2 text-red-600 dark:text-red-400">
+      <p>{error}</p>
+      {needsReload && (
+        <button
+          type="button"
+          className="mt-2 underline"
+          onClick={() => window.location.reload()}
+        >
+          Reload Mere
+        </button>
+      )}
+    </div>
   );
 }
