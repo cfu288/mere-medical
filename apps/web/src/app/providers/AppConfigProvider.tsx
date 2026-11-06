@@ -33,6 +33,8 @@ export interface AppConfig {
   NEXTGEN_CLIENT_ID?: string;
   NEXTGEN_SECRET_CONFIGURED?: boolean;
   PUBLIC_URL?: string;
+  REGISTRATION_TOKEN_REQUIRED?: boolean;
+  APP_CONTACT?: string;
 }
 
 interface AppConfigState {
@@ -107,7 +109,12 @@ export function AppConfigProvider({
   const saveConfigToDb = useCallback(
     async (configData: AppConfig) => {
       try {
-        await saveInstanceConfig(db, configData);
+        const {
+          REGISTRATION_TOKEN_REQUIRED: _required,
+          APP_CONTACT: _contact,
+          ...cacheable
+        } = configData;
+        await saveInstanceConfig(db, cacheable);
       } catch (error) {
         console.warn('Error saving config to RxDB:', error);
       }

@@ -29,6 +29,12 @@ import {
 } from '../../sync/SyncJobProvider';
 import { AbnormalResultIcon } from '../../timeline/components/AbnormalResultIcon';
 import { getLoginUrlBySource, setTenantUrlBySource } from '../ConnectionTab';
+import { useNavigate } from 'react-router-dom';
+import { Routes } from '../../../Routes';
+import {
+  registrationTokenNeededMessage,
+  needsRegistrationToken,
+} from '../registrationToken';
 import React from 'react';
 import { Modal } from '../../../shared/components/Modal';
 import { ModalHeader } from '../../../shared/components/ModalHeader';
@@ -76,6 +82,7 @@ export function ConnectionCard({
     user = useUser(),
     [deleting, setDeleting] = useState(false),
     userPreferences = useUserPreferences(),
+    navigate = useNavigate(),
     removeDocument = (document: RxDocument<AnyConnectionDocument>) => {
       setDeleting(true);
       const connectionId = document.get('id');
@@ -242,6 +249,19 @@ export function ConnectionCard({
                     message:
                       'Configuration not loaded. Please refresh the page.',
                     variant: 'error',
+                  });
+                  return;
+                }
+                if (needsRegistrationToken(config, item.get('source'))) {
+                  notifyDispatch({
+                    type: 'set_notification',
+                    message: registrationTokenNeededMessage(config),
+                    variant: 'error',
+                    button: {
+                      text: 'Open Settings',
+                      action: () =>
+                        navigate(`${Routes.Settings}#registration_token`),
+                    },
                   });
                   return;
                 }

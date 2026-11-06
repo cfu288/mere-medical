@@ -1,0 +1,24 @@
+#!/usr/bin/env node
+const { createHmac } = require('node:crypto');
+
+const origin = URL.parse(process.env.PUBLIC_URL ?? '')?.origin;
+const key = process.env.APP_KEY?.trim();
+
+if (!origin || origin === 'null') {
+  console.error(
+    'PUBLIC_URL must be the full address of this instance, such as https://mere.example.com.',
+  );
+  process.exit(1);
+}
+if (!key) {
+  console.error(
+    'APP_KEY is not set. Generate one with generate-app-key, add it to .env, and recreate the container.',
+  );
+  process.exit(1);
+}
+
+const token = createHmac('sha256', key)
+  .update('mere-registration-token')
+  .digest('base64url');
+
+console.log(`Invite link: ${origin}/#registration-token=${token}`);

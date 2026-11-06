@@ -6,10 +6,12 @@ import {
   Logger,
   Query,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { HealowService } from './healow.service';
 import { ConfigService } from '../config/config.service';
+import { RegistrationTokenGuard } from '../proxy/guards';
 
 interface TokenExchangeRequest {
   code: string;
@@ -61,6 +63,7 @@ export class HealowController {
     }
   }
 
+  @UseGuards(RegistrationTokenGuard)
   @Post('token')
   async exchangeToken(
     @Res() response: Response,
@@ -135,6 +138,7 @@ export class HealowController {
     }
   }
 
+  @UseGuards(RegistrationTokenGuard)
   @Post('refresh')
   async refreshToken(
     @Res() response: Response,

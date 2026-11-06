@@ -1,6 +1,15 @@
-import { Controller, Get, Inject, Logger, Query, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Inject,
+  Logger,
+  Query,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { Response } from 'express';
 import { OnPatientService, OnPatientServiceConfig } from './onpatient.service';
+import { RegistrationTokenGuard } from '../proxy/guards';
 
 @Controller('v1/onpatient')
 export class OnPatientController {
@@ -12,8 +21,7 @@ export class OnPatientController {
   @Get('callback')
   async callback(@Res() response: Response, @Query('code') code: string) {
     try {
-      const tokens = await this.onPatientService.getAuthCode(code);
-      const sessionId = this.onPatientService.storeTokens(tokens);
+      const sessionId = this.onPatientService.storeCode(code);
       response.redirect(
         `${this.config.publicUrl}/onpatient/callback?session=${sessionId}`,
       );
@@ -23,6 +31,7 @@ export class OnPatientController {
     }
   }
 
+  @UseGuards(RegistrationTokenGuard)
   @Get('tokens')
   async getTokens(
     @Query('session') sessionId: string,
@@ -32,7 +41,7 @@ export class OnPatientController {
       return response.status(401).json({ error: 'No session' });
     }
 
-    const tokens = this.onPatientService.retrieveTokens(sessionId);
+    const tokens = await this.onPatientService.exchangeSession(sessionId);
     if (!tokens) {
       return response
         .status(401)

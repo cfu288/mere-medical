@@ -37,6 +37,7 @@ export interface NextGenClient extends OAuthClient<NextGenTokenSet> {
 export interface NextGenApiEndpoints {
   token: string;
   refresh: string;
+  headers?: () => Record<string, string>;
 }
 
 async function initiateAuth(
@@ -123,6 +124,7 @@ function buildTokenResult(
   };
 }
 
+// TODO: move this Mere relay client into apps/web. The library should hold only vendor-facing code.
 export function createNextGenClientConfidential(
   apiEndpoints: NextGenApiEndpoints,
 ): NextGenClient {
@@ -134,7 +136,10 @@ export function createNextGenClientConfidential(
 
       const res = await fetch(apiEndpoints.token, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...apiEndpoints.headers?.(),
+        },
         body: JSON.stringify({
           code,
           redirect_uri: config.redirectUri,
@@ -160,7 +165,10 @@ export function createNextGenClientConfidential(
 
       const res = await fetch(apiEndpoints.refresh, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...apiEndpoints.headers?.(),
+        },
         body: JSON.stringify({
           refresh_token: tokens.refreshToken,
         }),

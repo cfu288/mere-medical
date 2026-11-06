@@ -1,4 +1,8 @@
-import { validateCallback, isTokenExpired } from './token-exchange';
+import {
+  validateCallback,
+  isTokenExpired,
+  parseTokenResponse,
+} from './token-exchange';
 import { OAuthError } from './types';
 import type { AuthorizationRequestState, CoreTokenSet } from './types';
 
@@ -166,5 +170,52 @@ describe('isTokenExpired', () => {
     const tokens = createTokenSet(nowSeconds + 60);
 
     expect(isTokenExpired(tokens, 60)).toBe(true);
+  });
+});
+
+describe('parseTokenResponse', () => {
+  it('carries the error code and description of an OAuth error body', async () => {
+    const res = {
+      ok: false,
+      status: 401,
+      text: async () =>
+        JSON.stringify({
+          error: 'registration_token_rejected',
+          error_description:
+            'Your invite link does not work for this Mere app. Ask your Mere administrator for a new one.',
+        }),
+    } as unknown as Response;
+
+    await expect(parseTokenResponse(res)).rejects.toMatchObject({
+      code: 'registration_token_rejected',
+      message:
+        'Your invite link does not work for this Mere app. Ask your Mere administrator for a new one.',
+    });
+  });
+
+  it('uses the status as the message when an OAuth error body has no description', async () => {
+    const res = {
+      ok: false,
+      status: 401,
+      text: async () => JSON.stringify({ error: 'invalid_grant' }),
+    } as unknown as Response;
+
+    await expect(parseTokenResponse(res)).rejects.toMatchObject({
+      code: 'invalid_grant',
+      message: 'Token exchange failed: 401',
+      cause: '{"error":"invalid_grant"}',
+    });
+  });
+
+  it('keeps a non-JSON 401 as a failed token exchange', async () => {
+    const res = {
+      ok: false,
+      status: 401,
+      text: async () => 'Unauthorized',
+    } as unknown as Response;
+
+    await expect(parseTokenResponse(res)).rejects.toMatchObject({
+      code: 'token_exchange_failed',
+    });
   });
 });

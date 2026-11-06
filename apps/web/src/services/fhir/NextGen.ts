@@ -29,6 +29,10 @@ import {
 import { findUserById } from '../../repositories/UserRepository';
 import { UserDocument } from '../../models/user-document/UserDocument.type';
 import uuid4 from '../../shared/utils/UUIDUtils';
+import {
+  registrationTokenHeaders,
+  isRegistrationTokenRejected,
+} from '../../features/connections/registrationToken';
 import { CreateClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import {
   createNextGenClientConfidential,
@@ -54,6 +58,7 @@ export function createNextGenClient(publicUrl: string): NextGenClient {
   return createNextGenClientConfidential({
     token: resolveFhirUrl(publicUrl, '/api/v1/nextgen/token'),
     refresh: resolveFhirUrl(publicUrl, '/api/v1/nextgen/refresh'),
+    headers: registrationTokenHeaders,
   });
 }
 
@@ -567,6 +572,9 @@ export async function refreshNextGenConnectionTokenIfNeeded(
       });
     } catch (e) {
       console.error(e);
+      if (isRegistrationTokenRejected(e)) {
+        throw e;
+      }
       throw new Error('Error refreshing token - try logging in again');
     }
   }

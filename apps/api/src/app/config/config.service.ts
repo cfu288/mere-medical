@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { isConfigured } from '@mere/shared';
+import { serverVendorConfig } from '../vendor-config.server';
 
 /**
  * Healow supports two OAuth modes depending on environment configuration:
@@ -36,11 +37,14 @@ export interface PublicConfig {
   NEXTGEN_CLIENT_ID?: string;
   NEXTGEN_SECRET_CONFIGURED?: boolean;
   PUBLIC_URL?: string;
+  REGISTRATION_TOKEN_REQUIRED: boolean;
+  APP_CONTACT?: string;
 }
 
 @Injectable()
 export class ConfigService {
   getPublicConfig(): PublicConfig {
+    const access = serverVendorConfig().registrationAccess;
     return {
       ONPATIENT_CLIENT_ID: process.env.ONPATIENT_CLIENT_ID,
       EPIC_CLIENT_ID: process.env.EPIC_CLIENT_ID,
@@ -62,6 +66,8 @@ export class ConfigService {
         process.env.NEXTGEN_CLIENT_SECRET,
       ),
       PUBLIC_URL: process.env.PUBLIC_URL,
+      REGISTRATION_TOKEN_REQUIRED: access.mode === 'keyed',
+      APP_CONTACT: access.mode === 'keyed' ? access.contact : undefined,
     };
   }
 

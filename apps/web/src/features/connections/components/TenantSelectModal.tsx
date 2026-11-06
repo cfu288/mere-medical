@@ -39,6 +39,11 @@ import {
   getLoginUrl as getAthenaLoginUrl,
 } from '../../../services/fhir/Athena';
 import { getLoginUrl as getNextGenLoginUrl } from '../../../services/fhir/NextGen';
+import { useLocalConfig } from '../../../app/providers/LocalConfigProvider';
+import {
+  registrationTokenNeededMessage,
+  needsRegistrationToken,
+} from '../registrationToken';
 import NextGenLogo from '../../../assets/img/nextgen-logo.svg';
 
 export type FhirVersion = 'DSTU2' | 'R4';
@@ -132,7 +137,8 @@ const defaultState: TenantSelectState = { step: 'pickVendor' };
 
 type DisabledReason =
   | { kind: 'message'; text: string }
-  | { kind: 'needsProxy' };
+  | { kind: 'needsProxy' }
+  | { kind: 'needsRegistrationToken' };
 
 type SourceItem = {
   title: string;
@@ -164,6 +170,7 @@ export function TenantSelectModal({
   const userPreferences = useUserPreferences(),
     notifyDispatch = useNotificationDispatch();
   const config = useConfig();
+  const localConfig = useLocalConfig();
 
   const vendors = useMemo(() => parseVendorConfig(config), [config]);
 
@@ -265,6 +272,13 @@ export function TenantSelectModal({
       if (!userPreferences?.use_proxy) {
         return { ...base, enabled: false, reason: { kind: 'needsProxy' } };
       }
+      if (needsRegistrationToken(config, 'onpatient')) {
+        return {
+          ...base,
+          enabled: false,
+          reason: { kind: 'needsRegistrationToken' },
+        };
+      }
       const href = buildOnPatientAuthUrl({
         clientId: vendors.onpatient.production.value,
         publicUrl: vendors.onpatient.publicUrl,
@@ -345,6 +359,13 @@ export function TenantSelectModal({
           ...base,
           enabled: false,
           reason: missingConfig(vendors.nextgen),
+        };
+      }
+      if (needsRegistrationToken(config, 'nextgen')) {
+        return {
+          ...base,
+          enabled: false,
+          reason: { kind: 'needsRegistrationToken' },
         };
       }
       const clientId = vendors.nextgen.production.value;
@@ -428,7 +449,13 @@ export function TenantSelectModal({
         vendors.epicDstu2,
       ),
     ];
-  }, [config, userPreferences?.use_proxy, vaUrl, vendors]);
+  }, [
+    config,
+    localConfig.registration_token,
+    userPreferences?.use_proxy,
+    vaUrl,
+    vendors,
+  ]);
 
   const mainSources = useMemo(
     () => ConnectionSources.filter((s) => !s.legacy),
@@ -545,6 +572,17 @@ export function TenantSelectModal({
                       file.reason.kind === 'message' ? (
                         <p className="block text-sm font-medium text-gray-500 dark:text-gray-400">
                           {file.reason.text}
+                        </p>
+                      ) : file.reason.kind === 'needsRegistrationToken' ? (
+                        <p className="pointer-events-auto relative z-10 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          {registrationTokenNeededMessage(config)}{' '}
+                          <Link
+                            className="text-primary dark:text-primary-300 hover:text-primary-500 dark:hover:text-primary-200 underline"
+                            to={`${Routes.Settings}#registration_token`}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            Open Settings
+                          </Link>
                         </p>
                       ) : (
                         <p className="pointer-events-auto relative z-10 block text-sm font-medium text-gray-700 dark:text-gray-300">

@@ -21,6 +21,7 @@ import { UserPreferencesProvider } from '../app/providers/UserPreferencesProvide
 import { UserProvider } from '../app/providers/UserProvider';
 import { AppConfigProvider } from '../app/providers/AppConfigProvider';
 import { TabWrapper } from '../shared/components/TabWrapper';
+import { useInviteLinkToken } from '../features/connections/hooks/useInviteLinkToken';
 import { TutorialOverlay } from '../features/tutorial/TutorialOverlay';
 import AthenaRedirect from '../features/connections/oauth-callbacks/AthenaRedirect';
 import CernerRedirect from '../features/connections/oauth-callbacks/CernerRedirect';
@@ -67,9 +68,14 @@ export default function App() {
   );
 }
 
+function RootLayout() {
+  useInviteLinkToken();
+  return <TabWrapper />;
+}
+
 const routes = [
   {
-    element: <TabWrapper />,
+    element: <RootLayout />,
     children: [
       {
         path: AppRoutes.Timeline,

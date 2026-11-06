@@ -10,46 +10,57 @@ export interface OnPatientServiceConfig {
   publicUrl: string;
 }
 
-interface TokenCacheEntry {
-  tokens: OnPatientTokenResponse;
+interface CodeCacheEntry {
+  code: string;
   expires: number;
 }
 
 /**
  * OnPatient OAuth integration service.
  *
- * Tokens are temporarily cached server-side and retrieved via a one-time session
- * ID rather than passed directly in URL parameters. While the session ID appears
- * in the URL, it's far less sensitive than actual tokens because it's single-use
- * and expires in 60 seconds. This prevents long-lived token exposure in browser
- * history, server logs, and HTTP referrer headers.
+ * The vendor redirects the browser to the callback with an authorization code.
+ * The service holds that code under a one-time session ID for 60 seconds. The
+ * exchange with the client secret happens only when the browser fetches the
+ * tokens through the registration-token guarded route. The session ID in the URL is
+ * single-use and never a token.
  */
 @Injectable()
 export class OnPatientService {
-  private tokenCache = new Map<string, TokenCacheEntry>();
+  private codeCache = new Map<string, CodeCacheEntry>();
 
   constructor(
     @Inject('CONFIG') private readonly config: OnPatientServiceConfig,
     private readonly httpService: HttpService,
   ) {}
 
-  storeTokens(tokens: OnPatientTokenResponse): string {
+  storeCode(code: string): string {
+    if (!code) {
+      throw new HttpException(
+        'Forbidden: no auth code provided in callback url',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+    const now = Date.now();
+    for (const [id, entry] of this.codeCache) {
+      if (entry.expires < now) {
+        this.codeCache.delete(id);
+      }
+    }
     const sessionId = randomUUID();
-    this.tokenCache.set(sessionId, {
-      tokens,
-      expires: Date.now() + 60_000,
-    });
+    this.codeCache.set(sessionId, { code, expires: now + 60_000 });
     return sessionId;
   }
 
-  retrieveTokens(sessionId: string): OnPatientTokenResponse | null {
-    const entry = this.tokenCache.get(sessionId);
+  /** Spends the session's code once. Null when the session is unknown, used, or expired. */
+  async exchangeSession(
+    sessionId: string,
+  ): Promise<OnPatientTokenResponse | null> {
+    const entry = this.codeCache.get(sessionId);
+    this.codeCache.delete(sessionId);
     if (!entry || entry.expires < Date.now()) {
-      this.tokenCache.delete(sessionId);
       return null;
     }
-    this.tokenCache.delete(sessionId);
-    return entry.tokens;
+    return this.getAuthCode(entry.code);
   }
 
   async getAuthCode(code: string): Promise<OnPatientTokenResponse> {
@@ -78,7 +89,7 @@ export class OnPatientService {
       },
     );
 
-    const awaitedRes = await response.toPromise();
+    const awaitedRes = await response.toPromise().catch(() => undefined);
     const status = await awaitedRes?.status;
 
     if (status !== 200) {

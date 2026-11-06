@@ -14,7 +14,10 @@ import { ReferenceModule } from './reference/reference.module';
 import { parseReferenceLibraryConfig } from './reference/reference.config';
 import { ConfigModule } from './config/config.module';
 import { describeRequirement, EnableRequirement } from '@mere/shared';
-import { serverVendorConfig } from './vendor-config.server';
+import {
+  allowsPublicConfidentialClients,
+  serverVendorConfig,
+} from './vendor-config.server';
 
 const vendors = serverVendorConfig();
 
@@ -55,6 +58,26 @@ if (vendors.healow.status === 'production') {
       ? 'HEALOW_CLIENT_SECRET was provided: Healow confidential client mode enabled with refresh token support.'
       : 'HEALOW_CLIENT_SECRET was not provided: Healow public client mode enabled (no refresh tokens).',
   );
+}
+
+switch (vendors.registrationAccess.mode) {
+  case 'keyed':
+    Logger.log(
+      'APP_KEY is set: connections that use a client secret require a registration token from an invite link.',
+    );
+    if (allowsPublicConfidentialClients(process.env)) {
+      Logger.warn(
+        'Both APP_KEY and ALLOW_PUBLIC_CONFIDENTIAL_CLIENTS are set: the key applies and the opt-out is ignored.',
+      );
+    }
+    break;
+  case 'public':
+    Logger.warn(
+      'ALLOW_PUBLIC_CONFIDENTIAL_CLIENTS=true: anyone who can reach this instance can use its Healow, NextGen, and OnPatient registrations.',
+    );
+    break;
+  case 'open':
+    break;
 }
 
 const referenceLibrary = parseReferenceLibraryConfig(process.env);

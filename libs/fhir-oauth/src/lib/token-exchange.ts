@@ -84,11 +84,23 @@ export async function exchangeWithPkce(
  *
  * @param res - Fetch Response from the token endpoint
  * @returns ParsedTokenResponse with access token, expiration, and optional refresh/id tokens
- * @throws OAuthError on non-2xx responses, with the error body as the cause
+ * @throws OAuthError with the body's error code and error_description when a non-2xx response carries an OAuth error body
+ * @throws OAuthError token_exchange_failed on other non-2xx responses, with the error body as the cause
+ * @example const tokens = await parseTokenResponse(await fetch(tokenUrl, { method: 'POST', body }));
  */
-export async function parseTokenResponse(res: Response): Promise<ParsedTokenResponse> {
+export async function parseTokenResponse(
+  res: Response,
+): Promise<ParsedTokenResponse> {
   if (!res.ok) {
     const errorText = await res.text();
+    const body = oauthErrorBody(errorText);
+    if (body) {
+      throw createOAuthError(
+        body.error,
+        body.error_description ?? `Token exchange failed: ${res.status}`,
+        errorText,
+      );
+    }
     throw OAuthErrors.tokenExchangeFailed(res.status, errorText);
   }
 
@@ -110,7 +122,28 @@ export async function parseTokenResponse(res: Response): Promise<ParsedTokenResp
   };
 }
 
-export function isTokenExpired(tokens: CoreTokenSet, bufferSeconds = 60): boolean {
+function oauthErrorBody(
+  text: string,
+): { error: string; error_description?: string } | undefined {
+  try {
+    const data = JSON.parse(text);
+    if (typeof data?.error !== 'string') return undefined;
+    return {
+      error: data.error,
+      error_description:
+        typeof data.error_description === 'string'
+          ? data.error_description
+          : undefined,
+    };
+  } catch {
+    return undefined;
+  }
+}
+
+export function isTokenExpired(
+  tokens: CoreTokenSet,
+  bufferSeconds = 60,
+): boolean {
   const nowSeconds = Math.floor(Date.now() / 1000);
   return tokens.expiresAt <= nowSeconds + bufferSeconds;
 }

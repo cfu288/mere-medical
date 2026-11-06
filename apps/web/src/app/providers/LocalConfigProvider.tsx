@@ -25,6 +25,7 @@ interface LocalConfig {
   experimental__ai_provider?: 'openai' | 'ollama';
   experimental__ollama_endpoint?: string;
   experimental__ollama_model?: string;
+  registration_token?: string;
 }
 
 const defaultLocalConfig: LocalConfig = {
@@ -39,7 +40,13 @@ const defaultLocalConfig: LocalConfig = {
   experimental__ollama_model: AI_DEFAULTS.OLLAMA.MODEL,
 };
 
-function getLocalConfig(): LocalConfig {
+/**
+ * Reads the saved local config outside React. Components use useLocalConfig.
+ *
+ * @returns the saved config merged over the defaults
+ * @example const { registration_token } = getLocalConfig();
+ */
+export function getLocalConfig(): LocalConfig {
   // Outside the try: a storage error is not a bad config, see LocalConfigProvider.
   const raw = localStorage.getItem('config');
   if (!raw) return defaultLocalConfig;

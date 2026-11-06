@@ -64,6 +64,7 @@ describe('AppModule boot', () => {
         VERADIGM_CLIENT_ID: 'veradigm-client-id',
         HEALOW_CLIENT_ID: 'healow-client-id',
         HEALOW_CLIENT_SECRET: 'healow-client-secret',
+        APP_KEY: 'valid-app-key-for-the-test-suite',
         ATHENA_CLIENT_ID: 'athena-client-id',
         ATHENA_SANDBOX_CLIENT_ID: 'athena-sandbox-client-id',
       },

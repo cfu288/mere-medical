@@ -77,6 +77,8 @@ services:
       - ATHENA_SANDBOX_CLIENT_ID=${ATHENA_SANDBOX_CLIENT_ID}
       - NEXTGEN_CLIENT_ID=${NEXTGEN_CLIENT_ID}
       - NEXTGEN_CLIENT_SECRET=${NEXTGEN_CLIENT_SECRET}
+      - APP_KEY=${APP_KEY}
+      - ALLOW_PUBLIC_CONFIDENTIAL_CLIENTS=${ALLOW_PUBLIC_CONFIDENTIAL_CLIENTS}
       - PUBLIC_URL=${PUBLIC_URL}
 ```
 
@@ -179,34 +181,51 @@ services:
      -e ATHENA_SANDBOX_CLIENT_ID=<ID_HERE> \
      -e NEXTGEN_CLIENT_ID=<ID_HERE> \
      -e NEXTGEN_CLIENT_SECRET=<SECRET_HERE> \
+     -e APP_KEY=<KEY_HERE> \
      -e PUBLIC_URL=https://localhost:4200 \
      mere-medical:latest
    ```
 
    Note the following environment variables can be provided:
 
-| Variable                       | Required | Description                                                                                                    | Example                                                                            |
-| ------------------------------ | -------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `PUBLIC_URL`                   | Yes      | Full URL where Mere Medical is accessible. **Must include protocol** (`https://` or `http://`).                | `https://app.meremedical.co`                                                       |
-| `ONPATIENT_CLIENT_ID`          | No       | Client ID for OnPatient/DrChrono                                                                               | See [OnPatient setup](https://meremedical.co/docs/getting-started/onpatient-setup) |
-| `ONPATIENT_CLIENT_SECRET`      | No       | Client secret for OnPatient/DrChrono                                                                           | See [OnPatient setup](https://meremedical.co/docs/getting-started/onpatient-setup) |
-| `EPIC_CLIENT_ID_R4`            | No       | Client ID for Epic MyChart production (recommended)                                                            | See [Epic setup](https://meremedical.co/docs/getting-started/epic-setup)           |
-| `EPIC_SANDBOX_CLIENT_ID_R4`    | No       | Client ID for Epic MyChart sandbox (recommended)                                                               | See [Epic setup](https://meremedical.co/docs/getting-started/epic-setup)           |
-| `EPIC_CLIENT_ID`               | No       | Client ID for Epic MyChart production (legacy DSTU2, for backwards compatibility)                              | See [Epic setup](https://meremedical.co/docs/getting-started/epic-setup)           |
-| `EPIC_CLIENT_ID_DSTU2`         | No       | Client ID for Epic MyChart production (legacy DSTU2)                                                           | See [Epic setup](https://meremedical.co/docs/getting-started/epic-setup)           |
-| `EPIC_SANDBOX_CLIENT_ID`       | No       | Client ID for Epic MyChart sandbox (legacy DSTU2, for backwards compatibility)                                 | See [Epic setup](https://meremedical.co/docs/getting-started/epic-setup)           |
-| `EPIC_SANDBOX_CLIENT_ID_DSTU2` | No       | Client ID for Epic MyChart sandbox (legacy DSTU2)                                                              | See [Epic setup](https://meremedical.co/docs/getting-started/epic-setup)           |
-| `CERNER_CLIENT_ID`             | No       | Client ID for Cerner Health (supports both R4 and DSTU2)                                                       | See [Cerner setup](https://meremedical.co/docs/getting-started/cerner-setup)       |
-| `VERADIGM_CLIENT_ID`           | No       | Client ID for Veradigm                                                                                         |                                                                                    |
-| `VA_CLIENT_ID`                 | No       | Client ID for VA (Veterans Affairs). **Note: Only works with VA sandbox, not production access at this time.** |                                                                                    |
-| `HEALOW_CLIENT_ID`             | No       | Client ID for Healow (eClinicalWorks)                                                                          | See [Healow setup](https://meremedical.co/docs/getting-started/healow-setup)       |
-| `HEALOW_CLIENT_SECRET`         | No       | Client secret for Healow confidential client (enables refresh tokens)                                          | See [Healow setup](https://meremedical.co/docs/getting-started/healow-setup)       |
-| `ATHENA_CLIENT_ID`             | No       | Client ID for Athena Health production                                                                         | See [Athena setup](https://meremedical.co/docs/getting-started/athena-setup)       |
-| `ATHENA_SANDBOX_CLIENT_ID`     | No       | Client ID for Athena Health sandbox (Preview)                                                                  | See [Athena setup](https://meremedical.co/docs/getting-started/athena-setup)       |
-| `NEXTGEN_CLIENT_ID`            | No       | Client ID for NextGen Enterprise                                                                               | See [NextGen setup](https://meremedical.co/docs/getting-started/nextgen-setup)     |
-| `NEXTGEN_CLIENT_SECRET`        | No       | Client secret for NextGen Enterprise. Required alongside the client ID; kept server-side.                      | See [NextGen setup](https://meremedical.co/docs/getting-started/nextgen-setup)     |
+| Variable                            | Required                   | Description                                                                                                                            | Example                                                                            |
+| ----------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `PUBLIC_URL`                        | Yes                        | Full URL where Mere Medical is accessible. **Must include protocol** (`https://` or `http://`).                                        | `https://app.meremedical.co`                                                       |
+| `ONPATIENT_CLIENT_ID`               | No                         | Client ID for OnPatient/DrChrono                                                                                                       | See [OnPatient setup](https://meremedical.co/docs/getting-started/onpatient-setup) |
+| `ONPATIENT_CLIENT_SECRET`           | No                         | Client secret for OnPatient/DrChrono                                                                                                   | See [OnPatient setup](https://meremedical.co/docs/getting-started/onpatient-setup) |
+| `EPIC_CLIENT_ID_R4`                 | No                         | Client ID for Epic MyChart production (recommended)                                                                                    | See [Epic setup](https://meremedical.co/docs/getting-started/epic-setup)           |
+| `EPIC_SANDBOX_CLIENT_ID_R4`         | No                         | Client ID for Epic MyChart sandbox (recommended)                                                                                       | See [Epic setup](https://meremedical.co/docs/getting-started/epic-setup)           |
+| `EPIC_CLIENT_ID`                    | No                         | Client ID for Epic MyChart production (legacy DSTU2, for backwards compatibility)                                                      | See [Epic setup](https://meremedical.co/docs/getting-started/epic-setup)           |
+| `EPIC_CLIENT_ID_DSTU2`              | No                         | Client ID for Epic MyChart production (legacy DSTU2)                                                                                   | See [Epic setup](https://meremedical.co/docs/getting-started/epic-setup)           |
+| `EPIC_SANDBOX_CLIENT_ID`            | No                         | Client ID for Epic MyChart sandbox (legacy DSTU2, for backwards compatibility)                                                         | See [Epic setup](https://meremedical.co/docs/getting-started/epic-setup)           |
+| `EPIC_SANDBOX_CLIENT_ID_DSTU2`      | No                         | Client ID for Epic MyChart sandbox (legacy DSTU2)                                                                                      | See [Epic setup](https://meremedical.co/docs/getting-started/epic-setup)           |
+| `CERNER_CLIENT_ID`                  | No                         | Client ID for Cerner Health (supports both R4 and DSTU2)                                                                               | See [Cerner setup](https://meremedical.co/docs/getting-started/cerner-setup)       |
+| `VERADIGM_CLIENT_ID`                | No                         | Client ID for Veradigm                                                                                                                 |                                                                                    |
+| `VA_CLIENT_ID`                      | No                         | Client ID for VA (Veterans Affairs). **Only works with the VA sandbox, not production access at this time.**                           |                                                                                    |
+| `HEALOW_CLIENT_ID`                  | No                         | Client ID for Healow (eClinicalWorks)                                                                                                  | See [Healow setup](https://meremedical.co/docs/getting-started/healow-setup)       |
+| `HEALOW_CLIENT_SECRET`              | No                         | Client secret for Healow confidential client (enables refresh tokens)                                                                  | See [Healow setup](https://meremedical.co/docs/getting-started/healow-setup)       |
+| `ATHENA_CLIENT_ID`                  | No                         | Client ID for Athena Health production                                                                                                 | See [Athena setup](https://meremedical.co/docs/getting-started/athena-setup)       |
+| `ATHENA_SANDBOX_CLIENT_ID`          | No                         | Client ID for Athena Health sandbox (Preview)                                                                                          | See [Athena setup](https://meremedical.co/docs/getting-started/athena-setup)       |
+| `NEXTGEN_CLIENT_ID`                 | No                         | Client ID for NextGen Enterprise                                                                                                       | See [NextGen setup](https://meremedical.co/docs/getting-started/nextgen-setup)     |
+| `NEXTGEN_CLIENT_SECRET`             | No                         | Client secret for NextGen Enterprise. Required alongside the client ID. The server keeps it.                                           | See [NextGen setup](https://meremedical.co/docs/getting-started/nextgen-setup)     |
+| `APP_KEY`                           | If you set a client secret | Private secret that signs the registration token in invite links. Exactly the 32 characters `generate-app-key` prints. Never share it. | See [App key](https://meremedical.co/docs/getting-started/docker#app-key)          |
+| `APP_CONTACT`                       | No                         | Who users should ask for an invite link, such as an email address. Shown in the app when a registration token is missing or refused.   | `admin@example.com`                                                                |
+| `ALLOW_PUBLIC_CONFIDENTIAL_CLIENTS` | No                         | Set to `true` to run those routes without a registration token.                                                                        | See [App key](https://meremedical.co/docs/getting-started/docker#app-key)          |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+### App key
+
+If you run Healow, NextGen, or OnPatient with its client secret, the API refuses to start until you also set `APP_KEY` or `ALLOW_PUBLIC_CONFIDENTIAL_CLIENTS=true`. Since when running the API these endpoints are public, this prevents untrusted third-party applications utilizing your app registrations without your consent to avoid abuse. If you do not mind third-party applications potentially using your app registration, you can set `ALLOW_PUBLIC_CONFIDENTIAL_CLIENTS=true` instead.
+
+To set an `APP_KEY`, follow these steps.
+
+1. Generate a key with `docker compose run --rm app generate-app-key`, or `npm run generate-app-key` in a source checkout.
+2. Add the line it prints to `.env`, add `APP_KEY` to the `environment` list of your compose file, then recreate the container.
+3. Print the invite link with `docker compose run --rm app generate-invite-link`, or `npm run generate-invite-link` in a source checkout. This should return something along the lines of `Invite link: https://mere.example.com/#registration-token=3ebnq9Avix4S-QZ4rLC47V-crei4F3IT7PqAOFSlCeA`. The link carries a registration token signed with your key, not the key itself.
+4. Send that invite link to each person you would like to grant access to your Healow, NextGen, or OnPatient registration for your instance. Opening the link saves the registration token in their browser. Without it, the app blocks those connections. Never share `APP_KEY` itself.
+
+To issue a new registration token via invite link, set a new `APP_KEY` via the CLI and recreate the container. Then re-share the new link from `generate-invite-link` with your app users. If you would like to skip the app-key creation process for new users, you can set `ALLOW_PUBLIC_CONFIDENTIAL_CLIENTS=true` instead. See the [app key docs](https://meremedical.co/docs/getting-started/docker#app-key).
 
 ## Design Goals
 

@@ -18,6 +18,7 @@ import * as Athena from '../../services/fhir/Athena';
 import * as NextGen from '../../services/fhir/NextGen';
 import { SyncContext } from '../../services/fhir/sync';
 import { from, Subject } from 'rxjs';
+import { isRegistrationTokenRejected } from '../connections/registrationToken';
 import { useNotificationDispatch } from '../../app/providers/NotificationProvider';
 import { differenceInDays, parseISO } from 'date-fns';
 import {
@@ -414,6 +415,9 @@ async function fetchMedicalRecords(ctx: SyncContext) {
   } catch (e) {
     console.error(e);
     await updateConnectionDocumentErrorTimestamps(connection, db);
+    if (isRegistrationTokenRejected(e)) {
+      throw e;
+    }
     throw new Error(
       `Error refreshing ${connection.get(
         'name',

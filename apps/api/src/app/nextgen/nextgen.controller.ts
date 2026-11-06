@@ -1,7 +1,16 @@
-import { Controller, Inject, Post, Body, Logger, Res } from '@nestjs/common';
+import {
+  Controller,
+  Inject,
+  Post,
+  Body,
+  Logger,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { Response } from 'express';
 import { NEXTGEN_CONSTANTS } from '@mere/fhir-oauth';
 import { NextGenModuleConfig } from './nextgen.config';
+import { RegistrationTokenGuard } from '../proxy/guards';
 
 interface TokenExchangeRequest {
   code: string;
@@ -21,6 +30,7 @@ interface TokenRefreshRequest {
 export class NextGenController {
   constructor(@Inject('CONFIG') private readonly config: NextGenModuleConfig) {}
 
+  @UseGuards(RegistrationTokenGuard)
   @Post('token')
   async exchangeToken(
     @Res() response: Response,
@@ -33,6 +43,7 @@ export class NextGenController {
     });
   }
 
+  @UseGuards(RegistrationTokenGuard)
   @Post('refresh')
   async refreshToken(
     @Res() response: Response,

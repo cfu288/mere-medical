@@ -28,6 +28,11 @@ import { GenericBanner } from '../../shared/components/GenericBanner';
 import { useConnectionCards } from './hooks/useConnectionCards';
 import { AnyConnectionDocument } from '../../models/connection-document/ConnectionDocument.type';
 import { AppConfig, useConfig } from '../../app/providers/AppConfigProvider';
+import { useNotificationDispatch } from '../../app/providers/NotificationProvider';
+import {
+  registrationTokenNeededMessage,
+  needsRegistrationToken,
+} from './registrationToken';
 import { CernerLocalStorageKeys } from '../../services/fhir/Cerner';
 import {
   EpicLocalStorageKeys,
@@ -43,6 +48,7 @@ import { describeRequirement, parseVendorConfig } from '@mere/shared';
 import { VeradigmLocalStorageKeys } from '../../services/fhir/Veradigm';
 import { HealowLocalStorageKeys } from '../../services/fhir/Healow';
 import { Routes } from '../../Routes';
+import { useNavigate } from 'react-router-dom';
 
 const epicClient = createEpicClient({ signJwt });
 const cernerClient = createCernerClient();
@@ -490,6 +496,8 @@ function setTenantHealowUrl(
 const ConnectionTab: React.FC = () => {
   const list = useConnectionCards(),
     config = useConfig(),
+    notifyDispatch = useNotificationDispatch(),
+    navigate = useNavigate(),
     [openSelectModal, setOpenSelectModal] = useState(false),
     handleTogglePanel = useCallback(
       (
@@ -552,6 +560,20 @@ const ConnectionTab: React.FC = () => {
             break;
           }
           case 'healow': {
+            if (needsRegistrationToken(config, 'healow')) {
+              setOpenSelectModal(false);
+              notifyDispatch({
+                type: 'set_notification',
+                message: registrationTokenNeededMessage(config),
+                variant: 'error',
+                button: {
+                  text: 'Open Settings',
+                  action: () =>
+                    navigate(`${Routes.Settings}#registration_token`),
+                },
+              });
+              break;
+            }
             setTenantHealowUrl(base, auth, token, name, id);
             setOpenSelectModal((x) => !x);
             initiateHealowAuth(config, base, auth, token, name, id).then(
@@ -563,7 +585,7 @@ const ConnectionTab: React.FC = () => {
           }
         }
       },
-      [config],
+      [config, navigate, notifyDispatch],
     );
 
   return (
