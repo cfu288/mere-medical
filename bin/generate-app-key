@@ -1,0 +1,4 @@
+#!/usr/bin/env node
+const { randomBytes } = require('node:crypto');
+
+console.log(`APP_KEY=${randomBytes(24).toString('base64url')}`);

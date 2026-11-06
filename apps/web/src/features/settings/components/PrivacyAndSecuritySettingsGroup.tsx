@@ -19,6 +19,7 @@ import { Modal } from '../../../shared/components/Modal';
 import { ModalHeader } from '../../../shared/components/ModalHeader';
 import { CryptedIndexedDBAdapter } from 'sylviejs/storage-adapter/crypted-indexeddb-adapter';
 import { ButtonLoadingSpinner } from '../../connections/components/ButtonLoadingSpinner';
+import { RegistrationTokenSetting } from './RegistrationTokenSetting';
 
 export function PrivacyAndSecuritySettingsGroup() {
   const db = useRxDb(),
@@ -140,6 +141,7 @@ export function PrivacyAndSecuritySettingsGroup() {
                   </Switch>
                 </div>
               </Switch.Group>
+              <RegistrationTokenSetting />
             </ul>
           </div>
         </div>

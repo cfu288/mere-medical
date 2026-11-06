@@ -12,7 +12,9 @@
     "build": "nx build",
     "test": "nx test",
     "dev": "nx serve-all",
-    "prepare": "[ -d .git ] && husky && git config blame.ignoreRevsFile .git-blame-ignore-revs || true"
+    "prepare": "[ -d .git ] && husky && git config blame.ignoreRevsFile .git-blame-ignore-revs || true",
+    "generate-app-key": "node bin/generate-app-key",
+    "generate-invite-link": "node --env-file=.env bin/generate-invite-link"
   },
   "engines": {
     "node": ">=26.7.0"

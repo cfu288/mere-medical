@@ -49,6 +49,7 @@ docker run -p 4200:8080 -i -t \
   -e ATHENA_SANDBOX_CLIENT_ID=<ID_HERE> \
   -e NEXTGEN_CLIENT_ID=<ID_HERE> \
   -e NEXTGEN_CLIENT_SECRET=<SECRET_HERE> \
+  -e APP_KEY=<KEY_HERE> \
   -e PUBLIC_URL=http://localhost:4200 \
   cfu288/mere-medical:latest
 ```
@@ -79,6 +80,7 @@ docker run -p 4200:8080 \
   -e ATHENA_SANDBOX_CLIENT_ID=<ID_HERE> \
   -e NEXTGEN_CLIENT_ID=<ID_HERE> \
   -e NEXTGEN_CLIENT_SECRET=<SECRET_HERE> \
+  -e APP_KEY=<KEY_HERE> \
   -e PUBLIC_URL=http://localhost:4200 \
   cfu288/mere-medical:latest
 ```
@@ -119,6 +121,8 @@ services:
       - ATHENA_SANDBOX_CLIENT_ID=${ATHENA_SANDBOX_CLIENT_ID}
       - NEXTGEN_CLIENT_ID=${NEXTGEN_CLIENT_ID}
       - NEXTGEN_CLIENT_SECRET=${NEXTGEN_CLIENT_SECRET}
+      - APP_KEY=${APP_KEY}
+      - ALLOW_PUBLIC_CONFIDENTIAL_CLIENTS=${ALLOW_PUBLIC_CONFIDENTIAL_CLIENTS}
       - PUBLIC_URL=${PUBLIC_URL}
 ```
 
@@ -190,6 +194,8 @@ services:
       - ATHENA_SANDBOX_CLIENT_ID=${ATHENA_SANDBOX_CLIENT_ID}
       - NEXTGEN_CLIENT_ID=${NEXTGEN_CLIENT_ID}
       - NEXTGEN_CLIENT_SECRET=${NEXTGEN_CLIENT_SECRET}
+      - APP_KEY=${APP_KEY}
+      - ALLOW_PUBLIC_CONFIDENTIAL_CLIENTS=${ALLOW_PUBLIC_CONFIDENTIAL_CLIENTS}
       - PUBLIC_URL=https://mere.example.com
 
 networks:
@@ -213,26 +219,72 @@ Start it with `docker compose --env-file .env up --detach`, then open your domai
 
 ## Environment Variables Reference
 
-| Variable | Required | Description | Example |
-|----------|----------|-------------|---------|
-| `PUBLIC_URL` | Yes | Full URL where Mere Medical is accessible. **Must include protocol** (`https://` or `http://`). | `https://app.meremedical.co` |
-| `ONPATIENT_CLIENT_ID` | No | Client ID for OnPatient/DrChrono | See [OnPatient setup](./onpatient-setup) |
-| `ONPATIENT_CLIENT_SECRET` | No | Client secret for OnPatient/DrChrono | See [OnPatient setup](./onpatient-setup) |
-| `EPIC_CLIENT_ID_R4` | No | Client ID for Epic MyChart production (recommended) | See [Epic setup](./epic-setup) |
-| `EPIC_SANDBOX_CLIENT_ID_R4` | No | Client ID for Epic MyChart sandbox (recommended) | See [Epic setup](./epic-setup) |
-| `EPIC_CLIENT_ID` | No | Client ID for Epic MyChart production (legacy DSTU2, for backwards compatibility) | See [Epic setup](./epic-setup) |
-| `EPIC_CLIENT_ID_DSTU2` | No | Client ID for Epic MyChart production (legacy DSTU2) | See [Epic setup](./epic-setup) |
-| `EPIC_SANDBOX_CLIENT_ID` | No | Client ID for Epic MyChart sandbox (legacy DSTU2, for backwards compatibility) | See [Epic setup](./epic-setup) |
-| `EPIC_SANDBOX_CLIENT_ID_DSTU2` | No | Client ID for Epic MyChart sandbox (legacy DSTU2) | See [Epic setup](./epic-setup) |
-| `CERNER_CLIENT_ID` | No | Client ID for Cerner Health (supports both R4 and DSTU2) | See [Cerner setup](./cerner-setup) |
-| `VERADIGM_CLIENT_ID` | No | Client ID for Veradigm | |
-| `VA_CLIENT_ID` | No | Client ID for VA (Veterans Affairs). **Note: Only works with VA sandbox, not production access at this time.** | |
-| `HEALOW_CLIENT_ID` | No | Client ID for Healow (eClinicalWorks) | See [Healow setup](./healow-setup) |
-| `HEALOW_CLIENT_SECRET` | No | Client secret for Healow confidential client (enables refresh tokens) | See [Healow setup](./healow-setup) |
-| `ATHENA_CLIENT_ID` | No | Client ID for Athena Health production | See [Athena setup](./athena-setup) |
-| `ATHENA_SANDBOX_CLIENT_ID` | No | Client ID for Athena Health sandbox (Preview) | See [Athena setup](./athena-setup) |
-| `NEXTGEN_CLIENT_ID` | No | Client ID for NextGen Enterprise | See [NextGen setup](./nextgen-setup) |
-| `NEXTGEN_CLIENT_SECRET` | No | Client secret for NextGen Enterprise. Required alongside the client ID; kept server-side. | See [NextGen setup](./nextgen-setup) |
+| Variable                            | Required                   | Description                                                                                                                            | Example                                  |
+| ----------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `PUBLIC_URL`                        | Yes                        | Full URL where Mere Medical is accessible. **Must include protocol** (`https://` or `http://`).                                        | `https://app.meremedical.co`             |
+| `ONPATIENT_CLIENT_ID`               | No                         | Client ID for OnPatient/DrChrono                                                                                                       | See [OnPatient setup](./onpatient-setup) |
+| `ONPATIENT_CLIENT_SECRET`           | No                         | Client secret for OnPatient/DrChrono                                                                                                   | See [OnPatient setup](./onpatient-setup) |
+| `EPIC_CLIENT_ID_R4`                 | No                         | Client ID for Epic MyChart production (recommended)                                                                                    | See [Epic setup](./epic-setup)           |
+| `EPIC_SANDBOX_CLIENT_ID_R4`         | No                         | Client ID for Epic MyChart sandbox (recommended)                                                                                       | See [Epic setup](./epic-setup)           |
+| `EPIC_CLIENT_ID`                    | No                         | Client ID for Epic MyChart production (legacy DSTU2, for backwards compatibility)                                                      | See [Epic setup](./epic-setup)           |
+| `EPIC_CLIENT_ID_DSTU2`              | No                         | Client ID for Epic MyChart production (legacy DSTU2)                                                                                   | See [Epic setup](./epic-setup)           |
+| `EPIC_SANDBOX_CLIENT_ID`            | No                         | Client ID for Epic MyChart sandbox (legacy DSTU2, for backwards compatibility)                                                         | See [Epic setup](./epic-setup)           |
+| `EPIC_SANDBOX_CLIENT_ID_DSTU2`      | No                         | Client ID for Epic MyChart sandbox (legacy DSTU2)                                                                                      | See [Epic setup](./epic-setup)           |
+| `CERNER_CLIENT_ID`                  | No                         | Client ID for Cerner Health (supports both R4 and DSTU2)                                                                               | See [Cerner setup](./cerner-setup)       |
+| `VERADIGM_CLIENT_ID`                | No                         | Client ID for Veradigm                                                                                                                 |                                          |
+| `VA_CLIENT_ID`                      | No                         | Client ID for VA (Veterans Affairs). **Only works with the VA sandbox, not production access at this time.**                           |                                          |
+| `HEALOW_CLIENT_ID`                  | No                         | Client ID for Healow (eClinicalWorks)                                                                                                  | See [Healow setup](./healow-setup)       |
+| `HEALOW_CLIENT_SECRET`              | No                         | Client secret for Healow confidential client (enables refresh tokens)                                                                  | See [Healow setup](./healow-setup)       |
+| `ATHENA_CLIENT_ID`                  | No                         | Client ID for Athena Health production                                                                                                 | See [Athena setup](./athena-setup)       |
+| `ATHENA_SANDBOX_CLIENT_ID`          | No                         | Client ID for Athena Health sandbox (Preview)                                                                                          | See [Athena setup](./athena-setup)       |
+| `NEXTGEN_CLIENT_ID`                 | No                         | Client ID for NextGen Enterprise                                                                                                       | See [NextGen setup](./nextgen-setup)     |
+| `NEXTGEN_CLIENT_SECRET`             | No                         | Client secret for NextGen Enterprise. Required alongside the client ID. The server keeps it.                                           | See [NextGen setup](./nextgen-setup)     |
+| `APP_KEY`                           | If you set a client secret | Private secret that signs the registration token in invite links. Exactly the 32 characters `generate-app-key` prints. Never share it. | See [App key](#app-key)                  |
+| `APP_CONTACT`                       | No                         | Who users should ask for an invite link, such as an email address. Shown in the app when a registration token is missing or refused.   | `admin@example.com`                      |
+| `ALLOW_PUBLIC_CONFIDENTIAL_CLIENTS` | No                         | Set to `true` to run those routes without a registration token.                                                                        | See [App key](#app-key)                  |
+
+## App Key
+
+Healow, NextGen, and OnPatient give your registered app a client secret. Mere keeps that secret on the server, and the server exchanges login codes for tokens on behalf of the browser. Without a check on the caller, another app could send its own users through the vendor consent screen with your client ID and redirect URL. It could then exchange the codes through your instance. This does not put your medical records at risk. It could let third parties abuse your app registration, and the EHR vendor could then close your registration. Invite links close that path. Each link carries a registration token that the server signs with your `APP_KEY`, and only browsers with that token can use those routes. The link never contains the key itself.
+
+> **Breaking change 11/2/2026.** If you run Healow, NextGen, or OnPatient with its client secret, you must also set `APP_KEY`. Alternatively you can set `ALLOW_PUBLIC_CONFIDENTIAL_CLIENTS=true` if you do not want these protections. Otherwise the container does not start, and the web app is not served either. If you do not have these integrations enabled, you need no change. See [Upgrade a deployment from before 11/2/2026](#upgrade-a-deployment-from-before-1122026).
+
+### Variables
+
+| Variable                            | When                                                                                                                         | What it does                                                                                                                                                                                                                                                                                                                                                                                   |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `APP_KEY`                           | Required when you set a Healow, NextGen, or OnPatient client secret, unless you set `ALLOW_PUBLIC_CONFIDENTIAL_CLIENTS=true` | Private secret that the server uses to sign the registration token in invite links. Generate it with `generate-app-key`. It must be exactly the 32 characters `generate-app-key` prints. Those are letters, digits, `-`, and `_`. The server trims surrounding spaces. A value that starts with `$` counts as unset. Any other value stops the container at start. Never share the key itself. |
+| `APP_CONTACT`                       | Optional                                                                                                                     | Who users should ask for an invite link, such as an email address. The app shows it when a registration token is missing or refused.                                                                                                                                                                                                                                                           |
+| `ALLOW_PUBLIC_CONFIDENTIAL_CLIENTS` | Optional                                                                                                                     | Set to `true` to run those routes without a registration token. If you set both `APP_KEY` and `ALLOW_PUBLIC_CONFIDENTIAL_CLIENTS=true`, the key applies and the server logs a warning.                                                                                                                                                                                                         |
+
+### Set up the app key
+
+1. Generate a key with `docker compose run --rm app generate-app-key`. It prints one line, such as `APP_KEY=Wo5afxExmyQKIiO1mTm0nghRWNtkwpCG`.
+2. Copy that line into `.env`. If `.env` already has an empty `APP_KEY=` line, replace it.
+3. Recreate the container with `docker compose up -d --force-recreate app`.
+4. Print the invite link with `docker compose run --rm app generate-invite-link`.
+5. Send the link to each person who uses Healow, NextGen, or OnPatient on your instance. Never send `APP_KEY` itself.
+
+### Invite link
+
+`generate-invite-link` prints the invite link for the `PUBLIC_URL` of the container. The link carries a registration token signed with the container's `APP_KEY`, not the key. Every run prints the same link. Without compose, generate a key with `docker run --rm cfu288/mere-medical generate-app-key` and print the link with `docker exec mere-medical generate-invite-link`. Opening the link from the end user's web app saves the registration token in that browser.
+
+If `APP_KEY` is set, a browser without a registration token cannot start a Healow, NextGen, or OnPatient connection. The Healow, NextGen, and OnPatient tiles tell the user to open the invite link from their Mere administrator, and name the `APP_CONTACT` when it is set. Settings > Privacy and Security shows whether the browser has a registration token.
+
+### Issue a new registration token
+
+Issue a new registration token via invite link. Set a new `APP_KEY`, recreate the container, and send the new invite link from `generate-invite-link`. The server refuses a browser that still has the old registration token on its next Healow, NextGen, or OnPatient login or refresh. The message tells the user to ask for a new invite link. Opening the new link replaces the old registration token.
+
+### Public instance
+
+`ALLOW_PUBLIC_CONFIDENTIAL_CLIENTS=true` without `APP_KEY` runs the token routes with no registration token check. Any app that can reach your instance can then exchange codes through it with your client ID and secret. Use this only for an instance nobody else can reach. Examples are a port published on loopback only (`-p 127.0.0.1:4200:8080`), a VPN, or basic auth at your reverse proxy.
+
+### Upgrade a deployment from before 11/2/2026
+
+Since 11/2/2026, a container with a Healow, NextGen, or OnPatient client secret does not start until you also set `APP_KEY` or `ALLOW_PUBLIC_CONFIDENTIAL_CLIENTS=true`. The startup error in `docker compose logs app` says what to set. Deployments without these secrets need no change.
+
+1. In your compose file, add `- APP_KEY=${APP_KEY}` to the `environment` list of the `app` service.
+2. Follow [Set up the app key](#set-up-the-app-key).
 
 ## Troubleshooting
 
@@ -251,6 +303,7 @@ Browsers only expose the Web Crypto APIs Mere needs on `https://` origins or `lo
 This error means `PUBLIC_URL` is not configured correctly. Check browser DevTools Network tab - if you see `/$PUBLIC_URL/api/...` in request URLs, the variable isn't being injected.
 
 **Common fixes:**
+
 - Ensure `PUBLIC_URL` includes protocol: `https://yourdomain.com` (not `yourdomain.com`)
 - Check for typos in variable name (`PUBLIC_URL` not `PUBLIC_ULR`)
 - After changing `.env`, recreate the container: `docker compose down && docker compose rm && docker compose up`

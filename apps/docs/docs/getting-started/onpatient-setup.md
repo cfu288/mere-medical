@@ -26,3 +26,15 @@ You'll now need to set the redirect URI to redirect to Mere Medical. By default 
 OnPatient requires an HTTPS redirect URL, so Mere needs a real domain name behind a reverse proxy. See [running behind a reverse proxy](./docker#running-behind-a-reverse-proxy).
 
 After creating your app, you should be able to see the Client ID and Client Secret. Provide those to your docker compose file.
+
+## App key
+
+With `ONPATIENT_CLIENT_SECRET` set, Mere does not start until you also set `APP_KEY`. The key signs the registration token in your invite links, which stops other apps from using your OnPatient registration through your instance. One key covers Healow, NextGen, and OnPatient, so skip these steps if you already set one. You can optionally choose to disable the need for a registration token via setting your instance as a [public instance](./docker#public-instance).
+
+1. Generate a key with `docker compose run --rm app generate-app-key`. It prints one line, such as `APP_KEY=Wo5afxExmyQKIiO1mTm0nghRWNtkwpCG`.
+2. Copy that line into `.env`. If `.env` already has an empty `APP_KEY=` line, replace it.
+3. Recreate the container with `docker compose up -d --force-recreate app`.
+4. Print the invite link with `docker compose run --rm app generate-invite-link`.
+5. Send the link to each person who uses this instance. Never send `APP_KEY` itself.
+
+See [App key](./docker#app-key) for how the key works and how to issue a new registration token.

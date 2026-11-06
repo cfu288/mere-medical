@@ -57,6 +57,8 @@ COPY --from=build-web-stage /app/dist/apps/web/ /app/web/
 COPY --from=build-api-stage /app/dist/apps/api/ /app/api/
 COPY --from=prod-deps /app/node_modules/ /app/node_modules/
 COPY ./healthcheck.js /app/healthcheck.js
+COPY --chmod=755 ./bin/ /app/bin/
+ENV PATH=/app/bin:$PATH
 
 USER 1000
 EXPOSE 8080

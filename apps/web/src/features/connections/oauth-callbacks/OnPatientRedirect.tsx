@@ -18,14 +18,20 @@ import {
   createConnection,
   updateConnection,
 } from '../../../repositories/ConnectionRepository';
+import { registrationTokenHeaders } from '../registrationToken';
 
 async function fetchTokensFromServer(
   sessionId: string,
 ): Promise<OnPatientTokenSet> {
-  const response = await fetch(`/api/v1/onpatient/tokens?session=${sessionId}`);
+  const response = await fetch(
+    `/api/v1/onpatient/tokens?session=${sessionId}`,
+    { headers: registrationTokenHeaders() },
+  );
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error || 'Failed to retrieve tokens');
+    throw new Error(
+      error.error_description || error.error || 'Failed to retrieve tokens',
+    );
   }
   const data: OnPatientTokenResponse = await response.json();
   return parseOnPatientTokenResponse(data);

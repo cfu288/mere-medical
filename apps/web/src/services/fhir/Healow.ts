@@ -51,6 +51,10 @@ import { UserDocument } from '../../models/user-document/UserDocument.type';
 import uuid4 from '../../shared/utils/UUIDUtils';
 import { CreateClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { concatPath } from '../../shared/utils/urlUtils';
+import {
+  registrationTokenHeaders,
+  isRegistrationTokenRejected,
+} from '../../features/connections/registrationToken';
 import { getConnectionCardByUrl } from './getConnectionCardByUrl';
 import { ResourceMapper, VendorSync, mapSearchedResources } from './sync';
 import {
@@ -642,13 +646,7 @@ export async function refreshHealowConnectionTokenIfNeeded(
       }
 
       const client = config.HEALOW_CONFIDENTIAL_MODE
-        ? createHealowClientConfidential({
-            token: concatPath(config.PUBLIC_URL || '', '/api/v1/healow/token'),
-            refresh: concatPath(
-              config.PUBLIC_URL || '',
-              '/api/v1/healow/refresh',
-            ),
-          })
+        ? createHealowConfidentialClient(config.PUBLIC_URL || '')
         : useProxy
           ? createHealowClientWithProxy(
               buildHealowProxyUrlBuilder(config.PUBLIC_URL || ''),
@@ -693,8 +691,19 @@ export async function refreshHealowConnectionTokenIfNeeded(
       });
     } catch (e) {
       console.error(e);
+      if (isRegistrationTokenRejected(e)) {
+        throw e;
+      }
       throw new Error('Error refreshing token - try logging in again');
     }
   }
   return Promise.resolve();
+}
+
+export function createHealowConfidentialClient(publicUrl: string) {
+  return createHealowClientConfidential({
+    token: concatPath(publicUrl, '/api/v1/healow/token'),
+    refresh: concatPath(publicUrl, '/api/v1/healow/refresh'),
+    headers: registrationTokenHeaders,
+  });
 }

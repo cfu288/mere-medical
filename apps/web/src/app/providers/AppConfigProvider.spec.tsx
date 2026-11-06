@@ -166,6 +166,45 @@ describe('AppConfigProvider', () => {
       });
     });
 
+    it('keeps the app key flag live and out of the cached document', async () => {
+      const mockFetcher: ConfigFetcher = async () => ({
+        PUBLIC_URL: 'https://keyed.example.com',
+        REGISTRATION_TOKEN_REQUIRED: true,
+        APP_CONTACT: 'admin@keyed.example.com',
+      });
+
+      const TestComponent = () => {
+        const config = useConfig();
+        return (
+          <span data-testid="required">
+            {String(config.REGISTRATION_TOKEN_REQUIRED)}
+          </span>
+        );
+      };
+
+      const { getByTestId } = render(
+        <TestProviders db={db}>
+          <AppConfigProvider configFetcher={mockFetcher}>
+            <TestComponent />
+          </AppConfigProvider>
+        </TestProviders>,
+      );
+
+      await waitFor(() => {
+        expect(getByTestId('required').textContent).toBe('true');
+      });
+      await waitFor(async () => {
+        const cached = await db.instance_config
+          .findOne('instance_config')
+          .exec();
+        expect(cached?.get('PUBLIC_URL')).toBe('https://keyed.example.com');
+        expect(cached?.toJSON()).not.toHaveProperty(
+          'REGISTRATION_TOKEN_REQUIRED',
+        );
+        expect(cached?.toJSON()).not.toHaveProperty('APP_CONTACT');
+      });
+    });
+
     it('uses cached config when API fails', async () => {
       await db.instance_config.upsert({
         id: 'instance_config',

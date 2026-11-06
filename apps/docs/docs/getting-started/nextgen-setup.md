@@ -34,6 +34,18 @@ NEXTGEN_CLIENT_ID=
 NEXTGEN_CLIENT_SECRET=
 ```
 
+## App key
+
+With `NEXTGEN_CLIENT_SECRET` set, Mere does not start until you also set `APP_KEY`. The key signs the registration token in your invite links, which stops other apps from using your NextGen registration through your instance. One key covers Healow, NextGen, and OnPatient, so skip these steps if you already set one. You can optionally choose to disable the need for a registration token via setting your instance as a [public instance](./docker#public-instance).
+
+1. Generate a key with `docker compose run --rm app generate-app-key`. It prints one line, such as `APP_KEY=Wo5afxExmyQKIiO1mTm0nghRWNtkwpCG`.
+2. Copy that line into `.env`. If `.env` already has an empty `APP_KEY=` line, replace it.
+3. Recreate the container with `docker compose up -d --force-recreate app`.
+4. Print the invite link with `docker compose run --rm app generate-invite-link`.
+5. Send the link to each person who uses this instance. Never send `APP_KEY` itself.
+
+See [App key](./docker#app-key) for how the key works and how to issue a new registration token.
+
 ## Testing with the Sandbox
 
 NextGen's sandbox uses the same OAuth and FHIR endpoints as production. Select NextGen in Mere's connections tab and log in with the sandbox test patient credentials published in the [NextGen Patient Access API Authentication Guide](https://www.nextgen.com/api/-/media/files/api/nge-patient-api-auth-guide.pdf) (username `patientapitest`).

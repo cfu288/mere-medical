@@ -33,5 +33,11 @@ spec:
           scope: RUN_TIME
         - key: HEALOW_CLIENT_SECRET
           scope: RUN_TIME
+        - key: APP_KEY
+          scope: RUN_TIME
+        - key: APP_CONTACT
+          scope: RUN_TIME
+        - key: ALLOW_PUBLIC_CONFIDENTIAL_CLIENTS
+          scope: RUN_TIME
         - key: PUBLIC_URL
           value: ${APP_URL}

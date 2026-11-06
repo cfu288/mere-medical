@@ -9,6 +9,7 @@ import { useUser } from '../../../app/providers/UserProvider';
 import { useAppConfig } from '../../../app/providers/AppConfigProvider';
 import { useUserPreferences } from '../../../app/providers/UserPreferencesProvider';
 import {
+  createHealowConfidentialClient,
   HealowLocalStorageKeys,
   saveConnectionToDb,
 } from '../../../services/fhir/Healow';
@@ -16,7 +17,6 @@ import { concatPath } from '../../../shared/utils/urlUtils';
 import {
   createHealowClient,
   createHealowClientWithProxy,
-  createHealowClientConfidential,
   buildHealowOAuthConfig,
 } from '@mere/fhir-oauth';
 import { useOAuthFlow } from '@mere/fhir-oauth/react';
@@ -51,10 +51,7 @@ function useHealowOAuthCallback() {
 
   const client = useMemo(() => {
     if (confidentialMode) {
-      return createHealowClientConfidential({
-        token: concatPath(publicUrl, '/api/v1/healow/token'),
-        refresh: concatPath(publicUrl, '/api/v1/healow/refresh'),
-      });
+      return createHealowConfidentialClient(publicUrl);
     }
     if (useProxy) {
       return createHealowClientWithProxy(buildHealowProxyUrlBuilder(publicUrl));
