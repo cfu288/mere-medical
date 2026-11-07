@@ -266,18 +266,16 @@ export default function Home() {
                       <a
                         href="https://demo.meremedical.co/timeline"
                         className="bg-primary-700 hover:bg-primary-600 flex w-full items-center justify-center rounded-md border border-transparent px-8 py-3 text-base font-medium text-white hover:text-white md:px-10 md:py-4 md:text-lg"
-                        data-umami-event="see-demo"
                       >
-                        See Demo
+                        Try the Demo
                       </a>
                     </div>
                     <div className="slideUpDelay3 mt-3 rounded-md opacity-0 shadow sm:ml-3 sm:mt-0">
                       <a
                         href="https://app.meremedical.co/timeline"
                         className="text-primary-700 hover:text-primary-600 flex w-full items-center justify-center rounded-md border border-transparent bg-white px-8 py-3 text-base font-medium hover:bg-gray-50 md:px-10 md:py-4 md:text-lg"
-                        data-umami-event="try-the-beta"
                       >
-                        Try the Beta
+                        Get Started
                       </a>
                     </div>
                   </div>

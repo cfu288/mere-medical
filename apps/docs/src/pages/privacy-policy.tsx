@@ -9,14 +9,6 @@ export default function PrivacyPolicy() {
         <title>Mere Medical Privacy Policy</title>
         <meta name="description" content="How Mere handles your data" />
         <meta property="og:description" content="How Mere handles your data" />
-        {process.env.NODE_ENV === 'production' && (
-          <script
-            async
-            defer
-            data-website-id="923df902-e3c6-4d55-8c84-51cd5881ed81"
-            src="https://umami.mari.casa/umami.js"
-          ></script>
-        )}
       </Head>
       <style>
         <>
