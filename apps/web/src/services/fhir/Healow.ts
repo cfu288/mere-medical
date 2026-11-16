@@ -1,3 +1,4 @@
+import { waitForAll } from './sync/waitForAll';
 /**
  * Healow FHIR R4 Integration
  *
@@ -433,7 +434,7 @@ async function syncDocumentReferences(
       }
     }
   });
-  return await Promise.all(cdsmap);
+  return await waitForAll(cdsmap);
 }
 
 async function fetchAttachmentData(

@@ -12,6 +12,10 @@ import {
 import { TestProviders } from '../../../test-utils/TestProviders';
 import { PrivacyAndSecuritySettingsGroup } from './PrivacyAndSecuritySettingsGroup';
 
+jest.mock('../../sync/SyncJobProvider', () => ({
+  usePauseSyncJobs: () => async () => () => undefined,
+}));
+
 describe('PrivacyAndSecuritySettingsGroup', () => {
   let db: RxDatabase<DatabaseCollections>;
 

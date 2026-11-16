@@ -1,3 +1,4 @@
+import { waitForAll } from './sync/waitForAll';
 import {
   Attachment,
   Bundle,
@@ -338,7 +339,7 @@ async function syncDocumentReferences(
       }
     }
   });
-  return await Promise.all(cdsmap);
+  return await waitForAll(cdsmap);
 }
 
 function decodeInlineAttachmentData(attachment: Attachment): {
