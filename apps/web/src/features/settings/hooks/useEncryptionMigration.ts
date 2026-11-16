@@ -12,10 +12,6 @@ import {
   useRxDb,
 } from '../../../app/providers/RxDbProvider';
 
-function debug(step: string) {
-  console.debug('useEncryptionMigration: ' + step);
-}
-
 async function saveEncryptedDatabase(db: RxDatabase<DatabaseCollections>) {
   const internalDb = await getInternalLokiStorage(db);
   // Loki keeps writes in memory. Wait for persistence before selecting this copy.
@@ -66,32 +62,36 @@ export function useEncryptionMigration(onSuccess: () => void) {
       let resumeSyncJobs: (() => void) | undefined;
 
       try {
-        debug(
+        console.debug(
           encrypted
-            ? 'Migrating from unencrypted to encrypted database'
-            : 'Migrating from encrypted to unencrypted database',
+            ? 'useEncryptionMigration: Migrating from unencrypted to encrypted database'
+            : 'useEncryptionMigration: Migrating from encrypted to unencrypted database',
         );
-        debug('Waiting for running sync jobs');
+        console.debug('useEncryptionMigration: Waiting for running sync jobs');
         resumeSyncJobs = await pauseSyncJobs();
         if (!encrypted) {
-          debug('Forcing final write of Loki memory to idb');
+          console.debug(
+            'useEncryptionMigration: Forcing final write of Loki memory to idb',
+          );
           await saveEncryptedDatabase(db);
         }
-        debug('Exporting current database');
+        console.debug('useEncryptionMigration: Exporting current database');
         const dump = await db.exportJSON();
         // RxDB's bulk writer cannot import an empty collection.
         dump.collections = dump.collections.filter(
           (col) => col.docs.length > 0,
         );
-        debug(
+        console.debug(
           encrypted
-            ? 'Creating new encrypted database'
-            : 'Creating new unencrypted database',
+            ? 'useEncryptionMigration: Creating new encrypted database'
+            : 'useEncryptionMigration: Creating new unencrypted database',
         );
         target = encrypted
           ? await initEncryptedRxDb(password)
           : await initUnencrypedRxDb();
-        debug('Importing data into new database');
+        console.debug(
+          'useEncryptionMigration: Importing data into new database',
+        );
         // RxDB 13 returns bulk-write results despite declaring Promise<void>.
         const results = (await target.importJSON(
           dump,
@@ -101,10 +101,14 @@ export function useEncryptionMigration(onSuccess: () => void) {
         }
         // Dexie imports await IndexedDB writes; Loki needs an explicit save.
         if (encrypted) {
-          debug('Forcing final write of Loki memory to idb');
+          console.debug(
+            'useEncryptionMigration: Forcing final write of Loki memory to idb',
+          );
           await saveEncryptedDatabase(target);
         }
-        debug('Saving the new encryption setting');
+        console.debug(
+          'useEncryptionMigration: Saving the new encryption setting',
+        );
         updateLocalConfig({ use_encrypted_database: encrypted });
       } catch (e) {
         console.error(e);
@@ -137,13 +141,13 @@ export function useEncryptionMigration(onSuccess: () => void) {
         // failure must keep the verified target selected, never roll back to a
         // source that may already have been partially removed.
         // Keep sync paused through reload: queued jobs still hold the source.
-        debug(
+        console.debug(
           encrypted
-            ? 'Deleting old unencrypted database'
-            : 'Deleting old encrypted database',
+            ? 'useEncryptionMigration: Deleting old unencrypted database'
+            : 'useEncryptionMigration: Deleting old encrypted database',
         );
         await removeDatabase(db, !encrypted);
-        debug('Completed migration');
+        console.debug('useEncryptionMigration: Completed migration');
         onSuccess();
         setTimeout(() => window.location.reload(), 0);
       } catch (e) {
