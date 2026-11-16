@@ -1,0 +1,34 @@
+name: Flag AI attribution
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const pr = context.payload.pull_request;
+            const aiAttribution =
+              /(generated with|co-authored-by:).*(claude|anthropic|copilot|cursor|codex|chatgpt|openai|gemini)/i;
+            const commits = await github.paginate(github.rest.pulls.listCommits, {
+              owner,
+              repo,
+              pull_number: pr.number,
+            });
+            const texts = [pr.title, pr.body ?? '', ...commits.map((c) => c.commit.message)];
+            if (!texts.some((text) => aiAttribution.test(text))) return;
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: pr.number,
+              labels: ['ai-attribution'],
+            });
