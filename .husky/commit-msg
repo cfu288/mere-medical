@@ -1,19 +1,25 @@
 ai_agent='claude|anthropic|chatgpt|openai|copilot|codex|gemini|cursoragent|generated with|🤖'
 
-matches=$(sed '/^# -* >8 -*$/,$d' "$1" | grep -v '^#' | grep -inE "$ai_agent" || true)
+message_matches=$(sed '/^# -* >8 -*$/,$d' "$1" | grep -v '^#' | grep -inE "$ai_agent" || true)
+identity_matches=$(
+  printf '%s\n' "author: $(git var GIT_AUTHOR_IDENT)" "committer: $(git var GIT_COMMITTER_IDENT)" |
+    sed 's/ [0-9]* [-+][0-9]*$//' | grep -iE "$ai_agent" || true
+)
+matches=$(printf '%s\n%s' "$message_matches" "$identity_matches" | sed '/^$/d')
 
 if [ -n "$matches" ]; then
   cat >&2 <<EOF
 
-warning: this commit message mentions an AI agent:
+warning: this commit mentions an AI agent in its message, author or committer:
 
 $matches
 
 While AI-assisted coding is allowed in this project, we expect all
 contributors to take ownership of their work. For that reason, we do not
-accept any commit with a co-author of an AI agent, or any commit message
-with mention of an AI agent. Before submitting or opening a PR, please
-review your code and commits and remove such attribution accordingly.
+accept any commit with an AI agent as author, committer or co-author, or
+any commit message with mention of an AI agent. Before submitting or
+opening a PR, please review your code and commits and remove such
+attribution accordingly.
 
 EOF
 fi
