@@ -31,6 +31,8 @@ import {
   DisplayCCDAPlanOfTreatmentSection,
 } from './parseCCDAPlanOfTreatmentSection';
 
+import type { JSX } from 'react';
+
 export function parseCCDA(
   raw: string,
   forceRawStringResponse = false,

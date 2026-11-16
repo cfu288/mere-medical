@@ -1,5 +1,5 @@
 import { BundleEntry, DocumentReference } from 'fhir/r2';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type JSX } from 'react';
 import DOMPurify from 'dompurify';
 import parse from 'html-react-parser';
 import { ClinicalDocument } from '../../../../models/clinical-document/ClinicalDocument.type';

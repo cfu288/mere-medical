@@ -334,7 +334,7 @@ function HistoricalRelatedLabsChart({
   relatedLabs: ClinicalDocument<BundleEntry<Observation>>[];
   item: ClinicalDocument<BundleEntry<Observation>>;
 }) {
-  const chartComponent = useRef<IChart>(),
+  const chartComponent = useRef<IChart>(undefined),
     chartDisplayName = `${item.metadata?.display_name}`,
     chartValueUnit = `(${getValueUnit(item)})`;
   const chartData = useMemo(

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type JSX } from 'react';
 import { ClinicalDocument } from '../../../../models/clinical-document/ClinicalDocument.type';
 import { Modal } from '../../../../shared/components/Modal';
 import { ModalHeader } from '../../../../shared/components/ModalHeader';

@@ -133,7 +133,7 @@ export function ProfileImageModal({
     return getFileFromFileList(ppWatch || undefined);
   }, [ppWatch]);
   const ppUrl = useObjectUrl(pp === null ? undefined : pp);
-  const uploadRef = useRef<HTMLInputElement | undefined>();
+  const uploadRef = useRef<HTMLInputElement | undefined>(undefined);
   const { ref, ...rest } = register('profilePhoto');
 
   useDebounceEffect(

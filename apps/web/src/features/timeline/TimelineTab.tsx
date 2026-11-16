@@ -127,6 +127,7 @@ export function TimelineTab() {
       }
     >
       <Transition
+        as="div"
         show={
           !initialized &&
           (status === QueryStatus.IDLE || status === QueryStatus.LOADING)
@@ -237,7 +238,7 @@ function LoadMoreButton({
   );
 }
 
-function useScrollToTop(ref?: React.RefObject<HTMLDivElement | undefined>) {
+function useScrollToTop(ref?: React.RefObject<HTMLDivElement | null>) {
   return useCallback(() => {
     ref?.current?.scrollTo({ top: 0, behavior: 'smooth' });
   }, [ref]);
