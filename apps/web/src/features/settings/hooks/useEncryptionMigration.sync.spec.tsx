@@ -153,7 +153,7 @@ describe('encryption migration with background sync', () => {
     'preserves a sync write arriving during migration (source encrypted: %s)',
     async (encrypted) => {
       // Keep the copy open until the in-flight request writes to the source.
-      // Without draining, this write lands after the dump and is then deleted.
+      // Without the wait, this write lands after the dump and is then deleted.
       const importJSON = target.importJSON.getMockImplementation();
       if (!importJSON) throw new Error('Import stub is required');
       target.importJSON.mockImplementation(async (dump) => {
@@ -274,7 +274,7 @@ describe('encryption migration with background sync', () => {
     expect(target.records.has('late-record')).toBe(true);
   });
 
-  it('drains rejected jobs through their final error timestamp write', async () => {
+  it('waits for rejected jobs through their final error timestamp write', async () => {
     const timestamp = deferred();
     jest.spyOn(console, 'error').mockImplementation(() => undefined);
     jest.mocked(epicSync.syncAllRecords).mockImplementation(async () => {
@@ -315,7 +315,7 @@ describe('encryption migration with background sync', () => {
     expect(result.current.migration.needsReload).toBe(true);
   });
 
-  it('retains a queued retry when the running job completes during the drain', async () => {
+  it('retains a queued retry when the running job completes during the wait', async () => {
     const { result } = setup();
     await act(async () => {
       result.current.dispatch(job());
