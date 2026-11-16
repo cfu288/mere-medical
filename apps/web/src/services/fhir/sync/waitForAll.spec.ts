@@ -1,26 +1,30 @@
 import { waitForAll } from './waitForAll';
 
-it('returns successful results in input order', async () => {
-  await expect(
-    waitForAll([Promise.resolve('first'), Promise.resolve('second')]),
-  ).resolves.toEqual(['first', 'second']);
-});
+describe('waitForAll', () => {
+  it('returns the values in the order of the jobs', async () => {
+    const values = await waitForAll([
+      Promise.resolve('first'),
+      Promise.resolve('second'),
+    ]);
 
-it('drains siblings and preserves the first observed rejection', async () => {
-  let rejectLater!: (reason: Error) => void;
-  const later = new Promise<never>((_, reject) => {
-    rejectLater = reject;
+    expect(values).toEqual(['first', 'second']);
   });
-  const failure = new Error('first failure');
-  let settled = false;
-  const result = waitForAll([later, Promise.reject(failure)]);
-  const observed = result.catch((error) => {
-    settled = true;
-    return error;
+
+  it('waits for a running job after another job fails', async () => {
+    let finishRunningJob!: () => void;
+    const runningJob = new Promise<void>((resolve) => {
+      finishRunningJob = resolve;
+    });
+    const failure = new Error('failed job');
+    const onDone = jest.fn();
+
+    const result = waitForAll([runningJob, Promise.reject(failure)]);
+    result.catch(onDone);
+    // A timer runs after every promise callback that is ready to run.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(onDone).not.toHaveBeenCalled();
+    finishRunningJob();
+    await expect(result).rejects.toBe(failure);
   });
-  await Promise.resolve();
-  await Promise.resolve();
-  expect(settled).toBe(false);
-  rejectLater(new Error('later failure'));
-  expect(await observed).toBe(failure);
 });
