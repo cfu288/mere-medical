@@ -1,0 +1,19 @@
+ai_agent='claude|anthropic|chatgpt|openai|copilot|codex|gemini|cursoragent|generated with|🤖'
+
+matches=$(sed '/^# -* >8 -*$/,$d' "$1" | grep -v '^#' | grep -inE "$ai_agent" || true)
+
+if [ -n "$matches" ]; then
+  cat >&2 <<EOF
+
+warning: this commit message mentions an AI agent:
+
+$matches
+
+While AI-assisted coding is allowed in this project, we expect all
+contributors to take ownership of their work. For that reason, we do not
+accept any commit with a co-author of an AI agent, or any commit message
+with mention of an AI agent. Before submitting or opening a PR, please
+review your code and commits and remove such attribution accordingly.
+
+EOF
+fi
