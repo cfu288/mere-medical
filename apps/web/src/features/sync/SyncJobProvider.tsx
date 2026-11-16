@@ -24,6 +24,12 @@ import * as Athena from '../../services/fhir/Athena';
 import * as NextGen from '../../services/fhir/NextGen';
 import { SyncContext } from '../../services/fhir/sync';
 import { from, ReplaySubject, Subject } from 'rxjs';
+import {
+  newSyncJobQueue,
+  pauseJobs,
+  resumeJobs,
+  startJob,
+} from './syncJobQueue';
 import { isRegistrationTokenRejected } from '../connections/registrationToken';
 import { useNotificationDispatch } from '../../app/providers/NotificationProvider';
 import { differenceInDays, parseISO } from 'date-fns';
@@ -150,45 +156,36 @@ function syncJobReducer(state: JobState, action: StateAction): JobState {
  */
 export function SyncJobProvider(props: SyncJobProviderProps) {
   const [state, updateState] = React.useReducer(syncJobReducer, {});
-  const paused = useRef(false);
-  const active = useRef(new Map<string, Promise<JobResults>>());
-  const pending = useRef(
-    new Map<string, Extract<Action, { type: 'add_job' }>>(),
-  );
+  const queue = useRef(newSyncJobQueue<SyncContext, JobResults>());
 
-  const dispatch = useCallback((action: Action) => {
-    if (action.type === 'remove_job') {
-      updateState(action);
-      return;
-    }
-    if (paused.current) {
-      pending.current.set(action.id, action);
-      return;
-    }
-    if (active.current.has(action.id)) return;
-    const job = fetchMedicalRecords(action.ctx);
-    active.current.set(action.id, job);
-    const finished = () => {
-      active.current.delete(action.id);
-    };
-    void job.then(finished, finished);
+  const showJob = useCallback((id: string, job: Promise<JobResults>) => {
     // A fast job may finish before the notification effect subscribes.
     const subject = new ReplaySubject<JobResults>(1);
-    updateState({ type: 'add_job', id: action.id, subject });
+    updateState({ type: 'add_job', id, subject });
     from(job).subscribe(subject);
   }, []);
 
+  const dispatch = useCallback(
+    (action: Action) => {
+      if (action.type === 'remove_job') {
+        updateState(action);
+        return;
+      }
+      startJob(
+        queue.current,
+        action.id,
+        action.ctx,
+        fetchMedicalRecords,
+        showJob,
+      );
+    },
+    [showJob],
+  );
+
   const pause = useCallback(async () => {
-    // Close admission synchronously, before taking the drain snapshot.
-    paused.current = true;
-    await Promise.allSettled(active.current.values());
-    return () => {
-      paused.current = false;
-      const queued = [...pending.current.values()];
-      pending.current.clear();
-      queued.forEach(dispatch);
-    };
-  }, [dispatch]);
+    await pauseJobs(queue.current);
+    return () => resumeJobs(queue.current, fetchMedicalRecords, showJob);
+  }, [showJob]);
 
   return (
     <SyncJobContext.Provider value={state}>
@@ -203,7 +200,10 @@ export function SyncJobProvider(props: SyncJobProviderProps) {
   );
 }
 
-/** Pause new jobs and drain running jobs; resume only while the source is valid. */
+/**
+ * Pauses new jobs and waits for running jobs.
+ * Resume the jobs only while the source database is valid.
+ */
 export function usePauseSyncJobs() {
   const pause = useContext(SyncJobPauseContext);
   if (!pause) throw new Error('SyncJobProvider is required');
