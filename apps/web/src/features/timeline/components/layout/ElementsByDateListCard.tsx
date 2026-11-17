@@ -23,7 +23,14 @@ import {
   Specimen,
   Device,
 } from 'fhir/r4';
-import React, { memo, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  memo,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type JSX,
+} from 'react';
 import {
   getEncounterClass,
   getEncounterLocation,
@@ -922,6 +929,7 @@ export const ElementsByDateListCard = memo(function ElementsByDateListCard({
           </div>
         </div>
         <Transition
+          as="div"
           show={expanded}
           enter="transition-all transform duration-150 origin-top"
           enterFrom="opacity-0 scale-y-0"

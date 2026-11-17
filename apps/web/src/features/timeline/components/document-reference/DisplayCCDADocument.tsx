@@ -3,6 +3,8 @@ import { CCDAStructureDefinitionKeys2_1 } from './CCDAStructureDefinitionKeys2_1
 import { DisplayCCDAElementSection } from './DisplayCCDAElementSection';
 import { DisplayCCDARawSection } from './DisplayCCDARawSection';
 
+import type { JSX } from 'react';
+
 export function DisplayCCDADocument({
   ccda,
 }: {

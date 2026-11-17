@@ -339,6 +339,7 @@ export function RxDbProvider(props: RxDbProviderProps) {
     <>
       {/* Transition added to avoid flash of white  */}
       <Transition
+        as="div"
         show={initialized !== 'COMPLETE'}
         appear={true}
         enter="transition-opacity duration-150"

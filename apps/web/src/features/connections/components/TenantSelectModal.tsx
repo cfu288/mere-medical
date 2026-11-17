@@ -714,7 +714,10 @@ export function TenantSelectModal({
             ) : (
               <>
                 <Combobox
-                  onChange={(s: SelectOption) => {
+                  onChange={(s: SelectOption | null) => {
+                    // Headless UI v2 comboboxes are always nullable and
+                    // report null when the selection is cleared.
+                    if (!s) return;
                     // Cross-vendor searches resolve the concrete vendor from
                     // the selected tenant itself
                     const vendor =
