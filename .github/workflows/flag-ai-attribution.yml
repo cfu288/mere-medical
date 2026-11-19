@@ -25,7 +25,15 @@ jobs:
               pull_number: pr.number,
             });
             const texts = [pr.title, pr.body ?? '', ...commits.map((c) => c.commit.message)];
-            if (!texts.some((text) => aiAttribution.test(text))) return;
+            const aiIdentity = /claude|anthropic|copilot|cursoragent|codex|chatgpt|openai|gemini/i;
+            const identities = commits
+              .flatMap((c) => [c.commit.author, c.commit.committer])
+              .flatMap((identity) => [identity?.name ?? '', identity?.email ?? '']);
+            if (
+              !texts.some((text) => aiAttribution.test(text)) &&
+              !identities.some((identity) => aiIdentity.test(identity))
+            )
+              return;
             await github.rest.issues.addLabels({
               owner,
               repo,
