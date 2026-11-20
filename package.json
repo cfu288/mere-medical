@@ -83,7 +83,7 @@
     "@types/compression": "^1.8.1",
     "@types/dompurify": "^3.0.5",
     "@types/express": "^5.0.6",
-    "@types/fhir": "^0.0.41",
+    "@types/fhir": "^0.0.44",
     "@types/jest": "30.0.0",
     "@types/lodash.merge": "^4.6.9",
     "@types/node": "25.0.9",
