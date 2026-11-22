@@ -25,4 +25,20 @@ describe('ErrorBoundary', () => {
 
     expect(errorText).toBeTruthy();
   });
+
+  it('should render the fallback passed by the caller', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    const ThrowError = () => {
+      throw new Error('Test Error That Is Caught');
+    };
+    const component = render(
+      <ErrorBoundary fallbackUI={<p>section failed</p>}>
+        <ThrowError />
+      </ErrorBoundary>,
+    );
+
+    expect(await component.findByText('section failed')).toBeTruthy();
+    expect(component.queryByText('Something went wrong')).toBeNull();
+  });
 });
