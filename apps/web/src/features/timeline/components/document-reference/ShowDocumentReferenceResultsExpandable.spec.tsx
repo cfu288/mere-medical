@@ -28,11 +28,11 @@ describe('ShowDocumentResultsExpandable', () => {
   });
 
   afterEach(async () => {
+    jest.restoreAllMocks();
     await cleanupTestDatabase(db);
   });
 
-  it('shows the stored text of a plain text note', async () => {
-    const note = createTestClinicalDocument({
+  const note = createTestClinicalDocument({
       id: 'conn-a|user-1|https://fhir.example.org/DocumentReference/1',
       connection_record_id: 'conn-a',
       user_id: 'user-1',
@@ -55,41 +55,108 @@ describe('ShowDocumentResultsExpandable', () => {
         date: '2022-01-13T12:00:00-05:00',
         display_name: 'Progress Note',
       },
-    }) as unknown as ClinicalDocument<BundleEntry<DocumentReference>>;
-    await db.clinical_documents.bulkInsert([
-      note as never,
-      createTestClinicalDocument({
-        id: 'conn-a|user-1|https://fhir.example.org/Binary/1',
-        connection_record_id: 'conn-a',
-        user_id: 'user-1',
-        data_record: {
-          raw: 'Patient is doing well.' as never,
-          format: 'FHIR.R4',
-          content_type: 'text/plain',
-          resource_type: 'documentreference_attachment',
-          version_history: [],
-        },
-        metadata: {
-          id: 'https://fhir.example.org/Binary/1',
-          date: '2022-01-13T12:00:00-05:00',
-        },
-      }),
-    ]);
+    }) as unknown as ClinicalDocument<BundleEntry<DocumentReference>>,
+    attachment = createTestClinicalDocument({
+      id: 'conn-a|user-1|https://fhir.example.org/Binary/1',
+      connection_record_id: 'conn-a',
+      user_id: 'user-1',
+      data_record: {
+        raw: 'Patient is doing well.' as never,
+        format: 'FHIR.R4',
+        content_type: 'text/plain',
+        resource_type: 'documentreference_attachment',
+        version_history: [],
+      },
+      metadata: {
+        id: 'https://fhir.example.org/Binary/1',
+        date: '2022-01-13T12:00:00-05:00',
+      },
+    }),
+    sorry = 'Sorry, looks like we were unable to get the linked document';
 
+  function renderOpened(item = note) {
     render(
       <TestProviders db={db}>
         <UserProvider>
           <ShowDocumentResultsExpandable
-            item={note}
+            item={item}
             expanded={true}
             setExpanded={() => undefined}
           />
         </UserProvider>
       </TestProviders>,
     );
+  }
+
+  it('shows the stored text of a plain text note', async () => {
+    await db.clinical_documents.bulkInsert([note as never, attachment]);
+
+    renderOpened();
 
     const text = await screen.findByText('Patient is doing well.');
 
     expect(text.textContent).toBe('Patient is doing well.');
+  });
+
+  it('shows loading until the lookup resolves', async () => {
+    await db.clinical_documents.bulkInsert([note as never, attachment]);
+    const findOne = db.clinical_documents.findOne.bind(db.clinical_documents);
+    let release!: () => void;
+    const released = new Promise<void>((done) => {
+      release = done;
+    });
+    jest.spyOn(db.clinical_documents, 'findOne').mockImplementation(
+      (query) =>
+        ({
+          exec: () => released.then(() => findOne(query).exec()),
+        }) as never,
+    );
+
+    renderOpened();
+
+    expect(await screen.findByText('Loading...')).toBeTruthy();
+    expect(screen.queryByText(sorry)).toBeNull();
+
+    release();
+
+    expect(await screen.findByText('Patient is doing well.')).toBeTruthy();
+    expect(screen.queryByText(sorry)).toBeNull();
+  });
+
+  it('reports a linked document that is not stored', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    await db.clinical_documents.insert(note as never);
+
+    renderOpened();
+
+    expect(await screen.findByText(sorry)).toBeTruthy();
+  });
+
+  it('reports a linked document when the lookup fails', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    jest.spyOn(db.clinical_documents, 'findOne').mockReturnValue({
+      exec: () => Promise.reject(new Error('lookup failed')),
+    } as never);
+
+    renderOpened();
+
+    expect(await screen.findByText(sorry)).toBeTruthy();
+  });
+
+  it('reports a note that links no document', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const findOne = jest.spyOn(db.clinical_documents, 'findOne');
+
+    renderOpened({
+      ...note,
+      data_record: {
+        ...note.data_record,
+        raw: { resource: { resourceType: 'DocumentReference' } } as never,
+      },
+      metadata: {},
+    });
+
+    expect(await screen.findByText(sorry)).toBeTruthy();
+    expect(findOne).not.toHaveBeenCalled();
   });
 });

@@ -32,11 +32,10 @@ export function ShowDocumentResultsExpandable({
       item.data_record.raw.resource?.content?.[0]?.attachment?.url,
     // Url-fetched attachments are stored under their url, inline
     // Attachment.data content under `{DocumentReference metadata.id}/attachment`
-    attachment = useClinicalDoc(
-      item.connection_record_id,
+    attachmentId =
       attachmentUrl ||
-        (item.metadata?.id ? `${item.metadata.id}/attachment` : undefined),
-    ),
+      (item.metadata?.id ? `${item.metadata.id}/attachment` : undefined),
+    attachment = useClinicalDoc(item.connection_record_id, attachmentId),
     [hasLoadedDocument, setHasLoadedDocument] = useState(false),
     [pdfUrl, setPdfUrl] = useState<string | undefined>(undefined),
     [html, setHtml] = useState<
@@ -45,6 +44,8 @@ export function ShowDocumentResultsExpandable({
 
   useEffect(() => {
     if (expanded) {
+      // undefined is a lookup still in flight, null is not found
+      if (attachment === undefined && attachmentId) return;
       if (!attachment) {
         console.error(
           '[ShowDocumentResultsExpandable] No attachment found in DB for URL:',
@@ -119,7 +120,7 @@ export function ShowDocumentResultsExpandable({
         URL.revokeObjectURL(pdfUrl);
       }
     };
-  }, [expanded, cd, attachment]);
+  }, [expanded, cd, attachment, attachmentId]);
 
   return (
     <Modal open={expanded} setOpen={setExpanded}>

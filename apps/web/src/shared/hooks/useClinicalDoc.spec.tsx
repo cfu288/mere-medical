@@ -25,6 +25,7 @@ describe('useClinicalDoc', () => {
   });
 
   afterEach(async () => {
+    jest.restoreAllMocks();
     await cleanupTestDatabase(db);
   });
 
@@ -62,6 +63,28 @@ describe('useClinicalDoc', () => {
 
     await waitFor(() => {
       expect(result.current).toEqual(attachment);
+    });
+  });
+
+  it('returns null when the lookup fails', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const findOne = jest
+      .spyOn(db.clinical_documents, 'findOne')
+      .mockReturnValue({
+        exec: () => Promise.reject(new Error('lookup failed')),
+      } as never);
+
+    const { result } = renderHook(
+      () => useClinicalDoc('conn-a', 'https://fhir.example.org/Binary/1'),
+      { wrapper },
+    );
+
+    // result.current is also null until UserProvider renders the hook
+    await waitFor(() => {
+      expect(findOne).toHaveBeenCalled();
+    });
+    await waitFor(() => {
+      expect(result.current).toBeNull();
     });
   });
 });
