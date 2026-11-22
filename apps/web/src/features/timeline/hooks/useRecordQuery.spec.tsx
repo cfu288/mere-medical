@@ -833,6 +833,57 @@ describe('fetchRecordsUntilCompleteDays', () => {
     });
   });
 
+  describe('dates whose text order differs from their day order', () => {
+    it('returns every record exactly once across pages', async () => {
+      // the same text order in every timezone: 01-08T01:00+14:00 sorts first
+      // but is a full day earlier than 01-07T23:59-12:00
+      const docs = createDocumentsWithSpecificDates(userId, [
+        { date: '2024-01-10T12:00:00Z', count: 1 },
+        { date: '2024-01-09T12:00:00Z', count: 1 },
+        { date: '2024-01-08T01:00:00+14:00', count: 1 },
+        { date: '2024-01-07T23:59:00-12:00', count: 1 },
+        { date: '2024-01-07T12:00:00Z', count: 1 },
+        { date: '2024-01-06T12:00:00Z', count: 1 },
+        { date: '2024-01-05T12:00:00Z', count: 1 },
+      ]);
+      await db.clinical_documents.bulkInsert(docs);
+
+      const seen: string[] = [];
+      let offset = 0;
+      for (let page = 0; page < docs.length; page++) {
+        const result = await fetchRecordsUntilCompleteDays(
+          db,
+          userId,
+          3,
+          offset,
+        );
+        seen.push(
+          ...Object.values(result.records)
+            .flat()
+            .map((record) => record.id),
+        );
+        offset = result.lastOffset;
+        if (!result.hasMore) break;
+      }
+
+      expect(seen.sort()).toEqual(docs.map((doc) => doc.id).sort());
+    });
+
+    it('reports no more records when a page keeps every record', async () => {
+      const docs = createDocumentsWithSpecificDates(userId, [
+        { date: '2024-01-08T01:00:00+14:00', count: 1 },
+        { date: '2024-01-07T23:59:00-12:00', count: 1 },
+      ]);
+      await db.clinical_documents.bulkInsert(docs);
+
+      const result = await fetchRecordsUntilCompleteDays(db, userId, 1, 0);
+
+      expect(Object.values(result.records).flat()).toHaveLength(2);
+      expect(result.hasMore).toBe(false);
+      expect(result.lastOffset).toBe(2);
+    });
+  });
+
   describe('fuzz testing - pagination integrity', () => {
     function generateRandomDateDistribution(
       seed: number,
@@ -920,6 +971,39 @@ describe('fetchRecordsUntilCompleteDays', () => {
 
         expect(missingFromPaged).toEqual([]);
         expect(extraInPaged).toEqual([]);
+      },
+    );
+
+    it.each([7, 99, 2024])(
+      'all records are returned once when dates mix formats and offsets (seed %i)',
+      async (seed) => {
+        const random = (max: number) => {
+          seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+          return seed % max;
+        };
+        const suffixes = [
+          '',
+          'T12:00:00Z',
+          'T00:30:00+14:00',
+          'T23:30:00-12:00',
+          'T08:15:00.000+05:30',
+        ];
+        const dates = Array.from({ length: 60 + random(60) }, () => ({
+          date: `2024-01-${String(1 + random(12)).padStart(2, '0')}${
+            suffixes[random(suffixes.length)]
+          }`,
+          count: 1 + random(8),
+        }));
+        const docs = createDocumentsWithSpecificDates(userId, dates);
+        await db.clinical_documents.bulkInsert(docs);
+
+        const unpagedIds = await getAllRecordsUnpaged(db, userId);
+
+        for (const minDays of [1, 3, 5]) {
+          const pagedIds = await getAllRecordsPaged(db, userId, minDays);
+
+          expect([...pagedIds].sort()).toEqual([...unpagedIds].sort());
+        }
       },
     );
 

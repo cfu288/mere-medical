@@ -75,6 +75,35 @@ export function mergeRecordsByDate(
   return merged;
 }
 
+/**
+ * Cuts a page at the first record of a day that is not in `days`.
+ *
+ * The page must be a prefix of `records`, because the next page starts at
+ * `lastOffset`. The database sorts by the date text, and the day comes from the
+ * local date, so the two orders differ when the dates mix formats or UTC
+ * offsets. The day of the first record is always kept, so a page is never empty.
+ *
+ * `hasMore` says if the database has records after `records`.
+ */
+function takeLeadingDays(
+  records: ClinicalDocument<BundleEntry<FhirResource>>[],
+  days: Set<string>,
+  existingOffset: number,
+  hasMore: boolean,
+) {
+  const firstDay = getRecordDateKey(records[0]);
+  const end = records.findIndex((record) => {
+    const day = getRecordDateKey(record);
+    return day !== firstDay && !days.has(day);
+  });
+  const kept = end === -1 ? records : records.slice(0, end);
+  return {
+    records: groupRecordsByDate(kept),
+    hasMore: hasMore || kept.length < records.length,
+    lastOffset: existingOffset + kept.length,
+  };
+}
+
 export type PartialResultsCallback = (partial: {
   records: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>;
   hasMore: boolean;
@@ -186,29 +215,12 @@ export async function fetchRecordsUntilCompleteDays(
           completeDates: completeDates.size,
         },
       );
-      const grouped = groupRecordsByDate(allRecords);
-      const sortedDates = Object.keys(grouped).sort((a, b) =>
-        b.localeCompare(a),
+      return takeLeadingDays(
+        allRecords,
+        completeDates,
+        existingOffset,
+        hasMore,
       );
-      const completeDatesToReturn = sortedDates.filter((d) =>
-        completeDates.has(d),
-      );
-
-      const truncated: Record<
-        string,
-        ClinicalDocument<BundleEntry<FhirResource>>[]
-      > = {};
-      let keptCount = 0;
-      for (const date of completeDatesToReturn) {
-        truncated[date] = grouped[date];
-        keptCount += grouped[date].length;
-      }
-
-      return {
-        records: truncated,
-        hasMore: true,
-        lastOffset: existingOffset + keptCount,
-      };
     }
 
     if (timeoutExceeded && completeDates.size === 0) {
@@ -273,25 +285,12 @@ export async function fetchRecordsUntilCompleteDays(
   const sortedDates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
 
   if (sortedDates.length > minDays) {
-    const datesToKeep = new Set(sortedDates.slice(0, minDays));
-    const truncated: Record<
-      string,
-      ClinicalDocument<BundleEntry<FhirResource>>[]
-    > = {};
-    let keptCount = 0;
-
-    for (const date of sortedDates) {
-      if (datesToKeep.has(date)) {
-        truncated[date] = grouped[date];
-        keptCount += grouped[date].length;
-      }
-    }
-
-    return {
-      records: truncated,
-      hasMore: true,
-      lastOffset: existingOffset + keptCount,
-    };
+    return takeLeadingDays(
+      allRecords,
+      new Set(sortedDates.slice(0, minDays)),
+      existingOffset,
+      hasMore,
+    );
   }
 
   if (
@@ -306,23 +305,7 @@ export async function fetchRecordsUntilCompleteDays(
         totalDates: sortedDates.length,
       },
     );
-    const completeDatesToReturn = sortedDates.filter((d) =>
-      completeDates.has(d),
-    );
-    const truncated: Record<
-      string,
-      ClinicalDocument<BundleEntry<FhirResource>>[]
-    > = {};
-    let keptCount = 0;
-    for (const date of completeDatesToReturn) {
-      truncated[date] = grouped[date];
-      keptCount += grouped[date].length;
-    }
-    return {
-      records: truncated,
-      hasMore: true,
-      lastOffset: existingOffset + keptCount,
-    };
+    return takeLeadingDays(allRecords, completeDates, existingOffset, hasMore);
   }
 
   return { records: grouped, hasMore, lastOffset: offset };
