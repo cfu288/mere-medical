@@ -92,6 +92,15 @@ const TIMELINE_EXCLUDED_TYPES: ClinicalDocumentResourceType[] = [
   'provenance',
 ];
 
+interface TimelinePage {
+  skip: number;
+  limit: number;
+  search?: string;
+  types?: ClinicalDocumentResourceType[];
+  dateFrom?: string;
+  dateBefore?: string;
+}
+
 /**
  * Reads one page of the timeline records, newest first. These are the user's
  * dated records except patients, care plans, note attachments and
@@ -99,9 +108,11 @@ const TIMELINE_EXCLUDED_TYPES: ClinicalDocumentResourceType[] = [
  *
  * @param db `RxDatabase<DatabaseCollections>`.
  * @param userId `string`. The user who owns the records.
- * @param page `{ skip: number; limit: number; search?: string }`. `search`
- * matches anywhere in the display name, ignoring case. Blank search text reads
- * as no search.
+ * @param page `TimelinePage`. `search` matches anywhere in the display name,
+ * ignoring case. Blank search text reads as no search. `types` keeps only those
+ * resource types; empty or missing keeps all. `dateFrom` (inclusive) and
+ * `dateBefore` (exclusive) are `yyyy-MM-dd` strings compared against
+ * `metadata.date` as text.
  * @returns `Promise<ClinicalDocument<T>[]>`. `T` is the record type the caller reads.
  *
  * @example
@@ -110,13 +121,20 @@ const TIMELINE_EXCLUDED_TYPES: ClinicalDocumentResourceType[] = [
 export async function findTimelineDocuments<T>(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
-  page: { skip: number; limit: number; search?: string },
+  page: TimelinePage,
 ): Promise<ClinicalDocument<T>[]> {
   const search = page.search?.trim();
   const selector: MangoQuerySelector<ClinicalDocument> = {
     user_id: userId,
-    'data_record.resource_type': { $nin: TIMELINE_EXCLUDED_TYPES },
-    'metadata.date': { $nin: [null, undefined, ''] },
+    'data_record.resource_type': {
+      $nin: TIMELINE_EXCLUDED_TYPES,
+      ...(page.types?.length ? { $in: page.types } : {}),
+    },
+    'metadata.date': {
+      $nin: [null, undefined, ''],
+      ...(page.dateFrom ? { $gte: page.dateFrom } : {}),
+      ...(page.dateBefore ? { $lt: page.dateBefore } : {}),
+    },
     ...(search
       ? {
           'metadata.display_name': {

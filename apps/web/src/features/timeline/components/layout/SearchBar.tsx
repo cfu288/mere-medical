@@ -1,30 +1,28 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { QueryStatus } from '../../TimelineTab';
 
 function LoadingSpinner({ tailwindColor }: { tailwindColor?: string }) {
   return (
-    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-      <svg
-        className={`animate-spin h-5 w-5 ${tailwindColor ? tailwindColor : 'text-gray-500 dark:text-gray-400'}`}
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-      >
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-        ></circle>
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 0116 0H4z"
-        ></path>
-      </svg>
-    </div>
+    <svg
+      className={`animate-spin h-5 w-5 ${tailwindColor ? tailwindColor : 'text-gray-500 dark:text-gray-400'}`}
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      ></circle>
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 0116 0H4z"
+      ></path>
+    </svg>
   );
 }
 
@@ -32,10 +30,12 @@ export function SearchBar({
   query,
   setQuery,
   status,
+  children,
 }: {
   query: string;
   setQuery: (s: string) => void;
   status: QueryStatus;
+  children: ReactNode;
 }) {
   return (
     <div className="mb-1 mt-4 w-full sm:mt-6 flex flex-row">
@@ -66,9 +66,12 @@ export function SearchBar({
             placeholder="Search your medical records"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className={`focus:border-primary-500 focus:ring-primary-500 transition-colors block w-full rounded-md border-gray-300 dark:border-gray-600 pl-10 pr-10 shadow-sm sm:text-sm`}
+            className={`focus:border-primary-500 focus:ring-primary-500 transition-colors block w-full rounded-md border-gray-300 dark:border-gray-600 pl-10 pr-20 shadow-sm sm:text-sm h-12`}
           />
-          {status === QueryStatus.LOADING && <LoadingSpinner />}
+          <div className="absolute inset-y-0 right-0 flex items-center gap-1 pr-1">
+            {status === QueryStatus.LOADING && <LoadingSpinner />}
+            {children}
+          </div>
         </div>
       </div>
     </div>

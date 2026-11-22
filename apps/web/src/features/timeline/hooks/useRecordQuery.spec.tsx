@@ -16,6 +16,7 @@ import {
   groupRecordsByDate,
   mergeRecordsByDate,
 } from './useRecordQuery';
+import { filterDaysInRange } from '../timelineFilters';
 
 describe('useRecordQuery helper functions', () => {
   let db: RxDatabase<DatabaseCollections>;
@@ -226,6 +227,80 @@ describe('useRecordQuery helper functions', () => {
       expect(records).toHaveLength(2);
       expect(records.every((r) => r.metadata?.date)).toBe(true);
     });
+
+    // Tests run in America/New_York (jest-global-setup.js).
+    it('shows records on the local days the range names, whatever their stored format', async () => {
+      const filters = {
+        categories: [],
+        from: '2024-02-01',
+        to: '2024-02-29',
+      };
+      const docs = createDocumentsWithSpecificDates(userId, [
+        // 2024-02-29 21:00 in New York: inside the range.
+        { date: '2024-03-01T02:00:00Z', count: 1 },
+        // Partial date, shown on Feb 1: inside the range.
+        { date: '2024-02', count: 1 },
+        // 2024-01-31 19:00 in New York: outside the range.
+        { date: '2024-02-01T00:00:00Z', count: 1 },
+        { date: '2024-03-02', count: 1 },
+      ]);
+      await db.clinical_documents.bulkInsert(docs);
+
+      const records = await fetchRawRecords(db, userId, 0, 10, filters);
+      const days = filterDaysInRange(groupRecordsByDate(records), filters);
+
+      expect(
+        Object.entries(days ?? {}).map(([day, list]) => [
+          day,
+          list.map((r) => r.metadata?.date),
+        ]),
+      ).toEqual([
+        ['2024-02-29', ['2024-03-01T02:00:00Z']],
+        ['2024-02-01', ['2024-02']],
+      ]);
+    });
+  });
+});
+
+describe('fetchRecordsUntilCompleteDays with filters', () => {
+  let db: RxDatabase<DatabaseCollections>;
+  let userId: string;
+
+  beforeEach(async () => {
+    db = await createTestDatabase();
+    const user = createDefaultTestUser();
+    userId = user.id;
+    await db.user_documents.insert(user);
+  });
+
+  afterEach(async () => {
+    await cleanupTestDatabase(db);
+  });
+
+  it('groups only the filtered records into days', async () => {
+    const docs = createDocumentsForDays(userId, 4, 2);
+    docs
+      .filter((_, i) => i % 2 === 0)
+      .forEach((d) => {
+        d.data_record.resource_type = 'immunization';
+      });
+    await db.clinical_documents.bulkInsert(docs);
+
+    const result = await fetchRecordsUntilCompleteDays(
+      db,
+      userId,
+      3,
+      0,
+      3000,
+      undefined,
+      { categories: ['immunizations'] },
+    );
+
+    const records = Object.values(result.records).flat();
+    expect(records).toHaveLength(3);
+    expect(
+      records.every((r) => r.data_record.resource_type === 'immunization'),
+    ).toBe(true);
   });
 });
 

@@ -10,6 +10,11 @@ import { ClinicalDocument } from '../../../models/clinical-document/ClinicalDocu
 import { QueryStatus, RecordsByDate } from '../types';
 import { fetchRecords, PAGE_SIZE } from '../TimelineTab';
 import { findTimelineDocuments } from '../../../repositories/ClinicalDocumentRepository';
+import {
+  NO_FILTERS,
+  TimelineFilters,
+  toTimelineQuery,
+} from '../timelineFilters';
 
 export const GROUPED_VIEW_BATCH_SIZE = 250;
 
@@ -18,10 +23,12 @@ export async function fetchRawRecords(
   user_id: string,
   offset: number,
   limit: number,
+  filters: TimelineFilters = NO_FILTERS,
 ): Promise<ClinicalDocument<BundleEntry<FhirResource>>[]> {
   return findTimelineDocuments<BundleEntry<FhirResource>>(db, user_id, {
     skip: offset,
     limit,
+    ...toTimelineQuery(filters),
   });
 }
 
@@ -93,6 +100,7 @@ export async function fetchRecordsUntilCompleteDays(
   existingOffset = 0,
   timeoutMs = 3000,
   onPartialResults?: PartialResultsCallback,
+  filters: TimelineFilters = NO_FILTERS,
 ): Promise<{
   records: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>;
   hasMore: boolean;
@@ -115,6 +123,7 @@ export async function fetchRecordsUntilCompleteDays(
       user_id,
       offset,
       GROUPED_VIEW_BATCH_SIZE,
+      filters,
     );
     const batchDuration = Date.now() - batchStartTime;
     const elapsed = Date.now() - startTime;
@@ -228,7 +237,7 @@ export async function fetchRecordsUntilCompleteDays(
     }
 
     if (hasEnoughDays) {
-      const checkBatch = await fetchRawRecords(db, user_id, offset, 1);
+      const checkBatch = await fetchRawRecords(db, user_id, offset, 1, filters);
       if (checkBatch.length === 0) {
         console.debug(
           '[fetchRecordsUntilCompleteDays] exiting: no more records after exit check',
@@ -422,6 +431,7 @@ async function executeGroupedQuery(
   offset: number,
   loadMore: boolean,
   dispatch: React.Dispatch<QueryAction>,
+  filters: TimelineFilters,
 ) {
   console.debug('useRecordQuery: grouped view', { offset, loadMore });
 
@@ -442,6 +452,7 @@ async function executeGroupedQuery(
         merge: loadMore,
       });
     },
+    filters,
   );
 
   console.debug('useRecordQuery: grouped result', {
@@ -466,10 +477,11 @@ async function executeSearchQuery(
   page: number,
   loadMore: boolean,
   dispatch: React.Dispatch<QueryAction>,
+  filters: TimelineFilters,
 ): Promise<void> {
   console.debug('useRecordQuery: search query', { query, page, loadMore });
 
-  const records = await fetchRecords(db, userId, query, page);
+  const records = await fetchRecords(db, userId, query, page, filters);
 
   const recordCount = Object.values(records).reduce(
     (sum, arr) => sum + arr.length,
@@ -507,10 +519,13 @@ async function executeSearchQuery(
  * **Search View** (with query): Fetches records matching the query with pagination.
  *
  * @param query - Search query string. Empty string triggers grouped view mode.
+ * @param filters - Record types and date range applied in both modes. Pass a
+ * stable object (e.g. from useState); a new object re-runs the query.
  * @param minCompleteDays - Minimum number of complete days to fetch in grouped view (default: 3)
  */
 export function useRecordQuery(
   query: string,
+  filters: TimelineFilters = NO_FILTERS,
   minCompleteDays = 3,
 ): {
   data: RecordsByDate | undefined;
@@ -554,6 +569,7 @@ export function useRecordQuery(
             offset,
             loadMore,
             guardedDispatch,
+            filters,
           );
         } else {
           const page = loadMore ? state.searchPage + 1 : 0;
@@ -564,6 +580,7 @@ export function useRecordQuery(
             page,
             loadMore,
             guardedDispatch,
+            filters,
           );
         }
       } catch (e) {
@@ -575,6 +592,7 @@ export function useRecordQuery(
       db,
       user.id,
       query,
+      filters,
       isGroupedView,
       state.groupedOffset,
       state.searchPage,
@@ -593,7 +611,7 @@ export function useRecordQuery(
   useEffect(() => {
     dispatch({ type: 'RESET_PAGINATION' });
     execQueryRef.current(false);
-  }, [query]);
+  }, [query, filters]);
 
   return {
     data: state.data,

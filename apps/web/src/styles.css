@@ -137,3 +137,12 @@ html {
     background-position: 100% 50%;
   }
 }
+
+@keyframes timeline-sheet-backdrop {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
