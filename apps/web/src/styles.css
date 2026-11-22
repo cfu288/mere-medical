@@ -138,7 +138,6 @@ html {
   }
 }
 
-/* Timeline filter sheet: the backdrop fades with the swipe. */
 @keyframes timeline-sheet-backdrop {
   from {
     opacity: 0;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useReducer, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -34,6 +34,39 @@ const pillOff =
 const pillOn =
   'border-primary-500 bg-primary-50 text-primary-900 dark:border-primary-300 dark:bg-primary-900 dark:text-primary-50';
 
+type DraftAction =
+  | { type: 'TOGGLE_CATEGORY'; key: TimelineCategoryKey }
+  | { type: 'SET_DATE_PRESET'; from: string | undefined }
+  | { type: 'SET_DATE'; field: 'from' | 'to'; value: string | undefined }
+  | { type: 'RESET' };
+
+function draftReducer(
+  state: TimelineFilters,
+  action: DraftAction,
+): TimelineFilters {
+  switch (action.type) {
+    case 'TOGGLE_CATEGORY':
+      return {
+        ...state,
+        categories: state.categories.includes(action.key)
+          ? state.categories.filter((k) => k !== action.key)
+          : [...state.categories, action.key],
+      };
+
+    case 'SET_DATE_PRESET':
+      return { ...state, from: action.from, to: undefined };
+
+    case 'SET_DATE':
+      return { ...state, [action.field]: action.value };
+
+    case 'RESET':
+      return NO_FILTERS;
+
+    default:
+      return state;
+  }
+}
+
 function FilterPanel({
   value,
   onApply,
@@ -43,15 +76,8 @@ function FilterPanel({
   onApply: (f: TimelineFilters) => void;
   close: () => void;
 }) {
-  const [draft, setDraft] = useState(value);
+  const [draft, dispatch] = useReducer(draftReducer, value);
   const rangeValid = !draft.from || !draft.to || draft.from <= draft.to;
-  const toggle = (key: TimelineCategoryKey) =>
-    setDraft((d) => ({
-      ...d,
-      categories: d.categories.includes(key)
-        ? d.categories.filter((k) => k !== key)
-        : [...d.categories, key],
-    }));
 
   return (
     <div className="flex flex-col gap-5 text-gray-900 dark:text-gray-100">
@@ -61,7 +87,7 @@ function FilterPanel({
         </Heading>
         <button
           type="button"
-          onClick={() => setDraft(NO_FILTERS)}
+          onClick={() => dispatch({ type: 'RESET' })}
           className="min-h-[44px] px-2 text-sm font-semibold text-primary-600 dark:text-primary-300"
         >
           Reset
@@ -80,7 +106,9 @@ function FilterPanel({
                 key={c.key}
                 type="button"
                 aria-pressed={on}
-                onClick={() => toggle(c.key)}
+                onClick={() =>
+                  dispatch({ type: 'TOGGLE_CATEGORY', key: c.key })
+                }
                 className={`${pill} ${on ? pillOn : pillOff}`}
               >
                 <span
@@ -107,7 +135,7 @@ function FilterPanel({
                 key={p.label}
                 type="button"
                 aria-pressed={on}
-                onClick={() => setDraft((d) => ({ ...d, from, to: undefined }))}
+                onClick={() => dispatch({ type: 'SET_DATE_PRESET', from })}
                 className={`${pill} ${on ? pillOn : pillOff}`}
               >
                 {p.label}
@@ -129,7 +157,11 @@ function FilterPanel({
                 }
                 value={draft[k] ?? ''}
                 onChange={(e) =>
-                  setDraft((d) => ({ ...d, [k]: e.target.value || undefined }))
+                  dispatch({
+                    type: 'SET_DATE',
+                    field: k,
+                    value: e.target.value || undefined,
+                  })
                 }
                 className="h-11 rounded-md border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800"
               />
@@ -161,8 +193,7 @@ function FilterPanel({
   );
 }
 
-/** Filter button that sits inside the search field. */
-export function TimelineFilterButton({
+export function TimelineFilterDialog({
   filters,
   setFilters,
 }: {
@@ -171,7 +202,6 @@ export function TimelineFilterButton({
 }) {
   const [isDesktop, setIsDesktop] = useState(false);
 
-  // Same switch as SettingsTab's user switcher: Tailwind's sm breakpoint (640px).
   useEffect(() => {
     const mediaQuery = window.matchMedia('(min-width: 640px)');
     const handleChange = () => setIsDesktop(mediaQuery.matches);
@@ -245,7 +275,6 @@ export function TimelineFilterButton({
   );
 }
 
-/** Removable chips for the applied filters; renders nothing with no filters. */
 export function TimelineFilterChips({
   filters,
   setFilters,

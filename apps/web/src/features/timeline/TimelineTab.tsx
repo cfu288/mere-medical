@@ -24,7 +24,7 @@ import { useUser } from '../../app/providers/UserProvider';
 import { JumpToPanel } from './components/layout/JumpToPanel';
 import { SearchBar } from './components/layout/SearchBar';
 import {
-  TimelineFilterButton,
+  TimelineFilterDialog,
   TimelineFilterChips,
 } from './components/layout/TimelineFilterControls';
 import { TimelineBanner } from './components/layout/TimelineBanner';
@@ -56,10 +56,6 @@ export function TimelineTab() {
       query === '' &&
       !activeFilterCount(filters) &&
       (!data || Object.entries(data).length === 0),
-    visibleData = useMemo(
-      () => filterDaysInRange(data, filters),
-      [data, filters],
-    ),
     scrollContainer = useRef<HTMLDivElement>(null),
     scrollToTop = useScrollToTop(scrollContainer),
     [scrollY, setScrollY] = useState(0),
@@ -71,14 +67,21 @@ export function TimelineTab() {
       }
     }, 100);
 
+  const filteredDataInDateRange = useMemo(
+    () => filterDaysInRange(data, filters),
+    [data, filters],
+  );
+
   const yearMap = useMemo(() => {
     const newYearMap = new Map<
       string,
       Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>
     >();
 
-    if (visibleData) {
-      for (const [dateKey, itemList] of Object.entries(visibleData)) {
+    if (filteredDataInDateRange) {
+      for (const [dateKey, itemList] of Object.entries(
+        filteredDataInDateRange,
+      )) {
         const year = dateKey.split('-')[0];
         const yearData = newYearMap.get(year);
         if (yearData) {
@@ -89,7 +92,7 @@ export function TimelineTab() {
       }
     }
     return newYearMap;
-  }, [visibleData]);
+  }, [filteredDataInDateRange]);
 
   useScrollToHash();
 
@@ -178,7 +181,7 @@ export function TimelineTab() {
         ) : (
           <div className="flex w-full overflow-hidden">
             <JumpToPanel
-              items={visibleData}
+              items={filteredDataInDateRange}
               isLoading={false}
               status={status}
               loadMore={loadNextPage}
@@ -190,7 +193,7 @@ export function TimelineTab() {
             >
               <div className="h-max w-full max-w-4xl flex-col px-4 pb-20 sm:px-6 sm:pb-6 lg:px-8">
                 <SearchBar query={query} setQuery={setQuery} status={status}>
-                  <TimelineFilterButton
+                  <TimelineFilterDialog
                     filters={filters}
                     setFilters={setFilters}
                   />
@@ -200,7 +203,7 @@ export function TimelineTab() {
                   setFilters={setFilters}
                 />
                 {listItems}
-                {Object.keys(visibleData || {}).length === 0 ? (
+                {Object.keys(filteredDataInDateRange || {}).length === 0 ? (
                   <main className="grid min-h-full place-items-center bg-white dark:bg-gray-900 px-6 py-24 sm:py-32 lg:px-8">
                     <div className="text-center">
                       <p className="text-base font-semibold text-primary-600 dark:text-primary-300">

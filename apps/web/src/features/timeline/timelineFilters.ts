@@ -129,7 +129,6 @@ export function toTimelineQuery(f: TimelineFilters) {
   };
 }
 
-/** Keeps the local days (`yyyy-MM-dd` keys) inside the filter's date range. */
 export function filterDaysInRange(
   data: RecordsByDate | undefined,
   f: TimelineFilters,
@@ -142,7 +141,6 @@ export function filterDaysInRange(
   );
 }
 
-/** "Past 2 years" when the range matches a preset, else the exact days. */
 export function dateRangeLabel(f: TimelineFilters, today = new Date()) {
   if (!f.from && !f.to) return undefined;
   const preset = DATE_PRESETS.find(

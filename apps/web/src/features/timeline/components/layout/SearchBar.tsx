@@ -35,7 +35,6 @@ export function SearchBar({
   query: string;
   setQuery: (s: string) => void;
   status: QueryStatus;
-  /** Controls shown at the right end of the field, e.g. the filter button. */
   children: ReactNode;
 }) {
   return (

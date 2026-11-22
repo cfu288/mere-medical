@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import {
-  TimelineFilterButton,
+  TimelineFilterDialog,
   TimelineFilterChips,
 } from './TimelineFilterControls';
 import { NO_FILTERS, TimelineFilters } from '../../timelineFilters';
@@ -17,12 +17,12 @@ function useDesktopLayout() {
   })) as unknown as typeof window.matchMedia;
 }
 
-describe('TimelineFilterButton', () => {
+describe('TimelineFilterDialog', () => {
   beforeEach(useDesktopLayout);
 
   function openPanel(filters: TimelineFilters = NO_FILTERS) {
     const setFilters = jest.fn();
-    render(<TimelineFilterButton filters={filters} setFilters={setFilters} />);
+    render(<TimelineFilterDialog filters={filters} setFilters={setFilters} />);
     fireEvent.click(
       screen.getByRole('button', { name: /Filter by type and date/ }),
     );
@@ -73,7 +73,7 @@ describe('TimelineFilterButton', () => {
 
   it('shows how many filters are active', () => {
     render(
-      <TimelineFilterButton
+      <TimelineFilterDialog
         filters={{ categories: ['labs', 'visits'], from: '2024-01-01' }}
         setFilters={jest.fn()}
       />,
