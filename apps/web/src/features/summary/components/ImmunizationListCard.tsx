@@ -4,21 +4,8 @@ import { format, parseISO } from 'date-fns';
 import { BundleEntry, Immunization } from 'fhir/r2';
 import { ClinicalDocument } from '../../../models/clinical-document/ClinicalDocument.type';
 import { getImmunizationVaccineCode } from '../../../shared/utils/fhirAccessHelpers';
+import { groupBy } from '../../../shared/utils/groupBy';
 import { CardBase } from '../../connections/components/CardBase';
-
-function groupBy<T, U>(list: T[], keyGetter: (arg: T) => U): Map<U, T[]> {
-  const map = new Map();
-  list.forEach((item) => {
-    const key = keyGetter(item);
-    const collection = map.get(key);
-    if (!collection) {
-      map.set(key, [item]);
-    } else {
-      collection.push(item);
-    }
-  });
-  return map;
-}
 
 export function ImmunizationListCard({
   items,
