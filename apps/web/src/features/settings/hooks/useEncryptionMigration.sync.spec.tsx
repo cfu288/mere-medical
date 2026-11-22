@@ -315,6 +315,55 @@ describe('encryption migration with background sync', () => {
     expect(result.current.migration.needsReload).toBe(true);
   });
 
+  it.each(['incomplete target', 'committed source'])(
+    'ignores a second call before the reload notice renders (%s cleanup fails)',
+    async (failure) => {
+      jest.spyOn(console, 'error').mockImplementation(() => undefined);
+      if (failure === 'incomplete target') {
+        target.importJSON.mockRejectedValue(new Error('Import failed'));
+        target.remove.mockRejectedValue(new Error('Cleanup failed'));
+      } else {
+        source.remove.mockRejectedValue(new Error('Cleanup failed'));
+      }
+      const { result } = setup();
+      const { migrate } = result.current.migration;
+      await act(async () => {
+        await migrate('password');
+        await migrate('password');
+      });
+      expect(result.current.migration.needsReload).toBe(true);
+      expect(initEncryptedRxDb).toHaveBeenCalledTimes(1);
+      expect(target.remove).toHaveBeenCalledTimes(
+        failure === 'incomplete target' ? 1 : 0,
+      );
+    },
+  );
+
+  it('ignores a second call after a successful switch', async () => {
+    const { result } = setup();
+    const { migrate } = result.current.migration;
+    await act(async () => {
+      await migrate('password');
+      await migrate('password');
+    });
+    expect(initEncryptedRxDb).toHaveBeenCalledTimes(1);
+    expect(source.remove).toHaveBeenCalledTimes(1);
+  });
+
+  it('runs a second call after a failure that discarded the target', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    target.importJSON.mockRejectedValueOnce(new Error('Import failed'));
+    const { result } = setup();
+    const { migrate } = result.current.migration;
+    await act(async () => {
+      await migrate('password');
+      await migrate('password');
+    });
+    expect(result.current.migration.error).toBe('');
+    expect(initEncryptedRxDb).toHaveBeenCalledTimes(2);
+    expect(source.remove).toHaveBeenCalledTimes(1);
+  });
+
   it('retains a queued retry when the running job completes during the wait', async () => {
     const { result } = setup();
     await act(async () => {
