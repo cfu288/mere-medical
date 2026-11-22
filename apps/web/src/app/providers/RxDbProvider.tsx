@@ -256,45 +256,51 @@ async function loadDemoData(db: RxDatabase<DatabaseCollections>) {
   return message;
 }
 
+type DbState =
+  | { status: 'idle' }
+  | { status: 'opening' }
+  | { status: 'ready'; db: RxDatabase<DatabaseCollections> }
+  | { status: 'error'; message: string };
+
 export function RxDbProvider(props: RxDbProviderProps) {
-  const [db, setDb] = useState<RxDatabase<DatabaseCollections>>();
+  const [state, setState] = useState<DbState>({ status: 'idle' });
   const notifyDispatch = useNotificationDispatch();
   const [password, setPassword] = useState<string>('');
-  const [initialized, setInitialized] = useState<
-    'IDLE' | 'PROGRESS' | 'COMPLETE' | 'ERROR'
-  >('IDLE');
-  const [error, setError] = useState<string>('');
   const localConfig = useLocalConfig();
 
   const submitPassword = (password: string) => {
-    setInitialized('PROGRESS');
-    try {
-      initEncryptedRxDb(password)
-        .then((db) => {
-          setDb(db);
-          setInitialized('COMPLETE');
-        })
-        .catch((err) => {
-          console.error(err);
-          setInitialized('ERROR');
-          setError(
+    if (state.status === 'opening') return;
+    setState({ status: 'opening' });
+    initEncryptedRxDb(password)
+      .then((db) => setState({ status: 'ready', db }))
+      .catch((err) => {
+        console.error(err);
+        setState({
+          status: 'error',
+          message:
             'There was an error decrypting your records with the provided password.',
-          );
         });
-    } catch (e) {
-      console.error(e);
-      setInitialized('ERROR');
-      setError(
-        'There was an error decrypting your records with the provided password.',
-      );
-      setPassword('');
-    }
+      });
   };
 
   useEffect(() => {
+    // the encryption setting can change while the app is open; the open
+    // database must stay mounted until its replacement is ready
+    const keepReady = (next: DbState) => (current: DbState) =>
+      current.status === 'ready' ? current : next;
+    const failed = (err: unknown) => {
+      console.error(err);
+      setState(
+        keepReady({
+          status: 'error',
+          message:
+            'There was an error initializing the database. Please try again.',
+        }),
+      );
+    };
     if (IS_DEMO === 'enabled') {
       // If this is a demo instance, load the demo data
-      setInitialized('PROGRESS');
+      setState(keepReady({ status: 'opening' }));
       initDemoRxDb().then((db) => {
         loadDemoData(db)
           .then(() => {
@@ -303,8 +309,7 @@ export function RxDbProvider(props: RxDbProviderProps) {
               message: `Welcome to the Mere Medical demo! We have added some test data for you. Some features are disabled while in demo mode.`,
               variant: 'success',
             });
-            setDb(db);
-            setInitialized('COMPLETE');
+            setState({ status: 'ready', db });
           })
           .catch((error) => {
             notifyDispatch({
@@ -312,25 +317,15 @@ export function RxDbProvider(props: RxDbProviderProps) {
               message: (error as Error).message,
               variant: 'error',
             });
-            setDb(db);
-            setInitialized('COMPLETE');
+            setState({ status: 'ready', db });
           });
-      });
+      }, failed);
     } else if (localConfig.use_encrypted_database === false) {
       // If not demo and not encrypted, load unencrypted db
-      setInitialized('PROGRESS');
+      setState(keepReady({ status: 'opening' }));
       initUnencrypedRxDb()
-        .then((db) => {
-          setDb(db);
-          setInitialized('COMPLETE');
-        })
-        .catch((err) => {
-          console.error(err);
-          setInitialized('ERROR');
-          setError(
-            'There was an error initializing the database. Please try again.',
-          );
-        });
+        .then((db) => setState({ status: 'ready', db }))
+        .catch(failed);
     }
     // Encrypted db is not automatically loaded, handled in submitPassword
   }, [localConfig.use_encrypted_database, notifyDispatch]);
@@ -340,7 +335,7 @@ export function RxDbProvider(props: RxDbProviderProps) {
       {/* Transition added to avoid flash of white  */}
       <Transition
         as="div"
-        show={initialized !== 'COMPLETE'}
+        show={state.status !== 'ready'}
         appear={true}
         enter="transition-opacity duration-150"
         enterFrom="opacity-0"
@@ -351,7 +346,7 @@ export function RxDbProvider(props: RxDbProviderProps) {
       >
         {localConfig.use_encrypted_database === true ? (
           <>
-            {initialized === 'COMPLETE' ? (
+            {state.status === 'ready' ? (
               <AppLoadingSkeleton ready />
             ) : (
               <div className="bg-primary mobile-full-height flex flex-1 flex-col justify-center">
@@ -392,7 +387,8 @@ export function RxDbProvider(props: RxDbProviderProps) {
                             value={password}
                             onChange={(e) => {
                               setPassword(e.target.value);
-                              initialized === 'ERROR' && setInitialized('IDLE');
+                              state.status === 'error' &&
+                                setState({ status: 'idle' });
                             }}
                             className={`focus:ring-primary-600 block w-full rounded-md border-0 bg-gray-100 dark:bg-gray-800 py-3 text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-700 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-inset ${
                               password === '' ? 'italic' : ''
@@ -409,9 +405,9 @@ export function RxDbProvider(props: RxDbProviderProps) {
                         </button>
                       </div>
                       {/* error message */}
-                      {initialized === 'ERROR' && (
+                      {state.status === 'error' && (
                         <div className="text-center text-red-500 dark:text-red-400">
-                          {error}
+                          {state.message}
                         </div>
                       )}
                     </form>
@@ -420,12 +416,28 @@ export function RxDbProvider(props: RxDbProviderProps) {
               </div>
             )}
           </>
+        ) : state.status === 'error' ? (
+          <div
+            role="alert"
+            className="mobile-full-height flex flex-1 flex-col items-center justify-center p-4 text-center text-red-500 dark:text-red-400"
+          >
+            {state.message}
+            <button
+              type="button"
+              className="bg-primary-700 hover:bg-primary-500 mt-6 rounded-md px-4 py-3 text-sm font-semibold text-white"
+              onClick={() => window.location.reload()}
+            >
+              Reload
+            </button>
+          </div>
         ) : (
-          <AppLoadingSkeleton ready={initialized === 'COMPLETE'} />
+          <AppLoadingSkeleton ready={state.status === 'ready'} />
         )}
       </Transition>
-      {db && (
-        <RxDbContext.Provider value={db}>{props.children}</RxDbContext.Provider>
+      {state.status === 'ready' && (
+        <RxDbContext.Provider value={state.db}>
+          {props.children}
+        </RxDbContext.Provider>
       )}
     </>
   );
