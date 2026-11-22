@@ -33,7 +33,7 @@ import { TimelineSkeleton } from './components/skeletons/TimelineSkeleton';
 import { TimelineYearHeader } from './components/layout/TimelineYearHeader';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 import { TimelineMonthDayHeader } from './components/layout/TimelineMonthDayHeader';
-import { useRecordQuery } from './hooks/useRecordQuery';
+import { getRecordDateKey, useRecordQuery } from './hooks/useRecordQuery';
 import { findTimelineDocuments } from '../../repositories/ClinicalDocumentRepository';
 import { QueryStatus } from './types';
 import {
@@ -330,9 +330,7 @@ export async function fetchRecords(
     if (item.metadata?.date === undefined) {
       console.warn('Date is undefined for object:', item);
     } else {
-      const date = item.metadata?.date
-        ? format(parseISO(item.metadata?.date), 'yyyy-MM-dd')
-        : '-1';
+      const date = getRecordDateKey(item);
       if (groupedRecords[date]) {
         groupedRecords[date].push(item);
       } else {

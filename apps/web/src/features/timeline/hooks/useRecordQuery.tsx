@@ -35,10 +35,12 @@ export async function fetchRawRecords(
 export function getRecordDateKey(
   record: ClinicalDocument<BundleEntry<FhirResource>>,
 ): string {
-  if (!record.metadata?.date) {
+  const date = parseISO(record.metadata?.date || '');
+  // format() throws on an invalid date, which would fail the whole page
+  if (Number.isNaN(date.getTime())) {
     return new Date(0).toISOString().split('T')[0];
   }
-  return format(parseISO(record.metadata.date), 'yyyy-MM-dd');
+  return format(date, 'yyyy-MM-dd');
 }
 
 export function groupRecordsByDate(

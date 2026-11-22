@@ -60,6 +60,15 @@ describe('useRecordQuery helper functions', () => {
 
       expect(dateKey).toBe('1970-01-01');
     });
+
+    it('returns epoch date when metadata.date is not a date', () => {
+      const doc = createDocumentsForDays(userId, 1, 1)[0];
+      doc.metadata = { date: 'unknown' };
+
+      const dateKey = getRecordDateKey(doc);
+
+      expect(dateKey).toBe('1970-01-01');
+    });
   });
 
   describe('groupRecordsByDate', () => {
