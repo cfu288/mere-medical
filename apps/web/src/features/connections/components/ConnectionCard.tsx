@@ -257,8 +257,7 @@ export function ConnectionCard({
           </button>
           {connection.status === 'error' ? (
             <button
-              disabled={syncing}
-              className="-ml-px flex flex-initial divide-x divide-gray-800 px-4 disabled:bg-slate-50 dark:disabled:bg-gray-800"
+              className="-ml-px flex flex-initial divide-x divide-gray-800 px-4"
               onClick={async () => {
                 if (!isConfigValid(config)) {
                   notifyDispatch({
