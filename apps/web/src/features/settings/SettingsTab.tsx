@@ -74,8 +74,10 @@ export function parseGender(
 
 const SettingsTab: React.FC = () => {
   const { pathname, hash, key } = useLocation();
-  const [showUserSwitcher, setShowUserSwitcher] = useState(false);
-  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [modal, setModal] = useState<'none' | 'switchUser' | 'addUser'>('none');
+  // a dialog that is already leaving must not close the one that replaced it
+  const close = (which: typeof modal) => () =>
+    setModal((current) => (current === which ? 'none' : current));
   const isDesktop = useMediaQuery('(min-width: 640px)');
 
   useEffect(() => {
@@ -98,7 +100,7 @@ const SettingsTab: React.FC = () => {
         <div className="flex items-center justify-between py-6">
           <div className="text-xl font-extrabold">About Me</div>
           <button
-            onClick={() => setShowUserSwitcher(true)}
+            onClick={() => setModal('switchUser')}
             className="text-primary-600 dark:text-primary-300 hover:text-primary-700 dark:hover:text-primary-200 text-sm font-medium px-3 py-1 rounded-md hover:bg-primary-50 dark:hover:bg-primary-900 transition-colors"
           >
             Switch User
@@ -117,27 +119,21 @@ const SettingsTab: React.FC = () => {
 
       {isDesktop ? (
         <UserSwitchModal
-          open={showUserSwitcher}
-          onClose={() => setShowUserSwitcher(false)}
-          onAddNewUser={() => {
-            setShowUserSwitcher(false);
-            setShowAddUserModal(true);
-          }}
+          open={modal === 'switchUser'}
+          onClose={close('switchUser')}
+          onAddNewUser={() => setModal('addUser')}
         />
       ) : (
         <UserSwitchDrawer
-          open={showUserSwitcher}
-          onClose={() => setShowUserSwitcher(false)}
-          onAddNewUser={() => {
-            setShowUserSwitcher(false);
-            setShowAddUserModal(true);
-          }}
+          open={modal === 'switchUser'}
+          onClose={close('switchUser')}
+          onAddNewUser={() => setModal('addUser')}
         />
       )}
 
       <AddUserModal
-        open={showAddUserModal}
-        onClose={() => setShowAddUserModal(false)}
+        open={modal === 'addUser'}
+        onClose={close('addUser')}
         switchToNewUser={true}
       />
     </AppPage>
