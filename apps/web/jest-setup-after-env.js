@@ -5,3 +5,6 @@ global.window.crypto.randomUUID = jest.fn(() => {
   // Generate a unique UUID for each call to avoid conflicts in tests
   return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
 });
+
+// jsdom has no TextDecoder, which browsers provide
+global.TextDecoder = global.TextDecoder || require('util').TextDecoder;
