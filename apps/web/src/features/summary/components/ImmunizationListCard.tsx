@@ -3,19 +3,8 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { format, parseISO } from 'date-fns';
 import { BundleEntry, Immunization } from 'fhir/r2';
 import { ClinicalDocument } from '../../../models/clinical-document/ClinicalDocument.type';
+import { getImmunizationVaccineCode } from '../../../shared/utils/fhirAccessHelpers';
 import { CardBase } from '../../connections/components/CardBase';
-
-function getVaccineCode(item: ClinicalDocument<BundleEntry<Immunization>>) {
-  let code = item.data_record.raw.resource?.vaccineCode?.coding?.filter((i) =>
-    i.system?.endsWith('cvx'),
-  )?.[0];
-  if (!code) {
-    code = item.data_record.raw.resource?.vaccineCode?.coding?.filter((i) =>
-      i.system?.endsWith('ndc'),
-    )?.[0];
-  }
-  return code?.code || '';
-}
 
 function groupBy<T, U>(list: T[], keyGetter: (arg: T) => U): Map<U, T[]> {
   const map = new Map();
@@ -40,7 +29,7 @@ export function ImmunizationListCard({
   const sortItems = groupBy<
     ClinicalDocument<BundleEntry<Immunization>>,
     string
-  >(items, getVaccineCode);
+  >(items, getImmunizationVaccineCode);
 
   return (
     <div className="col-span-6 sm:col-span-3 ">
