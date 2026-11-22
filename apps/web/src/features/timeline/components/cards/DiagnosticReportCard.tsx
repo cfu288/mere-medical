@@ -77,10 +77,20 @@ export async function getRelatedDocuments({
   return [sorted, isAbnormalResult];
 }
 
+type RelatedDocumentsState =
+  | { status: 'idle' | 'loading' | 'error' }
+  | {
+      status: 'success';
+      docs: ClinicalDocument<BundleEntry<Observation>>[];
+      isAbnormalResult: boolean;
+    };
+
+const NO_DOCS: ClinicalDocument<BundleEntry<Observation>>[] = [];
+
 /**
  * Fetches a set of Observations linked to a DiagnosticReport and indicates if there is an abnormal value in the set
  * @param ClinicalDocument<BundleEntry<DiagnosticReport>>, Whether or not the card is visible to the user, and whether or not the card is expanded
- * @returns a Tuple containing related observations and whether or not there is an abnormal value in the set
+ * @returns the load status, with the related observations and whether any is abnormal once loaded
  */
 export function useRelatedDocuments({
   shouldLoadRelatedDocuments,
@@ -90,43 +100,35 @@ export function useRelatedDocuments({
   shouldLoadRelatedDocuments: boolean;
   item: ClinicalDocument<BundleEntry<DiagnosticReport>>;
   conn?: ConnectionDocument;
-}): [
-  ClinicalDocument<BundleEntry<Observation>>[],
-  boolean,
-  'loading' | 'idle' | 'success',
-] {
+}): RelatedDocumentsState {
   const db = useRxDb(),
     user = useUser(),
-    [docs, setDocs] = useState<ClinicalDocument<BundleEntry<Observation>>[]>(
-      [],
-    ),
-    [isAbnormalResult, setIsAbnormalResult] = useState(false),
-    [status, setStatus] = useState<'loading' | 'idle' | 'success'>('idle');
+    [state, setState] = useState<RelatedDocumentsState>({ status: 'idle' }),
+    hasDocs = state.status === 'success' && state.docs.length > 0;
 
   useEffect(() => {
     let isMounted = true;
-    if (shouldLoadRelatedDocuments && docs.length === 0) {
-      setStatus('loading');
+    if (shouldLoadRelatedDocuments && !hasDocs) {
+      setState({ status: 'loading' });
       getRelatedDocuments({ db, user, item, conn })
-        .then(([relatedDocs, hasAbnormalResult]) => {
+        .then(([docs, isAbnormalResult]) => {
           if (isMounted) {
-            setDocs(relatedDocs);
-            setIsAbnormalResult(hasAbnormalResult);
-            setStatus('success');
+            setState({ status: 'success', docs, isAbnormalResult });
           }
         })
-        .catch(() => {
+        .catch((e) => {
+          console.error(e);
           if (isMounted) {
-            setStatus('idle');
+            setState({ status: 'error' });
           }
         });
     }
     return () => {
       isMounted = false;
     };
-  }, [db, user, item, conn, shouldLoadRelatedDocuments, docs.length]);
+  }, [db, user, item, conn, shouldLoadRelatedDocuments, hasDocs]);
 
-  return [docs, isAbnormalResult, status];
+  return state;
 }
 
 function DiagnosticReportCardUnmemo({
@@ -139,7 +141,7 @@ function DiagnosticReportCardUnmemo({
     ref = useRef<HTMLDivElement | null>(null),
     entry = useIntersectionObserver(ref, {}),
     isVisible = !!entry?.isIntersecting,
-    [docs, isAbnormalResult, status] = useRelatedDocuments({
+    related = useRelatedDocuments({
       shouldLoadRelatedDocuments: expanded || isVisible,
       item,
       conn,
@@ -154,12 +156,14 @@ function DiagnosticReportCardUnmemo({
               title={
                 <>
                   <p className="mr-1">Lab Panel</p>
-                  {status === 'loading' && (
+                  {related.status === 'loading' && (
                     <div className="ml-2">
                       <ButtonLoadingSpinner height="h-3" width="w-3" />
                     </div>
                   )}
-                  {isAbnormalResult && <AbnormalResultIcon />}
+                  {related.status === 'success' && related.isAbnormalResult && (
+                    <AbnormalResultIcon />
+                  )}
                 </>
               }
               color="text-blue-600 dark:text-blue-400"
@@ -184,11 +188,12 @@ function DiagnosticReportCardUnmemo({
         </div>
       </CardBase>
       <ShowDiagnosticReportResultsExpandable
-        docs={docs}
+        docs={related.status === 'success' ? related.docs : NO_DOCS}
         item={item}
         expanded={expanded}
         setExpanded={setExpanded}
-        loading={status === 'loading'}
+        loading={related.status === 'loading'}
+        failed={related.status === 'error'}
       />
     </>
   );
