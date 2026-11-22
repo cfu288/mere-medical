@@ -36,7 +36,7 @@ export function SearchBar({
   setQuery: (s: string) => void;
   status: QueryStatus;
   /** Controls shown at the right end of the field, e.g. the filter button. */
-  children?: ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div className="mb-1 mt-4 w-full sm:mt-6 flex flex-row">
@@ -67,14 +67,10 @@ export function SearchBar({
             placeholder="Search your medical records"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className={`focus:border-primary-500 focus:ring-primary-500 transition-colors block w-full rounded-md border-gray-300 dark:border-gray-600 pl-10 ${children ? 'pr-20' : 'pr-10'} shadow-sm sm:text-sm ${children ? 'h-12' : ''}`}
+            className={`focus:border-primary-500 focus:ring-primary-500 transition-colors block w-full rounded-md border-gray-300 dark:border-gray-600 pl-10 pr-20 shadow-sm sm:text-sm h-12`}
           />
           <div className="absolute inset-y-0 right-0 flex items-center gap-1 pr-1">
-            {status === QueryStatus.LOADING && (
-              <span className={children ? '' : 'pr-2'}>
-                <LoadingSpinner />
-              </span>
-            )}
+            {status === QueryStatus.LOADING && <LoadingSpinner />}
             {children}
           </div>
         </div>

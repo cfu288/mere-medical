@@ -1,6 +1,5 @@
 import { addDays, format, parseISO, subYears } from 'date-fns';
 import { ClinicalDocumentResourceType } from '../../models/clinical-document/ClinicalDocument.type';
-import { TimelinePage } from '../../repositories/ClinicalDocumentRepository';
 import { RecordsByDate } from './types';
 
 export const TIMELINE_CATEGORIES = [
@@ -90,9 +89,9 @@ export const TIMELINE_CATEGORIES = [
 export type TimelineCategoryKey = (typeof TIMELINE_CATEGORIES)[number]['key'];
 
 export const DATE_PRESETS = [
-  { key: 'any', label: 'Any time', years: 0 },
-  { key: '1y', label: 'Past year', years: 1 },
-  { key: '2y', label: 'Past 2 years', years: 2 },
+  { label: 'Any time', years: 0 },
+  { label: 'Past year', years: 1 },
+  { label: 'Past 2 years', years: 2 },
 ] as const;
 
 /** `from` and `to` are inclusive `yyyy-MM-dd` days; missing means open-ended. */
@@ -108,10 +107,6 @@ export function presetFrom(years: number, today = new Date()) {
   return years ? format(subYears(today, years), 'yyyy-MM-dd') : undefined;
 }
 
-export function hasFilters(f: TimelineFilters) {
-  return f.categories.length > 0 || !!f.from || !!f.to;
-}
-
 export function activeFilterCount(f: TimelineFilters) {
   return f.categories.length + (f.from || f.to ? 1 : 0);
 }
@@ -124,9 +119,7 @@ const DATE_SLACK_DAYS = 2;
 const shiftDay = (day: string, days: number) =>
   format(addDays(parseISO(day), days), 'yyyy-MM-dd');
 
-export function toTimelineQuery(
-  f: TimelineFilters,
-): Pick<TimelinePage, 'types' | 'dateFrom' | 'dateBefore'> {
+export function toTimelineQuery(f: TimelineFilters) {
   return {
     types: TIMELINE_CATEGORIES.filter((c) =>
       f.categories.includes(c.key),
@@ -147,10 +140,6 @@ export function filterDaysInRange(
       ([day]) => (!f.from || day >= f.from) && (!f.to || day <= f.to),
     ),
   );
-}
-
-export function isDateRangeValid(f: TimelineFilters) {
-  return !f.from || !f.to || f.from <= f.to;
 }
 
 /** "Past 2 years" when the range matches a preset, else the exact days. */

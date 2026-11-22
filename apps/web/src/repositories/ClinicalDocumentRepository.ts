@@ -92,7 +92,7 @@ const TIMELINE_EXCLUDED_TYPES: ClinicalDocumentResourceType[] = [
   'provenance',
 ];
 
-export interface TimelinePage {
+interface TimelinePage {
   skip: number;
   limit: number;
   search?: string;

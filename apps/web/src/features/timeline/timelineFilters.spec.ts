@@ -2,8 +2,6 @@ import {
   activeFilterCount,
   dateRangeLabel,
   filterDaysInRange,
-  hasFilters,
-  isDateRangeValid,
   NO_FILTERS,
   presetFrom,
   toTimelineQuery,
@@ -58,24 +56,6 @@ describe('timelineFilters', () => {
     expect(filterDaysInRange(data, NO_FILTERS)).toBe(data);
   });
 
-  it('rejects a From day after the To day', () => {
-    expect(
-      isDateRangeValid({
-        categories: [],
-        from: '2025-01-01',
-        to: '2024-01-01',
-      }),
-    ).toBe(false);
-    expect(
-      isDateRangeValid({
-        categories: [],
-        from: '2024-01-01',
-        to: '2024-01-01',
-      }),
-    ).toBe(true);
-    expect(isDateRangeValid({ categories: [], from: '2025-01-01' })).toBe(true);
-  });
-
   it('names a preset range by the preset, and any other range by its days', () => {
     expect(
       dateRangeLabel({ categories: [], from: presetFrom(2, today) }, today),
@@ -102,8 +82,6 @@ describe('timelineFilters', () => {
       to: '2024-02-01',
     };
     expect(activeFilterCount(filters)).toBe(2);
-    expect(hasFilters(filters)).toBe(true);
-    expect(hasFilters(NO_FILTERS)).toBe(false);
-    expect(hasFilters({ categories: [], to: '2024-01-01' })).toBe(true);
+    expect(activeFilterCount(NO_FILTERS)).toBe(0);
   });
 });

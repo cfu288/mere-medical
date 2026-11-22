@@ -20,8 +20,6 @@ import {
   activeFilterCount,
   DATE_PRESETS,
   dateRangeLabel,
-  hasFilters,
-  isDateRangeValid,
   NO_FILTERS,
   presetFrom,
   TIMELINE_CATEGORIES,
@@ -46,7 +44,7 @@ function FilterPanel({
   close: () => void;
 }) {
   const [draft, setDraft] = useState(value);
-  const rangeValid = isDateRangeValid(draft);
+  const rangeValid = !draft.from || !draft.to || draft.from <= draft.to;
   const toggle = (key: TimelineCategoryKey) =>
     setDraft((d) => ({
       ...d,
@@ -106,7 +104,7 @@ function FilterPanel({
             const on = !draft.to && draft.from === from;
             return (
               <button
-                key={p.key}
+                key={p.label}
                 type="button"
                 aria-pressed={on}
                 onClick={() => setDraft((d) => ({ ...d, from, to: undefined }))}
@@ -255,57 +253,50 @@ export function TimelineFilterChips({
   filters: TimelineFilters;
   setFilters: (f: TimelineFilters) => void;
 }) {
-  if (!hasFilters(filters)) return null;
   const dateLabel = dateRangeLabel(filters);
-  const chip =
-    'flex-none inline-flex items-center gap-1.5 h-9 pl-2.5 pr-1.5 rounded-full border border-primary-200 bg-primary-50 text-primary-900 text-[13px] font-semibold dark:border-primary-700 dark:bg-primary-900 dark:text-primary-50';
-  const x = (
-    <XMarkIcon
-      className="h-3.5 w-3.5 text-primary-700 dark:text-primary-200"
-      aria-hidden="true"
-    />
-  );
+  const chips = [
+    ...TIMELINE_CATEGORIES.filter((c) =>
+      filters.categories.includes(c.key),
+    ).map((c) => ({
+      label: c.label,
+      icon: (
+        <span aria-hidden="true" className={`h-2 w-2 rounded-full ${c.dot}`} />
+      ),
+      remove: {
+        categories: filters.categories.filter((k) => k !== c.key),
+      },
+    })),
+    ...(dateLabel
+      ? [
+          {
+            label: dateLabel,
+            icon: <CalendarIcon className="h-3.5 w-3.5" aria-hidden="true" />,
+            remove: { from: undefined, to: undefined },
+          },
+        ]
+      : []),
+  ];
+  if (!chips.length) return null;
 
   return (
     <div className="mt-2 flex items-center gap-2">
       <div className="flex min-w-0 flex-grow gap-1.5 overflow-x-auto">
-        {TIMELINE_CATEGORIES.filter((c) =>
-          filters.categories.includes(c.key),
-        ).map((c) => (
+        {chips.map((chip) => (
           <button
-            key={c.key}
+            key={chip.label}
             type="button"
-            aria-label={`Remove ${c.label}`}
-            className={chip}
-            onClick={() =>
-              setFilters({
-                ...filters,
-                categories: filters.categories.filter((k) => k !== c.key),
-              })
-            }
+            aria-label={`Remove ${chip.label}`}
+            className="flex-none inline-flex items-center gap-1.5 h-9 pl-2.5 pr-1.5 rounded-full border border-primary-200 bg-primary-50 text-primary-900 text-[13px] font-semibold dark:border-primary-700 dark:bg-primary-900 dark:text-primary-50"
+            onClick={() => setFilters({ ...filters, ...chip.remove })}
           >
-            <span
+            {chip.icon}
+            {chip.label}
+            <XMarkIcon
+              className="h-3.5 w-3.5 text-primary-700 dark:text-primary-200"
               aria-hidden="true"
-              className={`h-2 w-2 rounded-full ${c.dot}`}
             />
-            {c.label}
-            {x}
           </button>
         ))}
-        {dateLabel ? (
-          <button
-            type="button"
-            aria-label={`Remove ${dateLabel}`}
-            className={chip}
-            onClick={() =>
-              setFilters({ ...filters, from: undefined, to: undefined })
-            }
-          >
-            <CalendarIcon className="h-3.5 w-3.5" aria-hidden="true" />
-            {dateLabel}
-            {x}
-          </button>
-        ) : null}
       </div>
       <button
         type="button"

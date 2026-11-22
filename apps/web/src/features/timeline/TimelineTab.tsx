@@ -37,8 +37,8 @@ import { useRecordQuery } from './hooks/useRecordQuery';
 import { findTimelineDocuments } from '../../repositories/ClinicalDocumentRepository';
 import { QueryStatus } from './types';
 import {
+  activeFilterCount,
   filterDaysInRange,
-  hasFilters,
   NO_FILTERS,
   TimelineFilters,
   toTimelineQuery,
@@ -54,7 +54,7 @@ export function TimelineTab() {
       useRecordQuery(query, filters),
     hasNoRecords =
       query === '' &&
-      !hasFilters(filters) &&
+      !activeFilterCount(filters) &&
       (!data || Object.entries(data).length === 0),
     visibleData = useMemo(
       () => filterDaysInRange(data, filters),
@@ -210,11 +210,9 @@ export function TimelineTab() {
                         No matching records
                       </h1>
                       <p className="mt-6 text-lg leading-7 text-gray-700 dark:text-gray-300">
-                        {query && hasFilters(filters)
-                          ? `No records match these filters and the query: ${query}`
-                          : query
-                            ? `No records found with query: ${query}`
-                            : 'No records match these filters'}
+                        {query
+                          ? `No records found with query: ${query}`
+                          : 'No records match these filters'}
                       </p>
                     </div>
                   </main>

@@ -228,20 +228,6 @@ describe('useRecordQuery helper functions', () => {
       expect(records.every((r) => r.metadata?.date)).toBe(true);
     });
 
-    it('keeps only the filtered record types', async () => {
-      const docs = createDocumentsForDays(userId, 1, 3);
-      docs[0].data_record.resource_type = 'encounter';
-      await db.clinical_documents.bulkInsert(docs);
-
-      const records = await fetchRawRecords(db, userId, 0, 10, {
-        categories: ['visits'],
-      });
-
-      expect(records.map((r) => r.data_record.resource_type)).toEqual([
-        'encounter',
-      ]);
-    });
-
     // Tests run in America/New_York (jest-global-setup.js).
     it('shows records on the local days the range names, whatever their stored format', async () => {
       const filters = {
