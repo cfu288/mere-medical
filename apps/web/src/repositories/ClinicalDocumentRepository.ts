@@ -1,4 +1,6 @@
 import { MangoQuerySelector, RxDatabase, RxDocument } from 'rxdb';
+import { Observable } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
 import { DatabaseCollections } from '../app/providers/DatabaseCollections';
 import {
   ClinicalDocument,
@@ -330,4 +332,46 @@ export async function findAttachment(
     })
     .exec();
   return doc ? (doc.toMutableJSON() as ClinicalDocument) : null;
+}
+
+/**
+ * Reads every record the user has, of every type. The chat agent builds its
+ * record index from it.
+ *
+ * @param db `RxDatabase<DatabaseCollections>`.
+ * @param userId `string`.
+ * @returns `Promise<ClinicalDocument<T>[]>`. `T` is the record type the caller reads.
+ *
+ * @example
+ * const docs = await findAllDocuments(db, user.id);
+ */
+export async function findAllDocuments<T>(
+  db: RxDatabase<DatabaseCollections>,
+  userId: string,
+): Promise<ClinicalDocument<T>[]> {
+  const docs = await db.clinical_documents
+    .find({ selector: { user_id: userId } })
+    .exec();
+  return docs.map((doc) => toPlainRecord<T>(doc));
+}
+
+/**
+ * Emits once for each insert, update or delete of one of the user's records.
+ * The chat agent rebuilds its record index after a change.
+ *
+ * @param db `RxDatabase<DatabaseCollections>`.
+ * @param userId `string`.
+ * @returns `Observable<void>`.
+ *
+ * @example
+ * const subscription = watchDocumentChanges(db, user.id).subscribe(markStale);
+ */
+export function watchDocumentChanges(
+  db: RxDatabase<DatabaseCollections>,
+  userId: string,
+): Observable<void> {
+  return db.clinical_documents.$.pipe(
+    filter((event) => event.documentData?.user_id === userId),
+    map(() => undefined),
+  );
 }
