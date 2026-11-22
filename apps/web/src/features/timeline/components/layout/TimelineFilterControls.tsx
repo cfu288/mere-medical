@@ -29,23 +29,6 @@ import {
   TimelineFilters,
 } from '../../timelineFilters';
 
-// Matches the md breakpoint where the bottom tab bar gives way to the side nav.
-const DESKTOP_QUERY = '(min-width: 768px)';
-
-function useIsDesktop() {
-  const [isDesktop, setIsDesktop] = useState(
-    () => window.matchMedia?.(DESKTOP_QUERY).matches ?? false,
-  );
-  useEffect(() => {
-    const media = window.matchMedia?.(DESKTOP_QUERY);
-    if (!media) return;
-    const onChange = () => setIsDesktop(media.matches);
-    media.addEventListener('change', onChange);
-    return () => media.removeEventListener('change', onChange);
-  }, []);
-  return isDesktop;
-}
-
 const pill =
   'inline-flex items-center gap-2 h-9 px-3 rounded-full border text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500';
 const pillOff =
@@ -188,7 +171,16 @@ export function TimelineFilterButton({
   filters: TimelineFilters;
   setFilters: (f: TimelineFilters) => void;
 }) {
-  const isDesktop = useIsDesktop();
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  // Same switch as SettingsTab's user switcher: Tailwind's sm breakpoint (640px).
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(min-width: 640px)');
+    const handleChange = () => setIsDesktop(mediaQuery.matches);
+    handleChange();
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
   const count = activeFilterCount(filters);
   const trigger = (
     <Button

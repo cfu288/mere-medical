@@ -10,7 +10,7 @@ globalThis.CSS ??= { escape: (s: string) => s } as unknown as typeof CSS;
 
 function useDesktopLayout() {
   window.matchMedia = ((media: string) => ({
-    matches: media === '(min-width: 768px)',
+    matches: media === '(min-width: 640px)',
     media,
     addEventListener: () => undefined,
     removeEventListener: () => undefined,
