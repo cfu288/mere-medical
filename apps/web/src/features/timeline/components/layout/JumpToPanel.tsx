@@ -58,17 +58,17 @@ export function JumpToPanel({
             ))}
           {loadMore && (
             <>
-              {status !== undefined &&
-                status !== QueryStatus.COMPLETE_HIDE_LOAD_MORE && (
-                  <li className="sticky top-10 bg-gray-50 dark:bg-gray-800 p-1 pl-2">
-                    <button
-                      onClick={() => loadMore()}
-                      className="text-xs font-thin hover:underline"
-                    >
-                      Load More
-                    </button>
-                  </li>
-                )}
+              {(status === QueryStatus.SUCCESS ||
+                status === QueryStatus.LOAD_MORE_ERROR) && (
+                <li className="sticky top-10 bg-gray-50 dark:bg-gray-800 p-1 pl-2">
+                  <button
+                    onClick={() => loadMore()}
+                    className="text-xs font-thin hover:underline"
+                  >
+                    Load More
+                  </button>
+                </li>
+              )}
             </>
           )}
         </ul>
