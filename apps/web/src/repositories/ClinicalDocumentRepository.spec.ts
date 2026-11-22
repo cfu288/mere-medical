@@ -14,8 +14,10 @@ import {
   findDocumentsByIds,
   findDocumentsByLoincCodes,
   findDocumentsByMetadataIds,
+  findAllDocuments,
   findAllDocumentsByResourceTypes,
   findTimelineDocuments,
+  watchDocumentChanges,
 } from './ClinicalDocumentRepository';
 
 function clinicalDoc({
@@ -528,6 +530,57 @@ describe('ClinicalDocumentRepository', () => {
       );
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe('findAllDocuments', () => {
+    it('returns every record of the user, of every type', async () => {
+      const condition = clinicalDoc({
+        metadataId: 'cond-1',
+        type: 'condition',
+      });
+      const patient = clinicalDoc({ metadataId: 'pat-1', type: 'patient' });
+      await db.clinical_documents.bulkInsert([
+        condition,
+        patient,
+        clinicalDoc({
+          metadataId: 'cond-2',
+          type: 'condition',
+          userId: 'user-b',
+        }),
+      ]);
+
+      const result = await findAllDocuments(db, 'user-a');
+
+      expect(result).toHaveLength(2);
+      expect(result).toEqual(expect.arrayContaining([condition, patient]));
+    });
+  });
+
+  describe('watchDocumentChanges', () => {
+    it('emits for inserts, updates and deletes of the user records only', async () => {
+      const changes: string[] = [];
+      const subscription = watchDocumentChanges(db, 'user-a').subscribe(() =>
+        changes.push('change'),
+      );
+
+      await db.clinical_documents.insert(
+        clinicalDoc({
+          metadataId: 'cond-2',
+          type: 'condition',
+          userId: 'user-b',
+        }),
+      );
+      const inserted = await db.clinical_documents.insert(
+        clinicalDoc({ metadataId: 'cond-1', type: 'condition' }),
+      );
+      await inserted.atomicPatch({
+        metadata: { ...inserted.metadata, display_name: 'Asthma' },
+      });
+      await inserted.remove();
+      subscription.unsubscribe();
+
+      expect(changes).toEqual(['change', 'change', 'change']);
     });
   });
 });
