@@ -174,6 +174,41 @@ describe('ClinicalDocumentRepository', () => {
       expect(result).toEqual([middle]);
     });
 
+    it('keeps only the given resource types', async () => {
+      await db.clinical_documents.bulkInsert([oldest, newest, middle]);
+
+      const result = await findTimelineDocuments(db, 'user-a', {
+        skip: 0,
+        limit: 10,
+        types: ['observation', 'condition'],
+      });
+
+      expect(result).toEqual([middle, oldest]);
+    });
+
+    it('keeps records from dateFrom up to but not including dateBefore', async () => {
+      const dateOnly = clinicalDoc({
+        metadataId: 'imm-1',
+        type: 'immunization',
+        date: '2024-02-15',
+      });
+      await db.clinical_documents.bulkInsert([
+        oldest,
+        newest,
+        middle,
+        dateOnly,
+      ]);
+
+      const result = await findTimelineDocuments(db, 'user-a', {
+        skip: 0,
+        limit: 10,
+        dateFrom: '2024-02-01',
+        dateBefore: '2024-03-01',
+      });
+
+      expect(result).toEqual([dateOnly, middle]);
+    });
+
     it('matches the search text anywhere in the name, ignoring case', async () => {
       await db.clinical_documents.bulkInsert([oldest, newest, middle]);
 

@@ -23,6 +23,10 @@ import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import { useUser } from '../../app/providers/UserProvider';
 import { JumpToPanel } from './components/layout/JumpToPanel';
 import { SearchBar } from './components/layout/SearchBar';
+import {
+  TimelineFilterButton,
+  TimelineFilterChips,
+} from './components/layout/TimelineFilterControls';
 import { TimelineBanner } from './components/layout/TimelineBanner';
 import { TimelineItem } from './components/layout/TimelineItem';
 import { TimelineSkeleton } from './components/skeletons/TimelineSkeleton';
@@ -32,15 +36,30 @@ import { TimelineMonthDayHeader } from './components/layout/TimelineMonthDayHead
 import { useRecordQuery } from './hooks/useRecordQuery';
 import { findTimelineDocuments } from '../../repositories/ClinicalDocumentRepository';
 import { QueryStatus } from './types';
+import {
+  filterDaysInRange,
+  hasFilters,
+  NO_FILTERS,
+  TimelineFilters,
+  toTimelineQuery,
+} from './timelineFilters';
 
 export { QueryStatus };
 
 export function TimelineTab() {
   const user = useUser(),
     [query, setQuery] = useState(''),
+    [filters, setFilters] = useState<TimelineFilters>(NO_FILTERS),
     { data, status, initialized, loadNextPage, showIndividualItems } =
-      useRecordQuery(query),
-    hasNoRecords = query === '' && (!data || Object.entries(data).length === 0),
+      useRecordQuery(query, filters),
+    hasNoRecords =
+      query === '' &&
+      !hasFilters(filters) &&
+      (!data || Object.entries(data).length === 0),
+    visibleData = useMemo(
+      () => filterDaysInRange(data, filters),
+      [data, filters],
+    ),
     scrollContainer = useRef<HTMLDivElement>(null),
     scrollToTop = useScrollToTop(scrollContainer),
     [scrollY, setScrollY] = useState(0),
@@ -58,8 +77,8 @@ export function TimelineTab() {
       Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>
     >();
 
-    if (data) {
-      for (const [dateKey, itemList] of Object.entries(data)) {
+    if (visibleData) {
+      for (const [dateKey, itemList] of Object.entries(visibleData)) {
         const year = dateKey.split('-')[0];
         const yearData = newYearMap.get(year);
         if (yearData) {
@@ -70,7 +89,7 @@ export function TimelineTab() {
       }
     }
     return newYearMap;
-  }, [data]);
+  }, [visibleData]);
 
   useScrollToHash();
 
@@ -159,7 +178,7 @@ export function TimelineTab() {
         ) : (
           <div className="flex w-full overflow-hidden">
             <JumpToPanel
-              items={data}
+              items={visibleData}
               isLoading={false}
               status={status}
               loadMore={loadNextPage}
@@ -170,9 +189,18 @@ export function TimelineTab() {
               onScroll={onScroll}
             >
               <div className="h-max w-full max-w-4xl flex-col px-4 pb-20 sm:px-6 sm:pb-6 lg:px-8">
-                <SearchBar query={query} setQuery={setQuery} status={status} />
+                <SearchBar query={query} setQuery={setQuery} status={status}>
+                  <TimelineFilterButton
+                    filters={filters}
+                    setFilters={setFilters}
+                  />
+                </SearchBar>
+                <TimelineFilterChips
+                  filters={filters}
+                  setFilters={setFilters}
+                />
                 {listItems}
-                {(Object.keys(data || {}) || []).length === 0 ? (
+                {Object.keys(visibleData || {}).length === 0 ? (
                   <main className="grid min-h-full place-items-center bg-white dark:bg-gray-900 px-6 py-24 sm:py-32 lg:px-8">
                     <div className="text-center">
                       <p className="text-base font-semibold text-primary-600 dark:text-primary-300">
@@ -181,7 +209,13 @@ export function TimelineTab() {
                       <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-5xl">
                         No matching records
                       </h1>
-                      <p className="mt-6 text-lg leading-7 text-gray-700 dark:text-gray-300">{`No records found with query: ${query}`}</p>
+                      <p className="mt-6 text-lg leading-7 text-gray-700 dark:text-gray-300">
+                        {query && hasFilters(filters)
+                          ? `No records match these filters and the query: ${query}`
+                          : query
+                            ? `No records found with query: ${query}`
+                            : 'No records match these filters'}
+                      </p>
                     </div>
                   </main>
                 ) : null}
@@ -273,6 +307,7 @@ export async function fetchRecords(
   user_id: string,
   query?: string,
   page?: number,
+  filters: TimelineFilters = NO_FILTERS,
 ): Promise<Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>> {
   const list = await findTimelineDocuments<BundleEntry<FhirResource>>(
     db,
@@ -281,6 +316,7 @@ export async function fetchRecords(
       skip: page ? page * PAGE_SIZE : 0,
       limit: PAGE_SIZE,
       search: query,
+      ...toTimelineQuery(filters),
     },
   );
 

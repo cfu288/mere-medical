@@ -79,4 +79,34 @@ describe('fetchRecords', () => {
         .map((r) => r.metadata?.display_name),
     ).toEqual(['LDL CHOLESTEROL (CALC)']);
   });
+
+  it('applies the filters together with the search text', async () => {
+    const doc = (id: string, type: 'observation' | 'condition', date: string) =>
+      createTestClinicalDocument({
+        id: `conn-a|user-1|${id}`,
+        connection_record_id: 'conn-a',
+        user_id: 'user-1',
+        data_record: {
+          raw: { resource: { resourceType: 'Basic' } } as never,
+          format: 'FHIR.R4',
+          content_type: 'application/json',
+          resource_type: type,
+          version_history: [],
+        },
+        metadata: { id, date, display_name: `GLUCOSE ${id}` },
+      });
+    const match = doc('obs-1', 'observation', '2024-02-10T12:00:00Z');
+    await db.clinical_documents.bulkInsert([
+      match,
+      doc('obs-2', 'observation', '2023-02-10T12:00:00Z'),
+      doc('cond-1', 'condition', '2024-02-10T12:00:00Z'),
+    ]);
+
+    const records = await fetchRecords(db, 'user-1', 'glucose', 0, {
+      categories: ['labs'],
+      from: '2024-01-01',
+    });
+
+    expect(Object.values(records).flat()).toEqual([match]);
+  });
 });

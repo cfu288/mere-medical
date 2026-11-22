@@ -137,3 +137,13 @@ html {
     background-position: 100% 50%;
   }
 }
+
+/* Timeline filter sheet: the backdrop fades with the swipe. */
+@keyframes timeline-sheet-backdrop {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
