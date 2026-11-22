@@ -1,16 +1,17 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import {
   TimelineFilterDialog,
   TimelineFilterChips,
 } from './TimelineFilterControls';
 import { NO_FILTERS, TimelineFilters } from '../../timelineFilters';
+import { HiddenIntersectionObserver } from '../../../../test-utils/intersectionObserver';
 
 // jsdom has no CSS global; React Aria's popover calls CSS.escape.
 globalThis.CSS ??= { escape: (s: string) => s } as unknown as typeof CSS;
 
-function useDesktopLayout() {
+function setLayout(desktop: boolean) {
   window.matchMedia = ((media: string) => ({
-    matches: media === '(min-width: 640px)',
+    matches: desktop && media === '(min-width: 640px)',
     media,
     addEventListener: () => undefined,
     removeEventListener: () => undefined,
@@ -18,7 +19,7 @@ function useDesktopLayout() {
 }
 
 describe('TimelineFilterDialog', () => {
-  beforeEach(useDesktopLayout);
+  beforeEach(() => setLayout(true));
 
   function openPanel(filters: TimelineFilters = NO_FILTERS) {
     const setFilters = jest.fn();
@@ -82,6 +83,34 @@ describe('TimelineFilterDialog', () => {
     expect(
       screen.getByRole('button', { name: 'Filter by type and date, 3 active' }),
     ).toBeTruthy();
+  });
+});
+
+describe('TimelineFilterDialog on mobile', () => {
+  beforeEach(() => {
+    setLayout(false);
+    window.IntersectionObserver = HiddenIntersectionObserver;
+  });
+
+  it('applies the filters from the sheet and closes it', async () => {
+    const setFilters = jest.fn();
+    render(
+      <TimelineFilterDialog filters={NO_FILTERS} setFilters={setFilters} />,
+    );
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /Filter by type and date/ }),
+    );
+    expect(document.querySelector('[data-sheet-content]')).not.toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Labs' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Show results' }));
+
+    expect(setFilters).toHaveBeenCalledWith({ categories: ['labs'] });
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('heading', { name: 'Filter records' }),
+      ).toBeNull(),
+    );
   });
 });
 
