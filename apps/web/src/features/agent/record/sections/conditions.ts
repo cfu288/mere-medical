@@ -1,18 +1,16 @@
-import { BundleEntry, Condition, FhirResource } from 'fhir/r2';
+import { BundleEntry, Condition } from 'fhir/r2';
 import {
   BundleEntry as R4BundleEntry,
   Condition as R4Condition,
 } from 'fhir/r4';
 
-import { ClinicalDocument } from '../../../../models/clinical-document/ClinicalDocument.type';
-import { entry, latestBy, RecordEntry, toDateInfo } from '../types';
+import { ClinicalDoc } from '../clinicalDocs';
+import { entry, latestByName, RecordEntry, toDateInfo } from '../types';
 
 // ICD-10-CM block Z00-Z13, "Persons encountering health services for examinations"
 const EXAMINATION_ICD10 = /^Z(0\d|1[0-3])/;
 
-export function buildConditionEntries(
-  docs: ClinicalDocument<BundleEntry<FhirResource>>[],
-): RecordEntry[] {
+export function buildConditionEntries(docs: ClinicalDoc[]): RecordEntry[] {
   const entries: RecordEntry[] = [];
   for (const doc of docs) {
     const resource = doc.data_record.raw?.resource as Condition | undefined;
@@ -30,11 +28,7 @@ export function buildConditionEntries(
       ),
     );
   }
-  return latestBy(
-    entries,
-    (e) => e.name.toLowerCase(),
-    (e) => e.date,
-  );
+  return latestByName(entries);
 }
 
 function isAdministrative(resource?: Condition): boolean {
@@ -45,9 +39,7 @@ function isAdministrative(resource?: Condition): boolean {
   );
 }
 
-function conditionStatuses(
-  doc: ClinicalDocument<BundleEntry<FhirResource>>,
-): (string | undefined)[] {
+function conditionStatuses(doc: ClinicalDoc): (string | undefined)[] {
   switch (doc.data_record.format) {
     case 'FHIR.R4': {
       const resource = (doc.data_record.raw as R4BundleEntry<R4Condition>)

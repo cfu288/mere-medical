@@ -5,7 +5,8 @@ import {
   checkIfXmlIsCCDA,
   parseCCDARaw,
 } from '../../../timeline/components/document-reference/parseCCDA/parseCCDA';
-import { MAX_NOTE_CHARS } from '../constants';
+
+const MAX_NOTE_CHARS = 20000;
 
 export type NoteFormat = 'ccda' | 'html' | 'plain' | 'rtf' | 'pdf';
 

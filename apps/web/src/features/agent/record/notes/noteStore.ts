@@ -1,25 +1,14 @@
-import { BundleEntry, DocumentReference, FhirResource } from 'fhir/r2';
+import { DocumentReference } from 'fhir/r2';
 
-import {
-  ClinicalDocument,
-  ClinicalDocumentResourceType,
-} from '../../../../models/clinical-document/ClinicalDocument.type';
-import { compareDateInfoDesc, toDateInfo } from '../types';
+import { ByType, ClinicalDoc } from '../clinicalDocs';
+import { compareDateInfoDesc, isPresent, toDateInfo } from '../types';
 import { ExtractedNote, extractNoteText } from './extractNoteText';
 import { NoteExtraction, NoteRecord } from './noteRecord';
 
-export function toNoteRecords(
-  byType: Map<
-    ClinicalDocumentResourceType,
-    ClinicalDocument<BundleEntry<FhirResource>>[]
-  >,
-): NoteRecord[] {
+export function toNoteRecords(byType: ByType): NoteRecord[] {
   const docRefs = byType.get('documentreference') ?? [];
   const attachments = byType.get('documentreference_attachment') ?? [];
-  const attachmentsByMetadataId = new Map<
-    string,
-    ClinicalDocument<BundleEntry<FhirResource>>
-  >();
+  const attachmentsByMetadataId = new Map<string, ClinicalDoc>();
   for (const attachment of attachments) {
     if (attachment.metadata?.id) {
       attachmentsByMetadataId.set(attachment.metadata.id, attachment);
@@ -42,7 +31,7 @@ export function toNoteRecords(
       const attachment =
         (resource?.content ?? [])
           .map((content) => content.attachment?.url)
-          .filter((url): url is string => Boolean(url))
+          .filter(isPresent)
           .map((url) => attachmentsByMetadataId.get(url))
           .find((stored) => stored !== undefined) ??
         (docRef.metadata?.id
@@ -59,9 +48,7 @@ export function toNoteRecords(
 }
 
 /** Attachment bytes as the extractor wants them: text as is, a pdf as base64. */
-async function rawText(
-  attachment: ClinicalDocument<BundleEntry<FhirResource>>,
-): Promise<string | undefined> {
+async function rawText(attachment: ClinicalDoc): Promise<string | undefined> {
   const raw = attachment.data_record.raw as unknown;
   if (typeof raw === 'string') {
     return raw;
@@ -87,7 +74,7 @@ async function rawText(
 
 function memoizedExtract(
   docId: string,
-  attachment: ClinicalDocument<BundleEntry<FhirResource>> | undefined,
+  attachment: ClinicalDoc | undefined,
 ): NoteRecord['read'] {
   let memo: Promise<ExtractedNote> | undefined;
   return (onExtracted) => (memo ??= extract(docId, attachment, onExtracted));
@@ -95,7 +82,7 @@ function memoizedExtract(
 
 async function extract(
   docId: string,
-  attachment: ClinicalDocument<BundleEntry<FhirResource>> | undefined,
+  attachment: ClinicalDoc | undefined,
   onExtracted?: (extraction: NoteExtraction) => void,
 ): Promise<ExtractedNote> {
   const startedAt = Date.now();

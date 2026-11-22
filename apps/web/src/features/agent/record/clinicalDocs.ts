@@ -4,12 +4,15 @@ import { RxDatabase } from 'rxdb';
 import { DatabaseCollections } from '../../../app/providers/DatabaseCollections';
 import { findAllDocuments } from '../../../repositories/ClinicalDocumentRepository';
 import { findAllConnections } from '../../../repositories/ConnectionRepository';
+import { groupBy } from '../../../shared/utils/groupBy';
 import {
   ClinicalDocument,
   ClinicalDocumentResourceType,
 } from '../../../models/clinical-document/ClinicalDocument.type';
 
 export type ClinicalDoc = ClinicalDocument<BundleEntry<FhirResource>>;
+
+export type ByType = Map<ClinicalDocumentResourceType, ClinicalDoc[]>;
 
 export type ClinicalDocStore = {
   docs: ClinicalDoc[];
@@ -30,23 +33,9 @@ export async function loadClinicalDocs(
       connectionLocations.set(connection.id, connection.location);
     }
   }
-  return {
-    docs,
-    connectionLocations,
-  };
+  return { docs, connectionLocations };
 }
 
-export function docsByType(
-  docs: ClinicalDoc[],
-): Map<ClinicalDocumentResourceType, ClinicalDoc[]> {
-  const byType = new Map<ClinicalDocumentResourceType, ClinicalDoc[]>();
-  for (const doc of docs) {
-    const group = byType.get(doc.data_record.resource_type);
-    if (group) {
-      group.push(doc);
-    } else {
-      byType.set(doc.data_record.resource_type, [doc]);
-    }
-  }
-  return byType;
+export function docsByType(docs: ClinicalDoc[]): ByType {
+  return groupBy(docs, (doc) => doc.data_record.resource_type);
 }

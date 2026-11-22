@@ -61,6 +61,10 @@ export function compareDateInfoDesc(a: DateInfo, b: DateInfo): number {
   return bMs - aMs;
 }
 
+export function isPresent(value: string | undefined): value is string {
+  return Boolean(value);
+}
+
 export function latestBy<T>(
   items: T[],
   key: (item: T) => string,
@@ -75,5 +79,13 @@ export function latestBy<T>(
   }
   return [...byKey.values()].sort((a, b) =>
     compareDateInfoDesc(date(a), date(b)),
+  );
+}
+
+export function latestByName(entries: RecordEntry[]): RecordEntry[] {
+  return latestBy(
+    entries,
+    (e) => e.name.toLowerCase(),
+    (e) => e.date,
   );
 }

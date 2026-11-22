@@ -1,16 +1,16 @@
-import { BundleEntry, FhirResource, Immunization } from 'fhir/r2';
+import { Immunization } from 'fhir/r2';
 
-import { ClinicalDocument } from '../../../../models/clinical-document/ClinicalDocument.type';
 import {
   getAllergyIntoleranceDisplayName,
   getImmunizationVaccineCode,
 } from '../../../../shared/utils/fhirAccessHelpers';
+import { groupBy } from '../../../../shared/utils/groupBy';
+import { ClinicalDoc } from '../clinicalDocs';
 import {
   compareDateInfoDesc,
-  DateInfo,
   entry,
   formatDate,
-  latestBy,
+  latestByName,
   RecordEntry,
   toDateInfo,
 } from '../types';
@@ -26,33 +26,26 @@ function notGiven(resource: Immunization | undefined): boolean {
   );
 }
 
-export function buildImmunizationEntries(
-  docs: ClinicalDocument<BundleEntry<FhirResource>>[],
-): RecordEntry[] {
-  const byConcept = new Map<string, { name: string; date: DateInfo }[]>();
-  for (const doc of docs) {
+export function buildImmunizationEntries(docs: ClinicalDoc[]): RecordEntry[] {
+  const doses = docs.flatMap((doc) => {
     const resource = doc.data_record.raw?.resource as Immunization | undefined;
-    if (notGiven(resource)) {
-      continue;
-    }
     const name =
       doc.metadata?.display_name ??
       resource?.vaccineCode?.text ??
       resource?.vaccineCode?.coding?.[0]?.display;
-    if (!name) {
-      continue;
+    if (notGiven(resource) || !name) {
+      return [];
     }
     const code = getImmunizationVaccineCode(doc);
-    const concept = code ? `code:${code}` : name.toLowerCase();
-    const date = toDateInfo(doc.metadata?.date);
-    const doses = byConcept.get(concept);
-    if (doses) {
-      doses.push({ name, date });
-    } else {
-      byConcept.set(concept, [{ name, date }]);
-    }
-  }
-  return [...byConcept.values()]
+    return [
+      {
+        concept: code ? `code:${code}` : name.toLowerCase(),
+        name,
+        date: toDateInfo(doc.metadata?.date),
+      },
+    ];
+  });
+  return [...groupBy(doses, (dose) => dose.concept).values()]
     .map((doses) => {
       const sorted = [...doses].sort((a, b) =>
         compareDateInfoDesc(a.date, b.date),
@@ -69,9 +62,7 @@ export function buildImmunizationEntries(
     .sort((a, b) => compareDateInfoDesc(a.date, b.date));
 }
 
-export function buildAllergyEntries(
-  docs: ClinicalDocument<BundleEntry<FhirResource>>[],
-): RecordEntry[] {
+export function buildAllergyEntries(docs: ClinicalDoc[]): RecordEntry[] {
   const entries = docs.flatMap((doc) => {
     const name = (getAllergyIntoleranceDisplayName(doc) ?? '')
       .replace(/\*+$/, '')
@@ -80,9 +71,5 @@ export function buildAllergyEntries(
       ? [entry('allergy', name, toDateInfo(doc.metadata?.date), [])]
       : [];
   });
-  return latestBy(
-    entries,
-    (e) => e.name.toLowerCase(),
-    (e) => e.date,
-  );
+  return latestByName(entries);
 }

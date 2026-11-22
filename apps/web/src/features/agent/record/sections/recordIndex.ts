@@ -1,14 +1,20 @@
 import { ClinicalDocumentResourceType } from '../../../../models/clinical-document/ClinicalDocument.type';
-import { ClinicalDoc } from '../clinicalDocs';
+import { ByType, ClinicalDoc } from '../clinicalDocs';
 import { NoteRecord } from '../notes/noteRecord';
-import { compareDateInfoDesc, entry, RecordEntry, toDateInfo } from '../types';
+import {
+  compareDateInfoDesc,
+  entry,
+  isPresent,
+  RecordEntry,
+  toDateInfo,
+} from '../types';
 import { buildConditionEntries } from './conditions';
 import { buildEncounterEntries } from './encounters';
 import {
   buildAllergyEntries,
   buildImmunizationEntries,
 } from './immunizationsAllergies';
-import { reportObservationRefs } from './labs';
+import { connectionKey, reportObservationRefs } from './labs';
 import { buildMedicationEntries, MEDICATION_TYPES } from './medications';
 
 export type RecordIndex = {
@@ -70,7 +76,7 @@ const INFRA_TYPES = new Set<ClinicalDocumentResourceType>([
 ]);
 
 export function buildRecordIndex(
-  byType: Map<ClinicalDocumentResourceType, ClinicalDoc[]>,
+  byType: ByType,
   connectionLocations: Map<string, string>,
   notes: NoteRecord[],
 ): RecordIndex {
@@ -108,10 +114,6 @@ export function buildRecordIndex(
 
 function raw(doc: ClinicalDoc): RawResource | undefined {
   return doc.data_record.raw?.resource as RawResource | undefined;
-}
-
-function isPresent(value: string | undefined): value is string {
-  return Boolean(value);
 }
 
 function procedureEntry(doc: ClinicalDoc): RecordEntry[] {
@@ -234,7 +236,9 @@ function reportEntries(
   const observationIds = new Set(
     observations
       .filter((obs) => isPresent(obs.metadata?.id))
-      .map((obs) => `${obs.connection_record_id}|${obs.metadata?.id}`),
+      .map((obs) =>
+        connectionKey(obs.connection_record_id, obs.metadata?.id ?? ''),
+      ),
   );
   const reports = diagnosticReports.flatMap((report) => {
     const name = report.metadata?.display_name;
@@ -244,7 +248,7 @@ function reportEntries(
     const candidates = reportObservationRefs(report, connectionLocations);
     if (
       candidates.some((ref) =>
-        observationIds.has(`${report.connection_record_id}|${ref}`),
+        observationIds.has(connectionKey(report.connection_record_id, ref)),
       )
     ) {
       return [];
@@ -266,9 +270,7 @@ function reportEntries(
   return [...unique.values(), ...undated];
 }
 
-function alsoOnRecord(
-  byType: Map<ClinicalDocumentResourceType, ClinicalDoc[]>,
-): { type: string; count: number }[] {
+function alsoOnRecord(byType: ByType): { type: string; count: number }[] {
   return [...byType.entries()]
     .filter(([type]) => !HANDLED_TYPES.has(type) && !INFRA_TYPES.has(type))
     .map(([type, docs]) => ({ type, count: docs.length }))

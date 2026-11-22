@@ -1,11 +1,7 @@
-import { BundleEntry, FhirResource } from 'fhir/r2';
-
-import {
-  ClinicalDocument,
-  ClinicalDocumentResourceType,
-} from '../../../../models/clinical-document/ClinicalDocument.type';
+import { ClinicalDocumentResourceType } from '../../../../models/clinical-document/ClinicalDocument.type';
 import { getMedicationOrderDisplayName } from '../../../../shared/utils/fhirAccessHelpers';
-import { entry, latestBy, RecordEntry, toDateInfo } from '../types';
+import { ClinicalDoc } from '../clinicalDocs';
+import { entry, latestByName, RecordEntry, toDateInfo } from '../types';
 
 export const MEDICATION_TYPES: ClinicalDocumentResourceType[] = [
   'medicationstatement',
@@ -15,18 +11,12 @@ export const MEDICATION_TYPES: ClinicalDocumentResourceType[] = [
   'medicationadministration',
 ];
 
-export function buildMedicationEntries(
-  docs: ClinicalDocument<BundleEntry<FhirResource>>[],
-): RecordEntry[] {
+export function buildMedicationEntries(docs: ClinicalDoc[]): RecordEntry[] {
   const entries = docs.flatMap((doc) => {
     const name = getMedicationOrderDisplayName(doc);
     return name
       ? [entry('medication', name, toDateInfo(doc.metadata?.date), [])]
       : [];
   });
-  return latestBy(
-    entries,
-    (e) => e.name.toLowerCase(),
-    (e) => e.date,
-  );
+  return latestByName(entries);
 }

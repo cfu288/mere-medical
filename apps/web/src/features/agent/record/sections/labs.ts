@@ -1,29 +1,21 @@
-import {
-  BundleEntry,
-  DiagnosticReport,
-  FhirResource,
-  Observation,
-} from 'fhir/r2';
+import { BundleEntry, DiagnosticReport, Observation } from 'fhir/r2';
 
-import {
-  ClinicalDocument,
-  ClinicalDocumentResourceType,
-} from '../../../../models/clinical-document/ClinicalDocument.type';
+import { ClinicalDocument } from '../../../../models/clinical-document/ClinicalDocument.type';
 import { observationIdCandidates } from '../../../../shared/utils/fhirReferenceResolver';
 import {
   groupIdenticalLabRecords,
   labAnalyteKey,
   labValueText,
 } from '../../../../shared/utils/labResults';
+import { groupBy } from '../../../../shared/utils/groupBy';
 import {
   getValueUnit,
   isOutOfRangeResult,
 } from '../../../timeline/utils/fhirpathParsers';
+import { ByType, ClinicalDoc } from '../clinicalDocs';
 import { compareDateInfoDesc, DateInfo, toDateInfo } from '../types';
 
-type Doc = ClinicalDocument<BundleEntry<FhirResource>>;
 type LabDoc = ClinicalDocument<BundleEntry<Observation>>;
-type ByType = Map<ClinicalDocumentResourceType, Doc[]>;
 
 export type LabIndexEntry = {
   names: string[];
@@ -37,9 +29,14 @@ export type LabIndexEntry = {
   }[];
 };
 
+/** Keys a record id to its connection, since ids repeat across health systems. */
+export function connectionKey(connectionId: string, id: string): string {
+  return `${connectionId}|${id}`;
+}
+
 /** Every id the observations of a diagnostic report may be stored under. */
 export function reportObservationRefs(
-  report: Doc,
+  report: ClinicalDoc,
   connectionLocations: Map<string, string>,
 ): string[] {
   const resource = report.data_record.raw?.resource as
@@ -64,22 +61,17 @@ export function buildLabIndex(
       continue;
     }
     for (const id of reportObservationRefs(report, connectionLocations)) {
-      panelByObsId.set(`${report.connection_record_id}|${id}`, panelName);
+      panelByObsId.set(
+        connectionKey(report.connection_record_id, id),
+        panelName,
+      );
     }
   }
 
-  const byAnalyte = new Map<string, LabDoc[][]>();
-  for (const group of groupIdenticalLabRecords(
-    (byType.get('observation') ?? []) as LabDoc[],
-  )) {
-    const key = labAnalyteKey(group[0]);
-    const groups = byAnalyte.get(key);
-    if (groups) {
-      groups.push(group);
-    } else {
-      byAnalyte.set(key, [group]);
-    }
-  }
+  const byAnalyte = groupBy(
+    groupIdenticalLabRecords((byType.get('observation') ?? []) as LabDoc[]),
+    (group) => labAnalyteKey(group[0]),
+  );
 
   return [...byAnalyte.values()].map((groups) => {
     const newestFirst = [...groups].sort((a, b) =>
@@ -96,7 +88,7 @@ export function buildLabIndex(
         ...new Set(
           docs.flatMap((doc) => {
             const panel = panelByObsId.get(
-              `${doc.connection_record_id}|${doc.metadata?.id ?? ''}`,
+              connectionKey(doc.connection_record_id, doc.metadata?.id ?? ''),
             );
             return panel ? [panel] : [];
           }),
