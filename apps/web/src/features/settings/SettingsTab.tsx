@@ -5,6 +5,7 @@ import { RxDatabase } from 'rxdb';
 
 import { AppPage } from '../../shared/components/AppPage';
 import { GenericBanner } from '../../shared/components/GenericBanner';
+import { useMediaQuery } from '../../shared/hooks/useMediaQuery';
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
 import { AboutMereSettingsGroup } from './components/AboutMereSettingsGroup';
 import { AppearanceSettingsGroup } from './components/AppearanceSettingsGroup';
@@ -75,20 +76,7 @@ const SettingsTab: React.FC = () => {
   const { pathname, hash, key } = useLocation();
   const [showUserSwitcher, setShowUserSwitcher] = useState(false);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(false);
-
-  // Detect screen size - matches Tailwind's sm: breakpoint (640px)
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(min-width: 640px)');
-    const handleChange = () => setIsDesktop(mediaQuery.matches);
-
-    // Set initial value
-    handleChange();
-
-    // Listen for changes
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
+  const isDesktop = useMediaQuery('(min-width: 640px)');
 
   useEffect(() => {
     setTimeout(() => {

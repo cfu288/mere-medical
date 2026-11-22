@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useState } from 'react';
+import { useReducer } from 'react';
 import {
   Button,
   Dialog,
@@ -26,6 +26,7 @@ import {
   TimelineCategoryKey,
   TimelineFilters,
 } from '../../timelineFilters';
+import { useMediaQuery } from '../../../../shared/hooks/useMediaQuery';
 
 const pill =
   'inline-flex items-center gap-2 h-9 px-3 rounded-full border text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500';
@@ -200,15 +201,7 @@ export function TimelineFilterDialog({
   filters: TimelineFilters;
   setFilters: (f: TimelineFilters) => void;
 }) {
-  const [isDesktop, setIsDesktop] = useState(false);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(min-width: 640px)');
-    const handleChange = () => setIsDesktop(mediaQuery.matches);
-    handleChange();
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
+  const isDesktop = useMediaQuery('(min-width: 640px)');
   const count = activeFilterCount(filters);
   const trigger = (
     <Button
