@@ -256,6 +256,24 @@ async function loadDemoData(db: RxDatabase<DatabaseCollections>) {
   return message;
 }
 
+/**
+ * Opening the database, as a state machine.
+ *
+ * States:
+ * - `idle`: no open is running. With encryption on, the password form waits.
+ * - `opening`: an open is running. A second password submit is ignored.
+ * - `ready`: `db` is open and the app renders.
+ * - `error`: the open failed and `message` is shown.
+ *
+ * Transitions:
+ * - `idle` -> `opening`: the unencrypted or demo database starts to open
+ * - `idle` | `error` -> `opening`: a password is submitted
+ * - `opening` -> `ready`: the database opened
+ * - `opening` -> `error`: the open failed
+ * - `error` -> `idle`: the password is edited
+ * - `ready` -> `ready`: encryption is turned off, so the unencrypted database
+ *   opens and replaces `db`. A failed open keeps the open database.
+ */
 type DbState =
   | { status: 'idle' }
   | { status: 'opening' }
