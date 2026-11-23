@@ -1,6 +1,8 @@
+import { fireEvent, render, screen } from '@testing-library/react';
 import { RxDatabase } from 'rxdb';
 
 import { DatabaseCollections } from '../../../../app/providers/DatabaseCollections';
+import { UserProvider } from '../../../../app/providers/UserProvider';
 import { ConnectionDocument } from '../../../../models/connection-document/ConnectionDocument.type';
 import { UserDocument } from '../../../../models/user-document/UserDocument.type';
 import { createTestClinicalDocument } from '../../../../test-utils/clinicalDocumentTestData';
@@ -8,7 +10,12 @@ import {
   cleanupTestDatabase,
   createTestDatabase,
 } from '../../../../test-utils/createTestDatabase';
-import { getRelatedDocuments } from './DiagnosticReportCard';
+import { HiddenIntersectionObserver } from '../../../../test-utils/intersectionObserver';
+import { TestProviders } from '../../../../test-utils/TestProviders';
+import {
+  DiagnosticReportCard,
+  getRelatedDocuments,
+} from './DiagnosticReportCard';
 
 const user = { id: 'user-1' } as UserDocument;
 
@@ -124,5 +131,72 @@ describe('getRelatedDocuments', () => {
         'https://mepic.example.org/fhir/api/FHIR/R4/Observation/obs-1',
       ),
     ]);
+  });
+});
+
+describe('DiagnosticReportCard', () => {
+  let db: RxDatabase<DatabaseCollections>;
+
+  beforeEach(async () => {
+    window.IntersectionObserver = HiddenIntersectionObserver;
+    db = await createTestDatabase();
+    await db.user_documents.insert({
+      id: 'user-1',
+      is_selected_user: true,
+      is_default_user: true,
+    });
+  });
+
+  afterEach(async () => {
+    jest.restoreAllMocks();
+    await cleanupTestDatabase(db);
+  });
+
+  async function openResults() {
+    render(
+      <TestProviders db={db}>
+        <UserProvider>
+          <DiagnosticReportCard item={report('Observation/obs-1') as never} />
+        </UserProvider>
+      </TestProviders>,
+    );
+    fireEvent.click(await screen.findByText('URINALYSIS PANEL'));
+  }
+
+  it('shows the results of the report', async () => {
+    await db.clinical_documents.insert(observation('Observation/obs-1'));
+
+    await openResults();
+
+    expect((await screen.findByText('NEGATIVE')).textContent).toBe('NEGATIVE');
+    expect(screen.queryByText('No data available for this report')).toBeNull();
+  });
+
+  it('says no data is available when the report has no stored results', async () => {
+    await openResults();
+
+    const message = await screen.findByText(
+      'No data available for this report',
+    );
+
+    expect(message.textContent).toBe('No data available for this report');
+  });
+
+  it('says the results could not load when the query fails', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    jest.spyOn(db.clinical_documents, 'find').mockImplementation(() => {
+      throw new Error('query failed');
+    });
+
+    await openResults();
+
+    const message = await screen.findByText(
+      'Unable to load the results for this report',
+    );
+
+    expect(message.textContent).toBe(
+      'Unable to load the results for this report',
+    );
+    expect(screen.queryByText('No data available for this report')).toBeNull();
   });
 });

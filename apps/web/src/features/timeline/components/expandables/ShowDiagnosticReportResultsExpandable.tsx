@@ -16,6 +16,7 @@ export function ShowDiagnosticReportResultsExpandable({
   expanded,
   setExpanded,
   loading,
+  failed,
 }: {
   item:
     | ClinicalDocument<BundleEntry<DiagnosticReport>>
@@ -24,6 +25,7 @@ export function ShowDiagnosticReportResultsExpandable({
   expanded: boolean;
   setExpanded: React.Dispatch<React.SetStateAction<boolean>>;
   loading?: boolean;
+  failed?: boolean;
 }) {
   const toggleOpen = () => setExpanded((x) => !x);
 
@@ -91,7 +93,9 @@ export function ShowDiagnosticReportResultsExpandable({
             ) : (
               <div className="mx-4 flex flex-col border-b-2 border-solid border-gray-100 dark:border-gray-800 py-2">
                 <div className="self-center font-semibold text-gray-600 dark:text-gray-400">
-                  No data available for this report
+                  {failed
+                    ? 'Unable to load the results for this report'
+                    : 'No data available for this report'}
                 </div>
               </div>
             )}
