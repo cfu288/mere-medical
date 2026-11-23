@@ -42,6 +42,26 @@ async function removeDatabase(
   }
 }
 
+/**
+ * A migration between the encrypted and the unencrypted database, as a state
+ * machine.
+ *
+ * States:
+ * - `idle`: no migration is running.
+ * - `processing`: a migration is running.
+ * - `failed`: the migration failed and `error` is shown. `needsReload` is true
+ *   when a partial copy or the old database could not be removed.
+ *
+ * Transitions:
+ * - `idle` -> `processing`: `migrate()`
+ * - `failed` -> `processing`: `migrate()`, only when `needsReload` is false
+ * - `processing` -> `failed`: the migration failed
+ * - `processing` -> `idle`: the migration is done and the page reloads
+ *
+ * `migrate()` does nothing while a migration runs, after a failure with
+ * `needsReload`, and after a migration that is done. The `running` ref holds
+ * that lock, so it also applies before the next render.
+ */
 type MigrationState =
   | { status: 'idle' }
   | { status: 'processing' }
