@@ -2,7 +2,6 @@ import React, { PropsWithChildren } from 'react';
 
 export interface ErrorBoundaryState {
   hasError: boolean;
-  fallbackUI?: React.ReactNode;
 }
 
 type ErrorBoundaryProps = PropsWithChildren<{ fallbackUI?: React.ReactNode }>;
@@ -26,8 +25,8 @@ export class ErrorBoundary extends React.Component<
 
   override render() {
     if (this.state.hasError) {
-      if (this.state.fallbackUI) {
-        return this.state.fallbackUI;
+      if (this.props.fallbackUI) {
+        return this.props.fallbackUI;
       }
       return (
         <div className="flex h-screen flex-col items-center justify-center">

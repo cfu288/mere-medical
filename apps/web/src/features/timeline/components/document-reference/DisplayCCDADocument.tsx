@@ -66,7 +66,7 @@ export function DisplayCCDADocument({
         <ErrorBoundary
           fallbackUI={
             <div>
-              There was an error trying to load vital signs. Please submit a{' '}
+              There was an error trying to load this section. Please submit a{' '}
               <a href="mailto:cfu288@meremedical.co">bug report</a> so we can
               get this fixed!
             </div>
@@ -132,7 +132,7 @@ export function DisplayCCDADocument({
         <ErrorBoundary
           fallbackUI={
             <div>
-              There was an error trying to load vital signs. Please submit a{' '}
+              There was an error trying to load this section. Please submit a{' '}
               <a href="mailto:cfu288@meremedical.co">bug report</a> so we can
               get this fixed!
             </div>
