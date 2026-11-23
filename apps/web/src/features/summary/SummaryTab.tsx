@@ -47,7 +47,7 @@ import { LoadErrorPlaceholder } from '../../shared/components/LoadErrorPlacehold
 import { findSummaryPagePreferences } from '../../repositories/SummaryPagePreferencesRepository';
 
 enum ActionTypes {
-  IDLE,
+  RETRY,
   PENDING,
   COMPLETED,
   ERROR,
@@ -55,6 +55,24 @@ enum ActionTypes {
   UPDATE_CARD,
 }
 
+/**
+ * Loading the summary records, as a state machine on `status`.
+ *
+ * States:
+ * - `idle`: nothing is loaded. The effect in `useSummaryData` starts a load.
+ * - `pending`: the load is running. Skeleton cards show.
+ * - `completed`: the records are loaded.
+ * - `error`: the load failed. The error and "Try again" show.
+ *
+ * Transitions:
+ * - `idle` -> `pending`: PENDING, when the load starts
+ * - `pending` -> `completed`: COMPLETED
+ * - `pending` -> `error`: ERROR
+ * - `error` -> `idle`: RETRY
+ *
+ * PENDING, ERROR and RETRY do nothing in any other state. COMPLETED always
+ * applies. UPDATE_CARD_ORDER and UPDATE_CARD change `cards` and keep `status`.
+ */
 type SummaryState = {
   status: 'idle' | 'pending' | 'completed' | 'error';
   meds: ClinicalDocument<BundleEntry<MedicationStatement>>[];
@@ -67,7 +85,7 @@ type SummaryState = {
 };
 
 type SummaryActions =
-  | { type: ActionTypes.IDLE }
+  | { type: ActionTypes.RETRY }
   | { type: ActionTypes.PENDING }
   | { type: ActionTypes.ERROR }
   | {
@@ -93,8 +111,7 @@ function summaryReducer(
   action: SummaryActions,
 ): SummaryState {
   switch (action.type) {
-    // retry
-    case ActionTypes.IDLE: {
+    case ActionTypes.RETRY: {
       if (state.status !== 'error') return state;
       return {
         ...state,
@@ -309,7 +326,7 @@ function SummaryTab() {
     return (
       <AppPage banner={<GenericBanner text="Summary" />}>
         <LoadErrorPlaceholder
-          onRetry={() => reducer({ type: ActionTypes.IDLE })}
+          onRetry={() => reducer({ type: ActionTypes.RETRY })}
         />
       </AppPage>
     );
