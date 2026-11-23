@@ -75,7 +75,12 @@ export function parseGender(
 const SettingsTab: React.FC = () => {
   const { pathname, hash, key } = useLocation();
   const [modal, setModal] = useState<'none' | 'switchUser' | 'addUser'>('none');
-  // a dialog that is already leaving must not close the one that replaced it
+  // The dialog that is open. Transitions:
+  // - none -> switchUser: "Switch User"
+  // - switchUser -> addUser: "Add New User", which replaces the dialog
+  // - switchUser | addUser -> none: that dialog closes
+  // A close only applies to its own dialog: a dialog that is still leaving
+  // can call onClose after the other dialog replaced it.
   const close = (which: typeof modal) => () =>
     setModal((current) => (current === which ? 'none' : current));
   const isDesktop = useMediaQuery('(min-width: 640px)');
