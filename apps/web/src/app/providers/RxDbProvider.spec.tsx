@@ -19,37 +19,6 @@ jest.mock('sylviejs/storage-adapter/crypted-indexeddb-adapter', () => ({
   })),
 }));
 
-const createDatabase = jest.mocked(createRxDatabase);
-const openedDatabase = { addCollections: jest.fn() } as unknown as Awaited<
-  ReturnType<typeof createRxDatabase>
->;
-
-function EncryptionToggle() {
-  const update = useUpdateLocalConfig();
-  return (
-    <>
-      <button onClick={() => update({ use_encrypted_database: true })}>
-        encrypt
-      </button>
-      <button onClick={() => update({ use_encrypted_database: false })}>
-        decrypt
-      </button>
-    </>
-  );
-}
-
-function renderProvider() {
-  return render(
-    <NotificationProvider>
-      <LocalConfigProvider>
-        <RxDbProvider>
-          <EncryptionToggle />
-        </RxDbProvider>
-      </LocalConfigProvider>
-    </NotificationProvider>,
-  );
-}
-
 describe('RxDbProvider', () => {
   beforeEach(() => {
     Object.defineProperty(globalThis, 'IS_DEMO', {
@@ -63,20 +32,30 @@ describe('RxDbProvider', () => {
   afterEach(() => {
     Reflect.deleteProperty(globalThis, 'IS_DEMO');
     jest.restoreAllMocks();
-    createDatabase.mockReset();
+    jest.mocked(createRxDatabase).mockReset();
     jest.mocked(CryptedIndexedDBAdapter).mockClear();
     localStorage.clear();
   });
 
   it('shows an error with a reload button when the database cannot be opened', async () => {
-    createDatabase.mockRejectedValue(new Error('storage unavailable'));
-    renderProvider();
+    jest
+      .mocked(createRxDatabase)
+      .mockRejectedValue(new Error('storage unavailable'));
+    render(
+      <NotificationProvider>
+        <LocalConfigProvider>
+          <RxDbProvider>
+            <p>the app</p>
+          </RxDbProvider>
+        </LocalConfigProvider>
+      </NotificationProvider>,
+    );
 
     expect((await screen.findByRole('alert')).textContent).toContain(
       'There was an error initializing the database. Please try again.',
     );
-    expect(screen.getByRole('button', { name: 'Reload' })).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'encrypt' })).toBeNull();
+    screen.getByRole('button', { name: 'Reload' });
+    expect(screen.queryByText('the app')).toBeNull();
   });
 
   it('ignores a second unlock while the database is opening', async () => {
@@ -84,8 +63,16 @@ describe('RxDbProvider', () => {
       'config',
       JSON.stringify({ use_encrypted_database: true }),
     );
-    createDatabase.mockReturnValue(new Promise(() => undefined));
-    renderProvider();
+    jest.mocked(createRxDatabase).mockReturnValue(new Promise(() => undefined));
+    render(
+      <NotificationProvider>
+        <LocalConfigProvider>
+          <RxDbProvider>
+            <p>the app</p>
+          </RxDbProvider>
+        </LocalConfigProvider>
+      </NotificationProvider>,
+    );
     fireEvent.change(await screen.findByPlaceholderText('Password'), {
       target: { value: 'secret' },
     });
@@ -99,14 +86,39 @@ describe('RxDbProvider', () => {
 
   // The encryption migration changes the setting while the app is open.
   it('keeps the open database mounted when the encryption setting changes', async () => {
-    createDatabase.mockResolvedValueOnce(openedDatabase);
-    renderProvider();
+    function App() {
+      const update = useUpdateLocalConfig();
+      return (
+        <>
+          <button onClick={() => update({ use_encrypted_database: true })}>
+            encrypt
+          </button>
+          <button onClick={() => update({ use_encrypted_database: false })}>
+            decrypt
+          </button>
+        </>
+      );
+    }
+    jest.mocked(createRxDatabase).mockResolvedValueOnce({
+      addCollections: jest.fn(),
+    } as unknown as Awaited<ReturnType<typeof createRxDatabase>>);
+    render(
+      <NotificationProvider>
+        <LocalConfigProvider>
+          <RxDbProvider>
+            <App />
+          </RxDbProvider>
+        </LocalConfigProvider>
+      </NotificationProvider>,
+    );
     const encrypt = await screen.findByRole('button', { name: 'encrypt' });
 
     fireEvent.click(encrypt);
     expect(screen.getByRole('button', { name: 'encrypt' })).toBe(encrypt);
 
-    createDatabase.mockRejectedValueOnce(new Error('storage unavailable'));
+    jest
+      .mocked(createRxDatabase)
+      .mockRejectedValueOnce(new Error('storage unavailable'));
     fireEvent.click(screen.getByRole('button', { name: 'decrypt' }));
     await act(async () => undefined);
 
