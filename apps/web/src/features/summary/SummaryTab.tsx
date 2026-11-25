@@ -55,26 +55,12 @@ enum ActionTypes {
   UPDATE_CARD,
 }
 
-/**
- * Loading the summary records, as a state machine on `status`.
- *
- * States:
- * - `idle`: nothing is loaded. The effect in `useSummaryData` starts a load.
- * - `pending`: the load is running. Skeleton cards show.
- * - `completed`: the records are loaded.
- * - `error`: the load failed. The error and "Try again" show.
- *
- * Transitions:
- * - `idle` -> `pending`: PENDING, when the load starts
- * - `pending` -> `completed`: COMPLETED
- * - `pending` -> `error`: ERROR
- * - `error` -> `idle`: RETRY
- *
- * PENDING, ERROR and RETRY do nothing in any other state. COMPLETED always
- * applies. UPDATE_CARD_ORDER and UPDATE_CARD change `cards` and keep `status`.
- */
 type SummaryState = {
-  status: 'idle' | 'pending' | 'completed' | 'error';
+  status:
+    | 'idle' // -> pending: the load starts
+    | 'pending' // -> completed | error
+    | 'completed'
+    | 'error'; // -> idle: RETRY
   meds: ClinicalDocument<BundleEntry<MedicationStatement>>[];
   cond: ClinicalDocument<BundleEntry<Condition>>[];
   imm: ClinicalDocument<BundleEntry<Immunization>>[];
