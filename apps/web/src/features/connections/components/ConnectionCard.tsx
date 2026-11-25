@@ -72,6 +72,25 @@ function getImage(logo: ConnectionSources) {
   }
 }
 
+type ConnectionStatus =
+  // becomes connected or error when the sync ends
+  | { status: 'syncing' }
+  // becomes syncing when a sync starts, or connected after a new login
+  | { status: 'error'; lastSynced?: string }
+  // becomes syncing when a sync starts, or error if it can't start
+  | { status: 'connected'; lastSynced?: string };
+
+export function getConnectionStatus(
+  item: Pick<RxDocument<AnyConnectionDocument>, 'get'>,
+  syncing: boolean,
+): ConnectionStatus {
+  if (syncing) return { status: 'syncing' };
+  if (item.get('last_sync_was_error')) {
+    return { status: 'error', lastSynced: item.get('last_refreshed') };
+  }
+  return { status: 'connected', lastSynced: item.get('last_refreshed') };
+}
+
 export function ConnectionCard({
   item,
 }: {
@@ -111,6 +130,7 @@ export function ConnectionCard({
     syncD = useSyncJobDispatchContext(),
     syncJobEntries = new Set(Object.keys(sync)),
     syncing = syncJobEntries.has(item.get('id')),
+    connection = getConnectionStatus(item, syncing),
     handleFetchData = useCallback(() => {
       if (!isConfigValid(config)) {
         notifyDispatch({
@@ -186,22 +206,20 @@ export function ConnectionCard({
                         : item.get('name')}
             </h3>
           </div>
-          {item.get('last_sync_was_error') ? (
+          {connection.status === 'error' ? (
             <div className="mt-1 flex flex-row items-center truncate align-middle text-sm font-medium text-red-500 dark:text-red-400">
               <AbnormalResultIcon />
               <p className="pl-1">
-                {formatErrorLastAttemptTimestampText(
-                  item.get('last_refreshed'),
-                )}{' '}
+                {formatErrorLastAttemptTimestampText(connection.lastSynced)}{' '}
               </p>
             </div>
           ) : (
             <p className="mt-1 truncate text-sm font-medium text-gray-800 dark:text-gray-200">
-              {syncing
+              {connection.status === 'syncing'
                 ? `Syncing now${showPeriodText}`
                 : `Connected ${
-                    item.get('last_refreshed')
-                      ? formatConnectedTimestampText(item.get('last_refreshed'))
+                    connection.lastSynced
+                      ? formatConnectedTimestampText(connection.lastSynced)
                       : ''
                   }`}
             </p>
@@ -211,9 +229,11 @@ export function ConnectionCard({
       <div>
         <div className="-mt-px flex divide-x divide-gray-200 dark:divide-gray-700">
           <button
-            disabled={deleting}
+            disabled={deleting || syncing}
             className={`flex w-0 flex-1 ${
-              deleting ? 'disabled:bg-slate-50 dark:disabled:bg-gray-800' : ''
+              deleting || syncing
+                ? 'disabled:bg-slate-50 dark:disabled:bg-gray-800'
+                : ''
             }`}
             onClick={() => setShowModal(true)}
           >
@@ -238,10 +258,9 @@ export function ConnectionCard({
               </span>
             </div>
           </button>
-          {item.get('last_sync_was_error') ? (
+          {connection.status === 'error' ? (
             <button
-              disabled={syncing}
-              className="-ml-px flex flex-initial divide-x divide-gray-800 px-4 disabled:bg-slate-50 dark:disabled:bg-gray-800"
+              className="-ml-px flex flex-initial divide-x divide-gray-800 px-4"
               onClick={async () => {
                 if (!isConfigValid(config)) {
                   notifyDispatch({
@@ -307,7 +326,8 @@ export function ConnectionCard({
           </button>
           <button
             type="button"
-            className="ml-3 inline-flex justify-center rounded-md border border-red-300 dark:border-red-700 bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-600"
+            disabled={syncing}
+            className="ml-3 inline-flex justify-center rounded-md border border-red-300 dark:border-red-700 bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-600 disabled:opacity-50"
             onClick={() => {
               removeDocument(item);
               setShowModal(false);
@@ -328,7 +348,7 @@ function formatConnectedTimestampText(isoDate: string) {
           ${formatTimestampToTime(isoDate)}`;
 }
 
-function formatErrorLastAttemptTimestampText(isoDate: string) {
+function formatErrorLastAttemptTimestampText(isoDate?: string) {
   if (!isoDate) {
     return `Unable to sync`;
   }
