@@ -76,14 +76,10 @@ export function mergeRecordsByDate(
 }
 
 /**
- * Cuts a page at the first record of a day that is not in `days`.
- *
- * The page must be a prefix of `records`, because the next page starts at
- * `lastOffset`. The database sorts by the date text, and the day comes from the
- * local date, so the two orders differ when the dates mix formats or UTC
- * offsets. The day of the first record is always kept, so a page is never empty.
- *
- * `hasMore` says if the database has records after `records`.
+ * Cuts a page at the first record of a day that is not in `days`. The page is
+ * a prefix of `records`, because the next page starts at `lastOffset` and the
+ * database order (date text) can differ from the day order. The first day is
+ * always kept, so a page is never empty.
  */
 function takeLeadingDays(
   records: ClinicalDocument<BundleEntry<FhirResource>>[],
