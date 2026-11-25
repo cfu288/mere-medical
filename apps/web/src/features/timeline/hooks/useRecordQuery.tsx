@@ -36,7 +36,7 @@ export function getRecordDateKey(
   record: ClinicalDocument<BundleEntry<FhirResource>>,
 ): string {
   const date = parseISO(record.metadata?.date || '');
-  // format() throws on an invalid date, which would fail the whole page
+  // one bad date would stop the whole timeline from loading
   if (Number.isNaN(date.getTime())) {
     return new Date(0).toISOString().split('T')[0];
   }
