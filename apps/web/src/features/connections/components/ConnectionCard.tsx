@@ -72,26 +72,12 @@ function getImage(logo: ConnectionSources) {
   }
 }
 
-/**
- * The status that the card shows. `getConnectionStatus` derives it on every
- * render from the sync jobs and the connection document.
- *
- * States:
- * - `syncing`: a sync job of this connection runs. Disconnect, Sync and the
- *   Remove button of the confirm dialog are disabled.
- * - `error`: the last sync failed. The Fix button shows.
- * - `connected`: the last sync succeeded, or none ran yet.
- *
- * Transitions:
- * - `connected` | `error` -> `syncing`: a sync job starts
- * - `syncing` -> `connected`: the job ended and the sync succeeded
- * - `syncing` -> `error`: the job ended and the sync failed
- * - `connected` -> `error`: a sync could not start
- * - `error` -> `connected`: a new login cleared the failure
- */
 type ConnectionStatus =
+  // -> connected | error: the sync job ends
   | { status: 'syncing' }
+  // -> syncing: a sync starts. -> connected: a new login clears the failure
   | { status: 'error'; lastSynced?: string }
+  // -> syncing: a sync starts. -> error: a sync could not start
   | { status: 'connected'; lastSynced?: string };
 
 export function getConnectionStatus(
