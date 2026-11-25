@@ -84,7 +84,6 @@ describe('RxDbProvider', () => {
     expect(CryptedIndexedDBAdapter).toHaveBeenCalledTimes(1);
   });
 
-  // The encryption migration changes the setting while the app is open.
   it('keeps the open database mounted when the encryption setting changes', async () => {
     function App() {
       const update = useUpdateLocalConfig();

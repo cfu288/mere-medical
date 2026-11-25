@@ -257,13 +257,13 @@ async function loadDemoData(db: RxDatabase<DatabaseCollections>) {
 }
 
 type DbState =
-  // -> opening: the database starts to open, or a password is submitted
+  // becomes opening when we start to open the database
   | { status: 'idle' }
-  // -> ready | error. A second password submit is ignored
+  // becomes ready or error
   | { status: 'opening' }
-  // -> ready: encryption is turned off and the unencrypted database replaces db
+  // stays ready with a new db when the user turns off encryption
   | { status: 'ready'; db: RxDatabase<DatabaseCollections> }
-  // -> idle: the password is edited. -> opening: a password is submitted
+  // becomes idle when the user edits their password
   | { status: 'error'; message: string };
 
 export function RxDbProvider(props: RxDbProviderProps) {
@@ -288,8 +288,7 @@ export function RxDbProvider(props: RxDbProviderProps) {
   };
 
   useEffect(() => {
-    // the encryption setting can change while the app is open; the open
-    // database must stay mounted until its replacement is ready
+    // Keep the app on screen if the user changes the encryption setting.
     const keepReady = (next: DbState) => (current: DbState) =>
       current.status === 'ready' ? current : next;
     const failed = (err: unknown) => {
