@@ -341,16 +341,16 @@ export type QueryRequest = {
 };
 
 export type QueryState = {
-  /** The latest request. Stale responses to earlier ones are ignored. */
+  /** Identifies the latest request, so we can ignore replies to older ones. */
   requestId: number;
-  /** The query, filters and user that the records are for. */
+  /** What the user was looking at when that request was made. */
   request: QueryRequest | undefined;
-  /** False until the first records arrive, while the skeleton shows. */
+  /** Whether we have had any results yet. Until then we show a skeleton. */
   initialized: boolean;
 } & (
   | {
       status: QueryStatus.LOADING;
-      /** Shown while waiting: the existing records, or partial results. */
+      /** We show these while the user waits, so they may be from the last query. */
       data: RecordsByDate | undefined;
     }
   | { status: QueryStatus.ERROR }
@@ -360,12 +360,12 @@ export type QueryState = {
         | QueryStatus.COMPLETE_HIDE_LOAD_MORE
         | QueryStatus.LOAD_MORE_ERROR;
       data: RecordsByDate;
-      /** How many records are loaded. Load more starts after them. */
+      /** Where to start in the database when the user loads more. */
       lastOffset: number;
     }
   | {
       status: QueryStatus.LOADING_MORE;
-      /** Partial results of load more. */
+      /** Records that arrived early, while the rest are still loading. */
       partial: RecordsByDate | undefined;
       data: RecordsByDate;
       lastOffset: number;
@@ -401,8 +401,8 @@ export function canLoadMore(state: QueryState): state is QueryState & {
 }
 
 /**
- * Returns the records already on screen, so the list does not go blank while a
- * new query loads. Returns undefined if they are for a different user.
+ * Keeps the current records on screen while a new query loads, unless they
+ * belong to a different user.
  */
 function getExistingRecords(
   state: QueryState,
@@ -414,9 +414,9 @@ function getExistingRecords(
 }
 
 /**
- * Takes the current state of the timeline query and an action, such as a query
- * that loaded or failed. Returns the new state, or the same state if the action
- * does not apply to it.
+ * Works out what the timeline should show as queries start, finish and fail.
+ * If an action doesn't make sense in the current state, such as loading more
+ * before anything has loaded, we ignore it.
  *
  * - START_INITIAL_LOAD: any state -> LOADING
  * - START_LOAD_MORE: SUCCESS | LOAD_MORE_ERROR -> LOADING_MORE
@@ -587,8 +587,8 @@ async function executeSearchQuery(
  * @param filters - Record types and date range applied in both modes. Pass a
  * stable object (e.g. from useState); a new object re-runs the query.
  * @param minCompleteDays - Minimum number of complete days to fetch in grouped view (default: 3)
- * @returns The records to show grouped by date (`data`), whether they are loading,
- * loaded or failed (`status`), and functions to load more or try again.
+ * @returns The records to show, grouped by date, along with how the query is
+ * going and functions to load more records or try again after an error.
  */
 export function useRecordQuery(
   query: string,
@@ -608,7 +608,7 @@ export function useRecordQuery(
 
   const [state, dispatch] = useReducer(queryReducer, initialState);
 
-  // the records in `state` are for an earlier query, filters or user
+  // the user has changed something, but the new query hasn't started yet
   const isStale =
     state.request?.query !== query ||
     state.request.filters !== filters ||
