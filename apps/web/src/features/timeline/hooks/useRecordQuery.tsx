@@ -76,12 +76,11 @@ export function mergeRecordsByDate(
 }
 
 /**
- * Takes sorted records and the dates to keep. Keeps the records up to the first
- * one of any other date, so that load more continues from there and does not
- * skip or repeat a record. The date of the first record is always kept.
- *
- * @returns The kept records grouped by date, the offset where load more starts,
- * and whether there are more records.
+ * Cuts a batch of records down to the dates we want to show. The database
+ * doesn't always sort records in the same order as the days on screen, so we
+ * stop at the first record we don't want instead of picking out matching dates.
+ * Otherwise loading more would skip some records and repeat others. We always
+ * keep the first record's date so that there is something to show.
  */
 function truncateToDates(
   records: ClinicalDocument<BundleEntry<FhirResource>>[],
