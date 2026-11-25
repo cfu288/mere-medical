@@ -43,11 +43,11 @@ async function removeDatabase(
 }
 
 type MigrationState =
-  // -> processing: migrate()
+  // becomes processing when migrate is called
   | { status: 'idle' }
-  // -> failed. -> idle: done, and the page reloads
+  // becomes failed, or idle just before the page reloads
   | { status: 'processing' }
-  // -> processing: migrate(), unless needsReload (a copy could not be removed)
+  // becomes processing on another try, unless the page must reload first
   | { status: 'failed'; error: string; needsReload: boolean };
 
 export function useEncryptionMigration(onSuccess: () => void) {
@@ -139,7 +139,7 @@ export function useEncryptionMigration(onSuccess: () => void) {
               : 'Please try again.'),
           needsReload: cleanupFailed,
         });
-        // A leftover partial copy keeps the migration locked until reload.
+        // Don't allow another try until the page reloads if a copy is left over.
         running.current = cleanupFailed;
         return;
       }
@@ -168,7 +168,7 @@ export function useEncryptionMigration(onSuccess: () => void) {
           needsReload: true,
         });
       }
-      // Both outcomes end in a reload, so the migration stays locked.
+      // The page has to reload now, so don't allow another migration.
     },
     [db, needsReload, onSuccess, pauseSyncJobs, updateLocalConfig],
   );
