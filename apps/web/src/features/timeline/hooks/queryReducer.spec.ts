@@ -1,29 +1,33 @@
 import { createTestClinicalDocument } from '../../../test-utils/clinicalDocumentTestData';
 import { NO_FILTERS } from '../timelineFilters';
 import { QueryStatus } from '../types';
-import { queryReducer, QueryKey, QueryState } from './useRecordQuery';
+import { queryReducer, QueryRequest, QueryState } from './useRecordQuery';
 
 const a = createTestClinicalDocument({ id: 'a' });
 const b = createTestClinicalDocument({ id: 'b' });
 const c = createTestClinicalDocument({ id: 'c' });
 
-const key: QueryKey = { query: '', filters: NO_FILTERS, userId: 'user-a' };
+const request: QueryRequest = {
+  query: '',
+  filters: NO_FILTERS,
+  userId: 'user-a',
+};
 
 // one page is loaded and more records exist
 const loaded: QueryState = {
   requestId: 1,
-  key,
+  request,
   initialized: true,
   status: QueryStatus.SUCCESS,
   data: { '2024-01-02': [a] },
-  cursor: 1,
+  lastOffset: 1,
 };
 
 describe('queryReducer', () => {
   describe('first page', () => {
     const loading: QueryState = {
       requestId: 1,
-      key,
+      request,
       initialized: false,
       status: QueryStatus.LOADING,
       data: undefined,
@@ -31,10 +35,10 @@ describe('queryReducer', () => {
 
     it('shows the page and offers load more when more records exist', () => {
       const state = queryReducer(loading, {
-        type: 'PAGE_LOADED',
+        type: 'QUERY_SUCCESS',
         requestId: 1,
         records: { '2024-01-02': [a] },
-        cursor: 1,
+        lastOffset: 1,
         hasMore: true,
       });
 
@@ -43,10 +47,10 @@ describe('queryReducer', () => {
 
     it('hides load more when no records remain', () => {
       const state = queryReducer(loading, {
-        type: 'PAGE_LOADED',
+        type: 'QUERY_SUCCESS',
         requestId: 1,
         records: {},
-        cursor: 0,
+        lastOffset: 0,
         hasMore: false,
       });
 
@@ -55,14 +59,14 @@ describe('queryReducer', () => {
 
     it('shows partial results while the page still loads', () => {
       const state = queryReducer(loading, {
-        type: 'PARTIAL_RESULTS',
+        type: 'RECEIVE_PARTIAL_RESULTS',
         requestId: 1,
         records: { '2024-01-02': [a] },
       });
 
       expect(state).toEqual({
         requestId: 1,
-        key,
+        request,
         initialized: true,
         status: QueryStatus.LOADING,
         data: { '2024-01-02': [a] },
@@ -71,13 +75,13 @@ describe('queryReducer', () => {
 
     it('has no records after the load fails', () => {
       const state = queryReducer(loading, {
-        type: 'QUERY_FAILED',
+        type: 'QUERY_ERROR',
         requestId: 1,
       });
 
       expect(state).toEqual({
         requestId: 1,
-        key,
+        request,
         initialized: false,
         status: QueryStatus.ERROR,
       });
@@ -85,9 +89,9 @@ describe('queryReducer', () => {
 
     it('does not start load more', () => {
       const state = queryReducer(loading, {
-        type: 'LOAD_MORE_STARTED',
+        type: 'START_LOAD_MORE',
         requestId: 2,
-        cursor: 0,
+        lastOffset: 0,
       });
 
       expect(state).toBe(loading);
@@ -97,14 +101,14 @@ describe('queryReducer', () => {
   describe('new query', () => {
     it('keeps the previous results on screen while it loads', () => {
       const state = queryReducer(loaded, {
-        type: 'LOAD_STARTED',
+        type: 'START_INITIAL_LOAD',
         requestId: 2,
-        key: { ...key, query: 'glucose' },
+        request: { ...request, query: 'glucose' },
       });
 
       expect(state).toEqual({
         requestId: 2,
-        key: { ...key, query: 'glucose' },
+        request: { ...request, query: 'glucose' },
         initialized: true,
         status: QueryStatus.LOADING,
         data: { '2024-01-02': [a] },
@@ -113,9 +117,9 @@ describe('queryReducer', () => {
 
     it('drops the previous results when the user changed', () => {
       const state = queryReducer(loaded, {
-        type: 'LOAD_STARTED',
+        type: 'START_INITIAL_LOAD',
         requestId: 2,
-        key: { ...key, userId: 'user-b' },
+        request: { ...request, userId: 'user-b' },
       });
 
       expect(state).toMatchObject({
@@ -126,16 +130,16 @@ describe('queryReducer', () => {
 
     it('ignores a response to the request it replaced', () => {
       const loading = queryReducer(loaded, {
-        type: 'LOAD_STARTED',
+        type: 'START_INITIAL_LOAD',
         requestId: 2,
-        key,
+        request,
       });
 
       const state = queryReducer(loading, {
-        type: 'PAGE_LOADED',
+        type: 'QUERY_SUCCESS',
         requestId: 1,
         records: { '2023-01-01': [b] },
-        cursor: 9,
+        lastOffset: 9,
         hasMore: false,
       });
 
@@ -145,20 +149,20 @@ describe('queryReducer', () => {
     it('starts again from a failed query', () => {
       const failed: QueryState = {
         requestId: 1,
-        key,
+        request,
         initialized: false,
         status: QueryStatus.ERROR,
       };
 
       const state = queryReducer(failed, {
-        type: 'LOAD_STARTED',
+        type: 'START_INITIAL_LOAD',
         requestId: 2,
-        key,
+        request,
       });
 
       expect(state).toEqual({
         requestId: 2,
-        key,
+        request,
         initialized: false,
         status: QueryStatus.LOADING,
         data: undefined,
@@ -169,29 +173,29 @@ describe('queryReducer', () => {
   describe('load more', () => {
     const loadingMore: QueryState = {
       requestId: 2,
-      key,
+      request,
       initialized: true,
       status: QueryStatus.LOADING_MORE,
       data: { '2024-01-02': [a] },
-      cursor: 1,
+      lastOffset: 1,
       partial: undefined,
     };
 
     it('starts from a loaded page', () => {
       const state = queryReducer(loaded, {
-        type: 'LOAD_MORE_STARTED',
+        type: 'START_LOAD_MORE',
         requestId: 2,
-        cursor: 1,
+        lastOffset: 1,
       });
 
       expect(state).toEqual(loadingMore);
     });
 
-    it('does not start with the cursor of another query', () => {
+    it('does not start with the lastOffset of another query', () => {
       const state = queryReducer(loaded, {
-        type: 'LOAD_MORE_STARTED',
+        type: 'START_LOAD_MORE',
         requestId: 2,
-        cursor: 7,
+        lastOffset: 7,
       });
 
       expect(state).toBe(loaded);
@@ -199,9 +203,9 @@ describe('queryReducer', () => {
 
     it('does not start again while it runs', () => {
       const state = queryReducer(loadingMore, {
-        type: 'LOAD_MORE_STARTED',
+        type: 'START_LOAD_MORE',
         requestId: 3,
-        cursor: 1,
+        lastOffset: 1,
       });
 
       expect(state).toBe(loadingMore);
@@ -214,9 +218,9 @@ describe('queryReducer', () => {
       };
 
       const state = queryReducer(complete, {
-        type: 'LOAD_MORE_STARTED',
+        type: 'START_LOAD_MORE',
         requestId: 2,
-        cursor: 1,
+        lastOffset: 1,
       });
 
       expect(state).toBe(complete);
@@ -224,7 +228,7 @@ describe('queryReducer', () => {
 
     it('holds partial results apart from the loaded pages', () => {
       const state = queryReducer(loadingMore, {
-        type: 'PARTIAL_RESULTS',
+        type: 'RECEIVE_PARTIAL_RESULTS',
         requestId: 2,
         records: { '2024-01-01': [b] },
       });
@@ -242,53 +246,53 @@ describe('queryReducer', () => {
       };
 
       const state = queryReducer(withPartial, {
-        type: 'PAGE_LOADED',
+        type: 'QUERY_SUCCESS',
         requestId: 2,
         records: { '2024-01-01': [b, c] },
-        cursor: 3,
+        lastOffset: 3,
         hasMore: true,
       });
 
       expect(state).toEqual({
         requestId: 2,
-        key,
+        request,
         initialized: true,
         status: QueryStatus.SUCCESS,
         data: { '2024-01-02': [a], '2024-01-01': [b, c] },
-        cursor: 3,
+        lastOffset: 3,
       });
     });
 
     it('appends to a day that the loaded pages already have', () => {
       const state = queryReducer(loadingMore, {
-        type: 'PAGE_LOADED',
+        type: 'QUERY_SUCCESS',
         requestId: 2,
         records: { '2024-01-02': [b] },
-        cursor: 2,
+        lastOffset: 2,
         hasMore: false,
       });
 
       expect(state).toMatchObject({ data: { '2024-01-02': [a, b] } });
     });
 
-    it('keeps the loaded pages and the cursor when it fails', () => {
+    it('keeps the loaded pages and the lastOffset when it fails', () => {
       const withPartial: QueryState = {
         ...loadingMore,
         partial: { '2024-01-01': [b] },
       };
 
       const state = queryReducer(withPartial, {
-        type: 'QUERY_FAILED',
+        type: 'QUERY_ERROR',
         requestId: 2,
       });
 
       expect(state).toEqual({
         requestId: 2,
-        key,
+        request,
         initialized: true,
         status: QueryStatus.LOAD_MORE_ERROR,
         data: { '2024-01-02': [a] },
-        cursor: 1,
+        lastOffset: 1,
       });
     });
 
@@ -299,9 +303,9 @@ describe('queryReducer', () => {
       };
 
       const state = queryReducer(failed, {
-        type: 'LOAD_MORE_STARTED',
+        type: 'START_LOAD_MORE',
         requestId: 2,
-        cursor: 1,
+        lastOffset: 1,
       });
 
       expect(state.status).toBe(QueryStatus.LOADING_MORE);
@@ -314,14 +318,14 @@ describe('queryReducer', () => {
       };
 
       const state = queryReducer(withPartial, {
-        type: 'LOAD_STARTED',
+        type: 'START_INITIAL_LOAD',
         requestId: 3,
-        key,
+        request,
       });
 
       expect(state).toEqual({
         requestId: 3,
-        key,
+        request,
         initialized: true,
         status: QueryStatus.LOADING,
         data: { '2024-01-02': [a] },
