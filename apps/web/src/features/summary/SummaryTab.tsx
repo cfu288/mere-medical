@@ -43,10 +43,11 @@ import {
   findDocumentsByIds,
   findAllDocumentsByResourceTypes,
 } from '../../repositories/ClinicalDocumentRepository';
+import { LoadErrorPlaceholder } from '../../shared/components/LoadErrorPlaceholder';
 import { findSummaryPagePreferences } from '../../repositories/SummaryPagePreferencesRepository';
 
 enum ActionTypes {
-  IDLE,
+  RETRY,
   PENDING,
   COMPLETED,
   ERROR,
@@ -55,7 +56,11 @@ enum ActionTypes {
 }
 
 type SummaryState = {
-  status: ActionTypes;
+  status:
+    | 'idle' // becomes pending when loading starts
+    | 'pending' // becomes completed or error
+    | 'completed'
+    | 'error'; // becomes idle when the user tries again
   meds: ClinicalDocument<BundleEntry<MedicationStatement>>[];
   cond: ClinicalDocument<BundleEntry<Condition>>[];
   imm: ClinicalDocument<BundleEntry<Immunization>>[];
@@ -63,11 +68,10 @@ type SummaryState = {
   allergy: ClinicalDocument<BundleEntry<AllergyIntolerance>>[];
   pinned: ClinicalDocument<BundleEntry<DiagnosticReport | Observation>>[];
   cards: SummaryPagePreferences['cards']; // Use only the cards property
-  initialized: boolean;
 };
 
 type SummaryActions =
-  | { type: ActionTypes.IDLE }
+  | { type: ActionTypes.RETRY }
   | { type: ActionTypes.PENDING }
   | { type: ActionTypes.ERROR }
   | {
@@ -88,24 +92,31 @@ type SummaryActions =
     }
   | { type: ActionTypes.UPDATE_CARD; data: SummaryPagePreferencesCard };
 
-function summaryReducer(state: SummaryState, action: SummaryActions) {
+function summaryReducer(
+  state: SummaryState,
+  action: SummaryActions,
+): SummaryState {
   switch (action.type) {
-    case ActionTypes.IDLE: {
+    case ActionTypes.RETRY: {
+      if (state.status !== 'error') return state;
       return {
         ...state,
-        status: ActionTypes.IDLE,
+        status: 'idle',
       };
     }
     case ActionTypes.PENDING: {
+      if (state.status !== 'idle') return state;
       return {
         ...state,
-        status: ActionTypes.PENDING,
+        status: 'pending',
       };
     }
     case ActionTypes.ERROR: {
+      // keep showing records that have already loaded
+      if (state.status !== 'pending') return state;
       return {
         ...state,
-        status: ActionTypes.ERROR,
+        status: 'error',
       };
     }
     case ActionTypes.COMPLETED: {
@@ -118,8 +129,7 @@ function summaryReducer(state: SummaryState, action: SummaryActions) {
         allergy: action.data.allergy,
         pinned: action.data.pinned,
         cards: action.data.cards, // Use only the cards property
-        status: ActionTypes.COMPLETED,
-        initialized: true,
+        status: 'completed',
       };
     }
     case ActionTypes.UPDATE_CARD_ORDER: {
@@ -191,7 +201,7 @@ function useSummaryData(): [SummaryState, React.Dispatch<SummaryActions>] {
   const db = useRxDb(),
     user = useUser();
   const [data, reducer] = useReducer(summaryReducer, {
-    status: ActionTypes.IDLE,
+    status: 'idle',
     meds: [],
     cond: [],
     imm: [],
@@ -199,11 +209,10 @@ function useSummaryData(): [SummaryState, React.Dispatch<SummaryActions>] {
     allergy: [],
     pinned: [],
     cards: DEFAULT_CARD_ORDER, // Initialize cards with DEFAULT_CARD_ORDER
-    initialized: false,
   });
 
   useEffect(() => {
-    if (data.status === ActionTypes.IDLE) {
+    if (data.status === 'idle') {
       reducer({ type: ActionTypes.PENDING });
       Promise.all([
         findDatedDocumentsByResourceTypes<BundleEntry<MedicationStatement>>(
@@ -256,6 +265,7 @@ function useSummaryData(): [SummaryState, React.Dispatch<SummaryActions>] {
           });
         })
         .catch((err) => {
+          console.error(err);
           reducer({ type: ActionTypes.ERROR });
         });
     }
@@ -266,7 +276,7 @@ function useSummaryData(): [SummaryState, React.Dispatch<SummaryActions>] {
 
 function SummaryTab() {
   const [
-    { meds, cond, imm, careplan, allergy, pinned, cards, initialized },
+    { meds, cond, imm, careplan, allergy, pinned, cards, status },
     reducer,
   ] = useSummaryData();
   const [showEditModal, setShowEditModal] = useState(false);
@@ -298,7 +308,17 @@ function SummaryTab() {
     [reducer, sortedCards],
   );
 
-  if (!initialized) {
+  if (status === 'error') {
+    return (
+      <AppPage banner={<GenericBanner text="Summary" />}>
+        <LoadErrorPlaceholder
+          onRetry={() => reducer({ type: ActionTypes.RETRY })}
+        />
+      </AppPage>
+    );
+  }
+
+  if (status !== 'completed') {
     return (
       <AppPage banner={<GenericBanner text="Summary" />}>
         <div

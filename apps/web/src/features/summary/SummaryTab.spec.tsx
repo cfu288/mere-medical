@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { RxDatabase } from 'rxdb';
 
 import { DatabaseCollections } from '../../app/providers/DatabaseCollections';
@@ -14,6 +14,17 @@ import {
 import { TestProviders } from '../../test-utils/TestProviders';
 import SummaryTab from './SummaryTab';
 import { HiddenIntersectionObserver } from '../../test-utils/intersectionObserver';
+import { findSummaryPagePreferences } from '../../repositories/SummaryPagePreferencesRepository';
+
+jest.mock('../../repositories/SummaryPagePreferencesRepository', () => {
+  const actual = jest.requireActual(
+    '../../repositories/SummaryPagePreferencesRepository',
+  );
+  return {
+    ...actual,
+    findSummaryPagePreferences: jest.fn(actual.findSummaryPagePreferences),
+  };
+});
 
 function record(
   metadataId: string,
@@ -82,6 +93,7 @@ describe('SummaryTab', () => {
   });
 
   afterEach(async () => {
+    jest.restoreAllMocks();
     await cleanupTestDatabase(db);
   });
 
@@ -100,5 +112,24 @@ describe('SummaryTab', () => {
     screen.getByText('Penicillin');
     screen.getByText('- Lower A1c below 7');
     screen.getByText('GLUCOSE');
+  });
+
+  it('reports a failed load and loads the records on retry', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    jest
+      .mocked(findSummaryPagePreferences)
+      .mockRejectedValueOnce(new Error('database closed'));
+    render(
+      <TestProviders db={db}>
+        <UserProvider>
+          <SummaryTab />
+        </UserProvider>
+      </TestProviders>,
+    );
+
+    await screen.findByText('Unable to load your records');
+    fireEvent.click(screen.getByText('Try again'));
+
+    await screen.findByText('Metformin 500 mg');
   });
 });
