@@ -77,25 +77,8 @@ export async function getRelatedDocuments({
   return [sorted, isAbnormalResult];
 }
 
-/**
- * Loading the observations of a report, as a state machine.
- *
- * States:
- * - `idle`: nothing was requested yet.
- * - `loading`: a load is running.
- * - `success`: the load is done. `docs` can be empty.
- * - `error`: the load failed.
- *
- * Transitions:
- * - `idle` -> `loading`: the card scrolls into view or is opened
- * - `loading` -> `success`: the load is done
- * - `loading` -> `error`: the load failed
- * - `success` without docs | `error` -> `loading`: the card comes into view
- *   again, or its record or connection changes
- * - `loading` -> `loading`: the same triggers. The earlier load is dropped.
- *
- * A `success` with docs does not load again.
- */
+// idle -> loading: the card comes into view or opens. loading -> success | error.
+// error, and success without docs, -> loading: the card comes into view again
 type RelatedDocumentsState =
   | { status: 'idle' | 'loading' | 'error' }
   | {
