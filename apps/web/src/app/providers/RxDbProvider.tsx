@@ -37,6 +37,7 @@ import { useLocalConfig } from './LocalConfigProvider';
 import { SummaryPagePreferencesSchema } from '../../models/summary-page-preferences/SummaryPagePreferences.collection';
 import { SummaryPagePreferencesMigrations } from '../../models/summary-page-preferences/SummaryPagePreferences.migration';
 import { DatabaseCollections } from './DatabaseCollections';
+import { RxDBRerunFailedQueryPlugin } from './RxDBRerunFailedQueryPlugin';
 import { InstanceConfigDocumentSchema } from '../../models/instance-config/InstanceConfig.collection';
 
 if (process.env.NODE_ENV === 'development') {
@@ -46,6 +47,7 @@ addRxPlugin(RxDBUpdatePlugin);
 addRxPlugin(RxDBMigrationPlugin);
 addRxPlugin(RxDBJsonDumpPlugin);
 addRxPlugin(RxDBQueryBuilderPlugin);
+addRxPlugin(RxDBRerunFailedQueryPlugin);
 
 export const RxDbContext = React.createContext<
   RxDatabase<DatabaseCollections> | undefined
