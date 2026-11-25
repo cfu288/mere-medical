@@ -76,23 +76,23 @@ export function mergeRecordsByDate(
 }
 
 /**
- * Builds one timeline page from sorted `records`. Takes records from the start
- * and stops at the first one whose day is not in `days`, so the next page can
- * continue from there without skipping or repeating a record.
+ * Takes sorted records and the dates to keep. Keeps the records up to the first
+ * one of any other date, so that load more continues from there and does not
+ * skip or repeat a record. The date of the first record is always kept.
  *
- * @returns The page's records by day, where the next page starts, and whether
- * there is a next page.
+ * @returns The kept records grouped by date, the offset where load more starts,
+ * and whether there are more records.
  */
-function takeLeadingDays(
+function truncateToDates(
   records: ClinicalDocument<BundleEntry<FhirResource>>[],
-  days: Set<string>,
+  datesToKeep: Set<string>,
   existingOffset: number,
   hasMore: boolean,
 ) {
-  const firstDay = getRecordDateKey(records[0]);
+  const firstDate = getRecordDateKey(records[0]);
   const end = records.findIndex((record) => {
-    const day = getRecordDateKey(record);
-    return day !== firstDay && !days.has(day);
+    const dateKey = getRecordDateKey(record);
+    return dateKey !== firstDate && !datesToKeep.has(dateKey);
   });
   const kept = end === -1 ? records : records.slice(0, end);
   return {
@@ -213,7 +213,7 @@ export async function fetchRecordsUntilCompleteDays(
           completeDates: completeDates.size,
         },
       );
-      return takeLeadingDays(
+      return truncateToDates(
         allRecords,
         completeDates,
         existingOffset,
@@ -283,7 +283,7 @@ export async function fetchRecordsUntilCompleteDays(
   const sortedDates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
 
   if (sortedDates.length > minDays) {
-    return takeLeadingDays(
+    return truncateToDates(
       allRecords,
       new Set(sortedDates.slice(0, minDays)),
       existingOffset,
@@ -303,7 +303,7 @@ export async function fetchRecordsUntilCompleteDays(
         totalDates: sortedDates.length,
       },
     );
-    return takeLeadingDays(allRecords, completeDates, existingOffset, hasMore);
+    return truncateToDates(allRecords, completeDates, existingOffset, hasMore);
   }
 
   return { records: grouped, hasMore, lastOffset: offset };
