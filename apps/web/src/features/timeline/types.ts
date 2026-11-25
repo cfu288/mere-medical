@@ -2,17 +2,17 @@ import { BundleEntry, FhirResource } from 'fhir/r2';
 import { ClinicalDocument } from '../../models/clinical-document/ClinicalDocument.type';
 
 export enum QueryStatus {
-  /** First page of the current query and filters is loading. */
+  /** The first page is loading. */
   LOADING,
-  /** The next page is loading. The pages already loaded stay shown. */
+  /** The next page is loading. */
   LOADING_MORE,
-  /** Loaded, and more records exist. */
+  /** There are more records to load. */
   SUCCESS,
-  /** The first page failed to load. There are no records to show. */
+  /** The first page failed to load. */
   ERROR,
-  /** The next page failed to load. The pages already loaded stay shown. */
+  /** The next page failed to load. */
   LOAD_MORE_ERROR,
-  /** Loaded, and no more records exist. */
+  /** There are no more records to load. */
   COMPLETE_HIDE_LOAD_MORE,
 }
 

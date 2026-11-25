@@ -13,7 +13,7 @@ const request: QueryRequest = {
   userId: 'user-a',
 };
 
-// one page is loaded and more records exist
+// the first page has loaded and there are more records
 const loaded: QueryState = {
   requestId: 1,
   request,

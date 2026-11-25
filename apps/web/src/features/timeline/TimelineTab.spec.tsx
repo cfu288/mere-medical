@@ -145,7 +145,7 @@ describe('TimelineTab', () => {
       is_selected_user: true,
       is_default_user: true,
     });
-    // five days, newest Jan 15, two records a day; the first page is three days
+    // five days of records ending on Jan 15, and the first page shows three
     await db.clinical_documents.bulkInsert(
       createDocumentsForDays('user-1', 5, 2),
     );
@@ -188,7 +188,7 @@ describe('TimelineTab', () => {
       </MemoryRouter>,
     );
     await screen.findByText('Jan 15');
-    // waits for the skeleton, which has a search box of its own, to leave
+    // the loading skeleton also has a search box, so wait for it to go away
     const input = await screen.findByPlaceholderText(
       'Search your medical records',
     );
@@ -253,7 +253,7 @@ describe('TimelineTab', () => {
       </MemoryRouter>,
     );
     await screen.findByText('Jan 15');
-    // waits for the skeleton, which has a search box of its own, to leave
+    // the loading skeleton also has a search box, so wait for it to go away
     const input = await screen.findByPlaceholderText(
       'Search your medical records',
     );
