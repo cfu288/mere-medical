@@ -14,23 +14,8 @@ import { checkIfXmlIsCCDA, parseCCDA } from './parseCCDA/parseCCDA';
 export const LOINC_CODE_SYSTEM = '2.16.840.1.113883.6.1';
 export const SNOMED_CT_CODE_SYSTEM = '2.16.840.1.113883.6.96';
 
-/**
- * What the dialog shows, as a state machine.
- *
- * States:
- * - `loading`: the lookup of the linked document is in flight.
- * - `ccda`, `pdf`, `html`: the document, by the way it is shown. Plain text is
- *   shown as `html`.
- * - `missing`: the record links no document, the lookup found nothing or
- *   failed, or the document cannot be shown.
- *
- * Transitions, which run only while the dialog is open:
- * - `loading` -> `ccda` | `pdf` | `html`: the lookup returned a document
- * - `loading` -> `missing`
- * - any state -> the state of the new document: the lookup returned another
- *   document
- */
 type DocumentView =
+  // -> ccda | pdf | html | missing: the lookup ends while the dialog is open
   | { status: 'loading' }
   | {
       status: 'ccda';
@@ -39,7 +24,9 @@ type DocumentView =
       >;
     }
   | { status: 'pdf'; url: string }
+  // also plain text
   | { status: 'html'; html: string | JSX.Element | JSX.Element[] }
+  // no linked document, a failed lookup, or a document that cannot be shown
   | { status: 'missing' };
 
 /**
