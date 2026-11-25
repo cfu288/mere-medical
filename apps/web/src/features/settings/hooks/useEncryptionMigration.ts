@@ -42,21 +42,27 @@ async function removeDatabase(
   }
 }
 
+type MigrationState =
+  // becomes processing when migrate is called
+  | { status: 'idle' }
+  // becomes failed, or idle just before the page reloads
+  | { status: 'processing' }
+  // becomes processing on another try, unless the page must reload first
+  | { status: 'failed'; error: string; needsReload: boolean };
+
 export function useEncryptionMigration(onSuccess: () => void) {
   const db = useRxDb();
   const pauseSyncJobs = usePauseSyncJobs();
   const updateLocalConfig = useUpdateLocalConfig();
   const running = useRef(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState('');
-  const [needsReload, setNeedsReload] = useState(false);
+  const [state, setState] = useState<MigrationState>({ status: 'idle' });
+  const needsReload = state.status === 'failed' && state.needsReload;
 
   const migrate = useCallback(
     async (password?: string) => {
       if (running.current || needsReload) return;
       running.current = true;
-      setIsProcessing(true);
-      setError('');
+      setState({ status: 'processing' });
       const encrypted = password !== undefined;
       let target: RxDatabase<DatabaseCollections> | undefined;
       let resumeSyncJobs: (() => void) | undefined;
@@ -124,15 +130,17 @@ export function useEncryptionMigration(onSuccess: () => void) {
           }
         }
         resumeSyncJobs?.();
-        setError(
-          'Unable to change encryption. Your original database is still selected. ' +
+        setState({
+          status: 'failed',
+          error:
+            'Unable to change encryption. Your original database is still selected. ' +
             (cleanupFailed
               ? 'The incomplete copy could not be removed. Reload Mere before trying again.'
               : 'Please try again.'),
-        );
-        setNeedsReload(cleanupFailed);
-        running.current = false;
-        setIsProcessing(false);
+          needsReload: cleanupFailed,
+        });
+        // Don't allow another try until the page reloads if a copy is left over.
+        running.current = cleanupFailed;
         return;
       }
 
@@ -149,20 +157,26 @@ export function useEncryptionMigration(onSuccess: () => void) {
         await removeDatabase(db, !encrypted);
         console.debug('useEncryptionMigration: Completed migration');
         onSuccess();
+        setState({ status: 'idle' });
         setTimeout(() => window.location.reload(), 0);
       } catch (e) {
         console.error(e);
-        setError(
-          'Your records and encryption setting were saved, but the old database could not be fully removed. Reload Mere before trying again. An unencrypted copy may still remain on this device.',
-        );
-        setNeedsReload(true);
-      } finally {
-        running.current = false;
-        setIsProcessing(false);
+        setState({
+          status: 'failed',
+          error:
+            'Your records and encryption setting were saved, but the old database could not be fully removed. Reload Mere before trying again. An unencrypted copy may still remain on this device.',
+          needsReload: true,
+        });
       }
+      // The page has to reload now, so don't allow another migration.
     },
     [db, needsReload, onSuccess, pauseSyncJobs, updateLocalConfig],
   );
 
-  return { migrate, isProcessing, error, needsReload };
+  return {
+    migrate,
+    isProcessing: state.status === 'processing',
+    error: state.status === 'failed' ? state.error : '',
+    needsReload,
+  };
 }
