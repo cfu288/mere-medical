@@ -73,11 +73,11 @@ function getImage(logo: ConnectionSources) {
 }
 
 type ConnectionStatus =
-  // -> connected | error: the sync job ends
+  // becomes connected or error when the sync ends
   | { status: 'syncing' }
-  // -> syncing: a sync starts. -> connected: a new login clears the failure
+  // becomes syncing when a sync starts, or connected after a new login
   | { status: 'error'; lastSynced?: string }
-  // -> syncing: a sync starts. -> error: a sync could not start
+  // becomes syncing when a sync starts, or error if it can't start
   | { status: 'connected'; lastSynced?: string };
 
 export function getConnectionStatus(
