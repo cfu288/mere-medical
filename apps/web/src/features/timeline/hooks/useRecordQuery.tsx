@@ -76,10 +76,12 @@ export function mergeRecordsByDate(
 }
 
 /**
- * Cuts a page at the first record of a day that is not in `days`. The page is
- * a prefix of `records`, because the next page starts at `lastOffset` and the
- * database order (date text) can differ from the day order. The first day is
- * always kept, so a page is never empty.
+ * Builds one timeline page from sorted `records`. Takes records from the start
+ * and stops at the first one whose day is not in `days`, so the next page can
+ * continue from there without skipping or repeating a record.
+ *
+ * @returns The page's records by day, where the next page starts, and whether
+ * there is a next page.
  */
 function takeLeadingDays(
   records: ClinicalDocument<BundleEntry<FhirResource>>[],
