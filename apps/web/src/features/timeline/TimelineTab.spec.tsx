@@ -134,19 +134,6 @@ describe('fetchRecords', () => {
 describe('TimelineTab', () => {
   let db: RxDatabase<DatabaseCollections>;
 
-  const failNextFetch = () =>
-    jest
-      .mocked(findTimelineDocuments)
-      .mockRejectedValueOnce(new Error('database closed'));
-
-  const SEARCH = 'Search your medical records';
-
-  // the skeleton has a search box of its own until it leaves
-  async function loadedSearchBox() {
-    await screen.findByText('Jan 15', undefined, { timeout: 5000 });
-    return screen.findByPlaceholderText<HTMLInputElement>(SEARCH);
-  }
-
   beforeEach(async () => {
     window.IntersectionObserver = HiddenIntersectionObserver;
     mockColorScheme(false);
@@ -158,6 +145,7 @@ describe('TimelineTab', () => {
       is_selected_user: true,
       is_default_user: true,
     });
+    // five days, newest Jan 15, two records a day; the first page is three days
     await db.clinical_documents.bulkInsert(
       createDocumentsForDays('user-1', 5, 2),
     );
@@ -167,7 +155,10 @@ describe('TimelineTab', () => {
     await cleanupTestDatabase(db);
   });
 
-  function renderTimeline() {
+  it('shows an error with retry when the first load fails', async () => {
+    jest
+      .mocked(findTimelineDocuments)
+      .mockRejectedValueOnce(new Error('database closed'));
     render(
       <MemoryRouter>
         <TestProviders db={db}>
@@ -177,11 +168,6 @@ describe('TimelineTab', () => {
         </TestProviders>
       </MemoryRouter>,
     );
-  }
-
-  it('shows an error with retry when the first load fails', async () => {
-    failNextFetch();
-    renderTimeline();
 
     await screen.findByText('Unable to load your records');
 
@@ -192,17 +178,33 @@ describe('TimelineTab', () => {
   });
 
   it('replaces the results with an error when a search fails, and keeps the search box', async () => {
-    renderTimeline();
-    const input = await loadedSearchBox();
+    render(
+      <MemoryRouter>
+        <TestProviders db={db}>
+          <UserProvider>
+            <TimelineTab />
+          </UserProvider>
+        </TestProviders>
+      </MemoryRouter>,
+    );
+    await screen.findByText('Jan 15');
+    // waits for the skeleton, which has a search box of its own, to leave
+    const input = await screen.findByPlaceholderText(
+      'Search your medical records',
+    );
 
-    failNextFetch();
+    jest
+      .mocked(findTimelineDocuments)
+      .mockRejectedValueOnce(new Error('database closed'));
     fireEvent.change(input, { target: { value: 'Day 4' } });
 
     await screen.findByText('Unable to load your records');
     expect(screen.queryByText('Jan 15')).toBeNull();
     expect(screen.queryByText(/load more/i)).toBeNull();
     expect(screen.queryByText('No matching records')).toBeNull();
-    expect(screen.getByPlaceholderText(SEARCH)).toBe(input);
+    expect(screen.getByPlaceholderText('Search your medical records')).toBe(
+      input,
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
 
@@ -211,12 +213,21 @@ describe('TimelineTab', () => {
   });
 
   it('keeps the list and says so on the button when load more fails', async () => {
-    renderTimeline();
-    await loadedSearchBox();
-    const loadMore = screen.getByRole('button', { name: 'Load more records' });
+    render(
+      <MemoryRouter>
+        <TestProviders db={db}>
+          <UserProvider>
+            <TimelineTab />
+          </UserProvider>
+        </TestProviders>
+      </MemoryRouter>,
+    );
+    await screen.findByText('Jan 15');
 
-    failNextFetch();
-    fireEvent.click(loadMore);
+    jest
+      .mocked(findTimelineDocuments)
+      .mockRejectedValueOnce(new Error('database closed'));
+    fireEvent.click(screen.getByRole('button', { name: 'Load more records' }));
 
     const tryAgain = await screen.findByRole('button', {
       name: 'Unable to load more records. Try again',
@@ -232,8 +243,20 @@ describe('TimelineTab', () => {
   });
 
   it('keeps the search box focused when a search with no results is cleared', async () => {
-    renderTimeline();
-    const input = await loadedSearchBox();
+    render(
+      <MemoryRouter>
+        <TestProviders db={db}>
+          <UserProvider>
+            <TimelineTab />
+          </UserProvider>
+        </TestProviders>
+      </MemoryRouter>,
+    );
+    await screen.findByText('Jan 15');
+    // waits for the skeleton, which has a search box of its own, to leave
+    const input = await screen.findByPlaceholderText(
+      'Search your medical records',
+    );
     input.focus();
 
     fireEvent.change(input, { target: { value: 'no such record' } });
@@ -242,7 +265,9 @@ describe('TimelineTab', () => {
     fireEvent.change(input, { target: { value: '' } });
 
     expect(screen.queryByText('Link your medical records')).toBeNull();
-    expect(screen.getByPlaceholderText(SEARCH)).toBe(input);
+    expect(screen.getByPlaceholderText('Search your medical records')).toBe(
+      input,
+    );
     expect(document.activeElement).toBe(input);
     await screen.findByText('Jan 15');
   });

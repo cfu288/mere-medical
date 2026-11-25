@@ -26,9 +26,6 @@ jest.mock('../../../repositories/ClinicalDocumentRepository', () => {
   };
 });
 
-const countRecords = (data: Record<string, unknown[]> | undefined) =>
-  Object.values(data ?? {}).reduce((sum, list) => sum + list.length, 0);
-
 describe('useRecordQuery', () => {
   let db: RxDatabase<DatabaseCollections>;
 
@@ -60,7 +57,7 @@ describe('useRecordQuery', () => {
       expect(result.current.status).toBe(QueryStatus.COMPLETE_HIDE_LOAD_MORE),
     );
     expect(Object.keys(result.current.data ?? {})).toHaveLength(5);
-    expect(countRecords(result.current.data)).toBe(10);
+    expect(Object.values(result.current.data ?? {}).flat()).toHaveLength(10);
   });
 
   it('reports a failed first load and recovers on retry', async () => {
@@ -95,13 +92,13 @@ describe('useRecordQuery', () => {
     await waitFor(() =>
       expect(result.current.status).toBe(QueryStatus.LOAD_MORE_ERROR),
     );
-    expect(countRecords(result.current.data)).toBe(6);
+    expect(Object.values(result.current.data ?? {}).flat()).toHaveLength(6);
 
     act(() => result.current.loadNextPage());
     await waitFor(() =>
       expect(result.current.status).toBe(QueryStatus.COMPLETE_HIDE_LOAD_MORE),
     );
-    expect(countRecords(result.current.data)).toBe(10);
+    expect(Object.values(result.current.data ?? {}).flat()).toHaveLength(10);
   });
 
   it('pages through search results and reloads when the query changes', async () => {
@@ -119,17 +116,19 @@ describe('useRecordQuery', () => {
     await waitFor(() =>
       expect(result.current.status).toBe(QueryStatus.SUCCESS),
     );
-    expect(countRecords(result.current.data)).toBe(50);
+    expect(Object.values(result.current.data ?? {}).flat()).toHaveLength(50);
 
     act(() => result.current.loadNextPage());
     await waitFor(() =>
       expect(result.current.status).toBe(QueryStatus.COMPLETE_HIDE_LOAD_MORE),
     );
-    expect(countRecords(result.current.data)).toBe(60);
+    expect(Object.values(result.current.data ?? {}).flat()).toHaveLength(60);
 
     rerender({ query: 'Needle 59' });
     expect(result.current.status).toBe(QueryStatus.LOADING);
-    await waitFor(() => expect(countRecords(result.current.data)).toBe(1));
+    await waitFor(() =>
+      expect(Object.values(result.current.data ?? {}).flat()).toHaveLength(1),
+    );
     expect(result.current.status).toBe(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
   });
 });
