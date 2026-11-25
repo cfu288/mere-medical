@@ -57,10 +57,10 @@ enum ActionTypes {
 
 type SummaryState = {
   status:
-    | 'idle' // -> pending: the load starts
-    | 'pending' // -> completed | error
+    | 'idle' // becomes pending when loading starts
+    | 'pending' // becomes completed or error
     | 'completed'
-    | 'error'; // -> idle: RETRY
+    | 'error'; // becomes idle when the user tries again
   meds: ClinicalDocument<BundleEntry<MedicationStatement>>[];
   cond: ClinicalDocument<BundleEntry<Condition>>[];
   imm: ClinicalDocument<BundleEntry<Immunization>>[];
@@ -112,7 +112,7 @@ function summaryReducer(
       };
     }
     case ActionTypes.ERROR: {
-      // a late failure must not replace records that already loaded
+      // keep showing records that have already loaded
       if (state.status !== 'pending') return state;
       return {
         ...state,
