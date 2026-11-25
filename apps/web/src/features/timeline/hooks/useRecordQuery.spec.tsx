@@ -835,8 +835,8 @@ describe('fetchRecordsUntilCompleteDays', () => {
 
   describe('dates whose text order differs from their day order', () => {
     it('returns every record exactly once across pages', async () => {
-      // the same text order in every timezone: 01-08T01:00+14:00 sorts first
-      // but is a full day earlier than 01-07T23:59-12:00
+      // sorting these as text puts the third date before the fourth, but the
+      // third date is actually a day earlier
       const docs = createDocumentsWithSpecificDates(userId, [
         { date: '2024-01-10T12:00:00Z', count: 1 },
         { date: '2024-01-09T12:00:00Z', count: 1 },
