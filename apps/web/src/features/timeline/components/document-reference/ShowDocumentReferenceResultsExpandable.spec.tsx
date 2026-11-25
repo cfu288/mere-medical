@@ -71,27 +71,22 @@ describe('ShowDocumentResultsExpandable', () => {
         id: 'https://fhir.example.org/Binary/1',
         date: '2022-01-13T12:00:00-05:00',
       },
-    }),
-    sorry = 'Sorry, looks like we were unable to get the linked document';
+    });
 
-  function renderOpened(item = note) {
+  it('shows the stored text of a plain text note', async () => {
+    await db.clinical_documents.bulkInsert([note as never, attachment]);
+
     render(
       <TestProviders db={db}>
         <UserProvider>
           <ShowDocumentResultsExpandable
-            item={item}
+            item={note}
             expanded={true}
             setExpanded={() => undefined}
           />
         </UserProvider>
       </TestProviders>,
     );
-  }
-
-  it('shows the stored text of a plain text note', async () => {
-    await db.clinical_documents.bulkInsert([note as never, attachment]);
-
-    renderOpened();
 
     const text = await screen.findByText('Patient is doing well.');
 
@@ -112,24 +107,56 @@ describe('ShowDocumentResultsExpandable', () => {
         }) as never,
     );
 
-    renderOpened();
+    render(
+      <TestProviders db={db}>
+        <UserProvider>
+          <ShowDocumentResultsExpandable
+            item={note}
+            expanded={true}
+            setExpanded={() => undefined}
+          />
+        </UserProvider>
+      </TestProviders>,
+    );
 
     expect(await screen.findByText('Loading...')).toBeTruthy();
-    expect(screen.queryByText(sorry)).toBeNull();
+    expect(
+      screen.queryByText(
+        'Sorry, looks like we were unable to get the linked document',
+      ),
+    ).toBeNull();
 
     release();
 
     expect(await screen.findByText('Patient is doing well.')).toBeTruthy();
-    expect(screen.queryByText(sorry)).toBeNull();
+    expect(
+      screen.queryByText(
+        'Sorry, looks like we were unable to get the linked document',
+      ),
+    ).toBeNull();
   });
 
   it('reports a linked document that is not stored', async () => {
     jest.spyOn(console, 'error').mockImplementation(() => undefined);
     await db.clinical_documents.insert(note as never);
 
-    renderOpened();
+    render(
+      <TestProviders db={db}>
+        <UserProvider>
+          <ShowDocumentResultsExpandable
+            item={note}
+            expanded={true}
+            setExpanded={() => undefined}
+          />
+        </UserProvider>
+      </TestProviders>,
+    );
 
-    expect(await screen.findByText(sorry)).toBeTruthy();
+    expect(
+      await screen.findByText(
+        'Sorry, looks like we were unable to get the linked document',
+      ),
+    ).toBeTruthy();
   });
 
   it('reports a linked document when the lookup fails', async () => {
@@ -138,25 +165,54 @@ describe('ShowDocumentResultsExpandable', () => {
       exec: () => Promise.reject(new Error('lookup failed')),
     } as never);
 
-    renderOpened();
+    render(
+      <TestProviders db={db}>
+        <UserProvider>
+          <ShowDocumentResultsExpandable
+            item={note}
+            expanded={true}
+            setExpanded={() => undefined}
+          />
+        </UserProvider>
+      </TestProviders>,
+    );
 
-    expect(await screen.findByText(sorry)).toBeTruthy();
+    expect(
+      await screen.findByText(
+        'Sorry, looks like we were unable to get the linked document',
+      ),
+    ).toBeTruthy();
   });
 
   it('reports a note that links no document', async () => {
     jest.spyOn(console, 'error').mockImplementation(() => undefined);
     const findOne = jest.spyOn(db.clinical_documents, 'findOne');
 
-    renderOpened({
+    const noteWithoutLink = {
       ...note,
       data_record: {
         ...note.data_record,
         raw: { resource: { resourceType: 'DocumentReference' } } as never,
       },
       metadata: {},
-    });
+    };
+    render(
+      <TestProviders db={db}>
+        <UserProvider>
+          <ShowDocumentResultsExpandable
+            item={noteWithoutLink}
+            expanded={true}
+            setExpanded={() => undefined}
+          />
+        </UserProvider>
+      </TestProviders>,
+    );
 
-    expect(await screen.findByText(sorry)).toBeTruthy();
+    expect(
+      await screen.findByText(
+        'Sorry, looks like we were unable to get the linked document',
+      ),
+    ).toBeTruthy();
     expect(findOne).not.toHaveBeenCalled();
   });
 });
