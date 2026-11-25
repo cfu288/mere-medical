@@ -332,7 +332,7 @@ type Page = { records: RecordsByDate; cursor: number; hasMore: boolean };
 
 type Loaded = {
   data: RecordsByDate;
-  /** Where the next page starts: record offset (grouped) or page number (search). */
+  /** Where "load more" starts: a record count, or a page number in a search. */
   cursor: number;
 };
 
@@ -343,16 +343,16 @@ export type QueryKey = {
 };
 
 export type QueryState = {
-  /** The request this state is waiting for. Responses to other requests are ignored. */
+  /** The newest request. A late response to an older one is ignored. */
   requestId: number;
-  /** What `status` and the records describe. Undefined before the first request. */
+  /** The search, filters and user that these records belong to. */
   key: QueryKey | undefined;
-  /** True once any result was shown. Keeps the search bar mounted from then on. */
+  /** False until the first records arrive, while the skeleton shows. */
   initialized: boolean;
 } & (
   | {
       status: QueryStatus.LOADING;
-      /** Results of the previous query, or partial results of this one. */
+      /** Shown while waiting: the last search's records, or the first few new ones. */
       data: RecordsByDate | undefined;
     }
   | { status: QueryStatus.ERROR }
@@ -364,7 +364,7 @@ export type QueryState = {
     } & Loaded)
   | ({
       status: QueryStatus.LOADING_MORE;
-      /** Records of the next page received so far. Not part of `data` yet. */
+      /** The part of the next page that has arrived so far. */
       partial: RecordsByDate | undefined;
     } & Loaded)
 );
@@ -393,7 +393,10 @@ export function canLoadMore(state: QueryState): state is QueryState & {
   );
 }
 
-/** The records to keep on screen while another query of the same user loads. */
+/**
+ * Returns the records already on screen, so the list does not go blank while a
+ * new search loads. Returns undefined if they belong to a different user.
+ */
 function previousResults(
   state: QueryState,
   userId: string,
@@ -404,15 +407,15 @@ function previousResults(
 }
 
 /**
- * Transitions:
- * - LOAD_STARTED: any state -> LOADING (a new query, new filters or a retry)
- * - LOAD_MORE_STARTED: SUCCESS | LOAD_MORE_ERROR -> LOADING_MORE, only when
- *   the caller read the current cursor (a newer query may have replaced it)
- * - PARTIAL_RESULTS: LOADING | LOADING_MORE -> same status
+ * Decides what the timeline shows next. Takes the current state and something
+ * that happened, such as "a page loaded" or "a request failed", and returns the
+ * new state. Events that make no sense in the current state change nothing.
+ *
+ * - LOAD_STARTED: any state -> LOADING
+ * - LOAD_MORE_STARTED: SUCCESS | LOAD_MORE_ERROR -> LOADING_MORE
+ * - PARTIAL_RESULTS: stays LOADING | LOADING_MORE
  * - PAGE_LOADED: LOADING | LOADING_MORE -> SUCCESS | COMPLETE_HIDE_LOAD_MORE
  * - QUERY_FAILED: LOADING -> ERROR, LOADING_MORE -> LOAD_MORE_ERROR
- *
- * An action that is not valid in the current state returns the state unchanged.
  */
 export function queryReducer(
   state: QueryState,
@@ -575,9 +578,8 @@ async function fetchSearchPage(
  * @param filters - Record types and date range applied in both modes. Pass a
  * stable object (e.g. from useState); a new object re-runs the query.
  * @param minCompleteDays - Minimum number of complete days to fetch in grouped view (default: 3)
- * @returns `data` is the records to show for `status`: the previous results
- * while a new query loads, nothing after that query fails, and the loaded
- * pages plus any partial next page while more records load.
+ * @returns The records to show grouped by day (`data`), whether they are loading,
+ * loaded or failed (`status`), and functions to load more or try again.
  */
 export function useRecordQuery(
   query: string,
@@ -597,7 +599,7 @@ export function useRecordQuery(
 
   const [state, dispatch] = useReducer(queryReducer, initialQueryState);
 
-  // false in the render between a change of query and the start of its request
+  // do the records in `state` answer the search on screen, or an earlier one?
   const isCurrent =
     state.key?.query === query &&
     state.key.filters === filters &&
