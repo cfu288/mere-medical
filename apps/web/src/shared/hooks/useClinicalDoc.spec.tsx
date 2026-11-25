@@ -79,7 +79,7 @@ describe('useClinicalDoc', () => {
       { wrapper },
     );
 
-    // result.current is also null until UserProvider renders the hook
+    // the result is also null until the user has loaded
     await waitFor(() => {
       expect(findOne).toHaveBeenCalled();
     });

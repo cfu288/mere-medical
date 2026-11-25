@@ -15,7 +15,7 @@ export const LOINC_CODE_SYSTEM = '2.16.840.1.113883.6.1';
 export const SNOMED_CT_CODE_SYSTEM = '2.16.840.1.113883.6.96';
 
 type DocumentView =
-  // -> ccda | pdf | html | missing: the lookup ends while the dialog is open
+  // becomes one of the others when the document has been found or not
   | { status: 'loading' }
   | {
       status: 'ccda';
@@ -24,14 +24,14 @@ type DocumentView =
       >;
     }
   | { status: 'pdf'; url: string }
-  // also plain text
+  // also used for plain text
   | { status: 'html'; html: string | JSX.Element | JSX.Element[] }
-  // no linked document, a failed lookup, or a document that cannot be shown
+  // we couldn't find or show the document
   | { status: 'missing' };
 
 /**
- * Reads a stored attachment into the state that shows it. A `pdf` state holds
- * an object URL, which the caller must revoke.
+ * Works out how to show a document. Call URL.revokeObjectURL on the url of a
+ * pdf when it is no longer shown.
  */
 function toDocumentView(
   attachment: ClinicalDocument | null | undefined,
@@ -112,7 +112,7 @@ export function ShowDocumentResultsExpandable({
 
   useEffect(() => {
     if (!expanded) return;
-    // useClinicalDoc returns undefined while its lookup is in flight
+    // we are still looking for the document
     if (attachment === undefined && attachmentId) return;
     const next = toDocumentView(attachment, attachmentUrl);
     setView(next);
