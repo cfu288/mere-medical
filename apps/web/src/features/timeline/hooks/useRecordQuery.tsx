@@ -611,11 +611,11 @@ export function useRecordQuery(
     state.request.userId !== user.id;
 
   const execQuery = useCallback(
-    async (loadMore: boolean) => {
+    async (loadMore: boolean, from?: QueryRequest, fromOffset = 0) => {
       let lastOffset = 0;
       if (loadMore) {
-        if (isStale || !canLoadMore(state)) return;
-        lastOffset = state.lastOffset;
+        if (isStale || !canLoadMore(state) || state.request !== from) return;
+        lastOffset = fromOffset;
       }
       const requestId = ++requestIdRef.current;
       dispatch(
@@ -656,10 +656,23 @@ export function useRecordQuery(
   const execQueryRef = useRef(execQuery);
   execQueryRef.current = execQuery;
 
-  const loadNextPage = useDebounceCallback(
-    () => execQueryRef.current(true),
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
+  const loadMoreLater = useDebounceCallback(
+    (from: QueryRequest | undefined, fromOffset: number) =>
+      execQueryRef.current(true, from, fromOffset),
     300,
   );
+
+  // remember which search the user asked to load more of, because the search
+  // can change before the delay is over
+  const loadNextPage = useCallback(() => {
+    const current = stateRef.current;
+    if (canLoadMore(current)) {
+      loadMoreLater(current.request, current.lastOffset);
+    }
+  }, [loadMoreLater]);
 
   const retry = useCallback(() => {
     execQueryRef.current(false);

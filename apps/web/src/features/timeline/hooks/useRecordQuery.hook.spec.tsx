@@ -11,6 +11,7 @@ import { createDocumentsForDays } from '../../../test-utils/clinicalDocumentTest
 import { findTimelineDocuments } from '../../../repositories/ClinicalDocumentRepository';
 import { QueryStatus } from '../types';
 import { useRecordQuery } from './useRecordQuery';
+import { NO_FILTERS } from '../timelineFilters';
 
 jest.mock('../../../app/providers/UserProvider', () => ({
   useUser: () => ({ id: 'user-a' }),
@@ -130,5 +131,26 @@ describe('useRecordQuery', () => {
       expect(Object.values(result.current.data ?? {}).flat()).toHaveLength(1),
     );
     expect(result.current.status).toBe(QueryStatus.COMPLETE_HIDE_LOAD_MORE);
+  });
+
+  it('does not load more of a new search when load more was asked for the old one', async () => {
+    const { result, rerender } = renderHook(
+      ({ filters }) => useRecordQuery('', filters),
+      { wrapper, initialProps: { filters: NO_FILTERS } },
+    );
+    await waitFor(() =>
+      expect(result.current.status).toBe(QueryStatus.SUCCESS),
+    );
+
+    act(() => result.current.loadNextPage());
+    rerender({ filters: { ...NO_FILTERS } });
+    await waitFor(() =>
+      expect(result.current.status).toBe(QueryStatus.SUCCESS),
+    );
+    // longer than the 300 ms that load more waits
+    await act(() => new Promise((resolve) => setTimeout(resolve, 600)));
+
+    expect(result.current.status).toBe(QueryStatus.SUCCESS);
+    expect(Object.keys(result.current.data ?? {})).toHaveLength(3);
   });
 });
