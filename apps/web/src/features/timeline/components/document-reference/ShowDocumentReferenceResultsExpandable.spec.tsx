@@ -28,11 +28,11 @@ describe('ShowDocumentResultsExpandable', () => {
   });
 
   afterEach(async () => {
+    jest.restoreAllMocks();
     await cleanupTestDatabase(db);
   });
 
-  it('shows the stored text of a plain text note', async () => {
-    const note = createTestClinicalDocument({
+  const note = createTestClinicalDocument({
       id: 'conn-a|user-1|https://fhir.example.org/DocumentReference/1',
       connection_record_id: 'conn-a',
       user_id: 'user-1',
@@ -55,26 +55,26 @@ describe('ShowDocumentResultsExpandable', () => {
         date: '2022-01-13T12:00:00-05:00',
         display_name: 'Progress Note',
       },
-    }) as unknown as ClinicalDocument<BundleEntry<DocumentReference>>;
-    await db.clinical_documents.bulkInsert([
-      note as never,
-      createTestClinicalDocument({
-        id: 'conn-a|user-1|https://fhir.example.org/Binary/1',
-        connection_record_id: 'conn-a',
-        user_id: 'user-1',
-        data_record: {
-          raw: 'Patient is doing well.' as never,
-          format: 'FHIR.R4',
-          content_type: 'text/plain',
-          resource_type: 'documentreference_attachment',
-          version_history: [],
-        },
-        metadata: {
-          id: 'https://fhir.example.org/Binary/1',
-          date: '2022-01-13T12:00:00-05:00',
-        },
-      }),
-    ]);
+    }) as unknown as ClinicalDocument<BundleEntry<DocumentReference>>,
+    attachment = createTestClinicalDocument({
+      id: 'conn-a|user-1|https://fhir.example.org/Binary/1',
+      connection_record_id: 'conn-a',
+      user_id: 'user-1',
+      data_record: {
+        raw: 'Patient is doing well.' as never,
+        format: 'FHIR.R4',
+        content_type: 'text/plain',
+        resource_type: 'documentreference_attachment',
+        version_history: [],
+      },
+      metadata: {
+        id: 'https://fhir.example.org/Binary/1',
+        date: '2022-01-13T12:00:00-05:00',
+      },
+    });
+
+  it('shows the stored text of a plain text note', async () => {
+    await db.clinical_documents.bulkInsert([note as never, attachment]);
 
     render(
       <TestProviders db={db}>
@@ -91,5 +91,197 @@ describe('ShowDocumentResultsExpandable', () => {
     const text = await screen.findByText('Patient is doing well.');
 
     expect(text.textContent).toBe('Patient is doing well.');
+  });
+
+  it('releases the PDF when the dialog closes and makes a new one when it opens again', async () => {
+    const pdf = createTestClinicalDocument({
+      id: 'conn-a|user-1|https://fhir.example.org/Binary/1',
+      connection_record_id: 'conn-a',
+      user_id: 'user-1',
+      data_record: {
+        raw: 'JVBERi0xLjQ=' as never,
+        format: 'FHIR.R4',
+        content_type: 'application/pdf',
+        resource_type: 'documentreference_attachment',
+        version_history: [],
+      },
+      metadata: {
+        id: 'https://fhir.example.org/Binary/1',
+        date: '2022-01-13T12:00:00-05:00',
+      },
+    });
+    await db.clinical_documents.bulkInsert([note as never, pdf]);
+    // jsdom has no object URLs
+    URL.createObjectURL = jest
+      .fn()
+      .mockReturnValueOnce('blob:first')
+      .mockReturnValueOnce('blob:second');
+    URL.revokeObjectURL = jest.fn();
+
+    const { rerender } = render(
+      <TestProviders db={db}>
+        <UserProvider>
+          <ShowDocumentResultsExpandable
+            item={note}
+            expanded={true}
+            setExpanded={() => undefined}
+          />
+        </UserProvider>
+      </TestProviders>,
+    );
+    expect(
+      (await screen.findByTitle('Progress Note')).getAttribute('src'),
+    ).toBe('blob:first');
+
+    rerender(
+      <TestProviders db={db}>
+        <UserProvider>
+          <ShowDocumentResultsExpandable
+            item={note}
+            expanded={false}
+            setExpanded={() => undefined}
+          />
+        </UserProvider>
+      </TestProviders>,
+    );
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:first');
+
+    rerender(
+      <TestProviders db={db}>
+        <UserProvider>
+          <ShowDocumentResultsExpandable
+            item={note}
+            expanded={true}
+            setExpanded={() => undefined}
+          />
+        </UserProvider>
+      </TestProviders>,
+    );
+    expect(
+      (await screen.findByTitle('Progress Note')).getAttribute('src'),
+    ).toBe('blob:second');
+  });
+
+  it('shows loading until the lookup resolves', async () => {
+    await db.clinical_documents.bulkInsert([note as never, attachment]);
+    const findOne = db.clinical_documents.findOne.bind(db.clinical_documents);
+    let release!: () => void;
+    const released = new Promise<void>((done) => {
+      release = done;
+    });
+    jest.spyOn(db.clinical_documents, 'findOne').mockImplementation(
+      (query) =>
+        ({
+          exec: () => released.then(() => findOne(query).exec()),
+        }) as never,
+    );
+
+    render(
+      <TestProviders db={db}>
+        <UserProvider>
+          <ShowDocumentResultsExpandable
+            item={note}
+            expanded={true}
+            setExpanded={() => undefined}
+          />
+        </UserProvider>
+      </TestProviders>,
+    );
+
+    expect(await screen.findByText('Loading...')).toBeTruthy();
+    expect(
+      screen.queryByText(
+        'Sorry, looks like we were unable to get the linked document',
+      ),
+    ).toBeNull();
+
+    release();
+
+    expect(await screen.findByText('Patient is doing well.')).toBeTruthy();
+    expect(
+      screen.queryByText(
+        'Sorry, looks like we were unable to get the linked document',
+      ),
+    ).toBeNull();
+  });
+
+  it('reports a linked document that is not stored', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    await db.clinical_documents.insert(note as never);
+
+    render(
+      <TestProviders db={db}>
+        <UserProvider>
+          <ShowDocumentResultsExpandable
+            item={note}
+            expanded={true}
+            setExpanded={() => undefined}
+          />
+        </UserProvider>
+      </TestProviders>,
+    );
+
+    expect(
+      await screen.findByText(
+        'Sorry, looks like we were unable to get the linked document',
+      ),
+    ).toBeTruthy();
+  });
+
+  it('reports a linked document when the lookup fails', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    jest.spyOn(db.clinical_documents, 'findOne').mockReturnValue({
+      exec: () => Promise.reject(new Error('lookup failed')),
+    } as never);
+
+    render(
+      <TestProviders db={db}>
+        <UserProvider>
+          <ShowDocumentResultsExpandable
+            item={note}
+            expanded={true}
+            setExpanded={() => undefined}
+          />
+        </UserProvider>
+      </TestProviders>,
+    );
+
+    expect(
+      await screen.findByText(
+        'Sorry, looks like we were unable to get the linked document',
+      ),
+    ).toBeTruthy();
+  });
+
+  it('reports a note that links no document', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const findOne = jest.spyOn(db.clinical_documents, 'findOne');
+
+    const noteWithoutLink = {
+      ...note,
+      data_record: {
+        ...note.data_record,
+        raw: { resource: { resourceType: 'DocumentReference' } } as never,
+      },
+      metadata: {},
+    };
+    render(
+      <TestProviders db={db}>
+        <UserProvider>
+          <ShowDocumentResultsExpandable
+            item={noteWithoutLink}
+            expanded={true}
+            setExpanded={() => undefined}
+          />
+        </UserProvider>
+      </TestProviders>,
+    );
+
+    expect(
+      await screen.findByText(
+        'Sorry, looks like we were unable to get the linked document',
+      ),
+    ).toBeTruthy();
+    expect(findOne).not.toHaveBeenCalled();
   });
 });
