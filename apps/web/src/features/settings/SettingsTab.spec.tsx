@@ -154,13 +154,13 @@ describe('SettingsTab', () => {
       </MemoryRouter>,
     );
     fireEvent.click(await screen.findByRole('button', { name: 'Switch User' }));
-    const closeSwitcher = drawer.mock.lastCall![0].onClose;
+    const [switcherProps] = drawer.mock.calls[drawer.mock.calls.length - 1];
     fireEvent.click(
       await screen.findByRole('button', { name: 'Add New User' }),
     );
     await screen.findByRole('dialog', { name: 'Add New User' });
 
-    act(() => closeSwitcher());
+    act(() => switcherProps.onClose());
     // a closing dialog stays on the page until its animation ends
     await act(() => new Promise((resolve) => setTimeout(resolve, 500)));
 
