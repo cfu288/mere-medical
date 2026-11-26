@@ -878,6 +878,38 @@ describe('fetchRecordsUntilCompleteDays', () => {
       expect(seen.sort()).toEqual(docs.map((doc) => doc.id).sort());
     });
 
+    it('returns every record exactly once when one date cannot be read', async () => {
+      // the database sorts 'unknown' before every real date, but it is shown
+      // as 1970-01-01, after all of them
+      const docs = createDocumentsWithSpecificDates(userId, [
+        { date: 'unknown', count: 1 },
+        { date: '2024-01-10T12:00:00Z', count: 1 },
+        { date: '2024-01-09T12:00:00Z', count: 1 },
+        { date: '2024-01-08T12:00:00Z', count: 1 },
+      ]);
+      await db.clinical_documents.bulkInsert(docs);
+
+      const seen: string[] = [];
+      let offset = 0;
+      for (let page = 0; page < docs.length; page++) {
+        const result = await fetchRecordsUntilCompleteDays(
+          db,
+          userId,
+          3,
+          offset,
+        );
+        seen.push(
+          ...Object.values(result.records)
+            .flat()
+            .map((record) => record.id),
+        );
+        offset = result.lastOffset;
+        if (!result.hasMore) break;
+      }
+
+      expect(seen.sort()).toEqual(docs.map((doc) => doc.id).sort());
+    });
+
     it('reports no more records when a page keeps every record', async () => {
       const docs = createDocumentsWithSpecificDates(userId, [
         { date: '2024-01-08T01:00:00+14:00', count: 1 },
