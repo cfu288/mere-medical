@@ -208,6 +208,7 @@ export function getMedicationOrderDisplayName(
       return (
         resource?.medicationCodeableConcept?.text ||
         resource?.medicationCodeableConcept?.coding?.[0]?.display ||
+        resource?.medicationReference?.display ||
         resource?.text?.div
       );
     }
@@ -218,6 +219,7 @@ export function getMedicationOrderDisplayName(
       return (
         resource?.medicationCodeableConcept?.text ||
         resource?.medicationCodeableConcept?.coding?.[0]?.display ||
+        resource?.medicationReference?.display ||
         resource?.text?.div
       );
     }
