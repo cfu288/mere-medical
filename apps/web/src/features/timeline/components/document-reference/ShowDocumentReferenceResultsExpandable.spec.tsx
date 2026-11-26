@@ -93,6 +93,75 @@ describe('ShowDocumentResultsExpandable', () => {
     expect(text.textContent).toBe('Patient is doing well.');
   });
 
+  it('releases the PDF when the dialog closes and makes a new one when it opens again', async () => {
+    const pdf = createTestClinicalDocument({
+      id: 'conn-a|user-1|https://fhir.example.org/Binary/1',
+      connection_record_id: 'conn-a',
+      user_id: 'user-1',
+      data_record: {
+        raw: 'JVBERi0xLjQ=' as never,
+        format: 'FHIR.R4',
+        content_type: 'application/pdf',
+        resource_type: 'documentreference_attachment',
+        version_history: [],
+      },
+      metadata: {
+        id: 'https://fhir.example.org/Binary/1',
+        date: '2022-01-13T12:00:00-05:00',
+      },
+    });
+    await db.clinical_documents.bulkInsert([note as never, pdf]);
+    // jsdom has no object URLs
+    URL.createObjectURL = jest
+      .fn()
+      .mockReturnValueOnce('blob:first')
+      .mockReturnValueOnce('blob:second');
+    URL.revokeObjectURL = jest.fn();
+
+    const { rerender } = render(
+      <TestProviders db={db}>
+        <UserProvider>
+          <ShowDocumentResultsExpandable
+            item={note}
+            expanded={true}
+            setExpanded={() => undefined}
+          />
+        </UserProvider>
+      </TestProviders>,
+    );
+    expect(
+      (await screen.findByTitle('Progress Note')).getAttribute('src'),
+    ).toBe('blob:first');
+
+    rerender(
+      <TestProviders db={db}>
+        <UserProvider>
+          <ShowDocumentResultsExpandable
+            item={note}
+            expanded={false}
+            setExpanded={() => undefined}
+          />
+        </UserProvider>
+      </TestProviders>,
+    );
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:first');
+
+    rerender(
+      <TestProviders db={db}>
+        <UserProvider>
+          <ShowDocumentResultsExpandable
+            item={note}
+            expanded={true}
+            setExpanded={() => undefined}
+          />
+        </UserProvider>
+      </TestProviders>,
+    );
+    expect(
+      (await screen.findByTitle('Progress Note')).getAttribute('src'),
+    ).toBe('blob:second');
+  });
+
   it('shows loading until the lookup resolves', async () => {
     await db.clinical_documents.bulkInsert([note as never, attachment]);
     const findOne = db.clinical_documents.findOne.bind(db.clinical_documents);
