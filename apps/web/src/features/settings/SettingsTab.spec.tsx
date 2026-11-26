@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { RxDatabase } from 'rxdb';
 
@@ -17,6 +23,7 @@ import { mockColorScheme } from '../../test-utils/matchMedia';
 import { TestProviders } from '../../test-utils/TestProviders';
 import { createDefaultTestUser } from '../../test-utils/userTestData';
 import SettingsTab, { fetchPatientRecords } from './SettingsTab';
+import * as UserSwitchDrawer from './components/UserSwitchDrawer';
 
 jest.mock('../sync/SyncJobProvider', () => ({
   usePauseSyncJobs: () => async () => () => undefined,
@@ -125,5 +132,38 @@ describe('SettingsTab', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  });
+
+  it('keeps the add user dialog open when the user switcher closes late', async () => {
+    const drawer = jest.spyOn(UserSwitchDrawer, 'UserSwitchDrawer');
+    render(
+      <MemoryRouter>
+        <LocalConfigProvider>
+          <TestProviders db={db}>
+            <AppConfigProvider configFetcher={async () => ({})}>
+              <DeveloperLogsProvider>
+                <UserProvider>
+                  <UserPreferencesProvider>
+                    <SettingsTab />
+                  </UserPreferencesProvider>
+                </UserProvider>
+              </DeveloperLogsProvider>
+            </AppConfigProvider>
+          </TestProviders>
+        </LocalConfigProvider>
+      </MemoryRouter>,
+    );
+    fireEvent.click(await screen.findByRole('button', { name: 'Switch User' }));
+    const closeSwitcher = drawer.mock.lastCall![0].onClose;
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Add New User' }),
+    );
+    await screen.findByRole('dialog', { name: 'Add New User' });
+
+    act(() => closeSwitcher());
+    // a closing dialog stays on the page until its animation ends
+    await act(() => new Promise((resolve) => setTimeout(resolve, 500)));
+
+    expect(screen.getByRole('dialog', { name: 'Add New User' })).toBeTruthy();
   });
 });
