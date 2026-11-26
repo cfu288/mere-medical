@@ -44,13 +44,15 @@ import {
   toTimelineQuery,
 } from './timelineFilters';
 
+import { LoadErrorPlaceholder } from '../../shared/components/LoadErrorPlaceholder';
+
 export { QueryStatus };
 
 export function TimelineTab() {
   const user = useUser(),
     [query, setQuery] = useState(''),
     [filters, setFilters] = useState<TimelineFilters>(NO_FILTERS),
-    { data, status, initialized, loadNextPage, showIndividualItems } =
+    { data, status, initialized, loadNextPage, retry, showIndividualItems } =
       useRecordQuery(query, filters),
     hasNoRecords =
       query === '' &&
@@ -124,10 +126,11 @@ export function TimelineTab() {
               </div>
             ),
           )}
-          {status !== QueryStatus.COMPLETE_HIDE_LOAD_MORE &&
-            status !== QueryStatus.LOADING && (
-              <LoadMoreButton status={status} loadNextPage={loadNextPage} />
-            )}
+          {(status === QueryStatus.SUCCESS ||
+            status === QueryStatus.LOADING_MORE ||
+            status === QueryStatus.LOAD_MORE_ERROR) && (
+            <LoadMoreButton status={status} loadNextPage={loadNextPage} />
+          )}
         </>
       ) : (
         []
@@ -150,10 +153,7 @@ export function TimelineTab() {
     >
       <Transition
         as="div"
-        show={
-          !initialized &&
-          (status === QueryStatus.IDLE || status === QueryStatus.LOADING)
-        }
+        show={!initialized && status === QueryStatus.LOADING}
         enter="transition-opacity ease-in-out duration-75"
         enterFrom="opacity-75"
         enterTo="opacity-100"
@@ -163,6 +163,9 @@ export function TimelineTab() {
       >
         <TimelineSkeleton />
       </Transition>
+      {!initialized && status === QueryStatus.ERROR && (
+        <LoadErrorPlaceholder onRetry={retry} />
+      )}
       <Transition
         as="div"
         className={'relative flex h-full'}
@@ -175,7 +178,9 @@ export function TimelineTab() {
         leaveTo="opacity-75"
       >
         {!(
-          status === QueryStatus.LOADING_MORE || status === QueryStatus.LOADING
+          status === QueryStatus.LOADING_MORE ||
+          status === QueryStatus.LOADING ||
+          status === QueryStatus.ERROR
         ) && hasNoRecords ? (
           <EmptyRecordsPlaceholder />
         ) : (
@@ -203,7 +208,11 @@ export function TimelineTab() {
                   setFilters={setFilters}
                 />
                 {listItems}
-                {Object.keys(filteredDataInDateRange || {}).length === 0 ? (
+                {status === QueryStatus.ERROR ? (
+                  <LoadErrorPlaceholder onRetry={retry} />
+                ) : (status === QueryStatus.COMPLETE_HIDE_LOAD_MORE ||
+                    (status === QueryStatus.LOADING && data)) &&
+                  Object.keys(filteredDataInDateRange || {}).length === 0 ? (
                   <main className="grid min-h-full place-items-center bg-white dark:bg-gray-900 px-6 py-24 sm:py-32 lg:px-8">
                     <div className="text-center">
                       <p className="text-base font-semibold text-primary-600 dark:text-primary-300">
@@ -265,7 +274,9 @@ function LoadMoreButton({
     >
       {status === QueryStatus.LOADING_MORE
         ? 'Loading more records'
-        : 'Load more records'}
+        : status === QueryStatus.LOAD_MORE_ERROR
+          ? 'Unable to load more records. Try again'
+          : 'Load more records'}
       <span className="ml-2 inline-flex justify-center align-middle">
         {status === QueryStatus.LOADING_MORE ? <ButtonLoadingSpinner /> : null}
       </span>

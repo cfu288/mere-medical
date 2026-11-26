@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 import { format, parseISO } from 'date-fns';
 import { useDebounceCallback } from '@react-hook/debounce';
 import { BundleEntry, FhirResource } from 'fhir/r2';
@@ -328,112 +328,192 @@ export async function fetchRecordsUntilCompleteDays(
   return { records: grouped, hasMore, lastOffset: offset };
 }
 
-interface QueryState {
-  status: QueryStatus;
+type QueryResult = {
+  records: RecordsByDate;
+  lastOffset: number;
+  hasMore: boolean;
+};
+
+export type QueryRequest = {
+  query: string;
+  filters: TimelineFilters;
+  userId: string;
+};
+
+export type QueryState = {
+  /** Used to ignore results from older requests. */
+  requestId: number;
+  /** The search and filters that the user asked for. */
+  request: QueryRequest | undefined;
+  /** True once there are results to show. */
   initialized: boolean;
-  data: RecordsByDate | undefined;
-  groupedOffset: number;
-  searchPage: number;
+} & (
+  | {
+      status: QueryStatus.LOADING;
+      /** Results to show while loading, which can be from the last search. */
+      data: RecordsByDate | undefined;
+    }
+  | { status: QueryStatus.ERROR }
+  | {
+      status:
+        | QueryStatus.SUCCESS
+        | QueryStatus.COMPLETE_HIDE_LOAD_MORE
+        | QueryStatus.LOAD_MORE_ERROR;
+      data: RecordsByDate;
+      /** Where the next page starts. */
+      lastOffset: number;
+    }
+  | {
+      status: QueryStatus.LOADING_MORE;
+      /** Results for the next page that have loaded so far. */
+      partial: RecordsByDate | undefined;
+      data: RecordsByDate;
+      lastOffset: number;
+    }
+);
+
+export type QueryAction =
+  | { type: 'START_INITIAL_LOAD'; requestId: number; request: QueryRequest }
+  | { type: 'START_LOAD_MORE'; requestId: number; lastOffset: number }
+  | {
+      type: 'RECEIVE_PARTIAL_RESULTS';
+      requestId: number;
+      records: RecordsByDate;
+    }
+  | ({ type: 'QUERY_SUCCESS'; requestId: number } & QueryResult)
+  | { type: 'QUERY_ERROR'; requestId: number };
+
+export const initialState: QueryState = {
+  requestId: 0,
+  request: undefined,
+  initialized: false,
+  status: QueryStatus.LOADING,
+  data: undefined,
+};
+
+export function canLoadMore(state: QueryState): state is QueryState & {
+  status: QueryStatus.SUCCESS | QueryStatus.LOAD_MORE_ERROR;
+} {
+  return (
+    state.status === QueryStatus.SUCCESS ||
+    state.status === QueryStatus.LOAD_MORE_ERROR
+  );
 }
 
-type QueryAction =
-  | { type: 'START_INITIAL_LOAD' }
-  | { type: 'START_LOAD_MORE' }
-  | { type: 'RECEIVE_PARTIAL_RESULTS'; records: RecordsByDate; merge: boolean }
-  | {
-      type: 'GROUPED_QUERY_SUCCESS';
-      records: RecordsByDate;
-      lastOffset: number;
-      hasMore: boolean;
-      merge: boolean;
-    }
-  | {
-      type: 'SEARCH_QUERY_SUCCESS';
-      records: RecordsByDate;
-      page: number;
-      hasMore: boolean;
-      merge: boolean;
-    }
-  | { type: 'QUERY_ERROR' }
-  | { type: 'RESET_PAGINATION' };
+/** Returns the records on screen if they belong to this user. */
+function getExistingRecords(
+  state: QueryState,
+  userId: string,
+): RecordsByDate | undefined {
+  return 'data' in state && state.request?.userId === userId
+    ? state.data
+    : undefined;
+}
 
-function queryReducer(state: QueryState, action: QueryAction): QueryState {
+/**
+ * Updates the timeline when records load. Each action only works from the
+ * states listed here and does nothing from any other state.
+ *
+ * - START_INITIAL_LOAD: any state -> LOADING
+ * - START_LOAD_MORE: SUCCESS | LOAD_MORE_ERROR -> LOADING_MORE
+ * - RECEIVE_PARTIAL_RESULTS: stays LOADING | LOADING_MORE
+ * - QUERY_SUCCESS: LOADING | LOADING_MORE -> SUCCESS | COMPLETE_HIDE_LOAD_MORE
+ * - QUERY_ERROR: LOADING -> ERROR, LOADING_MORE -> LOAD_MORE_ERROR
+ */
+export function queryReducer(
+  state: QueryState,
+  action: QueryAction,
+): QueryState {
+  const { requestId, initialized, request } = state;
+  if (
+    action.type !== 'START_INITIAL_LOAD' &&
+    action.type !== 'START_LOAD_MORE' &&
+    action.requestId !== requestId
+  ) {
+    console.debug('useRecordQuery: ignoring stale response');
+    return state;
+  }
+
   switch (action.type) {
     case 'START_INITIAL_LOAD':
-      return { ...state, status: QueryStatus.LOADING };
+      return {
+        requestId: action.requestId,
+        initialized,
+        request: action.request,
+        status: QueryStatus.LOADING,
+        data: getExistingRecords(state, action.request.userId),
+      };
 
     case 'START_LOAD_MORE':
-      return { ...state, status: QueryStatus.LOADING_MORE };
+      if (!canLoadMore(state) || state.lastOffset !== action.lastOffset)
+        return state;
+      return {
+        requestId: action.requestId,
+        initialized,
+        request,
+        status: QueryStatus.LOADING_MORE,
+        data: state.data,
+        lastOffset: state.lastOffset,
+        partial: undefined,
+      };
 
     case 'RECEIVE_PARTIAL_RESULTS':
-      return {
-        ...state,
-        initialized: true,
-        data: action.merge
-          ? mergeRecordsByDate(state.data, action.records)
-          : action.records,
-      };
+      if (state.status === QueryStatus.LOADING) {
+        return { ...state, initialized: true, data: action.records };
+      }
+      if (state.status === QueryStatus.LOADING_MORE) {
+        return { ...state, partial: action.records };
+      }
+      return state;
 
-    case 'GROUPED_QUERY_SUCCESS':
+    case 'QUERY_SUCCESS':
+      if (
+        state.status !== QueryStatus.LOADING &&
+        state.status !== QueryStatus.LOADING_MORE
+      ) {
+        return state;
+      }
       return {
-        ...state,
+        requestId,
         initialized: true,
-        data: action.merge
-          ? mergeRecordsByDate(state.data, action.records)
-          : action.records,
-        groupedOffset: action.lastOffset,
+        request,
         status: action.hasMore
           ? QueryStatus.SUCCESS
           : QueryStatus.COMPLETE_HIDE_LOAD_MORE,
-      };
-
-    case 'SEARCH_QUERY_SUCCESS':
-      return {
-        ...state,
-        initialized: true,
-        data: action.merge
-          ? mergeRecordsByDate(state.data, action.records)
-          : action.records,
-        searchPage: action.page,
-        status: action.hasMore
-          ? QueryStatus.SUCCESS
-          : QueryStatus.COMPLETE_HIDE_LOAD_MORE,
+        data:
+          state.status === QueryStatus.LOADING_MORE
+            ? mergeRecordsByDate(state.data, action.records)
+            : action.records,
+        lastOffset: action.lastOffset,
       };
 
     case 'QUERY_ERROR':
-      return { ...state, status: QueryStatus.ERROR };
-
-    case 'RESET_PAGINATION':
-      return {
-        ...state,
-        status: QueryStatus.LOADING,
-        groupedOffset: 0,
-        searchPage: 0,
-      };
-
-    default:
+      if (state.status === QueryStatus.LOADING) {
+        return { requestId, initialized, request, status: QueryStatus.ERROR };
+      }
+      if (state.status === QueryStatus.LOADING_MORE) {
+        return {
+          requestId,
+          initialized,
+          request,
+          status: QueryStatus.LOAD_MORE_ERROR,
+          data: state.data,
+          lastOffset: state.lastOffset,
+        };
+      }
       return state;
   }
 }
-
-const initialState: QueryState = {
-  status: QueryStatus.IDLE,
-  initialized: false,
-  data: undefined,
-  groupedOffset: 0,
-  searchPage: 0,
-};
 
 async function executeGroupedQuery(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
   minCompleteDays: number,
   offset: number,
-  loadMore: boolean,
-  dispatch: React.Dispatch<QueryAction>,
   filters: TimelineFilters,
-) {
-  console.debug('useRecordQuery: grouped view', { offset, loadMore });
+  onPartialResults: (records: RecordsByDate) => void,
+): Promise<QueryResult> {
+  console.debug('useRecordQuery: grouped view', { offset });
 
   const result = await fetchRecordsUntilCompleteDays(
     db,
@@ -441,17 +521,7 @@ async function executeGroupedQuery(
     minCompleteDays,
     offset,
     3000,
-    (partial) => {
-      console.debug('useRecordQuery: received partial results', {
-        days: Object.keys(partial.records).length,
-        lastOffset: partial.lastOffset,
-      });
-      dispatch({
-        type: 'RECEIVE_PARTIAL_RESULTS',
-        records: partial.records,
-        merge: loadMore,
-      });
-    },
+    (partial) => onPartialResults(partial.records),
     filters,
   );
 
@@ -461,25 +531,22 @@ async function executeGroupedQuery(
     lastOffset: result.lastOffset,
   });
 
-  dispatch({
-    type: 'GROUPED_QUERY_SUCCESS',
+  return {
     records: result.records,
     lastOffset: result.lastOffset,
     hasMore: result.hasMore,
-    merge: loadMore,
-  });
+  };
 }
 
 async function executeSearchQuery(
   db: RxDatabase<DatabaseCollections>,
   userId: string,
   query: string,
-  page: number,
-  loadMore: boolean,
-  dispatch: React.Dispatch<QueryAction>,
+  offset: number,
   filters: TimelineFilters,
-): Promise<void> {
-  console.debug('useRecordQuery: search query', { query, page, loadMore });
+): Promise<QueryResult> {
+  const page = offset / PAGE_SIZE;
+  console.debug('useRecordQuery: search query', { query, page });
 
   const records = await fetchRecords(db, userId, query, page, filters);
 
@@ -495,13 +562,7 @@ async function executeSearchQuery(
     page,
   });
 
-  dispatch({
-    type: 'SEARCH_QUERY_SUCCESS',
-    records,
-    page,
-    hasMore,
-    merge: loadMore,
-  });
+  return { records, lastOffset: offset + PAGE_SIZE, hasMore };
 }
 
 /**
@@ -522,6 +583,8 @@ async function executeSearchQuery(
  * @param filters - Record types and date range applied in both modes. Pass a
  * stable object (e.g. from useState); a new object re-runs the query.
  * @param minCompleteDays - Minimum number of complete days to fetch in grouped view (default: 3)
+ * @returns The records to show grouped by date, the status of the query, and
+ * functions to load more records or try again.
  */
 export function useRecordQuery(
   query: string,
@@ -532,6 +595,7 @@ export function useRecordQuery(
   status: QueryStatus;
   initialized: boolean;
   loadNextPage: () => void;
+  retry: () => void;
   showIndividualItems: boolean;
 } {
   const db = useRxDb();
@@ -540,84 +604,99 @@ export function useRecordQuery(
 
   const [state, dispatch] = useReducer(queryReducer, initialState);
 
-  const isGroupedView = !query;
-  const showIndividualItems = !isGroupedView;
+  // the records in state are from an earlier search
+  const isStale =
+    state.request?.query !== query ||
+    state.request.filters !== filters ||
+    state.request.userId !== user.id;
 
   const execQuery = useCallback(
-    async (loadMore: boolean) => {
-      const thisRequestId = ++requestIdRef.current;
-
-      const guardedDispatch: typeof dispatch = (action) => {
-        if (requestIdRef.current !== thisRequestId) {
-          console.debug('useRecordQuery: ignoring stale response');
-          return;
-        }
-        dispatch(action);
-      };
-
-      guardedDispatch(
-        loadMore ? { type: 'START_LOAD_MORE' } : { type: 'START_INITIAL_LOAD' },
+    async (loadMore: boolean, from?: QueryRequest, fromOffset = 0) => {
+      let lastOffset = 0;
+      if (loadMore) {
+        if (isStale || !canLoadMore(state) || state.request !== from) return;
+        lastOffset = fromOffset;
+      }
+      const requestId = ++requestIdRef.current;
+      dispatch(
+        loadMore
+          ? { type: 'START_LOAD_MORE', requestId, lastOffset }
+          : {
+              type: 'START_INITIAL_LOAD',
+              requestId,
+              request: { query, filters, userId: user.id },
+            },
       );
 
       try {
-        if (isGroupedView) {
-          const offset = loadMore ? state.groupedOffset : 0;
-          await executeGroupedQuery(
-            db,
-            user.id,
-            minCompleteDays,
-            offset,
-            loadMore,
-            guardedDispatch,
-            filters,
-          );
-        } else {
-          const page = loadMore ? state.searchPage + 1 : 0;
-          await executeSearchQuery(
-            db,
-            user.id,
-            query,
-            page,
-            loadMore,
-            guardedDispatch,
-            filters,
-          );
-        }
+        const result = query
+          ? await executeSearchQuery(db, user.id, query, lastOffset, filters)
+          : await executeGroupedQuery(
+              db,
+              user.id,
+              minCompleteDays,
+              lastOffset,
+              filters,
+              (records) =>
+                dispatch({
+                  type: 'RECEIVE_PARTIAL_RESULTS',
+                  requestId,
+                  records,
+                }),
+            );
+        dispatch({ type: 'QUERY_SUCCESS', requestId, ...result });
       } catch (e) {
         console.error(e);
-        guardedDispatch({ type: 'QUERY_ERROR' });
+        dispatch({ type: 'QUERY_ERROR', requestId });
       }
     },
-    [
-      db,
-      user.id,
-      query,
-      filters,
-      isGroupedView,
-      state.groupedOffset,
-      state.searchPage,
-      minCompleteDays,
-    ],
+    [db, user.id, query, filters, minCompleteDays, state, isStale],
   );
 
   const execQueryRef = useRef(execQuery);
   execQueryRef.current = execQuery;
 
-  const loadNextPage = useDebounceCallback(
-    () => execQueryRef.current(true),
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
+  const loadMoreLater = useDebounceCallback(
+    (from: QueryRequest | undefined, fromOffset: number) =>
+      execQueryRef.current(true, from, fromOffset),
     300,
   );
 
-  useEffect(() => {
-    dispatch({ type: 'RESET_PAGINATION' });
+  // remember which search the user asked to load more of, because the search
+  // can change before the delay is over
+  const loadNextPage = useCallback(() => {
+    const current = stateRef.current;
+    if (canLoadMore(current)) {
+      loadMoreLater(current.request, current.lastOffset);
+    }
+  }, [loadMoreLater]);
+
+  const retry = useCallback(() => {
     execQueryRef.current(false);
-  }, [query, filters]);
+  }, []);
+
+  useEffect(() => {
+    execQueryRef.current(false);
+  }, [query, filters, user.id]);
+
+  const data = useMemo(() => {
+    if (isStale) return getExistingRecords(state, user.id);
+    if (state.status === QueryStatus.ERROR) return undefined;
+    if (state.status === QueryStatus.LOADING_MORE && state.partial) {
+      return mergeRecordsByDate(state.data, state.partial);
+    }
+    return state.data;
+  }, [state, isStale, user.id]);
 
   return {
-    data: state.data,
-    status: state.status,
+    data,
+    status: isStale ? QueryStatus.LOADING : state.status,
     initialized: state.initialized,
     loadNextPage,
-    showIndividualItems,
+    retry,
+    showIndividualItems: !!query,
   };
 }
