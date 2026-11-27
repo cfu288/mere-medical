@@ -43,6 +43,15 @@ export function getRecordDateKey(
   return format(date, 'yyyy-MM-dd');
 }
 
+// the database can return dates out of order, so the timeline sorts them itself
+function newestDateFirst(
+  grouped: Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]>,
+): Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]> {
+  return Object.fromEntries(
+    Object.entries(grouped).sort(([a], [b]) => b.localeCompare(a)),
+  );
+}
+
 export function groupRecordsByDate(
   records: ClinicalDocument<BundleEntry<FhirResource>>[],
 ): Record<string, ClinicalDocument<BundleEntry<FhirResource>>[]> {
@@ -58,7 +67,7 @@ export function groupRecordsByDate(
     }
   }
 
-  return grouped;
+  return newestDateFirst(grouped);
 }
 
 export function mergeRecordsByDate(
@@ -74,7 +83,7 @@ export function mergeRecordsByDate(
       ? [...merged[dateKey], ...records]
       : records;
   }
-  return merged;
+  return newestDateFirst(merged);
 }
 
 /**

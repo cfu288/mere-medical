@@ -878,6 +878,28 @@ describe('fetchRecordsUntilCompleteDays', () => {
       expect(seen.sort()).toEqual(docs.map((doc) => doc.id).sort());
     });
 
+    it('lists the days of a page newest first', async () => {
+      // in New York, where the tests run, the second record falls on Jan 7 and
+      // the third on Jan 8, the reverse of their order as text
+      await db.clinical_documents.bulkInsert(
+        createDocumentsWithSpecificDates(userId, [
+          { date: '2024-01-10T12:00:00Z', count: 1 },
+          { date: '2024-01-08T12:00:00+14:00', count: 1 },
+          { date: '2024-01-07T23:59:00-12:00', count: 1 },
+          { date: '2024-01-06T12:00:00Z', count: 1 },
+        ]),
+      );
+
+      const result = await fetchRecordsUntilCompleteDays(db, userId, 5, 0);
+
+      expect(Object.keys(result.records)).toEqual([
+        '2024-01-10',
+        '2024-01-08',
+        '2024-01-07',
+        '2024-01-06',
+      ]);
+    });
+
     it('returns every record exactly once when one date cannot be read', async () => {
       // the database sorts 'unknown' before every real date, but it is shown
       // as 1970-01-01, after all of them
