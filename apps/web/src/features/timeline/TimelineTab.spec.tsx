@@ -50,6 +50,20 @@ describe('fetchRecords', () => {
     ]);
   });
 
+  it('keeps a record whose date cannot be read', async () => {
+    const undated = createTestClinicalDocument({
+      id: 'conn-a|user-1|obs-1',
+      connection_record_id: 'conn-a',
+      user_id: 'user-1',
+      metadata: { id: 'obs-1', date: 'unknown', display_name: 'GLUCOSE' },
+    });
+    await db.clinical_documents.bulkInsert([undated]);
+
+    const records = await fetchRecords(db, 'user-1');
+
+    expect(records).toEqual({ '1970-01-01': [undated] });
+  });
+
   it('matches a search containing regex punctuation literally', async () => {
     await db.clinical_documents.insert(
       createTestClinicalDocument({
